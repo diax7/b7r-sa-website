@@ -1,0 +1,31 @@
+# dependencies
+node_modules/
+.pnpm-store/
+
+# next.js
+.next/
+out/
+next-env.d.ts
+
+# tests & reports
+coverage/
+playwright-report/
+test-results/
+.lighthouseci/
+blob-report/
+
+# env
+.env
+.env.local
+.env.*.local
+
+# os / editor
+.DS_Store
+Thumbs.db
+*.log
+
+# agent folder may hold local state; keep skills, ignore settings.local
+.claude/settings.local.json
+
+# large source PSDs are not needed by the site (kept in resources/ locally only)
+resources/source-files/
