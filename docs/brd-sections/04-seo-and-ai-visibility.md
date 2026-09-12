@@ -85,7 +85,7 @@ All indexable routes with `lastModified` (ISO 8601 with time; from the content f
 | Budget | Value |
 |---|---|
 | JS shipped to the home page (gzip) | ≤ 180 kB total; designer chunk lazy-loaded on scroll into view |
-| Fonts | 2 preloaded woff2 files ≤ 40 kB each; others lazy |
+| Fonts | Preloaded woff2 files ≤ 40 kB each (3 on the home page: Regular, Medium, Black); others lazy |
 | LCP image | ≤ 220 kB AVIF/WebP at 1920 w; responsive `srcset` 640–2560 |
 | Third-party scripts | Umami ≤ 5 kB; GA only after consent; Turnstile only on `/contact` |
 | Lighthouse CI thresholds | Performance 90, Accessibility 95, Best Practices 95, SEO 100 (mobile, throttled) |

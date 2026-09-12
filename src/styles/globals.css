@@ -1,0 +1,502 @@
+@import 'tailwindcss';
+
+/* ---------------------------------------------------------------------------------------
+   Design tokens (BRD §3). The only place raw hex is allowed. Components use utilities or
+   var(--token); never literal colours.
+   --------------------------------------------------------------------------------------- */
+@theme {
+  --color-*: initial;
+  --color-primary: #0058b0;
+  --color-primary-hover: #004a94;
+  --color-primary-dark: #1858a8;
+  --color-navy: #0a2f5e;
+  --color-accent: #0098e0;
+  --color-accent-tint: #e6f5fc;
+  --color-ground: #f6f8fb;
+  --color-surface: #ffffff;
+  --color-text: #14181f;
+  --color-text-muted: #5b6470;
+  --color-border: #e5e9ef;
+  --color-success: #16a34a;
+  --color-warning: #f59e0b;
+  --color-error: #d90000;
+  --color-whatsapp: #25d366;
+  --color-white: #ffffff;
+  --color-black: #000000;
+  --color-transparent: transparent;
+  --color-current: currentColor;
+
+  --font-sans:
+    'ITF Rayat Round', 'Rayat Fallback', system-ui, -apple-system, 'Segoe UI', Tahoma, sans-serif;
+
+  --radius-*: initial;
+  --radius: 13px;
+  --radius-base: 13px;
+  --radius-lg: 20px;
+  --radius-pill: 999px;
+  --radius-inner: 6px;
+
+  --shadow-*: initial;
+  --shadow-card: 0 1px 2px rgb(20 24 31 / 0.06), 0 1px 3px rgb(20 24 31 / 0.04);
+  --shadow-card-hover: 0 4px 12px rgb(20 24 31 / 0.08);
+  --shadow-popover: 0 8px 24px rgb(20 24 31 / 0.12);
+  --shadow-header: 0 1px 0 rgb(20 24 31 / 0.06);
+
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-exit: cubic-bezier(0.4, 0, 1, 1);
+  --ease-expand: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  --duration-fast: 150ms;
+  --duration-base: 200ms;
+  --duration-slow: 300ms;
+  --duration-slower: 500ms;
+  --duration-crossfade: 700ms;
+
+  --header-h: 72px;
+  --header-h-mobile: 60px;
+  --header-h-scrolled: 60px;
+
+  --container-page: 1280px;
+  --container-prose: 760px;
+  --container-measure: 38rem;
+
+  /* Type scale (§3.3) */
+  --text-display: clamp(40px, 6vw, 72px);
+  --text-display--line-height: 1.15;
+  --text-display--font-weight: 900;
+  --text-h1: clamp(32px, 4.5vw, 52px);
+  --text-h1--line-height: 1.2;
+  --text-h1--font-weight: 700;
+  --text-h2: clamp(28px, 3.5vw, 40px);
+  --text-h2--line-height: 1.2;
+  --text-h2--font-weight: 700;
+  --text-h3: clamp(22px, 2.5vw, 28px);
+  --text-h3--line-height: 1.3;
+  --text-h3--font-weight: 700;
+  --text-h4: 20px;
+  --text-h4--line-height: 1.4;
+  --text-h4--font-weight: 500;
+  --text-lead: clamp(17px, 1.6vw, 20px);
+  --text-lead--line-height: 1.7;
+  --text-body: 17px;
+  --text-body--line-height: 1.75;
+  --text-small: 15px;
+  --text-small--line-height: 1.6;
+  --text-caption: 13px;
+  --text-caption--line-height: 1.5;
+  --text-button: 16px;
+  --text-button--line-height: 1;
+  --text-button-lg: 17px;
+  --text-button-lg--line-height: 1;
+
+  --animate-fade-in: fade-in var(--duration-base) var(--ease-standard) both;
+  --animate-fade-out: fade-out var(--duration-base) var(--ease-exit) both;
+  --animate-rise-in: rise-in var(--duration-slow) var(--ease-standard) both;
+  --animate-rise-out: rise-out var(--duration-base) var(--ease-exit) both;
+  --animate-menu-in: menu-in var(--duration-slow) var(--ease-standard) both;
+  --animate-menu-out: menu-out var(--duration-base) var(--ease-exit) both;
+  --animate-wave: wave-drift 20s linear infinite;
+  --animate-wave-reverse: wave-drift-reverse 20s linear infinite;
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  @keyframes fade-out {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+  @keyframes rise-in {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @keyframes rise-out {
+    from {
+      opacity: 1;
+      transform: none;
+    }
+    to {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+  }
+  /* The sheet slides in from the start edge (BRD 6.2); in RTL the start edge is the right. */
+  @keyframes menu-in {
+    from {
+      opacity: 0;
+      transform: translateX(16px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @keyframes menu-out {
+    from {
+      opacity: 1;
+      transform: none;
+    }
+    to {
+      opacity: 0;
+      transform: translateX(16px);
+    }
+  }
+  @keyframes wave-drift {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+  @keyframes wave-drift-reverse {
+    from {
+      transform: translateX(-50%);
+    }
+    to {
+      transform: translateX(0);
+    }
+  }
+}
+
+/* ---------------------------------------------------------------------------------------
+   Fonts (§3.3). Regular and Bold are preloaded from layout.tsx; the rest load on demand.
+   --------------------------------------------------------------------------------------- */
+@font-face {
+  font-family: 'ITF Rayat Round';
+  src: url('/fonts/ITFRayatRound-Light.woff2') format('woff2');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'ITF Rayat Round';
+  src: url('/fonts/ITFRayatRound-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'ITF Rayat Round';
+  src: url('/fonts/ITFRayatRound-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'ITF Rayat Round';
+  src: url('/fonts/ITFRayatRound-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'ITF Rayat Round';
+  src: url('/fonts/ITFRayatRound-Black.woff2') format('woff2');
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+/* Metric-adjusted fallback to keep the swap from shifting layout (CLS ≤ 0.1). Values are
+   approximations for a rounded Arabic sans; the CLS e2e is the real gate. */
+@font-face {
+  font-family: 'Rayat Fallback';
+  src: local('Segoe UI'), local('Tahoma'), local('Roboto'), local('Noto Naskh Arabic');
+  size-adjust: 104%;
+  ascent-override: 96%;
+  descent-override: 30%;
+  line-gap-override: 0%;
+}
+
+/* ---------------------------------------------------------------------------------------
+   Base
+   --------------------------------------------------------------------------------------- */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    /* In-page anchors and the designer deep link land below the sticky header (BRD 6.2). */
+    scroll-padding-block-start: var(--header-h);
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+  body {
+    background: var(--color-surface);
+    color: var(--color-text);
+    font-family: var(--font-sans);
+    font-size: var(--text-body);
+    line-height: var(--text-body--line-height);
+    font-feature-settings: 'kern';
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    overflow-x: clip;
+  }
+  @media (max-width: 360px) {
+    body {
+      font-size: 16px;
+    }
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    text-wrap: balance;
+    overflow-wrap: normal;
+    hyphens: none;
+  }
+  p {
+    text-wrap: pretty;
+  }
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+  img,
+  video,
+  svg {
+    display: block;
+    max-width: 100%;
+  }
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+    color: inherit;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+    border-radius: var(--radius-inner);
+  }
+  ::selection {
+    background: var(--color-accent-tint);
+    color: var(--color-primary);
+  }
+  [inert] {
+    pointer-events: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------------------
+   Utilities that encode §3 rules once
+   --------------------------------------------------------------------------------------- */
+@utility display {
+  font-size: var(--text-display);
+  line-height: var(--text-display--line-height);
+  font-weight: 900;
+  letter-spacing: 0;
+}
+@utility lead {
+  font-size: var(--text-lead);
+  line-height: var(--text-lead--line-height);
+  font-weight: 400;
+}
+@utility eyebrow {
+  font-size: var(--text-caption);
+  line-height: var(--text-caption--line-height);
+  font-weight: 500;
+  color: var(--color-primary);
+}
+@utility measure {
+  max-width: var(--container-measure);
+}
+@utility tabular {
+  font-variant-numeric: tabular-nums;
+}
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+/* Section rhythm (§3.4): 96 px desktop, 64 px mobile. */
+@utility section-pad {
+  padding-block: 64px;
+  @media (min-width: 768px) {
+    padding-block: 96px;
+  }
+}
+/* Directional icons flip in RTL (§3.8); the wrapper applies this only for arrows/chevrons. */
+@utility mirror-rtl {
+  &:where([dir='rtl'], [dir='rtl'] *) {
+    transform: scaleX(-1);
+  }
+}
+
+/* Header nav underline (BRD 6.2): 2 px accent, offset 10 px, grows from the start edge. */
+.nav-link::after {
+  content: '';
+  position: absolute;
+  inset-inline-start: 0;
+  inset-block-end: -2px;
+  block-size: 2px;
+  inline-size: 100%;
+  border-radius: var(--radius-pill);
+  background: var(--color-accent);
+  transform: scaleX(0);
+  transform-origin: 100% 50%; /* the start edge in RTL */
+  transition: transform var(--duration-base) var(--ease-standard);
+}
+.nav-link.is-active::after,
+.nav-link:hover::after {
+  transform: scaleX(1);
+}
+
+/* Hero (BRD 6.4.1). Pulled under the transparent header; the legibility overlay is the one
+   permitted gradient (white to transparent). The gradient direction is physical on purpose:
+   the photo composition is fixed (cluster on the left, calm area on the right). */
+.hero {
+  margin-block-start: calc(-1 * var(--header-h-mobile));
+  padding-block-start: var(--header-h-mobile);
+  min-height: 100svh;
+}
+@media (min-width: 1024px) {
+  .hero {
+    margin-block-start: calc(-1 * var(--header-h));
+    padding-block-start: var(--header-h);
+  }
+}
+.hero-overlay {
+  background: linear-gradient(to bottom, rgb(255 255 255 / 0.96) 55%, rgb(255 255 255 / 0) 75%);
+}
+@media (min-width: 768px) {
+  .hero-overlay {
+    background: linear-gradient(
+      to left,
+      rgb(255 255 255 / 0.92) 0%,
+      rgb(255 255 255 / 0.85) 30%,
+      rgb(255 255 255 / 0) 55%
+    );
+  }
+}
+.hero-image {
+  object-fit: cover;
+  object-position: 50% 70%;
+}
+@media (min-width: 768px) {
+  .hero-image {
+    object-position: 20% 60%;
+  }
+}
+
+/* Product strip (BRD 6.4.2): five panels, hover/focus expands one to 2.6 of the others. */
+.strip {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: 16px;
+  padding-inline: 16px;
+  scrollbar-width: none;
+}
+.strip::-webkit-scrollbar {
+  display: none;
+}
+.strip-panel {
+  position: relative;
+  flex: 0 0 78vw;
+  aspect-ratio: 4 / 5;
+  scroll-snap-align: start;
+  overflow: hidden;
+  border-radius: var(--radius-base);
+  background: var(--color-ground);
+  outline-offset: 4px;
+}
+.strip-panel img {
+  transition: transform var(--duration-slower) var(--ease-expand);
+}
+.strip-label {
+  position: absolute;
+  inset-inline: 0;
+  inset-block-end: 0;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  background: linear-gradient(to top, rgb(20 24 31 / 0.55), rgb(20 24 31 / 0));
+}
+@media (min-width: 1024px) {
+  .strip {
+    height: 520px;
+    gap: 8px;
+    overflow: visible;
+    padding-inline: 24px;
+    scroll-snap-type: none;
+  }
+  .strip-panel {
+    flex: 1 1 0;
+    aspect-ratio: auto;
+    transition: flex-grow var(--duration-slower) var(--ease-expand);
+  }
+  .strip-panel:hover,
+  .strip-panel:focus-visible {
+    flex-grow: 2.6;
+    will-change: flex-grow;
+  }
+  .strip-panel:hover img,
+  .strip-panel:focus-visible img {
+    transform: scale(1.04);
+  }
+  .strip-label {
+    opacity: 0;
+    transition: opacity var(--duration-base) var(--ease-standard) 200ms;
+  }
+  .strip-panel:hover .strip-label,
+  .strip-panel:focus-visible .strip-label {
+    opacity: 1;
+  }
+}
+
+/* ---------------------------------------------------------------------------------------
+   Scroll reveal (§3.7). Hidden state only when JS is running (html.js is set by an inline
+   script in <head>), so JS-off and pre-hydration always show content.
+   --------------------------------------------------------------------------------------- */
+html.js .reveal {
+  opacity: 0;
+  transform: translateY(12px);
+  transition:
+    opacity 400ms var(--ease-standard),
+    transform 400ms var(--ease-standard);
+  transition-delay: calc(var(--i, 0) * 60ms);
+}
+html.js .reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* ---------------------------------------------------------------------------------------
+   Reduced motion (§0.4.11, §3.7)
+   --------------------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  html.js .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 150ms !important;
+    transition-property: opacity, color, background-color, border-color !important;
+  }
+}

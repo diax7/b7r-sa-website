@@ -1,0 +1,281 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "import", "unicorn", "react", "nextjs", "jsx-a11y"],
+  "categories": {
+    "correctness": "error",
+    "suspicious": "error",
+    "perf": "warn"
+  },
+  "env": {
+    "browser": true,
+    "node": true,
+    "es2022": true
+  },
+  "settings": {
+    "react": {
+      "version": "19.3.0",
+      "jsxRuntime": "automatic"
+    }
+  },
+  "rules": {
+    "eqeqeq": "error",
+    "no-console": [
+      "error",
+      {
+        "allow": ["warn", "error"]
+      }
+    ],
+    "no-restricted-imports": [
+      "error",
+      {
+        "patterns": [
+          {
+            "group": ["../*", "./../*"],
+            "message": "Use absolute imports via @/… (constitution VII)."
+          },
+          {
+            "group": ["@/modules/*/*", "!@/modules/core/*"],
+            "message": "Import a feature module only through its index (@/modules/<name>)."
+          }
+        ]
+      }
+    ],
+    "import/no-cycle": [
+      "error",
+      {
+        "maxDepth": 4
+      }
+    ],
+    "unicorn/filename-case": [
+      "error",
+      {
+        "case": "kebabCase"
+      }
+    ],
+    "unicorn/no-null": "off",
+    "typescript/no-explicit-any": "error",
+    "typescript/consistent-type-imports": "error",
+    "react/self-closing-comp": "error",
+    "react/jsx-no-useless-fragment": "error",
+    "jsx-a11y/alt-text": "error",
+    "jsx-a11y/anchor-has-content": "error",
+    "jsx-a11y/aria-props": "error",
+    "jsx-a11y/no-autofocus": "off",
+    "react/react-in-jsx-scope": "off",
+    "jsx-a11y/prefer-tag-over-role": "off",
+    "import/no-unassigned-import": [
+      "error",
+      {
+        "allow": ["**/*.css"]
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": ["scripts/**", "tests/**", "e2e/**", "*.config.ts", "*.config.mjs"],
+      "rules": {
+        "no-console": "off",
+        "no-await-in-loop": "off"
+      }
+    },
+    {
+      "files": ["**/*.d.ts"],
+      "rules": {
+        "unicorn/require-module-specifiers": "off"
+      }
+    },
+    {
+      "files": ["tests/**", "e2e/**"],
+      "rules": {
+        "no-restricted-imports": "off"
+      }
+    },
+    {
+      "files": ["src/modules/home/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["../*", "./../*"],
+                "message": "Use absolute imports via @/… (constitution VII)."
+              },
+              {
+                "group": [
+                  "@/modules/designer",
+                  "@/modules/designer/*",
+                  "@/modules/products",
+                  "@/modules/products/*",
+                  "@/modules/pages",
+                  "@/modules/pages/*",
+                  "@/modules/blog",
+                  "@/modules/blog/*",
+                  "@/modules/forms",
+                  "@/modules/forms/*"
+                ],
+                "message": "A feature module may import only components/*, content/*, lib/*, modules/core, and its own files (constitution VII)."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["src/modules/designer/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["../*", "./../*"],
+                "message": "Use absolute imports via @/… (constitution VII)."
+              },
+              {
+                "group": [
+                  "@/modules/home",
+                  "@/modules/home/*",
+                  "@/modules/products",
+                  "@/modules/products/*",
+                  "@/modules/pages",
+                  "@/modules/pages/*",
+                  "@/modules/blog",
+                  "@/modules/blog/*",
+                  "@/modules/forms",
+                  "@/modules/forms/*"
+                ],
+                "message": "A feature module may import only components/*, content/*, lib/*, modules/core, and its own files (constitution VII)."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["src/modules/products/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["../*", "./../*"],
+                "message": "Use absolute imports via @/… (constitution VII)."
+              },
+              {
+                "group": [
+                  "@/modules/home",
+                  "@/modules/home/*",
+                  "@/modules/designer",
+                  "@/modules/designer/*",
+                  "@/modules/pages",
+                  "@/modules/pages/*",
+                  "@/modules/blog",
+                  "@/modules/blog/*",
+                  "@/modules/forms",
+                  "@/modules/forms/*"
+                ],
+                "message": "A feature module may import only components/*, content/*, lib/*, modules/core, and its own files (constitution VII)."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["src/modules/pages/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["../*", "./../*"],
+                "message": "Use absolute imports via @/… (constitution VII)."
+              },
+              {
+                "group": [
+                  "@/modules/home",
+                  "@/modules/home/*",
+                  "@/modules/designer",
+                  "@/modules/designer/*",
+                  "@/modules/products",
+                  "@/modules/products/*",
+                  "@/modules/blog",
+                  "@/modules/blog/*",
+                  "@/modules/forms",
+                  "@/modules/forms/*"
+                ],
+                "message": "A feature module may import only components/*, content/*, lib/*, modules/core, and its own files (constitution VII)."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["src/modules/blog/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["../*", "./../*"],
+                "message": "Use absolute imports via @/… (constitution VII)."
+              },
+              {
+                "group": [
+                  "@/modules/home",
+                  "@/modules/home/*",
+                  "@/modules/designer",
+                  "@/modules/designer/*",
+                  "@/modules/products",
+                  "@/modules/products/*",
+                  "@/modules/pages",
+                  "@/modules/pages/*",
+                  "@/modules/forms",
+                  "@/modules/forms/*"
+                ],
+                "message": "A feature module may import only components/*, content/*, lib/*, modules/core, and its own files (constitution VII)."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["src/modules/forms/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["../*", "./../*"],
+                "message": "Use absolute imports via @/… (constitution VII)."
+              },
+              {
+                "group": [
+                  "@/modules/home",
+                  "@/modules/home/*",
+                  "@/modules/designer",
+                  "@/modules/designer/*",
+                  "@/modules/products",
+                  "@/modules/products/*",
+                  "@/modules/pages",
+                  "@/modules/pages/*",
+                  "@/modules/blog",
+                  "@/modules/blog/*"
+                ],
+                "message": "A feature module may import only components/*, content/*, lib/*, modules/core, and its own files (constitution VII)."
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "ignorePatterns": ["node_modules", ".next", "playwright-report", "test-results", "public"]
+}

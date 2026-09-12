@@ -1,0 +1,21 @@
+# pnpm project settings (pnpm 10+ reads these from here, not package.json)
+minimumReleaseAge: 1440
+# Install scripts are disabled globally (.npmrc ignore-scripts=true). sharp, esbuild and
+# @swc/core ship prebuilt binaries through optional dependencies, so nothing needs to build.
+allowBuilds:
+  '@parcel/watcher': false
+  '@swc/core': false
+  esbuild: false
+  sharp: false
+overrides:
+  # Transitive advisories under @lhci/cli (dev-only CI tool), pinned to patched versions.
+  tmp: 0.2.7
+  'uuid@<11.1.1': 11.1.1
+  qs: 6.16.0
+auditConfig:
+  ignoreGhsas:
+    # extract-zip <=2.0.1 via @lhci/cli > lighthouse > puppeteer-core (dev-only, never in the
+    # image). The advisory names >=2.0.2 as patched but 2.0.2 is not published yet.
+    # Remove these two lines when it ships. Checked 2026-09-12.
+    - GHSA-jmr9-qjv8-65gv
+    - GHSA-7pqw-9j4j-h8q3

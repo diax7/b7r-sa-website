@@ -283,6 +283,8 @@ Decision history: `docs/00-decisions-log.md` (rounds 1–4 with Dhia, 2026-09-12
 5. Three real testimonials.
 6. Cal.com account and `bookingUrl`.
 7. Higher-resolution Saudi Business Center and Ministry of Commerce badge files; a logo SVG.
+9. Confirm the ITF Rayat Round web licence permits subsetting the woff2 files (the site serves subsets, ADR-010); if not, serve the original files and re-measure.
+10. Review the agent-written aria/microcopy strings in `src/messages/ar.json` and the two `TODO(copy)` error-page strings in `src/content/pages.ts`.
 8. Whether the video needs an intro title card or Arabic captions (none specified).
 
 ### Appendix H: Glossary of Arabic UI terms used in code comments and admin labels

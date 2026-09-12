@@ -1,0 +1,16 @@
+node_modules
+.next
+.git
+.specify
+.claude
+specs
+docs
+resources
+e2e
+tests
+playwright-report
+test-results
+.lighthouseci
+.env*
+!.env.example
+/*.md

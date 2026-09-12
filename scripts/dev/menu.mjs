@@ -1,0 +1,11 @@
+import { chromium, devices } from '@playwright/test';
+const [, , url, out] = process.argv;
+const browser = await chromium.launch();
+const ctx = await browser.newContext({ ...devices['Pixel 7'] });
+const page = await ctx.newPage();
+await page.goto(url, { waitUntil: 'load' });
+await page.evaluate(() => document.fonts.ready);
+await page.getByTestId('menu-open').click();
+await page.waitForTimeout(700);
+await page.screenshot({ path: out });
+await browser.close();

@@ -1,0 +1,14 @@
+import { chromium } from '@playwright/test';
+const [, , url, out, hoverSel, shotSel] = process.argv;
+const browser = await chromium.launch();
+const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+await page.goto(url, { waitUntil: 'load' });
+await page.evaluate(() => document.fonts.ready);
+await page.locator(shotSel).scrollIntoViewIfNeeded();
+await page.mouse.move(5, 5);
+await page.waitForTimeout(300);
+await page.locator(shotSel).screenshot({ path: out.replace('.png', '-rest.png') });
+await page.locator(hoverSel).hover();
+await page.waitForTimeout(900);
+await page.locator(shotSel).screenshot({ path: out });
+await browser.close();

@@ -29,3 +29,6 @@ Thumbs.db
 
 # large source PSDs are not needed by the site (kept in resources/ locally only)
 resources/source-files/
+
+# typescript incremental cache
+*.tsbuildinfo

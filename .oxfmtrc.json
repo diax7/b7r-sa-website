@@ -1,0 +1,21 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "printWidth": 100,
+  "singleQuote": true,
+  "jsxSingleQuote": false,
+  "trailingComma": "all",
+  "ignorePatterns": [
+    "node_modules",
+    ".next",
+    "public",
+    "pnpm-lock.yaml",
+    "playwright-report",
+    "test-results",
+    ".lighthouseci",
+    "resources",
+    "docs",
+    "specs",
+    "*.md",
+    "next-env.d.ts"
+  ]
+}

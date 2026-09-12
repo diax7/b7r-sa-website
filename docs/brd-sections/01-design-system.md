@@ -36,7 +36,7 @@ Rules: primary text on white and white text on primary both pass AA. Never place
 ### 3.3 Typography
 
 - **Family:** ITF Rayat Round, self-hosted from `resources/brand/fonts/web/ITFRayatRound-{Light,Regular,Medium,Bold,Black}.woff2`. B7R holds the web licence. Serve only from b7r.sa. Fallback stack: `"ITF Rayat Round", system-ui, -apple-system, "Segoe UI", Tahoma, sans-serif`.
-- **Loading:** `@font-face` with `font-display: swap` and `size-adjust` on the fallback to keep CLS ≤ 0.1. Preload Regular and Bold in the document head. Medium loads on demand; Light and Black load lazily (Black is used only in the hero H1).
+- **Loading:** `@font-face` with `font-display: swap` and `size-adjust` on the fallback to keep CLS ≤ 0.1. The served files are subsets of the licensed woff2 (Arabic, Basic Latin, punctuation; ≈ 27 kB each, `scripts/subset-fonts.sh`). Preload the weights painted above the fold: Regular and Medium on every page, plus Black on the home page (hero H1) and Bold on pages whose H1 is Bold. Light loads lazily. (Amended 2026-09-13, ADR-010: measured mobile Lighthouse 82 → 90.)
 - **Weights and roles:** Black 900 hero display only · Bold 700 H1–H3 · Medium 500 H4, nav, buttons, labels, chips · Regular 400 body · Light 300 large pull-quotes only.
 - **Scale (fluid, `clamp()`):**
 
