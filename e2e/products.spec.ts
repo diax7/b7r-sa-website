@@ -1,16 +1,49 @@
 import { expect, test } from '@playwright/test';
 
 test.describe('products listing (BRD 6.5)', () => {
-  test('shows five linked cards with name, price, colours and sizes', async ({ page }) => {
+  test('shows five linked cards with name, price, two swatches and sizes', async ({ page }) => {
     await page.goto('/products');
-    const cards = page.locator('[data-product-grid] a[href^="/products/"]');
+    const cards = page.locator('[data-product-grid] [data-product-card]');
     await expect(cards).toHaveCount(5);
+    // Each card links twice (photo + name); only the name link is exposed to assistive tech.
+    await expect(page.locator('[data-product-grid] a[href^="/products/"]')).toHaveCount(10);
+    await expect(page.locator('[data-product-grid]').getByRole('link')).toHaveCount(5);
     const first = cards.first();
     await expect(first).toContainText('تيشيرت أساسي');
+    // The photo link is hidden from assistive tech; the name link is the accessible one.
+    await expect(first.getByRole('link')).toHaveCount(1);
+    await expect(first.getByRole('link')).toHaveAccessibleName('تيشيرت أساسي');
     await expect(first).toContainText('يبدأ من');
     await expect(first.locator('[data-sar-digits]')).toHaveText('45');
-    await expect(first.locator('li[title]')).toHaveCount(2);
+    await expect(first.locator('button[data-swatch]')).toHaveCount(2);
     await expect(first).toContainText('S – 2XL');
+  });
+
+  test('swatches preview and set the colour; hovering the photo flips to the back', async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(isMobile, 'hover interactions');
+    await page.goto('/products');
+    const card = page.locator('[data-product-card="tee-essential"]');
+    const photo = card.locator('[data-card-photo]');
+    await expect(photo).toHaveAttribute('data-card-photo', 'black');
+    const white = card.locator('button[data-swatch="white"]');
+    await white.hover();
+    await expect(photo).toHaveAttribute('data-card-photo', 'white');
+    await card.locator('h2').hover();
+    await expect(photo).toHaveAttribute('data-card-photo', 'black');
+    await white.click();
+    await expect(white).toHaveAttribute('aria-pressed', 'true');
+    await card.locator('h2').hover();
+    await expect(photo).toHaveAttribute('data-card-photo', 'white');
+    await expect(page).toHaveURL(/\/products$/);
+    const back = photo.locator('img').nth(1);
+    await expect(back).toHaveCSS('opacity', '0');
+    await photo.hover();
+    await expect(back).toHaveCSS('opacity', '1');
+    await photo.click();
+    await expect(page).toHaveURL(/\/products\/tee-essential$/);
   });
 });
 
@@ -32,7 +65,7 @@ test.describe('product detail (BRD 6.6)', () => {
     await expect(chart.locator('tbody tr')).toHaveCount(5);
     await expect(chart.locator('th[scope="col"]')).toHaveCount(4);
     // Three other products in catalogue order, wrapping around.
-    const related = page.locator('[aria-labelledby="product-related-title"] a[href^="/products/"]');
+    const related = page.locator('[aria-labelledby="product-related-title"]').getByRole('link');
     await expect(related).toHaveCount(3);
     await expect(related.nth(0)).toHaveAttribute('href', '/products/tee-oversize');
   });
@@ -47,28 +80,45 @@ test.describe('product detail (BRD 6.6)', () => {
       expect(tones[i], tones.join(' → ')).not.toBe(tones[i - 1]);
   });
 
-  test('gallery: thumbnails, swatches, arrows and a polite counter', async ({ page, isMobile }) => {
+  test('gallery: the photo flips to the back on hover, tap and arrow keys; swatches switch the colour', async ({
+    page,
+    isMobile,
+  }) => {
     await page.goto('/products/tee-essential');
     const gallery = page.locator('[data-gallery]');
-    const counter = gallery.locator('[aria-live="polite"]');
-    await expect(counter).toHaveText('صورة 1 من 4');
-    await expect(gallery.locator('img[alt]:not([alt=""])')).toHaveCount(1);
-    // Second thumbnail: white back.
-    await gallery.getByRole('button', { name: /أبيض، الواجهة الخلفية/ }).click();
-    await expect(counter).toHaveText('صورة 2 من 4');
-    // Swatch jumps to that colour's front.
-    await gallery.getByLabel('اللون أسود').check({ force: true });
-    await expect(counter).toHaveText('صورة 3 من 4');
-    if (!isMobile) {
-      // Arrow keys on any gallery button; ArrowLeft advances in RTL.
-      await gallery.getByRole('button', { name: 'الصورة التالية' }).focus();
+    const photo = gallery.locator('[data-gallery-photo]');
+    await expect(photo).toHaveAttribute('data-gallery-photo', 'white');
+    await expect(photo).toHaveAttribute('data-gallery-side', 'front');
+    // No counter, no thumbnail strip: one photo, the swatches, a hidden live region.
+    await expect(gallery.locator('img')).toHaveCount(2);
+    await expect(gallery.getByText(/صورة \d+ من/)).toHaveCount(0);
+    const state = gallery.locator('[aria-live="polite"]');
+    await expect(state).toHaveText('أبيض، الواجهة الأمامية');
+    if (isMobile) {
+      await photo.tap();
+    } else {
+      await photo.hover();
+      await expect(photo).toHaveAttribute('data-gallery-side', 'back');
+      await page.mouse.move(0, 0);
+      await expect(photo).toHaveAttribute('data-gallery-side', 'front');
+      await photo.focus();
       await page.keyboard.press('ArrowLeft');
-      await expect(counter).toHaveText('صورة 4 من 4');
-      await page.keyboard.press('ArrowLeft');
-      await expect(counter).toHaveText('صورة 1 من 4');
-      await page.keyboard.press('ArrowRight');
-      await expect(counter).toHaveText('صورة 4 من 4');
     }
+    await expect(photo).toHaveAttribute('data-gallery-side', 'back');
+    await expect(state).toHaveText('أبيض، الواجهة الخلفية');
+    // Swatch: that colour's front.
+    await gallery.getByLabel('اللون أسود').check({ force: true });
+    await expect(photo).toHaveAttribute('data-gallery-photo', 'black');
+    await expect(photo).toHaveAttribute('data-gallery-side', 'front');
+  });
+
+  test('description, specs and the size chart share one section', async ({ page }) => {
+    await page.goto('/products/tee-essential');
+    const details = page.locator('[data-product-details]');
+    await expect(details).toHaveCount(1);
+    await expect(details.locator('dl')).toHaveCount(1);
+    await expect(details.locator('table')).toHaveCount(1);
+    await expect(page.locator('table')).toHaveCount(1);
   });
 
   test('mobile sticky bar appears after the CTA scrolls out and lifts the widgets', async ({

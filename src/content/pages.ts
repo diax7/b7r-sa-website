@@ -32,7 +32,6 @@ export const productsPage = {
   weightUnit: 'غم',
   sizeChartHeaders: { size: 'المقاس', length: 'الطول', chest: 'عرض الصدر', sleeve: 'طول الكم' },
   colorSwitchAria: 'اللون {colour}',
-  galleryAria: 'صورة {n} من {total}',
 };
 
 export const howItWorksPage = {

@@ -1,12 +1,11 @@
 import type { ComponentPropsWithoutRef } from 'react';
 import { cn } from '@/lib/cn';
+import { formatNumber } from '@/components/shared/format-number';
 import { SarSymbol } from '@/components/shared/sar-symbol';
 
-/** Integers render without decimals; anything else with exactly two (BRD 3.11). */
+/** Integers render without decimals, anything else with exactly two, grouped (BRD 3.11). */
 export function formatSarDigits(value: number): string {
-  if (!Number.isFinite(value)) return '0';
-  const rounded = Math.round(value * 100) / 100;
-  return Number.isInteger(rounded) ? rounded.toFixed(0) : rounded.toFixed(2);
+  return formatNumber(value);
 }
 
 interface SarAmountProps extends ComponentPropsWithoutRef<'bdi'> {

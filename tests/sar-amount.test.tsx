@@ -8,7 +8,9 @@ describe('formatSarDigits', () => {
     expect(formatSarDigits(47.5)).toBe('47.50');
     expect(formatSarDigits(49.999)).toBe('50');
     expect(formatSarDigits(0)).toBe('0');
-    expect(formatSarDigits(13200)).toBe('13200');
+    expect(formatSarDigits(13200)).toBe('13,200');
+    expect(formatSarDigits(1234567.5)).toBe('1,234,567.50');
+    expect(formatSarDigits(999)).toBe('999');
   });
   it('never renders NaN or Infinity in a money position', () => {
     expect(formatSarDigits(Number.NaN)).toBe('0');
