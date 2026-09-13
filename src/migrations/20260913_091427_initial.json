@@ -242,6 +242,13 @@
           "primaryKey": false,
           "notNull": false
         },
+        "prefix": {
+          "name": "prefix",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'media'"
+        },
         "updated_at": {
           "name": "updated_at",
           "type": "timestamp(3) with time zone",
@@ -3688,6 +3695,6 @@
     "tables": {},
     "columns": {}
   },
-  "id": "46b37ade-f925-4eb4-b534-84651fe744b7",
+  "id": "3ec58f44-a7a2-4f1d-a6d7-adc03d3604dc",
   "prevId": "00000000-0000-0000-0000-000000000000"
 }

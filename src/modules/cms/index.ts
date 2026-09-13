@@ -77,6 +77,9 @@ export default buildConfig({
   plugins: [
     s3Storage({
       enabled: Boolean(env.s3),
+      // The `prefix` column exists whether or not S3 is on, so one migration fits both
+      // storages (local disk in dev and CI, S3 in production).
+      alwaysInsertFields: true,
       collections: {
         media: {
           prefix: 'media',
