@@ -1,20 +1,20 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { type DragEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/shared/button';
-import { ColorPicker } from '@/components/shared/color-picker';
 import { SarAmount } from '@/components/shared/sar-amount';
 import { useBottomDock } from '@/components/shared/use-bottom-dock';
 import type { Product } from '@/content/schema';
 import { cn } from '@/lib/cn';
 import { track } from '@/modules/core';
 import { DesignCanvas } from '@/modules/designer/canvas/design-canvas';
-import { DesignDropzone } from '@/modules/designer/controls/design-dropzone';
 import { PricingControls } from '@/modules/designer/controls/pricing-controls';
+import { PrintAreaOverlay } from '@/modules/designer/controls/print-area-overlay';
 import { ResultsCard } from '@/modules/designer/controls/results-card';
 import { printAreaRect } from '@/modules/designer/print-area';
 import { monthlyProfit, perPieceProfit } from '@/modules/designer/profit';
 import { ProductPicker } from '@/modules/designer/controls/product-picker';
+import { acceptFile } from '@/modules/designer/upload';
 import { useDesignerState } from '@/modules/designer/use-designer-state';
 import type { DesignerCopy } from '@/modules/designer/types';
 
@@ -51,6 +51,9 @@ export function DesignerIsland({
     }
   });
   const [stickyVisible, setStickyVisible] = useState(false);
+  const [chrome, setChrome] = useState(false);
+  const [hovered, setHovered] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
 
   const color =
     state.product.colors.find((c) => c.slug === state.colorSlug) ?? state.product.colors[0];
@@ -124,30 +127,94 @@ export function DesignerIsland({
     }
   }
 
+  async function onFile(file: File | undefined) {
+    if (!file) return;
+    const design = await acceptFile(file);
+    if (!design) {
+      dispatch({ type: 'fileError', error: true });
+      return;
+    }
+    dispatch({ type: 'setDesign', design });
+    track('designer_upload', { type: file.type, bytes: file.size });
+  }
+
+  // Drag-and-drop anywhere on the mockup (BRD 6.4.3); the print area is the click target.
+  function onDrop(e: DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    setDragOver(false);
+    void onFile(e.dataTransfer.files[0]);
+  }
+
+  const onChromeChange = useCallback((visible: boolean) => setChrome(visible), []);
+
+  // An uploaded design is an object URL: revoke it whenever it is replaced or on unmount.
+  const design = state.design;
+  useEffect(
+    () => () => {
+      if (design?.kind === 'upload') URL.revokeObjectURL(design.url);
+    },
+    [design],
+  );
+
   return (
     <div
       ref={sectionHost}
-      className="flex flex-col gap-8 lg:flex-row lg:gap-10"
+      className="flex flex-col gap-6 lg:flex-row lg:gap-8"
       data-designer-island=""
     >
-      {/* Canvas: end column on desktop (60 %), first on mobile. */}
-      <div className="order-first lg:order-last lg:w-[60%]">
+      {/* Canvas: end column on desktop, first on mobile. */}
+      <div className="order-first lg:order-last lg:w-[54%]">
+        {/* oxlint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- drop target; the file input in the overlay is the keyboard path */}
         <div
           ref={canvasHost}
-          className="relative mx-auto aspect-square w-full max-w-[640px] overflow-hidden rounded-lg bg-ground"
-          aria-label={copy.canvasLabel}
-          role="img"
+          className={cn(
+            'relative mx-auto aspect-square w-full max-w-[600px] overflow-hidden rounded-lg bg-ground transition-shadow duration-(--duration-fast)',
+            dragOver && 'ring-2 ring-primary/50',
+          )}
+          onDragOver={(e) => {
+            e.preventDefault();
+            setDragOver(true);
+          }}
+          onDragLeave={() => setDragOver(false)}
+          onDrop={onDrop}
+          // Only a mouse "hovers": a finger leaving the screen must not hide the handles.
+          onPointerEnter={(e) => e.pointerType === 'mouse' && setHovered(true)}
+          onPointerLeave={(e) => e.pointerType === 'mouse' && setHovered(false)}
+          data-design-dropzone=""
+          data-chrome={chrome ? 'true' : 'false'}
         >
           {size > 0 && color && (
-            <DesignCanvas
-              size={size}
-              mockupSrc={color.images.front}
-              design={state.design}
-              area={area}
-              onInteract={dismissHint}
-            />
+            <>
+              {/* The picture alone is the image; the upload input and «×» stay exposed. */}
+              <div role="img" aria-label={copy.canvasLabel}>
+                <DesignCanvas
+                  size={size}
+                  mockupSrc={color.images.front}
+                  design={state.design}
+                  area={area}
+                  hovered={hovered}
+                  onInteract={dismissHint}
+                  onChromeChange={onChromeChange}
+                />
+              </div>
+              <PrintAreaOverlay
+                area={area}
+                hasDesign={state.design !== null}
+                chrome={chrome}
+                fileError={state.fileError}
+                onFile={(file) => void onFile(file)}
+                onRemove={() => dispatch({ type: 'removeDesign' })}
+                copy={{
+                  prompt: copy.uploadPrompt,
+                  helper: copy.uploadHelper,
+                  inputAria: copy.dropzoneAria,
+                  removeAria: copy.removeAria,
+                  fileError: copy.fileError,
+                }}
+              />
+            </>
           )}
-          {hint && (
+          {hint && state.design && (
             <p
               className="pointer-events-none absolute inset-x-4 bottom-4 rounded-base bg-navy/85 px-4 py-2 text-center text-caption text-white backdrop-blur-sm"
               data-canvas-hint=""
@@ -156,10 +223,23 @@ export function DesignerIsland({
             </p>
           )}
         </div>
+        <p className="mt-3 text-center text-small text-text-muted">
+          <button
+            type="button"
+            onClick={() => {
+              dispatch({ type: 'useSample' });
+              track('designer_sample', {});
+            }}
+            className="font-medium text-primary underline-offset-4 hover:underline"
+            data-design-sample=""
+          >
+            {copy.sample}
+          </button>
+        </p>
       </div>
 
-      {/* Controls: start column (40 %). */}
-      <div className="flex flex-col gap-8 lg:w-[40%]">
+      {/* Controls: start column. */}
+      <div className="flex flex-col gap-6 lg:w-[46%]">
         <ProductPicker
           products={products}
           value={state.product.slug}
@@ -169,33 +249,6 @@ export function DesignerIsland({
           }}
           label={copy.groups.product}
           groupLabel={copy.productGroupAria}
-        />
-        <ColorPicker
-          name="designer-color"
-          colors={state.product.colors}
-          value={state.colorSlug}
-          onChange={(slug) => dispatch({ type: 'selectColor', colorSlug: slug })}
-          label={copy.groups.color}
-          optionLabel={copy.colorOptionAria}
-        />
-        <DesignDropzone
-          design={state.design}
-          fileError={state.fileError}
-          onDesign={(design) => dispatch({ type: 'setDesign', design })}
-          onError={(error) => dispatch({ type: 'fileError', error })}
-          onReset={() => dispatch({ type: 'resetDesign' })}
-          onSample={() => dispatch({ type: 'resetDesign' })}
-          copy={{
-            label: copy.groups.design,
-            upload: copy.upload,
-            helper: copy.uploadHelper,
-            sample: copy.sample,
-            replace: copy.replace,
-            reset: copy.reset,
-            fileError: copy.fileError,
-            dropzoneLabel: copy.dropzoneAria,
-            thumbnailAlt: copy.thumbnailAria,
-          }}
         />
         <PricingControls
           baseCost={state.product.baseCost}

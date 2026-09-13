@@ -8,6 +8,7 @@ import { SectionHeader } from '@/components/shared/section-header';
 import { productsPage } from '@/content/pages';
 import type { Product } from '@/content/schema';
 import { getProducts, getSiteSettings } from '@/lib/cms';
+import { cn } from '@/lib/cn';
 import { env, siteBase } from '@/lib/env';
 import { registerUrl } from '@/lib/utm';
 import messages from '@/messages/ar.json';
@@ -40,8 +41,8 @@ export async function ProductPage({ product }: { product: Product }) {
   const registerHref = registerUrl(env.appUrl, { campaign: 'product', content: product.slug });
   const profit = product.suggestedPrice - product.baseCost;
   const hasSizeChart = product.sizes.some((s) => s.measurements);
-  // surface (intro) → ground (description) → [surface (sizes)] → related → ribbon
-  const relatedTone: SectionTone = hasSizeChart ? 'ground' : 'surface';
+  // surface (intro) → ground (description + sizes) → surface (related) → ribbon
+  const relatedTone: SectionTone = 'surface';
   const crumbs = [
     { name: copy.breadcrumbHome, href: '/' },
     { name: copy.title, href: '/products' },
@@ -72,14 +73,11 @@ export async function ProductPage({ product }: { product: Product }) {
                 colors={product.colors}
                 copy={{
                   label: messages.gallery.label,
-                  thumbnails: messages.gallery.thumbnails,
-                  previous: messages.gallery.previous,
-                  next: messages.gallery.next,
+                  flip: messages.gallery.flip,
                   front: messages.gallery.front,
                   back: messages.gallery.back,
                   colorLabel: copy.specLabels.colors,
                   colorOptionAria: copy.colorSwitchAria.replace('{colour}', '{color}'),
-                  counter: copy.galleryAria,
                 }}
               />
             </div>
@@ -125,29 +123,46 @@ export async function ProductPage({ product }: { product: Product }) {
         </Container>
       </Section>
 
-      <Section tone="ground" aria-labelledby="product-description-title">
-        <Container className="grid gap-12 lg:grid-cols-2 lg:gap-16">
-          <div className="flex flex-col gap-6">
-            <h2 id="product-description-title" className="text-h2 text-text">
-              {copy.sections.description}
-            </h2>
-            <p className="lead measure text-text">{product.description}</p>
+      {/* Description + specs beside the size chart (Dhia, 2026-09-13): one section, not two. */}
+      <Section
+        tone="ground"
+        className="py-12 md:py-16"
+        aria-labelledby="product-description-title"
+        data-product-details=""
+      >
+        <Container
+          className={cn(
+            'grid gap-10',
+            hasSizeChart
+              ? 'md:grid-cols-[3fr_2fr] md:gap-12 lg:gap-16'
+              : 'lg:grid-cols-2 lg:gap-16',
+          )}
+        >
+          <div className="flex flex-col gap-8">
+            <div className="flex flex-col gap-4">
+              <h2 id="product-description-title" className="text-h3 text-text">
+                {copy.sections.description}
+              </h2>
+              <p className="text-body measure text-text">{product.description}</p>
+            </div>
+            <div className="flex flex-col gap-4">
+              <h2 className="text-h3 text-text">{copy.sections.specs}</h2>
+              <SpecList product={product} />
+            </div>
           </div>
-          <div className="flex flex-col gap-6">
-            <h2 className="text-h2 text-text">{copy.sections.specs}</h2>
-            <SpecList product={product} />
-          </div>
+          {hasSizeChart && (
+            <div className="flex flex-col gap-4">
+              <h2 id="product-sizes-title" className="text-h3 text-text">
+                {copy.sections.sizeChart}
+              </h2>
+              <SizeChart
+                product={product}
+                caption={`${copy.sections.sizeChart} — ${product.name}`}
+              />
+            </div>
+          )}
         </Container>
       </Section>
-
-      {hasSizeChart && (
-        <Section tone="surface" aria-labelledby="product-sizes-title">
-          <Container className="flex flex-col gap-8">
-            <SectionHeader id="product-sizes-title" title={copy.sections.sizeChart} />
-            <SizeChart product={product} caption={`${copy.sections.sizeChart} — ${product.name}`} />
-          </Container>
-        </Section>
-      )}
 
       <Section tone={relatedTone} aria-labelledby="product-related-title">
         <Container className="flex flex-col gap-10">

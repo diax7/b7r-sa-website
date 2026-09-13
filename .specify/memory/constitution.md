@@ -60,9 +60,10 @@ ITF Rayat Round self-hosted (five weights, roles fixed in §3.3). Colour tokens 
 properties in Tailwind 4 `@theme`; no raw hex in components; no hue gradients, glow, glass,
 neon, purple/pink/teal/orange, or decorative blobs. One radius family (13 px; 20 px large
 media; pill; 6 px inner). Shadows near-invisible. Motion durations and easings are tokens;
-scroll reveal once, no parallax, no scroll-jacking; the wave animates only in
-`WaveDivider`. Every animation has a reduced or static variant under
-`prefers-reduced-motion`. Light mode only.
+scroll reveal once, no parallax, no scroll-jacking; the only continuous animations are the
+wave in `WaveDivider` and the muted marketing loop in `VideoSection` (decorative, lazy,
+poster under reduced motion and Save-Data — ADR-037). Every animation has a reduced or
+static variant under `prefers-reduced-motion`. Light mode only.
 
 ### VI. No fabricated content
 No fake reviews, numbers, promises, urgency, or "coming soon" labels. Testimonial placeholders
@@ -138,4 +139,4 @@ for wording). Every plan's Constitution Check and every CTO review verifies comp
 principles I–X; a breach of I, II, III, IV, VI, or X is a BLOCKER. Complexity beyond what
 the current phase needs must be justified in the plan's Complexity Tracking table or removed.
 
-**Version**: 1.0.1 | **Ratified**: 2026-09-12 | **Last Amended**: 2026-09-13 (BRD §7.3, §7.6, §8.10 amended in Phase 1c; principles unchanged)
+**Version**: 1.1.0 | **Ratified**: 2026-09-12 | **Last Amended**: 2026-09-13 (principle V names the muted marketing loop next to the wave, ADR-037; BRD §3.7, §3.11, §6.4.3, §6.4.5, §6.5, §6.6, §6.15 amended in the design edits after 2a)

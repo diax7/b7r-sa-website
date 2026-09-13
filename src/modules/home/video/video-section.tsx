@@ -1,54 +1,47 @@
 import Image from 'next/image';
-import { Play } from 'lucide-react';
+import { Button } from '@/components/shared/button';
 import { Container } from '@/components/shared/container';
-import { Icon } from '@/components/shared/icon';
 import { Section } from '@/components/shared/section';
-import { SectionHeader } from '@/components/shared/section-header';
 import { home } from '@/content/home';
-import { VideoPlayerLoader } from '@/modules/home/video/video-player-loader';
+import { env } from '@/lib/env';
+import { registerUrl } from '@/lib/utm';
+import { VideoLoopLoader } from '@/modules/home/video/video-loop-loader';
 
 export const VIDEO_SRC = '/video/printer-marketing.mp4';
 export const VIDEO_POSTER = '/video/printer-marketing-poster.jpg';
 const POSTER_ALT = 'طابعة رقمية تطبع تصميماً على تيشيرت أسود';
 
 /**
- * Video section (BRD 6.4.5): centred header, 16:9 frame with a poster and a 72 px play
- * button; the `<video>` mounts only after the visitor presses play (no autoplay, no loop).
+ * Video section (BRD 6.4.5, amended 2026-09-13, ADR-037): a full-width frame with the
+ * server-rendered poster, the section copy and the register CTA over a fixed scrim (AA on
+ * every frame), and a muted looping video mounted near the viewport by a small island. No
+ * controls: the video is decorative, the text carries the meaning.
  */
 export function VideoSection() {
-  const { video } = home;
-  const poster = (
-    <div className="relative aspect-video w-full overflow-hidden rounded-lg border border-border bg-ground">
-      <Image
-        src={VIDEO_POSTER}
-        alt={POSTER_ALT}
-        fill
-        sizes="(min-width: 1024px) 960px, 100vw"
-        className="object-cover"
-      />
-      <span
-        aria-hidden="true"
-        className="absolute inset-0 m-auto grid size-[72px] place-items-center rounded-pill bg-white text-primary shadow-popover"
-      >
-        <Icon icon={Play} size={28} strokeWidth={2} className="ms-1 fill-current" />
-      </span>
-    </div>
-  );
-
+  const { video, hero } = home;
   return (
-    <Section id="video" tone="ground" aria-labelledby="video-title">
-      <Container className="flex flex-col items-center gap-10">
-        <SectionHeader id="video-title" title={video.title} lead={video.lead} align="center" />
-        <div className="w-full max-w-[960px]">
-          <VideoPlayerLoader
-            src={VIDEO_SRC}
-            poster={VIDEO_POSTER}
-            posterAlt={POSTER_ALT}
-            playLabel={video.playAria}
-            fallback={poster}
-          />
-        </div>
-      </Container>
+    <Section id="video" tone="ground" className="py-0 md:py-0" aria-labelledby="video-title">
+      <div className="relative isolate min-h-[420px] overflow-hidden md:min-h-[520px]">
+        <Image src={VIDEO_POSTER} alt={POSTER_ALT} fill sizes="100vw" className="object-cover" />
+        <VideoLoopLoader src={VIDEO_SRC} poster={VIDEO_POSTER} />
+        {/* Scrim: the copy stays readable whatever the frame shows. */}
+        <div aria-hidden="true" className="absolute inset-0 bg-navy/60" />
+        <Container className="relative flex min-h-[420px] flex-col items-center justify-center gap-6 py-16 text-center text-white md:min-h-[520px] md:py-24">
+          <h2 id="video-title" className="text-h1 text-white">
+            {video.title}
+          </h2>
+          <p className="lead max-w-[36rem] text-white/85">{video.lead}</p>
+          <Button asChild size="lg">
+            <a
+              href={registerUrl(env.appUrl, { campaign: 'video' })}
+              data-track="cta_click"
+              data-location="video"
+            >
+              {hero.primaryCta}
+            </a>
+          </Button>
+        </Container>
+      </div>
     </Section>
   );
 }

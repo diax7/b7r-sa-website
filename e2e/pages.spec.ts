@@ -1,10 +1,31 @@
-import { expect, test } from '@playwright/test';
+import { expect, type Page, test } from '@playwright/test';
+
+/** The progress line's extent along the track's axis (height on phones, width from lg). */
+async function progressExtent(page: Page) {
+  return page.locator('[data-flow] .flow-track').evaluate((track) => {
+    const line = track.querySelector('.flow-progress')!.getBoundingClientRect();
+    const box = track.getBoundingClientRect();
+    const inline = box.width > box.height;
+    return { line: inline ? line.width : line.height, track: inline ? box.width : box.height };
+  });
+}
+
+/** Scrolls so the track's start edge sits 40 px above the bottom of the viewport. */
+async function scrollToTrackEntry(page: Page) {
+  await page.locator('[data-flow] .flow-track').evaluate((el) => {
+    window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - window.innerHeight + 40);
+  });
+  await page.waitForTimeout(300);
+}
 
 test.describe('how it works (BRD 6.7)', () => {
   test('five steps, the profit equation and the mini FAQ', async ({ page }) => {
     await page.goto('/how-it-works');
     await expect(page.locator('ol li h2')).toHaveCount(5);
     await expect(page.locator('ol li h2').first()).toHaveText('أنشئ حسابك مجاناً');
+    // The connected path: one track with a progress line, five numbered icons.
+    await expect(page.locator('[data-flow] .flow-track .flow-progress')).toHaveCount(1);
+    await expect(page.locator('[data-flow] .flow-number')).toHaveText(['1', '2', '3', '4', '5']);
     const equation = page.locator('[data-equation]');
     await expect(equation).toContainText('سعر البيع');
     await expect(equation).toContainText('ربحك');
@@ -13,6 +34,38 @@ test.describe('how it works (BRD 6.7)', () => {
     await expect(digits).toHaveText(['89', '45', '44']);
     await expect(page.getByRole('link', { name: 'كل الأسئلة' })).toHaveAttribute('href', '/faq');
     await expect(page.locator('[aria-labelledby="hiw-faq-title"]')).toContainText('كيف أربح؟');
+  });
+
+  test('the progress line fills as the track scrolls through the viewport', async ({
+    page,
+    browserName,
+  }) => {
+    // Playwright's Linux WebKit claims support but evaluates the timeline once at load and
+    // not on a programmatic scroll (the line stayed at 12 % on the runner); Chromium is the
+    // engine that proves the progress moves. The reduced-motion test below runs everywhere.
+    test.skip(browserName === 'webkit', 'headless WebKit does not advance scroll timelines');
+    await page.goto('/how-it-works');
+    const supported = await page.evaluate(() => CSS.supports('animation-timeline: view()'));
+    test.skip(!supported, 'no scroll-driven animations in this browser: the line is simply full');
+    await scrollToTrackEntry(page);
+    const entering = await progressExtent(page);
+    await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+    await page.waitForTimeout(300);
+    const passed = await progressExtent(page);
+    expect(entering.line).toBeLessThan(passed.line);
+    expect(Math.abs(passed.line - passed.track)).toBeLessThanOrEqual(1);
+  });
+
+  test('the progress line is full and static under reduced motion', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.goto('/how-it-works');
+    await scrollToTrackEntry(page);
+    const entering = await progressExtent(page);
+    expect(Math.abs(entering.line - entering.track)).toBeLessThanOrEqual(1);
+    const animation = await page
+      .locator('[data-flow] .flow-progress')
+      .evaluate((el) => getComputedStyle(el).animationName);
+    expect(animation).toBe('none');
   });
 });
 
@@ -25,8 +78,20 @@ test.describe('about (BRD 6.8)', () => {
     }
     await expect(page.locator('img[alt="Misk Foundation"]')).toBeAttached();
     await expect(page.getByText('نطبع ونشحن من جدة إلى كل مدن المملكة.')).toBeVisible();
-    // Decorative banner only: alt="" and never a product link.
+    // Decorative photo only: alt="" and never a product link.
     await expect(page.locator('img[src*="lifestyle"]')).toHaveAttribute('alt', '');
+    // Facts band: the welcome credit and the three why-us pairs (title over text), no new copy.
+    const facts = page.locator('section.bg-navy');
+    await expect(facts).toHaveAttribute('aria-label', 'لماذا يختارنا التجار؟');
+    await expect(facts.locator('[data-sar-digits]')).toHaveText('30');
+    for (const [title, text] of [
+      ['بدون مخاطرة', 'صفر رأس مال، صفر مخزون، بدون حد أدنى للطلبات.'],
+      ['كل شيء تلقائي', 'الطلبات تتزامن من متجرك وتُنفّذ بدون تدخل منك.'],
+      ['جودة محلية وسريعة', 'طباعة في جدة وتوصيل لكل المملكة خلال 5 أيام.'],
+    ]) {
+      await expect(facts.getByText(title!, { exact: true })).toBeVisible();
+      await expect(facts.getByText(text!, { exact: true })).toBeVisible();
+    }
   });
 });
 

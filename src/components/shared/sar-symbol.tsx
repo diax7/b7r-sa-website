@@ -3,20 +3,20 @@ import { cn } from '@/lib/cn';
 
 /**
  * The official Saudi Central Bank riyal symbol as an inline SVG (BRD 0.4.5, 3.11).
- * `fill="currentColor"` so it takes the ambient text colour; `height="1em"` so it scales with
- * the type size. Never a Unicode character, an image, or a font glyph.
+ * `fill="currentColor"` so it takes the ambient text colour; `height="0.85em"` so it scales with
+ * the type size while sitting a touch smaller than the digits (Dhia, 2026-09-13). Never a Unicode character, an image, or a font glyph.
  */
 export function SarSymbol({ className, ...rest }: SVGProps<SVGSVGElement>) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 1124.14 1256.39"
-      height="1em"
-      width="0.895em"
+      height="0.85em"
+      width="0.76em"
       fill="currentColor"
       role="img"
       aria-label="ريال سعودي"
-      className={cn('inline-block shrink-0 align-[-0.1em]', className)}
+      className={cn('inline-block shrink-0 align-[-0.05em]', className)}
       data-sar-symbol=""
       {...rest}
     >

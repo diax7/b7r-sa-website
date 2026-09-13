@@ -3,18 +3,24 @@ import { expect, test } from '@playwright/test';
 const PREFILLED = 'مرحباً، أرغب بمعرفة المزيد عن بحر برنت.';
 
 test.describe('WhatsApp widget (BRD 6.15)', () => {
-  test('sits at the physical bottom-right, opens a panel with the prefilled wa.me link, closes on Escape', async ({
+  test('sits at the bottom-left, opens a panel above it without moving, closes on Escape', async ({
     page,
   }) => {
     await page.goto('/');
     const button = page.getByTestId('whatsapp-button');
     await expect(button).toBeVisible({ timeout: 5000 });
     const box = (await button.boundingBox())!;
-    const vw = page.viewportSize()!.width;
-    expect(vw - (box.x + box.width)).toBeLessThan(40); // physical right edge, even in RTL
+    expect(box.x).toBeLessThan(40); // inline end = the left edge in RTL (BRD 6.15, 2026-09-13)
     await button.click();
     const panel = page.getByTestId('whatsapp-panel');
     await expect(panel).toBeVisible();
+    // The panel anchors above the button; the button itself stays put (its centre is
+    // compared because a tap leaves the hover scale on touch browsers).
+    const after = (await button.boundingBox())!;
+    expect(Math.abs(after.x + after.width / 2 - (box.x + box.width / 2))).toBeLessThan(1);
+    expect(Math.abs(after.y + after.height / 2 - (box.y + box.height / 2))).toBeLessThan(1);
+    const panelBox = (await panel.boundingBox())!;
+    expect(panelBox.y + panelBox.height).toBeLessThanOrEqual(box.y + 1);
     await expect(panel).toContainText('فريق الدعم');
     await expect(panel).toContainText('أهلاً 👋 كيف نقدر نساعدك؟');
     const link = panel.getByRole('link', { name: /ابدأ المحادثة/ });

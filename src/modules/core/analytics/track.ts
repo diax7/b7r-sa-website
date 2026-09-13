@@ -13,7 +13,6 @@ export type TrackEvent =
   | { name: 'designer_upload'; props: { type: string; bytes: number } }
   | { name: 'designer_sample'; props: Record<string, never> }
   | { name: 'calculator_change'; props: { product: string; sell: number; daily: number } }
-  | { name: 'video_play'; props: Record<string, never> }
   | { name: 'product_view'; props: { slug: string } }
   | { name: 'faq_open'; props: { question: string } }
   | { name: 'newsletter_submit'; props: Record<string, never> }

@@ -25,11 +25,10 @@ export async function DesignerSection() {
 
   const copy: DesignerCopy = {
     groups: designer.groups,
-    upload: designer.upload,
+    uploadPrompt: designer.uploadPrompt,
     uploadHelper: designer.uploadHelper,
     sample: designer.sample,
-    replace: designer.replace,
-    reset: designer.reset,
+    removeAria: designer.removeAria,
     canvasHint: designer.canvasHint,
     baseCostLabel: designer.baseCostLabel,
     sellPriceLabel: designer.sellPriceLabel,
@@ -43,12 +42,10 @@ export async function DesignerSection() {
     fileError: designer.fileError,
     canvasLabel: messages.designer.canvasLabel,
     productGroupAria: messages.designer.productGroupLabel,
-    colorOptionAria: messages.designer.colorOption,
     sellInputAria: messages.designer.sellPriceInput,
     sellSliderAria: messages.designer.sellPriceSlider,
     dailyDecrementAria: messages.designer.dailySalesDecrement,
     dailyIncrementAria: messages.designer.dailySalesIncrement,
-    thumbnailAria: messages.designer.designThumbnail,
     dropzoneAria: messages.designer.dropzoneLabel,
   };
 

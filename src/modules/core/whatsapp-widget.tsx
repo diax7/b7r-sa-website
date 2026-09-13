@@ -11,14 +11,15 @@ import { whatsappUrl } from '@/lib/utm';
 
 const PULSE_KEY = 'b7r_wa_pulse';
 
-// The dock lifts above the designer's sticky results bar on phones via --bottom-dock.
+// The dock lifts above the designer's sticky results bar on phones via --bottom-dock. The
+// panel is positioned inside the dock, above the button, so opening it never moves the button.
 const dockClass =
-  'fixed bottom-[calc(24px+var(--bottom-dock,0px))] right-6 z-40 flex flex-col items-end gap-3 transition-[bottom] duration-(--duration-base)'; // rtl-allow: BRD 6.15 fixes the widget at the physical bottom-right even in RTL
+  'fixed bottom-[calc(24px+var(--bottom-dock,0px))] end-6 z-40 transition-[bottom] duration-(--duration-base)';
 
 /**
- * Floating WhatsApp entry point (BRD 6.15). Mounted 1.5 s after load by the layout; a dot
- * pulses once 6 s after load, once per session. The button sits at the PHYSICAL bottom-right
- * in RTL too (Dhia's explicit choice) — the one sanctioned physical placement.
+ * Floating WhatsApp entry point (BRD 6.15, amended 2026-09-13: bottom-left — the inline end
+ * of this RTL site, so a logical class does it). Mounted 1.5 s after load by the layout; a
+ * dot pulses once 6 s after load, once per session.
  */
 export function WhatsAppWidget({ number }: { number: string }) {
   const [open, setOpen] = useState(false);
@@ -77,7 +78,7 @@ export function WhatsAppWidget({ number }: { number: string }) {
           ref={panelRef}
           role="dialog"
           aria-labelledby={titleId}
-          className="w-[320px] max-w-[calc(100vw-32px)] overflow-hidden rounded-base bg-surface shadow-popover animate-rise-in motion-reduce:animate-none"
+          className="absolute bottom-full end-0 mb-3 w-[320px] max-w-[calc(100vw-32px)] overflow-hidden rounded-base bg-surface shadow-popover animate-rise-in motion-reduce:animate-none"
           data-testid="whatsapp-panel"
         >
           <div className="flex items-center gap-3 bg-primary px-4 py-3 text-white">

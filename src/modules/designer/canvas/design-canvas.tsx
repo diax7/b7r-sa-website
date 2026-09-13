@@ -27,10 +27,15 @@ if (typeof window !== 'undefined') {
 interface DesignCanvasProps {
   size: number;
   mockupSrc: string;
-  design: Design;
+  /** `null` while the print area is empty (the overlay shows the upload prompt). */
+  design: Design | null;
   area: Box;
+  /** A mouse pointer is inside the stage (touch never sets it; the host decides). */
+  hovered: boolean;
   /** Fires on the first drag so the one-time canvas hint can dismiss. */
   onInteract: () => void;
+  /** Edit chrome (outline + handles) is showing; the overlay mirrors it for the «×». */
+  onChromeChange: (visible: boolean) => void;
 }
 
 interface Point {
@@ -55,15 +60,27 @@ function tokens() {
  * anchors stay reachable outside the area) and the dashed print-area outline. Drag, corner
  * resize, rotation with snaps, wheel and pinch scaling, double-tap recentre, and a snap-back
  * when less than 25 % of the design remains inside the area.
+ *
+ * Edit chrome shows while a mouse pointer is inside the stage or the design is selected
+ * (a tap or click on it; cleared by a tap or click elsewhere on the stage), so the mockup
+ * reads as a clean preview otherwise and touch users keep their selection (ADR-036).
  */
-export function DesignCanvas({ size, mockupSrc, design, area, onInteract }: DesignCanvasProps) {
+export function DesignCanvas({
+  size,
+  mockupSrc,
+  design,
+  area,
+  hovered,
+  onInteract,
+  onChromeChange,
+}: DesignCanvasProps) {
   // The mockup goes through the optimizer (same origin, ADR-029): no CORS taint, CSP stays 'self'.
   const mockup = useImage(optimizedSrc(mockupSrc, MOCKUP_WIDTH));
-  const designImg = useImage(design.url);
+  const designImg = useImage(design?.url ?? null);
   const [prevMockup, setPrevMockup] = useState<HTMLImageElement | null>(null);
   // Client-only component: tokens are read from the live stylesheet, never hard-coded.
   const [colors] = useState(tokens);
-  const [hover, setHover] = useState(false);
+  const [selected, setSelected] = useState(false);
   const [dragging, setDragging] = useState(false);
 
   const designRef = useRef<Konva.Image>(null);
@@ -75,8 +92,8 @@ export function DesignCanvas({ size, mockupSrc, design, area, onInteract }: Desi
   const pinch = useRef<{ dist: number } | null>(null);
 
   const initialBox = useMemo(
-    () => initialDesignBox(area, design.width, design.height),
-    [area, design.width, design.height],
+    () => initialDesignBox(area, design?.width ?? 1, design?.height ?? 1),
+    [area, design?.width, design?.height],
   );
   // Re-placement key: the box, plus the mockup so a colour swap re-centres too (BRD 6.4.3).
   const placement = useMemo(
@@ -191,14 +208,20 @@ export function DesignCanvas({ size, mockupSrc, design, area, onInteract }: Desi
     pinch.current = null;
   }
 
-  const outlineVisible = hover || dragging;
+  const chrome = Boolean(designImg) && (hovered || selected || dragging);
+  useEffect(() => onChromeChange(chrome), [chrome, onChromeChange]);
+
+  // A tap or click anywhere but the design clears the selection (touch keeps it otherwise).
+  function onStagePointer(e: KonvaEventObject<MouseEvent | TouchEvent>) {
+    setSelected(e.target === designRef.current);
+  }
 
   return (
     <Stage
       width={size}
       height={size}
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
+      onMouseDown={onStagePointer}
+      onTouchStart={onStagePointer}
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
     >
@@ -250,11 +273,12 @@ export function DesignCanvas({ size, mockupSrc, design, area, onInteract }: Desi
           stroke={colors.accent}
           strokeWidth={1.5}
           dash={[6, 4]}
-          opacity={outlineVisible ? 0.6 : 0}
+          opacity={chrome ? 0.6 : 0}
           listening={false}
         />
         <Transformer
           ref={trRef}
+          visible={chrome}
           enabledAnchors={['top-left', 'top-right', 'bottom-left', 'bottom-right']}
           keepRatio
           flipEnabled={false}

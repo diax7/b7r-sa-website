@@ -9,12 +9,17 @@ const hoodie = getProduct('hoodie')!;
 const tote = getProduct('tote-bag')!;
 
 describe('designer state', () => {
-  it('starts on the essential tee in white with the sample design and suggested price', () => {
+  it('starts on the essential tee in white, an empty print area and the suggested price', () => {
     const s = initialState(tee);
     expect(s.colorSlug).toBe('white');
-    expect(s.design.url).toBe(SAMPLE_DESIGN.url);
+    expect(s.design).toBeNull();
     expect(s.sellPrice).toBe(89);
     expect(s.dailySales).toBe(10);
+  });
+
+  it('shows every product in white, or its only colour (the tote)', () => {
+    expect(initialState(hoodie).colorSlug).toBe('white');
+    expect(initialState(tote).colorSlug).toBe(tote.colors[0]?.slug);
   });
 
   it('resets colour and sell price when the product changes (no spurious below-cost warning)', () => {
@@ -48,16 +53,19 @@ describe('designer state', () => {
     expect(s.commit).toBe(c0 + 2);
   });
 
-  it('keeps the previous design on a file error and restores the sample on reset', () => {
+  it('keeps the previous design on a file error; the sample and remove actions replace it', () => {
     let s = reducer(initialState(tee), {
       type: 'setDesign',
       design: { url: 'blob:x', kind: 'upload', width: 10, height: 10 },
     });
     s = reducer(s, { type: 'fileError', error: true });
-    expect(s.design.url).toBe('blob:x');
+    expect(s.design?.url).toBe('blob:x');
     expect(s.fileError).toBe(true);
-    s = reducer(s, { type: 'resetDesign' });
-    expect(s.design.kind).toBe('sample');
+    s = reducer(s, { type: 'useSample' });
+    expect(s.design?.kind).toBe('sample');
+    expect(s.design?.url).toBe(SAMPLE_DESIGN.url);
     expect(s.fileError).toBe(false);
+    s = reducer(s, { type: 'removeDesign' });
+    expect(s.design).toBeNull();
   });
 });
