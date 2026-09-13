@@ -5,7 +5,7 @@ import { RESERVED_PAGE_SLUGS } from '@/content/schema';
  * the metadata routes and the asset folders. Anything else at the top level is a `pages`
  * slug candidate, and the proxy decides between the page and the global 404. The matcher in
  * `src/proxy.ts` repeats this list as a literal (Next reads `config` statically);
- * `tests/site-routes.test.ts` keeps the two — and the `(site)` folders — identical.
+ * `tests/site-routes.test.ts` keeps the two, and the `(site)` folders, identical.
  */
 export const CODE_TOP_LEVEL = [
   ...RESERVED_PAGE_SLUGS,

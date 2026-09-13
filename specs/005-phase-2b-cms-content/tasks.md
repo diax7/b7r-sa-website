@@ -1,9 +1,9 @@
-# Tasks: Phase 2b — Every page from the CMS
+# Tasks: Phase 2b: Every page from the CMS
 
 **Input**: `plan.md` (CTO review 2026-09-13, 92 GO). **Branch**: `phase/2b-cms-content`.
 Each phase ends with a CTO code review before the next starts.
 
-## Phase 1 — home, faqs, testimonials, integrations
+## Phase 1: home, faqs, testimonials, integrations
 - [x] T101 `hooks/revalidate.ts`: `safeRevalidatePath` (missing-store invariant → one info line),
   `isVisibleChange`, `revalidateRoutes`; unit tests with the store absent; every hook uses it.
 - [x] T102 Collections `faqs` (`homeOrder`, ≤ 5 guard in `beforeValidate`), `testimonials`
@@ -26,9 +26,9 @@ Each phase ends with a CTO code review before the next starts.
   «why us» off → section gone and tones alternate, sixth `showOnHome` → 400, editor and
   outsider seats.
 
-## Phase 2 — pages with blocks, SSR 404, content files gone
+## Phase 2: pages with blocks, SSR 404, content files gone
 - [x] T201 B0: `connection()` before `notFound()` throws DYNAMIC_SERVER_USAGE in an ISR render
-  (500) — closed; `src/app/api/pages/slugs/route.ts` (published slugs, ISR 60 s, revalidated by
+  (500), closed; `src/app/api/pages/slugs/route.ts` (published slugs, ISR 60 s, revalidated by
   the pages hook); proxy rewrite of unknown top-level slugs to `/__404/<slug>` (127.0.0.1
   self-fetch, 20 s SWR cache in `lib/page-slugs.ts`, fail open, `SLUG_SHAPE` gate);
   `tests/site-routes.test.ts` keeps `CODE_TOP_LEVEL`, the matcher literal and the `(site)`
@@ -51,7 +51,7 @@ Each phase ends with a CTO code review before the next starts.
   page delete/rename → 400; CMS pages ship no editor JS; the About document and a fresh
   rich-text block render RTL in the admin.
 
-## Phase 3 — redirects and the publish pipeline
+## Phase 3: redirects and the publish pipeline
 - [x] T301 `@payloadcms/plugin-redirects@3.89.0` (option B): `redirects` collection admin-only
   with Arabic labels, seeded from `lib/redirects.ts` (`renamed`; `/en` is a reserved segment
   and the glob stays in code), `redirectProblem` rules in `beforeValidate`, `resolveSlug`
@@ -67,7 +67,7 @@ Each phase ends with a CTO code review before the next starts.
   refusal; `payload` is a server-external package and guards throw `Refused` (ADR-033);
   `tests/indexnow-job.test.ts`.
 
-## Phase 4 — login Turnstile, e-mail, backups, polish, docs
+## Phase 4: login Turnstile, e-mail, backups, polish, docs
 - [x] T401 Login gate: `beforeLogin` widget (`modules/cms/auth/login-turnstile*.tsx`, the shared
   `useTurnstile` hook moved to `components/shared`), `/api/turnstile/login` → signed
   ten-minute gate cookie (`lib/login-gate.ts`), `users.hooks.beforeOperation` `gateLogin`

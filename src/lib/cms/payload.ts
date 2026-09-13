@@ -6,7 +6,7 @@ import { getPayload, type Payload } from 'payload';
 
 /**
  * The Payload Local API client (BRD 9.6): one instance per process, created lazily. `cron`
- * starts the jobs runner on that instance (ADR-033) — the first page render or health probe
+ * starts the jobs runner on that instance (ADR-033), the first page render or health probe
  * after a boot does it, not the first admin visit; Payload itself refuses during `next build`.
  */
 export function cms(): Promise<Payload> {

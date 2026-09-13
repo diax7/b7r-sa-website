@@ -1,4 +1,4 @@
-# Tasks: Phase 1c — Pages, SEO layer, cutover readiness
+# Tasks: Phase 1c: Pages, SEO layer, cutover readiness
 
 **Input**: `plan.md` (CTO review 2026-09-13). **Branch**: `phase/1c-pages-seo`.
 

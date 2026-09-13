@@ -1,8 +1,8 @@
-# B7R Marketing Site — Discovery Decisions Log
+# B7R Marketing Site: Discovery Decisions Log
 
 > Running log of decisions made during the interview sessions between Dhia and Claude. This is NOT the BRD. The BRD will be written only after Dhia's green light and will cite this log. Dates are absolute.
 
-## Round 1 — 2026-09-12 (answered by Dhia)
+## Round 1: 2026-09-12 (answered by Dhia)
 
 | # | Topic | Decision | Notes |
 |---|---|---|---|
@@ -48,7 +48,7 @@
 | Radius | 13 px (0.8rem) family, one radius per page | B7R app convention |
 | Mode | Light only for the marketing site | Dhia |
 
-## Round 2 — 2026-09-12 (answered by Dhia)
+## Round 2: 2026-09-12 (answered by Dhia)
 
 | # | Topic | Decision | Notes |
 |---|---|---|---|
@@ -69,7 +69,7 @@
 | D-31 | Font files | Convert the provided OTFs to WOFF2 (Dhia confirms the licence covers it). Subset Arabic + Latin, `font-display: swap`, preload the primary weight. | |
 | D-32 | Footer badges | Keep Saudi Business Center + Ministry of Commerce badges next to the payment logos. | |
 
-## Round 3 — 2026-09-12 (answered by Dhia)
+## Round 3: 2026-09-12 (answered by Dhia)
 
 | # | Topic | Decision | Notes |
 |---|---|---|---|
@@ -109,7 +109,7 @@
 | O-25 | Consent bar for GA4: accept a minimal Arabic consent bar, or drop GA4 and rely on Umami alone. | open |
 | O-26 | Contact form fields and the "type of inquiry" options. | open |
 
-## Round 4 — 2026-09-12 (answered by Dhia)
+## Round 4: 2026-09-12 (answered by Dhia)
 
 | # | Topic | Decision | Notes |
 |---|---|---|---|

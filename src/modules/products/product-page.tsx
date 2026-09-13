@@ -151,7 +151,7 @@ export async function ProductPage({ product }: { product: Product }) {
               </h2>
               <SizeChart
                 product={product}
-                caption={`${copy.sections.sizeChart} — ${product.name}`}
+                caption={`${copy.sections.sizeChart}: ${product.name}`}
               />
             </div>
           )}

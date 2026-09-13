@@ -5,6 +5,8 @@ import { canDeleteVersioned, isEditorOrAdmin, publishedOrStaff } from '@/modules
 import { Refused } from '@/modules/cms/refused';
 import { PAGE_BLOCKS } from '@/modules/cms/blocks';
 import { isDraftSave, revalidatePages } from '@/modules/cms/hooks/revalidate';
+import { savedByField, stampSavedBy } from '@/modules/cms/fields/saved-by';
+import { previewUrl } from '@/lib/preview-token';
 
 /** Slugs a page may never take: every code-owned segment except the seven designed pages. */
 export const FORBIDDEN_PAGE_SLUGS: readonly string[] = CODE_TOP_LEVEL.filter(
@@ -35,8 +37,18 @@ export const Pages: CollectionConfig = {
   labels: { singular: { ar: 'صفحة', en: 'Page' }, plural: { ar: 'الصفحات', en: 'Pages' } },
   admin: {
     useAsTitle: 'title',
+    // «معاينة»: a signed link that turns on draft mode and lands on the page (ADR-039).
+    preview: (doc, { req }) =>
+      typeof doc['slug'] === 'string' && doc['slug']
+        ? previewUrl(req.payload.config.serverURL, `/${doc['slug']}`, req.payload.secret)
+        : null,
     defaultColumns: ['title', 'slug', 'updatedAt', '_status'],
+    listSearchableFields: ['title', 'slug'],
     group: { ar: 'المحتوى', en: 'Content' },
+    description: {
+      ar: 'صفحات الموقع كأقسام قابلة للتحرير. الصفحات السبع الأساسية ثابتة الرابط؛ أضف صفحات جديدة بحرّية.',
+      en: 'Site pages as editable blocks. The seven designed pages keep their URLs; add new ones freely.',
+    },
   },
   versions: { drafts: { autosave: { interval: 1500 }, schedulePublish: true }, maxPerDoc: 25 },
   access: {
@@ -46,6 +58,7 @@ export const Pages: CollectionConfig = {
     delete: canDeleteVersioned,
   },
   hooks: {
+    beforeChange: [stampSavedBy],
     beforeValidate: [
       ({ data, originalDoc, req }) => {
         const slug = data?.['slug'];
@@ -154,5 +167,6 @@ export const Pages: CollectionConfig = {
         },
       ],
     },
+    savedByField,
   ],
 };

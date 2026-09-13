@@ -1,4 +1,5 @@
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
+import { signPreview } from '../src/lib/preview-token';
 import { ADMIN, API, createEditor, hasAdmin, login, POLL, shows } from './helpers/cms';
 
 /**
@@ -83,6 +84,26 @@ test.describe('CMS admin', () => {
   test.skip(!hasAdmin, 'ADMIN_EMAIL / ADMIN_PASSWORD unset');
   const admin = ADMIN;
 
+  // The suite owns its starting state: a stray autosave draft on `home` (an admin session
+  // left open mid-edit) would make every home publish below a 400. Republish the live doc.
+  test.beforeAll(async ({ request }) => {
+    const auth = await login(request, admin);
+    const live = await request.get(`${API}/globals/home?depth=0&draft=false`, { headers: auth });
+    if (live.status() !== 200) return;
+    const { _status, updatedAt, createdAt, globalType, id, ...data } =
+      (await live.json()) as Record<string, unknown>;
+    void _status;
+    void updatedAt;
+    void createdAt;
+    void globalType;
+    void id;
+    const res = await request.post(`${API}/globals/home?depth=0`, {
+      headers: auth,
+      data: { ...data, _status: 'published' },
+    });
+    expect(res.status(), 'home reset').toBe(200);
+  });
+
   test('the panel and its API are noindex, uncached and under the admin CSP', async ({
     request,
   }) => {
@@ -160,6 +181,255 @@ test.describe('CMS admin', () => {
     );
     for (const doc of ((await drafts.json()) as { docs: Array<{ id: number }> }).docs) {
       await request.delete(`${API}/pages/${doc.id}`, { headers: auth });
+    }
+  });
+
+  test('the shell (ADR-039): icons per entity, remembered groups, the palette, the account menu, the phone drawer', async ({
+    page,
+    browser,
+    request,
+  }) => {
+    test.setTimeout(120_000);
+    await page.setViewportSize({ width: 1600, height: 900 });
+    expect((await page.request.post(`${API}/users/login`, { data: admin })).status()).toBe(200);
+    // Start from an open sidebar with every group open (the `nav` preference is per user).
+    const adminAuth = await login(request, admin);
+    expect(
+      (
+        await request.post(`${API}/payload-preferences/nav`, {
+          headers: adminAuth,
+          data: { value: { open: true, groups: {} } },
+        })
+      ).status(),
+    ).toBe(200);
+    await page.goto('/admin/collections/pages');
+    const nav = page.locator('[data-admin-nav]');
+    await expect(nav).toHaveClass(/nav--nav-open/);
+    // Every entity link carries its icon; the current section is marked.
+    const links = nav.locator('a[id^="nav-"]');
+    expect(await links.count()).toBeGreaterThanOrEqual(12);
+    for (const link of await links.all()) await expect(link.locator('svg')).toHaveCount(1);
+    await expect(nav.locator('a[aria-current="page"]')).toHaveText(/الصفحات/);
+    // Content first; a collapsed group stays collapsed across a reload (Payload's `nav` pref).
+    await expect(nav.locator('[data-admin-group]').first()).toHaveAttribute(
+      'data-admin-group',
+      'المحتوى',
+    );
+    const settingsGroup = () => page.locator('[data-admin-group="الإعدادات"]');
+    await settingsGroup().locator('button').first().click();
+    await expect(settingsGroup().locator('#nav-redirects')).toBeHidden();
+    await page.reload();
+    await expect(page.locator('[data-admin-nav]')).toHaveClass(/nav--nav-open/);
+    await expect(settingsGroup().locator('#nav-redirects')).toBeHidden();
+    await settingsGroup().locator('button').first().click();
+    await expect(settingsGroup().locator('#nav-redirects')).toBeVisible();
+    // The palette: Ctrl+K, a document by title, Enter opens it.
+    await page.keyboard.press('Control+k');
+    const palette = page.locator('[data-admin-palette]');
+    await expect(palette).toBeVisible();
+    await page.keyboard.type('سياسة');
+    await expect(palette.getByRole('option', { name: /سياسة الخصوصية/ })).toBeVisible({
+      timeout: 10_000,
+    });
+    // axe on OUR surfaces (Payload's own edit-view chrome has known gaps: unnamed drag handles
+    // and popup buttons, its engine, not the shell).
+    const { AxeBuilder } = await import('@axe-core/playwright');
+    const serious = async (...include: string[]) => {
+      let builder = new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']);
+      for (const sel of include) builder = builder.include(sel);
+      return (await builder.analyze()).violations
+        .filter((v) => ['serious', 'critical'].includes(v.impact ?? ''))
+        .map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`);
+    };
+    expect(await serious('[data-admin-palette]', '.app-header'), 'axe: palette open').toEqual([]);
+    await page.keyboard.press('Enter');
+    await page.waitForURL(/\/admin\/collections\/pages\/\d+/);
+    await expect(page.locator('#field-slug')).toHaveValue('privacy');
+    // The account menu at the foot of the sidebar.
+    await page.locator('[data-admin-account]').click();
+    await expect(page.getByRole('menuitem', { name: /تسجيل الخروج/ })).toBeVisible();
+    await page.keyboard.press('Escape');
+    // Radix hides the rest of the page from assistive tech while a menu is open; wait for it
+    // to be gone before the audit.
+    await expect(page.getByRole('menuitem', { name: /تسجيل الخروج/ })).toHaveCount(0);
+    await expect(page.locator('body > [aria-hidden="true"]')).toHaveCount(0);
+    expect(await serious('[data-admin-nav]', '.app-header'), 'axe: shell on an edit view').toEqual(
+      [],
+    );
+    // An editor never sees the settings entries.
+    const editor = await createEditor(request, adminAuth);
+    const editorContext = await browser.newContext({ viewport: { width: 1600, height: 900 } });
+    try {
+      const editorPage = await editorContext.newPage();
+      expect((await editorPage.request.post(`${API}/users/login`, { data: editor })).status()).toBe(
+        200,
+      );
+      await editorPage.goto('/admin');
+      const editorNav = editorPage.locator('[data-admin-nav]');
+      await expect(editorNav.locator('#nav-pages')).toBeVisible();
+      await expect(editorNav.locator('#nav-redirects')).toHaveCount(0);
+      await expect(editorNav.locator('#nav-global-site-settings')).toHaveCount(0);
+      await expect(editorNav.locator('[data-admin-group="الإعدادات"]')).toHaveCount(0);
+    } finally {
+      await editorContext.close();
+      await request.delete(`${API}/users/${editor.id}`, { headers: adminAuth });
+    }
+    // On a phone the sidebar is a drawer: the header opens it, its own button closes it.
+    await page.setViewportSize({ width: 412, height: 915 });
+    await page.goto('/admin/collections/pages');
+    await expect(nav).not.toHaveClass(/nav--nav-open/);
+    await page.locator('.app-header__mobile-nav-toggler').click({ force: true });
+    await expect(nav).toHaveClass(/nav--nav-open/);
+    await expect(nav.locator('#nav-pages')).toBeVisible();
+    await nav.locator('.nav__mobile-close').click();
+    await expect(nav).not.toHaveClass(/nav--nav-open/);
+  });
+
+  test('the dashboard (ADR-039): quick actions by permission, the health report, the latest saves', async ({
+    page,
+    request,
+  }) => {
+    await page.setViewportSize({ width: 1600, height: 1000 });
+    expect((await page.request.post(`${API}/users/login`, { data: admin })).status()).toBe(200);
+    // A save stamps «آخر حفظ» and lands at the top of the list.
+    const auth = await login(request, admin);
+    const faq = await request.get(`${API}/faqs?limit=1&depth=0`, { headers: auth });
+    const entry = ((await faq.json()) as { docs: Array<{ id: number; question: string }> }).docs[0];
+    expect(entry).toBeDefined();
+    expect(
+      (
+        await request.patch(`${API}/faqs/${entry!.id}`, {
+          headers: auth,
+          data: { question: entry!.question },
+        })
+      ).status(),
+    ).toBe(200);
+    await page.goto('/admin');
+    const dashboard = page.locator('[data-admin-dashboard]');
+    await expect(dashboard).toBeVisible();
+    for (const key of ['home', 'add-page', 'add-product', 'add-faq', 'media', 'site']) {
+      await expect(dashboard.locator(`[data-admin-action="${key}"]`)).toBeVisible();
+    }
+    await expect(dashboard.locator('[data-health-row="db"]')).toHaveAttribute(
+      'data-tone',
+      'success',
+    );
+    await expect(dashboard.locator('[data-health-row="jobs"]')).toHaveAttribute(
+      'data-tone',
+      'success',
+    );
+    const first = dashboard.locator('[data-admin-recent] li').first();
+    await expect(first).toContainText(entry!.question);
+    await expect(first).toContainText(/بواسطة/);
+    const { AxeBuilder } = await import('@axe-core/playwright');
+    const results = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa'])
+      .include('[data-admin-dashboard]')
+      .analyze();
+    expect(
+      results.violations
+        .filter((v) => ['serious', 'critical'].includes(v.impact ?? ''))
+        .map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`),
+    ).toEqual([]);
+    // The field widgets: a section switch with its consequence, and the platform tiles.
+    await page.goto('/admin/globals/home');
+    const stepsSwitch = page.locator('[data-admin-switch="steps.enabled"]');
+    await expect(stepsSwitch).toHaveAttribute('role', 'switch');
+    await expect(stepsSwitch).toHaveAttribute('aria-checked', 'true');
+    await expect(page.locator('[data-admin-field="enabled"]').first()).toContainText(/يختفي قسم/);
+    await page.goto('/admin/collections/integrations/create');
+    await expect(page.locator('[data-admin-choice="salla"]')).toHaveAttribute('role', 'radio');
+    await page.locator('[data-admin-choice="zid"]').click();
+    await expect(page.locator('[data-admin-choice="zid"]')).toHaveAttribute('aria-checked', 'true');
+  });
+
+  test('preview (ADR-039): a signed link shows a draft page that the public never sees', async ({
+    page,
+    request,
+  }) => {
+    test.setTimeout(120_000);
+    const secret = process.env['PAYLOAD_SECRET'];
+    test.skip(!secret, 'PAYLOAD_SECRET unset');
+    const auth = await login(request, admin);
+    const slug = `preview-e2e-${Date.now()}`;
+    const title = `مسودة معاينة ${Date.now()}`;
+    const created = await request.post(`${API}/pages?draft=true`, {
+      headers: auth,
+      data: {
+        title,
+        slug,
+        _status: 'draft',
+        blocks: [
+          {
+            blockType: 'richText',
+            content: {
+              root: {
+                type: 'root',
+                children: [],
+                direction: 'rtl',
+                format: '',
+                indent: 0,
+                version: 1,
+              },
+            },
+          },
+        ],
+      },
+    });
+    expect(created.status(), await created.text()).toBe(201);
+    const id = ((await created.json()) as { doc: { id: number } }).doc.id;
+    try {
+      // (b) Without the cookie the unpublished slug is the full-document 404.
+      const anonymous = await request.get(`/${slug}`, { maxRedirects: 0 });
+      expect(anonymous.status()).toBe(404);
+      // A forged or foreign token is refused.
+      expect((await request.get(`/api/preview?path=/${slug}&token=1.x`)).status()).toBe(403);
+      // (a) The signed link turns on draft mode and lands on the draft, with the bar.
+      const token = signPreview(`/${slug}`, secret!);
+      await page.goto(`/api/preview?path=/${encodeURIComponent(slug)}&token=${token}`);
+      await expect(page).toHaveURL(new RegExp(`/${slug}$`));
+      await expect(page.locator('[data-draft-bar]')).toBeVisible();
+      await expect(page.locator('h1')).toHaveText(title);
+      // (d) A draft edit to a published page: visible in the preview, absent in public.
+      const about = await request.get(`${API}/pages?where[slug][equals]=about&depth=0&draft=true`, {
+        headers: auth,
+      });
+      const aboutDoc = ((await about.json()) as { docs: Array<Record<string, unknown>> }).docs[0]!;
+      const stamp = `معاينة ${Date.now()}`;
+      expect(
+        (
+          await request.patch(`${API}/pages/${aboutDoc['id']}?draft=true`, {
+            headers: auth,
+            data: { title: `${aboutDoc['title']} ${stamp}`, _status: 'draft' },
+          })
+        ).status(),
+      ).toBe(200);
+      try {
+        await page.goto('/about');
+        await expect(page.locator('[data-draft-bar]')).toBeVisible();
+        expect(await page.locator('body').textContent()).toContain(stamp);
+        expect(await (await request.get('/about')).text()).not.toContain(stamp);
+      } finally {
+        expect(
+          (
+            await request.patch(`${API}/pages/${aboutDoc['id']}`, {
+              headers: auth,
+              data: { title: aboutDoc['title'], _status: 'published' },
+            })
+          ).status(),
+        ).toBe(200);
+      }
+      // (c) Leaving draft mode returns to the page, which is the 404 again.
+      await page.locator('[data-draft-bar] a').click();
+      await expect(page.locator('[data-draft-bar]')).toHaveCount(0);
+      const gone = await page.goto(`/${slug}`);
+      expect(gone?.status()).toBe(404);
+      // (e) Constitution II: the public pages still come from the cache.
+      await request.get('/about');
+      const cached = await request.get('/about');
+      expect(cached.headers()['x-nextjs-cache']).toMatch(/HIT|STALE/);
+    } finally {
+      expect((await request.delete(`${API}/pages/${id}`, { headers: auth })).status()).toBe(200);
     }
   });
 

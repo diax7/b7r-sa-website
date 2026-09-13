@@ -1,4 +1,4 @@
-# B7R Print (بحر برنت) — Marketing Website Master BRD
+# B7R Print (بحر برنت)، Marketing Website Master BRD
 
 **Version:** 1.0 · **Date:** 2026-09-12 · **Owner:** Dhia (founder) · **Prepared with:** Claude · **Status:** Approved for implementation, Level 1 first
 

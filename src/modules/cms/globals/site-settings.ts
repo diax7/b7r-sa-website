@@ -1,6 +1,7 @@
 import type { GlobalConfig } from 'payload';
 import { hiddenUnlessAdmin, isAdmin } from '@/modules/cms/access';
 import { revalidateGlobal } from '@/modules/cms/hooks/revalidate';
+import { savedByField, stampSavedByGlobal } from '@/modules/cms/fields/saved-by';
 
 const APP_HELP = {
   ar: 'يجب أن يطابق التطبيق (لا مزامنة آلية).',
@@ -11,9 +12,16 @@ const APP_HELP = {
 export const SiteSettings: GlobalConfig = {
   slug: 'site-settings',
   label: { ar: 'إعدادات الموقع', en: 'Site settings' },
-  admin: { group: { ar: 'الإعدادات', en: 'Settings' }, hidden: hiddenUnlessAdmin },
+  admin: {
+    group: { ar: 'الإعدادات', en: 'Settings' },
+    hidden: hiddenUnlessAdmin,
+    description: {
+      ar: 'اسم الموقع، بيانات التواصل، الحسابات الاجتماعية والعرض الترحيبي.',
+      en: 'Site name, contact details, social accounts and the welcome offer.',
+    },
+  },
   access: { read: () => true, update: isAdmin },
-  hooks: { afterChange: [revalidateGlobal] },
+  hooks: { beforeChange: [stampSavedByGlobal], afterChange: [revalidateGlobal] },
   fields: [
     {
       type: 'row',
@@ -164,5 +172,6 @@ export const SiteSettings: GlobalConfig = {
       required: true,
       label: { ar: 'الكيان القانوني', en: 'Legal entity' },
     },
+    savedByField,
   ],
 };

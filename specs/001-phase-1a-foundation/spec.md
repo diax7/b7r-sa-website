@@ -1,4 +1,4 @@
-# Feature Specification: Phase 1a — Foundation, design system, shell, hero, product strip, designer
+# Feature Specification: Phase 1a: Foundation, design system, shell, hero, product strip, designer
 
 **Feature Branch**: `phase/1a-foundation`
 
@@ -202,10 +202,10 @@ and serves `/api/health` → `{ ok: true, version }`.
 ### Key Entities
 
 - **SiteSettings, NavItem, HeroSlide, Product, Step, WhyUsItem, Testimonial, Integration,
-  FaqItem, PageSeo, LegalPage, BlogPost** — as §8.4. Phase 1a populates all files so that
+  FaqItem, PageSeo, LegalPage, BlogPost**, as §8.4. Phase 1a populates all files so that
   1b/1c only add pages, not content.
-- **PrintArea** — `{ x, y, w, h }` fractions per product (§6.4.3 table), aspect 28:38.
-- **DesignerState** — `{ productSlug, colorSlug, design: { src, kind: 'sample' | 'upload' },
+- **PrintArea**, `{ x, y, w, h }` fractions per product (§6.4.3 table), aspect 28:38.
+- **DesignerState**, `{ productSlug, colorSlug, design: { src, kind: 'sample' | 'upload' },
   sellPrice, dailySales }`.
 
 ## Success Criteria *(mandatory)*

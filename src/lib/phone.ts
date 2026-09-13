@@ -8,8 +8,8 @@ function digitsOf(input: string): string {
 }
 
 /**
- * Saudi mobile numbers in the forms people actually type — `05XXXXXXXX`, `5XXXXXXXX`,
- * `+9665XXXXXXXX`, `009665XXXXXXXX`, `9665XXXXXXXX`, with spaces or dashes — as the canonical
+ * Saudi mobile numbers in the forms people actually type, `05XXXXXXXX`, `5XXXXXXXX`,
+ * `+9665XXXXXXXX`, `009665XXXXXXXX`, `9665XXXXXXXX`, with spaces or dashes, as the canonical
  * `9665XXXXXXXX` used by wa.me, or null when the input is not a Saudi mobile.
  */
 export function normaliseSaudiPhone(input: string): string | null {

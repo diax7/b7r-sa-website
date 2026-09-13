@@ -123,7 +123,7 @@ Use shadcn/ui primitives (Radix) for Accordion, Dialog, Select, Slider, Toast, a
 ### 3.11 Money, numbers, and the riyal symbol
 
 - `SarSymbol`: an inline SVG of the official Saudi Central Bank riyal symbol, `fill="currentColor"`, `height="0.85em"` (amended 2026-09-13, ADR-038: a touch smaller than the digits), `aria-label="ريال سعودي"`. Source the official path from the Saudi Central Bank's published symbol package (or trace it from the official SVG); do not use a Unicode character or a font.
-- `SarAmount value={89}` renders `<bdi dir="ltr"><SarSymbol/> 89</bdi>` with the symbol **always to the left of the digits**, a thin space between, digits in tabular figures. Integers render without decimals; non-integers with two decimals. Amended 2026-09-13 (ADR-038): every displayed number — amounts, the calculator's figures, stats — carries thousands separators (`13,200`) through one `formatNumber` helper; form inputs never receive grouped strings.
+- `SarAmount value={89}` renders `<bdi dir="ltr"><SarSymbol/> 89</bdi>` with the symbol **always to the left of the digits**, a thin space between, digits in tabular figures. Integers render without decimals; non-integers with two decimals. Amended 2026-09-13 (ADR-038): every displayed number, amounts, the calculator's figures, stats, carries thousands separators (`13,200`) through one `formatNumber` helper; form inputs never receive grouped strings.
 - Prose that spells the currency ("30 ريالاً") is used only where §4 spells it out; everywhere numbers appear as amounts (cards, calculator, tables) use `SarAmount`.
 - Phone numbers, emails, and URLs are rendered LTR inside `<bdi>`.
 

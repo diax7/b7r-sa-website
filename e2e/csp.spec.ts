@@ -4,7 +4,7 @@ import { expect, test, type Page } from '@playwright/test';
  * Outsider-seat check for the Content-Security-Policy (BRD 8.10, ADR-016): the browser must
  * report zero `securitypolicyviolation` events on the flows that touch inline styles, blob
  * images, and the third-party scripts. Meaningful only with the CI dummy env (a GA id and the
- * Umami stand-in) so the `connect-src` / `img-src` entries are actually exercised — the
+ * Umami stand-in) so the `connect-src` / `img-src` entries are actually exercised, the
  * first test asserts that shape so a bare env cannot pass this file silently.
  */
 declare global {

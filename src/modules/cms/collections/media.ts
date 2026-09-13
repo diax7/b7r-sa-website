@@ -1,5 +1,6 @@
 import type { CollectionConfig } from 'payload';
 import { isAdmin, isEditorOrAdmin } from '@/modules/cms/access';
+import { savedByField, stampSavedBy } from '@/modules/cms/fields/saved-by';
 
 const ARABIC = /[؀-ۿ]/;
 
@@ -14,7 +15,13 @@ export const Media: CollectionConfig = {
   labels: { singular: { ar: 'ملف وسائط', en: 'Media' }, plural: { ar: 'الوسائط', en: 'Media' } },
   admin: {
     group: { ar: 'المحتوى', en: 'Content' },
+    description: {
+      ar: 'الصور والملفات المستخدمة في الصفحات والمنتجات. اكتب نصاً بديلاً لكل صورة.',
+      en: 'Images and files used by pages and products. Give every image alt text.',
+    },
     defaultColumns: ['filename', 'alt', 'updatedAt'],
+    useAsTitle: 'filename',
+    listSearchableFields: ['filename', 'alt'],
   },
   access: {
     read: () => true,
@@ -35,6 +42,7 @@ export const Media: CollectionConfig = {
     ],
     adminThumbnail: 'thumbnail',
   },
+  hooks: { beforeChange: [stampSavedBy] },
   fields: [
     {
       name: 'alt',
@@ -59,5 +67,6 @@ export const Media: CollectionConfig = {
       type: 'text',
       label: { ar: 'المصدر (اختياري)', en: 'Credit (optional)' },
     },
+    savedByField,
   ],
 };

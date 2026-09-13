@@ -1,14 +1,22 @@
 import type { GlobalConfig } from 'payload';
 import { adminField, hiddenUnlessAdmin, isAdmin } from '@/modules/cms/access';
 import { revalidateGlobal } from '@/modules/cms/hooks/revalidate';
+import { savedByField, stampSavedByGlobal } from '@/modules/cms/fields/saved-by';
 
 /** BRD 9.4 `seo-defaults` ⇄ `content/seo.ts` (per-route titles/descriptions, BRD 4.16). */
 export const SeoDefaults: GlobalConfig = {
   slug: 'seo-defaults',
   label: { ar: 'إعدادات SEO', en: 'SEO defaults' },
-  admin: { group: { ar: 'الإعدادات', en: 'Settings' }, hidden: hiddenUnlessAdmin },
+  admin: {
+    group: { ar: 'الإعدادات', en: 'Settings' },
+    hidden: hiddenUnlessAdmin,
+    description: {
+      ar: 'عناوين ووصف محركات البحث للصفحات الثابتة، وصورة المشاركة الافتراضية.',
+      en: 'Search titles and descriptions for the fixed pages, and the default share image.',
+    },
+  },
   access: { read: () => true, update: isAdmin },
-  hooks: { afterChange: [revalidateGlobal] },
+  hooks: { beforeChange: [stampSavedByGlobal], afterChange: [revalidateGlobal] },
   fields: [
     {
       name: 'titleTemplate',
@@ -106,5 +114,6 @@ export const SeoDefaults: GlobalConfig = {
         { name: 'bing', type: 'text', label: 'Bing Webmaster Tools' },
       ],
     },
+    savedByField,
   ],
 };

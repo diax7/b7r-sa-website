@@ -1,4 +1,4 @@
-# Implementation Plan: Phase 1a — Foundation, design system, shell, hero, product strip, designer
+# Implementation Plan: Phase 1a: Foundation, design system, shell, hero, product strip, designer
 
 **Branch**: `phase/1a-foundation` | **Date**: 2026-09-12 | **Spec**: `specs/001-phase-1a-foundation/spec.md`
 
@@ -56,16 +56,16 @@ sections; ~12 content files; ~8 unit test files; ~6 e2e specs.
 
 | # | Gate (constitution v1.0.0) | Pass? |
 |---|---|---|
-| I | RTL/logical CSS only; `dir="rtl" lang="ar"` on `<html>`; mobile-first; Western digits | Yes — `check:rtl` script + oxlint; root layout owns `dir`/`lang` |
-| II | Every public page static + server-rendered; client islands only where needed | Yes — `/` is static; islands: Header (scroll/menu state), Hero, ProductStrip (hint only; strip itself is CSS hover/focus), Designer |
-| III | All copy from `src/content/*` verbatim per BRD §4; `SarAmount` for money | Yes — content files + schema test; aria microcopy in `messages/ar.json` |
-| IV | Perf/a11y budgets wired as CI thresholds (LHCI, axe, bundle) | Yes — `lighthouserc.json`, axe in e2e, `next build` size check in e2e |
-| V | Tokens only; one typeface; one radius family; reduced-motion variants | Yes — `@theme` in `globals.css`; oxlint `no-restricted-syntax` is not a hex detector, so `check:rtl` also greps for `#[0-9a-f]{3,6}` outside `globals.css`/SVG paths |
-| VI | No fabricated content; placeholders labelled; no AI mention | Yes — testimonials not rendered in 1a; placeholder sections carry a dev-only label |
-| VII | Feature under `src/modules/<name>/`; imports only core/components/content/lib | Yes — oxlint `no-restricted-imports` patterns |
-| VIII | ADR per non-obvious choice; CTO review before and after | Yes — ADR-001..ADR-008 listed below; this plan is the "before" |
-| IX | Tests for behaviour/edges/errors; all gates green with zero warnings | Yes — see Testing |
-| X | No AI attribution in commits/PRs | Yes — commit template; author Dhia |
+| I | RTL/logical CSS only; `dir="rtl" lang="ar"` on `<html>`; mobile-first; Western digits | Yes, `check:rtl` script + oxlint; root layout owns `dir`/`lang` |
+| II | Every public page static + server-rendered; client islands only where needed | Yes, `/` is static; islands: Header (scroll/menu state), Hero, ProductStrip (hint only; strip itself is CSS hover/focus), Designer |
+| III | All copy from `src/content/*` verbatim per BRD §4; `SarAmount` for money | Yes, content files + schema test; aria microcopy in `messages/ar.json` |
+| IV | Perf/a11y budgets wired as CI thresholds (LHCI, axe, bundle) | Yes, `lighthouserc.json`, axe in e2e, `next build` size check in e2e |
+| V | Tokens only; one typeface; one radius family; reduced-motion variants | Yes, `@theme` in `globals.css`; oxlint `no-restricted-syntax` is not a hex detector, so `check:rtl` also greps for `#[0-9a-f]{3,6}` outside `globals.css`/SVG paths |
+| VI | No fabricated content; placeholders labelled; no AI mention | Yes, testimonials not rendered in 1a; placeholder sections carry a dev-only label |
+| VII | Feature under `src/modules/<name>/`; imports only core/components/content/lib | Yes, oxlint `no-restricted-imports` patterns |
+| VIII | ADR per non-obvious choice; CTO review before and after | Yes, ADR-001..ADR-008 listed below; this plan is the "before" |
+| IX | Tests for behaviour/edges/errors; all gates green with zero warnings | Yes, see Testing |
+| X | No AI attribution in commits/PRs | Yes, commit template; author Dhia |
 
 ## Project Structure
 
@@ -108,7 +108,7 @@ src/
 │   ├── layout.tsx            html dir/lang, font preloads, shell order (§6.1)
 │   ├── page.tsx              home: Hero, ProductStrip, DesignerSection, placeholders, ribbon
 │   ├── not-found.tsx         §4.15, no ribbon
-│   ├── robots.ts             noindex guard (§7.2) — full rules land in 1c
+│   ├── robots.ts             noindex guard (§7.2), full rules land in 1c
 │   ├── error.tsx · global-error.tsx
 │   └── api/health/route.ts
 ├── modules/
@@ -122,7 +122,7 @@ src/
 │   ├── schema.ts · site.ts · navigation.ts · home.ts · products.ts · faq.ts
 │   ├── testimonials.ts · integrations.ts · seo.ts · steps.ts · why-us.ts
 │   ├── pages/{how-it-works,about,contact}.ts · legal/{terms,shipping,privacy}.md
-│   └── blog/index.ts         (three sample entries: slug, title, hub only — no bodies; §4.13)
+│   └── blog/index.ts         (three sample entries: slug, title, hub only, no bodies; §4.13)
 ├── components/
 │   ├── ui/                   slider.tsx · dialog.tsx (Radix, restyled)
 │   └── shared/               button, chip, badge, card, section-header, container, section,
@@ -167,7 +167,7 @@ e2e/
    swatches, which are data). Unit-tested with fixtures: `ml-4` fails, `text-left` fails,
    `rounded-l` fails, `ms-4` passes, `right-6 // rtl-allow` passes, `#0058B0` in tsx fails.
 5. Vitest (jsdom + plugin-react), Playwright (`webServer: pnpm start` on :3004 against the
-   built app; projects: Desktop Chrome 1280, Pixel 7 (Chromium), iPhone 15 (WebKit —
+   built app; projects: Desktop Chrome 1280, Pixel 7 (Chromium), iPhone 15 (WebKit,
    `playwright install chromium webkit`)), LHCI (`lighthouserc.json`
    mobile preset, assertions Performance 0.9, Accessibility 0.95, Best Practices 0.95, SEO 1.0
    on `http://localhost:3004/`, `NEXT_PUBLIC_SITE_URL=https://b7r.sa` for the run).
@@ -195,21 +195,21 @@ e2e/
 - Fonts: preload Regular + Bold in `layout.tsx` via `<link rel="preload" as="font"
   type="font/woff2" crossOrigin="anonymous">` (without `crossOrigin` fonts download twice);
   Medium loaded by `@font-face` on demand; Light/Black declared, used only where §3.3 says.
-  Black (hero H1) is lazy per §3.3; the hero CLS e2e measures the swap — if the H1 swap alone
+  Black (hero H1) is lazy per §3.3; the hero CLS e2e measures the swap, if the H1 swap alone
   exceeds ~0.05, preload Black on `/` and record an ADR.
 - Primitives: `cva`-based `Button` (primary/secondary/ghost/link × md/lg, `trailingArrow`
   renders `<Icon name="ArrowRight" />` which mirrors under RTL, `loading` state), `Chip`,
   `Badge` (10 % rule), `Card`, `SectionHeader` (eyebrow + H2 + lead, start-aligned, `align`
   prop), `Container` (1280 / 24 / 16), `Section` (`tone="surface"|"ground"`, 96/64 rhythm),
   `Icon` (Lucide wrapper: `size=24 strokeWidth=1.75`, `mirror` auto for arrows/chevrons via a
-  small map; renders `rtl:-scale-x-100` — a logical utility), `SarSymbol` (official SAMA path
+  small map; renders `rtl:-scale-x-100`, a logical utility), `SarSymbol` (official SAMA path
   from the B7R app, `fill="currentColor"`, `height="1em"`, `aria-label="ريال سعودي"`),
   `SarAmount` (`<bdi dir="ltr">` + tabular-nums, integer/2-dp rule), `Input`, `Stepper`
   (+/− buttons, `aria-live` value), `Slider` (Radix, RTL: Radix Slider honours `dir`
   prop; we pass `dir="rtl"` so it advances right-to-left), `VisuallyHidden`, `Reveal`
   (IntersectionObserver fade-up 12 px / 400 ms once, stagger via CSS `--i`; disabled under
-  reduced motion; hidden state applies only under `html.js` — an inline script in `<head>`
-  adds the class — so JS-off and pre-hydration always show content; never wraps hero
+  reduced motion; hidden state applies only under `html.js`, an inline script in `<head>`
+  adds the class, so JS-off and pre-hydration always show content; never wraps hero
   content). `WaveDivider` (§6.3.4 SVG drawn at two periods, 2880 × 48 viewBox, 2 paths, CSS
   `translateX` keyframes to −50 % over 20 s for a seamless loop, opposite directions,
   `prefers-reduced-motion` stops).
@@ -295,7 +295,7 @@ e2e/
 - Motion: image crossfade 700 ms (opacity, `will-change` only while transitioning); text
   fade-and-rise 12 px/400 ms starting 100 ms later; buttons/chips static. Reduced motion:
   instant swap.
-- Height: `min-height: 100svh` (border-box) on every breakpoint — the `padding-block-start:
+- Height: `min-height: 100svh` (border-box) on every breakpoint, the `padding-block-start:
   var(--header-h)` from §D is what keeps the text clear of the header; no dependence on
   image load.
 
@@ -317,7 +317,7 @@ e2e/
 - `DesignerSection` (server): `SectionHeader` + a card containing a static fallback (the
   default mockup image + copy) and the mount point; `DesignerLoader` (client) uses
   `IntersectionObserver` (rootMargin 400 px) to `dynamic(() => import('./DesignerIsland'),
-  { ssr: false })` — Konva lives only in that chunk.
+  { ssr: false })`, Konva lives only in that chunk.
 - State in `use-designer-state.ts` (`useReducer`): product, colour (reset to first colour on
   product change per §6.4.3 defaults), design `{ url, kind, naturalW, naturalH }`, sellPrice
   (default suggested; **reset to the new product's suggested price on product change** so
@@ -338,7 +338,7 @@ e2e/
   × 30`, integers; property test with fast-check; `clampSell(value, base)`.
 - Canvas (`DesignCanvas.tsx`, react-konva): square `Stage` sized via `ResizeObserver` (max
   640), `pixelRatio` capped at 2; **two layers** (memory on mid-range Android): layer 1 =
-  static mockup `Image` (`useImage` hook written locally — no `use-image` dependency),
+  static mockup `Image` (`useImage` hook written locally, no `use-image` dependency),
   `listening={false}`, `cache()` after load; layer 2 = a `Group` with `clipFunc` rect =
   print area in stage pixels containing the design `Image` (`draggable`, `id="design"`),
   **the `Transformer` as a sibling of the clipped group** (attached to the design node so
@@ -372,7 +372,7 @@ e2e/
 `PlaceholderSection` (server) renders `<section aria-labelledby>` with the §4 H2 and, when
 `NEXT_PUBLIC_SITE_URL !== 'https://b7r.sa'` (the same preview signal as the noindex guard,
 so Dhia's `pnpm build && pnpm start` gate still shows it), a muted «يُبنى في المرحلة 1b»
-label — one wording everywhere, never "قريباً". Backgrounds
+label, one wording everywhere, never "قريباً". Backgrounds
 alternate per §6.4 so the rhythm reads correctly even now.
 
 ## States handled
@@ -398,8 +398,8 @@ E2E (Playwright, built app on :3004, desktop + Pixel 7 + iPhone 15): hero (H1 co
 dots/pause keyboard, reduced-motion no auto-advance via `emulateMedia`), header (shrink
 without CLS via `layoutShift` PerformanceObserver script, mobile menu focus trap/Escape),
 strip (5 links, focus expands on desktop, snap on mobile), designer (chunk not loaded before
-scroll — assert via `page.on('request')`; sample visible; upload PNG fixture; drag moves
-the node — read via `page.evaluate(() => Konva.stages[0].findOne('#design')
+scroll, assert via `page.on('request')`; sample visible; upload PNG fixture; drag moves
+the node, read via `page.evaluate(() => Konva.stages[0].findOne('#design')
 .getAbsolutePosition())` since Konva exposes `window.Konva` in production builds; snap-back
 when < 25 % inside; values 89/45/10 → 44 / 13200; sell 40 → warning; deep link preselects
 hoodie; invalid file error), hero with `javaScriptEnabled: false` (one H1, four slide

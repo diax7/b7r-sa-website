@@ -4,6 +4,7 @@ import { SiteDocument } from '@/app/site-document';
 import { getNavigation, getSiteSettings } from '@/lib/cms';
 import { verificationTokens } from '@/lib/env-server';
 import { BRAND_PRIMARY_HEX } from '@/lib/tokens';
+import { DraftBar } from '@/modules/core/draft-bar';
 import { rootMetadata } from '@/modules/core/seo/metadata';
 
 /** Root metadata: the title template and the verification metas (CMS first, env as fallback). */
@@ -34,7 +35,7 @@ export const viewport: Viewport = {
 export default async function RootLayout({ children }: { children: ReactNode }) {
   const [site, navigation] = await Promise.all([getSiteSettings(), getNavigation()]);
   return (
-    <SiteDocument site={site} navigation={navigation}>
+    <SiteDocument site={site} navigation={navigation} banner={<DraftBar />}>
       {children}
     </SiteDocument>
   );

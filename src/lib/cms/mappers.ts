@@ -171,10 +171,15 @@ function mediaAlt(value: number | Media | null | undefined): string {
  * step icons and the strip products are populated; the strip keeps the admin's order as
  * product slugs.
  */
-export function toHome(doc: HomeDoc): Home {
+export interface MapOptions {
+  /** A preview render (ADR-039): the latest draft is what the editor asked to see. */
+  draft?: boolean;
+}
+
+export function toHome(doc: HomeDoc, options: MapOptions = {}): Home {
   // `draft: false` returns the main row whatever its status: a never-published home must not
-  // render its draft copy.
-  if (doc._status !== 'published') throw new Error('home: not published yet');
+  // render its draft copy, unless this is a preview.
+  if (!options.draft && doc._status !== 'published') throw new Error('home: not published yet');
   const strip = doc.productStrip.products.map((p, i) => {
     if (typeof p === 'number') throw new Error(`home.productStrip.products[${i}]: not populated`);
     return p.slug;
@@ -383,19 +388,25 @@ function toBlock(block: BlockDoc, where: string, index: number): Block {
 }
 
 /** A page document (depth ≥ 1) → the `Page` contract; published documents only. */
-export function toPage(doc: PageDoc): Page {
-  if (doc._status !== 'published') throw new Error(`page ${doc.slug}: not published`);
+export function toPage(doc: PageDoc, options: MapOptions = {}): Page {
+  if (!options.draft && doc._status !== 'published') {
+    throw new Error(`page ${doc.slug}: not published`);
+  }
   const blocks = doc.blocks.map((b, i) => toBlock(b, `page ${doc.slug} blocks[${i}]`, i));
   const legal = blocks.find((b) => b.blockType === 'legalBody');
   const ogImage = mediaUrl(doc.seo.ogImage);
+  // A draft may not have its search title and description yet; a preview shows the page's.
+  const seoTitle = doc.seo.title || (options.draft ? doc.title : doc.seo.title);
+  const seoDescription =
+    doc.seo.description || (options.draft ? doc.lead || doc.title : doc.seo.description);
   return PageSchema.parse({
     slug: doc.slug,
     title: doc.title,
     ...(doc.lead ? { lead: doc.lead } : {}),
     blocks,
     seo: {
-      title: doc.seo.title,
-      description: doc.seo.description,
+      title: seoTitle,
+      description: seoDescription,
       ...(ogImage ? { ogImage } : {}),
     },
     updatedAt: legal ? legal.updatedAt : doc.updatedAt.slice(0, 10),

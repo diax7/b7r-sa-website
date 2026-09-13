@@ -48,6 +48,8 @@ export default buildConfig({
   },
   admin: {
     user: Users.slug,
+    // Dark only (Dhia, 2026-09-13; ADR-039): the panel keeps Payload's dark greys.
+    theme: 'dark',
     // The default avatar fetches gravatar.com with a hash of the user's email (ADR-028).
     avatar: 'default',
     meta: {
@@ -59,8 +61,13 @@ export default buildConfig({
         Logo: '@/modules/cms/components/logo#Logo',
         Icon: '@/modules/cms/components/logo#Icon',
       },
-      // The Turnstile widget above the login form (ADR-034).
+      // The shell (ADR-039): sidebar with an icon per entity, header palette + site link.
+      Nav: '@/modules/cms/admin/nav/nav#Nav',
+      actions: ['@/modules/cms/admin/header/actions#HeaderActions'],
+      views: { dashboard: { Component: '@/modules/cms/admin/dashboard/dashboard#Dashboard' } },
+      // The Turnstile widget above the login form (ADR-034); one line under it (ADR-039).
       beforeLogin: ['@/modules/cms/auth/login-turnstile#LoginTurnstile'],
+      afterLogin: ['@/modules/cms/admin/login/after-login#AfterLogin'],
     },
     importMap: { baseDir: path.resolve(dirname, '../..') },
   },
@@ -96,7 +103,7 @@ export default buildConfig({
   }),
   /**
    * Jobs (ADR-033): the IndexNow ping and Payload's scheduled publish run in-process on a
-   * one-minute cron (never during `next build`); the run endpoint answers nobody — the cron
+   * one-minute cron (never during `next build`); the run endpoint answers nobody, the cron
    * is the only runner. Completed jobs are deleted.
    */
   jobs: {

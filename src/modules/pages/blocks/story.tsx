@@ -8,8 +8,8 @@ import { getHome, getSiteSettings } from '@/lib/cms';
 import type { BlockProps } from '@/modules/pages/blocks/types';
 
 /**
- * The story (BRD 6.8, amended 2026-09-13): the brand photo beside the text — the page title
- * as H1 when this is the first block — with the delivery origin as a chip over the photo,
+ * The story (BRD 6.8, amended 2026-09-13): the brand photo beside the text, the page title
+ * as H1 when this is the first block, with the delivery origin as a chip over the photo,
  * then the facts band built from the home page (welcome credit + the why-us pairs).
  */
 export async function StoryBlock({ block, tone, anchor, heading }: BlockProps<'story'>) {

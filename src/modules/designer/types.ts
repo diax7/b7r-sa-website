@@ -3,7 +3,7 @@ import messages from '@/messages/ar.json';
 /** Strings the designer island receives from the server shell (BRD 4.4 + aria microcopy). */
 export interface DesignerCopy {
   groups: { product: string };
-  /** «اضغط لرفع شعارك أو صورتك» — the prompt over the empty print area. */
+  /** «اضغط لرفع شعارك أو صورتك»، the prompt over the empty print area. */
   uploadPrompt: string;
   uploadHelper: string;
   /** «إزالة التصميم» */

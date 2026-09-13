@@ -1,10 +1,11 @@
 import type { CollectionConfig } from 'payload';
 import { canDeleteVersioned, isEditorOrAdmin, publishedOrStaff } from '@/modules/cms/access';
 import { revalidateRoutes } from '@/modules/cms/hooks/revalidate';
+import { savedByField, stampSavedBy } from '@/modules/cms/fields/saved-by';
 
 /**
  * Merchant testimonials (BRD 4.4, 6.4.7). Drafts so a quote can be prepared before it goes
- * live; `placeholder` keeps the BRD 3.14 rule visible in the admin — while every published
+ * live; `placeholder` keeps the BRD 3.14 rule visible in the admin, while every published
  * entry is a placeholder the production host omits the section (ADR-013, ADR-023).
  */
 export const Testimonials: CollectionConfig = {
@@ -16,7 +17,12 @@ export const Testimonials: CollectionConfig = {
   admin: {
     useAsTitle: 'name',
     defaultColumns: ['name', 'store', 'placeholder', 'order', '_status'],
+    listSearchableFields: ['name', 'store'],
     group: { ar: 'المحتوى', en: 'Content' },
+    description: {
+      ar: 'آراء التجار في الصفحة الرئيسية. النماذج المؤقتة لا تظهر في الموقع.',
+      en: 'Merchant quotes on the home page. Placeholders never show on the site.',
+    },
   },
   versions: { drafts: { autosave: { interval: 1500 }, schedulePublish: true }, maxPerDoc: 10 },
   access: {
@@ -26,6 +32,7 @@ export const Testimonials: CollectionConfig = {
     delete: canDeleteVersioned,
   },
   hooks: {
+    beforeChange: [stampSavedBy],
     afterChange: [revalidateRoutes(['/'])],
     afterDelete: [revalidateRoutes(['/'])],
   },
@@ -87,5 +94,6 @@ export const Testimonials: CollectionConfig = {
         },
       },
     },
+    savedByField,
   ],
 };

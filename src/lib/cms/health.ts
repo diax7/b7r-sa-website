@@ -2,6 +2,10 @@ import 'server-only';
 import { type PostgresAdapter, sql } from '@payloadcms/db-postgres';
 import { cms } from '@/lib/cms/payload';
 import { cmsEnv } from '@/lib/cms/env';
+import { getContactTransport } from '@/lib/contact-transport';
+import { contactEnv } from '@/lib/env-server';
+import { indexNowKey } from '@/lib/indexnow';
+import { getNewsletterTransport } from '@/lib/newsletter-transport';
 
 const DB_TIMEOUT_MS = 2000;
 
@@ -56,4 +60,40 @@ export async function failedJobs(): Promise<number | null> {
 /** Where uploads live: S3 when the bucket is configured, else the container's disk. */
 export function mediaStorage(): 's3' | 'local' {
   return cmsEnv().s3 ? 's3' : 'local';
+}
+
+export interface HealthReport {
+  ok: true;
+  version: string;
+  time: string;
+  db: 'ok' | 'error';
+  media: 's3' | 'local';
+  newsletter: string;
+  contact: string;
+  turnstile: 'on' | 'off';
+  indexnow: 'on' | 'off';
+  email: 'resend' | 'console';
+  jobs: 'on' | 'off';
+  jobsFailed: number | null;
+}
+
+/**
+ * What `/api/health` answers and the dashboard shows (ADR-039): one function, so the two
+ * never disagree. `ok` is liveness (the process answers); the rest says what is wired.
+ */
+export async function healthReport(): Promise<HealthReport> {
+  return {
+    ok: true,
+    version: process.env['APP_VERSION'] ?? 'dev',
+    time: new Date().toISOString(),
+    db: await databaseStatus(),
+    media: mediaStorage(),
+    newsletter: getNewsletterTransport().kind,
+    contact: getContactTransport().kind,
+    turnstile: contactEnv().turnstileSecretKey ? 'on' : 'off',
+    indexnow: indexNowKey() ? 'on' : 'off',
+    email: cmsEnv().email ? 'resend' : 'console',
+    jobs: await jobsStatus(),
+    jobsFailed: await failedJobs(),
+  };
 }

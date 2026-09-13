@@ -105,13 +105,13 @@ async function ensureProduct(payload: Payload, product: Product): Promise<void> 
     const front = await ensureMedia(
       payload,
       color.images.front,
-      `${product.name} — ${color.name}، الواجهة الأمامية`,
+      `${product.name}, ${color.name}، الواجهة الأمامية`,
     );
     const back = color.images.back
       ? await ensureMedia(
           payload,
           color.images.back,
-          `${product.name} — ${color.name}، الواجهة الخلفية`,
+          `${product.name}, ${color.name}، الواجهة الخلفية`,
         )
       : undefined;
     colors.push({
@@ -405,7 +405,7 @@ async function pruneSeoRows(payload: Payload): Promise<void> {
     context: CONTEXT,
   });
   console.warn(
-    `content:migrate: removed ${moved.map((r) => r.route).join(', ')} from seo-defaults — their title and description now live in the page's SEO group (ADR-026 exception).`,
+    `content:migrate: removed ${moved.map((r) => r.route).join(', ')} from seo-defaults, their title and description now live in the page's SEO group (ADR-026 exception).`,
   );
 }
 

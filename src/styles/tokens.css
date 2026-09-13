@@ -1,0 +1,219 @@
+/* ---------------------------------------------------------------------------------------
+   Shared design tokens (BRD §3): type, radius, motion and the brand font. Imported by the
+   site stylesheet (light palette) and the admin stylesheet (Payload's dark greys, ADR-039).
+   Colours and shadows live with each surface; this file has none.
+   --------------------------------------------------------------------------------------- */
+@theme {
+  --font-sans:
+    'ITF Rayat Round', 'Rayat Fallback', system-ui, -apple-system, 'Segoe UI', Tahoma, sans-serif;
+
+  --radius-*: initial;
+  --radius: 13px;
+  --radius-base: 13px;
+  --radius-lg: 20px;
+  --radius-pill: 999px;
+  --radius-inner: 6px;
+
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-exit: cubic-bezier(0.4, 0, 1, 1);
+  --ease-expand: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  --duration-fast: 150ms;
+  --duration-base: 200ms;
+  --duration-slow: 300ms;
+  --duration-slower: 500ms;
+  --duration-crossfade: 700ms;
+
+  /* Type scale (§3.3) */
+  --text-display: clamp(40px, 6vw, 72px);
+  --text-display--line-height: 1.25;
+  --text-display--font-weight: 900;
+  --text-h1: clamp(32px, 4.5vw, 52px);
+  --text-h1--line-height: 1.2;
+  --text-h1--font-weight: 700;
+  --text-h2: clamp(28px, 3.5vw, 40px);
+  --text-h2--line-height: 1.2;
+  --text-h2--font-weight: 700;
+  --text-h3: clamp(22px, 2.5vw, 28px);
+  --text-h3--line-height: 1.3;
+  --text-h3--font-weight: 700;
+  --text-h4: 20px;
+  --text-h4--line-height: 1.4;
+  --text-h4--font-weight: 500;
+  --text-lead: clamp(17px, 1.6vw, 20px);
+  --text-lead--line-height: 1.7;
+  --text-body: 17px;
+  --text-body--line-height: 1.75;
+  --text-small: 15px;
+  --text-small--line-height: 1.6;
+  --text-caption: 13px;
+  --text-caption--line-height: 1.5;
+  --text-button: 16px;
+  --text-button--line-height: 1;
+  --text-button-lg: 17px;
+  --text-button-lg--line-height: 1;
+
+  --animate-fade-in: fade-in var(--duration-base) var(--ease-standard) both;
+  --animate-fade-out: fade-out var(--duration-base) var(--ease-exit) both;
+  --animate-rise-in: rise-in var(--duration-slow) var(--ease-standard) both;
+  --animate-rise-out: rise-out var(--duration-base) var(--ease-exit) both;
+  --animate-menu-in: menu-in var(--duration-slow) var(--ease-standard) both;
+  --animate-menu-out: menu-out var(--duration-base) var(--ease-exit) both;
+  --animate-accordion-down: accordion-down var(--duration-base) var(--ease-standard);
+  --animate-accordion-up: accordion-up var(--duration-base) var(--ease-exit);
+  --animate-dot-pulse: dot-pulse 1.2s var(--ease-standard) 1;
+  --animate-wave: wave-drift 20s linear infinite;
+  --animate-wave-reverse: wave-drift-reverse 20s linear infinite;
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  @keyframes fade-out {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+  @keyframes rise-in {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @keyframes rise-out {
+    from {
+      opacity: 1;
+      transform: none;
+    }
+    to {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+  }
+  /* The sheet slides in from the start edge (BRD 6.2); in RTL the start edge is the right. */
+  @keyframes menu-in {
+    from {
+      opacity: 0;
+      transform: translateX(16px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @keyframes menu-out {
+    from {
+      opacity: 1;
+      transform: none;
+    }
+    to {
+      opacity: 0;
+      transform: translateX(16px);
+    }
+  }
+  @keyframes accordion-down {
+    from {
+      height: 0;
+    }
+    to {
+      height: var(--radix-accordion-content-height);
+    }
+  }
+  @keyframes accordion-up {
+    from {
+      height: var(--radix-accordion-content-height);
+    }
+    to {
+      height: 0;
+    }
+  }
+  @keyframes dot-pulse {
+    0% {
+      transform: scale(0.6);
+      opacity: 0;
+    }
+    40% {
+      transform: scale(1.3);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+  @keyframes wave-drift {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+  @keyframes wave-drift-reverse {
+    from {
+      transform: translateX(-50%);
+    }
+    to {
+      transform: translateX(0);
+    }
+  }
+}
+
+/* Fonts (§3.3). Regular and Bold are preloaded from site-document.tsx; the rest load on
+   demand. The admin loads the same files from the same URLs. */
+@font-face {
+  font-family: 'ITF Rayat Round';
+  src: url('/fonts/ITFRayatRound-Light.woff2') format('woff2');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'ITF Rayat Round';
+  src: url('/fonts/ITFRayatRound-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'ITF Rayat Round';
+  src: url('/fonts/ITFRayatRound-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'ITF Rayat Round';
+  src: url('/fonts/ITFRayatRound-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'ITF Rayat Round';
+  src: url('/fonts/ITFRayatRound-Black.woff2') format('woff2');
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+/* Metric-adjusted fallback to keep the swap from shifting layout (CLS ≤ 0.1). Values are
+   approximations for a rounded Arabic sans; the CLS e2e is the real gate. */
+@font-face {
+  font-family: 'Rayat Fallback';
+  src: local('Segoe UI'), local('Tahoma'), local('Roboto'), local('Noto Naskh Arabic');
+  size-adjust: 104%;
+  ascent-override: 96%;
+  descent-override: 30%;
+  line-gap-override: 0%;
+}

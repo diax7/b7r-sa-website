@@ -1,11 +1,11 @@
-# Implementation Plan: Phase 1b — Rest of the home page
+# Implementation Plan: Phase 1b: Rest of the home page
 
 **Branch**: `phase/1b-home` | **Date**: 2026-09-13 | **Spec**: `specs/002-phase-1b-home/spec.md`
 
 ## Summary
 
 Finish `/`: six sections replacing the placeholders, the WhatsApp widget, consent + analytics,
-the newsletter API, and event wiring — all inside the JS budget that Phase 1a left with ~8 kB
+the newsletter API, and event wiring, all inside the JS budget that Phase 1a left with ~8 kB
 of headroom, so every new interactive piece is either CSS-driven, a tiny island, or loaded on
 intent. Investigate the simulated-LCP gate with a time box.
 
@@ -13,18 +13,18 @@ intent. Investigate the simulated-LCP gate with a time box.
 
 Unchanged stack (Next 16.3.5, React 19.3, Tailwind 4.3). New deps (exact pins):
 `@radix-ui/react-accordion 1.2.20` (FAQ), `resend 6.28.0` (server only),
-`@next/third-parties 16.3.5` (GA4 after consent). **No `motion`** — see ADR-012.
+`@next/third-parties 16.3.5` (GA4 after consent). **No `motion`**, see ADR-012.
 
 ## Constitution Check
 
 | # | Gate | Pass? |
 |---|---|---|
 | I | RTL logical CSS | Yes; the widget's `right-6` is the sanctioned exception with `// rtl-allow` (BRD 6.15) |
-| II | Static + islands only | Yes — sections are server components; islands: StepsProgress, VideoPlayer, Accordion (Radix), WhatsAppWidget, ConsentBar, AnalyticsBridge, NewsletterForm |
-| III | Copy from content | Yes — all §4.4–4.7 strings already in `content/`; verbatim test extended to `pages.ts` widget/consent copy |
-| IV | Budgets as gates | Yes — budgets e2e extended (JS on first paint still ≤ 180 kB with everything mounted) |
-| V | Tokens/motion | Yes — count-ups/reveals/waves reducible; audit e2e |
-| VI | No fabricated content | Yes — testimonials carry «نموذج» and vanish on the production host |
+| II | Static + islands only | Yes, sections are server components; islands: StepsProgress, VideoPlayer, Accordion (Radix), WhatsAppWidget, ConsentBar, AnalyticsBridge, NewsletterForm |
+| III | Copy from content | Yes, all §4.4–4.7 strings already in `content/`; verbatim test extended to `pages.ts` widget/consent copy |
+| IV | Budgets as gates | Yes, budgets e2e extended (JS on first paint still ≤ 180 kB with everything mounted) |
+| V | Tokens/motion | Yes, count-ups/reveals/waves reducible; audit e2e |
+| VI | No fabricated content | Yes, testimonials carry «نموذج» and vanish on the production host |
 | VII | Modules | `modules/home/*` (steps, video, why-us, testimonials, integrations, faq), `modules/core/*` (widget, consent, analytics), `modules/forms/*` (newsletter) |
 | VIII | ADRs + CTO | ADR-012 (no motion), ADR-013 (production-host rule for testimonials), ADR-014 (LCP outcome) |
 | IX | Tests | unit: rate-limit, consent, newsletter schema, steps progress, testimonials rule; e2e: each spec scenario |
@@ -32,14 +32,14 @@ Unchanged stack (Next 16.3.5, React 19.3, Tailwind 4.3). New deps (exact pins):
 
 ## Approach
 
-### A. Steps (§6.4.4) — `modules/home/steps/`
+### A. Steps (§6.4.4): `modules/home/steps/`
 - `Steps` (server): `<section>` 300 vh on `lg` with a sticky 100 vh inner grid: start column =
   `<ol>` of three steps (badge, H3, text; server-rendered, readable without JS), end column =
   480 px accent-tint panel with the three 3D icons stacked (`next/image`, 160 px+), only the
   active one at opacity 1 / scale 1 (others 0 / 1.02). The link under the list.
 - The **list layout is the default CSS** (icons 96 px at the start of each row, connector
   line, `aria-current="step"` on the active item). The pinned layout applies only under
-  `html.js` at `lg` and not under reduced motion — so no-JS, reduced-motion and mobile share
+  `html.js` at `lg` and not under reduced motion, so no-JS, reduced-motion and mobile share
   one branch and a no-JS desktop never scrolls through 300 vh of nothing.
 - Pinned inner grid: `top: var(--header-h); height: calc(100vh - var(--header-h))` so the
   sticky header never covers the active step.
@@ -51,19 +51,19 @@ Unchanged stack (Next 16.3.5, React 19.3, Tailwind 4.3). New deps (exact pins):
   covers the mapping.
 - Native scroll only; no scroll-jacking.
 
-### B. Video (§6.4.5) — `modules/home/video/`
+### B. Video (§6.4.5): `modules/home/video/`
 - `VideoSection` (server) + `VideoPlayer` (client island, mounted near-viewport): poster
   `<Image>` + 72 px play button; on click renders `<video controls playsInline
   preload="none">` and calls `.play()` (user gesture; no `autoPlay`), tracks `video_play`.
-  The `<video>` exists in the DOM only after play — axe's `video-caption` rule is critical and
+  The `<video>` exists in the DOM only after play, axe's `video-caption` rule is critical and
   the clip has no captions yet; captions/intro card go to BRD Appendix G item 8 for Dhia.
   E2E asserts `controls` present and `play()` attempted; the "is playing" assertion runs only
   on WebKit (Playwright's Chromium ships without H.264). Poster: `public/video/printer-marketing-poster.jpg` produced
   by `prepare-assets` from `lifestyle-mockups/dtg-printer-stock.png` (BRD fallback; ffmpeg
-  is not available here — RUNBOOK notes how to regenerate a real frame later). MP4 copied to
+  is not available here, RUNBOOK notes how to regenerate a real frame later). MP4 copied to
   `public/video/`.
 
-### C. Why us / Testimonials / Integrations / FAQ — `modules/home/*`
+### C. Why us / Testimonials / Integrations / FAQ: `modules/home/*`
 - `WhyUs` (server): three `Card hoverable` with 56 px accent-tint icon circle.
 - `Testimonials` (server): `shouldRenderTestimonials(entries, isProductionSite)` (pure,
   tested) → omitted when production host && all placeholders; cards with quote glyph, Light
@@ -78,7 +78,7 @@ Unchanged stack (Next 16.3.5, React 19.3, Tailwind 4.3). New deps (exact pins):
   instant under reduced motion), mounted near-viewport through the shared loader (§G).
   `onValueChange` → `track('faq_open', { question })`.
 
-### D. WhatsApp widget (§6.15) — `modules/core/whatsapp-widget.tsx` (client, lazy)
+### D. WhatsApp widget (§6.15): `modules/core/whatsapp-widget.tsx` (client, lazy)
 - Mounted from the layout via `dynamic(..., { ssr: false })` after a 1.5 s timer (so it is
   never in the first-paint JS); scale-in 200 ms; accent dot pulses once at 6 s
   (`sessionStorage` flag). Popup 320 px / `calc(100vw − 32px)`; Escape + outside click close;
@@ -103,7 +103,7 @@ Unchanged stack (Next 16.3.5, React 19.3, Tailwind 4.3). New deps (exact pins):
   Mobile: full width with 88 px bottom clearance.
 - `AnalyticsBridge` (client, ~1 kB) **owns the granted-on-reload path**: on mount it reads
   the cookie; `granted` → `gtag('consent','update',{analytics_storage:'granted'})` and mount
-  `<GoogleAnalytics>`; the bar only handles the first decision. Registers sinks — Umami
+  `<GoogleAnalytics>`; the bar only handles the first decision. Registers sinks, Umami
   (`window.umami?.track`) always, GA4 (`gtag('event', …)`) when granted; delegated `click`
   listener on `document` that reads `data-track`/`data-location` and detects outbound links
   with `hostname === 'b7r.app' || hostname.endsWith('.b7r.app')` for `outbound_app_click`
@@ -117,7 +117,7 @@ Unchanged stack (Next 16.3.5, React 19.3, Tailwind 4.3). New deps (exact pins):
 - Env: `NEXT_PUBLIC_GA_ID`, `NEXT_PUBLIC_UMAMI_SRC`, `NEXT_PUBLIC_UMAMI_ID` optional in 1b
   (features no-op when unset); required-in-production list grows in 1c.
 
-### F. Newsletter (§6.14) — `modules/forms/newsletter/`
+### F. Newsletter (§6.14): `modules/forms/newsletter/`
 - `NewsletterForm` (client): email input (LTR), honeypot `website` (visually hidden,
   `tabIndex=-1`, `autoComplete="off"`), submit; states idle/submitting/success/error with
   `aria-live="polite"`; replaces the disabled footer form.
@@ -158,9 +158,9 @@ Unchanged stack (Next 16.3.5, React 19.3, Tailwind 4.3). New deps (exact pins):
   budget assertion unchanged.
 - LCP time box (≤ 1 h): (1) measure the chunk graph and the hero island's own weight;
   (2) confirm whether the LCP element is the H1 or the image under simulation and whether a
-  smaller hero island moves it; (3) record the result in ADR-014 — met, or the measured
+  smaller hero island moves it; (3) record the result in ADR-014, met, or the measured
   floor with the reason. (`optimizePackageImports` for lucide is already Next's default; a
-  server `Header` cannot know the pathname for active/transparent state — both dropped.)
+  server `Header` cannot know the pathname for active/transparent state, both dropped.)
 
 ### H. Tests
 - Unit: `rate-limit.test.ts` (window, pruning, per-IP), `consent.test.ts`,
@@ -170,7 +170,7 @@ Unchanged stack (Next 16.3.5, React 19.3, Tailwind 4.3). New deps (exact pins):
   `video.spec.ts`, `home-sections.spec.ts` (why-us strings, testimonials badges on preview,
   integrations tiles, accordion single-open + aria), `whatsapp.spec.ts` (link, position,
   Escape), `consent.spec.ts` (no GA before, GA after موافق, none after رفض, cookie, no bar
-  on reload, Umami tag when configured), `newsletter.spec.ts` — **single project
+  on reload, Umami tag when configured), `newsletter.spec.ts`, **single project
   (`desktop-chrome`), `mode: 'serial'`, each test
   sends its own `x-forwarded-for` so the in-memory limiter sees distinct clients; the 429
   test is last and spends exactly its own 6 requests** (success via mock transport, invalid,
@@ -195,6 +195,6 @@ Unchanged stack (Next 16.3.5, React 19.3, Tailwind 4.3). New deps (exact pins):
 ## Open items for Dhia (do not block)
 - Resend API key + audience id, GA4 id, Umami src/id to put in `.env.local` when available.
 - Real poster frame for the video (needs ffmpeg or a still from Dhia); captions or an intro
-  card for the clip (Appendix G item 8) — without captions the `<video>` fails axe's
+  card for the clip (Appendix G item 8), without captions the `<video>` fails axe's
   `video-caption` rule, which is why it mounts only after play.
 - One new string: «تعذّر الاشتراك الآن، حاول لاحقاً.» for newsletter 429/5xx (`TODO(copy)`).

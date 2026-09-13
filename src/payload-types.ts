@@ -149,6 +149,8 @@ export interface UserAuthOperations {
   };
 }
 /**
+ * Panel accounts. Editors change content; admins also change settings and users.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users".
  */
@@ -179,6 +181,8 @@ export interface User {
   collection: 'users';
 }
 /**
+ * Images and files used by pages and products. Give every image alt text.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "media".
  */
@@ -189,6 +193,13 @@ export interface Media {
    */
   alt: string;
   credit?: string | null;
+  /**
+   * Who saved the current version and when. Drafts do not change it.
+   */
+  lastSavedBy?: {
+    name?: string | null;
+    at?: string | null;
+  };
   prefix?: string | null;
   updatedAt: string;
   createdAt: string;
@@ -237,6 +248,8 @@ export interface Media {
   };
 }
 /**
+ * Products on the site and in the designer: prices, photos, sizes and colours.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "products".
  */
@@ -297,11 +310,20 @@ export interface Product {
     };
   };
   printMethodLabel: string;
+  /**
+   * Who saved the current version and when. Drafts do not change it.
+   */
+  lastSavedBy?: {
+    name?: string | null;
+    at?: string | null;
+  };
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
 }
 /**
+ * Site pages as editable blocks. The seven designed pages keep their URLs; add new ones freely.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "pages".
  */
@@ -441,11 +463,20 @@ export interface Page {
     description: string;
     ogImage?: (number | null) | Media;
   };
+  /**
+   * Who saved the current version and when. Drafts do not change it.
+   */
+  lastSavedBy?: {
+    name?: string | null;
+    at?: string | null;
+  };
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
 }
 /**
+ * FAQ entries by group. Up to five show on the home page.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "faqs".
  */
@@ -463,10 +494,19 @@ export interface Faq {
    */
   showOnHome?: boolean | null;
   homeOrder?: number | null;
+  /**
+   * Who saved the current version and when. Drafts do not change it.
+   */
+  lastSavedBy?: {
+    name?: string | null;
+    at?: string | null;
+  };
   updatedAt: string;
   createdAt: string;
 }
 /**
+ * Merchant quotes on the home page. Placeholders never show on the site.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "testimonials".
  */
@@ -481,11 +521,20 @@ export interface Testimonial {
    * Placeholders show a «sample» badge on previews and are omitted on b7r.sa until a real entry exists.
    */
   placeholder?: boolean | null;
+  /**
+   * Who saved the current version and when. Drafts do not change it.
+   */
+  lastSavedBy?: {
+    name?: string | null;
+    at?: string | null;
+  };
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
 }
 /**
+ * Connected platforms (Salla, Zid, Shopify) and their order in the integrations strip.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "integrations".
  */
@@ -498,10 +547,19 @@ export interface Integration {
   order: number;
   name: string;
   nameLatin: string;
+  /**
+   * Who saved the current version and when. Drafts do not change it.
+   */
+  lastSavedBy?: {
+    name?: string | null;
+    at?: string | null;
+  };
   updatedAt: string;
   createdAt: string;
 }
 /**
+ * Send an old URL to a page or a new URL. Live as soon as it is saved.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "redirects".
  */
@@ -741,6 +799,12 @@ export interface UsersSelect<T extends boolean = true> {
 export interface MediaSelect<T extends boolean = true> {
   alt?: T;
   credit?: T;
+  lastSavedBy?:
+    | T
+    | {
+        name?: T;
+        at?: T;
+      };
   prefix?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -848,6 +912,12 @@ export interface ProductsSelect<T extends boolean = true> {
             };
       };
   printMethodLabel?: T;
+  lastSavedBy?:
+    | T
+    | {
+        name?: T;
+        at?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
@@ -988,6 +1058,12 @@ export interface PagesSelect<T extends boolean = true> {
         description?: T;
         ogImage?: T;
       };
+  lastSavedBy?:
+    | T
+    | {
+        name?: T;
+        at?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
@@ -1003,6 +1079,12 @@ export interface FaqsSelect<T extends boolean = true> {
   order?: T;
   showOnHome?: T;
   homeOrder?: T;
+  lastSavedBy?:
+    | T
+    | {
+        name?: T;
+        at?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
 }
@@ -1017,6 +1099,12 @@ export interface TestimonialsSelect<T extends boolean = true> {
   avatar?: T;
   order?: T;
   placeholder?: T;
+  lastSavedBy?:
+    | T
+    | {
+        name?: T;
+        at?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
@@ -1030,6 +1118,12 @@ export interface IntegrationsSelect<T extends boolean = true> {
   order?: T;
   name?: T;
   nameLatin?: T;
+  lastSavedBy?:
+    | T
+    | {
+        name?: T;
+        at?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
 }
@@ -1122,6 +1216,8 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
   createdAt?: T;
 }
 /**
+ * The home page, section by section. Drafts are free; publishing is live within seconds.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "home".
  */
@@ -1217,11 +1313,20 @@ export interface Home {
     lead: string;
     button: string;
   };
+  /**
+   * Who saved the current version and when. Drafts do not change it.
+   */
+  lastSavedBy?: {
+    name?: string | null;
+    at?: string | null;
+  };
   _status?: ('draft' | 'published') | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
 /**
+ * Site name, contact details, social accounts and the welcome offer.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "site-settings".
  */
@@ -1260,10 +1365,19 @@ export interface SiteSetting {
     login: string;
   };
   legalEntity: string;
+  /**
+   * Who saved the current version and when. Drafts do not change it.
+   */
+  lastSavedBy?: {
+    name?: string | null;
+    at?: string | null;
+  };
   updatedAt?: string | null;
   createdAt?: string | null;
 }
 /**
+ * Header and footer links and the button labels.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "navigation".
  */
@@ -1293,10 +1407,19 @@ export interface Navigation {
   menuOpenLabel: string;
   menuCloseLabel: string;
   menuWhatsappLine: string;
+  /**
+   * Who saved the current version and when. Drafts do not change it.
+   */
+  lastSavedBy?: {
+    name?: string | null;
+    at?: string | null;
+  };
   updatedAt?: string | null;
   createdAt?: string | null;
 }
 /**
+ * Search titles and descriptions for the fixed pages, and the default share image.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "seo-defaults".
  */
@@ -1333,6 +1456,13 @@ export interface SeoDefault {
   verification?: {
     google?: string | null;
     bing?: string | null;
+  };
+  /**
+   * Who saved the current version and when. Drafts do not change it.
+   */
+  lastSavedBy?: {
+    name?: string | null;
+    at?: string | null;
   };
   updatedAt?: string | null;
   createdAt?: string | null;
@@ -1448,6 +1578,12 @@ export interface HomeSelect<T extends boolean = true> {
         lead?: T;
         button?: T;
       };
+  lastSavedBy?:
+    | T
+    | {
+        name?: T;
+        at?: T;
+      };
   _status?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -1488,6 +1624,12 @@ export interface SiteSettingsSelect<T extends boolean = true> {
         login?: T;
       };
   legalEntity?: T;
+  lastSavedBy?:
+    | T
+    | {
+        name?: T;
+        at?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;
@@ -1519,6 +1661,12 @@ export interface NavigationSelect<T extends boolean = true> {
   menuOpenLabel?: T;
   menuCloseLabel?: T;
   menuWhatsappLine?: T;
+  lastSavedBy?:
+    | T
+    | {
+        name?: T;
+        at?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;
@@ -1545,6 +1693,12 @@ export interface SeoDefaultsSelect<T extends boolean = true> {
     | {
         google?: T;
         bing?: T;
+      };
+  lastSavedBy?:
+    | T
+    | {
+        name?: T;
+        at?: T;
       };
   updatedAt?: T;
   createdAt?: T;

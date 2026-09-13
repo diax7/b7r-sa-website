@@ -13,8 +13,8 @@ export function indexablePaths(paths: Iterable<string>): string[] {
 }
 
 /**
- * Whether a publish should queue a ping (ADR-033): only on the production runtime — the
- * `B7R_RUNTIME` flag set solely in the CranL production app, never the origin alone — and
+ * Whether a publish should queue a ping (ADR-033): only on the production runtime, the
+ * `B7R_RUNTIME` flag set solely in the CranL production app, never the origin alone, and
  * only when the key exists. CI and previews never reach IndexNow.
  */
 export function shouldPing(raw: Record<string, string | undefined> = process.env): boolean {

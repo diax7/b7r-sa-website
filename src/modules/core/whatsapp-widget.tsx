@@ -17,7 +17,7 @@ const dockClass =
   'fixed bottom-[calc(24px+var(--bottom-dock,0px))] end-6 z-40 transition-[bottom] duration-(--duration-base)';
 
 /**
- * Floating WhatsApp entry point (BRD 6.15, amended 2026-09-13: bottom-left — the inline end
+ * Floating WhatsApp entry point (BRD 6.15, amended 2026-09-13: bottom-left, the inline end
  * of this RTL site, so a logical class does it). Mounted 1.5 s after load by the layout; a
  * dot pulses once 6 s after load, once per session.
  */

@@ -1,4 +1,4 @@
-# Feature Specification: Phase 2b — Every page from the CMS
+# Feature Specification: Phase 2b: Every page from the CMS
 
 **Feature Branch**: `phase/2b-cms-content` · **Created**: 2026-09-13 · **Status**: Draft
 
@@ -12,7 +12,7 @@ snapshot schedule. Everything is built and proven against Docker Postgres + MinI
 
 ## User Scenarios & Testing
 
-### US1 — The home page from the admin (P1)
+### US1: The home page from the admin (P1)
 Dhia opens «الصفحة الرئيسية» in the admin: one document with fixed sections in the BRD order
 (hero slides, product strip order, designer copy, steps, video, why-us, testimonials,
 integrations intro, FAQ selection, ribbon). Each section's copy and media are editable; the
@@ -20,10 +20,10 @@ sections after the designer carry an `enabled` toggle (hero, strip, designer and
 cannot be switched off, BRD 9.5). Publishing regenerates `/` at once. The section order and
 the layout never change from the admin (a designed page, not a page builder).
 
-### US2 — Pages with blocks (P1)
+### US2: Pages with blocks (P1)
 `/how-it-works`, `/about`, `/contact`, `/faq`, `/terms`, `/shipping` and `/privacy` are
 documents in a `pages` collection: slug (fixed list for the seven, free for new pages), title,
-lead, and a block list drawn from a small set — rich text, steps, cards, media banner, the
+lead, and a block list drawn from a small set, rich text, steps, cards, media banner, the
 MISK credential, the contact cards, the booking card, the FAQ list, the legal body (with its
 `updatedAt` line). The seven existing pages render byte-for-byte the same copy after
 migration (verbatim tests re-pointed at the seed). A new page (for example `/creators`)
@@ -31,7 +31,7 @@ can be assembled from the blocks and is a routed, indexed page on publish with i
 metadata. Rich text is Lexical: H2/H3, lists, links, images, and a «CTA» block; RTL editing
 verified in the admin e2e.
 
-### US3 — FAQs, testimonials, integrations (P1)
+### US3: FAQs, testimonials, integrations (P1)
 Three collections replace the content files. `faqs` (group, question, answer, order,
 `showOnHome`) feed `/faq` and the five home items (exactly five with `showOnHome`; the
 admin refuses a sixth). `testimonials` (quote, name, store, avatar, `placeholder`,
@@ -40,14 +40,14 @@ badge on previews and omits the section on the production host. `integrations` (
 name, Latin name, logo, status, order) feed the tiles. Each publish regenerates the pages
 that render it.
 
-### US4 — Redirects from the admin (P2)
+### US4: Redirects from the admin (P2)
 `@payloadcms/plugin-redirects` holds the §5.2 map as the editor-facing source; the admin adds
 or changes an entry and it is live within a minute without a deploy (308 for internal
 targets, 307 for external, single-segment sources). `next.config` redirects and the
 proxy's 410s keep working exactly as today for the seeded list. Loops, self-redirects,
 nested sources and non-`https:` targets are refused in the admin.
 
-### US5 — Publish pipeline (P2)
+### US5: Publish pipeline (P2)
 Publishing any document regenerates the routes that render it (ADR-030) and, in the
 production runtime only (`B7R_RUNTIME`), enqueues one IndexNow ping per changed public URL
 through Payload's jobs queue (retried, logged, never blocking the editor). Scheduled
@@ -55,13 +55,13 @@ publish works through the same queue (`publishAt`); the queue runs inside the co
 (`jobs.autoRun`), its run endpoint is closed to everyone, and a publish that happens from
 the queue (outside a request) is covered by the 60 s timer without an error.
 
-### US6 — Login hardening and e-mail (P2)
+### US6: Login hardening and e-mail (P2)
 The admin login form carries Turnstile when `NEXT_PUBLIC_TURNSTILE_SITE_KEY` is set (ADR-027
 design: widget before login → cookie → `beforeLogin` verification), with the always-pass
 test key in CI. `@payloadcms/email-resend` sends password resets and the verification e-mail
 of a new editor from `RESEND_FROM`; without a key the admin sees the RUNBOOK note.
 
-### US7 — Backups (P2)
+### US7: Backups (P2)
 `scripts/backup.sh` takes a `pg_dump` and uploads it to a **private** backups bucket (never
 the public media bucket) with a 30-day retention; a GitHub Actions schedule runs it weekly
 against production once the secrets exist (no-op notice until then). A restore is
@@ -69,14 +69,14 @@ documented and rehearsed once against a scratch database in CI
 (`scripts/ci/restore-check.sh`); CI also proves an outsider cannot list or read the
 backups bucket.
 
-### US8 — Admin polish and content files removed (P3)
+### US8: Admin polish and content files removed (P3)
 Every collection, global, field, help text and group label is Arabic (English left as the
 generated fallback); the dashboard groups read «المحتوى», «الإعدادات», «الإدارة»; the
 document titles use Arabic `useAsTitle`. `src/content/*.ts` other than `schema.ts`,
 `seo-copy.ts`, `blog/*` (Level 3) and the seed fixtures are deleted; the seed folder holds
 every migrated document.
 
-### US9 — Level 1 unchanged for visitors (P1)
+### US9: Level 1 unchanged for visitors (P1)
 Every §6.18 criterion, every e2e suite and Lighthouse on the five URLs stay green; no admin
 JS reaches a public page; pages remain prerendered with ISR (60 s) and on-demand paths.
 

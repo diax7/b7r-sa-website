@@ -9,7 +9,8 @@ import {
   type Testimonial,
 } from '@/content/schema';
 import { toFaq, toHome, toIntegration, toPage, toTestimonial } from '@/lib/cms/mappers';
-import { cms, PUBLIC_READ, PUBLISHED } from '@/lib/cms/payload';
+import { cms, PUBLIC_READ } from '@/lib/cms/payload';
+import { readsDrafts, versionedRead } from '@/lib/cms/read-mode';
 
 /**
  * Home-page content reads (BRD 9.6, ADR-030): the `home` global and the three small
@@ -17,10 +18,15 @@ import { cms, PUBLIC_READ, PUBLISHED } from '@/lib/cms/payload';
  * and on publish.
  */
 
-/** The published `home` global as the `Home` contract; the strip order comes as slugs. */
+/**
+ * The `home` global as the `Home` contract; the strip order comes as slugs. Published, or the
+ * latest draft when the request is a preview (ADR-039).
+ */
 export const getHome = cache(async (): Promise<Home> => {
   const payload = await cms();
-  return toHome(await payload.findGlobal({ slug: 'home', ...PUBLIC_READ, depth: 1 }));
+  const draft = await readsDrafts();
+  const doc = await payload.findGlobal({ slug: 'home', ...PUBLIC_READ, draft, depth: 1 });
+  return toHome(doc, { draft });
 });
 
 const groupIndex = (group: FaqItem['group']) => FAQ_GROUPS.indexOf(group);
@@ -54,7 +60,7 @@ export const getTestimonials = cache(async (): Promise<Testimonial[]> => {
   const { docs } = await payload.find({
     collection: 'testimonials',
     ...PUBLIC_READ,
-    where: PUBLISHED,
+    ...(await versionedRead()),
     depth: 1,
     limit: 50,
     pagination: false,
@@ -77,19 +83,23 @@ export const getIntegrations = cache(async (): Promise<Integration[]> => {
   return docs.map(toIntegration);
 });
 
-/** Published pages, newest first; `depth: 1` populates the block media and the OG image. */
+/**
+ * Published pages, newest first; `depth: 1` populates the block media and the OG image. In a
+ * preview request the drafts come back instead, unfiltered.
+ */
 export const getPages = cache(async (): Promise<Page[]> => {
   const payload = await cms();
+  const read = await versionedRead();
   const { docs } = await payload.find({
     collection: 'pages',
     ...PUBLIC_READ,
-    where: PUBLISHED,
+    ...read,
     depth: 1,
     limit: 200,
     pagination: false,
     sort: '-updatedAt',
   });
-  return docs.map(toPage);
+  return docs.map((doc) => toPage(doc, { draft: read.draft }));
 });
 
 /** One published page by slug, or undefined. */

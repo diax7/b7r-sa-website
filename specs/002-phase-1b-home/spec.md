@@ -1,4 +1,4 @@
-# Feature Specification: Phase 1b — Rest of the home page
+# Feature Specification: Phase 1b: Rest of the home page
 
 **Feature Branch**: `phase/1b-home` · **Created**: 2026-09-13 · **Status**: Draft
 
@@ -13,7 +13,7 @@ and newsletter.
 
 ## User Scenarios & Testing
 
-### US1 — The merchant understands the model in three verbs (P1)
+### US1: The merchant understands the model in three verbs (P1)
 
 Below the designer, «ثلاث خطوات وتبدأ» shows three steps. On desktop the section pins while
 the visitor scrolls through it: the active step lights up (badge filled primary, 100 %
@@ -28,7 +28,7 @@ Acceptance:
 3. Given reduced motion on desktop, then no sticky pin and all three icons are visible.
 4. The link «اعرف أكثر عن طريقة العمل» points to `/how-it-works`.
 
-### US2 — The merchant watches how printing works (P2)
+### US2: The merchant watches how printing works (P2)
 
 «شاهد كيف نطبع طلبك» with a 16:9 frame, poster, and a 72 px play button. Click plays the
 self-hosted MP4 with sound and native controls; no autoplay, no loop; `video_play` tracked.
@@ -36,7 +36,7 @@ self-hosted MP4 with sound and native controls; no autoplay, no loop; `video_pla
 Acceptance: poster visible before play; `<video preload="none" playsinline>`; after click,
 `controls` present and the video is playing; the poster image has Arabic alt.
 
-### US3 — The merchant sees the three proof points and social proof (P2)
+### US3: The merchant sees the three proof points and social proof (P2)
 
 «لماذا يختارنا التجار؟» renders three cards (ShieldCheck / Workflow / Zap). «تجار بدأوا معنا»
 renders the three sample cards each with a visible «نموذج» badge and `data-placeholder`,
@@ -45,7 +45,7 @@ and the whole section is omitted on the production host while every entry is a p
 Acceptance: three why-us cards with the exact §4.4 strings; testimonials visible with badges
 on the preview host; absent when `NEXT_PUBLIC_SITE_URL=https://b7r.sa`; mobile snap carousel.
 
-### US4 — The merchant confirms the integrations and gets answers (P1)
+### US4: The merchant confirms the integrations and gets answers (P1)
 
 «اربط متجرك بضغطة واحدة» shows three tiles (سلة, زد, شوبيفاي) with the official logos and the
 «متاح الآن» badge; not links. «الأسئلة الشائعة» is a single-open accordion with the five
@@ -54,7 +54,7 @@ homepage items and the «كل الأسئلة» link to `/faq`.
 Acceptance: 3 tiles fit in a row at 360 px; accordion buttons carry `aria-expanded`, only one
 open at a time, chevron rotates, answers ≤ 35 words; `faq_open` tracked with the question.
 
-### US5 — The merchant reaches a human on WhatsApp (P1)
+### US5: The merchant reaches a human on WhatsApp (P1)
 
 A green floating button at the physical bottom-right appears 1.5 s after load; a dot pulses
 once 6 s after load, once per session. Click opens a 320 px card (header «بحر برنت / فريق
@@ -65,7 +65,7 @@ tab. Escape and outside click close. No hours, no reply-time promise, no online 
 Acceptance: button is at the physical right in RTL; `whatsapp_click{location:"widget"}`
 tracked; on mobile the popup is `calc(100vw - 32px)` wide; keyboard operable.
 
-### US6 — Analytics respects consent (P1)
+### US6: Analytics respects consent (P1)
 
 Umami loads on every page without consent. A consent card appears 800 ms after load at the
 bottom-end (left in RTL) with the §4.7 text and «موافق» / «رفض» / «سياسة الخصوصية». Consent
@@ -79,7 +79,7 @@ values and expiry; no bar on reload; Umami script tag present in both states (wh
 `NEXT_PUBLIC_UMAMI_SRC` is set); the `gtag('consent','default', …denied)` call is in the
 initial HTML.
 
-### US7 — The merchant subscribes to the newsletter (P2)
+### US7: The merchant subscribes to the newsletter (P2)
 
 The footer form posts to `POST /api/newsletter`. Valid email → «اشتركت. سنرسل لك الجديد فقط.»;
 invalid → «أدخل بريداً إلكترونياً صحيحاً.»; honeypot filled → 200 with no side effect; 6th
@@ -88,13 +88,13 @@ request from one IP in 10 minutes → 429; duplicates → `ok: true`. `newslette
 Acceptance: e2e for each path (success via a mocked Resend transport); the button disables
 while submitting; messages are announced with `aria-live`.
 
-### US8 — Every CTA and outbound click is measured (P2)
+### US8: Every CTA and outbound click is measured (P2)
 
 `track()` sends to Umami always and to GA4 when granted. Server-rendered links carry
 `data-track` / `data-location`; a single document listener converts clicks into events, and
 any link to `b7r.app` emits `outbound_app_click{href}`.
 
-### US9 — Performance holds with everything enabled (P1)
+### US9: Performance holds with everything enabled (P1)
 
 Lighthouse mobile on `/` stays ≥ 90 / 95 / 95 / 100; CLS ≤ 0.1; JS ≤ 180 kB gzip on first
 paint (widgets, consent, video, steps, accordion, analytics bridge all lazy or tiny);
