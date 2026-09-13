@@ -439,20 +439,26 @@ needed a fresh challenge on every retry. Shipped instead: the widget above the l
 (`admin.components.beforeLogin`) executes once on mount and posts its token to
 `/api/turnstile/login` (JSON + same-origin, 10 per 10 min per IP), which verifies it with
 `siteverify` and answers a signed, HttpOnly, `SameSite=Lax` cookie scoped to `/api/payload`
-— `<exp>.<hmac>` over the Payload secret, ten minutes, refreshed by the widget before it
-expires. `users.hooks.beforeOperation` (`gateLogin`, login only) admits a request whose
+— `<exp>.<hmac>` over the expiry and the client address with the Payload secret, ten minutes,
+refreshed by the widget before it expires; binding the address means one solved challenge
+cannot be shared across a farm (a visitor whose network changes mid-flow solves it once
+more). `users.hooks.beforeOperation` (`gateLogin`, login only) admits a request whose
 cookie verifies and throws a 401 with the Arabic reason before Payload touches the password
 or the attempt counter; no network call on the login path itself. Without
 `TURNSTILE_SECRET_KEY` the gate is open (204, no cookie, one warning at boot) so a fresh
-install can sign in, and `/api/health` shows `turnstile: off`. CI keeps the always-pass site
-key and no secret; the pure pieces (`makeLoginGate`, `verifyLoginGate`, `loginAllowed`) are
-unit-tested and the sign-in e2e asserts the widget opens the gate.
+install can sign in, and `/api/health` shows `turnstile: off` — but both Turnstile keys are
+in the production-required set, so a production boot never runs the login open (ADR-019's
+"optional until the keys exist" was the contact form; the login is a different risk). CI
+keeps the always-pass site key and no secret; the pure pieces (`makeLoginGate`,
+`verifyLoginGate`, `loginAllowed`) are unit-tested and the sign-in e2e asserts the widget
+opens the gate.
 
 **E-mail.** `@payloadcms/email-resend@3.89.0` is the adapter when `RESEND_API_KEY` and a
 valid `RESEND_FROM` («بحر برنت <no-reply@b7r.sa>» or a bare address) are set; otherwise
 Payload logs the message and the RUNBOOK's manual reset applies. The forgot-password mail
-is Arabic and right-to-left with one button to `/admin/reset/<token>` on the request's own
-origin; `/api/health` reports `email: resend | console`.
+is Arabic and right-to-left with one button to `/admin/reset/<token>` on
+`PAYLOAD_PUBLIC_SERVER_URL` (never the request's Host header); `/api/health` reports
+`email: resend | console`.
 
 **Backups** (BRD 9.8). `scripts/backup.sh` runs `pg_dump --format=custom` and uploads
 `YYYY-MM-DD.dump` with the AWS CLI to a **separate private bucket** with its own key pair
@@ -503,7 +509,9 @@ Amended 2026-09-13 (Dhia's quick edits): the sample design is gone — no «جر
 جاهزاً» link, no `designer.sample` CMS field, no `designer_sample` event, no
 `public/designs/sample-tasmeemak.png` (ADR-007 retired). The canvas starts empty and only an
 upload fills it; every design is an object URL. The pricing legend «التسعير» and the
-«تقدير لا يشمل الشحن والضريبة» footnote are gone from the calculator too.
+«تقدير لا يشمل الشحن والضريبة» footnote are gone from the calculator too. The migration
+drops the `designer_sample` column in place — pre-launch, with no running image to protect;
+after launch a removed field is a two-release contract (ADR-025).
 
 ## ADR-037 — The video is a muted background loop (2026-09-13)
 

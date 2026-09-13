@@ -33,5 +33,7 @@ AWS_ACCESS_KEY_ID="$BACKUP_S3_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$BACKUP_S3_S
   AWS_EC2_METADATA_DISABLED=true aws --endpoint-url "$endpoint" --region "$region" \
   s3 cp "$file" "s3://$BACKUP_S3_BUCKET/$stamp.dump" --only-show-errors
 
-[ "${1:-}" ] && cp "$file" "$1"
+if [ -n "${1:-}" ]; then
+  cp "$file" "$1"
+fi
 echo "backup: $stamp.dump ($size bytes) → s3://$BACKUP_S3_BUCKET"

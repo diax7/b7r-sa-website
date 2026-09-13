@@ -10,21 +10,24 @@ import {
 import { loginAllowed } from '@/modules/cms/auth/login-gate';
 
 const SECRET = 'a-very-long-payload-secret-for-tests-0123456789';
+const IP = '203.0.113.7';
 
 describe('login gate (ADR-034): a signed ten-minute cookie stands in for the Turnstile token', () => {
-  it('a fresh gate verifies; an expired, tampered or foreign one does not', () => {
+  it('a fresh gate verifies; an expired, tampered, foreign or relocated one does not', () => {
     const now = 1_700_000_000_000;
-    const gate = makeLoginGate(SECRET, now);
-    expect(verifyLoginGate(gate, SECRET, now + 1_000)).toBe(true);
-    expect(verifyLoginGate(gate, SECRET, now + LOGIN_GATE_TTL_MS + 1)).toBe(false);
-    expect(verifyLoginGate(gate, 'another-secret-of-the-same-length-0123456789012', now)).toBe(
+    const gate = makeLoginGate(SECRET, IP, now);
+    expect(verifyLoginGate(gate, SECRET, IP, now + 1_000)).toBe(true);
+    expect(verifyLoginGate(gate, SECRET, IP, now + LOGIN_GATE_TTL_MS + 1)).toBe(false);
+    expect(verifyLoginGate(gate, 'another-secret-of-the-same-length-0123456789012', IP, now)).toBe(
       false,
     );
+    // The signature covers the address: a cookie solved elsewhere is worthless here.
+    expect(verifyLoginGate(gate, SECRET, '198.51.100.9', now)).toBe(false);
     const [exp, mac] = gate.split('.');
-    expect(verifyLoginGate(`${Number(exp) + 60_000}.${mac}`, SECRET, now)).toBe(false);
-    expect(verifyLoginGate(`${exp}.${mac?.slice(1)}x`, SECRET, now)).toBe(false);
-    expect(verifyLoginGate('garbage', SECRET, now)).toBe(false);
-    expect(verifyLoginGate(undefined, SECRET, now)).toBe(false);
+    expect(verifyLoginGate(`${Number(exp) + 60_000}.${mac}`, SECRET, IP, now)).toBe(false);
+    expect(verifyLoginGate(`${exp}.${mac?.slice(1)}x`, SECRET, IP, now)).toBe(false);
+    expect(verifyLoginGate('garbage', SECRET, IP, now)).toBe(false);
+    expect(verifyLoginGate(undefined, SECRET, IP, now)).toBe(false);
   });
 
   it('the cookie is HttpOnly, Lax, scoped to the CMS API and Secure in production', () => {
@@ -46,24 +49,15 @@ describe('login gate (ADR-034): a signed ten-minute cookie stands in for the Tur
 
   it('the login operation is open without a Turnstile secret and gated with one', () => {
     const now = 1_700_000_000_000;
-    const gate = makeLoginGate(SECRET, now);
+    const gate = makeLoginGate(SECRET, IP, now);
     const header = `${LOGIN_GATE_COOKIE}=${gate}`;
-    expect(loginAllowed({ cookieHeader: null, secret: SECRET, turnstileSecret: undefined })).toBe(
-      true,
-    );
-    expect(loginAllowed({ cookieHeader: null, secret: SECRET, turnstileSecret: 'ts', now })).toBe(
+    const base = { ip: IP, secret: SECRET, turnstileSecret: 'ts', now };
+    expect(loginAllowed({ ...base, cookieHeader: null, turnstileSecret: undefined })).toBe(true);
+    expect(loginAllowed({ ...base, cookieHeader: null })).toBe(false);
+    expect(loginAllowed({ ...base, cookieHeader: header })).toBe(true);
+    expect(loginAllowed({ ...base, cookieHeader: header, ip: '198.51.100.9' })).toBe(false);
+    expect(loginAllowed({ ...base, cookieHeader: header, now: now + LOGIN_GATE_TTL_MS + 1 })).toBe(
       false,
     );
-    expect(loginAllowed({ cookieHeader: header, secret: SECRET, turnstileSecret: 'ts', now })).toBe(
-      true,
-    );
-    expect(
-      loginAllowed({
-        cookieHeader: header,
-        secret: SECRET,
-        turnstileSecret: 'ts',
-        now: now + LOGIN_GATE_TTL_MS + 1,
-      }),
-    ).toBe(false);
   });
 });

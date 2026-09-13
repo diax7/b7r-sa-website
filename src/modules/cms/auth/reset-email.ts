@@ -14,7 +14,7 @@ const escape = (s: string) =>
     .replaceAll('>', '&gt;')
     .replaceAll('"', '&quot;');
 
-/** The reset link on the admin, from the request's own origin (never a hard-coded host). */
+/** The reset link on the admin, on the configured server URL (never the request's Host). */
 export function resetUrl(serverUrl: string, token: string): string {
   return `${serverUrl.replace(/\/$/, '')}/admin/reset/${encodeURIComponent(token)}`;
 }

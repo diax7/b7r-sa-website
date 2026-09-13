@@ -35,7 +35,7 @@ export async function POST(req: Request) {
   const res = new NextResponse(null, { status: 204 });
   res.headers.set(
     'Set-Cookie',
-    loginGateCookie(makeLoginGate(cmsEnv().secret), process.env.NODE_ENV === 'production'),
+    loginGateCookie(makeLoginGate(cmsEnv().secret, ip), process.env.NODE_ENV === 'production'),
   );
   return res;
 }

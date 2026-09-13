@@ -5,26 +5,34 @@ import { createHmac, timingSafeEqual } from 'node:crypto';
  * login page verifies one Turnstile token through `/api/turnstile/login`, which answers with
  * a short-lived signed cookie; the login operation then admits a request that carries a
  * valid cookie without another network call. Tokens are single-use, so a verified cookie
- * — not a token per attempt — is what lets a mistyped password be retried. Pure functions
- * here (unit-tested); the cookie name is shared with the endpoint and the hook.
+ * — not a token per attempt — is what lets a mistyped password be retried. The signature
+ * covers the client address, so one solved challenge cannot be handed to a farm; a visitor
+ * whose address changes mid-flow solves it once more. Pure functions here (unit-tested);
+ * the cookie name is shared with the endpoint and the hook.
  */
 export const LOGIN_GATE_COOKIE = 'b7r_login_ok';
 export const LOGIN_GATE_TTL_MS = 10 * 60 * 1000;
 
-function sign(exp: number, secret: string): string {
-  return createHmac('sha256', secret).update(`login-gate:${exp}`).digest('base64url');
+function sign(exp: number, ip: string, secret: string): string {
+  return createHmac('sha256', secret).update(`login-gate:${exp}:${ip}`).digest('base64url');
 }
 
-/** `<exp>.<hmac>`: the expiry in ms since the epoch, signed with the Payload secret. */
-export function makeLoginGate(secret: string, now = Date.now(), ttlMs = LOGIN_GATE_TTL_MS): string {
+/** `<exp>.<hmac>`: the expiry in ms since the epoch and the client address, signed. */
+export function makeLoginGate(
+  secret: string,
+  ip: string,
+  now = Date.now(),
+  ttlMs = LOGIN_GATE_TTL_MS,
+): string {
   const exp = now + ttlMs;
-  return `${exp}.${sign(exp, secret)}`;
+  return `${exp}.${sign(exp, ip, secret)}`;
 }
 
-/** True when the value is well-formed, signed with this secret, and not yet expired. */
+/** True when the value is well-formed, signed for this address with this secret, and live. */
 export function verifyLoginGate(
   value: string | undefined,
   secret: string,
+  ip: string,
   now = Date.now(),
 ): boolean {
   if (!value) return false;
@@ -32,7 +40,7 @@ export function verifyLoginGate(
   if (!expText || !mac) return false;
   const exp = Number(expText);
   if (!Number.isFinite(exp) || exp < now) return false;
-  const expected = sign(exp, secret);
+  const expected = sign(exp, ip, secret);
   if (expected.length !== mac.length) return false;
   return timingSafeEqual(Buffer.from(expected), Buffer.from(mac));
 }

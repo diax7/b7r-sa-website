@@ -45,7 +45,15 @@ describe('production env gate (BRD 8.5)', () => {
   });
 
   it('requires the CMS set: database, a long secret, same-origin server URL, S3 (BRD 9.2)', () => {
-    for (const name of ['DATABASE_URL', 'PAYLOAD_SECRET', 'S3_BUCKET', 'S3_SECRET_ACCESS_KEY']) {
+    for (const name of [
+      'DATABASE_URL',
+      'PAYLOAD_SECRET',
+      'S3_BUCKET',
+      'S3_SECRET_ACCESS_KEY',
+      // The login gate (ADR-034) must not boot open in production.
+      'NEXT_PUBLIC_TURNSTILE_SITE_KEY',
+      'TURNSTILE_SECRET_KEY',
+    ]) {
       expect(PRODUCTION_REQUIRED_ENV).toContain(name);
     }
     expect(() => assertProductionEnv({ ...prod, PAYLOAD_SECRET: 'short' })).toThrow(

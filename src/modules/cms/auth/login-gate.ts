@@ -1,6 +1,7 @@
 import { APIError, type CollectionBeforeOperationHook } from 'payload';
 import { cmsEnv } from '@/lib/cms/env';
 import { LOGIN_GATE_COOKIE, readCookie, verifyLoginGate } from '@/lib/login-gate';
+import { clientIp } from '@/lib/rate-limit';
 
 const MESSAGE = 'أكمل التحقق من أنك لست روبوتاً ثم حاول مرة أخرى.';
 
@@ -18,12 +19,14 @@ let warnedOpen = false;
 /** Whether a login request may proceed (pure over the inputs; unit-tested). */
 export function loginAllowed(args: {
   cookieHeader: string | null | undefined;
+  ip: string;
   secret: string;
   turnstileSecret: string | undefined;
   now?: number;
 }): boolean {
   if (!args.turnstileSecret) return true;
-  return verifyLoginGate(readCookie(args.cookieHeader, LOGIN_GATE_COOKIE), args.secret, args.now);
+  const value = readCookie(args.cookieHeader, LOGIN_GATE_COOKIE);
+  return verifyLoginGate(value, args.secret, args.ip, args.now);
 }
 
 /**
@@ -44,7 +47,8 @@ export const gateLogin: CollectionBeforeOperationHook = ({ args, operation, req 
     return args;
   }
   const cookieHeader = req.headers.get('cookie');
-  if (!loginAllowed({ cookieHeader, secret: cmsEnv().secret, turnstileSecret })) {
+  const ip = clientIp(req.headers);
+  if (!loginAllowed({ cookieHeader, ip, secret: cmsEnv().secret, turnstileSecret })) {
     // 401 with the Arabic reason as the message; the admin shows it as the login error.
     throw new GateClosed(MESSAGE);
   }
