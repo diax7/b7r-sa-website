@@ -1,8 +1,6 @@
 {
   "ci": {
     "collect": {
-      "startServerCommand": "pnpm start",
-      "startServerReadyPattern": "Ready",
       "url": [
         "http://localhost:3004/",
         "http://localhost:3004/products",
@@ -10,7 +8,7 @@
         "http://localhost:3004/contact",
         "http://localhost:3004/blog/how-to-price-printed-tshirt-saudi"
       ],
-      "numberOfRuns": 2,
+      "numberOfRuns": 3,
       "settings": {
         "formFactor": "mobile",
         "screenEmulation": {

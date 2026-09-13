@@ -20,8 +20,11 @@ First time only: `pnpm exec playwright install chromium webkit`, `uv tool instal
 (set `NEXT_PUBLIC_SITE_URL=https://b7r.sa` for the run so SEO can reach 100).
 
 On Windows `pnpm lhci` completes the audit but chrome-launcher fails to delete its temp
-profile (EPERM) and reports failure; use `bash scripts/dev/lh.sh` locally, which builds,
-serves and prints the same mobile scores. CI runs `pnpm lhci` on Ubuntu.
+profile (EPERM) and reports failure; use `bash scripts/dev/lh-all.sh` locally, which builds,
+serves, warms the image cache and prints the same mobile scores. CI runs
+`bash scripts/ci/lighthouse.sh` on Ubuntu: it starts the server, requests every audited page
+and its image transforms once (ISR entries and the `next/image` cache warm, the steady state
+production reaches after the first visitor), then runs `lhci autorun` with three runs.
 
 ## Local CMS (Phase 2a)
 

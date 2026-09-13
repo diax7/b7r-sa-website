@@ -115,7 +115,7 @@ jobs:
           retention-days: 7
 
       - name: Lighthouse CI
-        run: pnpm lhci
+        run: bash scripts/ci/lighthouse.sh
 
       - name: Upload Lighthouse report
         if: always()
