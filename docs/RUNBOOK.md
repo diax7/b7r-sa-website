@@ -70,7 +70,9 @@ again (move `public/media` aside first so filenames do not collide).
 
 `public/fonts/*.woff2` are subsets of the licensed ITF Rayat Round files
 (`bash scripts/subset-fonts.sh`, needs `uv`): Arabic, Basic Latin and punctuation only,
-~27 kB per weight. Re-run after `resources/brand/fonts/web` changes.
+~27 kB per weight. Re-run after `resources/brand/fonts/web` changes. The files are served
+`Cache-Control: immutable` for a year (ADR-039), so a changed woff2 must get a **new file
+name** (a version suffix); never overwrite the same path, browsers will keep the old bytes.
 
 ## Docker
 
@@ -99,7 +101,9 @@ GitHub push and the first CranL deploy wait for Dhia's approval (ADR-008). When 
    Region Saudi Arabia; port 3000; health check `GET /api/health` (`ok` is the liveness
    signal; `db`, `media`, `newsletter`, `contact`, `turnstile`, `indexnow` are reported).
 2. Image: `.github/workflows/deploy.yml` runs on every push to `main` and on demand. It
-   migrates the production database (`pnpm migrate`), builds the image with the database and
+   migrates the production database (`scripts/ci/migrate.sh`: `pnpm migrate`, then
+   `migrate:status` must list every migration file as ran, three attempts; the Payload CLI
+   once exited 0 in CI without applying anything), builds the image with the database and
    secret as BuildKit secrets, and pushes `ghcr.io/diax7/b7r-sa-website:{sha,latest}`. Point
    CranL at that image (deploy on new tag / webhook). Secrets go in the GitHub `production`
    environment (`DATABASE_URL`, `PAYLOAD_SECRET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`);

@@ -6,9 +6,13 @@ import type { Payload, PayloadRequest, SanitizedPermissions, TypedUser } from 'p
 import { formatAdminURL } from 'payload/shared';
 import {
   ACTION_ICONS,
+  COLLECTION_HUES,
   COLLECTION_ICONS,
+  entityHue,
   entityIcon,
+  GLOBAL_HUES,
   GLOBAL_ICONS,
+  type Hue,
 } from '@/modules/cms/admin/icons';
 import { navGroups } from '@/modules/cms/admin/nav/groups';
 import { adminStrings } from '@/modules/cms/admin/strings';
@@ -22,6 +26,7 @@ export interface QuickAction {
   title: string;
   text: string;
   icon: LucideIcon;
+  hue: Hue;
   external?: boolean;
 }
 
@@ -51,6 +56,7 @@ export function quickActions(args: {
       key: 'home',
       href: url('/globals/home'),
       icon: GLOBAL_ICONS.home,
+      hue: GLOBAL_HUES.home,
       ...s.actions.home,
     });
   }
@@ -59,6 +65,7 @@ export function quickActions(args: {
       key: 'add-page',
       href: url('/collections/pages/create'),
       icon: COLLECTION_ICONS.pages,
+      hue: COLLECTION_HUES.pages,
       ...s.actions.addPage,
     });
   }
@@ -67,6 +74,7 @@ export function quickActions(args: {
       key: 'add-product',
       href: url('/collections/products/create'),
       icon: COLLECTION_ICONS.products,
+      hue: COLLECTION_HUES.products,
       ...s.actions.addProduct,
     });
   }
@@ -75,6 +83,7 @@ export function quickActions(args: {
       key: 'add-faq',
       href: url('/collections/faqs/create'),
       icon: CirclePlus,
+      hue: COLLECTION_HUES.faqs,
       ...s.actions.addFaq,
     });
   }
@@ -83,6 +92,7 @@ export function quickActions(args: {
       key: 'media',
       href: url('/collections/media/create'),
       icon: Upload,
+      hue: COLLECTION_HUES.media,
       ...s.actions.media,
     });
   }
@@ -90,6 +100,7 @@ export function quickActions(args: {
     key: 'site',
     href: '/',
     icon: ACTION_ICONS.viewSite,
+    hue: 'green',
     external: true,
     ...s.actions.site,
   });
@@ -102,6 +113,7 @@ export interface RecentItem {
   title: string;
   entity: string;
   icon: LucideIcon | undefined;
+  hue: Hue;
   savedBy: string | null;
   updatedAt: string;
   status: 'draft' | 'published' | null;
@@ -115,6 +127,23 @@ type Doc = Record<string, unknown> & { id?: number | string; updatedAt?: string 
 function savedByName(doc: Doc): string | null {
   const snapshot = doc[SAVED_BY] as { name?: unknown } | null | undefined;
   return typeof snapshot?.name === 'string' && snapshot.name ? snapshot.name : null;
+}
+
+/** A document may have no title yet (a draft in progress); the list view says the same. */
+const UNTITLED = 'Untitled';
+
+export function titleOf(value: unknown): string {
+  if (typeof value === 'number') return String(value);
+  return typeof value === 'string' && value.trim() ? value : UNTITLED;
+}
+
+/**
+ * Payload's autosave creates a row the moment "Create New" opens; one an editor walked away
+ * from is a draft with no title and no saver (drafts are never stamped). Not a change worth
+ * listing.
+ */
+export function isAbandonedDraft(doc: Doc, title: unknown): boolean {
+  return doc['_status'] === 'draft' && titleOf(title) === UNTITLED && savedByName(doc) === null;
 }
 
 function statusOf(doc: Doc): RecentItem['status'] {
@@ -155,6 +184,7 @@ export async function recentActivity(args: {
             title: entity.label,
             entity: entity.label,
             icon: entityIcon('globals', entity.slug),
+            hue: entityHue('globals', entity.slug),
             savedBy: savedByName(doc),
             updatedAt: doc.updatedAt,
             status: statusOf(doc),
@@ -163,7 +193,7 @@ export async function recentActivity(args: {
         }
         const collection = payload.config.collections.find((c) => c.slug === entity.slug);
         if (!collection) return;
-        const title = collection.admin.useAsTitle || 'id';
+        const titleField = collection.admin.useAsTitle || 'id';
         const { docs } = await payload.find({
           collection: entity.slug as Parameters<Payload['find']>[0]['collection'],
           depth: 0,
@@ -174,13 +204,14 @@ export async function recentActivity(args: {
           overrideAccess: false,
         });
         for (const raw of docs as unknown as Doc[]) {
-          if (!raw.updatedAt) continue;
+          if (!raw.updatedAt || isAbandonedDraft(raw, raw[titleField])) continue;
           items.push({
             key: `c-${entity.slug}-${String(raw.id)}`,
             href: `${entity.href}/${String(raw.id)}`,
-            title: String(raw[title] ?? raw.id),
+            title: titleOf(raw[titleField]),
             entity: getTranslation(collection.labels.singular, i18n),
             icon: entityIcon('collections', entity.slug),
+            hue: entityHue('collections', entity.slug),
             savedBy: savedByName(raw),
             updatedAt: raw.updatedAt,
             status: statusOf(raw),

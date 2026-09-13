@@ -121,15 +121,15 @@ test.describe('CMS admin', () => {
     expect(sitemap).not.toContain('/admin');
   });
 
-  test('signs in on an Arabic, right-to-left panel without a CSP violation', async ({
+  test('signs in on an English panel whose Arabic content reads right-to-left, without a CSP violation', async ({
     page,
     request,
   }) => {
     await recordViolations(page);
     await page.goto('/admin/login');
     const html = page.locator('html');
-    await expect(html).toHaveAttribute('lang', 'ar');
-    await expect(html).toHaveAttribute('dir', /rtl/i);
+    await expect(html).toHaveAttribute('lang', 'en');
+    await expect(html).toHaveAttribute('dir', /ltr/i);
     // The login gate (ADR-034): the widget renders with a site key and opens the gate; the
     // verify endpoint answers 204 with no cookie while the Turnstile secret is unset.
     if (process.env['NEXT_PUBLIC_TURNSTILE_SITE_KEY']) {
@@ -152,8 +152,9 @@ test.describe('CMS admin', () => {
       .click();
     await page.waitForURL(/\/admin\/collections\/products\/\d+/);
     await expect(page.locator('#field-slug')).toHaveValue(/\w+/);
-    // The pages editor: the About document opens right-to-left with its blocks in place, and
-    // a rich-text block's Lexical editor is an RTL surface (2b phase 2).
+    // The pages editor: the About document opens with its blocks in place, and a rich-text
+    // block's Lexical editor follows the text it holds (`unicode-bidi: plaintext`, ADR-039), so
+    // Arabic reads right-to-left inside the English panel.
     const auth = await login(request, admin);
     const about = await request.get(`${API}/pages?where[slug][equals]=about&depth=0`, {
       headers: auth,
@@ -162,7 +163,7 @@ test.describe('CMS admin', () => {
     expect(aboutId).toBeDefined();
     await page.goto(`/admin/collections/pages/${aboutId}`);
     await expect(page.locator('#field-slug')).toHaveValue('about');
-    await expect(page.getByRole('textbox', { name: /عنوان الحكاية/ })).toHaveValue(/حكاية/);
+    await expect(page.getByRole('textbox', { name: /Story heading/ })).toHaveValue(/حكاية/);
     await page.goto('/admin/collections/pages/create');
     await page.getByRole('button', { name: /أضف قسم|Add Section/ }).click();
     await page
@@ -171,7 +172,10 @@ test.describe('CMS admin', () => {
       .click();
     const editor = page.locator('[data-lexical-editor="true"]').first();
     await expect(editor).toBeVisible({ timeout: 15_000 });
-    expect(await editor.evaluate((el) => getComputedStyle(el).direction)).toBe('rtl');
+    expect(await editor.evaluate((el) => getComputedStyle(el).unicodeBidi)).toBe('plaintext');
+    expect(
+      await page.locator('#field-title').evaluate((el) => getComputedStyle(el).unicodeBidi),
+    ).toBe('plaintext');
     expect(await page.evaluate(() => window.__cspViolations ?? [])).toEqual([]);
     // Autosave turns the open create form into an empty draft document: remove it.
     await page.goto('/admin');
@@ -184,7 +188,7 @@ test.describe('CMS admin', () => {
     }
   });
 
-  test('the shell (ADR-039): icons per entity, remembered groups, the palette, the account menu, the phone drawer', async ({
+  test('the shell (ADR-039): icons per entity, remembered groups, the icon rail, the palette, the account menu, the phone drawer', async ({
     page,
     browser,
     request,
@@ -209,13 +213,24 @@ test.describe('CMS admin', () => {
     const links = nav.locator('a[id^="nav-"]');
     expect(await links.count()).toBeGreaterThanOrEqual(12);
     for (const link of await links.all()) await expect(link.locator('svg')).toHaveCount(1);
-    await expect(nav.locator('a[aria-current="page"]')).toHaveText(/الصفحات/);
+    await expect(nav.locator('a[aria-current="page"]')).toHaveText(/Pages/);
+    // A sidebar click navigates inside the app: the page is not reloaded.
+    await page.evaluate(() => {
+      (window as unknown as { b7rMarker?: number }).b7rMarker = 1;
+    });
+    await nav.locator('#nav-products').click();
+    await page.waitForURL(/\/admin\/collections\/products/);
+    expect(await page.evaluate(() => (window as unknown as { b7rMarker?: number }).b7rMarker)).toBe(
+      1,
+    );
+    await expect(nav.locator('a[aria-current="page"]')).toHaveText(/Products/);
+    await page.goto('/admin/collections/pages');
     // Content first; a collapsed group stays collapsed across a reload (Payload's `nav` pref).
     await expect(nav.locator('[data-admin-group]').first()).toHaveAttribute(
       'data-admin-group',
-      'المحتوى',
+      'Content',
     );
-    const settingsGroup = () => page.locator('[data-admin-group="الإعدادات"]');
+    const settingsGroup = () => page.locator('[data-admin-group="Settings"]');
     await settingsGroup().locator('button').first().click();
     await expect(settingsGroup().locator('#nav-redirects')).toBeHidden();
     await page.reload();
@@ -223,6 +238,21 @@ test.describe('CMS admin', () => {
     await expect(settingsGroup().locator('#nav-redirects')).toBeHidden();
     await settingsGroup().locator('button').first().click();
     await expect(settingsGroup().locator('#nav-redirects')).toBeVisible();
+    // Collapsed on a desktop the sidebar is an icon rail, still usable, and it stays a rail
+    // across a reload; the expand button brings the labels back.
+    await page.locator('[data-admin-collapse]').click();
+    await expect(nav).toHaveAttribute('data-admin-rail', '');
+    await expect(nav.locator('#nav-pages')).toBeVisible();
+    await expect(nav.locator('#nav-pages')).toHaveAttribute('aria-label', /Pages/);
+    expect((await nav.boundingBox())!.width).toBeLessThan(100);
+    await page.reload();
+    await expect(page.locator('[data-admin-nav]')).toHaveAttribute('data-admin-rail', '');
+    await page.locator('[data-admin-expand]').click();
+    await expect(nav).toHaveClass(/nav--nav-open/);
+    await expect(nav.locator('#nav-pages')).toContainText(/Pages/);
+    // The header: a bordered search box and the site link, both with text on a desktop.
+    await expect(page.locator('[data-admin-palette-trigger]')).toContainText(/Search or jump/);
+    await expect(page.locator('[data-admin-view-site]')).toContainText(/View website/);
     // The palette: Ctrl+K, a document by title, Enter opens it.
     await page.keyboard.press('Control+k');
     const palette = page.locator('[data-admin-palette]');
@@ -247,11 +277,11 @@ test.describe('CMS admin', () => {
     await expect(page.locator('#field-slug')).toHaveValue('privacy');
     // The account menu at the foot of the sidebar.
     await page.locator('[data-admin-account]').click();
-    await expect(page.getByRole('menuitem', { name: /تسجيل الخروج/ })).toBeVisible();
+    await expect(page.getByRole('menuitem', { name: /Log out/ })).toBeVisible();
     await page.keyboard.press('Escape');
     // Radix hides the rest of the page from assistive tech while a menu is open; wait for it
     // to be gone before the audit.
-    await expect(page.getByRole('menuitem', { name: /تسجيل الخروج/ })).toHaveCount(0);
+    await expect(page.getByRole('menuitem', { name: /Log out/ })).toHaveCount(0);
     await expect(page.locator('body > [aria-hidden="true"]')).toHaveCount(0);
     expect(await serious('[data-admin-nav]', '.app-header'), 'axe: shell on an edit view').toEqual(
       [],
@@ -269,18 +299,20 @@ test.describe('CMS admin', () => {
       await expect(editorNav.locator('#nav-pages')).toBeVisible();
       await expect(editorNav.locator('#nav-redirects')).toHaveCount(0);
       await expect(editorNav.locator('#nav-global-site-settings')).toHaveCount(0);
-      await expect(editorNav.locator('[data-admin-group="الإعدادات"]')).toHaveCount(0);
+      await expect(editorNav.locator('[data-admin-group="Settings"]')).toHaveCount(0);
     } finally {
       await editorContext.close();
       await request.delete(`${API}/users/${editor.id}`, { headers: adminAuth });
     }
-    // On a phone the sidebar is a drawer: the header opens it, its own button closes it.
+    // On a phone the sidebar is a drawer: the header opens it, its own button closes it,
+    // and the desktop's collapse control stays out of it.
     await page.setViewportSize({ width: 412, height: 915 });
     await page.goto('/admin/collections/pages');
     await expect(nav).not.toHaveClass(/nav--nav-open/);
     await page.locator('.app-header__mobile-nav-toggler').click({ force: true });
     await expect(nav).toHaveClass(/nav--nav-open/);
     await expect(nav.locator('#nav-pages')).toBeVisible();
+    await expect(nav.locator('[data-admin-collapse]')).toBeHidden();
     await nav.locator('.nav__mobile-close').click();
     await expect(nav).not.toHaveClass(/nav--nav-open/);
   });
@@ -320,7 +352,22 @@ test.describe('CMS admin', () => {
     );
     const first = dashboard.locator('[data-admin-recent] li').first();
     await expect(first).toContainText(entry!.question);
-    await expect(first).toContainText(/بواسطة/);
+    await expect(first).toContainText(/by /);
+    await expect(first.locator('[data-hue]')).toHaveAttribute('data-hue', 'orange');
+    await expect(dashboard.locator('[data-admin-action="add-page"]')).toHaveAttribute(
+      'data-hue',
+      'violet',
+    );
+    // A tile navigates inside the app: no reload.
+    await page.evaluate(() => {
+      (window as unknown as { b7rMarker?: number }).b7rMarker = 1;
+    });
+    await dashboard.locator('[data-admin-action="home"]').click();
+    await page.waitForURL(/\/admin\/globals\/home/);
+    expect(await page.evaluate(() => (window as unknown as { b7rMarker?: number }).b7rMarker)).toBe(
+      1,
+    );
+    await page.goto('/admin');
     const { AxeBuilder } = await import('@axe-core/playwright');
     const results = await new AxeBuilder({ page })
       .withTags(['wcag2a', 'wcag2aa'])
@@ -336,11 +383,18 @@ test.describe('CMS admin', () => {
     const stepsSwitch = page.locator('[data-admin-switch="steps.enabled"]');
     await expect(stepsSwitch).toHaveAttribute('role', 'switch');
     await expect(stepsSwitch).toHaveAttribute('aria-checked', 'true');
-    await expect(page.locator('[data-admin-field="enabled"]').first()).toContainText(/يختفي قسم/);
+    await expect(page.locator('[data-admin-field="enabled"]').first()).toContainText(/hides/);
+    // Payload's locale suffix on localized labels (an em dash) is hidden; the header's locale
+    // switcher carries that information.
+    await expect(page.locator('.field-label .localized').first()).toBeHidden();
     await page.goto('/admin/collections/integrations/create');
     await expect(page.locator('[data-admin-choice="salla"]')).toHaveAttribute('role', 'radio');
     await page.locator('[data-admin-choice="zid"]').click();
     await expect(page.locator('[data-admin-choice="zid"]')).toHaveAttribute('aria-checked', 'true');
+    // "Last saved" is one line on an edit view and absent from the create form.
+    await expect(page.locator('[data-admin-saved-by]')).toHaveCount(0);
+    await page.goto(`/admin/collections/faqs/${entry!.id}`);
+    await expect(page.locator('[data-admin-saved-by]')).toContainText(/by .+ · /);
   });
 
   test('preview (ADR-039): a signed link shows a draft page that the public never sees', async ({
@@ -433,14 +487,14 @@ test.describe('CMS admin', () => {
     }
   });
 
-  test('a short password is refused with the Arabic reason (ADR-027)', async ({ request }) => {
+  test('a short password is refused with the reason (ADR-027)', async ({ request }) => {
     const adminAuth = await login(request, admin);
     const refused = await request.post(`${API}/users`, {
       headers: adminAuth,
       data: { email: 'short@b7r.sa', password: 'abc123def', name: 'x', role: 'editor' },
     });
     expect(refused.status()).toBe(400);
-    expect(await refused.text()).toContain('قصيرة');
+    expect(await refused.text()).toContain('too short');
   });
 
   test('an editor edits content but is refused users, settings and published deletes', async ({
@@ -706,7 +760,7 @@ test.describe('CMS admin', () => {
         data: { showOnHome: true, homeOrder: 1 },
       });
       expect(refused.status()).toBe(400);
-      expect(await refused.text()).toContain('فقط');
+      expect(await refused.text()).toContain('at most');
       const after = await request.get(`${API}/faqs/${spare.id}?depth=0`, { headers: auth });
       expect(((await after.json()) as Faq).showOnHome).toBeFalsy();
       // Editing a flagged entry itself is fine: the count excludes the document being saved.
@@ -878,7 +932,7 @@ test.describe('CMS admin', () => {
         data: { _status: 'draft' },
       });
       expect(unpublish.status(), 'unpublishing a designed page').toBe(400);
-      expect(await unpublish.text()).toContain('إلغاء نشرها');
+      expect(await unpublish.text()).toContain('cannot be unpublished');
       expect((await request.get('/about')).status()).toBe(200);
       // A draft on top of the published copy is fine: the site keeps the published title.
       const draft = await request.patch(`${API}/pages/${doc.id}?draft=true`, {

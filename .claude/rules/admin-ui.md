@@ -34,9 +34,12 @@ Read `docs/ADMIN-DESIGN-SYSTEM.md` before touching anything under `src/modules/c
   neutral, documented in the design system) before writing a one-off.
 - Icons through `components/shared/icon.tsx`, from the registry when the icon stands for an
   entity. Icon-only buttons carry `aria-label` + `Tooltip`.
-- Strings: Arabic, ux-araby rules (verb-first actions, nominal labels, no «تم», no «قم بـ»,
-  Arabic comma, no «!»), and the writing rules in `.claude/rules/writing.md` (no em dashes).
-  They live in `src/modules/cms/admin/strings.ts`, never inline.
+- Strings: the panel is English (`src/modules/cms/admin/strings.ts`, never inline); config
+  labels and descriptions carry both `en` and `ar`, the Arabic under the ux-araby rules
+  (verb-first actions, nominal labels, no «تم», no «قم بـ», Arabic comma, no «!»); the writing
+  rules in `.claude/rules/writing.md` apply to both (no em dashes).
+- Colour means one thing: blue = main action/active, green = publish/live, red = delete/
+  failure, amber = careful. Set Payload's button colours through its custom properties.
 - Roots of our shell carry `data-admin-ui` (the scoped element reset in `admin.css`) and a
   `data-admin-*` hook for the e2e; the sidebar keeps Payload's outer `nav` classes.
 - After adding or renaming a component referenced from the Payload config, run

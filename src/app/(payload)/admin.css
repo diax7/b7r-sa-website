@@ -34,8 +34,19 @@
   --color-border: var(--theme-elevation-150);
   /* Status colours picked for AA on the greys. */
   --color-success: #3fbf6b;
+  --color-success-tint: rgb(63 191 107 / 0.16);
   --color-warning: #f5b53f;
   --color-error: #f26b6b;
+  /* Dashboard hues: identity for an entity (a page is violet wherever the dashboard shows
+     one), never a meaning; each is at least 5.8:1 on the surface (rgb 34 34 34). */
+  --color-violet: #a78bfa;
+  --color-violet-tint: rgb(167 139 250 / 0.16);
+  --color-teal: #2dd4bf;
+  --color-teal-tint: rgb(45 212 191 / 0.16);
+  --color-orange: #fb923c;
+  --color-orange-tint: rgb(251 146 60 / 0.16);
+  --color-pink: #f472b6;
+  --color-pink-tint: rgb(244 114 182 / 0.16);
   --color-whatsapp: #25d366;
   --color-white: #ffffff;
   --color-black: #000000;
@@ -62,7 +73,16 @@
     --admin-accent: #0098e0;
     --admin-white: #ffffff;
     --admin-green: #3fbf6b;
+    --admin-green-hover: #34a95d;
+    --admin-green-ink: #10241a;
     --admin-green-tint: rgb(63 191 107 / 0.16);
+    --admin-red: #f26b6b;
+    --admin-red-hover: #e05050;
+    --admin-red-ink: #2a0f0f;
+    --admin-red-tint: rgb(242 107 107 / 0.14);
+    --admin-amber: #f5b53f;
+    --admin-ring: rgb(0 152 224 / 0.4);
+    --admin-rail-width: 72px;
     --font-body: var(--font-sans);
     --style-radius-s: var(--radius-inner);
     --style-radius-m: 8px;
@@ -97,6 +117,22 @@
 
   html {
     font-family: var(--font-sans);
+  }
+
+  /* Every view started flush under the 56 px header (Dhia, 2026-09-14): room above it. */
+  .template-default__wrap > .app-header + * {
+    padding-block-start: 24px;
+  }
+
+  /* The panel is English and left-to-right; the content it edits is Arabic. Every text
+     control follows the direction of what is typed into it, so Arabic reads right-to-left
+     and a slug or a URL left-to-right, without a per-field setting. */
+  input:not([type='checkbox']):not([type='radio']),
+  textarea,
+  [contenteditable='true'],
+  .rich-text-lexical .editor-shell {
+    unicode-bidi: plaintext;
+    text-align: start;
   }
 
   /* Our shell renders without Tailwind's preflight, so Payload's element defaults (button
@@ -155,5 +191,191 @@
 
   .graphic-logo img {
     max-height: 56px;
+  }
+
+  /* ----------------------------------------------------------------------------------------
+     The icon rail (Dhia, 2026-09-13): closed on a desktop, the sidebar keeps a narrow column
+     with icons and tooltips instead of vanishing. Payload's `l` breakpoint is 1440 px; at or
+     under it the sidebar is a drawer and these rules do not apply. The nav component adds
+     `data-admin-rail` and drops `inert` in that state; Payload's own toggler is replaced by
+     the collapse/expand buttons inside the sidebar.
+     ---------------------------------------------------------------------------------------- */
+  @media (min-width: 1441px) {
+    .template-default__nav-toggler-wrapper {
+      display: none;
+    }
+    /* Payload hides the nav until it hydrates and gives a closed one no column; the rail
+       needs neither, so the server render already paints it and nothing shifts. */
+    .template-default .nav {
+      display: block;
+    }
+    .template-default:not(.template-default--nav-open) {
+      grid-template-columns: var(--admin-rail-width) auto;
+    }
+    .nav:not(.nav--nav-open) {
+      opacity: 1;
+      width: var(--admin-rail-width);
+    }
+    .nav:not(.nav--nav-open) .nav__scroll {
+      padding-inline: 12px;
+    }
+  }
+
+  /* The brand mark in Payload's header: its 18 px wrapper cropped a 28 px icon. */
+  .step-nav__home,
+  .step-nav__home > span {
+    width: 24px;
+    height: 24px;
+    overflow: visible;
+  }
+
+  /* Payload suffixes every localized field label with the locale (a dash and its name).
+     The header's locale switcher already says which locale is open, nearly every content
+     field is localized, and the suffix is an em dash (.claude/rules/writing.md); hidden. */
+  .field-label .localized {
+    display: none;
+  }
+
+  /* ----------------------------------------------------------------------------------------
+     Colour that means something (Dhia, 2026-09-13): blue is the main action, green publishes
+     and marks what is live, red deletes, amber warns. Payload's buttons read their colours
+     from custom properties, so the overrides are the properties, not the rules.
+     ---------------------------------------------------------------------------------------- */
+  .list-create-new-doc__create-new-button {
+    --bg-color: var(--admin-primary);
+    --color: var(--admin-white);
+    --hover-bg: var(--admin-primary-hover);
+    --hover-color: var(--admin-white);
+    --btn-border: 0;
+  }
+  /* Publishing is green: the main button of a document that has a status line (drafts). */
+  .doc-controls:has(.status) #action-save,
+  .doc-controls:has(.status) .form-submit .btn--withPopup,
+  .doc-controls:has(.status) .form-submit .btn--withPopup .popup-button {
+    --bg-color: var(--admin-green);
+    --color: var(--admin-green-ink);
+    --hover-bg: var(--admin-green-hover);
+    --hover-color: var(--admin-green-ink);
+  }
+  .doc-controls #action-save-draft {
+    --hover-color: var(--admin-accent);
+  }
+  /* Deleting is red, unpublishing is amber, wherever Payload offers them. */
+  #action-delete,
+  .delete-document__toggle,
+  .delete-documents__toggle,
+  .array-actions__remove,
+  .list-selection__button--delete {
+    color: var(--admin-red);
+  }
+  #action-delete:hover,
+  .delete-document__toggle:hover,
+  .delete-documents__toggle:hover,
+  .array-actions__remove:hover {
+    background: var(--admin-red-tint);
+    color: var(--admin-red);
+  }
+  #action-unpublish,
+  .status__action {
+    color: var(--admin-amber);
+  }
+  /* The confirmation to delete: a red filled button. */
+  .delete-document__confirm,
+  .delete-documents__confirm,
+  .confirmation-modal__controls .btn--style-primary {
+    --bg-color: var(--admin-red);
+    --color: var(--admin-red-ink);
+    --hover-bg: var(--admin-red-hover);
+    --hover-color: var(--admin-red-ink);
+  }
+  .pill--style-error {
+    background: var(--admin-red-tint);
+    color: var(--admin-red);
+  }
+  .pill--style-warning {
+    color: var(--admin-amber);
+  }
+  .banner--type-error {
+    color: var(--admin-red);
+    background: var(--admin-red-tint);
+  }
+
+  /* ----------------------------------------------------------------------------------------
+     The shadcn feel on Payload's own elements: medium weight on buttons, a two-pixel accent
+     ring on focus, pills as pills, hairline rows that lift on hover, popovers with depth,
+     the active tab underlined in the accent.
+     ---------------------------------------------------------------------------------------- */
+  .btn {
+    font-weight: 500;
+  }
+  .btn:focus-visible,
+  .pill:focus-visible,
+  .popup-button:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--admin-ring);
+  }
+  .field-type input:focus,
+  .field-type textarea:focus,
+  .react-select__control--is-focused,
+  .rich-text-lexical .editor-shell:focus-within {
+    outline: none;
+    border-color: var(--admin-accent);
+    box-shadow: 0 0 0 2px var(--admin-ring);
+  }
+  .pill {
+    border-radius: 999px;
+  }
+  .table tbody tr:hover {
+    background: var(--theme-elevation-50);
+  }
+  .popup__content {
+    border: 1px solid var(--theme-elevation-150);
+    border-radius: 8px;
+    box-shadow: 0 12px 32px rgb(0 0 0 / 0.6);
+  }
+  .doc-tab--active,
+  .doc-tab[aria-current='page'] {
+    color: var(--admin-accent);
+    box-shadow: inset 0 -2px 0 var(--admin-accent);
+  }
+  .step-nav a:hover {
+    color: var(--admin-accent);
+  }
+}
+
+/* ---------------------------------------------------------------------------------------
+   The icon rail's element rules. Unlayered on purpose: `[data-rail-show]` must beat the
+   `hidden` utility on the same element. Only above Payload's `l` breakpoint and only while
+   the aside is closed; the phone drawer never sees them.
+   --------------------------------------------------------------------------------------- */
+@media (max-width: 1440px) {
+  /* The drawer closes with Payload's own control; the rail toggle belongs to the desktop. */
+  .nav [data-admin-toggle] {
+    display: none;
+  }
+}
+@media (min-width: 1441px) {
+  .nav:not(.nav--nav-open) [data-rail-hide] {
+    display: none;
+  }
+  .nav:not(.nav--nav-open) [data-rail-show] {
+    display: block;
+  }
+  .nav:not(.nav--nav-open) [data-rail-center] {
+    justify-content: center;
+    padding-inline: 0;
+    width: 100%;
+  }
+  .nav:not(.nav--nav-open) [data-rail-list] {
+    align-items: center;
+    border-top: 1px solid var(--theme-elevation-150);
+    padding-block: 8px;
+  }
+  .nav:not(.nav--nav-open) [data-admin-group]:first-child [data-rail-list] {
+    border-top: 0;
+    padding-block-start: 0;
+  }
+  .nav:not(.nav--nav-open) [data-rail-list] a {
+    width: 40px;
   }
 }

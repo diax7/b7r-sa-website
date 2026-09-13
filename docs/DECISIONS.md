@@ -80,6 +80,9 @@ CLS ≤ 0.1 as the constitution requires, so CI will be red on LCP until the sim
 drops; tracked as a Phase 1b task (reduce initial JS: hero island slimming, no new eager
 scripts). The category gate (Performance ≥ 90) and the DevTools-throttled LCP (2.1 s) pass.
 
+Amended 2026-09-13 (ADR-039): `/fonts/*` is served immutable for a year, so a changed font
+file takes a new name; the same path is never reused (RUNBOOK, fonts).
+
 ## ADR-011: Mobile menu sheet loads on first intent (2026-09-13)
 
 The Radix Dialog (focus trap, scroll lock, portal) costs ~15 kB gzip and is used only after a
@@ -621,3 +624,68 @@ a colon; a missing table value is a hyphen; numeric ranges keep the en dash. Enf
 `.claude/rules/writing.md`, and applied once across the repository (the BRD sections were
 rebuilt from the swept sources). The reset e-mail subject, the gallery alt text and the size
 chart caption changed accordingly.
+
+Amended 2026-09-13 (Dhia's review of the panel, `admin/ui-2`). **English panel.** The UI
+language is English for everyone (`i18n.supportedLanguages: { en }`, so a browser's
+Accept-Language cannot switch it); the content locale stays Arabic-first. Admin-facing
+messages (refusals, the login gate, the reset e-mail) are English; every text control carries
+`unicode-bidi: plaintext` so Arabic content reads right-to-left inside the left-to-right
+panel and a slug or URL reads left-to-right, without a per-field setting. **Icon rail.**
+Closed on a desktop (above Payload's `l` breakpoint, 1440 px) the sidebar no longer vanishes:
+the template grid keeps a 72 px column, the aside stays visible and interactive, every entry
+is an icon with a tooltip, the account avatar opens its menu, and the collapse/expand buttons
+persist Payload's `nav` preference like its own toggler (now hidden on desktops). At or under
+the breakpoint the drawer behaviour is unchanged. **Header.** A bordered search box (opens the
+palette; Ctrl/⌘ K still works) and a bordered "View website" link with text; both left the
+sidebar. **Colour that means something.** Blue is the main action and the active state, green
+publishes (the publish button of a document with drafts, the published pill), red deletes
+(the Delete items, row removal, the confirm button), amber warns (Unpublish, Revert). Payload's
+buttons read their colours from custom properties, so the overrides set the properties.
+**Font.** The self-hosted font files were served with `max-age=0`, so every admin navigation
+re-validated them and painted the fallback first; they are now `immutable` for a year and
+preloaded from the admin layout too. **Brand icon.** The site's preflight (`img { max-width:
+100% }`, which reaches `/admin`) squeezed the header icon into an 18 px column; the inline
+`max-width: none` restores the square. Widgets keep their per-field descriptions in English.
+
+Amended 2026-09-14 (Dhia's second review round and the closing review, `admin/ui-2`).
+**The rail is CSS, not a second markup.** The first version decided "rail or not" in the
+client after hydration, so a collapsed sidebar painted late and shifted every page it landed
+on. The server now renders the same tree open or closed; `admin.css` hides `[data-rail-hide]`
+and shows `[data-rail-show]` when the aside is closed above the `l` breakpoint, keeps the
+72 px column and the aside visible regardless of Payload's hide-until-hydrated rule, and the
+first frame of every navigation is already the rail. Hydration only adds tooltips, `aria-label`s
+and lifts `inert`. **Sidebar foot.** The collapse/expand control sits above the account block
+(not beside the brand); the brand row reads "B7R Print Website" at body size; the drawer at
+or under 1440 px never shows the collapse control (Payload's own close button serves it).
+**Header icon.** Payload's `.step-nav__home` wrapper is 18 px; it is 24 px now so the brand
+mark is whole. **Palette centring.** The dialog's card variant assumed RTL (`translate-x-1/2`);
+the admin is LTR, so the transform is direction-aware. **"Last saved" widget.** The
+`lastSavedBy` group rendered as two empty read-only inputs; `SavedByField` renders one line
+("by Dhia · 2 hours ago", or "No save recorded yet." for a row seeded or saved before the
+field existed) and nothing on a create form. **Locale suffix hidden.** Payload appends an em
+dash and the locale name to every localized label; nearly every content field is localized,
+the header's locale switcher already names the locale, and the dash breaks ADR-040, so
+`.field-label .localized` is hidden. **Redirect type defaults to 301.** The plugin's required
+select started empty. **Untitled rows.** Payload's autosave creates a document the moment
+"Create New" opens (its behaviour, kept: it is what makes autosave work); such a row has no
+title, and the dashboard's latest-changes list now says "Untitled" instead of the id, next
+to the list view's "No Title". Known third-party traits, noted and left: Payload's upload
+meta line and pagination ellipsis use an em dash; the checker covers our sources, not
+`node_modules`.
+
+Amended 2026-09-14 (Dhia's third notes and the CTO's closing review). **No reload inside the
+admin.** Every in-admin link in our shell (sidebar entities and brand, quick-action tiles,
+latest changes, "My account") is Payload's `Link` (Next's, with Payload's route-transition
+bar), as Payload's own nav and our palette already were; a plain `<a>` remains only for the
+site link (new tab) and `/admin/logout`. The e2e asserts a window marker survives a sidebar
+click and a tile click. Rail links carry `aria-label` from the server render, since the CSS
+hides their text before any JS runs. **Abandoned drafts stay off the dashboard.** A row that
+is a draft with no title and no saver is an autosave nobody used; `recentActivity()` skips it.
+**Hues on the dashboard.** Dhia asked for more colour: the greeting's name in the accent, a
+rocket on "Start here", and a hue per entity on the quick-action discs and the latest-changes
+discs (pages violet, products and integrations teal, FAQ orange, media and testimonials pink,
+the settings and the home page blue, the site link green for "live"). Hues are identity, not
+meaning; the four meaning colours keep their jobs. Tokens `violet`, `teal`, `orange`, `pink`
+(each at least 5.8:1 on the surface) and `success-tint` were added. **Room under the header.**
+Every view started flush under Payload's 56 px header; 24 px now. **Collapse control** at the
+start of its row. The saved-by widget's strings moved to `strings.ts`.

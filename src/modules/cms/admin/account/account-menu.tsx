@@ -1,5 +1,6 @@
 'use client';
 
+import { Link } from '@payloadcms/ui';
 import { ChevronDown, LogOut, UserRound } from 'lucide-react';
 import { Badge } from '@/components/shared/badge';
 import { Icon } from '@/components/shared/icon';
@@ -11,33 +12,33 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { initials } from '@/modules/cms/admin/account/initials';
 import { adminStrings } from '@/modules/cms/admin/strings';
 
 const s = adminStrings.account;
 
-/** Up to two initials from the name (Arabic or Latin); the e-mail's first letter otherwise. */
-export function initials(name: string, email: string): string {
-  const words = name.trim().split(/\s+/).filter(Boolean);
-  const letters = words.slice(0, 2).map((w) => w[0] ?? '');
-  const out = letters.join('');
-  return out || email[0]?.toUpperCase() || '؟';
-}
-
-/** The account block at the foot of the sidebar: who is signed in, and where to go from here. */
+/**
+ * The account block at the foot of the sidebar: who is signed in, and where to go from here.
+ * In the icon rail the CSS hides the name and e-mail (`data-rail-hide`); the avatar keeps the
+ * menu. `compact` only widens the accessible label once the client knows it is a rail.
+ */
 export function AccountMenu({
   account,
   adminRoute,
+  compact = false,
 }: {
   account: { name: string; email: string; role: string };
   adminRoute: string;
+  compact?: boolean;
 }) {
   const role = s.roles[account.role] ?? account.role;
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        className="flex w-full items-center gap-2.5 rounded-inner px-2 py-2 text-start transition-colors duration-(--duration-fast) hover:bg-accent-tint focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-accent/40 data-[state=open]:bg-accent-tint"
-        aria-label={s.menu}
+        className="flex w-full items-center gap-2.5 rounded-inner p-2 text-start transition-colors duration-(--duration-fast) hover:bg-accent-tint focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-accent/40 data-[state=open]:bg-accent-tint"
+        aria-label={compact ? `${s.menu}: ${account.name}` : s.menu}
         data-admin-account=""
+        data-rail-center=""
       >
         <span
           aria-hidden="true"
@@ -45,20 +46,15 @@ export function AccountMenu({
         >
           {initials(account.name, account.email)}
         </span>
-        <span className="min-w-0 flex-1">
+        <span className="min-w-0 flex-1" data-rail-hide="">
           <span className="block truncate text-small font-medium text-text">{account.name}</span>
           <span className="block truncate text-caption text-text-muted" dir="ltr">
             {account.email}
           </span>
         </span>
-        <Icon icon={ChevronDown} size={16} className="shrink-0 text-text-muted" />
+        <Icon icon={ChevronDown} size={16} className="shrink-0 text-text-muted" data-rail-hide="" />
       </DropdownMenuTrigger>
-      <DropdownMenuContent
-        align="start"
-        side="top"
-        className="w-(--radix-dropdown-menu-trigger-width)"
-        data-admin-ui=""
-      >
+      <DropdownMenuContent align="start" side="top" className="min-w-56" data-admin-ui="">
         <DropdownMenuLabel className="flex items-center justify-between gap-2">
           <span className="truncate">{account.name}</span>
           {role && (
@@ -69,12 +65,12 @@ export function AccountMenu({
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <a href={`${adminRoute}/account`}>
+          <Link href={`${adminRoute}/account`}>
             <Icon icon={UserRound} size={16} />
             {s.profile}
-          </a>
+          </Link>
         </DropdownMenuItem>
-        <DropdownMenuItem asChild>
+        <DropdownMenuItem asChild className="text-error data-highlighted:text-error">
           <a href={`${adminRoute}/logout`} data-admin-logout="">
             <Icon icon={LogOut} size={16} />
             {s.logout}

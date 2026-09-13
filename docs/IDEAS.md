@@ -24,6 +24,10 @@ Constitution VIII: features outside the current phase are written here, not buil
 - Payload's edit-view chrome has axe gaps that are its engine's, not the shell's (unnamed
   drag handles and popup buttons, an unlabelled date input, the tabs list): report upstream and
   re-check on the next Payload minor; the admin e2e scopes its audit to our surfaces meanwhile.
+  Two upstream em dashes sit in the same bucket (the upload meta line, the pagination
+  ellipsis); `pnpm check:dash` covers our sources, not `node_modules`.
+- The content-locale switcher offers `en` although no English content is live yet: an editor
+  who flips it sees empty fields. Hide `en` until the English phase, or label it "not live".
 - A lenient preview for a half-filled block: today a draft whose block fails the content
   contract renders the error page under preview (the public site must never render it); a
   preview could skip the broken block with a notice instead.

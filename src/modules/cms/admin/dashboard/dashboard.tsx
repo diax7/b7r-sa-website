@@ -23,11 +23,16 @@ export async function Dashboard(props: AdminViewServerProps) {
     recentActivity({ payload, req, user, permissions, i18n }),
   ]);
   const name = String(user?.['name'] ?? user?.email ?? '');
+  const [before, after] = s.greeting.split('{name}');
   return (
     <Gutter>
-      <div className="flex flex-col gap-8 py-2" data-admin-ui="" data-admin-dashboard="">
+      <div className="flex flex-col gap-8 pb-2" data-admin-ui="" data-admin-dashboard="">
         <header className="flex flex-col gap-1">
-          <h1 className="text-h2 text-text">{s.greeting.replace('{name}', name)}</h1>
+          <h1 className="text-h2 text-text">
+            {before}
+            <span className="text-accent">{name}</span>
+            {after}
+          </h1>
           <p className="text-small text-text-muted">{s.intro}</p>
         </header>
         <QuickActions actions={quickActions({ permissions, adminRoute })} />

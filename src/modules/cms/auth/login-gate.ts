@@ -3,7 +3,7 @@ import { cmsEnv } from '@/lib/cms/env';
 import { LOGIN_GATE_COOKIE, readCookie, verifyLoginGate } from '@/lib/login-gate';
 import { clientIp } from '@/lib/rate-limit';
 
-const MESSAGE = 'أكمل التحقق من أنك لست روبوتاً ثم حاول مرة أخرى.';
+const MESSAGE = 'Complete the bot check, then try again.';
 
 /** Filed under info by `loggingLevels`: a bot or an expired gate, not a server error. */
 class GateClosed extends APIError {
@@ -49,7 +49,7 @@ export const gateLogin: CollectionBeforeOperationHook = ({ args, operation, req 
   const cookieHeader = req.headers.get('cookie');
   const ip = clientIp(req.headers);
   if (!loginAllowed({ cookieHeader, ip, secret: cmsEnv().secret, turnstileSecret })) {
-    // 401 with the Arabic reason as the message; the admin shows it as the login error.
+    // 401 with the reason as the message; the admin shows it as the login error.
     throw new GateClosed(MESSAGE);
   }
   return args;

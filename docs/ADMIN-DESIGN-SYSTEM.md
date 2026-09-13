@@ -10,8 +10,12 @@ is the checklist, `tests/admin-config.test.ts` and `tests/admin-icons.test.ts` a
 1. **One product.** The panel looks and reads like بحر برنت: the brand font, the 13 px radius,
    the accent blue, the same Arabic voice as the site. Payload's dark greys stay, Dhia's
    choice (dark only), the brand sits on top.
-2. **Arabic first.** Every label, description, empty state and error is Arabic, written under
-   the ux-araby rules (§5). English is the fallback locale only.
+2. **English panel, Arabic content.** The UI language is English for everyone (Dhia,
+   2026-09-13); labels and descriptions are written in English with an Arabic version kept in
+   the config. The content is Arabic: every text control follows the direction of its own
+   text (`unicode-bidi: plaintext`), so Arabic reads right-to-left inside the panel. Caveat:
+   the direction follows the first strong character, so a title that starts with a Latin
+   word aligns left; if that ever bites, an explicit `dir="rtl"` on that field is the fix.
 3. **Icon + label, always.** An icon never stands alone except in an icon button with an
    `aria-label` and a tooltip. Every collection and global has one icon (§4) and it is the
    same icon everywhere it appears (nav, palette, dashboard, empty state).
@@ -40,15 +44,26 @@ render in both worlds without a fork. Raw hex lives only in the token block.
 | `text` | `--theme-elevation-1000` | Body text (white). |
 | `text-muted` | `--theme-elevation-600` | Secondary text (rgb 181 181 181, 9.5:1). |
 | `border` | `--theme-elevation-150` | Hairlines (rgb 60 60 60). |
-| `success` / `warning` / `error` | `#3fbf6b` / `#f5b53f` / `#f26b6b` | Status text and badges; each ≥ 4.5:1 on `ground` and `surface`. |
+| `success` / `warning` / `error` | `#3fbf6b` / `#f5b53f` / `#f26b6b` | Status text and badges; each ≥ 4.5:1 on `ground` and `surface`. `success-tint` sits behind green icons. |
+| `violet` / `teal` / `orange` / `pink` (+ `-tint`) | `#a78bfa` / `#2dd4bf` / `#fb923c` / `#f472b6` | Dashboard hues: one per entity (`COLLECTION_HUES`, `GLOBAL_HUES` in `icons.ts`), used only on the tinted icon discs of the quick actions and the latest changes. Identity, never meaning. Each ≥ 5.8:1 on `surface`. |
 | `radius-base` / `radius-lg` / `radius-inner` / `radius-pill` | 13 / 20 / 6 / 999 px | From `src/styles/tokens.css` (shared with the site). |
 | `shadow-card` / `shadow-popover` | black at 40 % / 60 % | Depth on the dark surface. |
 | `font-sans` | ITF Rayat Round | Also set as Payload's `--font-body`. |
 
 **Blue rule on dark:** `primary` is a fill, `accent` is a colour for text. `text-primary` is
 never used in an admin component; `bg-accent` is never used behind white text. The `Badge`
-`primary` tone (blue text on a blue tint) is not used in the admin, use `success`,
-`warning`, `error` or `muted`.
+`primary` tone (blue text on a blue tint) is not used in the admin; use `success`, `warning`,
+`error` or `muted`.
+
+**Colour that means something** (Dhia, 2026-09-13): the same four meanings everywhere, on
+Payload's elements and ours.
+
+| Colour | Means | Where |
+|---|---|---|
+| Blue (`primary` fill, `accent` text) | the main action, the active place, a link | Create New, Save, the active nav entry, the home and settings discs, focus rings |
+| Green (`--admin-green`) | publish, live | the publish button of a document with drafts, the Published pill, "answering/running" rows |
+| Red (`--admin-red`) | delete, failure | Delete items, row removal, the delete confirmation, failed rows, Log out |
+| Amber (`--admin-amber`) | careful | Unpublish, Revert, "off / test mode" rows |
 
 Payload's own selection colour (its "success" ramp: checkboxes, radios, focus rings, the
 published pill) is re-hued to the accent in `@layer payload`; its greys are untouched.
@@ -79,12 +94,15 @@ published pill) is re-hued to the accent in `@layer payload`; its greys are unto
   `MessageSquareQuote`, integrations `Plug`, media `Image`, redirects `ArrowRightLeft`, users
   `Users`; home `House`, site-settings `Settings2`, navigation `Compass`, seo-defaults
   `Search`; groups المحتوى `LayoutGrid`, الإعدادات `SlidersHorizontal`, الإدارة `Shield`.
-- Colour: icons inherit text colour; the active nav item and quick-action tiles use `accent`.
+- Colour: icons inherit text colour; the active nav item uses `accent`. On the dashboard an
+  entity's disc takes its hue (§2), the same hue on its tile and in the latest changes.
 
 ## 5. Writing (Arabic)
 
 The admin's strings are interface copy (ADR-031): written by us, under the ux-araby rules.
 
+- The panel's own strings are English (`modules/cms/admin/strings.ts`); the rules below apply
+  to the Arabic versions kept in the config and to any Arabic the panel shows.
 - Labels are nouns: «المنتجات», «الصفحة الرئيسية», «إعدادات الموقع». Never a sentence.
 - Actions are verb-first imperatives: «أضف صفحة», «ارفع ملفاً», «عرض الموقع». No «قم بـ».
 - Descriptions are one sentence that says what the thing is *for the site*: «الأسئلة الشائعة
@@ -118,18 +136,23 @@ Payload's own elements (buttons, fields, pills, toasts) are themed in `admin.css
 
 | Piece | File | Notes |
 |---|---|---|
-| Sidebar | `modules/cms/admin/nav/*` | Groups (المحتوى · الإعدادات · الإدارة) as collapsibles that remember their state in Payload's `nav` preference; an icon per entity; `aria-current="page"`; «عرض الموقع»; the account block. Keeps Payload's outer `nav` classes (layout, mobile drawer). |
-| Header actions | `modules/cms/admin/header/actions*` | Palette trigger and site link as icon buttons with tooltips; hidden under 768 px (both live in the sidebar too). |
+| Sidebar | `modules/cms/admin/nav/*` | Groups (Content · Settings · Administration) as collapsibles that remember their state in Payload's `nav` preference; an icon per entity; `aria-current="page"`; the collapse/expand control and the account block at the foot. Collapsed on a desktop it is a 72 px icon rail with tooltips, still usable, and it is CSS: the server renders one tree, `admin.css` toggles `[data-rail-hide]` / `[data-rail-show]` / `[data-rail-center]` / `[data-rail-list]` while the aside is closed above 1440 px, so the rail paints on the first frame with no shift; hydration adds `data-admin-rail`, tooltips and `aria-label`s. At or under 1440 px it is Payload's drawer without the collapse control. Keeps Payload's outer `nav` classes (layout, drawer). |
+| Header actions | `modules/cms/admin/header/actions*` | A bordered search box that opens the palette (with the Ctrl K hint) and a bordered "View website" link with text; icons only under 768 px. |
 | Command palette | `modules/cms/admin/header/palette*` | Ctrl/⌘ K; sections first, then documents of collections with `listSearchableFields` (5 per collection, from two characters); combobox semantics; ranking in `palette-rank.ts`. |
-| Account menu | `modules/cms/admin/account/*` | Initials avatar, name, e-mail (LTR), role badge, «حسابي», «تسجيل الخروج». |
+| Account menu | `modules/cms/admin/account/*` | Initials avatar, name, e-mail (LTR), role badge, "My account", "Log out" (red). In the rail only the avatar shows. |
 | Login | `modules/cms/admin/login/*` | One line under the form; the Turnstile widget above it (ADR-034). |
 
-| Dashboard | `modules/cms/admin/dashboard/*` | Greeting, quick-action tiles by permission, health card (`healthReport()`, rows with a colour and a sentence), latest saves with «آخر حفظ» and Arabic relative time (`relative-time.ts`). |
-| Field widgets | `modules/cms/admin/fields/*` | `EnabledSwitch` (switch + the section's consequence), `IconSelect` (lucide tiles), `PlatformSelect` (brand SVG tiles); all on `FieldShell` (label, description, error) and `ChoiceGrid` (radiogroup). |
-| Preview | `lib/preview-token.ts`, `app/api/preview/*`, `modules/core/draft-bar.tsx` | «معاينة» opens a signed link → Next draft mode → the page with a warning bar; exit returns to the page. |
+| Dashboard | `modules/cms/admin/dashboard/*` | Greeting (name in the accent), quick-action tiles by permission in their entity's hue, health card (`healthReport()`, rows with a colour and a sentence), latest saves with who saved them and a relative time (`relative-time.ts`); a draft nobody titled or saved (an unused "Create New") is left out. Every in-admin link is Payload's `Link`: no reload. |
+| Field widgets | `modules/cms/admin/fields/*` | `EnabledSwitch` (switch + the section's consequence), `IconSelect` (lucide tiles), `PlatformSelect` (brand SVG tiles), `SavedByField` (the `lastSavedBy` snapshot as one line, nothing on a create form); all on `FieldShell` (label, description, error), the pickers on `ChoiceGrid` (radiogroup). |
+| Preview | `lib/preview-token.ts`, `app/api/preview/*`, `modules/core/draft-bar.tsx` | The preview button opens a signed link → Next draft mode → the page with a warning bar; exit returns to the page. |
+
+**Links inside the admin are Payload's `Link`** (`@payloadcms/ui`): Next navigation with
+the route-transition bar, no reload. A plain `<a>` is for the site (new tab) and logout only.
 
 Payload puts the sidebar in a drawer at widths ≤ 1440 px (its `l` breakpoint), the header
-hamburger opens it; that is Payload's behaviour, kept.
+hamburger opens it; that is Payload's behaviour, kept. Every view gets 24 px under the header. Payload's locale suffix on localized
+labels (`.field-label .localized`) is hidden: the header's locale switcher names the locale,
+and the suffix is an em dash.
 
 ## 7. States
 

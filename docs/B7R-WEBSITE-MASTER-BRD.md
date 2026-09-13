@@ -1203,7 +1203,7 @@ Give Dhia and an editor a WordPress-like, Arabic, right-to-left admin at `https:
 ### 9.3 Payload setup
 
 - Routes: admin UI at `/admin`, REST at `/api/payload/*` (rename from the default `/api` to avoid clashing with the site's API routes), GraphQL disabled.
-- Admin locale: `ar` from `@payloadcms/translations`, `rtl: true`; the admin's document title "لوحة بحر برنت"; the logo and favicon replaced with the brand icon. Amended 2026-09-13 (ADR-039, `specs/007-admin-ui/`): the panel is dark only on Payload's greys with the brand font, radii and accent; the sidebar, header, account menu, login and dashboard are rebuilt on shadcn/ui primitives with an icon for every collection and global; every collection and global carries an Arabic description; the rules live in `docs/ADMIN-DESIGN-SYSTEM.md` and `.claude/rules/admin-ui.md`.
+- Admin locale: `ar` from `@payloadcms/translations`, `rtl: true`; the admin's document title "لوحة بحر برنت"; the logo and favicon replaced with the brand icon. Amended 2026-09-13 (ADR-039, `specs/007-admin-ui/`): the panel is dark only on Payload's greys with the brand font, radii and accent; the sidebar, header, account menu, login and dashboard are rebuilt on shadcn/ui primitives with an icon for every collection and global; every collection and global carries an Arabic description; the rules live in `docs/ADMIN-DESIGN-SYSTEM.md` and `.claude/rules/admin-ui.md`. Amended again 2026-09-13 (Dhia's review, ADR-039): the panel's UI language is English for everyone (`i18n.supportedLanguages: { en }`, title "B7R Print Admin"); the content locale stays Arabic-first, and every text control follows the direction of its own text (`unicode-bidi: plaintext`), so Arabic content reads right-to-left inside the left-to-right panel. Collapsed on a desktop the sidebar is an icon rail, the header carries a search box and a "View website" link, and colour has one meaning each (blue action, green publish, red delete, amber careful).
 - Users collection with roles `admin` and `editor`:
   - **admin**: everything, including users, settings, redirects, deleting.
   - **editor**: create/edit/publish content collections (pages, products, FAQ, testimonials, blog); no users, no site settings, no redirects, no deletes of published items.
@@ -1259,7 +1259,7 @@ Amended 2026-09-13 (Phase 2a, ADR-026, ADR-029): the migrated files move to `src
 
 ### 9.8 Acceptance (Level 2)
 
-1. Dhia logs in at `/admin` in Arabic RTL, edits the hero headline, publishes, and sees the change on b7r.sa within 60 seconds without a deploy.
+1. Dhia logs in at `/admin` (English UI, Arabic content in its fields, ADR-039 amendment), edits the hero headline, publishes, and sees the change on b7r.sa within 60 seconds without a deploy.
 2. Editor role cannot see users or settings and cannot delete published items.
 3. All Level 1 acceptance criteria (§6.18) still pass; Lighthouse scores unchanged (content is still static at request time).
 4. Migration script runs clean on an empty database and is idempotent on a second run.

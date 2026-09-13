@@ -8,8 +8,8 @@ import { Refused } from '@/modules/cms/refused';
 const LOCK_MINUTES = 15;
 
 const PASSWORD_MESSAGES = {
-  too_short: 'كلمة المرور قصيرة: 12 حرفاً على الأقل.',
-  breached: 'كلمة المرور ظهرت في تسريبات معروفة، اختر كلمة أخرى.',
+  too_short: 'The password is too short: at least 12 characters.',
+  breached: 'That password appears in known breaches; choose another.',
 } as const;
 
 /**

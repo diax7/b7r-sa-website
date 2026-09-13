@@ -5,7 +5,6 @@ import { resendAdapter } from '@payloadcms/email-resend';
 import { redirectsPlugin } from '@payloadcms/plugin-redirects';
 import { lexicalEditor } from '@payloadcms/richtext-lexical';
 import { s3Storage } from '@payloadcms/storage-s3';
-import { ar } from '@payloadcms/translations/languages/ar';
 import { en } from '@payloadcms/translations/languages/en';
 import { buildConfig } from 'payload';
 import { Faqs } from '@/modules/cms/collections/faqs';
@@ -53,7 +52,7 @@ export default buildConfig({
     // The default avatar fetches gravatar.com with a hash of the user's email (ADR-028).
     avatar: 'default',
     meta: {
-      titleSuffix: ' | لوحة بحر برنت',
+      titleSuffix: ' | B7R Print Admin',
       icons: [{ rel: 'icon', type: 'image/png', url: '/icon.png' }],
     },
     components: {
@@ -71,7 +70,10 @@ export default buildConfig({
     },
     importMap: { baseDir: path.resolve(dirname, '../..') },
   },
-  i18n: { supportedLanguages: { ar, en }, fallbackLanguage: 'ar' },
+  // The panel is English for everyone (Dhia, 2026-09-13; ADR-039): one UI language, so a
+  // browser's Accept-Language cannot switch it. The content locale (`localization`) is a
+  // separate setting and stays Arabic-first.
+  i18n: { supportedLanguages: { en }, fallbackLanguage: 'en' },
   localization: {
     locales: [
       { code: 'ar', label: 'العربية', rtl: true },

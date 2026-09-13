@@ -4,6 +4,7 @@ import {
   adminContentSecurityPolicy,
   adminHeaders,
   contentSecurityPolicy,
+  FONT_CACHE,
   headerRoutes,
   originOf,
   PAGE_ROUTE_SOURCE,
@@ -152,5 +153,13 @@ describe('originOf', () => {
     expect(originOf('http://localhost:3004/umami-test.js')).toBe('http://localhost:3004');
     expect(originOf('')).toBeUndefined();
     expect(originOf('nope')).toBeUndefined();
+  });
+});
+
+describe('font files', () => {
+  it('are cached for a year under their fixed names (ADR-039: no font swap per admin page)', () => {
+    const route = headerRoutes().find((r) => r.source === '/fonts/:path*');
+    expect(route?.headers).toContainEqual(FONT_CACHE);
+    expect(FONT_CACHE.value).toContain('immutable');
   });
 });

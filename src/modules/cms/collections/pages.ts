@@ -18,9 +18,9 @@ export const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 /** Why a slug is refused, or null. Pure so the unit test needs no database. */
 export function pageSlugProblem(slug: unknown): string | null {
   if (typeof slug !== 'string' || !SLUG_PATTERN.test(slug) || slug.length > 64) {
-    return 'المعرّف: حروف لاتينية صغيرة وأرقام وشرطات فقط، حتى 64 حرفاً';
+    return 'Slug: lowercase letters, digits and hyphens only, up to 64 characters';
   }
-  if (FORBIDDEN_PAGE_SLUGS.includes(slug)) return `«${slug}» محجوز للموقع نفسه`;
+  if (FORBIDDEN_PAGE_SLUGS.includes(slug)) return `"${slug}" is reserved by the site itself`;
   return null;
 }
 
@@ -65,7 +65,7 @@ export const Pages: CollectionConfig = {
         const isReserved = reserved(originalDoc?.['slug']);
         // The seven designed pages keep their slug: a route folder renders each one.
         if (isReserved && slug && slug !== originalDoc?.['slug']) {
-          throw new Refused('هذه الصفحة لها مسار ثابت في الموقع؛ لا يمكن تغيير معرّفها');
+          throw new Refused('This page has a fixed route on the site; its slug cannot change');
         }
         // …and stay published: «Unpublish» writes `_status: draft` to the main row (no
         // `draft=true` on the request), which would leave the route with nothing to render.
@@ -76,7 +76,7 @@ export const Pages: CollectionConfig = {
           originalDoc?.['_status'] === 'published' &&
           !isDraftSave(req);
         if (unpublishing) {
-          throw new Refused('هذه الصفحة ثابتة في الموقع؛ لا يمكن إلغاء نشرها');
+          throw new Refused('This page is part of the site; it cannot be unpublished');
         }
         // A draft autosave may carry no slug yet; `required` refuses the empty slug at publish.
         if (!slug) return data;
@@ -89,7 +89,7 @@ export const Pages: CollectionConfig = {
       async ({ id, req }) => {
         const doc = await req.payload.findByID({ collection: 'pages', id, depth: 0, req });
         if (reserved(doc.slug)) {
-          throw new Refused('هذه الصفحة لها مسار ثابت في الموقع؛ لا يمكن حذفها');
+          throw new Refused('This page has a fixed route on the site; it cannot be deleted');
         }
       },
     ],

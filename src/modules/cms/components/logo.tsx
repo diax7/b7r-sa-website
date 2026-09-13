@@ -5,6 +5,15 @@ export function Logo() {
   return <img src="/images/logo/logo.png" alt="بحر برنت" style={{ height: 56, width: 'auto' }} />;
 }
 
+/** Square; the inline `maxWidth` beats the site preflight's `img { max-width: 100% }`. */
 export function Icon() {
-  return <img src="/images/logo/icon.png" alt="" style={{ height: 28, width: 28 }} />;
+  return (
+    <img
+      src="/images/logo/icon.png"
+      alt=""
+      width={24}
+      height={24}
+      style={{ height: 24, width: 24, maxWidth: 'none', objectFit: 'contain', display: 'block' }}
+    />
+  );
 }

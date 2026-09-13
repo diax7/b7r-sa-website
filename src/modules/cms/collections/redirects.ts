@@ -31,18 +31,18 @@ export function redirectProblem(
   otherSources: readonly string[],
 ): string | null {
   if (typeof from !== 'string' || !FROM_PATTERN.test(from)) {
-    return 'المصدر: مسار من مقطع واحد بحروف لاتينية صغيرة وشرطات، مثل /showcase';
+    return 'From: a one-segment path of lowercase letters and hyphens, like /showcase';
   }
   if ((CODE_TOP_LEVEL as readonly string[]).includes(from.slice(1))) {
-    return `«${from}» صفحة قائمة في الموقع؛ لا يمكن التحويل منها`;
+    return `"${from}" is a live page on the site; it cannot be redirected`;
   }
   if (to?.type === 'custom') {
     const url = to.url?.trim() ?? '';
     const external = /^https:\/\/[^\s"'<>]+$/.test(url);
     const internal = url.startsWith('/') && !url.startsWith('//');
-    if (!external && !internal) return 'الوجهة: مسار يبدأ بـ / أو رابط https://';
-    if (url === from || url.startsWith(`${from}/`)) return 'الوجهة هي المصدر نفسه';
-    if (otherSources.includes(url)) return 'الوجهة مصدر تحويل آخر؛ لا حلقات';
+    if (!external && !internal) return 'To: a path starting with / or an https:// URL';
+    if (url === from || url.startsWith(`${from}/`)) return 'To: the same as From';
+    if (otherSources.includes(url)) return 'To: the From of another redirect; no chains';
   }
   return null;
 }
@@ -50,10 +50,20 @@ export function redirectProblem(
 const label = (name: string, ar: string, en: string) => (field: Field) =>
   'name' in field && field.name === name ? { ...field, label: { ar, en } } : field;
 
-/** Arabic labels on the plugin's fields (it ships no `ar` translations). */
+/**
+ * Arabic labels on the plugin's fields (it ships no `ar` translations), and a permanent
+ * redirect by default: the plugin's `type` select is required but starts empty.
+ */
 export function redirectFields(defaultFields: Field[]): Field[] {
   return defaultFields.map((field) => {
     const withLabel = label('from', 'المصدر (المسار القديم)', 'From (old path)')(field);
+    if ('name' in withLabel && withLabel.name === 'type' && withLabel.type === 'select') {
+      return {
+        ...withLabel,
+        defaultValue: '301',
+        label: { ar: 'نوع التحويل', en: 'Redirect type' },
+      };
+    }
     if ('name' in withLabel && withLabel.name === 'to' && withLabel.type === 'group') {
       return {
         ...withLabel,
@@ -64,7 +74,7 @@ export function redirectFields(defaultFields: Field[]): Field[] {
           .map(label('url', 'مسار أو رابط', 'Path or URL')),
       };
     }
-    return label('type', 'نوع التحويل', 'Redirect type')(withLabel);
+    return withLabel;
   });
 }
 

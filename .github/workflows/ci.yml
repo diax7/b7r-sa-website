@@ -95,7 +95,7 @@ jobs:
         run: pnpm test
 
       - name: Migrate the schema
-        run: pnpm migrate
+        run: bash scripts/ci/migrate.sh
 
       - name: Seed content and the first admin (integration check)
         run: bash scripts/ci/seed-check.sh
@@ -188,7 +188,7 @@ jobs:
 
       - name: Migrate, seed, first admin
         run: |
-          pnpm migrate
+          bash scripts/ci/migrate.sh
           pnpm content:migrate
           pnpm admin:create
 
