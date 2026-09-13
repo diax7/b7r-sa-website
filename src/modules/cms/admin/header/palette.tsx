@@ -78,7 +78,7 @@ export function searchTerm(query: string): string {
   return /[\p{L}\p{N}]/u.test(term) ? term : '';
 }
 
-const STATUS_LABEL: Record<string, string> = { draft: 'مسودة', published: 'منشور' };
+const STATUS_LABEL = s.status;
 
 /**
  * Ctrl/⌘ K palette (ADR-039): every section the user may open, then documents of the main

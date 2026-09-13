@@ -3,7 +3,7 @@ import { getTranslation } from '@payloadcms/translations';
 import { EntityType, groupNavItems } from '@payloadcms/ui/shared';
 import type { Payload, PayloadRequest, SanitizedPermissions, TypedUser } from 'payload';
 import { formatAdminURL, PREFERENCE_KEYS } from 'payload/shared';
-import { ADMIN_GROUPS } from '@/modules/cms/admin/icons';
+import { GROUP_ORDER, groupKey } from '@/modules/cms/admin/icons';
 
 /** One sidebar / palette entry: plain data, safe to hand to a client component. */
 export interface NavEntity {
@@ -16,6 +16,12 @@ export interface NavEntity {
 export interface NavGroup {
   label: string;
   entities: NavEntity[];
+}
+
+/** Where a rendered group label sits in the display order; unknown groups go last. */
+function position(label: string): number {
+  const key = groupKey(label);
+  return key ? GROUP_ORDER.indexOf(key) : GROUP_ORDER.length;
 }
 
 /** `{ groups: { [label]: { open } } }`, the shape Payload's own nav stores under `nav`. */
@@ -46,11 +52,6 @@ export function navGroups(args: {
       .filter((g) => visible(g.admin.hidden))
       .map((entity) => ({ type: EntityType.global, entity }) as const),
   ];
-  const order = [ADMIN_GROUPS.content.ar, ADMIN_GROUPS.settings.ar, ADMIN_GROUPS.administration.ar];
-  const position = (label: string) => {
-    const i = order.indexOf(label as (typeof order)[number]);
-    return i === -1 ? order.length : i;
-  };
   return groupNavItems(entities, permissions ?? ({} as SanitizedPermissions), i18n)
     .toSorted((a, b) => position(a.label) - position(b.label))
     .map((group) => ({

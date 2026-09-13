@@ -130,10 +130,19 @@ export const ADMIN_ROUTE_SOURCES = ['/admin/:path*', '/api/payload/:path*'];
  * Header routes for `next.config.ts`: security headers everywhere, the language on pages,
  * the admin set on the CMS surfaces.
  */
+/** The self-hosted font files never change under their names: cache them for a year. */
+export const FONT_CACHE: HeaderEntry = {
+  key: 'Cache-Control',
+  value: 'public, max-age=31536000, immutable',
+};
+
 export function headerRoutes(options: SecurityHeaderOptions = {}): HeaderRoute[] {
   return [
     { source: '/(.*)', headers: securityHeaders(options) },
     { source: PAGE_ROUTE_SOURCE, headers: [{ key: 'Content-Language', value: 'ar' }] },
+    // Without this Next answers `max-age=0` for /public files and every admin navigation
+    // re-validates the brand font, which shows as a font swap on each page (ADR-039).
+    { source: '/fonts/:path*', headers: [FONT_CACHE] },
     ...ADMIN_ROUTE_SOURCES.map((source) => ({ source, headers: adminHeaders(options) })),
   ];
 }

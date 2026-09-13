@@ -621,3 +621,25 @@ a colon; a missing table value is a hyphen; numeric ranges keep the en dash. Enf
 `.claude/rules/writing.md`, and applied once across the repository (the BRD sections were
 rebuilt from the swept sources). The reset e-mail subject, the gallery alt text and the size
 chart caption changed accordingly.
+
+Amended 2026-09-13 (Dhia's review of the panel, `admin/ui-2`). **English panel.** The UI
+language is English for everyone (`i18n.supportedLanguages: { en }`, so a browser's
+Accept-Language cannot switch it); the content locale stays Arabic-first. Admin-facing
+messages (refusals, the login gate, the reset e-mail) are English; every text control carries
+`unicode-bidi: plaintext` so Arabic content reads right-to-left inside the left-to-right
+panel and a slug or URL reads left-to-right, without a per-field setting. **Icon rail.**
+Closed on a desktop (above Payload's `l` breakpoint, 1440 px) the sidebar no longer vanishes:
+the template grid keeps a 72 px column, the aside stays visible and interactive, every entry
+is an icon with a tooltip, the account avatar opens its menu, and the collapse/expand buttons
+persist Payload's `nav` preference like its own toggler (now hidden on desktops). At or under
+the breakpoint the drawer behaviour is unchanged. **Header.** A bordered search box (opens the
+palette; Ctrl/⌘ K still works) and a bordered "View website" link with text; both left the
+sidebar. **Colour that means something.** Blue is the main action and the active state, green
+publishes (the publish button of a document with drafts, the published pill), red deletes
+(the Delete items, row removal, the confirm button), amber warns (Unpublish, Revert). Payload's
+buttons read their colours from custom properties, so the overrides set the properties.
+**Font.** The self-hosted font files were served with `max-age=0`, so every admin navigation
+re-validated them and painted the fallback first; they are now `immutable` for a year and
+preloaded from the admin layout too. **Brand icon.** The site's preflight (`img { max-width:
+100% }`, which reaches `/admin`) squeezed the header icon into an 18 px column; the inline
+`max-width: none` restores the square. Widgets keep their per-field descriptions in English.

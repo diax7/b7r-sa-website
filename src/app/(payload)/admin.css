@@ -62,7 +62,13 @@
     --admin-accent: #0098e0;
     --admin-white: #ffffff;
     --admin-green: #3fbf6b;
+    --admin-green-hover: #34a95d;
     --admin-green-tint: rgb(63 191 107 / 0.16);
+    --admin-red: #f26b6b;
+    --admin-red-tint: rgb(242 107 107 / 0.14);
+    --admin-amber: #f5b53f;
+    --admin-ring: rgb(0 152 224 / 0.4);
+    --admin-rail-width: 72px;
     --font-body: var(--font-sans);
     --style-radius-s: var(--radius-inner);
     --style-radius-m: 8px;
@@ -97,6 +103,17 @@
 
   html {
     font-family: var(--font-sans);
+  }
+
+  /* The panel is English and left-to-right; the content it edits is Arabic. Every text
+     control follows the direction of what is typed into it, so Arabic reads right-to-left
+     and a slug or a URL left-to-right, without a per-field setting. */
+  input:not([type='checkbox']):not([type='radio']),
+  textarea,
+  [contenteditable='true'],
+  .rich-text-lexical .editor-shell {
+    unicode-bidi: plaintext;
+    text-align: start;
   }
 
   /* Our shell renders without Tailwind's preflight, so Payload's element defaults (button
@@ -155,5 +172,134 @@
 
   .graphic-logo img {
     max-height: 56px;
+  }
+
+  /* ----------------------------------------------------------------------------------------
+     The icon rail (Dhia, 2026-09-13): closed on a desktop, the sidebar keeps a narrow column
+     with icons and tooltips instead of vanishing. Payload's `l` breakpoint is 1440 px; at or
+     under it the sidebar is a drawer and these rules do not apply. The nav component adds
+     `data-admin-rail` and drops `inert` in that state; Payload's own toggler is replaced by
+     the collapse/expand buttons inside the sidebar.
+     ---------------------------------------------------------------------------------------- */
+  @media (min-width: 1441px) {
+    .template-default__nav-toggler-wrapper {
+      display: none;
+    }
+    .template-default--nav-hydrated:not(.template-default--nav-open) {
+      grid-template-columns: var(--admin-rail-width) auto;
+    }
+    .nav:not(.nav--nav-open) {
+      opacity: 1;
+      width: var(--admin-rail-width);
+    }
+    .nav:not(.nav--nav-open) .nav__scroll {
+      padding-inline: 12px;
+    }
+  }
+
+  /* ----------------------------------------------------------------------------------------
+     Colour that means something (Dhia, 2026-09-13): blue is the main action, green publishes
+     and marks what is live, red deletes, amber warns. Payload's buttons read their colours
+     from custom properties, so the overrides are the properties, not the rules.
+     ---------------------------------------------------------------------------------------- */
+  .list-create-new-doc__create-new-button {
+    --bg-color: var(--admin-primary);
+    --color: var(--admin-white);
+    --hover-bg: var(--admin-primary-hover);
+    --hover-color: var(--admin-white);
+    --btn-border: 0;
+  }
+  /* Publishing is green: the main button of a document that has a status line (drafts). */
+  .doc-controls:has(.status) #action-save,
+  .doc-controls:has(.status) .form-submit .btn--withPopup,
+  .doc-controls:has(.status) .form-submit .btn--withPopup .popup-button {
+    --bg-color: var(--admin-green);
+    --color: #10241a;
+    --hover-bg: var(--admin-green-hover);
+    --hover-color: #10241a;
+  }
+  .doc-controls #action-save-draft {
+    --hover-color: var(--admin-accent);
+  }
+  /* Deleting is red, unpublishing is amber, wherever Payload offers them. */
+  #action-delete,
+  .delete-document__toggle,
+  .delete-documents__toggle,
+  .array-actions__remove,
+  .list-selection__button--delete {
+    color: var(--admin-red);
+  }
+  #action-delete:hover,
+  .delete-document__toggle:hover,
+  .delete-documents__toggle:hover,
+  .array-actions__remove:hover {
+    background: var(--admin-red-tint);
+    color: var(--admin-red);
+  }
+  #action-unpublish,
+  .status__action {
+    color: var(--admin-amber);
+  }
+  /* The confirmation to delete: a red filled button. */
+  .delete-document__confirm,
+  .delete-documents__confirm,
+  .confirmation-modal__controls .btn--style-primary {
+    --bg-color: var(--admin-red);
+    --color: #2a0f0f;
+    --hover-bg: #e05050;
+    --hover-color: #2a0f0f;
+  }
+  .pill--style-error {
+    background: var(--admin-red-tint);
+    color: var(--admin-red);
+  }
+  .pill--style-warning {
+    color: var(--admin-amber);
+  }
+  .banner--type-error {
+    color: var(--admin-red);
+    background: var(--admin-red-tint);
+  }
+
+  /* ----------------------------------------------------------------------------------------
+     The shadcn feel on Payload's own elements: medium weight on buttons, a two-pixel accent
+     ring on focus, pills as pills, hairline rows that lift on hover, popovers with depth,
+     the active tab underlined in the accent.
+     ---------------------------------------------------------------------------------------- */
+  .btn {
+    font-weight: 500;
+  }
+  .btn:focus-visible,
+  .pill:focus-visible,
+  .popup-button:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--admin-ring);
+  }
+  .field-type input:focus,
+  .field-type textarea:focus,
+  .react-select__control--is-focused,
+  .rich-text-lexical .editor-shell:focus-within {
+    outline: none;
+    border-color: var(--admin-accent);
+    box-shadow: 0 0 0 2px var(--admin-ring);
+  }
+  .pill {
+    border-radius: 999px;
+  }
+  .table tbody tr:hover {
+    background: var(--theme-elevation-50);
+  }
+  .popup__content {
+    border: 1px solid var(--theme-elevation-150);
+    border-radius: 8px;
+    box-shadow: 0 12px 32px rgb(0 0 0 / 0.6);
+  }
+  .doc-tab--active,
+  .doc-tab[aria-current='page'] {
+    color: var(--admin-accent);
+    box-shadow: inset 0 -2px 0 var(--admin-accent);
+  }
+  .step-nav a:hover {
+    color: var(--admin-accent);
   }
 }

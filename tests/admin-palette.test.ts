@@ -47,6 +47,6 @@ describe('command palette ranking (ADR-039)', () => {
     expect(initials('ضياء ناصر', 'd@b7r.sa')).toBe('ضن');
     expect(initials('Dhia', 'd@b7r.sa')).toBe('D');
     expect(initials('', 'editor@b7r.sa')).toBe('E');
-    expect(initials('', '')).toBe('؟');
+    expect(initials('', '')).toBe('?');
   });
 });

@@ -3,54 +3,52 @@
 import { Search } from 'lucide-react';
 import { Icon } from '@/components/shared/icon';
 import { Kbd } from '@/components/ui/kbd';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ACTION_ICONS } from '@/modules/cms/admin/icons';
 import { Palette, type PaletteProps } from '@/modules/cms/admin/header/palette';
 import { PALETTE_EVENT } from '@/modules/cms/admin/header/palette-event';
 import { adminStrings } from '@/modules/cms/admin/strings';
 
-const iconButton =
-  'grid size-9 place-items-center rounded-inner text-text-muted transition-colors duration-(--duration-fast) hover:bg-accent-tint hover:text-text focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-accent/40';
+const s = adminStrings.header;
 
-/** Two icon buttons in Payload's header, each with a tooltip, plus the palette they open. */
+const control =
+  'flex h-9 items-center gap-2 rounded-inner border border-border bg-surface px-3 text-small text-text-muted transition-colors duration-(--duration-fast) hover:border-text-muted/60 hover:text-text focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-accent/40';
+
+/**
+ * Payload's header, our controls (Dhia, 2026-09-13): a bordered search box that opens the
+ * palette, and a bordered "View website" link. On phones they fold to icons; the palette
+ * still answers Ctrl/⌘ K everywhere.
+ */
 export function HeaderActionsClient(props: PaletteProps) {
   return (
-    <TooltipProvider delayDuration={300}>
-      <div className="hidden items-center gap-1 md:flex" data-admin-ui="" data-admin-actions="">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <button
-              type="button"
-              className={iconButton}
-              aria-label={adminStrings.palette.title}
-              onClick={() => window.dispatchEvent(new CustomEvent(PALETTE_EVENT))}
-              data-admin-palette-trigger=""
-            >
-              <Icon icon={Search} size={18} />
-            </button>
-          </TooltipTrigger>
-          <TooltipContent className="flex items-center gap-1.5">
-            {adminStrings.palette.title}
+    <>
+      <div className="flex items-center gap-2" data-admin-ui="" data-admin-actions="">
+        <button
+          type="button"
+          className={`${control} w-9 justify-center px-0 md:w-80 md:justify-start md:px-3`}
+          aria-label={s.searchAria}
+          onClick={() => window.dispatchEvent(new CustomEvent(PALETTE_EVENT))}
+          data-admin-palette-trigger=""
+        >
+          <Icon icon={Search} size={16} className="shrink-0" />
+          <span className="hidden flex-1 truncate text-start md:inline">{s.search}</span>
+          <span className="hidden items-center gap-1 md:flex">
             <Kbd>Ctrl</Kbd>
             <Kbd>K</Kbd>
-          </TooltipContent>
-        </Tooltip>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <a
-              href="/"
-              target="_blank"
-              rel="noopener"
-              className={iconButton}
-              aria-label={adminStrings.nav.viewSite}
-            >
-              <Icon icon={ACTION_ICONS.viewSite} size={18} />
-            </a>
-          </TooltipTrigger>
-          <TooltipContent>{adminStrings.nav.viewSite}</TooltipContent>
-        </Tooltip>
+          </span>
+        </button>
+        <a
+          href="/"
+          target="_blank"
+          rel="noopener"
+          className={`${control} w-9 justify-center px-0 md:w-auto md:px-3`}
+          aria-label={s.viewSite}
+          data-admin-view-site=""
+        >
+          <Icon icon={ACTION_ICONS.viewSite} size={16} className="shrink-0" />
+          <span className="hidden md:inline">{s.viewSite}</span>
+        </a>
       </div>
       <Palette {...props} />
-    </TooltipProvider>
+    </>
   );
 }

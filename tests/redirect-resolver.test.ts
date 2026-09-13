@@ -35,12 +35,12 @@ describe('redirectProblem: the rules an admin row must pass', () => {
   });
 
   it('refuses nested, malformed or code-owned sources', () => {
-    expect(redirectProblem('/a/b', custom('/x'), [])).toMatch(/مقطع واحد/);
-    expect(redirectProblem('showcase', custom('/x'), [])).toMatch(/مقطع واحد/);
-    expect(redirectProblem('/Show', custom('/x'), [])).toMatch(/مقطع واحد/);
-    expect(redirectProblem('/about', custom('/x'), [])).toMatch(/قائمة في الموقع/);
-    expect(redirectProblem('/products', custom('/x'), [])).toMatch(/قائمة في الموقع/);
-    expect(redirectProblem('/en', custom('/'), [])).toMatch(/قائمة في الموقع/);
+    expect(redirectProblem('/a/b', custom('/x'), [])).toMatch(/one-segment/);
+    expect(redirectProblem('showcase', custom('/x'), [])).toMatch(/one-segment/);
+    expect(redirectProblem('/Show', custom('/x'), [])).toMatch(/one-segment/);
+    expect(redirectProblem('/about', custom('/x'), [])).toMatch(/live page/);
+    expect(redirectProblem('/products', custom('/x'), [])).toMatch(/live page/);
+    expect(redirectProblem('/en', custom('/'), [])).toMatch(/live page/);
     expect(redirectProblem(undefined, custom('/x'), [])).not.toBeNull();
   });
 
@@ -48,9 +48,9 @@ describe('redirectProblem: the rules an admin row must pass', () => {
     expect(redirectProblem('/old', custom('http://example.com'), [])).toMatch(/https/);
     expect(redirectProblem('/old', custom('javascript:alert(1)'), [])).toMatch(/https/);
     expect(redirectProblem('/old', custom('//evil.com'), [])).toMatch(/https/);
-    expect(redirectProblem('/old', custom('/old'), [])).toMatch(/المصدر نفسه/);
-    expect(redirectProblem('/old', custom('/old/x'), [])).toMatch(/المصدر نفسه/);
-    expect(redirectProblem('/old', custom('/older'), ['/older'])).toMatch(/حلقات/);
+    expect(redirectProblem('/old', custom('/old'), [])).toMatch(/same as From/);
+    expect(redirectProblem('/old', custom('/old/x'), [])).toMatch(/same as From/);
+    expect(redirectProblem('/old', custom('/older'), ['/older'])).toMatch(/no chains/);
     expect(redirectProblem('/old', custom('/older'), ['/other'])).toBeNull();
   });
 
@@ -63,8 +63,8 @@ describe('redirectProblem: the rules an admin row must pass', () => {
     ).toBe(7);
     expect(referenceId({ type: 'custom', url: '/x' })).toBeUndefined();
     // Resolved to its path, a reference loops like a custom URL would.
-    expect(redirectProblem('/a', custom('/b'), ['/b'])).toMatch(/حلقات/);
-    expect(redirectProblem('/x', custom('/x'), [])).toMatch(/المصدر نفسه/);
+    expect(redirectProblem('/a', custom('/b'), ['/b'])).toMatch(/no chains/);
+    expect(redirectProblem('/x', custom('/x'), [])).toMatch(/same as From/);
   });
 
   it('labels the plugin fields in Arabic without changing their names', () => {

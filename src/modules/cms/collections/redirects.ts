@@ -31,18 +31,18 @@ export function redirectProblem(
   otherSources: readonly string[],
 ): string | null {
   if (typeof from !== 'string' || !FROM_PATTERN.test(from)) {
-    return 'المصدر: مسار من مقطع واحد بحروف لاتينية صغيرة وشرطات، مثل /showcase';
+    return 'From: a one-segment path of lowercase letters and hyphens, like /showcase';
   }
   if ((CODE_TOP_LEVEL as readonly string[]).includes(from.slice(1))) {
-    return `«${from}» صفحة قائمة في الموقع؛ لا يمكن التحويل منها`;
+    return `"${from}" is a live page on the site; it cannot be redirected`;
   }
   if (to?.type === 'custom') {
     const url = to.url?.trim() ?? '';
     const external = /^https:\/\/[^\s"'<>]+$/.test(url);
     const internal = url.startsWith('/') && !url.startsWith('//');
-    if (!external && !internal) return 'الوجهة: مسار يبدأ بـ / أو رابط https://';
-    if (url === from || url.startsWith(`${from}/`)) return 'الوجهة هي المصدر نفسه';
-    if (otherSources.includes(url)) return 'الوجهة مصدر تحويل آخر؛ لا حلقات';
+    if (!external && !internal) return 'To: a path starting with / or an https:// URL';
+    if (url === from || url.startsWith(`${from}/`)) return 'To: the same as From';
+    if (otherSources.includes(url)) return 'To: the From of another redirect; no chains';
   }
   return null;
 }

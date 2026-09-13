@@ -43,10 +43,10 @@ describe('B0: the proxy and the (site) routes agree on the code-owned segments (
 
   it('refuses page slugs that are malformed, reserved by the code, or the 404 target', () => {
     expect(pageSlugProblem('creators')).toBeNull();
-    expect(pageSlugProblem('Creators')).toMatch(/حروف/);
+    expect(pageSlugProblem('Creators')).toMatch(/lowercase/);
     expect(pageSlugProblem('a'.repeat(65))).toMatch(/64/);
-    expect(pageSlugProblem('products')).toMatch(/محجوز/);
-    expect(pageSlugProblem('en')).toMatch(/محجوز/);
+    expect(pageSlugProblem('products')).toMatch(/reserved/);
+    expect(pageSlugProblem('en')).toMatch(/reserved/);
     expect(pageSlugProblem('__404')).not.toBeNull();
     expect(pageSlugProblem(undefined)).not.toBeNull();
     expect(SLUG_SHAPE.test('no-such-page')).toBe(true);

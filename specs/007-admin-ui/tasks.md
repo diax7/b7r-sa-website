@@ -30,3 +30,14 @@ Branch `admin/ui-1`, PR #4. CTO: plan 90, phase 1 94, phase 2 93.
 ## Writing rule (Dhia, 2026-09-13)
 - [x] T401 No em dashes anywhere: `scripts/check-em-dash.ts` (`pnpm check:dash`) in prek and CI,
   `.claude/rules/writing.md`, ADR-040, one sweep across code, content, docs and the BRD.
+
+## Phase 4: Dhia's review notes (2026-09-13, `admin/ui-2`)
+- [x] T501 Icon rail when the sidebar is collapsed on a desktop (72 px, tooltips, persisted).
+- [x] T502 English panel: `supportedLanguages: { en }`, English shell strings, refusals, login
+  gate and reset e-mail; `unicode-bidi: plaintext` on text controls for Arabic content.
+- [x] T503 Font swap on navigation: `/fonts` cached immutable for a year + admin preload.
+- [x] T504 Colour semantics on Payload's elements (publish green, delete red, unpublish amber,
+  Create New blue) and the shadcn feel (weights, focus rings, pills, popovers, tab underline).
+- [x] T505 Header: bordered search box + "View website" with text; both removed from the sidebar.
+- [x] T506 Square brand icon in the header.
+- [x] T507 e2e + unit tests updated; ADR-039 amendment; design system + rules.

@@ -8,7 +8,7 @@ import { savedByField, stampSavedBy } from '@/modules/cms/fields/saved-by';
 /** The home accordion shows exactly this many entries (BRD 4.4, 6.4.9). */
 export const HOME_FAQ_LIMIT = 5;
 
-export const HOME_LIMIT_MESSAGE = `الرئيسية تعرض ${HOME_FAQ_LIMIT} أسئلة فقط؛ ألغِ اختيار سؤال آخر أولاً.`;
+export const HOME_LIMIT_MESSAGE = `The home page shows ${HOME_FAQ_LIMIT} questions at most; untick another one first.`;
 
 /**
  * Refuses a sixth «show on home» (pure so the unit test needs no database): `othersOnHome`

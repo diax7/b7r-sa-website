@@ -10,8 +10,10 @@ is the checklist, `tests/admin-config.test.ts` and `tests/admin-icons.test.ts` a
 1. **One product.** The panel looks and reads like بحر برنت: the brand font, the 13 px radius,
    the accent blue, the same Arabic voice as the site. Payload's dark greys stay, Dhia's
    choice (dark only), the brand sits on top.
-2. **Arabic first.** Every label, description, empty state and error is Arabic, written under
-   the ux-araby rules (§5). English is the fallback locale only.
+2. **English panel, Arabic content.** The UI language is English for everyone (Dhia,
+   2026-09-13); labels and descriptions are written in English with an Arabic version kept in
+   the config. The content is Arabic: every text control follows the direction of its own
+   text (`unicode-bidi: plaintext`), so Arabic reads right-to-left inside the panel.
 3. **Icon + label, always.** An icon never stands alone except in an icon button with an
    `aria-label` and a tooltip. Every collection and global has one icon (§4) and it is the
    same icon everywhere it appears (nav, palette, dashboard, empty state).
@@ -47,8 +49,18 @@ render in both worlds without a fork. Raw hex lives only in the token block.
 
 **Blue rule on dark:** `primary` is a fill, `accent` is a colour for text. `text-primary` is
 never used in an admin component; `bg-accent` is never used behind white text. The `Badge`
-`primary` tone (blue text on a blue tint) is not used in the admin, use `success`,
-`warning`, `error` or `muted`.
+`primary` tone (blue text on a blue tint) is not used in the admin; use `success`, `warning`,
+`error` or `muted`.
+
+**Colour that means something** (Dhia, 2026-09-13): the same four meanings everywhere, on
+Payload's elements and ours.
+
+| Colour | Means | Where |
+|---|---|---|
+| Blue (`primary` fill, `accent` text) | the main action, the active place, a link | Create New, Save, the active nav entry, quick-action tiles, focus rings |
+| Green (`--admin-green`) | publish, live | the publish button of a document with drafts, the Published pill, "answering/running" rows |
+| Red (`--admin-red`) | delete, failure | Delete items, row removal, the delete confirmation, failed rows, Log out |
+| Amber (`--admin-amber`) | careful | Unpublish, Revert, "off / test mode" rows |
 
 Payload's own selection colour (its "success" ramp: checkboxes, radios, focus rings, the
 published pill) is re-hued to the accent in `@layer payload`; its greys are untouched.
@@ -85,6 +97,8 @@ published pill) is re-hued to the accent in `@layer payload`; its greys are unto
 
 The admin's strings are interface copy (ADR-031): written by us, under the ux-araby rules.
 
+- The panel's own strings are English (`modules/cms/admin/strings.ts`); the rules below apply
+  to the Arabic versions kept in the config and to any Arabic the panel shows.
 - Labels are nouns: «المنتجات», «الصفحة الرئيسية», «إعدادات الموقع». Never a sentence.
 - Actions are verb-first imperatives: «أضف صفحة», «ارفع ملفاً», «عرض الموقع». No «قم بـ».
 - Descriptions are one sentence that says what the thing is *for the site*: «الأسئلة الشائعة
@@ -118,8 +132,8 @@ Payload's own elements (buttons, fields, pills, toasts) are themed in `admin.css
 
 | Piece | File | Notes |
 |---|---|---|
-| Sidebar | `modules/cms/admin/nav/*` | Groups (المحتوى · الإعدادات · الإدارة) as collapsibles that remember their state in Payload's `nav` preference; an icon per entity; `aria-current="page"`; «عرض الموقع»; the account block. Keeps Payload's outer `nav` classes (layout, mobile drawer). |
-| Header actions | `modules/cms/admin/header/actions*` | Palette trigger and site link as icon buttons with tooltips; hidden under 768 px (both live in the sidebar too). |
+| Sidebar | `modules/cms/admin/nav/*` | Groups (Content · Settings · Administration) as collapsibles that remember their state in Payload's `nav` preference; an icon per entity; `aria-current="page"`; the account block. Collapsed on a desktop it is a 72 px icon rail with tooltips (`data-admin-rail`), still usable; at or under 1440 px it is Payload's drawer. Keeps Payload's outer `nav` classes (layout, drawer). |
+| Header actions | `modules/cms/admin/header/actions*` | A bordered search box that opens the palette (with the Ctrl K hint) and a bordered "View website" link with text; icons only under 768 px. |
 | Command palette | `modules/cms/admin/header/palette*` | Ctrl/⌘ K; sections first, then documents of collections with `listSearchableFields` (5 per collection, from two characters); combobox semantics; ranking in `palette-rank.ts`. |
 | Account menu | `modules/cms/admin/account/*` | Initials avatar, name, e-mail (LTR), role badge, «حسابي», «تسجيل الخروج». |
 | Login | `modules/cms/admin/login/*` | One line under the form; the Turnstile widget above it (ADR-034). |
