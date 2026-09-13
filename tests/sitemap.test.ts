@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { blogPosts } from '@/content/blog';
 import { getLegalPages } from '@/content/legal';
-import { products } from '@/content/products';
-import { seo } from '@/content/seo';
-import { site } from '@/content/site';
+import { products } from '@/content/seed/products';
+import { seo } from '@/content/seed/seo';
+import { site } from '@/content/seed/site';
 import { manifest } from '@/modules/core/seo/manifest';
 import { ANSWER_ENGINE_BOTS, robotsRules } from '@/modules/core/seo/robots';
 import { contentDate, sitemapEntries } from '@/modules/core/seo/sitemap';
@@ -11,7 +11,7 @@ import { contentDate, sitemapEntries } from '@/modules/core/seo/sitemap';
 const BASE = 'https://b7r.sa';
 
 describe('sitemap (BRD 7.5)', () => {
-  const entries = sitemapEntries(BASE);
+  const entries = sitemapEntries(BASE, seo, products);
   const urls = entries.map((e) => e.url);
 
   it('lists every static page, every product and every published post, nothing else', () => {
@@ -64,7 +64,7 @@ describe('robots (BRD 7.2)', () => {
 
 describe('manifest (BRD 7.3)', () => {
   it('is Arabic, RTL, brand-coloured, display browser, with two icons', () => {
-    const m = manifest();
+    const m = manifest(site);
     expect(m.name).toBe(site.brandName);
     expect(m.lang).toBe('ar');
     expect(m.dir).toBe('rtl');

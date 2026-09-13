@@ -1,13 +1,15 @@
 import type { Metadata } from 'next';
 import type { BlogPost, Product } from '@/content/schema';
-import { getSeo, productSeo, SEO_TITLE_TEMPLATE } from '@/content/seo';
-import { site } from '@/content/site';
+import { productSeo, SEO_TITLE_TEMPLATE } from '@/content/seo-copy';
+import { getSeo, getSeoDefaults, getSiteSettings } from '@/lib/cms';
 import { env, siteBase } from '@/lib/env';
 
 export const DEFAULT_OG_IMAGE = '/og/default.png';
 
 export interface PageMeta {
   route: string;
+  /** Brand name for `og:site_name`. */
+  siteName: string;
   title: string;
   description: string;
   ogType?: 'website' | 'article';
@@ -33,7 +35,7 @@ export function pageMetadata(meta: PageMeta): Metadata {
       ? {
           type: 'article',
           locale: 'ar_SA',
-          siteName: site.brandName,
+          siteName: meta.siteName,
           title: meta.title,
           description: meta.description,
           url: meta.route,
@@ -45,7 +47,7 @@ export function pageMetadata(meta: PageMeta): Metadata {
       : {
           type: 'website',
           locale: 'ar_SA',
-          siteName: site.brandName,
+          siteName: meta.siteName,
           title: meta.title,
           description: meta.description,
           url: meta.route,
@@ -64,11 +66,12 @@ export function pageMetadata(meta: PageMeta): Metadata {
   };
 }
 
-/** Static routes listed in `content/seo.ts`. */
-export function buildMetadata(route: string): Metadata {
-  const page = getSeo(route);
+/** Static routes: title/description from the `seo-defaults` global (BRD 4.16). */
+export async function buildMetadata(route: string): Promise<Metadata> {
+  const [page, site] = await Promise.all([getSeo(route), getSiteSettings()]);
   return pageMetadata({
     route,
+    siteName: site.brandName,
     title: page.title,
     description: page.description,
     ...(page.ogImage ? { ogImage: page.ogImage } : {}),
@@ -77,9 +80,11 @@ export function buildMetadata(route: string): Metadata {
 }
 
 /** Product detail (BRD 4.16 templates): its own OG image from `public/og/products/`. */
-export function productMetadata(product: Product): Metadata {
+export async function productMetadata(product: Product): Promise<Metadata> {
+  const site = await getSiteSettings();
   return pageMetadata({
     route: `/products/${product.slug}`,
+    siteName: site.brandName,
     title: productSeo.title.replace('{name}', product.name),
     description: productSeo.description
       .replace('{short description}', product.shortDescription.replace(/\.$/, ''))
@@ -89,9 +94,11 @@ export function productMetadata(product: Product): Metadata {
 }
 
 /** Blog post: `article` type with dates; the cover doubles as the OG image. */
-export function postMetadata(post: BlogPost): Metadata {
+export async function postMetadata(post: BlogPost): Promise<Metadata> {
+  const site = await getSiteSettings();
   return pageMetadata({
     route: `/blog/${post.slug}`,
+    siteName: site.brandName,
     title: post.title,
     description: post.excerpt,
     ogType: 'article',
@@ -101,7 +108,14 @@ export function postMetadata(post: BlogPost): Metadata {
   });
 }
 
-export const rootMetadata: Metadata = {
-  title: { default: getSeo('/').title, template: SEO_TITLE_TEMPLATE },
-  applicationName: site.brandName,
-};
+export async function rootMetadata(): Promise<Metadata> {
+  const [seo, site] = await Promise.all([getSeoDefaults(), getSiteSettings()]);
+  const home = seo.routes.find((r) => r.route === '/');
+  return {
+    title: {
+      default: home?.title ?? site.brandName,
+      template: seo.titleTemplate || SEO_TITLE_TEMPLATE,
+    },
+    applicationName: site.brandName,
+  };
+}

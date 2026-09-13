@@ -3,16 +3,14 @@ import Link from 'next/link';
 import { WhatsAppIcon } from '@/components/shared/brand-icons';
 import { Button } from '@/components/shared/button';
 import { Container } from '@/components/shared/container';
-import { navigation } from '@/content/navigation';
-import { site } from '@/content/site';
 import { whatsappUrl } from '@/lib/utm';
 
 interface StatusPageProps {
   title: string;
   text: string;
   button: string;
-  /** Show the WhatsApp line (runtime errors, BRD 8.11). */
-  whatsapp?: boolean;
+  /** WhatsApp line (runtime errors, BRD 8.11): the number and the link text. */
+  whatsapp?: { number: string; label: string };
 }
 
 /** Centred status layout shared by 404 and the error boundaries (BRD 6.13). No ribbon. */
@@ -34,13 +32,13 @@ export function StatusPage({ title, text, button, whatsapp }: StatusPageProps) {
         </Button>
         {whatsapp && (
           <a
-            href={whatsappUrl(site.contact.whatsapp)}
+            href={whatsappUrl(whatsapp.number)}
             target="_blank"
             rel="noopener"
             className="inline-flex items-center gap-2 py-2 font-medium text-primary hover:underline"
           >
             <WhatsAppIcon size={18} className="text-whatsapp" />
-            {navigation.menuWhatsappLine}
+            {whatsapp.label}
           </a>
         )}
       </div>

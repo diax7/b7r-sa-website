@@ -1,6 +1,6 @@
 import type { Navigation } from '@/content/schema';
 
-/** BRD 4.3 global elements and 4.5 policy links. Order is RTL start to end. */
+/** BRD 4.3 global elements and 4.5 policy links, verbatim: seed for the `navigation` global (ADR-026). */
 export const navigation: Navigation = {
   primary: [
     { label: 'الرئيسية', href: '/' },

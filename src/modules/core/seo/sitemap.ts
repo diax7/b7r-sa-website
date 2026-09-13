@@ -1,8 +1,7 @@
 import type { MetadataRoute } from 'next';
 import { blogPosts } from '@/content/blog';
 import { getLegalPages } from '@/content/legal';
-import { products } from '@/content/products';
-import { seo } from '@/content/seo';
+import type { PageSeo, Product } from '@/content/schema';
 
 const LEGAL_ROUTES = new Set(['/terms', '/shipping', '/privacy']);
 
@@ -16,7 +15,11 @@ export function contentDate(isoDate: string): Date {
  * with their photos, the published posts. Legal pages take their date from the legal file so
  * the visible «آخر تحديث», the JSON-LD and the sitemap agree. No 404, no API, no queries.
  */
-export function sitemapEntries(base: string): MetadataRoute.Sitemap {
+export function sitemapEntries(
+  base: string,
+  seo: PageSeo[],
+  products: Product[],
+): MetadataRoute.Sitemap {
   const legalDates = new Map(getLegalPages().map((p) => [`/${p.slug}`, p.updatedAt]));
   const pages = seo.map((page) => ({
     url: `${base}${page.route === '/' ? '' : page.route}`,
@@ -26,15 +29,13 @@ export function sitemapEntries(base: string): MetadataRoute.Sitemap {
         : page.updatedAt,
     ),
   }));
-  const productEntries = products
-    .toSorted((a, b) => a.sortOrder - b.sortOrder)
-    .map((product) => ({
-      url: `${base}/products/${product.slug}`,
-      lastModified: contentDate(product.updatedAt),
-      images: product.colors
-        .flatMap((c) => [c.images.front, c.images.back].filter((p): p is string => Boolean(p)))
-        .map((path) => `${base}${path}`),
-    }));
+  const productEntries = products.map((product) => ({
+    url: `${base}/products/${product.slug}`,
+    lastModified: contentDate(product.updatedAt),
+    images: product.colors
+      .flatMap((c) => [c.images.front, c.images.back].filter((p): p is string => Boolean(p)))
+      .map((path) => (path.startsWith('http') ? path : `${base}${path}`)),
+  }));
   const postEntries = blogPosts.map((post) => ({
     url: `${base}/blog/${post.slug}`,
     lastModified: contentDate(post.updatedAt),

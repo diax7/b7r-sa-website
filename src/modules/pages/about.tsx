@@ -6,7 +6,7 @@ import { Icon } from '@/components/shared/icon';
 import { Reveal } from '@/components/shared/reveal';
 import { Section } from '@/components/shared/section';
 import { aboutPage, productsPage } from '@/content/pages';
-import { getSeo } from '@/content/seo';
+import { getSeo } from '@/lib/cms';
 import { siteBase } from '@/lib/env';
 import { CtaRibbon, JsonLd, jsonLd } from '@/modules/core';
 
@@ -14,10 +14,10 @@ const ROUTE = '/about';
 const ICONS: Record<string, LucideIcon> = { Target, Eye, Heart };
 
 /** About (BRD 6.8, 4.10). */
-export function AboutPage() {
+export async function AboutPage() {
   const copy = aboutPage;
   const base = siteBase();
-  const seo = getSeo(ROUTE);
+  const seo = await getSeo(ROUTE);
 
   return (
     <>

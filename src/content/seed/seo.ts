@@ -1,6 +1,6 @@
 import type { PageSeo } from '@/content/schema';
 
-/** BRD 4.16. The template appends « | بحر برنت» except on the home page. */
+/** BRD 4.16 rows, verbatim: the seed for the `seo-defaults` global (ADR-026). */
 export const seo: PageSeo[] = [
   {
     route: '/',
@@ -67,20 +67,3 @@ export const seo: PageSeo[] = [
     updatedAt: '2026-09-13',
   },
 ];
-
-export const SEO_TITLE_TEMPLATE = '%s | بحر برنت';
-
-/** BRD 4.16 product row; `{name}`, `{short description}` and `{base}` are filled per product. */
-export const productSeo = {
-  title: '{name} للطباعة عند الطلب',
-  description: '{short description}. التكلفة تبدأ من {base} ريالاً، بدون حد أدنى، وشحن باسم متجرك.',
-};
-
-/** BRD 7.4: the Offer price note on product pages. */
-export const MERCHANT_COST_NOTE = 'تكلفة للتاجر';
-
-export function getSeo(route: string): PageSeo {
-  const entry = seo.find((s) => s.route === route);
-  if (!entry) throw new Error(`No SEO entry for route ${route}; add it to content/seo.ts`);
-  return entry;
-}

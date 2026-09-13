@@ -1,12 +1,11 @@
-import type { BlogPost, Product } from '@/content/schema';
-import { MERCHANT_COST_NOTE } from '@/content/seo';
-import { site } from '@/content/site';
+import type { BlogPost, Product, SiteSettings } from '@/content/schema';
+import { MERCHANT_COST_NOTE } from '@/content/seo-copy';
 
 /**
  * JSON-LD builders (BRD 7.4). Each page renders exactly one `<script type="application/ld+json">`
  * holding a `@graph` of the types the BRD table lists for it; `tests/json-ld.test.ts` asserts
  * the required fields per type. Facts (name, phone, city, delivery days, return window) come
- * from `content/site.ts` and the legal texts, never from literals here.
+ * from the CMS site settings and the legal texts, never from literals here.
  */
 export type JsonLdNode = Record<string, unknown> & { '@type': string };
 
@@ -22,7 +21,7 @@ function absolute(base: string, path: string): string {
   return path === '/' ? base : `${base}${path}`;
 }
 
-export function onlineStore(base: string): JsonLdNode {
+export function onlineStore(base: string, site: SiteSettings): JsonLdNode {
   return {
     '@type': 'OnlineStore',
     '@id': `${base}/#store`,
@@ -67,7 +66,7 @@ export function onlineStore(base: string): JsonLdNode {
   };
 }
 
-export function webSite(base: string): JsonLdNode {
+export function webSite(base: string, site: SiteSettings): JsonLdNode {
   return {
     '@type': 'WebSite',
     '@id': `${base}/#website`,
@@ -102,7 +101,7 @@ export function itemList(base: string, paths: string[]): JsonLdNode {
   };
 }
 
-export function product(base: string, item: Product): JsonLdNode {
+export function product(base: string, item: Product, site: SiteSettings): JsonLdNode {
   const url = `${base}/products/${item.slug}`;
   return {
     '@type': 'Product',
@@ -149,7 +148,12 @@ export function webPage(
   };
 }
 
-export function blogPosting(base: string, post: BlogPost, authorName: string): JsonLdNode {
+export function blogPosting(
+  base: string,
+  post: BlogPost,
+  authorName: string,
+  site: SiteSettings,
+): JsonLdNode {
   const url = `${base}/blog/${post.slug}`;
   return {
     '@type': 'BlogPosting',

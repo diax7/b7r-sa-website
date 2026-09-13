@@ -1,6 +1,6 @@
 import type { SiteSettings } from '@/content/schema';
 
-/** BRD 1.1 facts. Every number here is displayed from this single object. */
+/** BRD 1.1 facts, verbatim: seed for the `site-settings` global and the no-database fallback (ADR-026). */
 export const site: SiteSettings = {
   brandName: 'بحر برنت',
   brandNameLatin: 'B7R Print',

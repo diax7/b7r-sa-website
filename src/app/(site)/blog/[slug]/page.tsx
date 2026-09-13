@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { blogPosts, getBlogPost } from '@/content/blog';
 import { BlogPostPage } from '@/modules/blog';
-import { postMetadata } from '@/modules/core';
+import { postMetadata } from '@/modules/core/seo/metadata';
 
 interface Params {
   params: Promise<{ slug: string }>;

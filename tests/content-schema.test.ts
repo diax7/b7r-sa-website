@@ -5,8 +5,8 @@ import { faq, homeFaq } from '@/content/faq';
 import { home } from '@/content/home';
 import { integrations } from '@/content/integrations';
 import { getLegalPages } from '@/content/legal';
-import { navigation } from '@/content/navigation';
-import { products } from '@/content/products';
+import { navigation } from '@/content/seed/navigation';
+import { products } from '@/content/seed/products';
 import {
   BlogHubSchema,
   BlogPostSchema,
@@ -22,8 +22,8 @@ import {
   TestimonialSchema,
   WhyUsItemSchema,
 } from '@/content/schema';
-import { seo } from '@/content/seo';
-import { site } from '@/content/site';
+import { seo } from '@/content/seed/seo';
+import { site } from '@/content/seed/site';
 import { homeSteps, howItWorksSteps } from '@/content/steps';
 import { testimonials } from '@/content/testimonials';
 import { whyUs } from '@/content/why-us';

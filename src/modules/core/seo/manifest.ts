@@ -1,9 +1,9 @@
 import type { MetadataRoute } from 'next';
-import { site } from '@/content/site';
+import type { SiteSettings } from '@/content/schema';
 import { TOKEN_HEX } from '@/lib/tokens';
 
 /** Web app manifest (BRD 7.3): Arabic, RTL, brand colours, `display: browser`. */
-export function manifest(): MetadataRoute.Manifest {
+export function manifest(site: SiteSettings): MetadataRoute.Manifest {
   return {
     name: site.brandName,
     short_name: site.brandName,

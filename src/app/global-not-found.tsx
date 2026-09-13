@@ -1,21 +1,14 @@
 import type { Metadata, Viewport } from 'next';
-import type { ReactNode } from 'react';
 import { SiteDocument } from '@/app/site-document';
+import { notFoundPage } from '@/content/pages';
 import { getNavigation, getSiteSettings } from '@/lib/cms';
-import { verificationTokens } from '@/lib/env-server';
 import { BRAND_PRIMARY_HEX } from '@/lib/tokens';
+import { StatusPage } from '@/modules/core';
 import { rootMetadata } from '@/modules/core/seo/metadata';
 
-/** Root metadata: the title template and the verification metas (CMS first, env as fallback). */
+/** Next adds `<meta name="robots" content="noindex">` itself on every 404 response. */
 export async function generateMetadata(): Promise<Metadata> {
-  const tokens = verificationTokens();
-  return {
-    ...(await rootMetadata()),
-    verification: {
-      ...(tokens.google ? { google: tokens.google } : {}),
-      ...(tokens.bing ? { other: { 'msvalidate.01': tokens.bing } } : {}),
-    },
-  };
+  return { ...(await rootMetadata()), title: notFoundPage.title };
 }
 
 export const viewport: Viewport = {
@@ -24,12 +17,19 @@ export const viewport: Viewport = {
   themeColor: BRAND_PRIMARY_HEX,
 };
 
-/** Root layout of every public page: the shared document around the page content. */
-export default async function RootLayout({ children }: { children: ReactNode }) {
+/**
+ * BRD 4.15 / 6.13. With two root layouts (site and admin) Next cannot compose a 404 from a
+ * layout, so this file renders the whole document itself (ADR-024). HTTP 404, no ribbon.
+ */
+export default async function GlobalNotFound() {
   const [site, navigation] = await Promise.all([getSiteSettings(), getNavigation()]);
   return (
     <SiteDocument site={site} navigation={navigation}>
-      {children}
+      <StatusPage
+        title={notFoundPage.title}
+        text={notFoundPage.text}
+        button={notFoundPage.button}
+      />
     </SiteDocument>
   );
 }

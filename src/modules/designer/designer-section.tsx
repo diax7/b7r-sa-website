@@ -2,7 +2,7 @@ import { Container } from '@/components/shared/container';
 import { Section } from '@/components/shared/section';
 import { SectionHeader } from '@/components/shared/section-header';
 import { home } from '@/content/home';
-import { getProduct, products } from '@/content/products';
+import { getProduct, getProducts } from '@/lib/cms';
 import messages from '@/messages/ar.json';
 import { env } from '@/lib/env';
 import { registerUrl } from '@/lib/utm';
@@ -17,9 +17,10 @@ const DEFAULT_SLUG = 'tee-essential';
  * static preview (default mockup + labels) so the page is complete without JS; the Konva
  * island replaces the preview when the section nears the viewport.
  */
-export function DesignerSection() {
+export async function DesignerSection() {
   const { designer } = home;
-  const product = getProduct(DEFAULT_SLUG) ?? products[0];
+  const products = await getProducts();
+  const product = (await getProduct(DEFAULT_SLUG)) ?? products[0];
   if (!product) throw new Error('No products for the designer');
 
   const copy: DesignerCopy = {

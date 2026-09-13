@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import type { Product } from '@/content/schema';
-import { stripColorFor } from '@/content/products';
+import { stripColorFor } from '@/lib/product-helpers';
 import { cn } from '@/lib/cn';
 
 interface ProductPickerProps {

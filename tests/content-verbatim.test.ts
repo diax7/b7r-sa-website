@@ -8,9 +8,10 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { faq } from '@/content/faq';
 import { home } from '@/content/home';
-import { navigation } from '@/content/navigation';
+import { navigation } from '@/content/seed/navigation';
 import { blogCopy, blogHubs, blogPosts } from '@/content/blog';
-import { MERCHANT_COST_NOTE, productSeo, seo } from '@/content/seo';
+import { seo } from '@/content/seed/seo';
+import { MERCHANT_COST_NOTE, productSeo } from '@/content/seo-copy';
 import {
   contactEmail,
   errorPage,
@@ -24,8 +25,8 @@ import {
   howItWorksPage,
   notFoundPage,
 } from '@/content/pages';
-import { products } from '@/content/products';
-import { site } from '@/content/site';
+import { products } from '@/content/seed/products';
+import { site } from '@/content/seed/site';
 import { homeSteps, howItWorksSteps } from '@/content/steps';
 import { whyUs } from '@/content/why-us';
 

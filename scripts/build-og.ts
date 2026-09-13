@@ -12,8 +12,9 @@ import { extname, join } from 'node:path';
 import { chromium } from '@playwright/test';
 import sharp from 'sharp';
 import { productsPage } from '../src/content/pages';
-import { products, stripColorFor } from '../src/content/products';
-import { site } from '../src/content/site';
+import { products } from '../src/content/seed/products';
+import { site } from '../src/content/seed/site';
+import { stripColorFor } from '../src/lib/product-helpers';
 import { TOKEN_HEX } from '../src/lib/tokens';
 
 const root = process.cwd();

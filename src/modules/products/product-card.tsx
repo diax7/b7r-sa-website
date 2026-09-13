@@ -3,9 +3,9 @@ import Link from 'next/link';
 import { Card } from '@/components/shared/card';
 import { SarAmount } from '@/components/shared/sar-amount';
 import { productsPage } from '@/content/pages';
-import { stripColorFor } from '@/content/products';
 import type { Product } from '@/content/schema';
 import { cn } from '@/lib/cn';
+import { stripColorFor } from '@/lib/product-helpers';
 
 interface ProductCardProps {
   product: Product;

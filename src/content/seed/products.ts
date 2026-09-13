@@ -1,8 +1,12 @@
 import type { Product } from '@/content/schema';
 
-/** BRD Appendix A, the only source for product content; print areas from BRD 6.4.3. */
-const PRINT_AREA_LABEL = 'الواجهة الأمامية، 28 × 38 سم';
-const PRINT_METHOD = 'طباعة رقمية عالية الجودة';
+/**
+ * BRD Appendix A, verbatim. Seed for the CMS (`pnpm content:migrate`, ADR-026) and the
+ * static fallback for the few places that must render without a database (error pages, the
+ * proxy). The site itself reads products from Payload (`src/lib/cms/products.ts`).
+ */
+export const PRINT_AREA_LABEL = 'الواجهة الأمامية، 28 × 38 سم';
+export const PRINT_METHOD = 'طباعة رقمية عالية الجودة';
 
 const adultSizes = [
   { label: 'S', measurements: { length: 68, chest: 88, sleeve: 20 } },
@@ -160,14 +164,3 @@ export const products: Product[] = [
     updatedAt: '2026-09-12',
   },
 ];
-
-export function getProduct(slug: string): Product | undefined {
-  return products.find((p) => p.slug === slug);
-}
-
-/** Front photo used in the home strip and listing (BRD 6.4.2): black for tees and hoodie. */
-export function stripColorFor(product: Product): string {
-  return product.colors.some((c) => c.slug === 'black')
-    ? 'black'
-    : (product.colors[0]?.slug ?? 'white');
-}

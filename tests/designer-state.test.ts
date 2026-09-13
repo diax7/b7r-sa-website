@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { getProduct } from '@/content/products';
+import { products } from '@/content/seed/products';
+
+const getProduct = (slug: string) => products.find((p) => p.slug === slug);
 import { initialState, reducer, SAMPLE_DESIGN } from '@/modules/designer/use-designer-state';
 
 const tee = getProduct('tee-essential')!;

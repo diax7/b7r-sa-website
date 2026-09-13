@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { blogPosts } from '@/content/blog';
-import { products } from '@/content/products';
-import { site } from '@/content/site';
+import { products } from '@/content/seed/products';
+import { site } from '@/content/seed/site';
 import {
   blogPosting,
   breadcrumbs,
@@ -56,14 +56,14 @@ function expectRequired(node: Record<string, unknown>) {
 
 describe('JSON-LD builders (BRD 7.4)', () => {
   it('home: OnlineStore with the BRD 1.1 facts and WebSite', () => {
-    const store = onlineStore(BASE);
+    const store = onlineStore(BASE, site);
     expectRequired(store);
     expect(store['address']).toMatchObject({ addressLocality: 'جدة', addressCountry: 'SA' });
     expect(store['contactPoint']).toMatchObject({ telephone: '+966501699572' });
     expect(store['sameAs']).toEqual([site.social.x, site.social.instagram, site.social.tiktok]);
     expect(store['hasMerchantReturnPolicy']).toMatchObject({ merchantReturnDays: 10 });
     expect(JSON.stringify(store)).toContain('"maxValue":5');
-    expectRequired(webSite(BASE));
+    expectRequired(webSite(BASE, site));
   });
 
   it('products: ItemList of the five URLs, Product + Offer per product', () => {
@@ -74,7 +74,7 @@ describe('JSON-LD builders (BRD 7.4)', () => {
     expectRequired(list);
     expect((list['itemListElement'] as unknown[]).length).toBe(5);
     for (const p of products) {
-      const node = product(BASE, p);
+      const node = product(BASE, p, site);
       expectRequired(node);
       expect(node['offers']).toMatchObject({
         '@type': 'Offer',
@@ -104,7 +104,7 @@ describe('JSON-LD builders (BRD 7.4)', () => {
     expectRequired(page);
     expect(page['dateModified']).toBe('2026-09-12');
     for (const post of blogPosts) {
-      const node = blogPosting(BASE, post, 'ضياء');
+      const node = blogPosting(BASE, post, 'ضياء', site);
       expectRequired(node);
       expect(node['author']).toEqual({ '@type': 'Person', name: 'ضياء', url: `${BASE}/about` });
       expect(node['datePublished']).toMatch(/^\d{4}-\d{2}-\d{2}$/);
@@ -112,7 +112,7 @@ describe('JSON-LD builders (BRD 7.4)', () => {
   });
 
   it('serialises one graph per page and escapes < so content cannot close the script', () => {
-    const json = serialize(graph([webSite(BASE), webPage(BASE, '/x', '<b>', 'a</script>')]));
+    const json = serialize(graph([webSite(BASE, site), webPage(BASE, '/x', '<b>', 'a</script>')]));
     expect(json).not.toContain('</script>');
     expect(json).not.toContain('<');
     const parsed = JSON.parse(json) as { '@context': string; '@graph': unknown[] };

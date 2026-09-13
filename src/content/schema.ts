@@ -111,11 +111,14 @@ export const HomeSchema = z.object({
 });
 export type Home = z.infer<typeof HomeSchema>;
 
+/** A site path, or an absolute URL once the photo lives in the CMS media store (S3). */
+const imageSrc = publicPath.or(z.url());
+
 export const ProductColorSchema = z.object({
   slug: slug,
   name: nonEmpty,
   hex,
-  images: z.object({ front: publicPath, back: publicPath.optional() }),
+  images: z.object({ front: imageSrc, back: imageSrc.optional() }),
 });
 export type ProductColor = z.infer<typeof ProductColorSchema>;
 

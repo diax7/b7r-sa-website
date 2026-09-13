@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { products } from '@/content/products';
+import { products } from '@/content/seed/products';
 import {
   initialDesignBox,
   insideRatio,
