@@ -36,7 +36,14 @@ test.describe('how it works (BRD 6.7)', () => {
     await expect(page.locator('[aria-labelledby="hiw-faq-title"]')).toContainText('كيف أربح؟');
   });
 
-  test('the progress line fills as the track scrolls through the viewport', async ({ page }) => {
+  test('the progress line fills as the track scrolls through the viewport', async ({
+    page,
+    browserName,
+  }) => {
+    // Playwright's Linux WebKit claims support but evaluates the timeline once at load and
+    // not on a programmatic scroll (the line stayed at 12 % on the runner); Chromium is the
+    // engine that proves the progress moves. The reduced-motion test below runs everywhere.
+    test.skip(browserName === 'webkit', 'headless WebKit does not advance scroll timelines');
     await page.goto('/how-it-works');
     const supported = await page.evaluate(() => CSS.supports('animation-timeline: view()'));
     test.skip(!supported, 'no scroll-driven animations in this browser: the line is simply full');
