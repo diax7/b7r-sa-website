@@ -1,4 +1,4 @@
-# Feature Specification: Phase 1c — Pages, SEO layer, cutover readiness
+# Feature Specification: Phase 1c: Pages, SEO layer, cutover readiness
 
 **Feature Branch**: `phase/1c-pages-seo` · **Created**: 2026-09-13 · **Status**: Draft
 
@@ -12,12 +12,12 @@ Appendix A/B/D.
 **DoD (BRD §12.2)**: all of §6.18; Search Console and Bing verification tokens in place;
 launch checklist §12.4 items 1–12 complete; Dhia approves; DNS cutover; post-cutover checks.
 Items needing Dhia or credentials (real testimonials, app flags, final photos, Resend domain,
-Turnstile keys, GA verification, tokens, DNS) are listed as open items — this phase builds
+Turnstile keys, GA verification, tokens, DNS) are listed as open items, this phase builds
 everything the code side can and stops at the Dhia gate for cutover.
 
 ## User Scenarios & Testing
 
-### US1 — Products (P1)
+### US1: Products (P1)
 `/products`: H1 + lead, grid of 5 `ProductCard`s (3/2/1 columns), 4:5 front photo, name,
 «يبدأ من {price}», colour dots, sizes summary; whole card a link; hover lifts 2 px and swaps
 to the back view when one exists; then the ribbon. `/products/{slug}`: breadcrumbs; gallery
@@ -27,12 +27,12 @@ CTA (`utm_campaign=product&utm_content={slug}`), «جرّب تصميمك علي�
 sections الوصف / المواصفات / جدول المقاسات / منتجات أخرى (3 cards); mobile sticky bottom bar
 with «يبدأ من» + CTA; JSON-LD `Product` + `Offer` + `BreadcrumbList`; `product_view` event.
 
-### US2 — How it works, About, FAQ (P2)
+### US2: How it works, About, FAQ (P2)
 Per §6.7, §6.8, §6.10 with §4.9, §4.10, Appendix D. FAQ groups as H2 accordions with a
 sticky in-page group nav on desktop; mini FAQ on how-it-works reuses home items 2, 3, 4;
 about renders the Misk block with the logo and the decorative hanging-tee banner.
 
-### US3 — Contact (P1)
+### US3: Contact (P1)
 Form per §4.11/§6.9 with zod client validation, `aria-invalid`, honeypot `website`, Turnstile
 rendered when `NEXT_PUBLIC_TURNSTILE_SITE_KEY` is set, `POST /api/contact` (zod, honeypot 200,
 Turnstile server verification when configured, 5/10 min/IP, Resend email to `CONTACT_TO`,
@@ -40,18 +40,18 @@ Turnstile server verification when configured, 5/10 min/IP, Resend email to `CON
 follow) and the booking card («احجز موعدك» → `BOOKING_URL` in a new tab or WhatsApp with the
 §4.11 message). Mobile order: cards, booking, form.
 
-### US4 — Blog placeholder (P3)
+### US4: Blog placeholder (P3)
 `/blog` index with hub chips (`?hub=` filter), 3 sample post cards; `/blog/{slug}` template
 (breadcrumbs, H1, meta line, cover, «أهم النقاط», body with H2 questions, in-post CTA after the
 second H2, related 2, share WhatsApp/X/copy, author card) with `BlogPosting` JSON-LD. Sample
 bodies (200–300 words each, §4.1, no claims beyond §1.1) are written with `ux-araby` and
 listed for Dhia's review; marked `sample: true`.
 
-### US5 — Legal pages (P2)
+### US5: Legal pages (P2)
 `/terms`, `/shipping`, `/privacy`: Appendix B markdown rendered with numbered H2s, updated
 line, sticky on-this-page list on desktop, `WebPage` + `BreadcrumbList` JSON-LD.
 
-### US6 — Machine files and redirects (P1)
+### US6: Machine files and redirects (P1)
 `sitemap.xml` (all indexable routes, `lastModified` from content `updatedAt`, product image
 entries), `robots.txt` (§7.2 full rules with the answer-engine allow list; `Disallow: /` on
 non-production hosts), `/indexnow/{INDEXNOW_KEY}.txt` served when the key is set (404 for any
@@ -60,7 +60,7 @@ other name; `keyLocation` in the IndexNow body), `manifest.webmanifest`
 list served by `proxy.ts` (Next 16's middleware) with a static 410 body; `/en/*` → 302 to the
 Arabic route; trailing slashes → 308. `Content-Language: ar` header on every page.
 
-### US7 — Metadata, OG, JSON-LD (P1)
+### US7: Metadata, OG, JSON-LD (P1)
 Every route: title/description from `content/seo.ts` (product/post titles from their data),
 canonical, Open Graph (`website` / `product` / `article`), Twitter card, verification metas
 from env. `public/og/default.png` and `public/og/products/{slug}.png` generated once by
@@ -69,17 +69,17 @@ product variant: photo + «يبدأ من {price}» in ITF Rayat Round Bold) and 
 PNGs (ADR-020); posts use the cover. JSON-LD per §7.4 table with
 a unit test on required fields; home gets `OnlineStore` + `WebSite`.
 
-### US8 — Security headers and hygiene (P1)
+### US8: Security headers and hygiene (P1)
 §8.10 headers via `next.config.ts` `headers()`: HSTS, nosniff, referrer policy, permissions
 policy, `X-Frame-Options: DENY`, and a CSP allowing self, GTM, Turnstile, the Umami origin,
 GA connect endpoints, `data:`/`blob:` images, `style-src 'self' 'unsafe-inline'` (inline
 `style` attributes from `next/image` and the motion primitives), `object-src 'none'`,
 `base-uri 'self'`, `form-action 'self'`, `frame-ancestors 'none'`. Nonces are deferred (ADR)
-because Next's static rendering cannot vary a nonce per response without dynamic rendering —
+because Next's static rendering cannot vary a nonce per response without dynamic rendering, 
 `'unsafe-inline'` for scripts as the BRD's CSP already lists. An e2e asserts zero
 `securitypolicyviolation` events on the flows that touch third parties.
 
-### US9 — Cutover readiness (P2)
+### US9: Cutover readiness (P2)
 `docs/RUNBOOK.md` deploy/rollback/cutover sections; `docs/LAUNCH-CHECKLIST.md` with §12.4
 items and who owns each; IndexNow GitHub Actions step (`scripts/indexnow.ts`) guarded on
 `main` + healthy deploy; `.env.example` complete; the production-required env set is asserted

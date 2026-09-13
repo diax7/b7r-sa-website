@@ -1,7 +1,7 @@
 # Feature Specification: Admin panel shell, dashboard and design system
 
 **Feature Branch**: `admin/ui-1` (from `main` after the Phase 2b merge) | **Date**: 2026-09-13
-**Requested by**: Dhia — "use shadcn/ui to rebuild the dashboard pages and enhance the panel;
+**Requested by**: Dhia, "use shadcn/ui to rebuild the dashboard pages and enhance the panel;
 icons in every possible way; very easy to use, nice UI and UX; good design rules and a design
 system even for future things."
 
@@ -12,7 +12,7 @@ system even for future things."
 | Scope | Shell + dashboard + theme + field widgets on Payload's engine. The edit and list views stay Payload's (rebuilding them re-implements drafts, versions, uploads and Lexical). |
 | Live preview | No side panel. A «معاينة» button that opens the draft on the site in a new tab. |
 | Dashboard widgets | Quick actions, system health, recent activity. Not drafts/scheduled. |
-| Theme | **Dark only** — keep Payload's dark grey; B7R blue as the accent. No light mode. |
+| Theme | **Dark only**, keep Payload's dark grey; B7R blue as the accent. No light mode. |
 
 ## Goals
 
@@ -28,8 +28,8 @@ system even for future things."
 4. Editing that explains itself: icon pickers that show the icon, platform selects with logos,
    section switches with a sentence of guidance, a preview button on pages/products/home,
    Arabic descriptions and sensible list columns on every collection.
-5. A written design system for the panel — tokens, components, icon rules, Arabic writing
-   rules for labels and descriptions — plus a `.claude/rules/admin-ui.md` so every future
+5. A written design system for the panel, tokens, components, icon rules, Arabic writing
+   rules for labels and descriptions, plus a `.claude/rules/admin-ui.md` so every future
    collection follows it without being asked.
 
 ## Non-goals
@@ -62,7 +62,7 @@ system even for future things."
   HTTP (the same function runs in the server component); recent activity shows the editor's
   name via the new `lastPublishedBy` snapshot (a draft save never writes the main row).
 - Preview: pages, products and home have a «معاينة» button that opens `/api/preview?…` and
-  renders the draft (Next draft mode) — never a guessable URL (signed).
+  renders the draft (Next draft mode), never a guessable URL (signed).
 - Theme: `admin.theme = 'dark'`; the B7R accent on links, focus, active nav, primary buttons;
   Payload's greys untouched; contrast AA on every custom surface (axe in the admin e2e).
 - Public site unchanged: no admin CSS or JS reaches the `(site)` bundle (budget test).

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Database backup (BRD 9.8, ADR-034): `pg_dump` in custom format, uploaded to the PRIVATE
-# backup bucket — never the public media bucket. Needs DATABASE_URL and the BACKUP_S3_* rows
+# backup bucket: never the public media bucket. Needs DATABASE_URL and the BACKUP_S3_* rows
 # (endpoint and region fall back to the media bucket's). Retention is a lifecycle rule on
 # the bucket (docs/RUNBOOK.md, "Backups and restore").
 #

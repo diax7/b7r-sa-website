@@ -64,6 +64,7 @@ export default buildConfig({
       // The shell (ADR-039): sidebar with an icon per entity, header palette + site link.
       Nav: '@/modules/cms/admin/nav/nav#Nav',
       actions: ['@/modules/cms/admin/header/actions#HeaderActions'],
+      views: { dashboard: { Component: '@/modules/cms/admin/dashboard/dashboard#Dashboard' } },
       // The Turnstile widget above the login form (ADR-034); one line under it (ADR-039).
       beforeLogin: ['@/modules/cms/auth/login-turnstile#LoginTurnstile'],
       afterLogin: ['@/modules/cms/admin/login/after-login#AfterLogin'],
@@ -102,7 +103,7 @@ export default buildConfig({
   }),
   /**
    * Jobs (ADR-033): the IndexNow ping and Payload's scheduled publish run in-process on a
-   * one-minute cron (never during `next build`); the run endpoint answers nobody — the cron
+   * one-minute cron (never during `next build`); the run endpoint answers nobody, the cron
    * is the only runner. Completed jobs are deleted.
    */
   jobs: {

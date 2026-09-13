@@ -2,7 +2,7 @@
 
 **Input**: `plan.md` (CTO plan review 2026-09-13, 93 GO). **Branch**: `design/edits-1`.
 
-## Phase A — global + product surfaces (CTO code review 88 → revisions folded into B)
+## Phase A: global + product surfaces (CTO code review 88 → revisions folded into B)
 - [x] A1 `formatNumber` + `SarAmount`; riyal symbol 0.85 em; unit tests.
 - [x] A2 WhatsApp widget at the inline end (bottom-left), panel anchored above the button; e2e.
 - [x] A3 Product card island: stretched name link, two 44 px swatches, card-hover flip paused
@@ -10,7 +10,7 @@
 - [x] A4 Product page: one-photo gallery with hover/tap/arrow flip, front/back pills, swatches;
   description + specs + size chart in one section; e2e.
 
-## Phase B — designer + video (CTO code review 88 → revisions folded into C)
+## Phase B: designer + video (CTO code review 88 → revisions folded into C)
 - [x] B1 Designer: one colour per product, print-area upload target (focusable input +
   prompt), «×» remove (44 px, inert while hidden), edit chrome on mouse-hover or selection,
   touch keeps selection, drag-and-drop on the mockup, sample link, compact layout, static
@@ -19,7 +19,7 @@
   fallbacks; `video_play` retired; e2e.
 - [x] B3 CI warm-up in Playwright's `globalSetup`.
 
-## Phase C — About + How We Work + docs
+## Phase C: About + How We Work + docs
 - [x] C1 About redesign (photo beside the story, facts band from existing strings, 3D-art cards,
   MISK tint card); e2e.
 - [x] C2 How We Work journey (connected path, numbered 3D icons, scroll-driven progress line,
@@ -33,6 +33,6 @@
 
 ## For Dhia's review on :3004
 - The designer starts with an empty print area and the upload prompt (the sample is one click
-  away); the earlier build pre-placed the sample — say which you prefer.
+  away); the earlier build pre-placed the sample, say which you prefer.
 - The home strip keeps its expand-on-hover panels (the two-swatch cards are on `/products`
   and the related cards).

@@ -12,6 +12,7 @@
     "format": "oxfmt",
     "format:check": "oxfmt --check",
     "check:rtl": "tsx scripts/check-rtl-classes.ts",
+    "check:dash": "tsx scripts/check-em-dash.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "e2e": "playwright test",

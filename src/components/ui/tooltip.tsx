@@ -6,7 +6,7 @@ import { cn } from '@/lib/cn';
 
 /**
  * Tooltip (ADR-039): a short label for icon-only controls. Never the only place a meaning
- * lives — the control keeps its `aria-label`. Compose:
+ * lives, the control keeps its `aria-label`. Compose:
  * <TooltipProvider><Tooltip><TooltipTrigger asChild/><TooltipContent/></Tooltip></TooltipProvider>
  */
 export const TooltipProvider = TooltipPrimitive.Provider;

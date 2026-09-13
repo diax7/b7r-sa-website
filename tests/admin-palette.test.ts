@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { initials } from '@/modules/cms/admin/account/account-menu';
+import { searchTerm } from '@/modules/cms/admin/header/palette';
 import { fold, MIN_QUERY, rank, score } from '@/modules/cms/admin/header/palette-rank';
 
 const items = [
@@ -33,6 +34,13 @@ describe('command palette ranking (ADR-039)', () => {
     expect(score('  ', items[0]!)).toBe(0);
     expect(rank('', items)).toEqual([]);
     expect(MIN_QUERY).toBe(2);
+  });
+
+  it('the document search drops SQL wildcards and needs a letter or digit', () => {
+    expect(searchTerm('%')).toBe('');
+    expect(searchTerm('a_b%')).toBe('ab');
+    expect(searchTerm('  ')).toBe('');
+    expect(searchTerm(' هودي ')).toBe('هودي');
   });
 
   it('account initials take the first two words, or the e-mail, never an empty badge', () => {

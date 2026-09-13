@@ -37,7 +37,7 @@ export const productsPage = {
 };
 
 /**
- * Contact form (BRD 4.11): interface copy — labels, placeholders, the inquiry options the API
+ * Contact form (BRD 4.11): interface copy, labels, placeholders, the inquiry options the API
  * validates, the states and the validation lines (ADR-031). The page's own copy (title, the
  * cards, booking) is the `contact` block of the contact page in the CMS.
  */
@@ -109,6 +109,12 @@ export const footerCopy = {
   },
   badgesCaption: 'وسائل الدفع وجهات التوثيق',
   copyright: '© {year} بحر برنت. جميع الحقوق محفوظة.',
+};
+
+/** The preview bar an editor sees on the site in draft mode (ADR-039; interface copy). */
+export const draftBarCopy = {
+  label: 'معاينة مسودة: ما تراه هنا لم يُنشر بعد.',
+  exit: 'خروج من المعاينة',
 };
 
 export const whatsappWidgetCopy = {

@@ -17,7 +17,7 @@ describe('readingMinutes', () => {
   });
 
   it('ignores punctuation-only tokens', () => {
-    expect(readingMinutes('## - — ، .')).toBe(1);
+    expect(readingMinutes('## -، ، .')).toBe(1);
   });
 });
 

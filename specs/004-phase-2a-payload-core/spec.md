@@ -1,4 +1,4 @@
-# Feature Specification: Phase 2a — Payload core (admin, users, settings, products, media)
+# Feature Specification: Phase 2a: Payload core (admin, users, settings, products, media)
 
 **Feature Branch**: `phase/2a-payload-core` · **Created**: 2026-09-13 · **Status**: Draft
 
@@ -14,46 +14,46 @@ in CI; the RUNBOOK gives CranL the exact env matrix.
 
 ## User Scenarios & Testing
 
-### US1 — Arabic admin (P1)
+### US1: Arabic admin (P1)
 Dhia opens `/admin`, sees the login in Arabic and right-to-left («لوحة بحر برنت» as the
 document title, the brand icon as logo), logs in with email + password, and lands on a
 dashboard listing المنتجات, الوسائط, المستخدمون (admin only) and the three globals
 (إعدادات الموقع، التنقل، إعدادات SEO). Admin routes are `noindex` (meta + `X-Robots-Tag`)
 and absent from the sitemap. GraphQL is off; REST lives at `/api/payload/*`.
 
-### US2 — Roles (P1)
+### US2: Roles (P1)
 Two roles. **admin**: everything. **editor**: read/create/update products and media, publish
 drafts; cannot see or edit users, site settings, navigation, SEO defaults; cannot delete a
 published product. Enforced by collection/global access functions and proven by tests that
 use the REST API with an editor session (403s), not only by hidden UI.
 
-### US3 — Products edited without a deploy (P1)
+### US3: Products edited without a deploy (P1)
 An editor changes a product's short description and publishes. Within 60 seconds the public
 `/products/{slug}`, `/products`, the home strip and the designer show the new text, without a
 deploy. Products carry drafts/versions with autosave; the public site reads only published
 documents. `suggestedPrice ≥ baseCost` and the fixed 28 × 38 print area are validated in the
 admin. Colour photos come from the media collection (front required, back optional).
 
-### US4 — Settings and navigation from the admin (P2)
+### US4: Settings and navigation from the admin (P2)
 `site-settings` (brand, contact, social, welcome credit, delivery days/origin, booking URL,
 app URLs), `navigation` (six primary items, four policy links, labels) and `seo-defaults`
-(title template, per-route titles/descriptions, default OG image, verification tokens —
+(title template, per-route titles/descriptions, default OG image, verification tokens, 
 admin-only fields) drive the shell, the footer, the ribbon, the contact page and metadata.
 Editing any of them revalidates every page that reads it.
 
-### US5 — Media (P2)
+### US5: Media (P2)
 Uploads require Arabic alt text, keep the original, generate thumbnail 400 / card 800 /
 hero 1920 / og 1200×630 with focal-point cropping, and are stored on S3 when `S3_*` is set
 (CranL) or on local disk otherwise (dev, CI). Public read for images.
 
-### US6 — Migration (P1)
+### US6: Migration (P1)
 `pnpm content:migrate` seeds the three globals, the five products and their
 photos (uploaded to media with the existing alt text) from the Level 1 content, idempotently
 (second run changes nothing; upsert by slug/global). Runs clean on an empty database in CI.
 The first admin user is created by `pnpm admin:create` from `ADMIN_EMAIL`/`ADMIN_PASSWORD`
 (one-off, documented).
 
-### US7 — Level 1 unchanged for visitors (P1)
+### US7: Level 1 unchanged for visitors (P1)
 Every §6.18 acceptance criterion and every existing e2e still passes; Lighthouse on the five
 URLs unchanged (no Payload JS on public pages); pages remain prerendered at build and refresh
 through `revalidateTag`/`revalidatePath` only.

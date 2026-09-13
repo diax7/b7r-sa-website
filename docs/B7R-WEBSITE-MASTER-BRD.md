@@ -1,4 +1,4 @@
-# B7R Print (بحر برنت) — Marketing Website Master BRD
+# B7R Print (بحر برنت)، Marketing Website Master BRD
 
 **Version:** 1.0 · **Date:** 2026-09-12 · **Owner:** Dhia (founder) · **Prepared with:** Claude · **Status:** Approved for implementation, Level 1 first
 
@@ -295,7 +295,7 @@ Use shadcn/ui primitives (Radix) for Accordion, Dialog, Select, Slider, Toast, a
 ### 3.11 Money, numbers, and the riyal symbol
 
 - `SarSymbol`: an inline SVG of the official Saudi Central Bank riyal symbol, `fill="currentColor"`, `height="0.85em"` (amended 2026-09-13, ADR-038: a touch smaller than the digits), `aria-label="ريال سعودي"`. Source the official path from the Saudi Central Bank's published symbol package (or trace it from the official SVG); do not use a Unicode character or a font.
-- `SarAmount value={89}` renders `<bdi dir="ltr"><SarSymbol/> 89</bdi>` with the symbol **always to the left of the digits**, a thin space between, digits in tabular figures. Integers render without decimals; non-integers with two decimals. Amended 2026-09-13 (ADR-038): every displayed number — amounts, the calculator's figures, stats — carries thousands separators (`13,200`) through one `formatNumber` helper; form inputs never receive grouped strings.
+- `SarAmount value={89}` renders `<bdi dir="ltr"><SarSymbol/> 89</bdi>` with the symbol **always to the left of the digits**, a thin space between, digits in tabular figures. Integers render without decimals; non-integers with two decimals. Amended 2026-09-13 (ADR-038): every displayed number, amounts, the calculator's figures, stats, carries thousands separators (`13,200`) through one `formatNumber` helper; form inputs never receive grouped strings.
 - Prose that spells the currency ("30 ريالاً") is used only where §4 spells it out; everywhere numbers appear as amounts (cards, calculator, tables) use `SarAmount`.
 - Phone numbers, emails, and URLs are rendered LTR inside `<bdi>`.
 
@@ -322,9 +322,12 @@ No hue gradients, no glassmorphism, no glow, no neon, no rainbow text, no oversi
 
 ## 4. Voice, terminology, and the copy bank
 
+Writing rule (Dhia, 2026-09-13, ADR-040): no em dashes in any copy, search title or description, admin string or e-mail. Arabic uses «،» or a colon; English a comma, a colon or a new sentence. `pnpm check:dash` enforces it.
+
+
 Every user-visible string in Level 1 is here. Copy it exactly, including punctuation. Strings in `{braces}` are variables. Where a string depends on a product, see Appendix A.
 
-**Reading this section:** where a line reads `Title — text`, the em dash is markdown structure separating a heading from its body text; it is never rendered on screen. The middle dot `·` between list items likewise means "separate elements", not a character to display. Arabic on-screen copy never contains an em dash (§4.1).
+**Reading this section:** where a line reads `Title, text`, the em dash is markdown structure separating a heading from its body text; it is never rendered on screen. The middle dot `·` between list items likewise means "separate elements", not a character to display. Arabic on-screen copy never contains an em dash (§4.1).
 
 ### 4.1 Voice and writing rules (for the rare new string)
 
@@ -349,7 +352,7 @@ Every user-visible string in Level 1 is here. Copy it exactly, including punctua
 | Brand | براندك (CTA only, per Dhia) · علامتك التجارية (prose) | ماركتك |
 | Register | أنشئ حسابك / ابدأ براندك مجانًا | سجّل الآن (allowed only in the ribbon lead) |
 | Delivery | التوصيل, نوصّل | الشحن as the customer-facing verb (use شحن for the act B7R does) |
-| Sign in | تسجيل الدخول | — |
+| Sign in | تسجيل الدخول |، |
 
 ### 4.3 Global elements
 
@@ -409,9 +412,9 @@ Every user-visible string in Level 1 is here. Copy it exactly, including punctua
 - Eyebrow: كيف نعمل
 - H2: ثلاث خطوات وتبدأ
 - Steps:
-  1. صمّم منتجك — ارفع تصميمك وشاهده على المنتج فوراً.
-  2. اربط متجرك — سلة أو زد أو شوبيفاي بضغطة واحدة.
-  3. نطبع ونشحن — كل طلب يصلنا تلقائياً ويوصل عميلك باسم متجرك.
+  1. صمّم منتجك، ارفع تصميمك وشاهده على المنتج فوراً.
+  2. اربط متجرك، سلة أو زد أو شوبيفاي بضغطة واحدة.
+  3. نطبع ونشحن، كل طلب يصلنا تلقائياً ويوصل عميلك باسم متجرك.
 - Link under the steps: اعرف أكثر عن طريقة العمل → `/how-it-works`
 
 **Video section**
@@ -423,17 +426,17 @@ Every user-visible string in Level 1 is here. Copy it exactly, including punctua
 - Eyebrow: لماذا بحر
 - H2: لماذا يختارنا التجار؟
 - Cards:
-  1. بدون مخاطرة — صفر رأس مال، صفر مخزون، بدون حد أدنى للطلبات.
-  2. كل شيء تلقائي — الطلبات تتزامن من متجرك وتُنفّذ بدون تدخل منك.
-  3. جودة محلية وسريعة — طباعة في جدة وتوصيل لكل المملكة خلال 5 أيام.
+  1. بدون مخاطرة، صفر رأس مال، صفر مخزون، بدون حد أدنى للطلبات.
+  2. كل شيء تلقائي، الطلبات تتزامن من متجرك وتُنفّذ بدون تدخل منك.
+  3. جودة محلية وسريعة، طباعة في جدة وتوصيل لكل المملكة خلال 5 أيام.
 
 **Testimonials section**
 - Eyebrow: آراء التجار
 - H2: تجار بدأوا معنا
 - Sample cards (render only while `testimonials.placeholder = true`; each card carries a visible tag **نموذج** and the whole section is hidden in production until real content exists):
-  1. «نموذج» — "ربطت متجري في سلة خلال دقائق، وأول طلب وصل عميلي خلال أربعة أيام." — اسم التاجر، اسم المتجر
-  2. «نموذج» — "بدأت بدون أي مخزون، والآن عندي 12 تصميماً تبيع كل أسبوع." — اسم التاجر، اسم المتجر
-  3. «نموذج» — "جودة الطباعة أفضل مما توقعت، والتغليف باسم متجري." — اسم التاجر، اسم المتجر
+  1. «نموذج»، "ربطت متجري في سلة خلال دقائق، وأول طلب وصل عميلي خلال أربعة أيام."، اسم التاجر، اسم المتجر
+  2. «نموذج»، "بدأت بدون أي مخزون، والآن عندي 12 تصميماً تبيع كل أسبوع."، اسم التاجر، اسم المتجر
+  3. «نموذج»، "جودة الطباعة أفضل مما توقعت، والتغليف باسم متجري."، اسم التاجر، اسم المتجر
 
 **Integrations section**
 - H2: اربط متجرك بضغطة واحدة
@@ -444,11 +447,11 @@ Every user-visible string in Level 1 is here. Copy it exactly, including punctua
 **FAQ section (5)**
 - H2: الأسئلة الشائعة
 - Items:
-  1. كم أحتاج لأبدأ؟ — لا شيء. تسجّل مجاناً وتحصل على 30 ريالاً رصيداً ترحيبياً.
-  2. كيف أربح؟ — تحدّد سعر البيع في متجرك. عند كل طلب نخصم تكلفة المنتج والشحن من محفظتك، والباقي ربحك.
-  3. هل يعرف عميلي أن الطباعة من بحر برنت؟ — لا. الطرد وبوليصة الشحن باسم متجرك فقط.
-  4. كم يستغرق التوصيل؟ — 5 أيام كحد أقصى لأي مدينة في السعودية.
-  5. ما المتاجر التي أقدر أربطها؟ — سلة وزد وشوبيفاي، والربط مجاني.
+  1. كم أحتاج لأبدأ؟، لا شيء. تسجّل مجاناً وتحصل على 30 ريالاً رصيداً ترحيبياً.
+  2. كيف أربح؟، تحدّد سعر البيع في متجرك. عند كل طلب نخصم تكلفة المنتج والشحن من محفظتك، والباقي ربحك.
+  3. هل يعرف عميلي أن الطباعة من بحر برنت؟، لا. الطرد وبوليصة الشحن باسم متجرك فقط.
+  4. كم يستغرق التوصيل؟، 5 أيام كحد أقصى لأي مدينة في السعودية.
+  5. ما المتاجر التي أقدر أربطها؟، سلة وزد وشوبيفاي، والربط مجاني.
 - Link: كل الأسئلة → `/faq`
 
 **CTA ribbon (on every page, before the footer)**
@@ -459,9 +462,9 @@ Every user-visible string in Level 1 is here. Copy it exactly, including punctua
 ### 4.5 Footer
 
 - Tagline under the white logo: منصة الطباعة عند الطلب في السعودية
-- Column 1 title: روابط — items: الرئيسية · المنتجات · كيف نعمل · من نحن · المدونة · تواصل معنا
-- Column 2 title: السياسات — items: الشروط والأحكام · الشحن والتوصيل · سياسة الخصوصية · الأسئلة الشائعة
-- Column 3 title: النشرة البريدية — label: اشترك ليصلك الجديد — placeholder: name@example.com — button: اشترك — success: اشتركت. سنرسل لك الجديد فقط. — error: أدخل بريداً إلكترونياً صحيحاً.
+- Column 1 title: روابط، items: الرئيسية · المنتجات · كيف نعمل · من نحن · المدونة · تواصل معنا
+- Column 2 title: السياسات، items: الشروط والأحكام · الشحن والتوصيل · سياسة الخصوصية · الأسئلة الشائعة
+- Column 3 title: النشرة البريدية، label: اشترك ليصلك الجديد، placeholder: name@example.com، button: اشترك، success: اشتركت. سنرسل لك الجديد فقط.، error: أدخل بريداً إلكترونياً صحيحاً.
 - Contact line: contact@b7r.sa · 0501699572 (both LTR inside `<bdi>`; the number links to `tel:+966501699572`)
 - Social aria labels: بحر برنت على X · بحر برنت على إنستغرام · بحر برنت على تيك توك · بحر برنت على واتساب
 - Badges row caption (visually hidden, aria): وسائل الدفع وجهات التوثيق
@@ -471,7 +474,7 @@ Every user-visible string in Level 1 is here. Copy it exactly, including punctua
 ### 4.6 WhatsApp widget
 
 - Floating button aria: تواصل معنا عبر واتساب
-- Popup header title: بحر برنت — subtitle: فريق الدعم
+- Popup header title: بحر برنت، subtitle: فريق الدعم
 - Greeting bubble: أهلاً 👋 كيف نقدر نساعدك؟
 - Action button: ابدأ المحادثة
 - Prefilled message: مرحباً، أرغب بمعرفة المزيد عن بحر برنت.
@@ -497,7 +500,7 @@ Every user-visible string in Level 1 is here. Copy it exactly, including punctua
 - Price footnote: تقدير لا يشمل الشحن والضريبة. أنت تحدّد سعر البيع. *(removed 2026-09-13)*
 - Primary CTA: ابدأ بيع هذا المنتج → register URL with `utm_campaign=product&utm_content={slug}`
 - Secondary link: جرّب تصميمك عليه → `/#designer?product={slug}`
-- Section titles: الوصف · المواصفات · جدول المقاسات · منتجات أخرى *(2026-09-13: «الوصف» has no section of its own — the full description sits under the product name)*
+- Section titles: الوصف · المواصفات · جدول المقاسات · منتجات أخرى *(2026-09-13: «الوصف» has no section of its own, the full description sits under the product name)*
 - Spec labels: الخامة · الوزن · المقاسات · الألوان · منطقة الطباعة · طريقة الطباعة
 - Print method value (all products): طباعة رقمية عالية الجودة
 - Print area value: الواجهة الأمامية، 28 × 38 سم
@@ -510,11 +513,11 @@ Every user-visible string in Level 1 is here. Copy it exactly, including punctua
 - H1: كيف تعمل الطباعة عند الطلب مع بحر؟
 - Lead: نموذج عمل يتيح لك بيع منتجات مخصصة دون أن تطبعها أو تخزنها.
 - Steps (5, each with a 3D icon):
-  1. أنشئ حسابك مجاناً — سجّل خلال دقيقة واحصل على 30 ريالاً رصيداً ترحيبياً.
-  2. اختر منتجك وصمّمه — ارفع تصميمك وشاهده على المنتج مباشرة، وحدّد سعر البيع.
-  3. اربط متجرك — سلة أو زد أو شوبيفاي، بربط آمن وبدون مشاركة أي بيانات حساسة.
-  4. انشر المنتج بضغطة — يُزامَن الاسم والصور والخيارات والسعر إلى متجرك تلقائياً.
-  5. نطبع ونغلّف ونشحن — كل طلب يصلنا فور شرائه، نخصم التكلفة من محفظتك، ونشحنه باسم متجرك خلال 5 أيام كحد أقصى.
+  1. أنشئ حسابك مجاناً، سجّل خلال دقيقة واحصل على 30 ريالاً رصيداً ترحيبياً.
+  2. اختر منتجك وصمّمه، ارفع تصميمك وشاهده على المنتج مباشرة، وحدّد سعر البيع.
+  3. اربط متجرك، سلة أو زد أو شوبيفاي، بربط آمن وبدون مشاركة أي بيانات حساسة.
+  4. انشر المنتج بضغطة، يُزامَن الاسم والصور والخيارات والسعر إلى متجرك تلقائياً.
+  5. نطبع ونغلّف ونشحن، كل طلب يصلنا فور شرائه، نخصم التكلفة من محفظتك، ونشحنه باسم متجرك خلال 5 أيام كحد أقصى.
 - Profit block title: كيف تُحسب أرباحك؟
 - Equation tiles: سعر البيع − التكلفة الأساسية = ربحك
 - Equation example line: مثال: تيشيرت تبيعه بـ 89 وتكلفته 45، ربحك 44 لكل قطعة. (render the three numbers with `SarAmount`)
@@ -527,9 +530,9 @@ Every user-visible string in Level 1 is here. Copy it exactly, including punctua
 - Story title: حكاية بدأت بتحدٍّ وتحوّلت إلى فرصة
 - Story: وُلدت بحر برنت من تجربة مصمم حاول إطلاق علامته التجارية، فاصطدم بتكاليف مرتفعة وتعقيدات لوجستية عطّلت حلمه. تحوّل التحدي إلى فرصة لبناء حل محلي يفتح الباب لكل مبدع ورائد أعمال ليطلق منتجاته بأقل التكاليف. اليوم، بحر برنت منصة سعودية متكاملة تمكّن المؤثرين والمصممين وأصحاب الأفكار من تحويل إبداعاتهم إلى منتجات حقيقية تصل إلى عملائهم بسهولة واحترافية.
 - Cards:
-  - رسالتنا — تمكين أي شخص من إطلاق علامته التجارية بسهولة، عبر خدمة محلية للطباعة عند الطلب تشمل المنتجات والطباعة والتغليف والشحن، مع ربط ذكي بمتجره.
-  - رؤيتنا — أن نكون الشريك الأول للمبدعين ورواد الأعمال في السعودية والخليج لإطلاق منتجاتهم المطبوعة، وأن نسهم في اقتصاد إبداعي مستدام يقوم على حلول تقنية محلية.
-  - قيمنا — الإبداع الذي يحوّل الأفكار إلى منتجات، والتمكين الذي يمنح كل مبدع بداية بلا مخاطرة، والجودة التي نلتزم بها في الطباعة والتغليف.
+  - رسالتنا، تمكين أي شخص من إطلاق علامته التجارية بسهولة، عبر خدمة محلية للطباعة عند الطلب تشمل المنتجات والطباعة والتغليف والشحن، مع ربط ذكي بمتجره.
+  - رؤيتنا، أن نكون الشريك الأول للمبدعين ورواد الأعمال في السعودية والخليج لإطلاق منتجاتهم المطبوعة، وأن نسهم في اقتصاد إبداعي مستدام يقوم على حلول تقنية محلية.
+  - قيمنا، الإبداع الذي يحوّل الأفكار إلى منتجات، والتمكين الذي يمنح كل مبدع بداية بلا مخاطرة، والجودة التي نلتزم بها في الطباعة والتغليف.
 - Misk block title: خريجو برنامج Misk Launchpad
 - Misk block text: بحر برنت من خريجي الدفعة التاسعة (2026) من برنامج Misk Launchpad، برنامج ما قبل التسريع من مؤسسة محمد بن سلمان «مسك».
 - Location line: نطبع ونشحن من جدة إلى كل مدن المملكة.
@@ -546,7 +549,7 @@ Every user-visible string in Level 1 is here. Copy it exactly, including punctua
 - Success: وصلتنا رسالتك. سنرد عليك قريباً.
 - Failure: تعذّر الإرسال. حاول مرة أخرى أو راسلنا على واتساب.
 - Validation: أدخل اسمك · أدخل رقم جوال صحيح · أدخل بريداً إلكترونياً صحيحاً · اكتب رسالتك
-- Contact cards: واتساب — راسلنا مباشرة · البريد الإلكتروني — contact@b7r.sa · الهاتف — 0501699572 · تابعنا — (social icons)
+- Contact cards: واتساب، راسلنا مباشرة · البريد الإلكتروني، contact@b7r.sa · الهاتف، 0501699572 · تابعنا، (social icons)
 - Booking card title: احجز استشارة مجانية
 - Booking card text: 30 دقيقة نجاوب فيها على أسئلتك ونساعدك تبدأ.
 - Booking button: احجز موعدك (opens `bookingUrl`; if unset, opens WhatsApp with the message: مرحباً، أرغب بحجز استشارة مجانية.)
@@ -567,7 +570,7 @@ Every user-visible string in Level 1 is here. Copy it exactly, including punctua
 - Key takeaways box title: أهم النقاط
 - Related title: مقالات ذات صلة
 - Share: شارك
-- In-post CTA block: title ابدأ براندك اليوم — text بدون رأس مال وبدون مخزون. — button ابدأ براندك مجانًا
+- In-post CTA block: title ابدأ براندك اليوم، text بدون رأس مال وبدون مخزون.، button ابدأ براندك مجانًا
 - Placeholder posts (3, marked as samples in the CMS data, real content to come in Level 3):
   1. كيف تبدأ براند ملابس في السعودية بدون مصنع وبدون مخزون
   2. ما هي الطباعة عند الطلب؟ شرح مبسط بالأمثلة السعودية
@@ -603,7 +606,7 @@ Every user-visible string in Level 1 is here. Copy it exactly, including punctua
 
 ### 4.17 Transactional emails (Level 1, sent through Resend)
 
-- Contact notification to contact@b7r.sa — subject: رسالة جديدة من الموقع: {inquiryType} — body lists all fields, LTR-safe formatting for phone and email, plus a "رد عبر واتساب" link if the phone is Saudi.
+- Contact notification to contact@b7r.sa، subject: رسالة جديدة من الموقع: {inquiryType}, body lists all fields, LTR-safe formatting for phone and email, plus a "رد عبر واتساب" link if the phone is Saudi.
 - Newsletter: no welcome email in Level 1; the address is added to a Resend audience named "b7r.sa newsletter".
 
 ---
@@ -627,7 +630,7 @@ Arabic lives at the root. `/en/*` is reserved for the English phase and must not
 | `/blog/{slug}` | Post (3 samples in L1) | yes | §6.11 |
 | `/terms` · `/shipping` · `/privacy` | Legal | yes | §6.12 |
 | `/404` (not-found) | 404 | no | §6.13, returns HTTP 404 |
-| `/sitemap.xml`, `/robots.txt`, `/{INDEXNOW_KEY}.txt`, `/manifest.webmanifest`, favicon set | Machine files | — | §7 |
+| `/sitemap.xml`, `/robots.txt`, `/{INDEXNOW_KEY}.txt`, `/manifest.webmanifest`, favicon set | Machine files |, | §7 |
 | `POST /api/contact`, `POST /api/newsletter`, `GET /api/health` | API | no | §6.9, §6.14, §8.6 |
 
 Hub slugs for the blog (used as filters in L1, as routes in L3): `getting-started`, `pod-basics`, `salla-zid-shopify`, `design`, `pricing-profit`, `seasons`.
@@ -737,8 +740,8 @@ Section order: Hero → Product strip → Interactive designer and profit → Th
 
 **Controls (top to bottom, each group has its §4.4 label):**
 1. **المنتج**: 5 `Chip`s with 32 px product thumbnails and names; single select; default تيشيرت أساسي.
-2. **اللون**: swatches (28 px circles with a 2 px ring on selection) for the selected product's colours (tees and hoodie: white, black; onesie: white; tote: beige). Default: white for tees and hoodie, so the sample design is visible. *Amended 2026-09-13 (ADR-036): no colour control — every product shows in white, the tote in beige.*
-3. **التصميم**: a dashed dropzone (radius 13 px) with an `Upload` icon and the button "ارفع تصميمك" + helper text; accepts `image/png, image/jpeg, image/svg+xml, image/webp`, max 10 MB, drag-and-drop and click; below it the ghost button "جرّب تصميماً جاهزاً". After a design exists, the dropzone collapses to a 56 px row with the thumbnail, "غيّر التصميم" and "إعادة الضبط". Invalid files show the §4.4 file error inline. *Amended 2026-09-13 (ADR-036): the printable area on the mockup is the upload target — empty, it shows «اضغط لرفع شعارك أو صورتك» with the helper text and opens the picker on click or keyboard (drag-and-drop anywhere on the mockup); a placed design gets a 44 px «×» («إزالة التصميم») that clears it; the canvas starts empty and «جرّب تصميماً جاهزاً» under it places the sample. The print-area outline and the handles show only while a mouse pointer is inside the canvas or the design is selected by a tap; otherwise the mockup is a clean preview. The dropzone, its collapsed row and «غيّر التصميم» / «إعادة الضبط» are gone. Amended again 2026-09-13 (Dhia): no sample design and no «جرّب تصميماً جاهزاً» — the canvas fills only by upload; the «التسعير» legend and the «تقدير لا يشمل الشحن والضريبة» footnote are removed from the calculator.*
+2. **اللون**: swatches (28 px circles with a 2 px ring on selection) for the selected product's colours (tees and hoodie: white, black; onesie: white; tote: beige). Default: white for tees and hoodie, so the sample design is visible. *Amended 2026-09-13 (ADR-036): no colour control, every product shows in white, the tote in beige.*
+3. **التصميم**: a dashed dropzone (radius 13 px) with an `Upload` icon and the button "ارفع تصميمك" + helper text; accepts `image/png, image/jpeg, image/svg+xml, image/webp`, max 10 MB, drag-and-drop and click; below it the ghost button "جرّب تصميماً جاهزاً". After a design exists, the dropzone collapses to a 56 px row with the thumbnail, "غيّر التصميم" and "إعادة الضبط". Invalid files show the §4.4 file error inline. *Amended 2026-09-13 (ADR-036): the printable area on the mockup is the upload target, empty, it shows «اضغط لرفع شعارك أو صورتك» with the helper text and opens the picker on click or keyboard (drag-and-drop anywhere on the mockup); a placed design gets a 44 px «×» («إزالة التصميم») that clears it; the canvas starts empty and «جرّب تصميماً جاهزاً» under it places the sample. The print-area outline and the handles show only while a mouse pointer is inside the canvas or the design is selected by a tap; otherwise the mockup is a clean preview. The dropzone, its collapsed row and «غيّر التصميم» / «إعادة الضبط» are gone. Amended again 2026-09-13 (Dhia): no sample design and no «جرّب تصميماً جاهزاً»، the canvas fills only by upload; the «التسعير» legend and the «تقدير لا يشمل الشحن والضريبة» footnote are removed from the calculator.*
 4. **التسعير**: read-only row "التكلفة من بحر" with `SarAmount base`; "سعر البيع في متجرك" numeric input (LTR digits, `SarSymbol` prefix) bound to a `Slider` (min = base, max = base × 4, step 1, default = suggested price from Appendix A) with the helper "السعر المقترح {SarAmount}"; "مبيعات يومية" `Stepper` (min 1, max 100, default 10).
 
 **Results card (below the controls, tinted `--color-accent-tint`):** two figures with labels "ربحك لكل قطعة" = sell − base, "ربحك الشهري التقديري" = (sell − base) × dailySales × 30, both `SarAmount`, integers, count-up 300 ms on change; when sell < base show the warning in `--color-error` and render the figures in error colour; when sell = base show 0 in muted colour. Footnote. Then the section CTA "ابدأ بيع هذا المنتج" (primary lg, full width of the column) linking to the register URL with `utm_campaign=designer&product={slug}`.
@@ -755,7 +758,7 @@ Section order: Hero → Product strip → Interactive designer and profit → Th
 | baby-onesie | 0.375 | 0.27 | 0.25 | 0.34 |
 | tote-bag | 0.3375 | 0.42 | 0.325 | 0.44 |
 
-**Sample design:** *removed 2026-09-13 (Dhia) — there is no sample design; the canvas starts empty and fills only by upload.*
+**Sample design:** *removed 2026-09-13 (Dhia), there is no sample design; the canvas starts empty and fills only by upload.*
 
 **Deep link:** `/#designer?product=hoodie` (from product pages) scrolls to the section and preselects the product.
 
@@ -789,7 +792,7 @@ Amended 2026-09-13 (ADR-037, Dhia's design review): the section is a full-width 
 
 #### 6.4.7 Testimonials
 
-**Layout:** `SectionHeader`. Three `Card`s: large quote glyph in accent tint, the quote (lead size, Light weight), then avatar (48 px circle or store logo) + name (Medium) + store (muted). Mobile: snap carousel. Source `content/testimonials.ts` with `placeholder: true` on the sample entries. **Rendering rule:** when every entry is a placeholder, render each card with a visible «نموذج» badge and add the `data-placeholder` attribute; on the production host (`NEXT_PUBLIC_SITE_URL` = `https://b7r.sa`, the same signal as the noindex guard; amended 2026-09-13, ADR-013 — a CranL preview is also `NODE_ENV=production` and must still show the sample cards) the whole section is omitted until at least one non-placeholder entry exists. The launch checklist (§12.4) requires three real entries.
+**Layout:** `SectionHeader`. Three `Card`s: large quote glyph in accent tint, the quote (lead size, Light weight), then avatar (48 px circle or store logo) + name (Medium) + store (muted). Mobile: snap carousel. Source `content/testimonials.ts` with `placeholder: true` on the sample entries. **Rendering rule:** when every entry is a placeholder, render each card with a visible «نموذج» badge and add the `data-placeholder` attribute; on the production host (`NEXT_PUBLIC_SITE_URL` = `https://b7r.sa`, the same signal as the noindex guard; amended 2026-09-13, ADR-013, a CranL preview is also `NODE_ENV=production` and must still show the sample cards) the whole section is omitted until at least one non-placeholder entry exists. The launch checklist (§12.4) requires three real entries.
 
 #### 6.4.8 Integrations
 
@@ -805,7 +808,7 @@ H1 + lead (§4.8). Grid of 5 `ProductCard`s (3 columns desktop, 2 tablet, 1 mobi
 
 ### 6.6 Product detail `/products/{slug}`
 
-**Layout desktop:** breadcrumbs; two columns: start = content, end = gallery. Gallery: main image 1:1 (radius 20 px) with thumbnails below (front/back for each colour); colour swatches switch both; keyboard arrows move between images. *Amended 2026-09-13 (ADR-035): one photo of the active colour that shows the back on hover, tap or arrow keys, a visible front/back toggle under it, then the colour swatches — no thumbnails, no counter; description, specs and the size chart share one section side by side from `md`. Amended again 2026-09-13 (Dhia): the full description replaces the short one under the H1, the price footnote is gone, and the details section holds only المواصفات and جدول المقاسات.* Content: H1, short description (one paragraph from Appendix A), price block (three lines from §4.8 with `SarAmount`, the profit line in success colour), footnote, primary CTA (lg) + secondary link to the designer, then sections: الوصف (full description), المواصفات (definition list: الخامة, الوزن, المقاسات, الألوان, منطقة الطباعة, طريقة الطباعة), جدول المقاسات (table; cm; LTR digits in RTL cells), منتجات أخرى (3 `ProductCard`s). Then the ribbon.
+**Layout desktop:** breadcrumbs; two columns: start = content, end = gallery. Gallery: main image 1:1 (radius 20 px) with thumbnails below (front/back for each colour); colour swatches switch both; keyboard arrows move between images. *Amended 2026-09-13 (ADR-035): one photo of the active colour that shows the back on hover, tap or arrow keys, a visible front/back toggle under it, then the colour swatches, no thumbnails, no counter; description, specs and the size chart share one section side by side from `md`. Amended again 2026-09-13 (Dhia): the full description replaces the short one under the H1, the price footnote is gone, and the details section holds only المواصفات and جدول المقاسات.* Content: H1, short description (one paragraph from Appendix A), price block (three lines from §4.8 with `SarAmount`, the profit line in success colour), footnote, primary CTA (lg) + secondary link to the designer, then sections: الوصف (full description), المواصفات (definition list: الخامة, الوزن, المقاسات, الألوان, منطقة الطباعة, طريقة الطباعة), جدول المقاسات (table; cm; LTR digits in RTL cells), منتجات أخرى (3 `ProductCard`s). Then the ribbon.
 
 **Mobile:** gallery first, then content; sticky bottom bar with price "يبدأ من" and the CTA.
 
@@ -815,7 +818,7 @@ H1 + lead (§4.8). Grid of 5 `ProductCard`s (3 columns desktop, 2 tablet, 1 mobi
 
 H1 + lead. Five step rows alternating image side (3D icons: `tee-plus-create-product`, `laptop-link-connect-store`, `bag-and-parcel-order`, `printer-print`, `truck-delivery`; icon on the end side for odd rows, start side for even rows; mobile stacks icon above text). Then the profit block: title, three tiles joined by "−" and "=" glyphs (mirrored order is natural in RTL: سعر البيع on the start), example line with `SarAmount`. Then the mini FAQ (3 items) and the ribbon.
 
-Amended 2026-09-13 (Dhia's design review): the five steps are one connected journey — numbered 3D icons in circular frames on a path that runs across the top from `lg` and down the start side on phones, with a progress line that fills as the track scrolls through the viewport (a CSS view timeline named on the track; full and static where unsupported and under reduced motion); the profit block is a highlighted card whose tiles stack on phones. Copy unchanged.
+Amended 2026-09-13 (Dhia's design review): the five steps are one connected journey, numbered 3D icons in circular frames on a path that runs across the top from `lg` and down the start side on phones, with a progress line that fills as the track scrolls through the viewport (a CSS view timeline named on the track; full and static where unsupported and under reduced motion); the profit block is a highlighted card whose tiles stack on phones. Copy unchanged.
 
 ### 6.8 About `/about`
 
@@ -863,7 +866,7 @@ Component `NewsletterForm` used in the footer and blog. `POST /api/newsletter` v
 
 **Purpose:** always-available human contact, styled to the brand, not a bare icon.
 
-**Button:** fixed at bottom **right** (Dhia's explicit choice, even in RTL): `inset-block-end: 24px; right: 24px` (this is the one intentional physical property; comment it) — *amended 2026-09-13 (ADR-038): bottom **left**, i.e. the inline end of this RTL site (`inset-inline-end: 24px`, a logical property; the physical exception is retired); the panel opens above the button inside the same fixed dock, so the button never moves* — 56 px circle, `--color-whatsapp` background, white WhatsApp glyph (official logo shape), `--shadow-popover`, scale 1.05 on hover. On first page load it appears after 1.5 s with a 200 ms scale-in. A small unread-style dot (accent) pulses once 6 s after load, once per session.
+**Button:** fixed at bottom **right** (Dhia's explicit choice, even in RTL): `inset-block-end: 24px; right: 24px` (this is the one intentional physical property; comment it), *amended 2026-09-13 (ADR-038): bottom **left**, i.e. the inline end of this RTL site (`inset-inline-end: 24px`, a logical property; the physical exception is retired); the panel opens above the button inside the same fixed dock, so the button never moves*, 56 px circle, `--color-whatsapp` background, white WhatsApp glyph (official logo shape), `--shadow-popover`, scale 1.05 on hover. On first page load it appears after 1.5 s with a 200 ms scale-in. A small unread-style dot (accent) pulses once 6 s after load, once per session.
 
 **Popup (click):** a 320 px card anchored above the button (right-aligned), radius 13 px, `--shadow-popover`: header in `--color-primary` with the B7R icon (36 px), title "بحر برنت", subtitle "فريق الدعم", a close X; body on `--color-ground` with one chat bubble (white, radius 13 px with a small tail at the start) containing the greeting; footer with the primary button "ابدأ المحادثة" (full width, WhatsApp green) that opens `https://wa.me/966501699572?text={encoded prefilled message}` in a new tab. Open/close animates 200 ms (opacity + 8 px rise). Escape closes; clicking outside closes. On mobile the popup is `calc(100vw - 32px)` wide. Track `whatsapp_click{location:"widget"}`.
 
@@ -949,7 +952,7 @@ Training crawlers (`GPTBot`, `ClaudeBot`, `Google-Extended`, `CCBot`, `Meta-Exte
 - `title` from §4.16 with the template `%s | بحر برنت`; the home page uses the full title without the template.
 - `description` from §4.16 (≤ 155 characters).
 - `alternates.canonical`.
-- Open Graph: `type` (`website` everywhere except `article` on posts; `product` is not an `og:type` the previews read and Next's typed metadata does not emit it, so product pages use `website` and the `Product` JSON-LD carries the commerce data — amended in Phase 1c), `locale: ar_SA`, `siteName: بحر برنت`, `title`, `description`, `images` (1200 × 630). Default OG image: designed once (`public/og/default.png`): white background, the colour logo, the tagline منصة الطباعة عند الطلب في السعودية, and a row of the five product photos; product pages use `public/og/products/{slug}.png` with the product photo and "يبدأ من {price}"; posts use the cover. All OG images are static PNGs rendered once by `scripts/build-og.ts` (`pnpm og`) with Playwright and the self-hosted ITF Rayat Round files, because Satori (`next/og`) does not shape Arabic (ADR-020, amended in Phase 1c).
+- Open Graph: `type` (`website` everywhere except `article` on posts; `product` is not an `og:type` the previews read and Next's typed metadata does not emit it, so product pages use `website` and the `Product` JSON-LD carries the commerce data, amended in Phase 1c), `locale: ar_SA`, `siteName: بحر برنت`, `title`, `description`, `images` (1200 × 630). Default OG image: designed once (`public/og/default.png`): white background, the colour logo, the tagline منصة الطباعة عند الطلب في السعودية, and a row of the five product photos; product pages use `public/og/products/{slug}.png` with the product photo and "يبدأ من {price}"; posts use the cover. All OG images are static PNGs rendered once by `scripts/build-og.ts` (`pnpm og`) with Playwright and the self-hosted ITF Rayat Round files, because Satori (`next/og`) does not shape Arabic (ADR-020, amended in Phase 1c).
 - Twitter card `summary_large_image`, `site: @b7rprint`.
 - `robots: { index, follow, 'max-image-preview': 'large' }`; `noindex` on 404 and on any non-production host.
 - Icons: `favicon.ico` (32), `icon.svg` if available else PNG 192/512, `apple-touch-icon` 180, `manifest.webmanifest` (name "بحر برنت", `lang: ar`, `dir: rtl`, `theme_color: #0058B0`, `background_color: #FFFFFF`, display `browser`).
@@ -973,7 +976,7 @@ All indexable routes with `lastModified` (ISO 8601 with time; from the content f
 
 ### 7.6 IndexNow
 
-The key is served at `/indexnow/{INDEXNOW_KEY}.txt` by `app/indexnow/[key]/route.ts` (any other name is a plain 404; a root-level catch-all would soft-404 every unknown URL — amended in Phase 1c). A small utility `lib/indexnow.ts` posts `{ host, key, keyLocation, urlList }` to `https://api.indexnow.org/indexnow` with `keyLocation` pointing at that path. In Level 1 it runs from a GitHub Actions step after a production deploy with the list of changed routes (diff of `sitemap.xml` before/after). Level 2 moves it to a publish hook.
+The key is served at `/indexnow/{INDEXNOW_KEY}.txt` by `app/indexnow/[key]/route.ts` (any other name is a plain 404; a root-level catch-all would soft-404 every unknown URL, amended in Phase 1c). A small utility `lib/indexnow.ts` posts `{ host, key, keyLocation, urlList }` to `https://api.indexnow.org/indexnow` with `keyLocation` pointing at that path. In Level 1 it runs from a GitHub Actions step after a production deploy with the list of changed routes (diff of `sitemap.xml` before/after). Level 2 moves it to a publish hook.
 
 ### 7.7 Measurement setup
 
@@ -1173,7 +1176,7 @@ Zero warnings policy: any warning from any step is fixed or suppressed inline wi
 
 ### 8.10 Security headers and hygiene
 
-- Headers: `Strict-Transport-Security: max-age=63072000; includeSubDomains; preload`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy` (camera, microphone, geolocation off), `X-Frame-Options: DENY` (except Level 4 pages that embed Cal.com use `frame-src` in CSP instead), and a CSP with `default-src 'self'`; `script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://challenges.cloudflare.com {UMAMI_ORIGIN}`; `style-src 'self' 'unsafe-inline'` (required: `next/image fill`, the reveal and hero primitives emit inline `style` attributes — amended in Phase 1c); `img-src 'self' data: blob: https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com`; `connect-src 'self' https://*.google-analytics.com https://*.analytics.google.com https://region1.google-analytics.com {UMAMI_ORIGIN}`; `frame-src https://challenges.cloudflare.com`; `font-src 'self'`; `media-src 'self'`; `object-src 'none'`; `base-uri 'self'`; `form-action 'self'`; `frame-ancestors 'none'`. No nonces: every page is static, so a per-response nonce is impossible without dynamic rendering, and a nonce next to `'unsafe-inline'` would switch the latter off in CSP3 browsers and break the inline script gtag injects (ADR-016). An e2e (`e2e/csp.spec.ts`) asserts zero `securitypolicyviolation` events on home load, a designer upload, consent → GA, and a contact submit.
+- Headers: `Strict-Transport-Security: max-age=63072000; includeSubDomains; preload`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy` (camera, microphone, geolocation off), `X-Frame-Options: DENY` (except Level 4 pages that embed Cal.com use `frame-src` in CSP instead), and a CSP with `default-src 'self'`; `script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://challenges.cloudflare.com {UMAMI_ORIGIN}`; `style-src 'self' 'unsafe-inline'` (required: `next/image fill`, the reveal and hero primitives emit inline `style` attributes, amended in Phase 1c); `img-src 'self' data: blob: https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com`; `connect-src 'self' https://*.google-analytics.com https://*.analytics.google.com https://region1.google-analytics.com {UMAMI_ORIGIN}`; `frame-src https://challenges.cloudflare.com`; `font-src 'self'`; `media-src 'self'`; `object-src 'none'`; `base-uri 'self'`; `form-action 'self'`; `frame-ancestors 'none'`. No nonces: every page is static, so a per-response nonce is impossible without dynamic rendering, and a nonce next to `'unsafe-inline'` would switch the latter off in CSP3 browsers and break the inline script gtag injects (ADR-016). An e2e (`e2e/csp.spec.ts`) asserts zero `securitypolicyviolation` events on home load, a designer upload, consent → GA, and a contact submit.
 - Dependencies: pinned exact versions; `pnpm audit` in CI weekly (Dependabot with 7-day cooldown, grouped updates).
 - API routes: zod validation, honeypot, rate limit, no PII in logs, generic error messages to clients.
 - Uploads in the designer never leave the browser.
@@ -1223,10 +1226,10 @@ Give Dhia and an editor a WordPress-like, Arabic, right-to-left admin at `https:
 | | | Amended 2026-09-13 (ADR-031, as shipped): blocks `richText`, `story` (heading, text, line, photo, facts-band switch), `cards` (icon, title, text, art), `steps`, `profitEquation`, `faqList` (all groups or a slice of the home entries, link, closing line), `miskCredential`, `contact` (the cards' titles and the booking card; the form is interface copy in code), `legalBody` (Markdown + date), `mediaBanner`; `seo` group (title ≤ 70, description ≤ 160, share image) instead of `plugin-seo`; the seven slugs are reserved (route folders in code, no rename, no delete) and other published pages are served by `/[slug]`; unknown top-level URLs get the global 404 through the proxy (ADR-032). | `content/seed/pages.ts`, `content/seed/legal/*.md` (seed) |
 | `faqs` | Collection | group, question, answer, order, showOnHome, homeOrder (1–5; a sixth `showOnHome` is refused, ADR-031) | `content/seed/faq.ts` (seed) |
 | `testimonials` | Collection | quote, name, store, avatar, placeholder (default false), order | `content/testimonials.ts` |
-| `integrations` | Collection | platform (salla \| zid \| shopify — selects the brand SVG that ships with the code, ADR-031), name, nameLatin, order | `content/seed/integrations.ts` (seed) |
+| `integrations` | Collection | platform (salla \| zid \| shopify, selects the brand SVG that ships with the code, ADR-031), name, nameLatin, order | `content/seed/integrations.ts` (seed) |
 | `media` | Collection | upload with alt (required, Arabic), focal point, credit | `public/images/*` |
 | `redirects` | Collection (plugin) | from, to, type 301/308/410 | `lib/redirects.ts` |
-| `users` | Collection | email, role, name | — |
+| `users` | Collection | email, role, name |, |
 | `posts`, `categories`, `authors` | Collections | Level 3 (§10) | `content/blog/*` |
 
 Official plugins: `@payloadcms/plugin-seo` (title/description/OG fields with Arabic length hints and a preview), `@payloadcms/plugin-redirects`, `@payloadcms/plugin-form-builder` (Level 4), `@payloadcms/plugin-search` (Level 3), `@payloadcms/storage-s3`. Amended 2026-09-13 (ADR-031): `plugin-seo` is not used; each page carries a `seo` group with the same limits.
@@ -1237,7 +1240,7 @@ Field rules: every text field shows its §4 default as the initial value after m
 
 - The home page is a Global with fixed sections (order not editable; Dhia wanted a designed page, not a page builder). Each section's fields are editable; each section has an `enabled` toggle except hero, product strip, designer, and ribbon.
 - Other pages use a small block set (rich text, cards, steps, media banner) so new pages can be assembled in Level 2 without code (for example a future `/creators` landing).
-- Rich text is Lexical with headings H2/H3, lists, links, images, and a "CTA block" custom node; RTL editing verified. Amended 2026-09-13 (ADR-031): shipped without the CTA node — no seeded page needs one; docs/IDEAS.md holds it.
+- Rich text is Lexical with headings H2/H3, lists, links, images, and a "CTA block" custom node; RTL editing verified. Amended 2026-09-13 (ADR-031): shipped without the CTA node, no seeded page needs one; docs/IDEAS.md holds it.
 - Product prices, the welcome credit, and the delivery days each carry a help text reminding the editor that they must match the app (no API sync, decision D-41).
 - Media library requires Arabic alt text on upload.
 
@@ -1264,7 +1267,7 @@ Amended 2026-09-13 (Phase 2a, ADR-026, ADR-029): the migrated files move to `src
 5. IndexNow and revalidation hooks fire on publish (visible in job logs).
 6. Backups exist and a restore has been rehearsed once (documented in `RUNBOOK.md`).
 
-Amended 2026-09-13 (Phase 2b, ADR-034): (1) proven by `e2e/admin.spec.ts` (a home publish is on `/` at once); (2) proven for users, settings, redirects, published products/pages/testimonials and live FAQ entries; (4) `scripts/ci/seed-check.sh` every CI run; (5) IndexNow is a queued job on the production runtime, revalidation runs from every publish hook; (6) the weekly `Backup` workflow writes to a private bucket and CI rehearses a restore on every run (`scripts/ci/restore-check.sh`) — the once-off rehearsal from a CranL snapshot remains a launch step. The login Turnstile is a verified gate cookie rather than a token per attempt (ADR-034).
+Amended 2026-09-13 (Phase 2b, ADR-034): (1) proven by `e2e/admin.spec.ts` (a home publish is on `/` at once); (2) proven for users, settings, redirects, published products/pages/testimonials and live FAQ entries; (4) `scripts/ci/seed-check.sh` every CI run; (5) IndexNow is a queued job on the production runtime, revalidation runs from every publish hook; (6) the weekly `Backup` workflow writes to a private bucket and CI rehearses a restore on every run (`scripts/ci/restore-check.sh`), the once-off rehearsal from a CranL snapshot remains a launch step. The login Turnstile is a verified gate cookie rather than a token per attempt (ADR-034).
 
 ---
 
@@ -1646,30 +1649,30 @@ See §5.2. Keep the machine-readable version in `src/lib/redirects.ts` and a tes
 ### Appendix D: Full FAQ (`/faq`, grouped)
 
 **البداية**
-1. كم أحتاج لأبدأ؟ — لا شيء. تسجّل مجاناً وتحصل على 30 ريالاً رصيداً ترحيبياً.
-2. هل أحتاج سجلاً تجارياً؟ — تقدر تبدأ بحساب مجاني. لربط متجرك واستلام الطلبات نطلب توثيق هويتك مع سجل تجاري أو وثيقة عمل حر.
-3. هل أحتاج تصاميم جاهزة؟ — ارفع تصميمك بصيغة PNG أو JPG أو SVG. وإن لم يكن عندك تصميم، ابدأ بنص أو شعار بسيط.
+1. كم أحتاج لأبدأ؟، لا شيء. تسجّل مجاناً وتحصل على 30 ريالاً رصيداً ترحيبياً.
+2. هل أحتاج سجلاً تجارياً؟، تقدر تبدأ بحساب مجاني. لربط متجرك واستلام الطلبات نطلب توثيق هويتك مع سجل تجاري أو وثيقة عمل حر.
+3. هل أحتاج تصاميم جاهزة؟، ارفع تصميمك بصيغة PNG أو JPG أو SVG. وإن لم يكن عندك تصميم، ابدأ بنص أو شعار بسيط.
 
 **الأسعار والربح**
-4. كيف أربح؟ — تحدّد سعر البيع في متجرك. عند كل طلب نخصم تكلفة المنتج والشحن من محفظتك، والباقي ربحك.
-5. كم تكلفة المنتجات؟ — تبدأ من 30 ريالاً للحقيبة القماشية و45 ريالاً للتيشيرت. كل الأسعار في صفحة المنتجات.
-6. ما هي المحفظة؟ — رصيد مسبق الدفع تُخصم منه تكلفة كل طلب. تعبّئها بالتحويل البنكي، والحد الأدنى 10 ريالات.
-7. هل هناك اشتراك شهري أو حد أدنى للطلبات؟ — لا. لا اشتراك ولا حد أدنى، تدفع تكلفة الطلب فقط.
+4. كيف أربح؟، تحدّد سعر البيع في متجرك. عند كل طلب نخصم تكلفة المنتج والشحن من محفظتك، والباقي ربحك.
+5. كم تكلفة المنتجات؟، تبدأ من 30 ريالاً للحقيبة القماشية و45 ريالاً للتيشيرت. كل الأسعار في صفحة المنتجات.
+6. ما هي المحفظة؟، رصيد مسبق الدفع تُخصم منه تكلفة كل طلب. تعبّئها بالتحويل البنكي، والحد الأدنى 10 ريالات.
+7. هل هناك اشتراك شهري أو حد أدنى للطلبات؟، لا. لا اشتراك ولا حد أدنى، تدفع تكلفة الطلب فقط.
 
 **الطلبات والتوصيل**
-8. كم يستغرق التوصيل؟ — 5 أيام كحد أقصى لأي مدينة في السعودية.
-9. من يدفع الشحن؟ — تُخصم رسوم شحن الطلب من محفظتك حسب شركة الشحن، وتحدّد أنت ما تُحمّله لعميلك في متجرك.
-10. هل يعرف عميلي أن الطباعة من بحر برنت؟ — لا. الطرد وبوليصة الشحن باسم متجرك فقط.
-11. ماذا لو وصل المنتج معيباً؟ — إذا كان الخطأ منا نعيد الطباعة والشحن مجاناً أو نرد المبلغ، بشرط إبلاغنا خلال 10 أيام من الاستلام مع صور.
+8. كم يستغرق التوصيل؟، 5 أيام كحد أقصى لأي مدينة في السعودية.
+9. من يدفع الشحن؟، تُخصم رسوم شحن الطلب من محفظتك حسب شركة الشحن، وتحدّد أنت ما تُحمّله لعميلك في متجرك.
+10. هل يعرف عميلي أن الطباعة من بحر برنت؟، لا. الطرد وبوليصة الشحن باسم متجرك فقط.
+11. ماذا لو وصل المنتج معيباً؟، إذا كان الخطأ منا نعيد الطباعة والشحن مجاناً أو نرد المبلغ، بشرط إبلاغنا خلال 10 أيام من الاستلام مع صور.
 
 **المتاجر والربط**
-12. ما المتاجر التي أقدر أربطها؟ — سلة وزد وشوبيفاي، والربط مجاني.
-13. كيف يتم الربط؟ — بتفويض آمن من داخل متجرك بضغطة واحدة، بدون مشاركة أي بيانات حساسة.
-14. هل أقدر أربط أكثر من متجر؟ — نعم، اربط أكثر من متجر على أكثر من منصة من الحساب نفسه.
+12. ما المتاجر التي أقدر أربطها؟، سلة وزد وشوبيفاي، والربط مجاني.
+13. كيف يتم الربط؟، بتفويض آمن من داخل متجرك بضغطة واحدة، بدون مشاركة أي بيانات حساسة.
+14. هل أقدر أربط أكثر من متجر؟، نعم، اربط أكثر من متجر على أكثر من منصة من الحساب نفسه.
 
 **الجودة والدعم**
-15. ما طريقة الطباعة؟ — طباعة رقمية عالية الجودة بألوان ثابتة تتحمل الغسيل المتكرر.
-16. كيف أتواصل معكم؟ — عبر واتساب على 0501699572 أو البريد contact@b7r.sa.
+15. ما طريقة الطباعة؟، طباعة رقمية عالية الجودة بألوان ثابتة تتحمل الغسيل المتكرر.
+16. كيف أتواصل معكم؟، عبر واتساب على 0501699572 أو البريد contact@b7r.sa.
 
 ### Appendix E: Content backlog and keyword map (seeds `ai-topics` in Level 3; informs sample posts in Level 1)
 
@@ -1750,7 +1753,7 @@ Decision history: `docs/00-decisions-log.md` (rounds 1–4 with Dhia, 2026-09-12
 13. About banner: §6.8 names `hanging-tshirt-mockup.jpg`, but that file carries the vendor's "Free t-shirt mockup" sample print, so the site uses `hanging-tshirt-mockup-2.jpg` (same subject, real design). Blog covers use `designer-at-desk-stock.jpg`, `hodie2.jpg` and `totebag1.jpg`. Swap when final photography exists.
 14. `NEXT_PUBLIC_TURNSTILE_SITE_KEY` is set to Cloudflare's public always-pass test key in `.env.local` and CI so the widget island renders in tests; production needs the real pair (§12.4 item 5).
 15. Product OG images use `og:type website` (see §7.3 amendment); confirm in WhatsApp/X previews at cutover (§12.4 item 8).
-16. Three sample testimonials (`src/content/testimonials.ts`) were written by the agent on Dhia's instruction (ADR-023) and stay `placeholder: true`; to show them on b7r.sa set `placeholder: false` (they are not real merchants' words — §3.14) or replace them with real entries (§12.4 item 1).
+16. Three sample testimonials (`src/content/testimonials.ts`) were written by the agent on Dhia's instruction (ADR-023) and stay `placeholder: true`; to show them on b7r.sa set `placeholder: false` (they are not real merchants' words, §3.14) or replace them with real entries (§12.4 item 1).
 
 17. Design edits 2026-09-13 (`src/content/home.ts`, `TODO(copy)`): the designer's upload prompt «اضغط لرفع شعارك أو صورتك» and the remove control «إزالة التصميم» (ADR-036), and the product gallery's toggle name «اقلب الصورة» (`src/messages/ar.json`, ADR-035). These three also belong to the 2b `home` global seed. The designer now starts with an empty print area; the pre-placed sample of the earlier build is a one-line switch (`initialState.design`) if Dhia prefers it.
 

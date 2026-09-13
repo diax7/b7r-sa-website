@@ -27,8 +27,8 @@ export function blockTones(count: number): BlockTone[] {
 }
 
 /**
- * A page from the `pages` collection (BRD 9.4, 9.5; ADR-031): JSON-LD, the blocks in order —
- * the first one carries the page title as its H1 — and the CTA ribbon. `notFound()` when the
+ * A page from the `pages` collection (BRD 9.4, 9.5; ADR-031): JSON-LD, the blocks in order,
+ * the first one carries the page title as its H1, and the CTA ribbon. `notFound()` when the
  * slug is not published (the proxy already answers unknown top-level URLs, B0).
  */
 export async function CmsPage({ slug, renderers = NO_EXTRA }: CmsPageProps) {

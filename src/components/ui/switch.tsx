@@ -5,7 +5,7 @@ import type { ComponentPropsWithoutRef } from 'react';
 import { cn } from '@/lib/cn';
 
 /**
- * Switch (ADR-039): an on/off setting that takes effect on save — never an action button.
+ * Switch (ADR-039): an on/off setting that takes effect on save, never an action button.
  * Always paired with a visible label (`aria-labelledby` or `<label htmlFor>`); the thumb slides
  * towards the inline end when on, so it reads correctly in RTL.
  */

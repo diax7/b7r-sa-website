@@ -1,6 +1,8 @@
 import type { Field, GlobalConfig } from 'payload';
 import { isEditorOrAdmin } from '@/modules/cms/access';
 import { revalidateGlobal } from '@/modules/cms/hooks/revalidate';
+import { savedByField, stampSavedByGlobal } from '@/modules/cms/fields/saved-by';
+import { previewUrl } from '@/lib/preview-token';
 
 /** The three why-us icons the section knows how to draw (BRD 6.4.6). */
 export const WHY_US_ICONS = ['ShieldCheck', 'Workflow', 'Zap'] as const;
@@ -11,11 +13,19 @@ export const STRIP_SIZE = 5;
 const text = (name: string, label: { ar: string; en: string }, extra: Partial<Field> = {}): Field =>
   ({ name, type: 'text', required: true, localized: true, label, ...extra }) as Field;
 
-const enabled = (): Field => ({
+/** The section switch (ADR-039): its description names what the switch removes from the site. */
+const enabled = (section: { ar: string; en: string }): Field => ({
   name: 'enabled',
   type: 'checkbox',
   defaultValue: true,
   label: { ar: 'يظهر في الصفحة', en: 'Shown on the page' },
+  admin: {
+    description: {
+      ar: `عند الإيقاف يختفي قسم «${section.ar}» من الصفحة الرئيسية.`,
+      en: `Off hides the “${section.en}” section from the home page.`,
+    },
+    components: { Field: '@/modules/cms/admin/fields/enabled-switch#EnabledSwitch' },
+  },
 });
 
 const header = (withEyebrow = true, withLead = true): Field[] => [
@@ -36,6 +46,7 @@ export const Home: GlobalConfig = {
   label: { ar: 'الصفحة الرئيسية', en: 'Home page' },
   admin: {
     group: { ar: 'المحتوى', en: 'Content' },
+    preview: (_doc, { req }) => previewUrl(req.payload.config.serverURL, '/', req.payload.secret),
     description: {
       ar: 'أقسام الصفحة الرئيسية بالترتيب. احفظ مسودة بحرّية؛ النشر يظهر في الموقع خلال ثوانٍ.',
       en: 'The home page, section by section. Drafts are free; publishing is live within seconds.',
@@ -45,7 +56,7 @@ export const Home: GlobalConfig = {
   // Drafts sit next to the published copy: the REST read is for signed-in staff; the site
   // reads through the Local API with `draft: false`.
   access: { read: isEditorOrAdmin, update: isEditorOrAdmin },
-  hooks: { afterChange: [revalidateGlobal] },
+  hooks: { beforeChange: [stampSavedByGlobal], afterChange: [revalidateGlobal] },
   fields: [
     {
       name: 'hero',
@@ -162,7 +173,7 @@ export const Home: GlobalConfig = {
       type: 'group',
       label: { ar: 'الخطوات الثلاث', en: 'Three steps' },
       fields: [
-        enabled(),
+        enabled({ ar: 'الخطوات الثلاث', en: 'Three steps' }),
         ...header(true, false),
         text('link', { ar: 'رابط «اعرف أكثر»', en: 'Learn-more link' }),
         {
@@ -197,14 +208,14 @@ export const Home: GlobalConfig = {
           en: 'The loop itself ships with the site; only the copy lives here.',
         },
       },
-      fields: [enabled(), ...header(false)],
+      fields: [enabled({ ar: 'الفيديو', en: 'Video' }), ...header(false)],
     },
     {
       name: 'whyUs',
       type: 'group',
       label: { ar: 'لماذا بحر', en: 'Why us' },
       fields: [
-        enabled(),
+        enabled({ ar: 'لماذا بحر', en: 'Why us' }),
         ...header(true, false),
         {
           name: 'items',
@@ -224,6 +235,7 @@ export const Home: GlobalConfig = {
               required: true,
               options: WHY_US_ICONS.map((i) => ({ label: i, value: i })),
               label: { ar: 'الأيقونة', en: 'Icon' },
+              admin: { components: { Field: '@/modules/cms/admin/fields/icon-select#IconSelect' } },
             },
             text('title', { ar: 'العنوان', en: 'Title' }),
             text('text', { ar: 'النص', en: 'Text' }),
@@ -241,13 +253,13 @@ export const Home: GlobalConfig = {
           en: 'The entries live in Testimonials; the section title lives here.',
         },
       },
-      fields: [enabled(), ...header(true, false)],
+      fields: [enabled({ ar: 'آراء التجار', en: 'Testimonials' }), ...header(true, false)],
     },
     {
       name: 'integrations',
       type: 'group',
       label: { ar: 'المتاجر المتصلة', en: 'Integrations' },
-      fields: [enabled(), ...header(false)],
+      fields: [enabled({ ar: 'المتاجر المتصلة', en: 'Integrations' }), ...header(false)],
     },
     {
       name: 'faq',
@@ -260,7 +272,7 @@ export const Home: GlobalConfig = {
         },
       },
       fields: [
-        enabled(),
+        enabled({ ar: 'الأسئلة الشائعة', en: 'FAQ' }),
         ...header(false, false),
         text('link', { ar: 'رابط «كل الأسئلة»', en: 'All-questions link' }),
       ],
@@ -271,5 +283,6 @@ export const Home: GlobalConfig = {
       label: { ar: 'شريط الدعوة (كل الصفحات)', en: 'CTA ribbon (every page)' },
       fields: [...header(false), text('button', { ar: 'الزر', en: 'Button' })],
     },
+    savedByField,
   ],
 };

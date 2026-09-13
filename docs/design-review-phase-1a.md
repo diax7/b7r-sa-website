@@ -1,4 +1,4 @@
-# Design review — Phase 1a (hero, product strip, designer)
+# Design review: Phase 1a (hero, product strip, designer)
 
 Date 2026-09-13 · Build `phase/1a-foundation` · Viewports: 1280 desktop, Pixel 7, iPhone 15.
 Method: the `design-review` checklist (first impression, design-system extraction, 10-category
@@ -37,14 +37,14 @@ The eye goes to (1) the H1 «علامتك التجارية تبدأ من قطع�
 
 ## Findings and fixes
 
-- FINDING-001 (medium, designer) — product chip thumbnails used the white variant on a white
+- FINDING-001 (medium, designer), product chip thumbnails used the white variant on a white
   chip; switched to the darker variant like the strip. Fixed in the build commit.
-- FINDING-002 (medium, hero mobile) — copy sat mid-screen; moved into the top half per BRD
+- FINDING-002 (medium, hero mobile), copy sat mid-screen; moved into the top half per BRD
   6.4.1 with the proof chips on one scrolling row. Fixed.
-- FINDING-003 (polish, footer) — payment badges shipped with 60 % transparent padding and
+- FINDING-003 (polish, footer), payment badges shipped with 60 % transparent padding and
   rendered tiny; trimmed in the asset pipeline, trust badges on white tiles. Fixed.
 
-- NOTE (hero desktop) — the legibility overlay runs to 55 % of the width at 0.85 opacity
+- NOTE (hero desktop), the legibility overlay runs to 55 % of the width at 0.85 opacity
   (BRD 6.4.1 says 45 %) so the headline stays readable over the placeholder photos' busy
   right third; it ghosts the hoodie and cap. Revisit when the final photos arrive.
 

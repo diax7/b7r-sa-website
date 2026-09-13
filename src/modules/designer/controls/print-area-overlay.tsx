@@ -33,7 +33,7 @@ interface PrintAreaOverlayProps {
 
 /**
  * HTML layer over the Konva stage, aligned to the print area (BRD 6.4.3, amended
- * 2026-09-13, ADR-036). Empty: the area itself is the upload target — a visually hidden but
+ * 2026-09-13, ADR-036). Empty: the area itself is the upload target, a visually hidden but
  * focusable file input with the prompt as its label, so a click, Enter or Space opens the
  * picker and the focus ring lands on the area. With a design: one «×» at the top-end corner
  * of the area, shown only while the edit chrome is visible.

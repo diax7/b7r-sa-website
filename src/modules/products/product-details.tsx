@@ -63,7 +63,7 @@ export function SizeChart({ product, caption }: { product: Product; caption: str
               </th>
               {keys.map((k) => (
                 <td key={k} className="tabular px-5 py-3 text-text">
-                  <bdi dir="ltr">{size.measurements?.[k] ?? '—'}</bdi>
+                  <bdi dir="ltr">{size.measurements?.[k] ?? '-'}</bdi>
                 </td>
               ))}
             </tr>

@@ -3,6 +3,7 @@ import { FAQ_GROUPS } from '@/content/schema';
 import { isAdmin, isEditorOrAdmin } from '@/modules/cms/access';
 import { Refused } from '@/modules/cms/refused';
 import { PATHS_FOR_FAQS, revalidateRoutes } from '@/modules/cms/hooks/revalidate';
+import { savedByField, stampSavedBy } from '@/modules/cms/fields/saved-by';
 
 /** The home accordion shows exactly this many entries (BRD 4.4, 6.4.9). */
 export const HOME_FAQ_LIMIT = 5;
@@ -42,7 +43,7 @@ async function guardHomeLimit({
 
 /**
  * FAQ entries (BRD 4.10, Appendix D): grouped, ordered, with at most five flagged for the
- * home accordion in their own order. No drafts: each entry is one small, atomic edit — and
+ * home accordion in their own order. No drafts: each entry is one small, atomic edit, and
  * live the moment it exists, so deleting one is an admin's call (BRD 9.3).
  */
 export const Faqs: CollectionConfig = {
@@ -69,6 +70,7 @@ export const Faqs: CollectionConfig = {
   },
   hooks: {
     beforeValidate: [guardHomeLimit],
+    beforeChange: [stampSavedBy],
     afterChange: [revalidateRoutes(PATHS_FOR_FAQS)],
     afterDelete: [revalidateRoutes(PATHS_FOR_FAQS)],
   },
@@ -136,5 +138,6 @@ export const Faqs: CollectionConfig = {
         },
       ],
     },
+    savedByField,
   ],
 };

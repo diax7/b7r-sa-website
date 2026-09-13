@@ -18,18 +18,18 @@
 
 | Company | URL | Model & products | Pricing shown | Integrations | Strengths | Weaknesses |
 |---|---|---|---|---|---|---|
-| **B7R Print (بحر برنت)** | b7r.sa | POD, white-label. T-shirt, hoodie, baby romper, tote, pin, mug, cap, iPhone case | None | "اربط متجرك مجانًا" — platform not named | Clear Saudi-dialect copy, white-label promise | Invisible in app stores; no pricing/catalog/SLAs; no integration proof; no content engine |
+| **B7R Print (بحر برنت)** | b7r.sa | POD, white-label. T-shirt, hoodie, baby romper, tote, pin, mug, cap, iPhone case | None | "اربط متجرك مجانًا"، platform not named | Clear Saudi-dialect copy, white-label promise | Invisible in app stores; no pricing/catalog/SLAs; no integration proof; no content engine |
 | **أطبع لي / Printitle** | printitle.com; Salla app id 1753429719 | POD from Riyadh; t-shirts, mugs, canvas, posters | App: 39 SAR/mo or 399 SAR/yr, 3-day trial | Salla (live app), claims Zid + Shopify | Only POD app listed on Salla; subscription model | 0 reviews; 2-7 days; pages not crawlable (JS-only); posters/notebooks first |
 | **Lana Designs** | lana-designs.com/en/b2b-guest | DTF print + embroidery on demand; tees, oversized, polo, hoodie, cap; S-6XL, 18 colours | Per-item after account approval; no subscription, no MOQ | Manual (no store sync) | Embroidery, free branded packaging, GCC shipping, displays SBC auth no. 0000131781 + VAT no. | No automation; 1-2 day approval |
 | **Riyadh Prints** | riyadhprints.com | Local print shop with POD SKU family; DTG + screen; same-day for <25 pcs | Quote via WhatsApp | None | Strong English local SEO pages, "240+ companies" | Quote-driven; not a workflow |
 | **Print Design T-Shirt** | brand-sa.com | Salla-hosted store selling custom tees/caps/mugs | Retail | Salla store | Consumer-friendly | 5-7 days; B2C |
 | **Sahl Shop (Jeddah)** | sahlshop.com | Custom printing incl. DTF polos/uniforms; 48h delivery | Per-product; bulk | None | Uniform/corporate SEO | Not POD for resellers |
-| **itba3ly.com** | itba3ly.com | Salla store, women-run, POD (consumer) | Retail | — | Female-team positioning | Public review: fabric "heavy", print limited to A4 — a live quality objection |
-| **Madar Print** | ar.madarprint.com | Bulk custom apparel, quote-based | From 1,050 SAR lots; 70% deposit; 7-10 days | — | Corporate | MOQ/deposit — the anti-POD |
-| **Print.sa (اطبع)** | print.sa | Document-printing marketplace (600k customers) | — | — | Owns "اطبع" | Not merch |
-| **Samawy (سماوي)** | samawy.com | Book POD (Riyadh) | — | — | POD term resonates for books | Different vertical |
+| **itba3ly.com** | itba3ly.com | Salla store, women-run, POD (consumer) | Retail |, | Female-team positioning | Public review: fabric "heavy", print limited to A4, a live quality objection |
+| **Madar Print** | ar.madarprint.com | Bulk custom apparel, quote-based | From 1,050 SAR lots; 70% deposit; 7-10 days |, | Corporate | MOQ/deposit, the anti-POD |
+| **Print.sa (اطبع)** | print.sa | Document-printing marketplace (600k customers) |, |، | Owns "اطبع" | Not merch |
+| **Samawy (سماوي)** | samawy.com | Book POD (Riyadh) |, |, | POD term resonates for books | Different vertical |
 
-Adjacent: PopupSnap "Product Studio" (Grovlix) — live product-customizer app on both Salla and Zid; natural integration partner. Fulfilment/3PLs: Isnaad, Salasa, Premium, Shorages, IQ Fulfillment. Dropshipping apps on Salla: Mahalk (SHEIN), DropIt, Masfufat, DropCard; on Zid: Taajer. Salla runs a "حزمة الدروب شيبينق" bundle.
+Adjacent: PopupSnap "Product Studio" (Grovlix), live product-customizer app on both Salla and Zid; natural integration partner. Fulfilment/3PLs: Isnaad, Salasa, Premium, Shorages, IQ Fulfillment. Dropshipping apps on Salla: Mahalk (SHEIN), DropIt, Masfufat, DropCard; on Zid: Taajer. Salla runs a "حزمة الدروب شيبينق" bundle.
 
 ### 1b. GCC / UAE
 - **Printanica** (printanica.com): UAE, ships GCC incl. KSA, 90+ products, "24h shipping", USD prices. No store integrations.
@@ -44,8 +44,8 @@ Adjacent: PopupSnap "Product Studio" (Grovlix) — live product-customizer app o
 |---|---|---|---|---|---|
 | **Printful** | "Worldwide" zone from US/EU | 2-5 bd production + 10-20 bd transit; KSA flagged for customs holds | $12.49 first item + $6.00 additional | DDU: customer pays on delivery | None native |
 | **Printify** | No MEA providers | 10-30 days | Provider-dependent | DDU | None native |
-| **Prodigi** | KSA landing page; no GCC facility | Not specified | — | DDU | None |
-| **Redbubble / TeePublic** | Marketplaces recommended by Arabic bloggers | Long | — | — | N/A |
+| **Prodigi** | KSA landing page; no GCC facility | Not specified |, | DDU | None |
+| **Redbubble / TeePublic** | Marketplaces recommended by Arabic bloggers | Long |, |, | N/A |
 
 Implication: every Arabic "how to start POD" article names Printful/Printify/Redbubble. None can serve a Saudi customer in under two weeks or under ~50 SAR shipping. That gap is B7R's whole story.
 
@@ -62,7 +62,7 @@ Implication: every Arabic "how to start POD" article names Printful/Printify/Red
 | Rank | Phrase | Intent | Evidence |
 |---|---|---|---|
 | 1 | طباعة تيشيرت / طباعة تيشيرتات (+ الرياض، جدة) | Transactional | Dominant on provider pages |
-| 2 | تيشيرت اليوم الوطني / تيشرتات يوم التأسيس | Seasonal transactional | Dozens of Salla/Zid stores rank; almrj3.com yearly listicles — proven spike |
+| 2 | تيشيرت اليوم الوطني / تيشرتات يوم التأسيس | Seasonal transactional | Dozens of Salla/Zid stores rank; almrj3.com yearly listicles, proven spike |
 | 3 | هدايا مخصصة / هدايا بالاسم / تغليف هدايا | Transactional | Verified volumes (Keyword Planner via DataForSEO, Jul 2026): هدايا 60,500/mo; تغليف هدايا 33,100; هدايا رجالية 9,900; هدايا العيد / رمضان / مواليد 5,400 each |
 | 4 | دروبشيبينغ / دروب شيبينق السعودية | Informational-commercial | Salla and Zid both run dropshipping content and bundles |
 | 5 | طباعة حسب الطلب | Commercial | Salla's changelog, Printitle, Riyadh Prints, Mahally |
@@ -148,7 +148,7 @@ Market-share trackers disagree wildly because Salla stores on custom domains are
 ### 3c. Shipping carriers and aggregators
 - Carriers: SMSA (fastest in big cities), Aramex (widest coverage), Naqel, J&T, iMile, SPL/سبل (Saudi Post), Zajel, DHL/FedEx, RedBox lockers.
 - Typical merchant cost 14-35 SAR per parcel; COD fee 4-8 SAR.
-- Aggregators: **OTO** (tryoto.com; 450+ carriers — B7R's actual provider), **Torod**, Salla Shipping and Zid Ship, Barq.
+- Aggregators: **OTO** (tryoto.com; 450+ carriers, B7R's actual provider), **Torod**, Salla Shipping and Zid Ship, Barq.
 - **"Tryvo" is not a courier**: tryvo.net is a Riyadh school-transport app. The brief meant OTO.
 
 ### 3d. Trust signals Saudi visitors expect (legal baseline)
@@ -243,4 +243,4 @@ Trust/legal: laws.boe.gov.sa (E-Commerce Law) · business.sa/eservices · mc.gov
 
 Audience: zawya.com (Monsha'at registrations) · mc.gov.sa/en/mediacenter/News/Pages/15-07-25-01.aspx · monshaat.gov.sa/en/ecommerce · carnegieendowment.org/sada/2025/12 (women in e-commerce) · nadae-shop.com/saudi-national-day-tshirts/ · hightech-eg.net/blog/t-shirt-printing-business-guide-saudi-arabia
 
-Keywords/seasonal: github.com/dahabaaly/arabic-gift-search-demand · almrj3.com/national-day-t-shirts/ · store-tools.ultratechdynamics.com/blog/saudi-shopping-seasons-calendar-guide · deepmarketinsights.com (KSA custom t-shirt market USD 143.5M in 2025, 12.7% CAGR — paid estimate, indicative)
+Keywords/seasonal: github.com/dahabaaly/arabic-gift-search-demand · almrj3.com/national-day-t-shirts/ · store-tools.ultratechdynamics.com/blog/saudi-shopping-seasons-calendar-guide · deepmarketinsights.com (KSA custom t-shirt market USD 143.5M in 2025, 12.7% CAGR, paid estimate, indicative)

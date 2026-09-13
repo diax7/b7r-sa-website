@@ -1,4 +1,4 @@
-# Competitor Teardown — Printful, Printify, Gelato
+# Competitor Teardown: Printful, Printify, Gelato
 
 > Research report generated 2026-09-12 by a background agent (direct fetches + rendered pages + reviewer walkthroughs). Input for the B7R marketing-site BRD. Not the BRD itself. Numbers vary page-to-page on each site; quoted as shown.
 
@@ -25,14 +25,14 @@
 1. Hero.
 2. **"Take the leap and start building your iconic brand today"** → "Get your store up and running within an hour." → 5-step stepper: Design your products → Create an online store → List your products → Set up billing → Sample your creations.
 3. Trust strip: "113 million orders delivered since 2013" / "99.76% order approval rate" / "24/7 Support".
-4. **"Choose from 440 beautiful custom products"** — category tiles.
-5. **"Your passion really can pay — See how much you could make"** (profit teaser).
+4. **"Choose from 440 beautiful custom products"**, category tiles.
+5. **"Your passion really can pay, See how much you could make"** (profit teaser).
 6. Quality: owns every facility, 99.76%.
 7. Support: Live support / Video tutorials / Guides.
-8. Testimonials — 3 quote cards with person + store.
+8. Testimonials, 3 quote cards with person + store.
 9. Stats: 440 products / 1,000,000 items per month / 22 integrations / 113M items.
-10. "Seamlessly connect to any eCommerce site" — logo wall.
-11. "Let's build your brand together" — 4 resource cards.
+10. "Seamlessly connect to any eCommerce site", logo wall.
+11. "Let's build your brand together", 4 resource cards.
 - No homepage FAQ.
 
 **1.4 How it works** (/how-printful-works)
@@ -41,14 +41,14 @@
 
 **1.5 Pricing / profit UX**
 - **/pricing**: Free $0 / **Growth $24.99/mo "Free when you reach $12K/year in sales"** / Enterprise. Then "Here's how much you could make per month". Then the formula: **"Your profit = Retail price – Printful cost"** with 4 numbered lines (You set the retail price → Customers pay you at checkout → You pay Printful for product, fulfillment, shipping → You keep the difference). Per-technique cost breakdown. 7-question FAQ.
-- **/profit-calculator**: 3 parts: "1. How transactions work on your store" with visual equation **"Printful price + Your profit margin (we recommend 30% of the base price) = Retail price"**; "2. How transactions work on your Printful store"; "3. How much profit can I make?" — calculator: **Product** dropdown + thumbnail carousel (default "Unisex Staple T-Shirt, Bella + Canvas 3001 — $11.92"), **Shipping destination**, **Quantity sold**, **Your retail price** (with "Recommended price" hint), **Other expenses** (Taxes %, Platform monthly fee, Product transaction fee, Other monthly fees). Output: **"Your approximate monthly profit"** plus a second figure "with Printful Growth" (upsell in the result).
-- PDP pricing: "Price $11.92 — One print included", bulk "25 items – $10.37 (13% off)", "Shipping starts at $4.95", "Estimated delivery Sep 18–21". No sell-for/profit on PDP.
+- **/profit-calculator**: 3 parts: "1. How transactions work on your store" with visual equation **"Printful price + Your profit margin (we recommend 30% of the base price) = Retail price"**; "2. How transactions work on your Printful store"; "3. How much profit can I make?", calculator: **Product** dropdown + thumbnail carousel (default "Unisex Staple T-Shirt, Bella + Canvas 3001, $11.92"), **Shipping destination**, **Quantity sold**, **Your retail price** (with "Recommended price" hint), **Other expenses** (Taxes %, Platform monthly fee, Product transaction fee, Other monthly fees). Output: **"Your approximate monthly profit"** plus a second figure "with Printful Growth" (upsell in the result).
+- PDP pricing: "Price $11.92, One print included", bulk "25 items – $10.37 (13% off)", "Shipping starts at $4.95", "Estimated delivery Sep 18–21". No sell-for/profit on PDP.
 
 **1.6 Catalog & PDP**
 - Catalog: left nav Products / Collections / Brands; filters for colour, size, material, technique. Cards: name + brand model, "From $…", sizes, rating + count, badges **"new" / "bestseller" / "Eco-friendly"**, technique badge.
 - PDP (Bella+Canvas 3001): "Price $11.92"; **"6151 Reviews" 4.5★**; **"91% of customers recommend"**; badges "Bestseller", "Produced responsibly"; technique tabs DTG / Embroidery / DTFlex; 80+ colour swatches; sizes XS–5XL; CTA **"Start designing"**; tabs Description / Shipping / File guidelines / Source; style & fit, material, features, print-care icons; reviews filterable; Instagram seller posts; live ticker **"Latest orders from Myrtle Beach, US 2 min ago"**; "You might also like". Category pages carry 8-question FAQ.
 
-**1.7 Integrations**: homepage logo wall; /integrations is a **comparison + quiz** ("Find the best Printful integration for your store — Take a quiz") + demo Shopify store; each platform has its own landing page.
+**1.7 Integrations**: homepage logo wall; /integrations is a **comparison + quiz** ("Find the best Printful integration for your store, Take a quiz") + demo Shopify store; each platform has its own landing page.
 
 **1.8 Trust & social proof**: 547 products; 1M+ items/month; 22 integrations; 143M items since 2013; **0.24% reshipment rate**; 99.76% approval; 12 facilities; 190 countries; "#1 POD app by Shopify users"; "4.56/5 from 74,764 reviews". Testimonials always name person + store. /reviews has video wall and a **Printful vs. bulk fulfillment pros/cons table**.
 
@@ -72,35 +72,35 @@
 - H1 **"Create and sell custom products"**; three check-marked proof chips **"100% Free to use" · "1300+ products" · "Global delivery"**; CTA **"Get started for free"**; microcopy **"No credit card required"**; **"Trusted by 10M+ sellers"**; **"4.8 ★ on Shopify"**. Visual: product/creator collage in brand green.
 
 **2.3 Homepage sections in order**
-1. **"Start with $0 investment"** — 3 numbered steps: Select your product / Add your design / Start selling ("You set your profit margin, we take care of production and delivery"). CTAs "Start designing" + "Learn more".
-2. **"Your next bestseller awaits"** — horizontal chip carousel (T-shirts, Sweatshirt, Mugs, Hoodie, Kids, Stickers, Phone cases, Posters, Candles, Bags).
-3. **"Ideas and inspiration"** — gallery of finished merch.
-4. **"See how much you can make:"** — inline calculator: "Choose a product" carousel (T-shirt, Hoodie, Socks, Phone case, Notebook, Poster…) → "Fulfillment cost*: $9.64" → "Sell it for: **$20** · Daily sales: **1**" → **"Your monthly earnings: $321.16"** → "Start designing". Footnote: "*The production cost includes the fulfillment price of one item with one print. It doesn't include shipping fees, taxes…".
-5. **"Real people use Printify"** — video testimonial: "…it allowed me to quit my job within 9 months. Now I'm in Bali…" — Christina Umerez, Toronto.
-6. **"Connect and start selling"** — logo row (Shopify, Etsy, TikTok, Amazon…) → "See all integrations".
-7. **"As seen in:"** — Business Insider, Daily Mail, Entrepreneur, CNBC, Forbes, WaPo, WSJ.
-8. **"Printify is where your customers are:"** — 60M+ orders / 209 countries / 141 facilities.
-9. **"Everything you need to start your own online business"** — 6 community cards with numbers.
+1. **"Start with $0 investment"**, 3 numbered steps: Select your product / Add your design / Start selling ("You set your profit margin, we take care of production and delivery"). CTAs "Start designing" + "Learn more".
+2. **"Your next bestseller awaits"**, horizontal chip carousel (T-shirts, Sweatshirt, Mugs, Hoodie, Kids, Stickers, Phone cases, Posters, Candles, Bags).
+3. **"Ideas and inspiration"**, gallery of finished merch.
+4. **"See how much you can make:"**, inline calculator: "Choose a product" carousel (T-shirt, Hoodie, Socks, Phone case, Notebook, Poster…) → "Fulfillment cost*: $9.64" → "Sell it for: **$20** · Daily sales: **1**" → **"Your monthly earnings: $321.16"** → "Start designing". Footnote: "*The production cost includes the fulfillment price of one item with one print. It doesn't include shipping fees, taxes…".
+5. **"Real people use Printify"**, video testimonial: "…it allowed me to quit my job within 9 months. Now I'm in Bali…", Christina Umerez, Toronto.
+6. **"Connect and start selling"**, logo row (Shopify, Etsy, TikTok, Amazon…) → "See all integrations".
+7. **"As seen in:"**, Business Insider, Daily Mail, Entrepreneur, CNBC, Forbes, WaPo, WSJ.
+8. **"Printify is where your customers are:"**, 60M+ orders / 209 countries / 141 facilities.
+9. **"Everything you need to start your own online business"**, 6 community cards with numbers.
 10. **"Get started today 100% free"** → "Get started".
 - No homepage FAQ.
 
 **2.4 How it works** (/how-it-works/): **"Launch your business in 4 easy steps": 1. Select → 2. Create → 3. Publish → 4. Make money risk-free**, each with its own CTA ("Choose your product" / "Start designing" / "Connect your store" / "Start earning"). Homepage uses 3 steps; POD page uses 5.
 
-**2.5 Pricing / profit UX** — the strongest of the three
+**2.5 Pricing / profit UX**, the strongest of the three
 - **/pricing**: "Start for free, then scale with unmatched pricing"; monthly/yearly toggle; Free $0 · **Premium "From $39/month or $24.99/month billed yearly (save 36%)"** · Enterprise; feature matrix. Then **"See how much you could make"**: 5 product tabs each with base cost (Jersey Tee $8.77, Hoodie $15.89, Socks $5.29, Tough cases $10.73, Canvas); inputs "Sell it for:" and "Daily sales:" → "Your monthly earnings". FAQ: "a tee with an $8.77 fulfillment cost sold at $19.99 earns over $11 per sale."
-- **/t-shirt-pricing-calculator**: margin-first inputs — "T-shirt cost: $8.80", "Additional costs: $4", "Desired profit margin: 40%" → "T-shirt retail price: $21.33" and "Your Profit: $8.53".
-- **Category page pattern** (/custom-t-shirts/): "Know your profit before you sell" — three worked rows at 40/50/60% margins: "Gildan 5000: cost $8.80 → sell $14.67 → profit $5.87 · Bella+Canvas 3001: cost $10.98 → sell $21.96 → profit $10.98 · Comfort Colors 1717: cost $12.79 → sell $31.98 → profit $19.19" + "Calculate profit".
-- **Card/PDP pattern**: every card shows two prices — **"From $10.98" and "From $8.77 with Printify Premium"**. In-app: **new listings default to a 40% profit margin**; "Automated Profit Calculator" in dashboard.
+- **/t-shirt-pricing-calculator**: margin-first inputs, "T-shirt cost: $8.80", "Additional costs: $4", "Desired profit margin: 40%" → "T-shirt retail price: $21.33" and "Your Profit: $8.53".
+- **Category page pattern** (/custom-t-shirts/): "Know your profit before you sell", three worked rows at 40/50/60% margins: "Gildan 5000: cost $8.80 → sell $14.67 → profit $5.87 · Bella+Canvas 3001: cost $10.98 → sell $21.96 → profit $10.98 · Comfort Colors 1717: cost $12.79 → sell $31.98 → profit $19.19" + "Calculate profit".
+- **Card/PDP pattern**: every card shows two prices, **"From $10.98" and "From $8.77 with Printify Premium"**. In-app: **new listings default to a 40% profit margin**; "Automated Profit Calculator" in dashboard.
 
 **2.6 Catalog & PDP** (app-rendered): tabs **For you / Men / Women / Kids / Accessories / Home and Living**; curated rows "Explore Printify's best", "Starter essentials", "Top New Arrivals". Card: title · brand + model · **"From USD 8.11 / From USD 6.04 with Premium"** · "9 sizes" · "66 colors" · "18 print providers" · badges **Bestseller / New / Early Access**. PDP: print-provider selector with "Printify Choice" summary (lowest price, shipping "From USD 3.99", fastest "1.1 days", "Quality Promise"); provider comparison by price / location / production time / rating; size-guide table; care icons.
 
 **2.7 Integrations** (/integrations/): "Connect to sell everywhere"; "Join over 10 million people selling with Printify. Based on 6000+ reviews on Trustpilot". Cards grouped **Marketplaces** (Etsy "96 million active buyers", TikTok "US only", eBay, Amazon) / **eCommerce stores** (Shopify, Squarespace, Wix, Woo, Big Cartel, PrestaShop, BigCommerce) / **Pop-up & API**; one benefit line each. 3-step "Connect your store and watch the profits roll in"; 7 seller quotes; 5 FAQs.
 
-**2.8 Trust**: "Trusted by 10M+ sellers"; 4.8 Shopify; "Rated Excellent 4.8 — 6000+ reviews on Trustpilot"; 60M+ orders; 209 countries; 140+ facilities; 90+ print providers; **"Merchant Protection covers a free reprint or refund within 30 days"**; press logos; community metrics; testimonials with person + store.
+**2.8 Trust**: "Trusted by 10M+ sellers"; 4.8 Shopify; "Rated Excellent 4.8, 6000+ reviews on Trustpilot"; 60M+ orders; 209 countries; 140+ facilities; 90+ print providers; **"Merchant Protection covers a free reprint or refund within 30 days"**; press logos; community metrics; testimonials with person + store.
 
 **2.9 FAQ**: homepage none; pricing 7 ("Do I need to pay for using Printify?", "Can I cancel Premium at any time?", "How can I pay?", "What is Enterprise?", "What do I lose if I downgrade?", "How does Printify make money if the platform is free?", "How much can I earn?"); integrations 5; Pop-Up 6.
 
-**2.10 Blog / resources**: /blog/ — "Knowledge and inspiration for your print-on-demand business"; featured hero → latest → success story → explore. Posts `/blog/<slug>/`; categories `/blog/category/<cat>/` (Marketing, Business tips, eCommerce 101, Success stories, Product inspiration, Design trends); **topic hubs** `/blog/topics/starting-out/`; regional `/blog/uk/`. Card = category chip · title · excerpt · date • read time. **Resource Center**: Blog | Guides | Webinars tabs + search. Guides (e-books), Knowledge Hub, Glossary. In-post: sticky sidebar CTAs, TOC, "Related article" cards, "Pro tip" callouts, comparison tables, quick-answer summary at top.
+**2.10 Blog / resources**: /blog/, "Knowledge and inspiration for your print-on-demand business"; featured hero → latest → success story → explore. Posts `/blog/<slug>/`; categories `/blog/category/<cat>/` (Marketing, Business tips, eCommerce 101, Success stories, Product inspiration, Design trends); **topic hubs** `/blog/topics/starting-out/`; regional `/blog/uk/`. Card = category chip · title · excerpt · date • read time. **Resource Center**: Blog | Guides | Webinars tabs + search. Guides (e-books), Knowledge Hub, Glossary. In-post: sticky sidebar CTAs, TOC, "Related article" cards, "Pro tip" callouts, comparison tables, quick-answer summary at top.
 
 **2.11 Footer**: **Connect** (13 channels) · **Discover** (Brands, Pricing, Deals, Shipping rates, Product Creator, Mockup Generator, Start a clothing brand, Start a POD business…) · **Products** · **Learn** (Blog, Guides, Help Center, Knowledge Hub, platform + POD pages, Glossary) · **Printify** (About, Policies, Jobs, Contact, Reviews, Print Providers, Partner, Quality Promise, Affiliates, Sustainability, Sales, Network Status, Merchant protection, Accessibility, Sitemap). Legal row.
 
@@ -112,36 +112,36 @@
 
 **3.1 Header / nav**: **Products | Shop for yourself | Start selling | Tools and apps | Pricing | Resources | Pro sellers | GelatoConnect** · search · **"EN / USD"** switcher · cart · **"Log in"** · **"Sign up"**. Persistent promo bar + geo prompt. Catalog categories: Bestsellers, New Arrivals, Brands, Men's, Women's, Kids & baby, Elevated Apparel, Hats, Tote Bags, Phone cases, Wall art, Mugs & Bottle, Calendars, Cards, Photo books.
 
-**3.2 Hero** — audience switcher with two tabs:
+**3.2 Hero**, audience switcher with two tabs:
 - **"For creators"**: H1 **"Grow your print on demand business with Gelato"**; sub "Custom products for your store, your team, or just for you. Create with the world's largest print on demand network"; CTAs **"Create for free"** + **"Shop for yourself"**; **"4.8 / 5 based on 963 reviews"** with Shopify logo.
-- **"For print producers"**: "GelatoConnect — …all-in-one software solution for the print industry".
+- **"For print producers"**: "GelatoConnect, …all-in-one software solution for the print industry".
 
 **3.3 Homepage sections**
 1. Stats strip: **90% of all orders are produced locally / 90% of orders arrive within 5 days / 250+ print providers across 32 countries**.
 2. Promo banner (new apparel, 10% off).
 3. Platinum upsell "grow 25%+ faster" → "Get custom quote".
-4. **"Why choose Gelato"** — 7 bullets (largest network; Sell globally, produce locally; 100% free; 60+ logistics partners; quality; smart tools; 1-click integration).
+4. **"Why choose Gelato"**, 7 bullets (largest network; Sell globally, produce locally; 100% free; 60+ logistics partners; quality; smart tools; 1-click integration).
 5. Tools/apps pitch → "Get started".
 6. Closing line. Floating "Contact Us" chat.
 - No testimonials, calculator, integrations wall, or FAQ on the homepage.
 
-**3.4 How it works** — 4 steps reused on every product page: **"Connect your store to Gelato → List your products for sale → Customer places an order → Producing your goods & shipping"**; pricing page 3-step money flow **"You receive an order → You let us know → We produce & deliver"**.
+**3.4 How it works**, 4 steps reused on every product page: **"Connect your store to Gelato → List your products for sale → Customer places an order → Producing your goods & shipping"**; pricing page 3-step money flow **"You receive an order → You let us know → We produce & deliver"**.
 
 **3.5 Pricing / profit UX**
-- **/pricing**: "Monetize your creativity — Sign up for free and only pay for what you sell" → **"Get a sample product"**; 6 tiles (No upfront fees; Payment/currency options; No minimum orders; Monthly and bulk discounts; Multi-currency wallet; Local taxes/VAT); Platinum "Price matching / Free samples"; "30% off your first order (capped at €50)". No public calculator.
+- **/pricing**: "Monetize your creativity, Sign up for free and only pay for what you sell" → **"Get a sample product"**; 6 tiles (No upfront fees; Payment/currency options; No minimum orders; Monthly and bulk discounts; Multi-currency wallet; Local taxes/VAT); Platinum "Price matching / Free samples"; "30% off your first order (capped at €50)". No public calculator.
 - **/subscription-plans**: FREE $0 · **Gelato+ $29.99/mo or $19.99/mo annual** · Platinum; AI tools; 8 FAQs including "How does Gelato+ compare to Printful Growth or Printify Premium?".
 - **In-app "Set Prices" tool**: columns Retail Price / Product Costs / shipping / **Estimated Profit** + %; **default 50% profit margin**; "Price Insights" market distribution. **Price Navigator** (Gelato+): bulk price edits, history, "Price Guide" vs market average, Etsy fees, Shopify "Compare at".
 - PDP: "Gelato's pick" badge, fabric dropdown, fulfillment countries, **"deliver to" dropdown → shipping cost + ETA**, "Start designing"; "we're transparent with our full price list".
 
 **3.6 Catalog**: /custom shows category tiles + "Shipping region" + "Currency"; grid is app-rendered. Marketing product pages (/products/hoodies, /products/mugs) are long SEO pages: H1 + rating, spec bullets ("7.5 oz / 254 g", "55% cotton/45% polyester"), how-it-works, network, 6–8 FAQs; no prices.
 
-**3.7 Integrations**: "Connect your business to Gelato — Shopify, Etsy, WooCommerce, TikTok Shop, Amazon, Wix, Squarespace, BigCommerce, or your custom store via API." Region tags ("US and UK sellers"). **"Switch from any platform in days, not weeks" — Velocity Switch** (AI mapping, explicitly "migrating from Printify, Printful").
+**3.7 Integrations**: "Connect your business to Gelato, Shopify, Etsy, WooCommerce, TikTok Shop, Amazon, Wix, Squarespace, BigCommerce, or your custom store via API." Region tags ("US and UK sellers"). **"Switch from any platform in days, not weeks", Velocity Switch** (AI mapping, explicitly "migrating from Printify, Printful").
 
 **3.8 Trust**: 4.8/5 Shopify; 90%/90%; 250+ partners in 32 countries; 60+ logistics partners; 10M+ orders; "2M+ creators"; named founders; anonymous Platinum ROI quotes. No press logos.
 
 **3.9 FAQ**: homepage 0; products 5 ("What is the most profitable print on demand item?", "What products can be printed on demand?", "Can you make money from Gelato?", "Can you build a brand with print on demand?", "Where do you get your products from?"); integrations 4; subscription 8.
 
-**3.10 Blog**: /blog "The Gelato blog — Empower your creativity with print on demand". Categories as clean paths `/blog/<category>` (Marketing & sales, Print on demand, Product design and trends, Supply chain, Ecommerce storefronts, Business, News); posts `/blog/<slug>`; localized `/it/blog`. Card = image · label + date · title · excerpt · tag chips. Posts open with a **"Main takeaways from this article"** box. Separate **Academy**, Customer Stories, Apps directory, What's new changelog.
+**3.10 Blog**: /blog "The Gelato blog, Empower your creativity with print on demand". Categories as clean paths `/blog/<category>` (Marketing & sales, Print on demand, Product design and trends, Supply chain, Ecommerce storefronts, Business, News); posts `/blog/<slug>`; localized `/it/blog`. Card = image · label + date · title · excerpt · tag chips. Posts open with a **"Main takeaways from this article"** box. Separate **Academy**, Customer Stories, Apps directory, What's new changelog.
 
 **3.11 Footer**: **Print on demand** (What is POD?, Catalog, Shipping, Dropshipping, Pro sellers, White label, Returns, Global yet local, Sustainability, Support) · **Integrations** · **Start selling** (Posters, Canvas, Calendars, Cards, T-shirts, Hoodies, Mugs, Phone cases, POD Europe/UK/France/Canada) · **Company** · legal row · **App Store + Google Play badges** · social.
 
@@ -173,12 +173,12 @@
 - **Inconsistent numbers across pages** (Printful 143M/143.4M/143.9M; Gelato 250+/140+/130+; Printify 1300+ vs 2,000+). Keep one source of truth injected into every template.
 - **Homepage with no proof or path** (Gelato: no testimonials, calculator, FAQ or integration wall; two promo banners and an upsell before any product).
 - **Homepage body that vanishes without JS** (Printful renders hero + steps, then footer). Progressive enhancement matters for Saudi mobile traffic on mid-range Android.
-- **Copy-paste modular blocks across 50 pages** (Gelato) — reads as filler.
+- **Copy-paste modular blocks across 50 pages** (Gelato), reads as filler.
 - **Long English SEO essays disguised as product pages** (Gelato /products/*). Keep marketing pages short; put depth in the blog/guides.
 - **Price display without location context** (Printful "$11.92" until you pick a destination). Show SAR, shipping "+ شحن من 20 ر.س", delivery ETA up front; VAT-inclusive by default per ZATCA norms.
 - **Promo bar + geo-switch + cookie + chat all stacked** (Gelato). One bar maximum; never auto-prompt a region switch to Arabic users already on the Arabic site.
 - **Upsell inside the calculator result** (Printful's "with Printful Growth" second figure) can feel like bait.
-- **Untranslated third-party widgets and mixed numerals** — decide once on Western digits and Arabic text, mirror all icons/arrows, localize the rating widget, chat bubble (bottom-left in RTL) and app badges.
-- **"As seen in" with logos only** (Printify) — without links or dates it reads as decoration.
+- **Untranslated third-party widgets and mixed numerals**, decide once on Western digits and Arabic text, mirror all icons/arrows, localize the rating widget, chat bubble (bottom-left in RTL) and app badges.
+- **"As seen in" with logos only** (Printify), without links or dates it reads as decoration.
 
 Sources: printful.com (/, /pricing, /profit-calculator, /how-printful-works, /print-on-demand, /quick-stores, /custom-products, PDP Bella+Canvas 3001, /integrations, /blog, /academy, /reviews, /shipping), printify.com (/, /pricing/, /how-it-works/, /integrations/, /custom-t-shirts/, /t-shirt-pricing-calculator/, /product-creator/, /pop-up-store/, /resource-center/, /blog/, /app/products, /make-it-your-way/, /press-kit/), gelato.com (/, /pricing, /subscription-plans, /products, /products/hoodies, /products/mugs, /products/t-shirt, /integrations, /platinum, /price-navigator, /academy, /apps, /blog, /custom), support.gelato.com, plus reviewer walkthroughs (stylefactoryproductions.com, cybernaira.com, traksource.com, michaelessek.com) and the June-2025 Printful homepage mirror at clothprinters.com.

@@ -18,3 +18,16 @@ Constitution VIII: features outside the current phase are written here, not buil
 - Home product strip: Dhia's two-swatch card behaviour (ADR-035) stops at the listing and related cards; the strip keeps its expand-on-hover panels because a hover-preview swatch inside an expanding panel would be two hover behaviours in one element and would put the card island on the home route. Revisit only if Dhia names the strip.
 - Designer colour choice: the home designer shows one colour per product (ADR-036); the product page's «جرّب تصميمك عليه» link could carry the chosen colour into the designer if colour returns later.
 - Phase 2b candidates recorded here rather than built: login Turnstile (ADR-027), IndexNow ping and CDN purge from the publish hooks (BRD 9.6), scheduled publish and live preview (BRD 9.3), the remaining collections/globals of BRD 9.4 (pages, home, faqs, testimonials, integrations, redirects) and a weekly `pg_dump` to S3 (BRD 9.2).
+
+## Admin panel (ADR-039, 2026-09-13)
+
+- Payload's edit-view chrome has axe gaps that are its engine's, not the shell's (unnamed
+  drag handles and popup buttons, an unlabelled date input, the tabs list): report upstream and
+  re-check on the next Payload minor; the admin e2e scopes its audit to our surfaces meanwhile.
+- A lenient preview for a half-filled block: today a draft whose block fails the content
+  contract renders the error page under preview (the public site must never render it); a
+  preview could skip the broken block with a notice instead.
+- Dashboard widgets not built: drafts waiting to publish and scheduled publishes (Dhia chose
+  not to), the last backup date (the weekly workflow could post a status the dashboard reads).
+- Live preview (a side panel that updates as you type) stays deferred; the preview button is
+  what Dhia asked for.

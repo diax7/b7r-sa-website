@@ -5,7 +5,7 @@ import type { PayloadRequest } from 'payload';
  * from its forgot-password operation; the adapter that sends them is Resend when
  * `RESEND_API_KEY` is set (ADR-034), else the console.
  */
-export const RESET_SUBJECT = 'إعادة تعيين كلمة المرور — لوحة بحر برنت';
+export const RESET_SUBJECT = 'إعادة تعيين كلمة المرور: لوحة بحر برنت';
 
 const escape = (s: string) =>
   s

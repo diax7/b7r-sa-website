@@ -1,5 +1,6 @@
 import type { CollectionConfig } from 'payload';
 import { isAdmin, isEditorOrAdmin } from '@/modules/cms/access';
+import { savedByField, stampSavedBy } from '@/modules/cms/fields/saved-by';
 
 const ARABIC = /[؀-ۿ]/;
 
@@ -41,6 +42,7 @@ export const Media: CollectionConfig = {
     ],
     adminThumbnail: 'thumbnail',
   },
+  hooks: { beforeChange: [stampSavedBy] },
   fields: [
     {
       name: 'alt',
@@ -65,5 +67,6 @@ export const Media: CollectionConfig = {
       type: 'text',
       label: { ar: 'المصدر (اختياري)', en: 'Credit (optional)' },
     },
+    savedByField,
   ],
 };

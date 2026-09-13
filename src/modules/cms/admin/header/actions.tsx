@@ -8,7 +8,7 @@ import { navGroups } from '@/modules/cms/admin/nav/groups';
  * Header actions (`admin.components.actions`): the palette trigger and the site link. The
  * palette itself mounts here, once per page; the sidebar's search row only fires its event.
  * The searchable collections are the ones the user may read that declare
- * `listSearchableFields` — the palette searches exactly those fields.
+ * `listSearchableFields`, the palette searches exactly those fields.
  */
 export function HeaderActions(props: ServerProps) {
   const { payload, permissions, user, i18n } = props;

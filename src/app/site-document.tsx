@@ -15,6 +15,8 @@ const CONSENT_DEFAULT =
 const FONT_WEIGHTS = ['Regular', 'Medium', 'Bold'] as const;
 
 interface SiteDocumentProps {
+  /** Rendered above the header (the draft-mode bar, ADR-039). */
+  banner?: ReactNode;
   site: SiteSettings;
   navigation: Navigation;
   children: ReactNode;
@@ -26,7 +28,7 @@ interface SiteDocumentProps {
  * analytics scripts. Shared by the site root layout and the global 404, which Next renders
  * outside any layout (ADR-024).
  */
-export function SiteDocument({ site, navigation, children }: SiteDocumentProps) {
+export function SiteDocument({ site, navigation, banner, children }: SiteDocumentProps) {
   // Browsers fetch a weight as soon as any text in the document uses it, so the three weights
   // present on every page (body, nav/buttons, H2s) are preloaded together; the home page adds
   // Black for its H1 (ADR-010). `preload()` emits one deduplicated <link> per font, where a
@@ -52,6 +54,7 @@ export function SiteDocument({ site, navigation, children }: SiteDocumentProps) 
       </head>
       <body className="relative min-h-svh">
         <SkipLink label={navigation.skipLinkLabel} />
+        {banner}
         <Header navigation={navigation} site={site} />
         <main id="content" className="relative">
           {children}

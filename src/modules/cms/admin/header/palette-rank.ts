@@ -1,6 +1,6 @@
 /**
  * Ranking for the command palette (ADR-039): pure, unit-tested. Arabic is folded before
- * matching — diacritics dropped, hamza forms and alef maqsura unified, taa marbuta kept —
+ * matching, diacritics dropped, hamza forms and alef maqsura unified, taa marbuta kept,
  * so «الاسئلة» finds «الأسئلة» and «سياسه» does not silently miss «سياسة».
  */
 export interface Rankable {

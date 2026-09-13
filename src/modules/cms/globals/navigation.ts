@@ -1,6 +1,7 @@
 import type { Field, GlobalConfig } from 'payload';
 import { hiddenUnlessAdmin, isAdmin } from '@/modules/cms/access';
 import { revalidateGlobal } from '@/modules/cms/hooks/revalidate';
+import { savedByField, stampSavedByGlobal } from '@/modules/cms/fields/saved-by';
 
 const navItem: Field[] = [
   {
@@ -44,7 +45,7 @@ export const Navigation: GlobalConfig = {
     },
   },
   access: { read: () => true, update: isAdmin },
-  hooks: { afterChange: [revalidateGlobal] },
+  hooks: { beforeChange: [stampSavedByGlobal], afterChange: [revalidateGlobal] },
   fields: [
     {
       name: 'primary',
@@ -116,5 +117,6 @@ export const Navigation: GlobalConfig = {
       localized: true,
       label: { ar: 'سطر واتساب في القائمة', en: 'Menu WhatsApp line' },
     },
+    savedByField,
   ],
 };

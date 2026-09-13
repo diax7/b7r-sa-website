@@ -1,4 +1,4 @@
-# Tasks: Phase 1b — Rest of the home page
+# Tasks: Phase 1b: Rest of the home page
 
 **Input**: `plan.md` (CTO GO 92/100, 2026-09-13). **Branch**: `phase/1b-home`.
 

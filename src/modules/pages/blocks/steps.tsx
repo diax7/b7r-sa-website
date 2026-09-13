@@ -6,8 +6,8 @@ import { SectionHeader } from '@/components/shared/section-header';
 import type { BlockProps } from '@/modules/pages/blocks/types';
 
 /**
- * The journey (BRD 6.7, amended 2026-09-13): numbered 3D icons on one connected path —
- * across the top from `lg`, down the start side on phones — with a progress line that fills
+ * The journey (BRD 6.7, amended 2026-09-13): numbered 3D icons on one connected path,
+ * across the top from `lg`, down the start side on phones, with a progress line that fills
  * as the track scrolls through the viewport (CSS view timeline; full and static where
  * unsupported or under reduced motion).
  */

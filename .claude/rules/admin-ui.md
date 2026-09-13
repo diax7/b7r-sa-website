@@ -8,7 +8,7 @@ Read `docs/ADMIN-DESIGN-SYSTEM.md` before touching anything under `src/modules/c
 
 1. `admin.group` in Arabic + English, one of the existing groups (المحتوى / الإعدادات /
    الإدارة) unless a new group is a deliberate decision (then add its icon to `GROUP_ICONS`).
-2. One icon in `src/modules/cms/admin/icons.ts` (`COLLECTION_ICONS` / `GLOBAL_ICONS`) —
+2. One icon in `src/modules/cms/admin/icons.ts` (`COLLECTION_ICONS` / `GLOBAL_ICONS`), 
    a noun for a collection, a place for a global. Missing = type error + failing test.
 3. `labels.singular` / `labels.plural` (collections) or `label` (globals) in Arabic + English;
    nouns, never sentences.
@@ -35,7 +35,8 @@ Read `docs/ADMIN-DESIGN-SYSTEM.md` before touching anything under `src/modules/c
 - Icons through `components/shared/icon.tsx`, from the registry when the icon stands for an
   entity. Icon-only buttons carry `aria-label` + `Tooltip`.
 - Strings: Arabic, ux-araby rules (verb-first actions, nominal labels, no «تم», no «قم بـ»,
-  Arabic comma, no «!»). They live in `src/modules/cms/admin/strings.ts`, never inline.
+  Arabic comma, no «!»), and the writing rules in `.claude/rules/writing.md` (no em dashes).
+  They live in `src/modules/cms/admin/strings.ts`, never inline.
 - Roots of our shell carry `data-admin-ui` (the scoped element reset in `admin.css`) and a
   `data-admin-*` hook for the e2e; the sidebar keeps Payload's outer `nav` classes.
 - After adding or renaming a component referenced from the Payload config, run

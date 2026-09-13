@@ -30,8 +30,8 @@ export function loginAllowed(args: {
 }
 
 /**
- * Runs before Payload's login operation — before the password is checked or the attempt
- * counted — so a request without a verified gate cookie never reaches the password oracle
+ * Runs before Payload's login operation, before the password is checked or the attempt
+ * counted, so a request without a verified gate cookie never reaches the password oracle
  * (ADR-034). Fail-open, logged once, when no Turnstile secret is configured.
  */
 export const gateLogin: CollectionBeforeOperationHook = ({ args, operation, req }) => {

@@ -7,14 +7,14 @@ import { isProductionRuntime } from '@/lib/cms/env';
  * import; the client never sees these.
  *
  * The one place that fails hard is `assertProductionEnv()`, run from `instrumentation.ts`
- * at server start and only when `B7R_RUNTIME=production` — a signal set solely in the CranL
+ * at server start and only when `B7R_RUNTIME=production`, a signal set solely in the CranL
  * app, never in CI (which builds and serves on the production origin for the noindex checks).
  * Throwing there fails the container's health check so CranL keeps the previous image.
  */
 export interface NewsletterEnv {
   resendApiKey: string | undefined;
   resendAudienceId: string | undefined;
-  /** `mock` enables the in-memory transport for tests — only ever honoured without a key. */
+  /** `mock` enables the in-memory transport for tests, only ever honoured without a key. */
   transportOverride: string | undefined;
 }
 
@@ -32,7 +32,7 @@ export interface ContactEnv {
   resendFrom: string | undefined;
   contactTo: string | undefined;
   turnstileSecretKey: string | undefined;
-  /** `mock` keeps messages in memory for tests — only ever honoured without a key. */
+  /** `mock` keeps messages in memory for tests, only ever honoured without a key. */
   transportOverride: string | undefined;
 }
 

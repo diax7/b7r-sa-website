@@ -62,7 +62,7 @@ export function AccountMenu({
         <DropdownMenuLabel className="flex items-center justify-between gap-2">
           <span className="truncate">{account.name}</span>
           {role && (
-            <Badge tone={account.role === 'admin' ? 'warning' : 'success'} className="shrink-0">
+            <Badge tone={account.role === 'admin' ? 'success' : 'muted'} className="shrink-0">
               {role}
             </Badge>
           )}

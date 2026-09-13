@@ -51,7 +51,7 @@ async function BottomLine({ line, word }: { line: string; word: string }) {
 /**
  * FAQ entries from the `faqs` collection (BRD 6.10, 6.4.9, 4.9). `all`: every group as an
  * H2 with its own accordion and a sticky group nav on desktop. `home`: a slice of the home
- * entries (offset/limit) beside a title and a link — the how-it-works mini FAQ.
+ * entries (offset/limit) beside a title and a link, the how-it-works mini FAQ.
  */
 export async function FaqListBlock({ block, tone, anchor, heading }: BlockProps<'faqList'>) {
   const first = Boolean(heading);

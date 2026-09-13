@@ -2,6 +2,7 @@ import type { CollectionConfig } from 'payload';
 import { INTEGRATION_PLATFORMS } from '@/content/schema';
 import { isAdmin, isEditorOrAdmin } from '@/modules/cms/access';
 import { revalidateRoutes } from '@/modules/cms/hooks/revalidate';
+import { savedByField, stampSavedBy } from '@/modules/cms/fields/saved-by';
 
 /**
  * Integration tiles (BRD 4.4, 6.4.8): one document per platform. The logo is a brand SVG
@@ -31,6 +32,7 @@ export const Integrations: CollectionConfig = {
     delete: isAdmin,
   },
   hooks: {
+    beforeChange: [stampSavedBy],
     afterChange: [revalidateRoutes(['/'])],
     afterDelete: [revalidateRoutes(['/'])],
   },
@@ -45,7 +47,13 @@ export const Integrations: CollectionConfig = {
           unique: true,
           options: INTEGRATION_PLATFORMS.map((p) => ({ label: p, value: p })),
           label: { ar: 'المنصة', en: 'Platform' },
-          admin: { description: { ar: 'يحدد الشعار', en: 'Selects the logo' } },
+          admin: {
+            description: {
+              ar: 'يحدد الشعار الذي يظهر في الموقع',
+              en: 'Selects the logo shown on the site',
+            },
+            components: { Field: '@/modules/cms/admin/fields/platform-select#PlatformSelect' },
+          },
         },
         {
           name: 'order',
@@ -75,5 +83,6 @@ export const Integrations: CollectionConfig = {
         },
       ],
     },
+    savedByField,
   ],
 };

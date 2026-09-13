@@ -1,4 +1,4 @@
-# Tasks: Phase 2a — Payload core
+# Tasks: Phase 2a: Payload core
 
 **Input**: `plan.md` (CTO review 2026-09-13). **Branch**: `phase/2a-payload-core`.
 
@@ -6,15 +6,15 @@
 - [x] T001 Route groups: move the site into `src/app/(site)/` (layout, page, error, not-found, every page folder except `api/`); keep metadata files, `api/`, `indexnow/`, `global-error.tsx` at the root. The 404 is `global-not-found.tsx` + `site-document.tsx` (ADR-024), not a catch-all. All Level 1 e2e still green.
 - [x] T002 `src/payload.config.ts` (+ `@payload-config` path), `withPayload`, `src/app/(payload)/{layout,custom.css,admin/[[...segments]]/{page,not-found},api/payload/[...slug]/route}`, importMap; `routes.api=/api/payload`, GraphQL off, i18n ar/en, localization ar/en, admin meta + brand icon/logo; admin header set (`adminHeaders()` + unit test); `robots`/`sitemap` unchanged.
 
-## Collections and globals — `src/modules/cms/`
+## Collections and globals: `src/modules/cms/`
 - [x] T003 `access.ts` + `tests/access.test.ts` (role × operation matrix; delete published vs draft).
 - [x] T004 `users.ts` (roles, lockout, cookies, password policy hooks) + `lib/pwned.ts` + `tests/pwned.test.ts`; `scripts/create-admin.ts` (`pnpm admin:create`).
 - [x] T005 `media.ts` (alt Arabic, focal point, sizes, S3/local storage) + `sharp` to dependencies.
 - [x] T006 `products.ts` (fields 1:1, drafts+autosave, price validation, plugin-seo, Arabic labels/help texts) and globals `site-settings.ts`, `navigation.ts`, `seo-defaults.ts` with BRD defaults; `hooks/revalidate.ts` + `tests/revalidate-hook.test.ts`.
 - [x] T007 Migrations: `pnpm payload migrate:create initial` → `src/migrations/`; `push: false`; `prodMigrations` gated off during build.
 
-## Data layer and call sites — `src/lib/cms/`
-- [x] T008 `payload.ts`, `products.ts`, `settings.ts` (Local API `draft:false`, `locale:'ar'`, `React.cache` per render — ISR instead of tags, ADR-030; zod-parsed) + `lib/image-url.ts optimizedSrc` + `tests/cms-mapping.test.ts`.
+## Data layer and call sites: `src/lib/cms/`
+- [x] T008 `payload.ts`, `products.ts`, `settings.ts` (Local API `draft:false`, `locale:'ar'`, `React.cache` per render, ISR instead of tags, ADR-030; zod-parsed) + `lib/image-url.ts optimizedSrc` + `tests/cms-mapping.test.ts`.
 - [x] T009 Switch call sites (enumerate with `rg "from '@/content/(products|site|navigation|seo)'"`): pages' `metadata` → `generateMetadata`, header/footer/ribbon/contact/strip/designer/products/sitemap/OG script/JSON-LD; designer `useImage` via `optimizedSrc`; `next.config` `images.remotePatterns`.
 - [x] T010 Seed fixtures `src/content/seed/*`; delete `src/content/{site,navigation,seo,products}.ts`; `scripts/migrate-content.ts` (create-only, `--force` guard); `scripts/build-og.ts` reads Payload when configured; verbatim + schema tests re-pointed.
 
@@ -41,6 +41,6 @@
   deploy); JSON-LD/sitemap share `absoluteUrl` for S3 media; the password policy throws a
   `ValidationError` (400, inline) from `beforeValidate` only; globals hidden from editors in
   the panel; SVG uploads dropped; print area validated at the API; `.gitattributes` LF;
-  `@payloadcms/plugin-seo` removed (never imported — the BRD 4.16 templates cover titles and
+  `@payloadcms/plugin-seo` removed (never imported, the BRD 4.16 templates cover titles and
   descriptions; the plugin returns with `pages` in 2b if wanted); `lib/cms/env.ts` moved out
   of the module so `lib` no longer imports `modules`.

@@ -9,7 +9,7 @@
  * is the one sanctioned exception). Raw hex is allowed in `globals.css` (where the tokens are
  * defined) and in `content/products.ts` (colour swatches are data, not styling).
  *
- * Usage: `pnpm check:rtl` — exits 1 and prints `file:line` for every violation.
+ * Usage: `pnpm check:rtl`, exits 1 and prints `file:line` for every violation.
  */
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
@@ -81,11 +81,11 @@ const isMain = process.argv[1]?.replace(/\\/g, '/').endsWith('scripts/check-rtl-
 if (isMain) {
   const violations = checkDirectory(process.cwd());
   if (violations.length === 0) {
-    console.log('check:rtl — no physical-direction classes or raw hex found.');
+    console.log('check:rtl: no physical-direction classes or raw hex found.');
   } else {
     for (const v of violations) console.error(`${v.file}:${v.line}  [${v.rule}]  ${v.text.trim()}`);
     console.error(
-      `\ncheck:rtl — ${violations.length} violation(s). Use logical utilities (ms- me- ps- pe- start- end- text-start text-end) and @theme tokens.`,
+      `\ncheck:rtl, ${violations.length} violation(s). Use logical utilities (ms- me- ps- pe- start- end- text-start text-end) and @theme tokens.`,
     );
     process.exit(1);
   }

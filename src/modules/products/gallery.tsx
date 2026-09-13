@@ -25,7 +25,7 @@ interface GalleryProps {
 
 /**
  * Product gallery (BRD 6.6, amended 2026-09-13): one 1:1 photo of the active colour that
- * shows the back while hovered (pointer) or after a tap/click/Enter (touch, keyboard —
+ * shows the back while hovered (pointer) or after a tap/click/Enter (touch, keyboard,
  * ArrowLeft/ArrowRight flip too), a visible front/back toggle under it so the back is
  * discoverable on a phone, and the colour swatches. No thumbnails, no counter: a visually
  * hidden live region announces colour and side for screen readers.
@@ -66,7 +66,7 @@ export function Gallery({ productName, colors, copy }: GalleryProps) {
       >
         <Image
           src={color.images.front}
-          alt={`${productName} — ${color.name}، ${copy.front}`}
+          alt={`${productName}، ${color.name}، ${copy.front}`}
           fill
           sizes="(min-width: 1024px) 560px, 100vw"
           priority
@@ -78,7 +78,7 @@ export function Gallery({ productName, colors, copy }: GalleryProps) {
         {color.images.back && (
           <Image
             src={color.images.back}
-            alt={`${productName} — ${color.name}، ${copy.back}`}
+            alt={`${productName}، ${color.name}، ${copy.back}`}
             fill
             sizes="(min-width: 1024px) 560px, 100vw"
             className={cn(

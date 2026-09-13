@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { hasDraftCookie } from '@/lib/cookies';
 import { goneHtml } from '@/lib/gone-page';
 import { createSlugCache, SLUG_SHAPE } from '@/lib/page-slugs';
 import { isGone } from '@/lib/redirects';
@@ -7,12 +8,14 @@ import { NOT_FOUND_PREFIX, topLevelSlug } from '@/lib/site-routes';
 /**
  * Two jobs (BRD 5.2, ADR-017, ADR-032). Retired WordPress URLs answer 410 Gone (`next.config`
  * redirects cannot emit 410). Unknown top-level URLs are rewritten to a path no route matches,
- * so Next renders `global-not-found` server-side with status 404 and the URL unchanged —
+ * so Next renders `global-not-found` server-side with status 404 and the URL unchanged,
  * without this the `/[slug]` route would answer them from a bare document (ADR-024). The
  * allowlist is the published pages, read from the loopback address (never the public origin)
  * and cached in-process for 20 s with stale-while-revalidate; when it cannot be read the
- * request passes through (fail open). The matcher lists the code-owned segments as literals
- * because Next reads `config` statically; `tests/site-routes.test.ts` keeps them in sync.
+ * request passes through (fail open). A request carrying Next's draft cookie passes through
+ * too: an editor previewing an unpublished page (ADR-039) is not on the allowlist yet. The
+ * matcher lists the code-owned segments as literals because Next reads `config` statically;
+ * `tests/site-routes.test.ts` keeps them in sync.
  */
 const SLUGS_TTL_MS = 20_000;
 
@@ -41,6 +44,7 @@ export async function proxy(request: Request) {
   }
   const slug = topLevelSlug(url.pathname);
   if (slug === null) return undefined;
+  if (hasDraftCookie(request.headers.get('cookie'))) return undefined;
   const notFound = () => NextResponse.rewrite(new URL(`${NOT_FOUND_PREFIX}${slug}`, url));
   if (!SLUG_SHAPE.test(slug)) return notFound();
   const known = await slugs.knows(slug);

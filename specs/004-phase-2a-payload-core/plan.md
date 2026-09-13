@@ -1,4 +1,4 @@
-# Implementation Plan: Phase 2a — Payload core
+# Implementation Plan: Phase 2a: Payload core
 
 **Branch**: `phase/2a-payload-core` | **Date**: 2026-09-13 | **Spec**: `specs/004-phase-2a-payload-core/spec.md`
 
@@ -24,19 +24,19 @@ though 2a stores plain text; used by `description` on products), `graphql` (peer
 | # | Gate | Pass? |
 |---|---|---|
 | I | RTL | Admin: `ar` from `@payloadcms/translations`, Payload flips `dir` for `ar`; public unchanged |
-| II | Static | Yes — pages still prerender at build (DB reachable at build: Postgres service in CI; production images are built by CI after `payload migrate` and pushed to GHCR for CranL to pull; CranL-builds-from-Dockerfile is the documented fallback), refresh only via tags/paths |
+| II | Static | Yes, pages still prerender at build (DB reachable at build: Postgres service in CI; production images are built by CI after `payload migrate` and pushed to GHCR for CranL to pull; CranL-builds-from-Dockerfile is the documented fallback), refresh only via tags/paths |
 | III | Copy | Migrated content is the BRD copy, seeded from `src/content/seed/*` which keep the verbatim test |
 | IV | Budgets | Public pages load no Payload JS; LHCI five URLs unchanged; admin excluded |
 | V | Tokens | Admin uses Payload's own theme (out of the design system by design); brand icon + title only |
 | VI | No fabrication | Seed = existing content; testimonials untouched (2b) |
-| VII | Modules | `src/lib/cms/` (Local API + cache) is `lib`; the admin is a feature block: `src/modules/cms/` (config, collections, globals, access, hooks; `index.ts` exports the config) — no new top-level folder (ADR-024); seed fixtures are content: `src/content/seed/` |
+| VII | Modules | `src/lib/cms/` (Local API + cache) is `lib`; the admin is a feature block: `src/modules/cms/` (config, collections, globals, access, hooks; `index.ts` exports the config), no new top-level folder (ADR-024); seed fixtures are content: `src/content/seed/` |
 | VIII | ADRs | ADR-024 `modules/cms` + route groups, ADR-025 build-time DB with the CI-built image as the primary deploy path, ADR-026 create-only seed migration, ADR-027 login Turnstile designed for 2b + HIBP now, ADR-028 admin header set, ADR-029 media served same-origin through `next/image` |
 | IX | Tests | listed per area below |
 | X | No attribution | Yes |
 
 ## Approach
 
-### A. Wiring — `src/payload.config.ts`, `src/app/(payload)/`, `next.config.ts`
+### A. Wiring: `src/payload.config.ts`, `src/app/(payload)/`, `next.config.ts`
 - `withPayload(nextConfig)`; `tsconfig` path `@payload-config` → `src/payload.config.ts`.
 - Move `src/app/{layout,page,error,not-found}.tsx` and every route folder except `api/`,
   the metadata files and `indexnow/` into `src/app/(site)/`; `api/{contact,newsletter,health}`
@@ -52,27 +52,27 @@ though 2a stores plain text; used by `description` on products), `graphql` (peer
   `admin.meta.titleSuffix ' | لوحة بحر برنت'`, custom `Logo`/`Icon` components (brand icon).
 - Headers: `/admin/:path*` and `/api/payload/:path*` get `X-Robots-Tag: noindex, nofollow`
   and their own CSP from `lib/security-headers.ts` `adminHeaders()` (the public policy is
-  the starting point; `'unsafe-eval'` added only if the admin bundle needs it — verified at
+  the starting point; `'unsafe-eval'` added only if the admin bundle needs it, verified at
   build and asserted by a unit test). `robots.ts` already disallows `/admin/` and `/api/`;
   `sitemap.ts` reads routes, never admin. `(site)/[...missing]` catches unknown site paths;
-  `/api/*` unknown paths are outside the group and keep Next's JSON-less 404 — the existing
+  `/api/*` unknown paths are outside the group and keep Next's JSON-less 404, the existing
   `/api/nope` behaviour is asserted in the routes e2e.
 
-### B. Collections and globals — `src/modules/cms/`
+### B. Collections and globals: `src/modules/cms/`
 - `access.ts`: `isAdmin`, `isEditorOrAdmin`, `isAdminOrSelf`, `canDeleteProduct` (admin, or
   editor when `_status !== 'published'`), `publishedOnly` for anonymous reads
   (`{ _status: { equals: 'published' } }`), `hideFromEditor` field access for verification
   tokens.
 - `users.ts`: auth (`maxLoginAttempts: 5`, `lockTime: 15 * 60 * 1000`, `cookies: { sameSite: 'Lax', secure: isProduction }`), fields `name`, `role` (select, admin-only update),
   password policy in a `beforeValidate` hook and again in `beforeChange` on `password`
-  (covers `create`, `update` and `resetPassword`, Local API included — the `admin:create`
+  (covers `create`, `update` and `resetPassword`, Local API included, the `admin:create`
   script goes through the same hooks and is tested): length ≥ 12 + `lib/pwned.ts` (SHA-1
   prefix to `https://api.pwnedpasswords.com/range/`, fail-open with `console.warn`); Arabic
   labels. Login Turnstile ships in 2b with the design in ADR-027: `admin.components.beforeLogin`
   renders the widget, its callback writes the token to a short-lived cookie, and the users
   `auth.beforeLogin`-equivalent (`hooks.beforeLogin`) reads it from `req.headers`, verifies
-  with Cloudflare through `lib/turnstile.ts`, and throws on failure — no view replacement.
-- `media.ts`: upload, `alt` (required, Arabic — regex on Arabic letters), `focalPoint: true`,
+  with Cloudflare through `lib/turnstile.ts`, and throws on failure, no view replacement.
+- `media.ts`: upload, `alt` (required, Arabic, regex on Arabic letters), `focalPoint: true`,
   `imageSizes` thumbnail 400, card 800, hero 1920, og 1200×630 (`fit: cover`), `mimeTypes`
   images; storage: `@payloadcms/storage-s3` when `S3_BUCKET` is set (public read via bucket
   policy, `prefix: 'media'`), else `staticDir: 'public/media'` (gitignored; `next start`
@@ -87,7 +87,7 @@ though 2a stores plain text; used by `description` on products), `graphql` (peer
   `img-src` stays `'self' data: blob: …`. CI runs the e2e twice: the full suite on local disk
   and `admin.spec.ts` + `csp.spec.ts` + `products.spec.ts` against MinIO (`docker run` step),
   so the S3 URL shape is exercised before CranL. RUNBOOK: the CDN zone covers
-  `/_next/static`, `/_next/image`, `/images`, `/fonts`, `/video`, `/media` only — never HTML
+  `/_next/static`, `/_next/image`, `/images`, `/fonts`, `/video`, `/media` only, never HTML
   (Next's `s-maxage` on prerendered pages would otherwise defeat `revalidateTag`); a purge step
   joins the 2b IndexNow hook.
 - `products.ts`: fields 1:1 with `Product` (slug unique, name, shortDescription, description
@@ -104,13 +104,13 @@ though 2a stores plain text; used by `description` on products), `graphql` (peer
   (`/`, `/products`, `/products/{slug}`, `/sitemap.xml`); globals → their tag + `/` and the
   routes that read them; skipped when `context.disableRevalidate` (migration) or during build.
 
-### C. Data layer — `src/lib/cms/`
+### C. Data layer: `src/lib/cms/`
 - `payload.ts`: `getPayloadClient()` (cached `getPayload({ config })`).
-- `products.ts`: `getProducts()`, `getProduct(slug)` — `unstable_cache(fn, key incl. locale, { tags })`,
+- `products.ts`: `getProducts()`, `getProduct(slug)`, `unstable_cache(fn, key incl. locale, { tags })`,
   Local API with `draft: false` (explicit: the Local API bypasses access, so published-only
   is a read option, not an access rule) and `locale: 'ar'`, mapped to `Product` and parsed
   with `ProductSchema`; image URLs from media (S3 URL or `/media/...`).
-- `settings.ts`, `navigation.ts`, `seo.ts` — same shape, mapped to `SiteSettings`, `Navigation`,
+- `settings.ts`, `navigation.ts`, `seo.ts`, same shape, mapped to `SiteSettings`, `Navigation`,
   `PageSeo[]` (+ `getSeo(route)` keeps its signature, now async). Call sites of `getSeo` /
   `buildMetadata` (every `page.tsx` `metadata` export becomes `generateMetadata`), `site`,
   `navigation`, `products`, `getProduct`, `stripColorFor` are enumerated in `tasks.md` so none
@@ -119,16 +119,16 @@ though 2a stores plain text; used by `description` on products), `graphql` (peer
   (server components and route metadata). Client islands keep receiving props. `content/schema.ts`
   stays the type source; `src/seed/` holds the fixtures.
 - `sitemap.ts`, `og` script, `build-og.ts`, `strip`, `designer` (product list prop), footer,
-  header, ribbon, contact page — each switched to the data layer; `scripts/build-og.ts` reads
+  header, ribbon, contact page, each switched to the data layer; `scripts/build-og.ts` reads
   the seed (design-time asset).
 
-### D. Migration and seed — `scripts/migrate-content.ts`, `src/content/seed/`
+### D. Migration and seed: `scripts/migrate-content.ts`, `src/content/seed/`
 - Seed fixtures: `src/content/seed/{site,navigation,seo,products}.ts` (moved files; schema
   test and verbatim test point at them). BRD §9.7 amended: the fixtures stay as the
   deterministic empty-database seed; Payload is the runtime source of truth.
 - Script (**create-only**, ADR-026): refuses to run when the database already holds any
   product or a filled global unless `--force` is passed (prints what exists and exits 2); with
-  or without `--force` it never overwrites an existing document — it creates what is missing
+  or without `--force` it never overwrites an existing document, it creates what is missing
   and logs every skip. For each product: upload front/back photos from `public/images/products`
   into media (alt from the existing card alt text; skip when a media doc with the same
   `filename` exists) → create the product (`_status: 'published'`,
@@ -181,7 +181,7 @@ though 2a stores plain text; used by `description` on products), `graphql` (peer
   second run without `--force` exits 2 and changes nothing; with `--force` exits 0 and
   changes nothing; `admin:create` with a 10-char password fails; `payload.db.migrateStatus()`
   clean.
-- E2E: `admin.spec.ts` — login page `html[lang=ar][dir=rtl]`, title suffix; admin logs in;
+- E2E: `admin.spec.ts`, login page `html[lang=ar][dir=rtl]`, title suffix; admin logs in;
   editor session via REST cannot list users (403), cannot PATCH site-settings (403), cannot
   DELETE a published product (403) but can PATCH a draft; product edit + publish → GET
   `/products/{slug}` shows the new text within 60 s (poll); `/admin` has `X-Robots-Tag` and

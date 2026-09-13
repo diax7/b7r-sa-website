@@ -88,6 +88,9 @@ jobs:
       - name: RTL class check
         run: pnpm check:rtl
 
+      - name: No em dashes (writing rule)
+        run: pnpm check:dash
+
       - name: Unit tests
         run: pnpm test
 
@@ -132,7 +135,7 @@ jobs:
           retention-days: 14
 
   s3:
-    name: Media on S3 (MinIO) — admin, CSP, products, machine files
+    name: Media on S3 (MinIO), admin, CSP, products, machine files
     runs-on: ubuntu-latest
     timeout-minutes: 20
     services:

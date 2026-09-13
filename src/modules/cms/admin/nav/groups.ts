@@ -18,12 +18,12 @@ export interface NavGroup {
   entities: NavEntity[];
 }
 
-/** `{ groups: { [label]: { open } } }` — the shape Payload's own nav stores under `nav`. */
+/** `{ groups: { [label]: { open } } }`, the shape Payload's own nav stores under `nav`. */
 export type NavPrefs = { groups?: Record<string, { open?: boolean }> } | null;
 
 /**
  * The entities the signed-in user may open, grouped the way Payload groups them (by the
- * translated `admin.group`), minus `admin.hidden` ones — the same rule the default nav uses,
+ * translated `admin.group`), minus `admin.hidden` ones, the same rule the default nav uses,
  * shared by the sidebar and the command palette so they never disagree.
  */
 export function navGroups(args: {

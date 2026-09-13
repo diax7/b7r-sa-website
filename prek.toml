@@ -1,4 +1,4 @@
-# prek (https://github.com/j178/prek) git hooks — typecheck + lint + RTL check on commit.
+# prek (https://github.com/j178/prek) git hooks: typecheck, lint, RTL and em-dash checks on commit.
 # Install with: prek install
 [[repos]]
 repo = "local"
@@ -21,5 +21,12 @@ pass_filenames = false
 id = "check-rtl"
 name = "pnpm check:rtl"
 entry = "pnpm check:rtl"
+language = "system"
+pass_filenames = false
+
+[[repos.hooks]]
+id = "check-dash"
+name = "pnpm check:dash"
+entry = "pnpm check:dash"
 language = "system"
 pass_filenames = false

@@ -4,6 +4,7 @@ import {
   Compass,
   Eye,
   FileText,
+  Heart,
   House,
   Image,
   LayoutGrid,
@@ -13,16 +14,20 @@ import {
   Search,
   Settings2,
   Shield,
+  ShieldCheck,
   Shirt,
   SlidersHorizontal,
+  Target,
   Users,
+  Workflow,
+  Zap,
 } from 'lucide-react';
 import type { Config } from '@/payload-types';
 
 /**
  * The one place an admin icon is chosen (ADR-039, `.claude/rules/admin-ui.md`). The key
  * types are derived from the generated config, so a new collection or global without an
- * entry here is a type error — and `tests/admin-icons.test.ts` walks the runtime config too.
+ * entry here is a type error, and `tests/admin-icons.test.ts` walks the runtime config too.
  */
 export type CollectionSlug = Exclude<keyof Config['collections'], `payload-${string}`>;
 export type GlobalSlug = keyof Config['globals'];
@@ -65,6 +70,16 @@ export function groupIcon(label: string): LucideIcon | undefined {
 }
 
 export const ACTION_ICONS = { viewSite: Eye } as const;
+
+/** The lucide names the content selects offer (`CARD_ICONS`, `WHY_US_ICONS`), for the picker. */
+export const WIDGET_ICONS: Record<string, LucideIcon> = {
+  ShieldCheck,
+  Workflow,
+  Zap,
+  Target,
+  Eye,
+  Heart,
+};
 
 export function entityIcon(type: 'collections' | 'globals', slug: string): LucideIcon | undefined {
   return type === 'collections'

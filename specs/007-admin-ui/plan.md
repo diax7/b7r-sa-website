@@ -2,18 +2,18 @@
 
 **Branch**: `admin/ui-1` (from `main` after PR #3 merges) | **Date**: 2026-09-13 |
 **Spec**: `specs/007-admin-ui/spec.md`
-**CTO plan review**: 2026-09-13, GO 90 — amendments folded below (proxy passthrough on the draft
+**CTO plan review**: 2026-09-13, GO 90, amendments folded below (proxy passthrough on the draft
 cookie and unfiltered draft reads; `lastPublishedBy` as a name snapshot; palette search rules; a
 config-shape test instead of a wrapper; ADR-039; contrast and CSS-scanning notes).
 
 ## Summary
 
 Payload keeps rendering the edit and list views; we own everything around them. Three
-reviewed phases: (1) the foundation — B7R tokens on Payload's dark theme, Tailwind and the
+reviewed phases: (1) the foundation, B7R tokens on Payload's dark theme, Tailwind and the
 shadcn primitives available inside the admin, an icon registry, the written design system and
-the rules file; (2) the shell — sidebar with icons and groups, header with a command palette
-and a "view site" link, account menu, branded login; (3) the dashboard — quick actions, system
-health, recent activity — plus the preview button (Next draft mode), the field widgets, and
+the rules file; (2) the shell, sidebar with icons and groups, header with a command palette
+and a "view site" link, account menu, branded login; (3) the dashboard, quick actions, system
+health, recent activity, plus the preview button (Next draft mode), the field widgets, and
 Arabic descriptions and columns on every collection. Dark only, by Dhia's choice.
 
 ## Technical context (verified against `@payloadcms/ui` / `@payloadcms/next` 3.89.0)
@@ -27,7 +27,7 @@ Arabic descriptions and columns on every collection. Dark only, by Dhia's choice
   Arabic strings Payload owns. `admin.theme: 'dark'` removes the light theme.
 - **CSS layering**: Payload's styles live in `@layer payload-default, payload` (app.scss:1).
   Unlayered CSS wins over any layer, so Tailwind utilities imported **without** `layer()`
-  (`@import 'tailwindcss/theme.css'; @import 'tailwindcss/utilities.css';` — no preflight,
+  (`@import 'tailwindcss/theme.css'; @import 'tailwindcss/utilities.css';`, no preflight,
   Payload keeps its resets) style our components without `!important`, and brand overrides
   of Payload's own elements go in `@layer payload` as Payload documents.
 - **Tokens**: the admin stylesheet declares `@theme inline` tokens with the **same names the
@@ -60,7 +60,7 @@ src/modules/cms/admin/
   nav/nav-client.tsx       # client: collapsible groups (prefs key `nav`), active state, site link
   header/actions.tsx       # server → <HeaderActions/> client: palette trigger + "view site"
   header/palette.tsx       # client: Ctrl/⌘K dialog, entities + document search (REST)
-  header/palette-rank.ts   # pure: rank(query, items) — unit-tested
+  header/palette-rank.ts   # pure: rank(query, items), unit-tested
   account/settings-menu.tsx, account/logout-button.tsx
   login/after-login.tsx    # one line under the form (who to ask for access)
   dashboard/dashboard.tsx  # server view inside DefaultTemplate
@@ -77,7 +77,7 @@ docs/ADMIN-DESIGN-SYSTEM.md, .claude/rules/admin-ui.md, docs/DECISIONS.md ADR-03
 `src/modules/cms/admin/**` is server/client React for the panel only; it may import
 `@payloadcms/ui` and `payload`. Nothing under `src/modules/home|pages|products` imports it.
 
-## Phase 1 — Foundation (tokens, primitives, icons, design system)
+## Phase 1: Foundation (tokens, primitives, icons, design system)
 
 - `admin.theme: 'dark'`; `src/app/(payload)/admin.css` (replaces `custom.css`): `@font-face`,
   `@theme inline` token map, Tailwind theme + utilities (unlayered, scoped `@source`),
@@ -91,7 +91,7 @@ docs/ADMIN-DESIGN-SYSTEM.md, .claude/rules/admin-ui.md, docs/DECISIONS.md ADR-03
   slug in the config, plus group and action icons; `tests/admin-icons.test.ts` fails when a
   slug has none. `tests/admin-config.test.ts` walks every collection and global and asserts
   `admin.group`, Arabic `labels`, `admin.description`, `useAsTitle` and `defaultColumns`
-  (collections) — the "future things" guarantee without a `defineCollection` wrapper (CTO).
+  (collections), the "future things" guarantee without a `defineCollection` wrapper (CTO).
 - `docs/ADMIN-DESIGN-SYSTEM.md`: principles (one product, Arabic first, icon + label always,
   one primary action per view, explain before you toggle), tokens table, type scale,
   spacing, the primitives and when to use each, icon rules (lucide, 20 px in nav, 16 px
@@ -99,7 +99,7 @@ docs/ADMIN-DESIGN-SYSTEM.md, .claude/rules/admin-ui.md, docs/DECISIONS.md ADR-03
   writing rules for labels/descriptions/empty states (ux-araby: verb-first actions, nominal
   labels, no «تم», no «قم بـ»), states (empty, loading, error, disabled), a11y (contrast
   AA on the dark surface, focus visible, keyboard).
-- `.claude/rules/admin-ui.md`: the checklist for a new collection/global — `admin.group`,
+- `.claude/rules/admin-ui.md`: the checklist for a new collection/global, `admin.group`,
   registry icon, Arabic `label` (singular/plural) + `description`, `useAsTitle`,
   `defaultColumns`, `listSearchableFields`, field descriptions, `enabled` fields use the
   switch widget, preview if it has a route; run `generate:importmap`; add to the dashboard
@@ -115,9 +115,9 @@ docs/ADMIN-DESIGN-SYSTEM.md, .claude/rules/admin-ui.md, docs/DECISIONS.md ADR-03
   primitives it imports) so classes used only by `dropdown-menu`/`switch`/`kbd` never land in
   the public stylesheet; the budget test gains a CSS-size assertion for `/`.
 - Tests: icon registry; `tests/admin-css.test.ts` asserts the admin stylesheet has no raw hex
-  outside `@theme` (same rule as the site) — or extend `check:rtl`'s hex rule to it.
+  outside `@theme` (same rule as the site), or extend `check:rtl`'s hex rule to it.
 
-## Phase 2 — Shell (nav, header, account, login)
+## Phase 2: Shell (nav, header, account, login)
 
 - `Nav`: server component builds groups with `groupNavItems` (respects `visibleEntities`
   and permissions, so editors never see settings they cannot open), reads the `nav`
@@ -129,10 +129,10 @@ docs/ADMIN-DESIGN-SYSTEM.md, .claude/rules/admin-ui.md, docs/DECISIONS.md ADR-03
   items as links with the entity icon, `aria-current="page"` on the active one, tooltips
   when collapsed on narrow heights, a «عرض الموقع» link (opens the site in a new tab), the
   account block (name, role badge, settings menu, logout) pinned at the bottom.
-- Header `actions`: `HeaderActions` — palette button showing `Ctrl K` / `⌘ K` (detects
+- Header `actions`: `HeaderActions`, palette button showing `Ctrl K` / `⌘ K` (detects
   platform), «الموقع» external link. Palette: entities first (icon + label + group), then
   document hits from products, pages, faqs, testimonials, media, users(admin only) via
-  `GET /api/payload/<slug>?where[<field>][like]=…&limit=5&depth=0` — `<field>` is each
+  `GET /api/payload/<slug>?where[<field>][like]=…&limit=5&depth=0`, `<field>` is each
   collection's `listSearchableFields`, searching starts at two characters, at most 5 hits per
   collection, `credentials: include` (Payload's access rules are the boundary), debounced
   200 ms, stale requests aborted; arrow keys, Enter, Esc; recent choices in `localStorage`
@@ -149,24 +149,24 @@ docs/ADMIN-DESIGN-SYSTEM.md, .claude/rules/admin-ui.md, docs/DECISIONS.md ADR-03
   mobile (pixel-7 viewport inside the cms project) drawer opens and closes; axe on the
   login page, the dashboard, the palette, a list view and an edit view in dark.
 
-## Phase 3 — Dashboard, preview, widgets, collection polish
+## Phase 3: Dashboard, preview, widgets, collection polish
 
 - `views.dashboard.Component`: server component inside `DefaultTemplate`; greeting with the
   user's name; **Quick actions** (edit home, add page, add product, add FAQ, upload media,
-  view site — icon cards, filtered by permissions); **System health** from `healthReport()`
+  view site, icon cards, filtered by permissions); **System health** from `healthReport()`
   (shared with `/api/health`: db, media, jobs, failed jobs, e-mail, Turnstile, IndexNow) as
   status rows with coloured badges and one line of Arabic meaning each, plus a «تحقّق
   الآن» link to `/api/health`; **Recent activity**: last 8 documents across collections and
   globals by `updatedAt`, each with icon, title, collection, editor name, relative time, link.
   Last backup date is *not* shown (only the bucket knows it; listing it would need the backup
-  keys at runtime — ADR note, revisit when the weekly workflow posts a status).
-- `lastPublishedBy`: a `group { name, at }` **snapshot** (not a relationship — `users.read`
+  keys at runtime, ADR note, revisit when the weekly workflow posts a status).
+- `lastPublishedBy`: a `group { name, at }` **snapshot** (not a relationship, `users.read`
   is admin-or-self, so an editor would see a bare id for a colleague, and a deleted user would
   dangle) on products, pages, faqs, testimonials, integrations, media, home, site-settings,
   navigation, seo-defaults; `admin.readOnly`, sidebar position, label «آخر نشر بواسطة» with
   the honest description (a draft save never writes the main row, so the field reflects the
   last publish); set in a shared `beforeChange` hook from `req.user` (left unchanged on
-  system writes without a user — the seed and jobs); additive migration; unit test on the
+  system writes without a user, the seed and jobs); additive migration; unit test on the
   hook.
 - Preview: `admin.preview` on pages, products and `home` → `/api/preview?path=…&token=…`
   where `token = hmac(path + exp, PAYLOAD_SECRET)`, one hour; the route verifies the token,
@@ -177,23 +177,23 @@ docs/ADMIN-DESIGN-SYSTEM.md, .claude/rules/admin-ui.md, docs/DECISIONS.md ADR-03
   to the 404 before draft mode has a say. **Fetchers:** `getHome`, `getPage`, `getPages`,
   `getProduct`/`getProducts`, `getTestimonials`, `getFaqs` read with `draft: true` **and
   without the `PUBLISHED` filter** when `draftMode().isEnabled` (today they filter by
-  status). Reading `draftMode()` is static-safe — during a prerender it is an empty provider
+  status). Reading `draftMode()` is static-safe, during a prerender it is an empty provider
   with `isEnabled: false` and no dynamic tracking (verified by the CTO in
   `next/dist/server/request/draft-mode.js`); only `enable()`/`disable()` are dynamic. A thin
-  «معاينة مسودة — خروج» bar renders on the site in draft mode. Payload's own «Preview»
+  «معاينة مسودة، خروج» bar renders on the site in draft mode. Payload's own «Preview»
   button opens it in a new tab (Dhia's choice: no live panel). ADR-039 records the
   semantics: the link is a one-hour bearer by design (staff share it) and draft mode, once
   enabled, shows drafts site-wide until exit. Unit test on the token and the path rule; e2e:
   (a) a draft page created via REST renders through its preview URL with the bar; (b) the
   same path without the cookie is the full-document 404; (c) after `/api/preview/exit` it is
   the 404 again; (d) a draft edit to a published page is visible through the preview and
-  absent from the public page; (e) constitution II proof — `/` and `/about` answer
+  absent from the public page; (e) constitution II proof, `/` and `/about` answer
   `x-nextjs-cache: HIT` without the cookie and the build output keeps every `(site)` route
   static/ISR.
 - Field widgets (`admin.components.Field`): `IconSelect` for `CARD_ICONS` fields (grid of
   icon buttons, radiogroup semantics); `PlatformSelect` for `integrations.platform` (radio
   cards with the brand SVGs); `EnabledSwitch` for every `enabled` checkbox (switch + one
-  sentence taken from the field's own `admin.description`, so each names its section —
+  sentence taken from the field's own `admin.description`, so each names its section, 
   «عند الإيقاف يختفي قسم «لماذا بحر برنت» من الصفحة الرئيسية»). Each uses `useField` and
   works with drafts/autosave.
 - Collection polish: Arabic `admin.description` on every collection and global,

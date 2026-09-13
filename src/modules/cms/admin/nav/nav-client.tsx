@@ -31,9 +31,9 @@ function isActive(pathname: string, href: string): boolean {
 }
 
 /**
- * Sidebar contents. The outer element keeps Payload's classes — `nav`, `nav--nav-open`,
+ * Sidebar contents. The outer element keeps Payload's classes, `nav`, `nav--nav-open`,
  * `nav--nav-animate`, `nav--nav-hydrated`, `nav__scroll`, `nav__header`, `nav__mobile-close`
- * (checked against @payloadcms/next 3.89.0) — because the template's grid, the mobile
+ * (checked against @payloadcms/next 3.89.0), because the template's grid, the mobile
  * slide-in and the `inert` state are theirs; everything inside is ours.
  */
 export function NavClient({ groups, prefs, account, adminRoute }: NavClientProps) {

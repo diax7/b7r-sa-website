@@ -1,4 +1,5 @@
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
+import { signPreview } from '../src/lib/preview-token';
 import { ADMIN, API, createEditor, hasAdmin, login, POLL, shows } from './helpers/cms';
 
 /**
@@ -231,7 +232,7 @@ test.describe('CMS admin', () => {
       timeout: 10_000,
     });
     // axe on OUR surfaces (Payload's own edit-view chrome has known gaps: unnamed drag handles
-    // and popup buttons — its engine, not the shell).
+    // and popup buttons, its engine, not the shell).
     const { AxeBuilder } = await import('@axe-core/playwright');
     const serious = async (...include: string[]) => {
       let builder = new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']);
@@ -282,6 +283,154 @@ test.describe('CMS admin', () => {
     await expect(nav.locator('#nav-pages')).toBeVisible();
     await nav.locator('.nav__mobile-close').click();
     await expect(nav).not.toHaveClass(/nav--nav-open/);
+  });
+
+  test('the dashboard (ADR-039): quick actions by permission, the health report, the latest saves', async ({
+    page,
+    request,
+  }) => {
+    await page.setViewportSize({ width: 1600, height: 1000 });
+    expect((await page.request.post(`${API}/users/login`, { data: admin })).status()).toBe(200);
+    // A save stamps «آخر حفظ» and lands at the top of the list.
+    const auth = await login(request, admin);
+    const faq = await request.get(`${API}/faqs?limit=1&depth=0`, { headers: auth });
+    const entry = ((await faq.json()) as { docs: Array<{ id: number; question: string }> }).docs[0];
+    expect(entry).toBeDefined();
+    expect(
+      (
+        await request.patch(`${API}/faqs/${entry!.id}`, {
+          headers: auth,
+          data: { question: entry!.question },
+        })
+      ).status(),
+    ).toBe(200);
+    await page.goto('/admin');
+    const dashboard = page.locator('[data-admin-dashboard]');
+    await expect(dashboard).toBeVisible();
+    for (const key of ['home', 'add-page', 'add-product', 'add-faq', 'media', 'site']) {
+      await expect(dashboard.locator(`[data-admin-action="${key}"]`)).toBeVisible();
+    }
+    await expect(dashboard.locator('[data-health-row="db"]')).toHaveAttribute(
+      'data-tone',
+      'success',
+    );
+    await expect(dashboard.locator('[data-health-row="jobs"]')).toHaveAttribute(
+      'data-tone',
+      'success',
+    );
+    const first = dashboard.locator('[data-admin-recent] li').first();
+    await expect(first).toContainText(entry!.question);
+    await expect(first).toContainText(/بواسطة/);
+    const { AxeBuilder } = await import('@axe-core/playwright');
+    const results = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa'])
+      .include('[data-admin-dashboard]')
+      .analyze();
+    expect(
+      results.violations
+        .filter((v) => ['serious', 'critical'].includes(v.impact ?? ''))
+        .map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`),
+    ).toEqual([]);
+    // The field widgets: a section switch with its consequence, and the platform tiles.
+    await page.goto('/admin/globals/home');
+    const stepsSwitch = page.locator('[data-admin-switch="steps.enabled"]');
+    await expect(stepsSwitch).toHaveAttribute('role', 'switch');
+    await expect(stepsSwitch).toHaveAttribute('aria-checked', 'true');
+    await expect(page.locator('[data-admin-field="enabled"]').first()).toContainText(/يختفي قسم/);
+    await page.goto('/admin/collections/integrations/create');
+    await expect(page.locator('[data-admin-choice="salla"]')).toHaveAttribute('role', 'radio');
+    await page.locator('[data-admin-choice="zid"]').click();
+    await expect(page.locator('[data-admin-choice="zid"]')).toHaveAttribute('aria-checked', 'true');
+  });
+
+  test('preview (ADR-039): a signed link shows a draft page that the public never sees', async ({
+    page,
+    request,
+  }) => {
+    test.setTimeout(120_000);
+    const secret = process.env['PAYLOAD_SECRET'];
+    test.skip(!secret, 'PAYLOAD_SECRET unset');
+    const auth = await login(request, admin);
+    const slug = `preview-e2e-${Date.now()}`;
+    const title = `مسودة معاينة ${Date.now()}`;
+    const created = await request.post(`${API}/pages?draft=true`, {
+      headers: auth,
+      data: {
+        title,
+        slug,
+        _status: 'draft',
+        blocks: [
+          {
+            blockType: 'richText',
+            content: {
+              root: {
+                type: 'root',
+                children: [],
+                direction: 'rtl',
+                format: '',
+                indent: 0,
+                version: 1,
+              },
+            },
+          },
+        ],
+      },
+    });
+    expect(created.status(), await created.text()).toBe(201);
+    const id = ((await created.json()) as { doc: { id: number } }).doc.id;
+    try {
+      // (b) Without the cookie the unpublished slug is the full-document 404.
+      const anonymous = await request.get(`/${slug}`, { maxRedirects: 0 });
+      expect(anonymous.status()).toBe(404);
+      // A forged or foreign token is refused.
+      expect((await request.get(`/api/preview?path=/${slug}&token=1.x`)).status()).toBe(403);
+      // (a) The signed link turns on draft mode and lands on the draft, with the bar.
+      const token = signPreview(`/${slug}`, secret!);
+      await page.goto(`/api/preview?path=/${encodeURIComponent(slug)}&token=${token}`);
+      await expect(page).toHaveURL(new RegExp(`/${slug}$`));
+      await expect(page.locator('[data-draft-bar]')).toBeVisible();
+      await expect(page.locator('h1')).toHaveText(title);
+      // (d) A draft edit to a published page: visible in the preview, absent in public.
+      const about = await request.get(`${API}/pages?where[slug][equals]=about&depth=0&draft=true`, {
+        headers: auth,
+      });
+      const aboutDoc = ((await about.json()) as { docs: Array<Record<string, unknown>> }).docs[0]!;
+      const stamp = `معاينة ${Date.now()}`;
+      expect(
+        (
+          await request.patch(`${API}/pages/${aboutDoc['id']}?draft=true`, {
+            headers: auth,
+            data: { title: `${aboutDoc['title']} ${stamp}`, _status: 'draft' },
+          })
+        ).status(),
+      ).toBe(200);
+      try {
+        await page.goto('/about');
+        await expect(page.locator('[data-draft-bar]')).toBeVisible();
+        expect(await page.locator('body').textContent()).toContain(stamp);
+        expect(await (await request.get('/about')).text()).not.toContain(stamp);
+      } finally {
+        expect(
+          (
+            await request.patch(`${API}/pages/${aboutDoc['id']}`, {
+              headers: auth,
+              data: { title: aboutDoc['title'], _status: 'published' },
+            })
+          ).status(),
+        ).toBe(200);
+      }
+      // (c) Leaving draft mode returns to the page, which is the 404 again.
+      await page.locator('[data-draft-bar] a').click();
+      await expect(page.locator('[data-draft-bar]')).toHaveCount(0);
+      const gone = await page.goto(`/${slug}`);
+      expect(gone?.status()).toBe(404);
+      // (e) Constitution II: the public pages still come from the cache.
+      await request.get('/about');
+      const cached = await request.get('/about');
+      expect(cached.headers()['x-nextjs-cache']).toMatch(/HIT|STALE/);
+    } finally {
+      expect((await request.delete(`${API}/pages/${id}`, { headers: auth })).status()).toBe(200);
+    }
   });
 
   test('a short password is refused with the Arabic reason (ADR-027)', async ({ request }) => {

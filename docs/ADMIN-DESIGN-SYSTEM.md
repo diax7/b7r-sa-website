@@ -1,15 +1,15 @@
-# B7R admin panel — design system
+# B7R admin panel: design system
 
 The rules for every screen an editor sees at `/admin` (BRD §9.3, ADR-039). Payload renders
 the forms and lists; we own the shell, the dashboard, the field widgets and the theme. New
-collections, globals and admin components follow this document — `.claude/rules/admin-ui.md`
+collections, globals and admin components follow this document, `.claude/rules/admin-ui.md`
 is the checklist, `tests/admin-config.test.ts` and `tests/admin-icons.test.ts` are the gate.
 
 ## 1. Principles
 
 1. **One product.** The panel looks and reads like بحر برنت: the brand font, the 13 px radius,
-   the accent blue, the same Arabic voice as the site. Payload's dark greys stay — Dhia's
-   choice (dark only) — the brand sits on top.
+   the accent blue, the same Arabic voice as the site. Payload's dark greys stay, Dhia's
+   choice (dark only), the brand sits on top.
 2. **Arabic first.** Every label, description, empty state and error is Arabic, written under
    the ux-araby rules (§5). English is the fallback locale only.
 3. **Icon + label, always.** An icon never stands alone except in an icon button with an
@@ -31,7 +31,7 @@ render in both worlds without a fork. Raw hex lives only in the token block.
 
 | Token | Admin value | Use |
 |---|---|---|
-| `primary` | `#0058b0` | Blue **fills** — primary buttons, the on state of a switch. White text on it (6.9:1). |
+| `primary` | `#0058b0` | Blue **fills**, primary buttons, the on state of a switch. White text on it (6.9:1). |
 | `primary-hover` | `#1a6ac0` | Hover of a blue fill. |
 | `accent` | `#0098e0` | Blue **text, icons, links, focus rings, active nav** (5.7:1 on the page). Never white text on it. |
 | `accent-tint` | `rgb(0 152 224 / .14)` | Active/hover background behind accent text. |
@@ -47,7 +47,7 @@ render in both worlds without a fork. Raw hex lives only in the token block.
 
 **Blue rule on dark:** `primary` is a fill, `accent` is a colour for text. `text-primary` is
 never used in an admin component; `bg-accent` is never used behind white text. The `Badge`
-`primary` tone (blue text on a blue tint) is not used in the admin — use `success`,
+`primary` tone (blue text on a blue tint) is not used in the admin, use `success`,
 `warning`, `error` or `muted`.
 
 Payload's own selection colour (its "success" ramp: checkboxes, radios, focus rings, the
@@ -71,7 +71,7 @@ published pill) is re-hued to the accent in `@layer payload`; its greys are unto
   icons mirror in RTL automatically).
 - Sizes: 20 px in the sidebar and quick-action tiles, 16 px inline next to text, 24 px alone
   in an empty state.
-- Registry: `src/modules/cms/admin/icons.ts` — `COLLECTION_ICONS`, `GLOBAL_ICONS`,
+- Registry: `src/modules/cms/admin/icons.ts`, `COLLECTION_ICONS`, `GLOBAL_ICONS`,
   `GROUP_ICONS`, `ACTION_ICONS`. A collection or global without an entry is a type error and a
   failing test. Pick a noun icon for a collection (a shirt, a file, a question mark), a place
   icon for a global (a house, sliders), a verb icon for an action (an eye for "view site").
@@ -95,7 +95,8 @@ The admin's strings are interface copy (ADR-031): written by us, under the ux-ar
 - Errors: what happened + how to recover, no blame: «تعذّر الحفظ. تحقق من الحقول المعلّمة.»
 - Numbers Western (`1, 2, 3`), dates relative when recent («قبل 3 دقائق»), otherwise
   `dd/MM/yyyy`. Brand and product names stay Latin: Salla, Zid, Shopify, Turnstile, Resend.
-- Punctuation: Arabic comma «،», «أو» not «/», no «!», no em dash.
+- Punctuation: Arabic comma «،», «أو» not «/», no «!». **No em dash anywhere** (ADR-040,
+  `.claude/rules/writing.md`, `pnpm check:dash`): a colon or two sentences instead.
 
 ## 6. Components
 
@@ -113,7 +114,7 @@ The admin's strings are interface copy (ADR-031): written by us, under the ux-ar
 | `Separator`, `Kbd` | `ui/separator.tsx`, `ui/kbd.tsx` | Group hairlines; key hints («Ctrl K»). |
 
 Payload's own elements (buttons, fields, pills, toasts) are themed in `admin.css` under
-`@layer payload` — never re-implemented. The shell pieces built on these primitives:
+`@layer payload`, never re-implemented. The shell pieces built on these primitives:
 
 | Piece | File | Notes |
 |---|---|---|
@@ -123,7 +124,11 @@ Payload's own elements (buttons, fields, pills, toasts) are themed in `admin.css
 | Account menu | `modules/cms/admin/account/*` | Initials avatar, name, e-mail (LTR), role badge, «حسابي», «تسجيل الخروج». |
 | Login | `modules/cms/admin/login/*` | One line under the form; the Turnstile widget above it (ADR-034). |
 
-Payload puts the sidebar in a drawer at widths ≤ 1440 px (its `l` breakpoint) — the header
+| Dashboard | `modules/cms/admin/dashboard/*` | Greeting, quick-action tiles by permission, health card (`healthReport()`, rows with a colour and a sentence), latest saves with «آخر حفظ» and Arabic relative time (`relative-time.ts`). |
+| Field widgets | `modules/cms/admin/fields/*` | `EnabledSwitch` (switch + the section's consequence), `IconSelect` (lucide tiles), `PlatformSelect` (brand SVG tiles); all on `FieldShell` (label, description, error) and `ChoiceGrid` (radiogroup). |
+| Preview | `lib/preview-token.ts`, `app/api/preview/*`, `modules/core/draft-bar.tsx` | «معاينة» opens a signed link → Next draft mode → the page with a warning bar; exit returns to the page. |
+
+Payload puts the sidebar in a drawer at widths ≤ 1440 px (its `l` breakpoint), the header
 hamburger opens it; that is Payload's behaviour, kept.
 
 ## 7. States

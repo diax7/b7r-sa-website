@@ -36,6 +36,8 @@ export interface PaletteProps {
 interface DocHit {
   key: string;
   title: string;
+  /** What tells two same-titled documents apart: the slug, else the draft/published state. */
+  detail: string;
   collection: string;
   slug: string;
   href: string;
@@ -69,6 +71,14 @@ function pushRecent(href: string) {
 function inEditor(target: EventTarget | null): boolean {
   return target instanceof HTMLElement && !!target.closest('[contenteditable="true"]');
 }
+
+/** `like` reads `%` and `_` as wildcards: drop them, and search only when something is left. */
+export function searchTerm(query: string): string {
+  const term = query.replaceAll(/[%_]/g, '').trim();
+  return /[\p{L}\p{N}]/u.test(term) ? term : '';
+}
+
+const STATUS_LABEL: Record<string, string> = { draft: 'مسودة', published: 'منشور' };
 
 /**
  * Ctrl/⌘ K palette (ADR-039): every section the user may open, then documents of the main
@@ -114,11 +124,11 @@ export function Palette({ entities, searchable, apiRoute }: PaletteProps) {
   // are set from the input's change event and from the (asynchronous) response only.
   useEffect(() => {
     abort.current?.abort();
-    if (!open || query.trim().length < MIN_QUERY || searchable.length === 0) return;
+    const q = searchTerm(query);
+    if (!open || q.length < MIN_QUERY || searchable.length === 0) return;
     const controller = new AbortController();
     abort.current = controller;
     const timer = window.setTimeout(async () => {
-      const q = query.trim();
       const results = await Promise.all(
         searchable.map(async (c) => {
           const params = new URLSearchParams({ limit: String(PER_COLLECTION), depth: '0' });
@@ -130,13 +140,18 @@ export function Palette({ entities, searchable, apiRoute }: PaletteProps) {
             });
             if (!res.ok) return [];
             const body = (await res.json()) as { docs?: Array<Record<string, unknown>> };
-            return (body.docs ?? []).map((doc) => ({
-              key: `${c.slug}-${String(doc['id'])}`,
-              title: String(doc[c.titleField] ?? doc['id']),
-              collection: c.label,
-              slug: c.slug,
-              href: `${c.href}/${String(doc['id'])}`,
-            }));
+            return (body.docs ?? []).map((doc) => {
+              const slug = typeof doc['slug'] === 'string' ? doc['slug'] : '';
+              const status = typeof doc['_status'] === 'string' ? doc['_status'] : '';
+              return {
+                key: `${c.slug}-${String(doc['id'])}`,
+                title: String(doc[c.titleField] ?? doc['id']),
+                detail: slug && slug !== doc[c.titleField] ? slug : (STATUS_LABEL[status] ?? ''),
+                collection: c.label,
+                slug: c.slug,
+                href: `${c.href}/${String(doc['id'])}`,
+              };
+            });
           } catch {
             return [];
           }
@@ -221,7 +236,7 @@ export function Palette({ entities, searchable, apiRoute }: PaletteProps) {
               const value = e.target.value;
               setQuery(value);
               setActive(0);
-              const searches = value.trim().length >= MIN_QUERY && searchable.length > 0;
+              const searches = searchTerm(value).length >= MIN_QUERY && searchable.length > 0;
               setSearching(searches);
               if (!searches) setHits([]);
             }}
@@ -281,7 +296,12 @@ export function Palette({ entities, searchable, apiRoute }: PaletteProps) {
                   >
                     {EntityIcon && <Icon icon={EntityIcon} size={18} className="text-text-muted" />}
                     <span className="flex-1 truncate">{h.title}</span>
-                    <span className="text-caption text-text-muted">{h.collection}</span>
+                    {h.detail && (
+                      <span className="truncate text-caption text-text-muted" dir="auto">
+                        {h.detail}
+                      </span>
+                    )}
+                    <span className="shrink-0 text-caption text-text-muted">{h.collection}</span>
                   </Row>
                 );
               })}
@@ -292,7 +312,7 @@ export function Palette({ entities, searchable, apiRoute }: PaletteProps) {
           )}
         </div>
         <DialogDescription className="flex items-center justify-between gap-3 border-t border-border px-4 py-2 text-caption text-text-muted">
-          <span>{query.trim().length < MIN_QUERY ? s.hint : s.shortcut}</span>
+          <span>{searchTerm(query).length < MIN_QUERY ? s.hint : s.shortcut}</span>
           <span className="flex items-center gap-1">
             <Icon icon={CornerDownLeft} size={12} />
             {s.open}

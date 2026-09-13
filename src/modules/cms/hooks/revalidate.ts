@@ -66,8 +66,8 @@ const OUTSIDE_REQUEST = /store missing|during render/i;
 
 /**
  * `revalidatePath` needs Next's request store: called from a job (the queue cron, a scheduled
- * publish) it throws the "static generation store missing" invariant, or — when the cron
- * fires inside a render's context — "used revalidatePath during render which is
+ * publish) it throws the "static generation store missing" invariant, or, when the cron
+ * fires inside a render's context, "used revalidatePath during render which is
  * unsupported". Outside a request the 60 s timer covers the change, so the helper logs that
  * once and moves on (ADR-033).
  */
@@ -98,7 +98,7 @@ export function isDraftSave(req: PayloadRequest): boolean {
 }
 
 /**
- * IndexNow is told about a publish, an unpublish or a delete — never a draft save of a
+ * IndexNow is told about a publish, an unpublish or a delete, never a draft save of a
  * published document, which regenerates the page (harmless) but must not ping (ADR-033).
  */
 function pingWorthy(req: PayloadRequest, change: ChangeArgs): boolean {

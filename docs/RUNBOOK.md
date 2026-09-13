@@ -40,7 +40,7 @@ pnpm dev                    # admin at http://localhost:3004/admin (Arabic, RTL)
 `PAYLOAD_PUBLIC_SERVER_URL=http://localhost:3004` and the admin pair. Media goes to
 `public/media/` (gitignored) unless the `S3_*` rows point at MinIO (bucket `b7r-media`,
 public download; add `IMAGES_ALLOW_LOCAL_IP=1` so the image optimiser accepts the
-localhost endpoint — never in production). `bash scripts/ci/seed-check.sh` runs the seed and admin scripts through
+localhost endpoint, never in production). `bash scripts/ci/seed-check.sh` runs the seed and admin scripts through
 their three outcomes against a fresh database, the way CI does.
 
 Admin components (a new field type such as rich text, a custom view): run
@@ -201,7 +201,7 @@ page answers 200 within a minute more.
 ## IndexNow
 
 A publish in the admin queues an `indexnow-ping` job with the regenerated URLs (three
-retries, exponential backoff) — only when `B7R_RUNTIME=production` and `INDEXNOW_KEY` are
+retries, exponential backoff), only when `B7R_RUNTIME=production` and `INDEXNOW_KEY` are
 set, so CI and previews never ping (ADR-033). For the deploy-time submission:
 `scripts/indexnow.ts <before.xml> <after.xml>` diffs two sitemap snapshots and POSTs the
 changed URLs with `keyLocation = https://b7r.sa/indexnow/{key}.txt`. It exits 0 without a
@@ -209,6 +209,14 @@ request when `NEXT_PUBLIC_SITE_URL` or `INDEXNOW_KEY` is unset. Intended GitHub 
 on `main` once CranL deploys from it: fetch the live `sitemap.xml` before the deploy, poll
 `/api/health` until `version` matches `package.json`, fetch it again, run the script. Until
 then it is a manual step.
+
+## Preview (draft mode)
+
+«معاينة» on a page, a product or the home page opens `/api/preview?path=…&token=…`: a link
+signed for one hour with the Payload secret (ADR-039). It turns on Next draft mode for that
+browser, so the site shows the latest drafts (a bar at the top says so) until «خروج من
+المعاينة» or `/api/preview/exit`. The link is a bearer: anyone holding it sees drafts for an
+hour. Public pages are unaffected; they stay cached and published-only.
 
 ## Admin login gate (Turnstile)
 
@@ -223,7 +231,7 @@ the page; the gate never sends the visitor to Cloudflare's servers from the logi
 With `RESEND_API_KEY` + `RESEND_FROM` the «نسيت كلمة المرور» link sends the Arabic reset
 e-mail through Resend (`/api/health` → `email: resend`). Without them (`email: console`) the
 message is printed in the app log: read the `/admin/reset/<token>` link there, or set a new
-password from a machine with the secrets: `pnpm payload …` is not needed — the
+password from a machine with the secrets: `pnpm payload …` is not needed, the
 `admin:create` script only creates the first admin; use the admin UI as another admin
 (Users → the account → new password).
 
@@ -232,7 +240,7 @@ password from a machine with the secrets: `pnpm payload …` is not needed — t
 Weekly, `.github/workflows/backup.yml` (Sundays 03:00 UTC, or «Run workflow») runs
 `scripts/backup.sh`: `pg_dump --format=custom` → `s3://$BACKUP_S3_BUCKET/YYYY-MM-DD.dump`.
 The bucket is **private** with its own key pair (put + list only); never the media bucket
-— the script refuses it. Retention: a lifecycle rule on the bucket, e.g.
+, the script refuses it. Retention: a lifecycle rule on the bucket, e.g.
 `mc ilm rule add --expire-days 30 cranl/b7r-backups` (or the provider's console). Set the
 five `BACKUP_S3_*` secrets in the `production` environment; until then the workflow ends
 with a notice.
@@ -285,7 +293,7 @@ then replace the file and re-run `pnpm assets`.
 
 `RESEND_API_KEY` + `RESEND_AUDIENCE_ID` enable the live transport (`/api/health` →
 `newsletter: live`). The BRD names Resend audiences; Resend has since introduced segments and
-kept `audienceId` as a supported legacy option — migrate to `segments: [{ id }]` when the
+kept `audienceId` as a supported legacy option, migrate to `segments: [{ id }]` when the
 account moves. Without a key the endpoint answers `503 not_configured` and the form shows the
 retry copy; `NEWSLETTER_TRANSPORT=mock` (tests only) keeps subscriptions in memory.
 

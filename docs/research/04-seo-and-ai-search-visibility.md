@@ -37,7 +37,7 @@
 | IndexNow | Host `{key}.txt` at root; POST JSON to `https://api.indexnow.org/indexnow` with `host`, `key`, `urlList` (≤10,000); fire on publish/update/delete from the CMS. Bing may deprecate its own URL Submission API in favour of IndexNow. | [IndexNow](https://www.indexnow.org/documentation) |
 | Search Console | Verify via DNS TXT (Domain property); submit sitemap; keep **Search generative AI control** on "Include" (default). | [GSC control](https://support.google.com/webmasters/answer/16908024) |
 | Bing Webmaster Tools | Verify, submit sitemap, enable IndexNow, use AI Performance report. Bing processes sitemaps at least daily. | [Bing setup](https://blogs.bing.com/webmaster/June-2025/Start-Using-Bing-Webmaster-Tools-to-Improve-Your-Site-Visibility) |
-| Metadata | `generateMetadata` for dynamic pages; JSON-LD does **not** go in `generateMetadata` — render `<script type="application/ld+json">` in the page component. | [Next.js generateMetadata](https://nextjs.org/docs/app/api-reference/functions/generate-metadata) |
+| Metadata | `generateMetadata` for dynamic pages; JSON-LD does **not** go in `generateMetadata`, render `<script type="application/ld+json">` in the page component. | [Next.js generateMetadata](https://nextjs.org/docs/app/api-reference/functions/generate-metadata) |
 
 ---
 
@@ -109,14 +109,14 @@ Implication: being in Google's *and* Bing's indexes (IndexNow + sitemaps) covers
 
 | Finding | Study | Caveat |
 |---|---|---|
-| Adding **statistics, quotations, and cited sources** raised generative-engine visibility 30–40%; keyword stuffing did nothing | Princeton/IIT GEO paper, KDD 2024 — the only controlled experiment | 2023 engines |
+| Adding **statistics, quotations, and cited sources** raised generative-engine visibility 30–40%; keyword stuffing did nothing | Princeton/IIT GEO paper, KDD 2024, the only controlled experiment | 2023 engines |
 | Cited pages score higher on **clarity/summary (+32.8%), E-E-A-T (+30.6%), Q&A format (+25.5%), section structure (+22.9%)**; promotional tone negative (−26%) | Semrush, 304K AI-cited URLs (2025) | Correlational |
 | **44% of ChatGPT citations come from the first 30% of the page**; top 30 domains per topic capture 67%; repeatedly cited pages are broad hubs answering 10+ prompts | Kevin Indig, 1.2M ChatGPT responses (2026) | Correlational |
 | Only **1.5% of cited URLs are homepages**; 74.7% ≥2 path segments deep | Foglift Q3 2026 | Small panel |
 | **Freshness**: AI assistants cite content ~26% newer than organic SERPs; median server `Last-Modified` of cited pages = 3 days | Ahrefs 17M citations; parse.gl 8.2M | parse.gl aged only 1.4% of citations |
 | **Brand mentions beat links**: YouTube mentions r≈0.74, branded web mentions 0.66–0.71, branded search 0.35–0.47, backlinks 0.22 | Ahrefs, 75K brands (Dec 2025) | Correlational |
-| **Rank ≠ citation**: 38% of AIO citations rank top-10 (down from 76%); 18% of non-ranking citations are YouTube; ChatGPT overlap with Google top-10 4–12% | Ahrefs Mar 2026 | — |
-| **Engines don't agree**: mean pairwise Jaccard 0.094 across five engines | Foglift; Wellows 22.7M citations | — |
+| **Rank ≠ citation**: 38% of AIO citations rank top-10 (down from 76%); 18% of non-ranking citations are YouTube; ChatGPT overlap with Google top-10 4–12% | Ahrefs Mar 2026 |, |
+| **Engines don't agree**: mean pairwise Jaccard 0.094 across five engines | Foglift; Wellows 22.7M citations |, |
 
 Sources: [GEO paper](https://arxiv.org/abs/2311.09735), [Semrush](https://www.semrush.com/blog/content-optimization-ai-search-study/), [Indig](https://www.growth-memo.com/p/the-science-of-how-ai-picks-its-sources), [Foglift](https://foglift.io/research/ai-search-citation-benchmark-2026-q3), [Ahrefs freshness](https://ahrefs.com/blog/do-ai-assistants-prefer-to-cite-fresh-content/), [parse.gl](https://parse.gl/research/how-old-are-the-pages-ai-cites), [Ahrefs brand factors](https://ahrefs.com/blog/ai-brand-visibility-correlations/), [Ahrefs top-10](https://ahrefs.com/blog/ai-overview-citations-top-10/), [Wellows](https://wellows.com/blog/ai-citation-overlap-study/).
 
@@ -125,7 +125,7 @@ Sources: [GEO paper](https://arxiv.org/abs/2311.09735), [Semrush](https://www.se
 ### 3e. Author E-E-A-T and brand entity
 - Google: "We strongly encourage adding accurate authorship information, such as bylines." Trust is the most important E-E-A-T component. ([Creating helpful content](https://developers.google.com/search/docs/fundamentals/creating-helpful-content))
 - Article `author.url` → author page marked up as `ProfilePage`.
-- Entity stack (practitioner consensus, not vendor-documented): Organization `sameAs` → Wikidata item (Arabic + English labels), LinkedIn company page, Crunchbase, verified SBC/Maroof, consistent NAP. Arabic Wikidata coverage is thin — an opening.
+- Entity stack (practitioner consensus, not vendor-documented): Organization `sameAs` → Wikidata item (Arabic + English labels), LinkedIn company page, Crunchbase, verified SBC/Maroof, consistent NAP. Arabic Wikidata coverage is thin, an opening.
 - Google Business Profile: only with a customer-facing location.
 
 ---
@@ -133,12 +133,12 @@ Sources: [GEO paper](https://arxiv.org/abs/2311.09735), [Semrush](https://www.se
 ## 4. Arabic-specific SEO
 
 **Keyword behaviour**
-- Saudi users mix MSA and Gulf/Najdi/Hejazi dialect, often with English or Arabizi ("ايفون 15 برو"). MSA-only or machine-translated keyword sets miss volume; diacritics omitted; root morphology means tools undercount. Method: Keyword Planner (KSA) + google.com.sa autocomplete + Search Console; validate with a native Saudi speaker. (Agency sources: seosaudiarabia, Crawlix, Udjat — consistent, none quantitative.)
+- Saudi users mix MSA and Gulf/Najdi/Hejazi dialect, often with English or Arabizi ("ايفون 15 برو"). MSA-only or machine-translated keyword sets miss volume; diacritics omitted; root morphology means tools undercount. Method: Keyword Planner (KSA) + google.com.sa autocomplete + Search Console; validate with a native Saudi speaker. (Agency sources: seosaudiarabia, Crawlix, Udjat, consistent, none quantitative.)
 - POD terminology observed: "الطباعة عند الطلب" (b7r.sa), "طباعة حسب الطلب" (madarprint, riyadhprints, lana-designs). Target the cluster: `الطباعة عند الطلب`, `طباعة حسب الطلب`, `print on demand السعودية`, `طباعة تيشيرتات`, `متجر طباعة تيشيرت`.
 - Numbers: Latin digits (123) are what Saudi users type and read online.
 
 **URL slugs**
-- Google: "Use words in your audience's language in the URL (and, if applicable, transliterated words)" — Arabic-script slugs supported if percent-encoded. ([URL structure](https://developers.google.com/search/docs/crawling-indexing/url-structure))
+- Google: "Use words in your audience's language in the URL (and, if applicable, transliterated words)", Arabic-script slugs supported if percent-encoded. ([URL structure](https://developers.google.com/search/docs/crawling-indexing/url-structure))
 - Practitioner consensus: transliterated/English Latin slugs avoid encoded-URL ugliness when shared (WhatsApp, Instagram bios) and tracking breakage. **Recommendation:** `/ar/` prefix + short Latin slugs (17–40 chars); Arabic in title, H1, breadcrumbs.
 
 **Fonts and performance**
@@ -155,7 +155,7 @@ Sources: [GEO paper](https://arxiv.org/abs/2311.09735), [Semrush](https://www.se
 - Google AI Overviews are the most language-faithful engine (85% local-language citations for non-English prompts; ChatGPT 70%; Grok 52%).
 - Profound (3.25B citations, Mar 2026, KSA/UAE prompts in Arabic): in Arabic AIO, social citations within the social slice: **Instagram 29%, YouTube 26%, Facebook 10%, TikTok 9%, LinkedIn 8%, Reddit 4.9%**. ([Profound](https://www.tryprofound.com/blog/how-query-language-reshapes-ai-citations))
 - Small audit (16 prompts): Arabic AIO cited vendor-owned pages 91%, directories 0%. Directional only.
-- Academic (arXiv 2509.13930): models prefer to cite documents in the *query language*, with English bias growing for lower-resource languages — publish natively in Arabic **and** an English twin.
+- Academic (arXiv 2509.13930): models prefer to cite documents in the *query language*, with English bias growing for lower-resource languages, publish natively in Arabic **and** an English twin.
 - Bing/Copilot Arabic: no published study; unverified.
 
 ---
@@ -164,9 +164,9 @@ Sources: [GEO paper](https://arxiv.org/abs/2311.09735), [Semrush](https://www.se
 
 **Policy text to design against**
 
-> "Scaled content abuse is when many pages are generated for the primary purpose of manipulating search rankings and not helping users… Examples… Using generative AI tools or other similar tools to generate many pages without adding value for users… Scraping feeds… (including through automated transformations like synonymizing, translating, or other obfuscation techniques)…" — [Google spam policies](https://developers.google.com/search/docs/essentials/spam-policies) (March 2024)
+> "Scaled content abuse is when many pages are generated for the primary purpose of manipulating search rankings and not helping users… Examples… Using generative AI tools or other similar tools to generate many pages without adding value for users… Scraping feeds… (including through automated transformations like synonymizing, translating, or other obfuscation techniques)…", [Google spam policies](https://developers.google.com/search/docs/essentials/spam-policies) (March 2024)
 
-> "Appropriate use of AI or automation is not against our guidelines… Using AI doesn't give content any special gains. It's just content." — [Google AI content guidance](https://developers.google.com/search/blog/2023/02/google-search-and-ai-content)
+> "Appropriate use of AI or automation is not against our guidelines… Using AI doesn't give content any special gains. It's just content.", [Google AI content guidance](https://developers.google.com/search/blog/2023/02/google-search-and-ai-content)
 
 > Rater guidelines (Jan 2025, §4.6.6): "The Lowest rating applies if all or almost all of the MC on the page… is copied, paraphrased, embedded, auto or AI generated, or reposted from other sources with little to no effort, little to no originality, and little to no added value."
 

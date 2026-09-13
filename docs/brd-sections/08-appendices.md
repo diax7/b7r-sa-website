@@ -187,30 +187,30 @@ See §5.2. Keep the machine-readable version in `src/lib/redirects.ts` and a tes
 ### Appendix D: Full FAQ (`/faq`, grouped)
 
 **البداية**
-1. كم أحتاج لأبدأ؟ — لا شيء. تسجّل مجاناً وتحصل على 30 ريالاً رصيداً ترحيبياً.
-2. هل أحتاج سجلاً تجارياً؟ — تقدر تبدأ بحساب مجاني. لربط متجرك واستلام الطلبات نطلب توثيق هويتك مع سجل تجاري أو وثيقة عمل حر.
-3. هل أحتاج تصاميم جاهزة؟ — ارفع تصميمك بصيغة PNG أو JPG أو SVG. وإن لم يكن عندك تصميم، ابدأ بنص أو شعار بسيط.
+1. كم أحتاج لأبدأ؟، لا شيء. تسجّل مجاناً وتحصل على 30 ريالاً رصيداً ترحيبياً.
+2. هل أحتاج سجلاً تجارياً؟، تقدر تبدأ بحساب مجاني. لربط متجرك واستلام الطلبات نطلب توثيق هويتك مع سجل تجاري أو وثيقة عمل حر.
+3. هل أحتاج تصاميم جاهزة؟، ارفع تصميمك بصيغة PNG أو JPG أو SVG. وإن لم يكن عندك تصميم، ابدأ بنص أو شعار بسيط.
 
 **الأسعار والربح**
-4. كيف أربح؟ — تحدّد سعر البيع في متجرك. عند كل طلب نخصم تكلفة المنتج والشحن من محفظتك، والباقي ربحك.
-5. كم تكلفة المنتجات؟ — تبدأ من 30 ريالاً للحقيبة القماشية و45 ريالاً للتيشيرت. كل الأسعار في صفحة المنتجات.
-6. ما هي المحفظة؟ — رصيد مسبق الدفع تُخصم منه تكلفة كل طلب. تعبّئها بالتحويل البنكي، والحد الأدنى 10 ريالات.
-7. هل هناك اشتراك شهري أو حد أدنى للطلبات؟ — لا. لا اشتراك ولا حد أدنى، تدفع تكلفة الطلب فقط.
+4. كيف أربح؟، تحدّد سعر البيع في متجرك. عند كل طلب نخصم تكلفة المنتج والشحن من محفظتك، والباقي ربحك.
+5. كم تكلفة المنتجات؟، تبدأ من 30 ريالاً للحقيبة القماشية و45 ريالاً للتيشيرت. كل الأسعار في صفحة المنتجات.
+6. ما هي المحفظة؟، رصيد مسبق الدفع تُخصم منه تكلفة كل طلب. تعبّئها بالتحويل البنكي، والحد الأدنى 10 ريالات.
+7. هل هناك اشتراك شهري أو حد أدنى للطلبات؟، لا. لا اشتراك ولا حد أدنى، تدفع تكلفة الطلب فقط.
 
 **الطلبات والتوصيل**
-8. كم يستغرق التوصيل؟ — 5 أيام كحد أقصى لأي مدينة في السعودية.
-9. من يدفع الشحن؟ — تُخصم رسوم شحن الطلب من محفظتك حسب شركة الشحن، وتحدّد أنت ما تُحمّله لعميلك في متجرك.
-10. هل يعرف عميلي أن الطباعة من بحر برنت؟ — لا. الطرد وبوليصة الشحن باسم متجرك فقط.
-11. ماذا لو وصل المنتج معيباً؟ — إذا كان الخطأ منا نعيد الطباعة والشحن مجاناً أو نرد المبلغ، بشرط إبلاغنا خلال 10 أيام من الاستلام مع صور.
+8. كم يستغرق التوصيل؟، 5 أيام كحد أقصى لأي مدينة في السعودية.
+9. من يدفع الشحن؟، تُخصم رسوم شحن الطلب من محفظتك حسب شركة الشحن، وتحدّد أنت ما تُحمّله لعميلك في متجرك.
+10. هل يعرف عميلي أن الطباعة من بحر برنت؟، لا. الطرد وبوليصة الشحن باسم متجرك فقط.
+11. ماذا لو وصل المنتج معيباً؟، إذا كان الخطأ منا نعيد الطباعة والشحن مجاناً أو نرد المبلغ، بشرط إبلاغنا خلال 10 أيام من الاستلام مع صور.
 
 **المتاجر والربط**
-12. ما المتاجر التي أقدر أربطها؟ — سلة وزد وشوبيفاي، والربط مجاني.
-13. كيف يتم الربط؟ — بتفويض آمن من داخل متجرك بضغطة واحدة، بدون مشاركة أي بيانات حساسة.
-14. هل أقدر أربط أكثر من متجر؟ — نعم، اربط أكثر من متجر على أكثر من منصة من الحساب نفسه.
+12. ما المتاجر التي أقدر أربطها؟، سلة وزد وشوبيفاي، والربط مجاني.
+13. كيف يتم الربط؟، بتفويض آمن من داخل متجرك بضغطة واحدة، بدون مشاركة أي بيانات حساسة.
+14. هل أقدر أربط أكثر من متجر؟، نعم، اربط أكثر من متجر على أكثر من منصة من الحساب نفسه.
 
 **الجودة والدعم**
-15. ما طريقة الطباعة؟ — طباعة رقمية عالية الجودة بألوان ثابتة تتحمل الغسيل المتكرر.
-16. كيف أتواصل معكم؟ — عبر واتساب على 0501699572 أو البريد contact@b7r.sa.
+15. ما طريقة الطباعة؟، طباعة رقمية عالية الجودة بألوان ثابتة تتحمل الغسيل المتكرر.
+16. كيف أتواصل معكم؟، عبر واتساب على 0501699572 أو البريد contact@b7r.sa.
 
 ### Appendix E: Content backlog and keyword map (seeds `ai-topics` in Level 3; informs sample posts in Level 1)
 
@@ -291,7 +291,7 @@ Decision history: `docs/00-decisions-log.md` (rounds 1–4 with Dhia, 2026-09-12
 13. About banner: §6.8 names `hanging-tshirt-mockup.jpg`, but that file carries the vendor's "Free t-shirt mockup" sample print, so the site uses `hanging-tshirt-mockup-2.jpg` (same subject, real design). Blog covers use `designer-at-desk-stock.jpg`, `hodie2.jpg` and `totebag1.jpg`. Swap when final photography exists.
 14. `NEXT_PUBLIC_TURNSTILE_SITE_KEY` is set to Cloudflare's public always-pass test key in `.env.local` and CI so the widget island renders in tests; production needs the real pair (§12.4 item 5).
 15. Product OG images use `og:type website` (see §7.3 amendment); confirm in WhatsApp/X previews at cutover (§12.4 item 8).
-16. Three sample testimonials (`src/content/testimonials.ts`) were written by the agent on Dhia's instruction (ADR-023) and stay `placeholder: true`; to show them on b7r.sa set `placeholder: false` (they are not real merchants' words — §3.14) or replace them with real entries (§12.4 item 1).
+16. Three sample testimonials (`src/content/testimonials.ts`) were written by the agent on Dhia's instruction (ADR-023) and stay `placeholder: true`; to show them on b7r.sa set `placeholder: false` (they are not real merchants' words, §3.14) or replace them with real entries (§12.4 item 1).
 
 17. Design edits 2026-09-13 (`src/content/home.ts`, `TODO(copy)`): the designer's upload prompt «اضغط لرفع شعارك أو صورتك» and the remove control «إزالة التصميم» (ADR-036), and the product gallery's toggle name «اقلب الصورة» (`src/messages/ar.json`, ADR-035). These three also belong to the 2b `home` global seed. The designer now starts with an empty print area; the pre-placed sample of the earlier build is a one-line switch (`initialState.design`) if Dhia prefers it.
 

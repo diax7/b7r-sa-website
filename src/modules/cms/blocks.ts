@@ -131,6 +131,7 @@ export const CardsBlock: Block = {
             {
               name: 'icon',
               type: 'select',
+              admin: { components: { Field: '@/modules/cms/admin/fields/icon-select#IconSelect' } },
               required: true,
               options: CARD_ICONS.map((i) => ({ label: i, value: i })),
               label: { ar: 'الأيقونة', en: 'Icon' },
