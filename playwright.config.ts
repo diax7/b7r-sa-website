@@ -1,4 +1,8 @@
+import nextEnv from '@next/env';
 import { defineConfig, devices } from '@playwright/test';
+
+// The admin suite signs in with ADMIN_EMAIL / ADMIN_PASSWORD from .env.local (CI sets them).
+nextEnv.loadEnvConfig(process.cwd());
 
 const PORT = 3004;
 export const BASE_URL = `http://localhost:${PORT}`;

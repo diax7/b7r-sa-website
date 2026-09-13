@@ -1,4 +1,4 @@
-import { revalidatePath, revalidateTag } from 'next/cache';
+import { revalidatePath } from 'next/cache';
 import type {
   CollectionAfterChangeHook,
   CollectionAfterDeleteHook,
@@ -6,18 +6,18 @@ import type {
   PayloadRequest,
 } from 'payload';
 
-/** Cache tags the site's data layer reads with (`src/lib/cms/*`). */
-export const CACHE_TAGS = {
-  products: 'products',
-  siteSettings: 'site-settings',
-  navigation: 'navigation',
-  seo: 'seo',
-} as const;
+/**
+ * Publish → live (BRD 9.6, ADR-030). Every page revalidates on a 60 s timer; on top of that
+ * a publish regenerates the static routes that show the content right away.
+ *
+ * Product detail pages are deliberately left to the timer: they are `dynamicParams = false`
+ * routes, and Next 16's file-system cache answers 404 for such a route once its path has
+ * been revalidated on demand (`file-system-cache.js` returns null for expired tags, then the
+ * page module throws NoFallbackError). Never add `/products/:slug` here.
+ */
 
-/** Routes that read each source; `/` and `/sitemap.xml` are included where relevant. */
-export function pathsForProduct(slug: string): string[] {
-  return ['/', '/products', `/products/${slug}`, '/sitemap.xml'];
-}
+/** Static routes that render products: the home strip and designer, the listing, the sitemap. */
+export const PATHS_FOR_PRODUCTS = ['/', '/products', '/sitemap.xml'];
 
 export const PATHS_FOR_GLOBAL: Record<string, string[]> = {
   'site-settings': ['/', '/contact', '/about', '/how-it-works', '/faq', '/products', '/blog'],
@@ -31,37 +31,26 @@ export function shouldRevalidate(req: PayloadRequest): boolean {
   return process.env['NEXT_PHASE'] !== 'phase-production-build';
 }
 
-function revalidate(tag: string, paths: string[]): void {
-  revalidateTag(tag, 'max');
-  for (const path of new Set(paths)) revalidatePath(path);
-}
-
-/** Products: the document's page, the listing, the home (strip + designer) and the sitemap. */
+/** Products: a publish, an unpublish or a delete is visible; a draft autosave is not. */
 export const revalidateProducts: CollectionAfterChangeHook & CollectionAfterDeleteHook = ({
   doc,
   req,
   ...rest
 }) => {
   if (!shouldRevalidate(req)) return doc;
-  const slugs = new Set<string>();
-  if (typeof doc?.['slug'] === 'string') slugs.add(doc['slug']);
-  const previous = (rest as { previousDoc?: { slug?: string } }).previousDoc;
-  if (typeof previous?.slug === 'string') slugs.add(previous.slug);
-  // Only a published change is visible; a draft autosave must not churn the cache.
   const status = (doc as { _status?: string } | undefined)?._status;
-  if ('operation' in rest && status && status !== 'published') return doc;
-  revalidate(
-    CACHE_TAGS.products,
-    [...slugs].flatMap((slug) => pathsForProduct(slug)),
-  );
+  const previous = (rest as { previousDoc?: { _status?: string } }).previousDoc;
+  const wasPublished = previous?._status === 'published';
+  if ('operation' in rest && status && status !== 'published' && !wasPublished) return doc;
+  for (const path of PATHS_FOR_PRODUCTS) revalidatePath(path);
   return doc;
 };
 
-/** Globals: their own tag plus every route that renders them. */
-export function revalidateGlobal(slug: string, tag: string): GlobalAfterChangeHook {
+/** Globals: every static route that renders them. */
+export function revalidateGlobal(slug: string): GlobalAfterChangeHook {
   return ({ doc, req }) => {
     if (!shouldRevalidate(req)) return doc;
-    revalidate(tag, PATHS_FOR_GLOBAL[slug] ?? ['/']);
+    for (const path of PATHS_FOR_GLOBAL[slug] ?? ['/']) revalidatePath(path);
     return doc;
   };
 }

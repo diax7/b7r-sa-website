@@ -15,6 +15,8 @@ import { SeoDefaults } from '@/modules/cms/globals/seo-defaults';
 import { SiteSettings } from '@/modules/cms/globals/site-settings';
 import { migrations } from '@/migrations';
 
+export { cmsEnv, type CmsEnv } from '@/modules/cms/env';
+
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 const env = cmsEnv();
 
@@ -29,8 +31,18 @@ export default buildConfig({
   routes: { admin: '/admin', api: '/api/payload' },
   graphQL: { disable: true },
   telemetry: false,
+  // Expected client-side outcomes (a refused edit, a wrong password, a bad form) are not
+  // server errors; keep the error log for what needs a human.
+  loggingLevels: {
+    AuthenticationError: 'info',
+    Forbidden: 'info',
+    NotFound: 'info',
+    ValidationError: 'info',
+  },
   admin: {
     user: Users.slug,
+    // The default avatar fetches gravatar.com with a hash of the user's email (ADR-028).
+    avatar: 'default',
     meta: {
       titleSuffix: ' | لوحة بحر برنت',
       icons: [{ rel: 'icon', type: 'image/png', url: '/icon.png' }],

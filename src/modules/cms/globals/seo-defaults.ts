@@ -1,6 +1,6 @@
 import type { GlobalConfig } from 'payload';
 import { adminField, isAdmin } from '@/modules/cms/access';
-import { CACHE_TAGS, revalidateGlobal } from '@/modules/cms/hooks/revalidate';
+import { revalidateGlobal } from '@/modules/cms/hooks/revalidate';
 
 /** BRD 9.4 `seo-defaults` ⇄ `content/seo.ts` (per-route titles/descriptions, BRD 4.16). */
 export const SeoDefaults: GlobalConfig = {
@@ -8,7 +8,7 @@ export const SeoDefaults: GlobalConfig = {
   label: { ar: 'إعدادات SEO', en: 'SEO defaults' },
   admin: { group: { ar: 'الإعدادات', en: 'Settings' } },
   access: { read: () => true, update: isAdmin },
-  hooks: { afterChange: [revalidateGlobal('seo-defaults', CACHE_TAGS.seo)] },
+  hooks: { afterChange: [revalidateGlobal('seo-defaults')] },
   fields: [
     {
       name: 'titleTemplate',

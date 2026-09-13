@@ -11,6 +11,8 @@ export async function generateMetadata(): Promise<Metadata> {
   return { ...(await rootMetadata()), title: notFoundPage.title };
 }
 
+export const revalidate = 60;
+
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,

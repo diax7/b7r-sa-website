@@ -1,6 +1,6 @@
 import type { GlobalConfig } from 'payload';
 import { isAdmin } from '@/modules/cms/access';
-import { CACHE_TAGS, revalidateGlobal } from '@/modules/cms/hooks/revalidate';
+import { revalidateGlobal } from '@/modules/cms/hooks/revalidate';
 
 const APP_HELP = {
   ar: 'يجب أن يطابق التطبيق (لا مزامنة آلية).',
@@ -13,7 +13,7 @@ export const SiteSettings: GlobalConfig = {
   label: { ar: 'إعدادات الموقع', en: 'Site settings' },
   admin: { group: { ar: 'الإعدادات', en: 'Settings' } },
   access: { read: () => true, update: isAdmin },
-  hooks: { afterChange: [revalidateGlobal('site-settings', CACHE_TAGS.siteSettings)] },
+  hooks: { afterChange: [revalidateGlobal('site-settings')] },
   fields: [
     {
       type: 'row',

@@ -1,6 +1,6 @@
 import type { Field, GlobalConfig } from 'payload';
 import { isAdmin } from '@/modules/cms/access';
-import { CACHE_TAGS, revalidateGlobal } from '@/modules/cms/hooks/revalidate';
+import { revalidateGlobal } from '@/modules/cms/hooks/revalidate';
 
 const navItem: Field[] = [
   {
@@ -37,7 +37,7 @@ export const Navigation: GlobalConfig = {
   label: { ar: 'التنقل', en: 'Navigation' },
   admin: { group: { ar: 'الإعدادات', en: 'Settings' } },
   access: { read: () => true, update: isAdmin },
-  hooks: { afterChange: [revalidateGlobal('navigation', CACHE_TAGS.navigation)] },
+  hooks: { afterChange: [revalidateGlobal('navigation')] },
   fields: [
     {
       name: 'primary',

@@ -97,7 +97,7 @@
         "no-underscore-dangle": [
           "error",
           {
-            "allow": ["__umamiEvents", "__cspViolations"]
+            "allow": ["__umamiEvents", "__cspViolations", "_status"]
           }
         ]
       }

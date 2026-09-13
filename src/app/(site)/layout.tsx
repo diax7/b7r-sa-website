@@ -18,6 +18,12 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
+/**
+ * Every public page is static and regenerates at most once a minute when requested (ISR), on
+ * top of the publish-time `revalidatePath` calls in `modules/cms/hooks/revalidate` (ADR-030).
+ */
+export const revalidate = 60;
+
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,

@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
+  ADMIN_ROUTE_SOURCES,
+  adminContentSecurityPolicy,
+  adminHeaders,
   contentSecurityPolicy,
   headerRoutes,
   originOf,
@@ -95,6 +98,51 @@ describe('security headers', () => {
     for (const notPage of ['/api/health', '/_next/static/x.js', '/robots.txt', '/og/a.png']) {
       expect(pageOnly.test(notPage), notPage).toBe(false);
     }
+  });
+});
+
+describe('admin headers (ADR-028)', () => {
+  const csp = adminContentSecurityPolicy({ mediaOrigin: 'https://media.b7r.sa' });
+
+  it('allows no third-party script or connection besides Turnstile', () => {
+    expect(directive(csp, 'script-src')).toEqual([
+      "'self'",
+      "'unsafe-inline'",
+      'https://challenges.cloudflare.com',
+    ]);
+    expect(directive(csp, 'connect-src')).toEqual(["'self'", 'https://media.b7r.sa']);
+    expect(csp).not.toContain('googletagmanager');
+    expect(csp).not.toContain("'unsafe-eval'");
+  });
+
+  it('lets upload previews come from storage, blobs and data URLs', () => {
+    expect(directive(csp, 'img-src')).toEqual(["'self'", 'data:', 'blob:', 'https://media.b7r.sa']);
+    expect(directive(csp, 'media-src')).toEqual(["'self'", 'blob:']);
+    expect(directive(adminContentSecurityPolicy(), 'img-src')).toEqual([
+      "'self'",
+      'data:',
+      'blob:',
+    ]);
+  });
+
+  it('keeps the hardening directives of the site policy', () => {
+    for (const name of ['object-src', 'base-uri', 'form-action', 'frame-ancestors']) {
+      expect(directive(csp, name)).toEqual(directive(contentSecurityPolicy(), name));
+    }
+  });
+
+  it('marks the admin and its API noindex and uncacheable, on both sources', () => {
+    const headers = Object.fromEntries(adminHeaders().map((h) => [h.key, h.value]));
+    expect(headers['X-Robots-Tag']).toBe('noindex, nofollow');
+    expect(headers['Cache-Control']).toBe('private, no-store');
+    expect(headers['Content-Security-Policy']).toContain("default-src 'self'");
+    const routes = headerRoutes();
+    const adminRoutes = routes.filter((r) => ADMIN_ROUTE_SOURCES.includes(r.source));
+    expect(adminRoutes.map((r) => r.source)).toEqual(['/admin/:path*', '/api/payload/:path*']);
+    // Later routes win for the same key, so the admin set must follow the site-wide set.
+    expect(routes.indexOf(adminRoutes[0]!)).toBeGreaterThan(
+      routes.findIndex((r) => r.source === '/(.*)'),
+    );
   });
 });
 

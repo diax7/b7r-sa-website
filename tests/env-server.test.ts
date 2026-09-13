@@ -3,6 +3,7 @@ import {
   assertProductionEnv,
   isProductionRuntime,
   missingProductionEnv,
+  PAYLOAD_SECRET_MIN_LENGTH,
   PRODUCTION_REQUIRED_ENV,
 } from '@/lib/env-server';
 
@@ -13,6 +14,8 @@ const prod: Record<string, string> = {
   ...full,
   B7R_RUNTIME: 'production',
   NEXT_PUBLIC_SITE_URL: 'https://b7r.sa',
+  PAYLOAD_PUBLIC_SERVER_URL: 'https://b7r.sa',
+  PAYLOAD_SECRET: 'a'.repeat(PAYLOAD_SECRET_MIN_LENGTH),
 };
 
 describe('production env gate (BRD 8.5)', () => {
@@ -39,5 +42,17 @@ describe('production env gate (BRD 8.5)', () => {
     expect(() =>
       assertProductionEnv({ ...prod, NEXT_PUBLIC_SITE_URL: 'https://preview.b7r.sa' }),
     ).toThrow(/must be https:\/\/b7r\.sa/);
+  });
+
+  it('requires the CMS set: database, a long secret, same-origin server URL, S3 (BRD 9.2)', () => {
+    for (const name of ['DATABASE_URL', 'PAYLOAD_SECRET', 'S3_BUCKET', 'S3_SECRET_ACCESS_KEY']) {
+      expect(PRODUCTION_REQUIRED_ENV).toContain(name);
+    }
+    expect(() => assertProductionEnv({ ...prod, PAYLOAD_SECRET: 'short' })).toThrow(
+      /PAYLOAD_SECRET must be at least 32/,
+    );
+    expect(() =>
+      assertProductionEnv({ ...prod, PAYLOAD_PUBLIC_SERVER_URL: 'https://cms.b7r.sa' }),
+    ).toThrow(/PAYLOAD_PUBLIC_SERVER_URL must be https:\/\/b7r\.sa/);
   });
 });

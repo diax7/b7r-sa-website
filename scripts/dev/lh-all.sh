@@ -4,7 +4,6 @@
 set -euo pipefail
 cd "$(dirname "$0")/../.."
 for pid in $(netstat -ano 2>/dev/null | grep ':3004' | grep LISTENING | awk '{print $NF}' | sort -u); do taskkill //PID "$pid" //F >/dev/null 2>&1 || true; done
-rm -rf .next/cache/fetch-cache
 NEXT_PUBLIC_SITE_URL=https://b7r.sa pnpm build >/tmp/b7r-build.log 2>&1 || {
   tail -30 /tmp/b7r-build.log
   exit 1
