@@ -19,7 +19,9 @@ export default defineConfig({
     trace: 'on-first-retry',
   },
   webServer: {
-    command: 'pnpm start',
+    // CI warms the ISR entries and image transforms on the same server before the tests run
+    // (a cold AVIF transform on the runner stalls the load event); locally the server is reused.
+    command: process.env['CI'] ? 'bash scripts/ci/serve-warm.sh' : 'pnpm start',
     url: BASE_URL,
     reuseExistingServer: !process.env['CI'],
     timeout: 60_000,
