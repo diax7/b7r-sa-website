@@ -287,3 +287,59 @@ live on the page at once. The cost is that an unknown product slug answers `notF
 from a bare document (ADR-024) rather than the global 404; the client renders the view
 inside the layout, crawlers get the 404 status. `e2e/admin.spec.ts` covers publish, draft,
 create and delete; `tests/revalidate-hook.test.ts` the paths.
+
+## ADR-035 — Product cards carry a colour state; the gallery is one photo with a toggle (2026-09-13)
+
+Dhia's design review: cards show two colours, hovering a swatch previews it, clicking makes
+it the active colour, and hovering the photo flips to the back of the active colour; the
+product page was too long. `ProductCard` becomes a small client island: the name is a
+stretched link (the whole card still navigates, one accessible link), two swatch buttons
+(44 px targets, `aria-pressed`) sit above the link, and the flip is bound to the card's hover
+and paused while a swatch previews. Before hydration the first colour renders as before. The
+gallery drops thumbnails, arrows and the «صورة n من 4» counter: one photo that flips on
+hover, tap or arrow keys, a visible front/back toggle so the back is discoverable on a phone,
+the colour swatches, and a hidden live region for screen readers. Description, specs and the
+size chart share one section. The home strip keeps its expand-on-hover panels (IDEAS). BRD
+§6.5 and §6.6 amended.
+
+## ADR-036 — The designer's print area is the upload target; one colour per product (2026-09-13)
+
+Dhia's design review: the designer should be more compact, show only white (the tote in
+beige), take the upload on the printable area itself with a prompt, offer an «×» to remove
+the placed design, and hide the editing bounds unless the pointer is inside. The colour
+picker and the dropzone are gone; `PrintAreaOverlay` is an HTML layer aligned to the Konva
+print area (stage coordinates, hence the one `rtl-allow`): empty, it is a visually hidden,
+focusable file input with the prompt «اضغط لرفع شعارك أو صورتك» as its label (keyboard and
+click both open the picker; drag-and-drop stays on the canvas); with a design, one 44 px «×»
+(«إزالة التصميم») at the print-area corner that is inert while hidden. Edit chrome (outline,
+handles, «×») shows while a mouse pointer is inside the canvas or the design is selected by
+a tap or click; touch keeps its selection, a press elsewhere on the mockup clears it. The
+canvas starts empty with the prompt (Dhia can flip it to the pre-placed sample in one line:
+`initialState.design`); «جرّب تصميماً جاهزاً» places the sample. Uploads stay in memory;
+the island revokes a replaced object URL. The two new strings are Appendix G rows and are
+listed for the 2b `home` seed. BRD §6.4.3 amended.
+
+## ADR-037 — The video is a muted background loop (2026-09-13)
+
+Dhia's design review: a continuous looping background video with the copy over it, not a
+poster with a play button. This departs from BRD §3.7 ("no continuous background
+animations except the waves") and §6.4.5 ("no autoplay anywhere, no loop"), so both are
+amended and constitution principle V is bumped to 1.1.0 naming the loop. The conditions
+that keep it acceptable: muted (`muted` set as a property before `play()` — React omits the
+attribute in server HTML), decorative (`aria-hidden`, no controls, the copy carries the
+meaning), lazy (poster and copy are server-rendered; the loop mounts near the viewport with
+`preload="none"`, so nothing is fetched above the fold and Lighthouse is unaffected) and
+reducible (poster only under `prefers-reduced-motion`, Save-Data, or a refused `play()`). A
+fixed scrim keeps the copy at AA on every frame. The `video_play` event is retired (§6.6,
+§6.16 event list).
+
+## ADR-038 — Widget at the bottom-left, grouped numbers, a smaller riyal symbol (2026-09-13)
+
+Dhia's design review, three global changes. The WhatsApp widget moves to the bottom-left,
+which in this RTL-only site is the inline end: `end-6`, no physical property — BRD §6.15's
+"one intentional physical property" is retired (a future LTR locale would put it
+bottom-right, the conventional LTR spot). Its panel is positioned inside the fixed dock above
+the button, so opening it never moves the button (the old flex layout shifted it). Every
+displayed number goes through `formatNumber` (`Intl.NumberFormat('en-US')` grouping,
+integers without decimals, two otherwise); form inputs never receive grouped strings. The
+riyal symbol renders at 0.85 em instead of 1 em. BRD §3.11 and §6.15 amended.

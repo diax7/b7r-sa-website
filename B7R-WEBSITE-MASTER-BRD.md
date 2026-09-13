@@ -269,6 +269,8 @@ Scroll-reveal: elements fade up 12 px over 400 ms, once, when 20% visible, stagg
 
 Under `prefers-reduced-motion: reduce`: disable auto-advance, parallax-like effects, waves, stagger, and count-ups; keep opacity transitions ≤ 150 ms.
 
+Amended 2026-09-13 (ADR-037): the marketing video in §6.4.5 is the second continuous animation, a muted, decorative loop mounted near the viewport with the poster under reduced motion and Save-Data. The how-it-works journey (§6.7) fills its path with a CSS scroll-driven progress line, static where unsupported.
+
 ### 3.8 Iconography and illustration
 
 - UI icons: **Lucide** (`lucide-react`), 24 px, 1.75 px stroke, colour inherits. Directional icons (`ArrowLeft/Right`, `ChevronLeft/Right`) must be mirrored in RTL: use the RTL-aware wrapper component `Icon` that flips `ArrowRight` to `ArrowLeft` when `dir="rtl"`, or use `ArrowUpRight`-style icons that need no flip.
@@ -292,8 +294,8 @@ Use shadcn/ui primitives (Radix) for Accordion, Dialog, Select, Slider, Toast, a
 
 ### 3.11 Money, numbers, and the riyal symbol
 
-- `SarSymbol`: an inline SVG of the official Saudi Central Bank riyal symbol, `fill="currentColor"`, `height="1em"`, `aria-label="ريال سعودي"`. Source the official path from the Saudi Central Bank's published symbol package (or trace it from the official SVG); do not use a Unicode character or a font.
-- `SarAmount value={89}` renders `<bdi dir="ltr"><SarSymbol/> 89</bdi>` with the symbol **always to the left of the digits**, a thin space between, digits in tabular figures. Integers render without decimals; non-integers with two decimals.
+- `SarSymbol`: an inline SVG of the official Saudi Central Bank riyal symbol, `fill="currentColor"`, `height="0.85em"` (amended 2026-09-13, ADR-038: a touch smaller than the digits), `aria-label="ريال سعودي"`. Source the official path from the Saudi Central Bank's published symbol package (or trace it from the official SVG); do not use a Unicode character or a font.
+- `SarAmount value={89}` renders `<bdi dir="ltr"><SarSymbol/> 89</bdi>` with the symbol **always to the left of the digits**, a thin space between, digits in tabular figures. Integers render without decimals; non-integers with two decimals. Amended 2026-09-13 (ADR-038): every displayed number — amounts, the calculator's figures, stats — carries thousands separators (`13,200`) through one `formatNumber` helper; form inputs never receive grouped strings.
 - Prose that spells the currency ("30 ريالاً") is used only where §4 spells it out; everywhere numbers appear as amounts (cards, calculator, tables) use `SarAmount`.
 - Phone numbers, emails, and URLs are rendered LTR inside `<bdi>`.
 
@@ -731,12 +733,12 @@ Section order: Hero → Product strip → Interactive designer and profit → Th
 
 **Purpose:** let the visitor feel the product and the money in under a minute. This is the section Dhia called the most important. Build it as its own module (`modules/designer`), fully client-side, no uploads to any server, no login, no saving.
 
-**Layout desktop:** `SectionHeader`. Then a two-column card (surface, radius 20 px, hairline border, padding 32 px): **start column (40%) = controls**, **end column (60%) = canvas**. Mobile: canvas first (full width, square), controls below as four stacked groups; the results card is sticky at the bottom of the viewport while the section is in view (height 72 px, shows ربحك الشهري التقديري and the CTA).
+**Layout desktop:** `SectionHeader`. Then a two-column card (surface, radius 20 px, hairline border, padding 32 px): **start column (40%) = controls**, **end column (60%) = canvas** (amended 2026-09-13: controls 46 %, canvas 54 %, canvas max 600 px, tighter gaps). Mobile: canvas first (full width, square), controls below as four stacked groups; the results card is sticky at the bottom of the viewport while the section is in view (height 72 px, shows ربحك الشهري التقديري and the CTA).
 
 **Controls (top to bottom, each group has its §4.4 label):**
 1. **المنتج**: 5 `Chip`s with 32 px product thumbnails and names; single select; default تيشيرت أساسي.
-2. **اللون**: swatches (28 px circles with a 2 px ring on selection) for the selected product's colours (tees and hoodie: white, black; onesie: white; tote: beige). Default: white for tees and hoodie, so the sample design is visible.
-3. **التصميم**: a dashed dropzone (radius 13 px) with an `Upload` icon and the button "ارفع تصميمك" + helper text; accepts `image/png, image/jpeg, image/svg+xml, image/webp`, max 10 MB, drag-and-drop and click; below it the ghost button "جرّب تصميماً جاهزاً". After a design exists, the dropzone collapses to a 56 px row with the thumbnail, "غيّر التصميم" and "إعادة الضبط". Invalid files show the §4.4 file error inline.
+2. **اللون**: swatches (28 px circles with a 2 px ring on selection) for the selected product's colours (tees and hoodie: white, black; onesie: white; tote: beige). Default: white for tees and hoodie, so the sample design is visible. *Amended 2026-09-13 (ADR-036): no colour control — every product shows in white, the tote in beige.*
+3. **التصميم**: a dashed dropzone (radius 13 px) with an `Upload` icon and the button "ارفع تصميمك" + helper text; accepts `image/png, image/jpeg, image/svg+xml, image/webp`, max 10 MB, drag-and-drop and click; below it the ghost button "جرّب تصميماً جاهزاً". After a design exists, the dropzone collapses to a 56 px row with the thumbnail, "غيّر التصميم" and "إعادة الضبط". Invalid files show the §4.4 file error inline. *Amended 2026-09-13 (ADR-036): the printable area on the mockup is the upload target — empty, it shows «اضغط لرفع شعارك أو صورتك» with the helper text and opens the picker on click or keyboard (drag-and-drop anywhere on the mockup); a placed design gets a 44 px «×» («إزالة التصميم») that clears it; the canvas starts empty and «جرّب تصميماً جاهزاً» under it places the sample. The print-area outline and the handles show only while a mouse pointer is inside the canvas or the design is selected by a tap; otherwise the mockup is a clean preview. The dropzone, its collapsed row and «غيّر التصميم» / «إعادة الضبط» are gone.*
 4. **التسعير**: read-only row "التكلفة من بحر" with `SarAmount base`; "سعر البيع في متجرك" numeric input (LTR digits, `SarSymbol` prefix) bound to a `Slider` (min = base, max = base × 4, step 1, default = suggested price from Appendix A) with the helper "السعر المقترح {SarAmount}"; "مبيعات يومية" `Stepper` (min 1, max 100, default 10).
 
 **Results card (below the controls, tinted `--color-accent-tint`):** two figures with labels "ربحك لكل قطعة" = sell − base, "ربحك الشهري التقديري" = (sell − base) × dailySales × 30, both `SarAmount`, integers, count-up 300 ms on change; when sell < base show the warning in `--color-error` and render the figures in error colour; when sell = base show 0 in muted colour. Footnote. Then the section CTA "ابدأ بيع هذا المنتج" (primary lg, full width of the column) linking to the register URL with `utm_campaign=designer&product={slug}`.
@@ -779,6 +781,8 @@ Section order: Hero → Product strip → Interactive designer and profit → Th
 
 **Layout:** centred `SectionHeader` (H2 + lead from §4.4). Below: a 16:9 `VideoPlayer` in a radius 20 px frame with a hairline border, max-width 960 px, poster image (a frame extracted from the video at build via `scripts/video-poster.ts`; if extraction is impossible in the build environment use `lifestyle-mockups/dtg-printer-stock.png`), a centred 72 px play button (white circle, primary play icon, shadow-popover). Click: the `<video>` (`preload="none"`, `playsinline`, `controls` after start) plays with sound. No autoplay anywhere, no loop. Source `public/video/printer-marketing.mp4`. Track `video_play`.
 
+Amended 2026-09-13 (ADR-037, Dhia's design review): the section is a full-width frame with the server-rendered poster, the H2 + lead and the register CTA over a fixed scrim, and a **muted looping** `<video>` (`preload="none"`, `playsinline`, no controls, `aria-hidden`) mounted near the viewport by a small island; under `prefers-reduced-motion`, Save-Data, or a refused `play()` the poster stays. No `video_play` event.
+
 #### 6.4.6 Why us
 
 **Layout:** `SectionHeader`. Three `Card`s in a row (single column on mobile): 56 px icon circle (accent tint background, Lucide icon in `--color-primary`: `ShieldCheck` for بدون مخاطرة, `Workflow` for كل شيء تلقائي, `Zap` for جودة محلية وسريعة), H3 title, one-line text (§4.4). Cards have hairline borders, no shadow at rest, `--shadow-card-hover` on hover with a 2 px lift.
@@ -797,11 +801,11 @@ Section order: Hero → Product strip → Interactive designer and profit → Th
 
 ### 6.5 Products listing `/products`
 
-H1 + lead (§4.8). Grid of 5 `ProductCard`s (3 columns desktop, 2 tablet, 1 mobile): photo 4:5 (front, black or beige as in §6.4.2), name (H3), price "يبدأ من {SarAmount}", colour dots, sizes summary. Whole card is a link; hover lifts 2 px and swaps the photo to the back view over 300 ms if one exists. Then the CTA ribbon.
+H1 + lead (§4.8). Grid of 5 `ProductCard`s (3 columns desktop, 2 tablet, 1 mobile): photo 4:5 (front, black or beige as in §6.4.2), name (H3), price "يبدأ من {SarAmount}", colour dots, sizes summary. Amended 2026-09-13 (ADR-035): the card shows the first two colour swatches (44 px targets); hovering a swatch previews that colour, clicking makes it the active colour; hovering the card flips to the back of the active colour. Whole card is a link; hover lifts 2 px and swaps the photo to the back view over 300 ms if one exists. Then the CTA ribbon.
 
 ### 6.6 Product detail `/products/{slug}`
 
-**Layout desktop:** breadcrumbs; two columns: start = content, end = gallery. Gallery: main image 1:1 (radius 20 px) with thumbnails below (front/back for each colour); colour swatches switch both; keyboard arrows move between images. Content: H1, short description (one paragraph from Appendix A), price block (three lines from §4.8 with `SarAmount`, the profit line in success colour), footnote, primary CTA (lg) + secondary link to the designer, then sections: الوصف (full description), المواصفات (definition list: الخامة, الوزن, المقاسات, الألوان, منطقة الطباعة, طريقة الطباعة), جدول المقاسات (table; cm; LTR digits in RTL cells), منتجات أخرى (3 `ProductCard`s). Then the ribbon.
+**Layout desktop:** breadcrumbs; two columns: start = content, end = gallery. Gallery: main image 1:1 (radius 20 px) with thumbnails below (front/back for each colour); colour swatches switch both; keyboard arrows move between images. *Amended 2026-09-13 (ADR-035): one photo of the active colour that shows the back on hover, tap or arrow keys, a visible front/back toggle under it, then the colour swatches — no thumbnails, no counter; description, specs and the size chart share one section side by side from `md`.* Content: H1, short description (one paragraph from Appendix A), price block (three lines from §4.8 with `SarAmount`, the profit line in success colour), footnote, primary CTA (lg) + secondary link to the designer, then sections: الوصف (full description), المواصفات (definition list: الخامة, الوزن, المقاسات, الألوان, منطقة الطباعة, طريقة الطباعة), جدول المقاسات (table; cm; LTR digits in RTL cells), منتجات أخرى (3 `ProductCard`s). Then the ribbon.
 
 **Mobile:** gallery first, then content; sticky bottom bar with price "يبدأ من" and the CTA.
 
@@ -811,9 +815,13 @@ H1 + lead (§4.8). Grid of 5 `ProductCard`s (3 columns desktop, 2 tablet, 1 mobi
 
 H1 + lead. Five step rows alternating image side (3D icons: `tee-plus-create-product`, `laptop-link-connect-store`, `bag-and-parcel-order`, `printer-print`, `truck-delivery`; icon on the end side for odd rows, start side for even rows; mobile stacks icon above text). Then the profit block: title, three tiles joined by "−" and "=" glyphs (mirrored order is natural in RTL: سعر البيع on the start), example line with `SarAmount`. Then the mini FAQ (3 items) and the ribbon.
 
+Amended 2026-09-13 (Dhia's design review): the five steps are one connected journey — numbered 3D icons in circular frames on a path that runs across the top from `lg` and down the start side on phones, with a progress line that fills as the section scrolls (CSS scroll timeline; static where unsupported and under reduced motion); the profit block is a highlighted card whose tiles stack on phones. Copy unchanged.
+
 ### 6.8 About `/about`
 
 H1. Story block (title + paragraph, max-width 760 px). Three cards (رسالتنا, رؤيتنا, قيمنا) with Lucide icons `Target`, `Eye`, `Heart`. Misk credential block: a surface card with the Misk logo (`brand/trust-badges/misk-foundation-logo.png`, 200 px wide, on white) at the start and the title + text at the end. Location line with a `MapPin` icon. One lifestyle image is allowed (`lifestyle-mockups/hanging-tshirt-mockup.jpg`) as a decorative banner between the story and the cards, 21:9, radius 20 px. Then the ribbon.
+
+Amended 2026-09-13 (Dhia's design review, same copy): the lifestyle photo sits beside the story in a two-column header with the delivery origin as a chip over it and the location line under the story; a navy facts band follows with the welcome credit (`SarAmount`) and the three hero proof chips from §4.4, each with the matching why-us line; the three cards carry the 3D icons as art in a staggered grid; the MISK credential sits on an accent-tint card; then the ribbon.
 
 ### 6.9 Contact `/contact`
 
@@ -853,7 +861,7 @@ Component `NewsletterForm` used in the footer and blog. `POST /api/newsletter` v
 
 **Purpose:** always-available human contact, styled to the brand, not a bare icon.
 
-**Button:** fixed at bottom **right** (Dhia's explicit choice, even in RTL): `inset-block-end: 24px; right: 24px` (this is the one intentional physical property; comment it), 56 px circle, `--color-whatsapp` background, white WhatsApp glyph (official logo shape), `--shadow-popover`, scale 1.05 on hover. On first page load it appears after 1.5 s with a 200 ms scale-in. A small unread-style dot (accent) pulses once 6 s after load, once per session.
+**Button:** fixed at bottom **right** (Dhia's explicit choice, even in RTL): `inset-block-end: 24px; right: 24px` (this is the one intentional physical property; comment it) — *amended 2026-09-13 (ADR-038): bottom **left**, i.e. the inline end of this RTL site (`inset-inline-end: 24px`, a logical property; the physical exception is retired); the panel opens above the button inside the same fixed dock, so the button never moves* — 56 px circle, `--color-whatsapp` background, white WhatsApp glyph (official logo shape), `--shadow-popover`, scale 1.05 on hover. On first page load it appears after 1.5 s with a 200 ms scale-in. A small unread-style dot (accent) pulses once 6 s after load, once per session.
 
 **Popup (click):** a 320 px card anchored above the button (right-aligned), radius 13 px, `--shadow-popover`: header in `--color-primary` with the B7R icon (36 px), title "بحر برنت", subtitle "فريق الدعم", a close X; body on `--color-ground` with one chat bubble (white, radius 13 px with a small tail at the start) containing the greeting; footer with the primary button "ابدأ المحادثة" (full width, WhatsApp green) that opens `https://wa.me/966501699572?text={encoded prefilled message}` in a new tab. Open/close animates 200 ms (opacity + 8 px rise). Escape closes; clicking outside closes. On mobile the popup is `calc(100vw - 32px)` wide. Track `whatsapp_click{location:"widget"}`.
 
@@ -864,7 +872,7 @@ Component `NewsletterForm` used in the footer and blog. `POST /api/newsletter` v
 - **Umami** loads on every page (script from `NEXT_PUBLIC_UMAMI_SRC` with `data-website-id`), cookieless, no consent needed.
 - **GA4** (`NEXT_PUBLIC_GA_ID`) loads only after consent. Implement Consent Mode v2: an inline `beforeInteractive` script sets `gtag('consent','default',{ analytics_storage:'denied', ad_storage:'denied', ad_user_data:'denied', ad_personalization:'denied' })`; on "موافق" set a first-party cookie `b7r_consent=granted` (180 days), call `gtag('consent','update',{ analytics_storage:'granted' })` and inject the GA script via `@next/third-parties`; on "رفض" set `b7r_consent=denied` and never load GA. On later visits respect the cookie; no bar.
 - **ConsentBar:** small card fixed at the bottom **end** (in RTL the end edge is the left, so it never collides with the WhatsApp button, which sits at the physical right), `inset-block-end: 24px; inset-inline-end: 24px`, max-width 420 px, radius 13 px, shadow-popover, text (§4.7) + two buttons (موافق primary md, رفض ghost md) + the privacy link. Appears 800 ms after load with a 200 ms rise. Never blocks scrolling or content. On mobile it is full-width and sits above the WhatsApp button with 88 px bottom clearance.
-- **Event helper:** `track(name, props)` sends to Umami always and to GA4 when granted. Events: `cta_click{location}`, `whatsapp_click{location}`, `designer_*`, `calculator_change`, `contact_submit`, `newsletter_submit`, `video_play`, `product_view`, `faq_open`, `outbound_app_click` (any link to b7r.app).
+- **Event helper:** `track(name, props)` sends to Umami always and to GA4 when granted. Events: `cta_click{location}`, `whatsapp_click{location}`, `designer_*`, `calculator_change`, `contact_submit`, `newsletter_submit`, `product_view`, `faq_open`, `outbound_app_click` (any link to b7r.app). (`video_play` retired 2026-09-13, ADR-037.)
 
 ### 6.17 Mobile rules summary
 
@@ -1735,6 +1743,8 @@ Decision history: `docs/00-decisions-log.md` (rounds 1–4 with Dhia, 2026-09-12
 14. `NEXT_PUBLIC_TURNSTILE_SITE_KEY` is set to Cloudflare's public always-pass test key in `.env.local` and CI so the widget island renders in tests; production needs the real pair (§12.4 item 5).
 15. Product OG images use `og:type website` (see §7.3 amendment); confirm in WhatsApp/X previews at cutover (§12.4 item 8).
 16. Three sample testimonials (`src/content/testimonials.ts`) were written by the agent on Dhia's instruction (ADR-023) and stay `placeholder: true`; to show them on b7r.sa set `placeholder: false` (they are not real merchants' words — §3.14) or replace them with real entries (§12.4 item 1).
+
+17. Design edits 2026-09-13 (`src/content/home.ts`, `TODO(copy)`): the designer's upload prompt «اضغط لرفع شعارك أو صورتك» and the remove control «إزالة التصميم» (ADR-036), and the product gallery's toggle name «اقلب الصورة» (`src/messages/ar.json`, ADR-035). These three also belong to the 2b `home` global seed. The designer now starts with an empty print area; the pre-placed sample of the earlier build is a one-line switch (`initialState.design`) if Dhia prefers it.
 
 ### Appendix H: Glossary of Arabic UI terms used in code comments and admin labels
 

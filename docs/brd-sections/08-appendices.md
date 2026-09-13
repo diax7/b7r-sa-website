@@ -293,6 +293,8 @@ Decision history: `docs/00-decisions-log.md` (rounds 1–4 with Dhia, 2026-09-12
 15. Product OG images use `og:type website` (see §7.3 amendment); confirm in WhatsApp/X previews at cutover (§12.4 item 8).
 16. Three sample testimonials (`src/content/testimonials.ts`) were written by the agent on Dhia's instruction (ADR-023) and stay `placeholder: true`; to show them on b7r.sa set `placeholder: false` (they are not real merchants' words — §3.14) or replace them with real entries (§12.4 item 1).
 
+17. Design edits 2026-09-13 (`src/content/home.ts`, `TODO(copy)`): the designer's upload prompt «اضغط لرفع شعارك أو صورتك» and the remove control «إزالة التصميم» (ADR-036), and the product gallery's toggle name «اقلب الصورة» (`src/messages/ar.json`, ADR-035). These three also belong to the 2b `home` global seed. The designer now starts with an empty print area; the pre-placed sample of the earlier build is a one-line switch (`initialState.design`) if Dhia prefers it.
+
 ### Appendix H: Glossary of Arabic UI terms used in code comments and admin labels
 
 | Arabic | English (code) |

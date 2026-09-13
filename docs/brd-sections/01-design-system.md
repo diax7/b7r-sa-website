@@ -97,6 +97,8 @@ Scroll-reveal: elements fade up 12 px over 400 ms, once, when 20% visible, stagg
 
 Under `prefers-reduced-motion: reduce`: disable auto-advance, parallax-like effects, waves, stagger, and count-ups; keep opacity transitions ≤ 150 ms.
 
+Amended 2026-09-13 (ADR-037): the marketing video in §6.4.5 is the second continuous animation, a muted, decorative loop mounted near the viewport with the poster under reduced motion and Save-Data. The how-it-works journey (§6.7) fills its path with a CSS scroll-driven progress line, static where unsupported.
+
 ### 3.8 Iconography and illustration
 
 - UI icons: **Lucide** (`lucide-react`), 24 px, 1.75 px stroke, colour inherits. Directional icons (`ArrowLeft/Right`, `ChevronLeft/Right`) must be mirrored in RTL: use the RTL-aware wrapper component `Icon` that flips `ArrowRight` to `ArrowLeft` when `dir="rtl"`, or use `ArrowUpRight`-style icons that need no flip.
@@ -120,8 +122,8 @@ Use shadcn/ui primitives (Radix) for Accordion, Dialog, Select, Slider, Toast, a
 
 ### 3.11 Money, numbers, and the riyal symbol
 
-- `SarSymbol`: an inline SVG of the official Saudi Central Bank riyal symbol, `fill="currentColor"`, `height="1em"`, `aria-label="ريال سعودي"`. Source the official path from the Saudi Central Bank's published symbol package (or trace it from the official SVG); do not use a Unicode character or a font.
-- `SarAmount value={89}` renders `<bdi dir="ltr"><SarSymbol/> 89</bdi>` with the symbol **always to the left of the digits**, a thin space between, digits in tabular figures. Integers render without decimals; non-integers with two decimals.
+- `SarSymbol`: an inline SVG of the official Saudi Central Bank riyal symbol, `fill="currentColor"`, `height="0.85em"` (amended 2026-09-13, ADR-038: a touch smaller than the digits), `aria-label="ريال سعودي"`. Source the official path from the Saudi Central Bank's published symbol package (or trace it from the official SVG); do not use a Unicode character or a font.
+- `SarAmount value={89}` renders `<bdi dir="ltr"><SarSymbol/> 89</bdi>` with the symbol **always to the left of the digits**, a thin space between, digits in tabular figures. Integers render without decimals; non-integers with two decimals. Amended 2026-09-13 (ADR-038): every displayed number — amounts, the calculator's figures, stats — carries thousands separators (`13,200`) through one `formatNumber` helper; form inputs never receive grouped strings.
 - Prose that spells the currency ("30 ريالاً") is used only where §4 spells it out; everywhere numbers appear as amounts (cards, calculator, tables) use `SarAmount`.
 - Phone numbers, emails, and URLs are rendered LTR inside `<bdi>`.
 
