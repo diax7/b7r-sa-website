@@ -27,6 +27,9 @@
 - [x] C3 Axe scans the mounted home islands; target-size assertions.
 - [x] C4 ADR-035…038, constitution 1.1.0, BRD §3.7/§3.11/§6.4.3/§6.4.5/§6.5/§6.6/§6.7/§6.8/§6.15
   + §6.16 events, Appendix G row 17, IDEAS; screenshots for Dhia; CTO review; PR.
+- [x] C5 CTO revisions (89 → 94 GO): the flow line's view timeline named on the track and static
+  under reduced motion; the About facts band from the why-us pairs; the upload prompt fits the
+  print area on every stage (container queries).
 
 ## For Dhia's review on :3004
 - The designer starts with an empty print area and the upload prompt (the sample is one click
