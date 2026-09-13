@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import type { Metadata } from 'next';
 import type { BlogPost, Product } from '@/content/schema';
 import { productSeo, SEO_TITLE_TEMPLATE } from '@/content/seo-copy';
-import { getSeo, getSeoDefaults, getSiteSettings } from '@/lib/cms';
+import { getPage, getSeo, getSeoDefaults, getSiteSettings } from '@/lib/cms';
 import { env, siteBase } from '@/lib/env';
 
 export const DEFAULT_OG_IMAGE = '/og/default.png';
@@ -78,6 +78,19 @@ export async function buildMetadata(route: string): Promise<Metadata> {
     description: page.description,
     ...(page.ogImage ? { ogImage: page.ogImage } : {}),
     absoluteTitle: route === '/',
+  });
+}
+
+/** A `pages` document: its own `seo` group (BRD 4.16); nothing for a slug that is not published. */
+export async function cmsPageMetadata(slug: string): Promise<Metadata> {
+  const [page, site] = await Promise.all([getPage(slug), getSiteSettings()]);
+  if (!page) return {};
+  return pageMetadata({
+    route: `/${slug}`,
+    siteName: site.brandName,
+    title: page.seo.title,
+    description: page.seo.description,
+    ...(page.seo.ogImage ? { ogImage: page.seo.ogImage } : {}),
   });
 }
 

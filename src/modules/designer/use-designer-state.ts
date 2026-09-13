@@ -4,13 +4,12 @@ import { useReducer } from 'react';
 import type { Product } from '@/content/schema';
 import { clampDaily, clampSell } from '@/modules/designer/profit';
 
-export const SAMPLE_DESIGN = { url: '/designs/sample-tasmeemak.png', width: 1200, height: 600 };
 export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
 export const ACCEPTED_TYPES = ['image/png', 'image/jpeg', 'image/svg+xml', 'image/webp'];
 
+/** An uploaded design: an object URL plus its natural size. */
 export interface Design {
   url: string;
-  kind: 'sample' | 'upload';
   width: number;
   height: number;
 }
@@ -18,7 +17,7 @@ export interface Design {
 export interface DesignerState {
   product: Product;
   colorSlug: string;
-  /** `null` until the visitor uploads or places the sample: the print area shows the prompt. */
+  /** `null` until the visitor uploads a design: the print area shows the prompt. */
   design: Design | null;
   sellPrice: number;
   dailySales: number;
@@ -33,7 +32,6 @@ export interface DesignerState {
 export type DesignerAction =
   | { type: 'selectProduct'; product: Product }
   | { type: 'setDesign'; design: Design }
-  | { type: 'useSample' }
   | { type: 'removeDesign' }
   | { type: 'fileError'; error: boolean }
   | { type: 'setSell'; value: number; live?: boolean }
@@ -80,8 +78,6 @@ export function reducer(state: DesignerState, action: DesignerAction): DesignerS
     }
     case 'setDesign':
       return { ...state, design: action.design, fileError: false };
-    case 'useSample':
-      return { ...state, design: { ...SAMPLE_DESIGN, kind: 'sample' }, fileError: false };
     case 'removeDesign':
       return { ...state, design: null, fileError: false };
     case 'fileError':

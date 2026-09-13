@@ -26,7 +26,6 @@ export interface HeroCarouselProps {
     primaryHref: string;
     secondaryCta: string;
     secondaryHref: string;
-    microcopy: string;
     chips: string[];
     slideIndicatorAria: string;
     pauseAria: string;
@@ -190,22 +189,19 @@ export function HeroCarousel({ slides, images, copy }: HeroCarouselProps) {
             })}
           </div>
 
-          <div className="flex w-full flex-col gap-3">
-            <div className="flex w-full flex-col items-stretch gap-4 sm:flex-row sm:items-center sm:gap-6">
-              <Button asChild size="lg" className="shadow-card-hover">
-                <a href={copy.primaryHref} data-track="cta_click" data-location="hero">
-                  {copy.primaryCta}
-                </a>
-              </Button>
-              <Link
-                href={copy.secondaryHref}
-                className="inline-flex items-center justify-center gap-2 py-2 text-body font-medium text-primary transition-colors duration-(--duration-fast) hover:text-primary-hover sm:justify-start"
-              >
-                {copy.secondaryCta}
-                <Icon icon={ArrowRight} size={18} />
-              </Link>
-            </div>
-            <p className="text-small text-text-muted">{copy.microcopy}</p>
+          <div className="flex w-full flex-col items-stretch gap-4 sm:flex-row sm:items-center sm:gap-6">
+            <Button asChild size="lg" className="shadow-card-hover">
+              <a href={copy.primaryHref} data-track="cta_click" data-location="hero">
+                {copy.primaryCta}
+              </a>
+            </Button>
+            <Link
+              href={copy.secondaryHref}
+              className="inline-flex items-center justify-center gap-2 py-2 text-body font-medium text-primary transition-colors duration-(--duration-fast) hover:text-primary-hover sm:justify-start"
+            >
+              {copy.secondaryCta}
+              <Icon icon={ArrowRight} size={18} />
+            </Link>
           </div>
 
           <ul

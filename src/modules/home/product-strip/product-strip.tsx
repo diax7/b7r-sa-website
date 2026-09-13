@@ -5,8 +5,7 @@ import { Container } from '@/components/shared/container';
 import { SarAmount } from '@/components/shared/sar-amount';
 import { Section } from '@/components/shared/section';
 import { SectionHeader } from '@/components/shared/section-header';
-import { home } from '@/content/home';
-import { getProduct } from '@/lib/cms';
+import { getHome, getProduct } from '@/lib/cms';
 import { stripColorFor } from '@/lib/product-helpers';
 import messages from '@/messages/ar.json';
 import { StripHint } from '@/modules/home/product-strip/strip-hint';
@@ -16,15 +15,20 @@ import { StripHint } from '@/modules/home/product-strip/strip-hint';
  * with keyboard focus and without JS. Mobile: native snap carousel with labels always visible.
  */
 export async function ProductStrip() {
-  const { productStrip } = home;
+  const { productStrip } = await getHome();
   const found = await Promise.all(productStrip.order.map((slug) => getProduct(slug)));
-  const items = productStrip.order.map((slug, i) => {
+  const items = productStrip.order.flatMap((slug, i) => {
     const product = found[i];
-    if (!product) throw new Error(`Product strip references unknown product ${slug}`);
+    // A strip product unpublished or deleted after the home was published: the strip keeps
+    // rendering without it rather than freezing the home page's regeneration.
+    if (!product) {
+      console.warn(`product strip: ${slug} is not published, skipping the panel`);
+      return [];
+    }
     const color =
       product.colors.find((c) => c.slug === stripColorFor(product)) ?? product.colors[0];
     if (!color) throw new Error(`Product ${slug} has no colours`);
-    return { product, color };
+    return [{ product, color }];
   });
 
   return (
@@ -73,7 +77,7 @@ export async function ProductStrip() {
             </li>
           ))}
         </ul>
-        <StripHint label={productStrip.swipeHint} />
+        <StripHint label={messages.strip.swipeHint} />
       </div>
     </Section>
   );

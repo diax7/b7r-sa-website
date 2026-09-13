@@ -7,7 +7,7 @@ import { Prose } from '@/components/shared/prose';
 import { Section } from '@/components/shared/section';
 import { blogCopy, blogPosts, hubName } from '@/content/blog';
 import { loadBlogPost } from '@/content/blog/load';
-import { legalCopy, productsPage } from '@/content/pages';
+import { productsPage } from '@/content/pages';
 import type { BlogPost as BlogPostData } from '@/content/schema';
 import { formatArabicDate } from '@/lib/dates';
 import { env, siteBase } from '@/lib/env';
@@ -15,7 +15,8 @@ import { renderMarkdown } from '@/lib/markdown';
 import { registerUrl } from '@/lib/utm';
 import messages from '@/messages/ar.json';
 import { getSiteSettings } from '@/lib/cms';
-import { CtaRibbon, JsonLd, jsonLd } from '@/modules/core';
+import { JsonLd, jsonLd } from '@/modules/core';
+import { CtaRibbon } from '@/modules/core/cta-ribbon';
 import { PostCard, postMeta } from '@/modules/blog/post-card';
 import { ShareButtons } from '@/modules/blog/share-buttons';
 
@@ -95,7 +96,7 @@ export async function BlogPostPage({ post }: { post: BlogPostData }) {
                 {post.updatedAt !== post.publishedAt && (
                   <>
                     {' · '}
-                    {legalCopy.updatedPrefix}{' '}
+                    {messages.legal.updatedPrefix}{' '}
                     <time dateTime={post.updatedAt}>{formatArabicDate(post.updatedAt)}</time>
                   </>
                 )}

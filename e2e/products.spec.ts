@@ -135,10 +135,15 @@ test.describe('product detail (BRD 6.6)', () => {
     await expect(photo).toHaveAttribute('data-gallery-side', 'front');
   });
 
-  test('description, specs and the size chart share one section', async ({ page }) => {
+  test('the description sits under the name; specs and the size chart share one section', async ({
+    page,
+  }) => {
     await page.goto('/products/tee-essential');
+    const hero = page.locator('section[aria-labelledby="product-title"]');
+    await expect(hero.getByText('تيشيرت كلاسيكي بياقة دائرية', { exact: false })).toBeVisible();
     const details = page.locator('[data-product-details]');
     await expect(details).toHaveCount(1);
+    await expect(details.locator('h2')).toHaveCount(2);
     await expect(details.locator('dl')).toHaveCount(1);
     await expect(details.locator('table')).toHaveCount(1);
     await expect(page.locator('table')).toHaveCount(1);

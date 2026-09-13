@@ -1,7 +1,26 @@
 import type { FaqItem } from '@/content/schema';
 
+const HOME_ORDER = [
+  'كم أحتاج لأبدأ؟',
+  'كيف أربح؟',
+  'هل يعرف عميلي أن الطباعة من بحر برنت؟',
+  'كم يستغرق التوصيل؟',
+  'ما المتاجر التي أقدر أربطها؟',
+];
+
+/** Adds each entry's order inside its group and, for the five home items, their home order (BRD 4.4). */
+function ordered(items: Array<Omit<FaqItem, 'order' | 'homeOrder'>>): FaqItem[] {
+  const counters = new Map<string, number>();
+  return items.map((item) => {
+    const order = (counters.get(item.group) ?? 0) + 1;
+    counters.set(item.group, order);
+    const home = HOME_ORDER.indexOf(item.question);
+    return { ...item, order, ...(item.showOnHome && home >= 0 ? { homeOrder: home + 1 } : {}) };
+  });
+}
+
 /** BRD Appendix D (full FAQ, grouped). `showOnHome` marks the five homepage items (BRD 4.4). */
-export const faq: FaqItem[] = [
+export const faq: FaqItem[] = ordered([
   {
     group: 'البداية',
     question: 'كم أحتاج لأبدأ؟',
@@ -100,17 +119,9 @@ export const faq: FaqItem[] = [
     answer: 'عبر واتساب على 0501699572 أو البريد contact@b7r.sa.',
     showOnHome: false,
   },
-];
+]);
 
-/** Homepage order per BRD 4.4: items 1, 2, 3, 4, 5 of that list. */
-export const homeFaq: FaqItem[] = [
-  'كم أحتاج لأبدأ؟',
-  'كيف أربح؟',
-  'هل يعرف عميلي أن الطباعة من بحر برنت؟',
-  'كم يستغرق التوصيل؟',
-  'ما المتاجر التي أقدر أربطها؟',
-].map((q) => {
-  const item = faq.find((f) => f.question === q);
-  if (!item) throw new Error(`Home FAQ item missing: ${q}`);
-  return item;
-});
+/** Homepage order per BRD 4.4: the five flagged entries by their home order. */
+export const homeFaq: FaqItem[] = faq
+  .filter((f) => f.showOnHome)
+  .toSorted((a, b) => (a.homeOrder ?? 99) - (b.homeOrder ?? 99));

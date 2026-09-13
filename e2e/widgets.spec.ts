@@ -43,8 +43,11 @@ test.describe('WhatsApp widget (BRD 6.15)', () => {
     await expect(page.getByTestId('whatsapp-button')).toBeVisible({ timeout: 5000 });
     await page.locator('#designer').scrollIntoViewIfNeeded();
     await page.waitForSelector('[data-designer-island] canvas', { timeout: 15_000 });
-    // Scroll so the section is in view but the results card is not.
-    await page.locator('[data-designer-island] fieldset').first().scrollIntoViewIfNeeded();
+    // Scroll so the section is in view but the results card is not: the section's top at the
+    // top of the viewport puts the canvas and the controls in view, the results below the fold.
+    await page.evaluate(() =>
+      document.querySelector('#designer')?.scrollIntoView({ block: 'start' }),
+    );
     await page.waitForTimeout(400);
     await expect(page.locator('[data-sticky-results]')).toHaveCSS('opacity', '1');
     const dock = await page.evaluate(() =>

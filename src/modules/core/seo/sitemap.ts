@@ -1,10 +1,7 @@
 import type { MetadataRoute } from 'next';
 import { blogPosts } from '@/content/blog';
-import { getLegalPages } from '@/content/legal';
-import type { PageSeo, Product } from '@/content/schema';
+import type { Page, PageSeo, Product } from '@/content/schema';
 import { absoluteUrl } from '@/lib/absolute-url';
-
-const LEGAL_ROUTES = new Set(['/terms', '/shipping', '/privacy']);
 
 /** `YYYY-MM-DD` → the UTC midnight instant, so the XML carries a full ISO 8601 timestamp. */
 export function contentDate(isoDate: string): Date {
@@ -12,23 +9,24 @@ export function contentDate(isoDate: string): Date {
 }
 
 /**
- * Every indexable route (BRD 7.5): the static pages from `content/seo.ts`, the five products
- * with their photos, the published posts. Legal pages take their date from the legal file so
- * the visible «آخر تحديث», the JSON-LD and the sitemap agree. No 404, no API, no queries.
+ * Every indexable route (BRD 7.5): the code-owned routes from `seo-defaults` (`/`,
+ * `/products`, `/blog`), every published page with its date (a legal page's date is its
+ * body's «آخر تحديث», so the visible line, the JSON-LD and the sitemap agree), the products
+ * with their photos, the published posts. No 404, no API, no queries.
  */
 export function sitemapEntries(
   base: string,
   seo: PageSeo[],
+  pages: Array<Pick<Page, 'slug' | 'updatedAt'>>,
   products: Product[],
 ): MetadataRoute.Sitemap {
-  const legalDates = new Map(getLegalPages().map((p) => [`/${p.slug}`, p.updatedAt]));
-  const pages = seo.map((page) => ({
+  const staticEntries = seo.map((page) => ({
     url: `${base}${page.route === '/' ? '' : page.route}`,
-    lastModified: contentDate(
-      LEGAL_ROUTES.has(page.route)
-        ? (legalDates.get(page.route) ?? page.updatedAt)
-        : page.updatedAt,
-    ),
+    lastModified: contentDate(page.updatedAt),
+  }));
+  const pageEntries = pages.map((page) => ({
+    url: `${base}/${page.slug}`,
+    lastModified: contentDate(page.updatedAt),
   }));
   const productEntries = products.map((product) => ({
     url: `${base}/products/${product.slug}`,
@@ -41,5 +39,5 @@ export function sitemapEntries(
     url: `${base}/blog/${post.slug}`,
     lastModified: contentDate(post.updatedAt),
   }));
-  return [...pages, ...productEntries, ...postEntries];
+  return [...staticEntries, ...pageEntries, ...productEntries, ...postEntries];
 }

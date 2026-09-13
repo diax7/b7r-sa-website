@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { products } from '@/content/seed/products';
 
 const getProduct = (slug: string) => products.find((p) => p.slug === slug);
-import { initialState, reducer, SAMPLE_DESIGN } from '@/modules/designer/use-designer-state';
+import { initialState, reducer } from '@/modules/designer/use-designer-state';
 
 const tee = getProduct('tee-essential')!;
 const hoodie = getProduct('hoodie')!;
@@ -53,17 +53,16 @@ describe('designer state', () => {
     expect(s.commit).toBe(c0 + 2);
   });
 
-  it('keeps the previous design on a file error; the sample and remove actions replace it', () => {
+  it('keeps the previous design on a file error; a new upload or remove replaces it', () => {
     let s = reducer(initialState(tee), {
       type: 'setDesign',
-      design: { url: 'blob:x', kind: 'upload', width: 10, height: 10 },
+      design: { url: 'blob:x', width: 10, height: 10 },
     });
     s = reducer(s, { type: 'fileError', error: true });
     expect(s.design?.url).toBe('blob:x');
     expect(s.fileError).toBe(true);
-    s = reducer(s, { type: 'useSample' });
-    expect(s.design?.kind).toBe('sample');
-    expect(s.design?.url).toBe(SAMPLE_DESIGN.url);
+    s = reducer(s, { type: 'setDesign', design: { url: 'blob:y', width: 10, height: 10 } });
+    expect(s.design?.url).toBe('blob:y');
     expect(s.fileError).toBe(false);
     s = reducer(s, { type: 'removeDesign' });
     expect(s.design).toBeNull();

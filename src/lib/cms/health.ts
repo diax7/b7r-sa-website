@@ -28,6 +28,31 @@ export async function databaseStatus(): Promise<'ok' | 'error'> {
   }
 }
 
+/** `on` once the in-process job cron runs (ADR-033); `off` until the first admin request starts it. */
+export async function jobsStatus(): Promise<'on' | 'off'> {
+  try {
+    const payload = await cms();
+    return (payload as unknown as { crons?: unknown[] }).crons?.length ? 'on' : 'off';
+  } catch {
+    return 'off';
+  }
+}
+
+/** Jobs that exhausted their retries and still sit in the queue (ADR-033); `null` when unreadable. */
+export async function failedJobs(): Promise<number | null> {
+  try {
+    const payload = await cms();
+    const { totalDocs } = await payload.count({
+      collection: 'payload-jobs',
+      where: { hasError: { equals: true } },
+    });
+    return totalDocs;
+  } catch (error) {
+    console.error('health: jobs check failed:', error);
+    return null;
+  }
+}
+
 /** Where uploads live: S3 when the bucket is configured, else the container's disk. */
 export function mediaStorage(): 's3' | 'local' {
   return cmsEnv().s3 ? 's3' : 'local';

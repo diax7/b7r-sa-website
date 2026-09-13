@@ -8,7 +8,8 @@ import { loadBlogPost } from '@/content/blog/load';
 import { footerCopy, productsPage } from '@/content/pages';
 import { getSeo } from '@/lib/cms';
 import { siteBase } from '@/lib/env';
-import { CtaRibbon, JsonLd, jsonLd } from '@/modules/core';
+import { JsonLd, jsonLd } from '@/modules/core';
+import { CtaRibbon } from '@/modules/core/cta-ribbon';
 import { HubFilter } from '@/modules/blog/hub-filter';
 import { PostCard } from '@/modules/blog/post-card';
 

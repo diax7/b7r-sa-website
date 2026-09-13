@@ -27,9 +27,9 @@ async function openDesigner(page: Page) {
   await page.waitForSelector('[data-designer-island] canvas', { timeout: 15_000 });
 }
 
-/** The print area starts empty (ADR-036); most tests want the sample design placed. */
+/** The print area starts empty (ADR-036); most tests want a design placed — the fixture PNG. */
 async function placeSample(page: Page) {
-  await page.locator('[data-design-sample]').click();
+  await page.getByLabel('ارفع ملف التصميم').setInputFiles('e2e/fixtures/design.png');
   await page.waitForFunction(() => !!window.Konva?.stages[0]?.findOne('#design'));
 }
 

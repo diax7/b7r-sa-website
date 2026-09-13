@@ -1,6 +1,6 @@
 import { getImageProps } from 'next/image';
 import { preload } from 'react-dom';
-import { home } from '@/content/home';
+import { getHome } from '@/lib/cms';
 import messages from '@/messages/ar.json';
 import { env } from '@/lib/env';
 import { registerUrl } from '@/lib/utm';
@@ -26,8 +26,8 @@ function imageSet(desktopSrc: string, mobileSrc: string): HeroImageSet {
  * two media-gated preloads for slide 1 so exactly one LCP image is fetched per viewport;
  * `getImageProps` alone emits none. React 19 hoists the <link>s into <head>.
  */
-export function Hero() {
-  const { hero } = home;
+export async function Hero() {
+  const { hero } = await getHome();
   const images = hero.slides.map((s) => imageSet(s.imageDesktop, s.imageMobile));
   const first = images[0];
 
@@ -71,11 +71,13 @@ export function Hero() {
           primaryHref: registerUrl(env.appUrl, { campaign: 'hero' }),
           secondaryCta: hero.secondaryCta,
           secondaryHref: '/products',
-          microcopy: hero.microcopy,
           chips: hero.chips,
-          slideIndicatorAria: hero.slideIndicatorAria,
-          pauseAria: hero.pauseAria,
-          resumeAria: hero.resumeAria,
+          slideIndicatorAria: messages.hero.slideIndicator.replace(
+            '{total}',
+            String(hero.slides.length),
+          ),
+          pauseAria: messages.hero.pause,
+          resumeAria: messages.hero.resume,
           carouselLabel: messages.hero.carouselLabel,
         }}
       />

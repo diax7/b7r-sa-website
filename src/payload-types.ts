@@ -70,7 +70,13 @@ export interface Config {
     users: User;
     media: Media;
     products: Product;
+    pages: Page;
+    faqs: Faq;
+    testimonials: Testimonial;
+    integrations: Integration;
+    redirects: Redirect;
     'payload-kv': PayloadKv;
+    'payload-jobs': PayloadJob;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
     'payload-migrations': PayloadMigration;
@@ -80,7 +86,13 @@ export interface Config {
     users: UsersSelect<false> | UsersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     products: ProductsSelect<false> | ProductsSelect<true>;
+    pages: PagesSelect<false> | PagesSelect<true>;
+    faqs: FaqsSelect<false> | FaqsSelect<true>;
+    testimonials: TestimonialsSelect<false> | TestimonialsSelect<true>;
+    integrations: IntegrationsSelect<false> | IntegrationsSelect<true>;
+    redirects: RedirectsSelect<false> | RedirectsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
+    'payload-jobs': PayloadJobsSelect<false> | PayloadJobsSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
     'payload-migrations': PayloadMigrationsSelect<false> | PayloadMigrationsSelect<true>;
@@ -90,11 +102,13 @@ export interface Config {
   };
   fallbackLocale: ('false' | 'none' | 'null') | false | null | ('ar' | 'en') | ('ar' | 'en')[];
   globals: {
+    home: Home;
     'site-settings': SiteSetting;
     navigation: Navigation;
     'seo-defaults': SeoDefault;
   };
   globalsSelect: {
+    home: HomeSelect<false> | HomeSelect<true>;
     'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
     navigation: NavigationSelect<false> | NavigationSelect<true>;
     'seo-defaults': SeoDefaultsSelect<false> | SeoDefaultsSelect<true>;
@@ -105,7 +119,14 @@ export interface Config {
   };
   user: User;
   jobs: {
-    tasks: unknown;
+    tasks: {
+      'indexnow-ping': TaskIndexnowPing;
+      schedulePublish: TaskSchedulePublish;
+      inline: {
+        input: unknown;
+        output: unknown;
+      };
+    };
     workflows: unknown;
   };
 }
@@ -282,6 +303,225 @@ export interface Product {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "pages".
+ */
+export interface Page {
+  id: number;
+  title: string;
+  /**
+   * lowercase-hyphenated; served at /slug
+   */
+  slug: string;
+  lead?: string | null;
+  blocks: (
+    | {
+        title?: string | null;
+        content: {
+          root: {
+            type: string;
+            children: {
+              type: any;
+              version: number;
+              [k: string]: unknown;
+            }[];
+            direction: ('ltr' | 'rtl') | null;
+            format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+            indent: number;
+            version: number;
+          };
+          [k: string]: unknown;
+        };
+        id?: string | null;
+        blockName?: string | null;
+        blockType: 'richText';
+      }
+    | {
+        heading: string;
+        text: string;
+        line: string;
+        photo: number | Media;
+        /**
+         * The welcome credit and the why-us pairs from the home page
+         */
+        withFacts?: boolean | null;
+        id?: string | null;
+        blockName?: string | null;
+        blockType: 'story';
+      }
+    | {
+        title?: string | null;
+        items: {
+          icon: 'ShieldCheck' | 'Workflow' | 'Zap' | 'Target' | 'Eye' | 'Heart';
+          title: string;
+          text: string;
+          art?: (number | null) | Media;
+          id?: string | null;
+        }[];
+        id?: string | null;
+        blockName?: string | null;
+        blockType: 'cards';
+      }
+    | {
+        items: {
+          title: string;
+          text: string;
+          icon: number | Media;
+          id?: string | null;
+        }[];
+        id?: string | null;
+        blockName?: string | null;
+        blockType: 'steps';
+      }
+    | {
+        title: string;
+        sell: string;
+        base: string;
+        profit: string;
+        exampleLine: string;
+        id?: string | null;
+        blockName?: string | null;
+        blockType: 'profitEquation';
+      }
+    | {
+        selection: 'all' | 'home';
+        offset?: number | null;
+        limit?: number | null;
+        title?: string | null;
+        linkLabel?: string | null;
+        linkHref?: string | null;
+        bottomLine?: string | null;
+        bottomLinkWord?: string | null;
+        id?: string | null;
+        blockName?: string | null;
+        blockType: 'faqList';
+      }
+    | {
+        title: string;
+        text: string;
+        id?: string | null;
+        blockName?: string | null;
+        blockType: 'miskCredential';
+      }
+    | {
+        whatsappTitle: string;
+        whatsappText: string;
+        emailTitle: string;
+        phoneTitle: string;
+        followTitle: string;
+        booking: {
+          title: string;
+          text: string;
+          button: string;
+          whatsappMessage: string;
+        };
+        id?: string | null;
+        blockName?: string | null;
+        blockType: 'contact';
+      }
+    | {
+        updatedAt: string;
+        /**
+         * ## headings become the on-this-page list; no HTML.
+         */
+        body: string;
+        id?: string | null;
+        blockName?: string | null;
+        blockType: 'legalBody';
+      }
+    | {
+        media: number | Media;
+        caption?: string | null;
+        id?: string | null;
+        blockName?: string | null;
+        blockType: 'mediaBanner';
+      }
+  )[];
+  seo: {
+    title: string;
+    description: string;
+    ogImage?: (number | null) | Media;
+  };
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "faqs".
+ */
+export interface Faq {
+  id: number;
+  question: string;
+  /**
+   * Plain text, no links
+   */
+  answer: string;
+  group: 'البداية' | 'الأسعار والربح' | 'الطلبات والتوصيل' | 'المتاجر والربط' | 'الجودة والدعم';
+  order: number;
+  /**
+   * At most 5 entries
+   */
+  showOnHome?: boolean | null;
+  homeOrder?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "testimonials".
+ */
+export interface Testimonial {
+  id: number;
+  quote: string;
+  name: string;
+  store: string;
+  avatar?: (number | null) | Media;
+  order: number;
+  /**
+   * Placeholders show a «sample» badge on previews and are omitted on b7r.sa until a real entry exists.
+   */
+  placeholder?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "integrations".
+ */
+export interface Integration {
+  id: number;
+  /**
+   * Selects the logo
+   */
+  platform: 'salla' | 'zid' | 'shopify';
+  order: number;
+  name: string;
+  nameLatin: string;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "redirects".
+ */
+export interface Redirect {
+  id: number;
+  from: string;
+  to?: {
+    type?: ('reference' | 'custom') | null;
+    reference?: {
+      relationTo: 'pages';
+      value: number | Page;
+    } | null;
+    url?: string | null;
+  };
+  type: '301' | '302';
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
@@ -296,6 +536,98 @@ export interface PayloadKv {
     | number
     | boolean
     | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payload-jobs".
+ */
+export interface PayloadJob {
+  id: number;
+  /**
+   * Input data provided to the job
+   */
+  input?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  taskStatus?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  completedAt?: string | null;
+  totalTried?: number | null;
+  /**
+   * If hasError is true this job will not be retried
+   */
+  hasError?: boolean | null;
+  /**
+   * If hasError is true, this is the error that caused it
+   */
+  error?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * Task execution log
+   */
+  log?:
+    | {
+        executedAt: string;
+        completedAt: string;
+        taskSlug: 'inline' | 'indexnow-ping' | 'schedulePublish';
+        taskID: string;
+        input?:
+          | {
+              [k: string]: unknown;
+            }
+          | unknown[]
+          | string
+          | number
+          | boolean
+          | null;
+        output?:
+          | {
+              [k: string]: unknown;
+            }
+          | unknown[]
+          | string
+          | number
+          | boolean
+          | null;
+        state: 'failed' | 'succeeded';
+        error?:
+          | {
+              [k: string]: unknown;
+            }
+          | unknown[]
+          | string
+          | number
+          | boolean
+          | null;
+        id?: string | null;
+      }[]
+    | null;
+  taskSlug?: ('inline' | 'indexnow-ping' | 'schedulePublish') | null;
+  queue?: string | null;
+  waitUntil?: string | null;
+  processing?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -315,6 +647,26 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'products';
         value: number | Product;
+      } | null)
+    | ({
+        relationTo: 'pages';
+        value: number | Page;
+      } | null)
+    | ({
+        relationTo: 'faqs';
+        value: number | Faq;
+      } | null)
+    | ({
+        relationTo: 'testimonials';
+        value: number | Testimonial;
+      } | null)
+    | ({
+        relationTo: 'integrations';
+        value: number | Integration;
+      } | null)
+    | ({
+        relationTo: 'redirects';
+        value: number | Redirect;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -502,11 +854,240 @@ export interface ProductsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "pages_select".
+ */
+export interface PagesSelect<T extends boolean = true> {
+  title?: T;
+  slug?: T;
+  lead?: T;
+  blocks?:
+    | T
+    | {
+        richText?:
+          | T
+          | {
+              title?: T;
+              content?: T;
+              id?: T;
+              blockName?: T;
+            };
+        story?:
+          | T
+          | {
+              heading?: T;
+              text?: T;
+              line?: T;
+              photo?: T;
+              withFacts?: T;
+              id?: T;
+              blockName?: T;
+            };
+        cards?:
+          | T
+          | {
+              title?: T;
+              items?:
+                | T
+                | {
+                    icon?: T;
+                    title?: T;
+                    text?: T;
+                    art?: T;
+                    id?: T;
+                  };
+              id?: T;
+              blockName?: T;
+            };
+        steps?:
+          | T
+          | {
+              items?:
+                | T
+                | {
+                    title?: T;
+                    text?: T;
+                    icon?: T;
+                    id?: T;
+                  };
+              id?: T;
+              blockName?: T;
+            };
+        profitEquation?:
+          | T
+          | {
+              title?: T;
+              sell?: T;
+              base?: T;
+              profit?: T;
+              exampleLine?: T;
+              id?: T;
+              blockName?: T;
+            };
+        faqList?:
+          | T
+          | {
+              selection?: T;
+              offset?: T;
+              limit?: T;
+              title?: T;
+              linkLabel?: T;
+              linkHref?: T;
+              bottomLine?: T;
+              bottomLinkWord?: T;
+              id?: T;
+              blockName?: T;
+            };
+        miskCredential?:
+          | T
+          | {
+              title?: T;
+              text?: T;
+              id?: T;
+              blockName?: T;
+            };
+        contact?:
+          | T
+          | {
+              whatsappTitle?: T;
+              whatsappText?: T;
+              emailTitle?: T;
+              phoneTitle?: T;
+              followTitle?: T;
+              booking?:
+                | T
+                | {
+                    title?: T;
+                    text?: T;
+                    button?: T;
+                    whatsappMessage?: T;
+                  };
+              id?: T;
+              blockName?: T;
+            };
+        legalBody?:
+          | T
+          | {
+              updatedAt?: T;
+              body?: T;
+              id?: T;
+              blockName?: T;
+            };
+        mediaBanner?:
+          | T
+          | {
+              media?: T;
+              caption?: T;
+              id?: T;
+              blockName?: T;
+            };
+      };
+  seo?:
+    | T
+    | {
+        title?: T;
+        description?: T;
+        ogImage?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "faqs_select".
+ */
+export interface FaqsSelect<T extends boolean = true> {
+  question?: T;
+  answer?: T;
+  group?: T;
+  order?: T;
+  showOnHome?: T;
+  homeOrder?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "testimonials_select".
+ */
+export interface TestimonialsSelect<T extends boolean = true> {
+  quote?: T;
+  name?: T;
+  store?: T;
+  avatar?: T;
+  order?: T;
+  placeholder?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "integrations_select".
+ */
+export interface IntegrationsSelect<T extends boolean = true> {
+  platform?: T;
+  order?: T;
+  name?: T;
+  nameLatin?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "redirects_select".
+ */
+export interface RedirectsSelect<T extends boolean = true> {
+  from?: T;
+  to?:
+    | T
+    | {
+        type?: T;
+        reference?: T;
+        url?: T;
+      };
+  type?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv_select".
  */
 export interface PayloadKvSelect<T extends boolean = true> {
   key?: T;
   data?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payload-jobs_select".
+ */
+export interface PayloadJobsSelect<T extends boolean = true> {
+  input?: T;
+  taskStatus?: T;
+  completedAt?: T;
+  totalTried?: T;
+  hasError?: T;
+  error?: T;
+  log?:
+    | T
+    | {
+        executedAt?: T;
+        completedAt?: T;
+        taskSlug?: T;
+        taskID?: T;
+        input?: T;
+        output?: T;
+        state?: T;
+        error?: T;
+        id?: T;
+      };
+  taskSlug?: T;
+  queue?: T;
+  waitUntil?: T;
+  processing?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -539,6 +1120,106 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
   batch?: T;
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "home".
+ */
+export interface Home {
+  id: number;
+  hero: {
+    slides: {
+      headline: string;
+      subline: string;
+      imageDesktop: number | Media;
+      imageMobile: number | Media;
+      id?: string | null;
+    }[];
+    primaryCta: string;
+    secondaryCta: string;
+    microcopy: string;
+    chips: {
+      text: string;
+      id?: string | null;
+    }[];
+  };
+  productStrip: {
+    eyebrow: string;
+    title: string;
+    lead: string;
+    pricePrefix: string;
+    button: string;
+    /**
+     * Published products only; one unpublished later drops out of the strip until it is published again.
+     */
+    products: (number | Product)[];
+  };
+  designer: {
+    eyebrow: string;
+    title: string;
+    lead: string;
+    cta: string;
+  };
+  steps: {
+    enabled?: boolean | null;
+    eyebrow: string;
+    title: string;
+    link: string;
+    items: {
+      title: string;
+      text: string;
+      icon: number | Media;
+      id?: string | null;
+    }[];
+  };
+  /**
+   * The loop itself ships with the site; only the copy lives here.
+   */
+  video: {
+    enabled?: boolean | null;
+    title: string;
+    lead: string;
+  };
+  whyUs: {
+    enabled?: boolean | null;
+    eyebrow: string;
+    title: string;
+    items: {
+      icon: 'ShieldCheck' | 'Workflow' | 'Zap';
+      title: string;
+      text: string;
+      id?: string | null;
+    }[];
+  };
+  /**
+   * The entries live in Testimonials; the section title lives here.
+   */
+  testimonials: {
+    enabled?: boolean | null;
+    eyebrow: string;
+    title: string;
+  };
+  integrations: {
+    enabled?: boolean | null;
+    title: string;
+    lead: string;
+  };
+  /**
+   * The entries flagged «show on home» in the FAQ collection.
+   */
+  faq: {
+    enabled?: boolean | null;
+    title: string;
+    link: string;
+  };
+  ribbon: {
+    title: string;
+    lead: string;
+    button: string;
+  };
+  _status?: ('draft' | 'published') | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -658,6 +1339,122 @@ export interface SeoDefault {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "home_select".
+ */
+export interface HomeSelect<T extends boolean = true> {
+  hero?:
+    | T
+    | {
+        slides?:
+          | T
+          | {
+              headline?: T;
+              subline?: T;
+              imageDesktop?: T;
+              imageMobile?: T;
+              id?: T;
+            };
+        primaryCta?: T;
+        secondaryCta?: T;
+        microcopy?: T;
+        chips?:
+          | T
+          | {
+              text?: T;
+              id?: T;
+            };
+      };
+  productStrip?:
+    | T
+    | {
+        eyebrow?: T;
+        title?: T;
+        lead?: T;
+        pricePrefix?: T;
+        button?: T;
+        products?: T;
+      };
+  designer?:
+    | T
+    | {
+        eyebrow?: T;
+        title?: T;
+        lead?: T;
+        cta?: T;
+      };
+  steps?:
+    | T
+    | {
+        enabled?: T;
+        eyebrow?: T;
+        title?: T;
+        link?: T;
+        items?:
+          | T
+          | {
+              title?: T;
+              text?: T;
+              icon?: T;
+              id?: T;
+            };
+      };
+  video?:
+    | T
+    | {
+        enabled?: T;
+        title?: T;
+        lead?: T;
+      };
+  whyUs?:
+    | T
+    | {
+        enabled?: T;
+        eyebrow?: T;
+        title?: T;
+        items?:
+          | T
+          | {
+              icon?: T;
+              title?: T;
+              text?: T;
+              id?: T;
+            };
+      };
+  testimonials?:
+    | T
+    | {
+        enabled?: T;
+        eyebrow?: T;
+        title?: T;
+      };
+  integrations?:
+    | T
+    | {
+        enabled?: T;
+        title?: T;
+        lead?: T;
+      };
+  faq?:
+    | T
+    | {
+        enabled?: T;
+        title?: T;
+        link?: T;
+      };
+  ribbon?:
+    | T
+    | {
+        title?: T;
+        lead?: T;
+        button?: T;
+      };
+  _status?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "site-settings_select".
  */
 export interface SiteSettingsSelect<T extends boolean = true> {
@@ -762,6 +1559,52 @@ export interface CollectionsWidget {
     [k: string]: unknown;
   };
   width: 'full';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TaskIndexnow-ping".
+ */
+export interface TaskIndexnowPing {
+  input: {
+    urls:
+      | {
+          [k: string]: unknown;
+        }
+      | unknown[]
+      | string
+      | number
+      | boolean
+      | null;
+  };
+  output: {
+    status?: number | null;
+  };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TaskSchedulePublish".
+ */
+export interface TaskSchedulePublish {
+  input: {
+    type?: ('publish' | 'unpublish') | null;
+    locale?: string | null;
+    doc?:
+      | ({
+          relationTo: 'products';
+          value: number | Product;
+        } | null)
+      | ({
+          relationTo: 'pages';
+          value: number | Page;
+        } | null)
+      | ({
+          relationTo: 'testimonials';
+          value: number | Testimonial;
+        } | null);
+    global?: 'home' | null;
+    user?: (number | null) | User;
+  };
+  output?: unknown;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

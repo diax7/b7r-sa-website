@@ -11,7 +11,6 @@ export type TrackEvent =
   | { name: 'outbound_app_click'; props: { href: string } }
   | { name: 'designer_product_change'; props: { product: string } }
   | { name: 'designer_upload'; props: { type: string; bytes: number } }
-  | { name: 'designer_sample'; props: Record<string, never> }
   | { name: 'calculator_change'; props: { product: string; sell: number; daily: number } }
   | { name: 'product_view'; props: { slug: string } }
   | { name: 'faq_open'; props: { question: string } }

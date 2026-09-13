@@ -16,7 +16,6 @@ interface PricingControlsProps {
   onSellCommit: (value: number) => void;
   onDaily: (value: number) => void;
   copy: {
-    label: string;
     baseCostLabel: string;
     sellPriceLabel: string;
     suggestedPriceHelper: string;
@@ -47,8 +46,6 @@ export function PricingControls({
 
   return (
     <div className="flex flex-col gap-5">
-      <p className="text-small font-medium text-text">{copy.label}</p>
-
       <div className="flex items-center justify-between rounded-base bg-ground px-4 py-3">
         <span className="text-small text-text-muted">{copy.baseCostLabel}</span>
         <SarAmount value={baseCost} className="text-h4 text-text" />

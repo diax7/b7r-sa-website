@@ -11,7 +11,7 @@ b7r.sa to go live.
 | 2 | Zid and Shopify enabled in the app so «متاح الآن» is true | Dhia | open | Appendix G 3 |
 | 3 | Final hero photos delivered and cropped, or placeholders accepted for launch | Dhia | open | `scripts/hero-crops.ts` re-crops from `resources/hero/` |
 | 4 | Resend domain `b7r.sa` verified (SPF, DKIM, DMARC); test contact email received at contact@b7r.sa | Dhia | open | `RESEND_API_KEY`, `RESEND_FROM`, `CONTACT_TO`, `RESEND_AUDIENCE_ID`; `/api/health` → `contact: live`, `newsletter: live` |
-| 5 | Turnstile keys set; a bot submission blocked; a human submission passes | Dhia | open | `NEXT_PUBLIC_TURNSTILE_SITE_KEY` + `TURNSTILE_SECRET_KEY`; `/api/health` → `turnstile: on` |
+| 5 | Turnstile keys set; a bot submission blocked; a human submission passes; the admin login shows the widget | Dhia | open | `NEXT_PUBLIC_TURNSTILE_SITE_KEY` + `TURNSTILE_SECRET_KEY` — required in production since the login gate (ADR-034): the app refuses to boot without them; `/api/health` → `turnstile: on` |
 | 6 | GA4 consent flow verified in DebugView; Umami receiving events | Dhia | open | Code done (1b); needs the real ids and the Umami site |
 | 7 | `INDEXNOW_KEY` file live; Google and Bing verification tokens set | Dhia | open | Served at `/indexnow/{key}.txt`; tokens become `<meta>` tags |
 | 8 | OG default and product images render in WhatsApp, X and LinkedIn previews | Dhia | open | Images exist (`pnpm og`); check after DNS |
@@ -46,7 +46,7 @@ b7r.sa to go live.
 | 22 | First deploy: `pnpm migrate`, `pnpm content:migrate`, `pnpm admin:create` against production; sign in and change the password | Dhia | open | ADR-026; the seed refuses a non-empty database |
 | 23 | CranL pulls `ghcr.io/diax7/b7r-sa-website:latest` (package visibility or a pull token); health check on `/api/health` | Dhia | open | `deploy.yml` pushes on every merge to `main` once the secrets exist |
 | 24 | An editor account created for the second person; the editor seat verified (no users, no settings, no delete of published) | Dhia | open | `e2e/admin.spec.ts` proves the matrix in CI |
-| 25 | Backup restore rehearsed once from a CranL snapshot into a scratch database | Dhia | open | BRD 9.8 (6) |
+| 25 | Backup restore rehearsed once from a CranL snapshot into a scratch database | Dhia | open | BRD 9.8 (6); CI rehearses a restore of the seeded database every run (`scripts/ci/restore-check.sh`) and the weekly `Backup` workflow needs the `BACKUP_S3_*` secrets (ADR-034) |
 
 ## Also needed before any of the above
 

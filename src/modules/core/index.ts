@@ -1,4 +1,5 @@
-export { CtaRibbon } from '@/modules/core/cta-ribbon';
+// `CtaRibbon` reads the CMS: import it from '@/modules/core/cta-ribbon' so this index stays
+// safe for client components.
 export { Footer, newsletterCopy } from '@/modules/core/footer';
 export { Header } from '@/modules/core/header/header';
 export { SkipLink } from '@/modules/core/skip-link';

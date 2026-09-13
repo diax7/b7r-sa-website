@@ -33,7 +33,7 @@ test.describe('how it works (BRD 6.7)', () => {
     const digits = page.locator('[aria-labelledby="profit-title"] [data-sar-digits]');
     await expect(digits).toHaveText(['89', '45', '44']);
     await expect(page.getByRole('link', { name: 'كل الأسئلة' })).toHaveAttribute('href', '/faq');
-    await expect(page.locator('[aria-labelledby="hiw-faq-title"]')).toContainText('كيف أربح؟');
+    await expect(page.locator('[data-block="faqList"]')).toContainText('كيف أربح؟');
   });
 
   test('the progress line fills as the track scrolls through the viewport', async ({
@@ -138,7 +138,7 @@ test.describe('legal pages (BRD 6.12)', () => {
     await expect(page.getByText(/آخر تحديث:/)).toBeVisible();
     const headings = page.locator('.prose h2');
     await expect(headings).toHaveCount(9);
-    await expect(headings.first()).toHaveAttribute('id', 'section-1');
+    await expect(headings.first()).toHaveAttribute('id', 'legal-section-1');
     await expect(headings.first()).toContainText('1. التعاريف والطرفان');
     const nav = page.getByRole('navigation', { name: 'في هذه الصفحة' });
     if (isMobile) {
@@ -146,7 +146,7 @@ test.describe('legal pages (BRD 6.12)', () => {
     } else {
       await expect(nav.locator('a')).toHaveCount(9);
       await nav.locator('a').nth(5).click();
-      await expect(page).toHaveURL(/#section-6$/);
+      await expect(page).toHaveURL(/#legal-section-6$/);
     }
     // The visible date equals the JSON-LD dateModified.
     const graph = JSON.parse(

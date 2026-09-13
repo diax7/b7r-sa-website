@@ -3,10 +3,9 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Container } from '@/components/shared/container';
 import { Icon } from '@/components/shared/icon';
-import { Section } from '@/components/shared/section';
+import { Section, type SectionTone } from '@/components/shared/section';
 import { SectionHeader } from '@/components/shared/section-header';
-import { home } from '@/content/home';
-import { homeSteps } from '@/content/steps';
+import { getHome } from '@/lib/cms';
 import { StepsProgress } from '@/modules/home/steps/steps-progress';
 
 /**
@@ -14,16 +13,12 @@ import { StepsProgress } from '@/modules/home/steps/steps-progress';
  * motion); under `html.js` at `lg` the section becomes 300 vh with a pinned inner grid and
  * `StepsProgress` maps scroll position to the active step. Native scroll only.
  */
-export function Steps() {
-  const { steps } = home;
+export async function Steps({ tone = 'surface' }: { tone?: SectionTone }) {
+  const { steps } = await getHome();
+  if (!steps.enabled) return null;
+  const homeSteps = steps.items;
   return (
-    <Section
-      id="steps"
-      tone="surface"
-      aria-labelledby="steps-title"
-      className="steps"
-      data-active="0"
-    >
+    <Section id="steps" tone={tone} aria-labelledby="steps-title" className="steps" data-active="0">
       <div className="steps-pin">
         <Container className="flex flex-col gap-10">
           <SectionHeader id="steps-title" eyebrow={steps.eyebrow} title={steps.title} />

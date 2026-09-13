@@ -1,9 +1,10 @@
 import type { Metadata } from 'next';
-import { buildMetadata } from '@/modules/core/seo/metadata';
-import { LegalPage } from '@/modules/pages';
+import { SITE_BLOCK_RENDERERS } from '@/app/(site)/cms-blocks';
+import { cmsPageMetadata } from '@/modules/core/seo/metadata';
+import { CmsPage } from '@/modules/pages';
 
-export const generateMetadata = (): Promise<Metadata> => buildMetadata('/shipping');
+export const generateMetadata = (): Promise<Metadata> => cmsPageMetadata('shipping');
 
-export default function LegalRoute() {
-  return <LegalPage slug="shipping" />;
+export default function ShippingRoute() {
+  return <CmsPage slug="shipping" renderers={SITE_BLOCK_RENDERERS} />;
 }

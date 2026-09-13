@@ -1,10 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { blogHubs, blogPosts } from '@/content/blog';
-import { faq, homeFaq } from '@/content/faq';
-import { home } from '@/content/home';
-import { integrations } from '@/content/integrations';
-import { getLegalPages } from '@/content/legal';
+import { faq, homeFaq } from '@/content/seed/faq';
+import { home } from '@/content/seed/home';
+import { integrations } from '@/content/seed/integrations';
 import { navigation } from '@/content/seed/navigation';
 import { products } from '@/content/seed/products';
 import {
@@ -13,20 +12,17 @@ import {
   FaqItemSchema,
   HomeSchema,
   IntegrationSchema,
-  LegalPageSchema,
   NavigationSchema,
+  PageSchema,
   PageSeoSchema,
   ProductSchema,
   SiteSettingsSchema,
-  StepSchema,
   TestimonialSchema,
-  WhyUsItemSchema,
 } from '@/content/schema';
+import { pages } from '@/content/seed/pages';
 import { seo } from '@/content/seed/seo';
 import { site } from '@/content/seed/site';
-import { homeSteps, howItWorksSteps } from '@/content/steps';
-import { testimonials } from '@/content/testimonials';
-import { whyUs } from '@/content/why-us';
+import { testimonials } from '@/content/seed/testimonials';
 
 function expectValid(name: string, schema: z.ZodType, value: unknown) {
   const result = schema.safeParse(value);
@@ -41,15 +37,13 @@ describe('content contract (BRD 8.4)', () => {
   it('navigation.ts', () => expectValid('navigation.ts', NavigationSchema, navigation));
   it('home.ts', () => expectValid('home.ts', HomeSchema, home));
   it('products.ts', () => expectValid('products.ts', z.array(ProductSchema).length(5), products));
-  it('steps.ts', () => {
-    expectValid('steps.ts#home', z.array(StepSchema).length(3), homeSteps);
-    expectValid('steps.ts#how-it-works', z.array(StepSchema).length(5), howItWorksSteps);
-  });
-  it('why-us.ts', () => expectValid('why-us.ts', z.array(WhyUsItemSchema).length(3), whyUs));
   it('faq.ts', () => {
     expectValid('faq.ts', z.array(FaqItemSchema).length(16), faq);
     expect(homeFaq).toHaveLength(5);
+    expect(homeFaq.map((f) => f.homeOrder)).toEqual([1, 2, 3, 4, 5]);
     expect(faq.filter((f) => f.showOnHome)).toHaveLength(5);
+    // Order restarts inside each group (Appendix D).
+    expect(faq.filter((f) => f.group === 'البداية').map((f) => f.order)).toEqual([1, 2, 3]);
   });
   it('testimonials.ts are all placeholders until real ones exist', () => {
     expectValid('testimonials.ts', z.array(TestimonialSchema).length(3), testimonials);
@@ -75,7 +69,23 @@ describe('content contract (BRD 8.4)', () => {
       expect(routes).toContain(r);
     }
   });
-  it('legal/*.md', () => expectValid('legal', z.array(LegalPageSchema).length(3), getLegalPages()));
+  it('seed/pages.ts: the seven designed pages, legal bodies from Appendix B', () => {
+    expectValid('pages.ts', z.array(PageSchema).length(7), pages);
+    expect(pages.map((p) => p.slug)).toEqual([
+      'how-it-works',
+      'about',
+      'contact',
+      'faq',
+      'terms',
+      'shipping',
+      'privacy',
+    ]);
+    for (const slug of ['terms', 'shipping', 'privacy']) {
+      const body = pages.find((p) => p.slug === slug)?.blocks[0];
+      expect(body?.blockType).toBe('legalBody');
+      expect(body && 'body' in body ? body.body.length : 0).toBeGreaterThan(500);
+    }
+  });
   it('blog/index.ts', () => {
     expectValid('blog#hubs', z.array(BlogHubSchema).length(6), blogHubs);
     expectValid('blog#posts', z.array(BlogPostSchema).length(3), blogPosts);

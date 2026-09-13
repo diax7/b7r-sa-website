@@ -42,7 +42,7 @@ export async function acceptFile(file: File): Promise<Design | null> {
   const url = URL.createObjectURL(file);
   try {
     const size = await measure(file, url);
-    return { url, kind: 'upload', ...size };
+    return { url, ...size };
   } catch {
     URL.revokeObjectURL(url);
     return null;

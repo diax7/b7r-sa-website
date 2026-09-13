@@ -1,4 +1,5 @@
-export { AboutPage } from '@/modules/pages/about';
-export { FaqPage, faqGroups } from '@/modules/pages/faq-page';
-export { ExampleLine, HowItWorksPage } from '@/modules/pages/how-it-works';
-export { LegalPage, OnThisPage, getLegalPage } from '@/modules/pages/legal-page';
+export { CmsPage, CmsPageBody, blockTones } from '@/modules/pages/cms-page';
+export { ExampleLine } from '@/modules/pages/blocks/profit-equation';
+export { faqGroups } from '@/modules/pages/blocks/faq-list';
+export { OnThisPage } from '@/modules/pages/blocks/legal-body';
+export type { ExtraRenderers } from '@/modules/pages/blocks/types';

@@ -3,21 +3,23 @@ import { Card } from '@/components/shared/card';
 import { Container } from '@/components/shared/container';
 import { Icon } from '@/components/shared/icon';
 import { Reveal } from '@/components/shared/reveal';
-import { Section } from '@/components/shared/section';
+import { Section, type SectionTone } from '@/components/shared/section';
 import { SectionHeader } from '@/components/shared/section-header';
-import { home } from '@/content/home';
-import { whyUs } from '@/content/why-us';
+import type { WhyUsItem } from '@/content/schema';
+import { getHome } from '@/lib/cms';
 
-const ICONS: Record<(typeof whyUs)[number]['icon'], LucideIcon> = { ShieldCheck, Workflow, Zap };
+const ICONS: Record<WhyUsItem['icon'], LucideIcon> = { ShieldCheck, Workflow, Zap };
 
 /** Why us (BRD 6.4.6): three hairline cards, icon circle, H3, one line. */
-export function WhyUs() {
+export async function WhyUs({ tone = 'surface' }: { tone?: SectionTone }) {
+  const { whyUs } = await getHome();
+  if (!whyUs.enabled) return null;
   return (
-    <Section id="why-us" tone="surface" aria-labelledby="why-us-title">
+    <Section id="why-us" tone={tone} aria-labelledby="why-us-title">
       <Container className="flex flex-col gap-10">
-        <SectionHeader id="why-us-title" eyebrow={home.whyUs.eyebrow} title={home.whyUs.title} />
+        <SectionHeader id="why-us-title" eyebrow={whyUs.eyebrow} title={whyUs.title} />
         <ul className="grid gap-4 md:grid-cols-3">
-          {whyUs.map((item, i) => (
+          {whyUs.items.map((item, i) => (
             <Reveal as="li" index={i} key={item.title}>
               <Card hoverable className="flex h-full flex-col gap-4 p-6">
                 <span className="grid size-14 place-items-center rounded-pill bg-accent-tint text-primary">

@@ -54,7 +54,7 @@ describe('Umami queue (events fired before the script loads)', () => {
     const w = window as { umami?: { track: (n: string, d?: unknown) => void } };
     delete w.umami;
     sendToUmami({ name: 'product_view', props: { slug: 'hoodie' } });
-    sendToUmami({ name: 'designer_sample', props: {} });
+    sendToUmami({ name: 'newsletter_submit', props: {} });
     const umamiTrack = vi.fn();
     vi.advanceTimersByTime(600);
     expect(umamiTrack).not.toHaveBeenCalled();
@@ -62,7 +62,7 @@ describe('Umami queue (events fired before the script loads)', () => {
     vi.advanceTimersByTime(300);
     expect(umamiTrack.mock.calls).toEqual([
       ['product_view', { slug: 'hoodie' }],
-      ['designer_sample', {}],
+      ['newsletter_submit', {}],
     ]);
     // Once the script is there, new events go straight through.
     sendToUmami({ name: 'faq_open', props: { question: 'q' } });

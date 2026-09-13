@@ -1,11 +1,12 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
-import { InstagramIcon, TikTokIcon, XIcon } from '@/components/shared/brand-icons';
+import { InstagramIcon, TikTokIcon, WhatsAppIcon, XIcon } from '@/components/shared/brand-icons';
 import { Container } from '@/components/shared/container';
 import { footerCopy } from '@/content/pages';
 import type { Navigation, SiteSettings } from '@/content/schema';
 import { cn } from '@/lib/cn';
+import { whatsappUrl } from '@/lib/utm';
 
 const PAYMENT_BADGES = [
   { file: 'paypal.png', name: 'PayPal' },
@@ -52,6 +53,11 @@ export function Footer({
     { href: site.social.x, label: footerCopy.socialAria.x, Icon: XIcon },
     { href: site.social.instagram, label: footerCopy.socialAria.instagram, Icon: InstagramIcon },
     { href: site.social.tiktok, label: footerCopy.socialAria.tiktok, Icon: TikTokIcon },
+    {
+      href: whatsappUrl(site.contact.whatsapp),
+      label: footerCopy.socialAria.whatsapp,
+      Icon: WhatsAppIcon,
+    },
   ];
 
   return (
@@ -84,6 +90,15 @@ export function Footer({
                 </li>
               ))}
             </ul>
+            <p className="flex flex-wrap items-center gap-x-3 text-small text-white/75">
+              <a href={`mailto:${site.contact.email}`} className={cn(linkCls, 'py-0')}>
+                <bdi dir="ltr">{site.contact.email}</bdi>
+              </a>
+              <span aria-hidden="true">·</span>
+              <a href={`tel:${site.contact.phoneIntl}`} className={cn(linkCls, 'py-0')}>
+                <bdi dir="ltr">{site.contact.phone}</bdi>
+              </a>
+            </p>
           </div>
 
           <FooterColumn title={footerCopy.linksTitle}>
@@ -152,29 +167,17 @@ export function Footer({
                 </li>
               ))}
             </ul>
-            <div className="flex items-center gap-3">
-              <Image
-                src="/images/badges/misk-foundation-logo.png"
-                alt="مؤسسة مسك"
-                width={400}
-                height={230}
-                className="h-10 w-auto rounded-inner bg-white p-1"
-              />
-              <p className="text-caption text-white/75">{footerCopy.miskLine}</p>
-            </div>
+            <Image
+              src="/images/badges/misk-foundation-logo.png"
+              alt="مؤسسة مسك"
+              width={400}
+              height={230}
+              className="h-10 w-auto rounded-inner bg-white p-1"
+            />
           </div>
         </div>
 
-        <div className="mt-8 flex flex-col gap-3 border-t border-white/10 pt-6 text-small text-white/75 md:flex-row md:items-center md:justify-between">
-          <p className="flex flex-wrap items-center gap-x-3">
-            <a href={`mailto:${site.contact.email}`} className={cn(linkCls, 'py-0')}>
-              <bdi dir="ltr">{site.contact.email}</bdi>
-            </a>
-            <span aria-hidden="true">·</span>
-            <a href={`tel:${site.contact.phoneIntl}`} className={cn(linkCls, 'py-0')}>
-              <bdi dir="ltr">{site.contact.phone}</bdi>
-            </a>
-          </p>
+        <div className="mt-8 border-t border-white/10 pt-6 text-center text-small text-white/75">
           <p>{footerCopy.copyright.replace('{year}', String(year))}</p>
         </div>
       </Container>

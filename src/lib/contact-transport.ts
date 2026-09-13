@@ -1,6 +1,6 @@
 import 'server-only';
 import { Resend } from 'resend';
-import { contactEmail, contactPage } from '@/content/pages';
+import { contactEmail, contactForm } from '@/content/pages';
 import { contactEnv } from '@/lib/env-server';
 import { formatSaudiPhone, isSaudiMobile } from '@/lib/phone';
 import { whatsappUrl } from '@/lib/utm';
@@ -35,7 +35,7 @@ export function buildContactEmail(message: ContactMessage): {
   html: string;
   text: string;
 } {
-  const { labels } = contactPage;
+  const { labels } = contactForm;
   const subject = contactEmail.subject.replace('{inquiryType}', message.inquiry);
   const phone = formatSaudiPhone(message.phone);
   const wa = isSaudiMobile(message.phone) ? whatsappUrl(message.phone) : null;

@@ -11,6 +11,8 @@ interface Params {
 /**
  * A product published in the admin after the build gets its page on first request (ISR),
  * so unknown slugs must reach the page and `notFound()`; the 404 is cached like any page.
+ * (`await connection()` before `notFound()`, tried 2026-09-13 to keep junk slugs out of the
+ * cache, throws DYNAMIC_SERVER_USAGE inside an ISR render and answers 500 — not an option.)
  */
 export const dynamicParams = true;
 

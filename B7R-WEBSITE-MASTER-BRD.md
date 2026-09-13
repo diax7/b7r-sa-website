@@ -269,7 +269,7 @@ Scroll-reveal: elements fade up 12 px over 400 ms, once, when 20% visible, stagg
 
 Under `prefers-reduced-motion: reduce`: disable auto-advance, parallax-like effects, waves, stagger, and count-ups; keep opacity transitions ≤ 150 ms.
 
-Amended 2026-09-13 (ADR-037): the marketing video in §6.4.5 is the second continuous animation, a muted, decorative loop mounted near the viewport with the poster under reduced motion and Save-Data. The how-it-works journey (§6.7) fills its path with a CSS scroll-driven progress line, static where unsupported.
+Amended 2026-09-13 (ADR-037): the marketing video in §6.4.5 is the second continuous animation, a muted, decorative loop mounted near the viewport with the poster under reduced motion and Save-Data. The how-it-works journey (§6.7) fills its path with a CSS scroll-driven progress line, full and static where unsupported and under reduced motion (`animation: none`: scroll-driven progress ignores the global 0.01 ms duration).
 
 ### 3.8 Iconography and illustration
 
@@ -373,7 +373,7 @@ Every user-visible string in Level 1 is here. Copy it exactly, including punctua
 
 **Hero primary CTA:** ابدأ براندك مجانًا → register URL with `utm_campaign=hero`
 **Hero secondary CTA (text link with mirrored arrow):** استكشف المنتجات → `/products`
-**Hero microcopy under the buttons:** رصيد ترحيبي 30 ريالاً، بدون بطاقة
+**Hero microcopy under the buttons:** رصيد ترحيبي 30 ريالاً، بدون بطاقة *(2026-09-13, Dhia: not shown in the hero any more; the line stays in the CMS for the About facts band)*
 **Hero proof chips (3, with check icons):** مجاني 100% · بدون حد أدنى للطلبات · توصيل لكل المملكة خلال 5 أيام
 **Slide indicator aria:** الشريحة {n} من 4 · **Pause aria:** إيقاف التبديل التلقائي / استئناف التبديل التلقائي
 
@@ -388,10 +388,10 @@ Every user-visible string in Level 1 is here. Copy it exactly, including punctua
 - Eyebrow: جرّب بنفسك
 - H2: شاهد تصميمك واحسب ربحك
 - Lead: ارفع تصميمك، حرّكه على المنتج، وحدّد سعرك.
-- Group labels: المنتج · اللون · التصميم · التسعير
+- Group labels: المنتج · اللون · التصميم · التسعير *(2026-09-13: «التسعير» no longer shown)*
 - Upload button: ارفع تصميمك
 - Upload helper: PNG أو JPG أو SVG، حتى 10 ميجابايت
-- Sample design button: جرّب تصميماً جاهزاً
+- Sample design button: جرّب تصميماً جاهزاً *(removed 2026-09-13)*
 - Replace design: غيّر التصميم
 - Reset: إعادة الضبط
 - Canvas hint (shown once, dismisses on first drag): اسحب التصميم لتحريكه، واستخدم الزوايا لتغيير الحجم.
@@ -401,7 +401,7 @@ Every user-visible string in Level 1 is here. Copy it exactly, including punctua
 - Daily sales label: مبيعات يومية
 - Result labels: ربحك لكل قطعة · ربحك الشهري التقديري
 - Negative-profit warning: سعر البيع أقل من التكلفة. ارفع السعر لتربح.
-- Footnote: تقدير لا يشمل الشحن والضريبة.
+- Footnote: تقدير لا يشمل الشحن والضريبة. *(removed 2026-09-13)*
 - Section CTA: ابدأ بيع هذا المنتج → register URL with `utm_campaign=designer&product={slug}`
 - File error: الملف غير مدعوم أو أكبر من 10 ميجابايت.
 
@@ -463,9 +463,9 @@ Every user-visible string in Level 1 is here. Copy it exactly, including punctua
 - Column 2 title: السياسات — items: الشروط والأحكام · الشحن والتوصيل · سياسة الخصوصية · الأسئلة الشائعة
 - Column 3 title: النشرة البريدية — label: اشترك ليصلك الجديد — placeholder: name@example.com — button: اشترك — success: اشتركت. سنرسل لك الجديد فقط. — error: أدخل بريداً إلكترونياً صحيحاً.
 - Contact line: contact@b7r.sa · 0501699572 (both LTR inside `<bdi>`; the number links to `tel:+966501699572`)
-- Social aria labels: بحر برنت على X · بحر برنت على إنستغرام · بحر برنت على تيك توك
+- Social aria labels: بحر برنت على X · بحر برنت على إنستغرام · بحر برنت على تيك توك · بحر برنت على واتساب
 - Badges row caption (visually hidden, aria): وسائل الدفع وجهات التوثيق
-- Misk line next to the Misk logo: خريجو برنامج Misk Launchpad، الدفعة 9، 2026
+- Misk line next to the Misk logo: خريجو برنامج Misk Launchpad، الدفعة 9، 2026 *(removed 2026-09-13; the logo stays)*
 - Copyright: © {year} بحر برنت. جميع الحقوق محفوظة.
 
 ### 4.6 WhatsApp widget
@@ -494,10 +494,10 @@ Every user-visible string in Level 1 is here. Copy it exactly, including punctua
 - Breadcrumb: الرئيسية › المنتجات › `{name}`
 - H1: `{name}`
 - Price block: التكلفة تبدأ من `{SarAmount base}` · سعر بيع مقترح `{SarAmount suggested}` · ربحك التقديري `{SarAmount suggested − base}` لكل قطعة
-- Price footnote: تقدير لا يشمل الشحن والضريبة. أنت تحدّد سعر البيع.
+- Price footnote: تقدير لا يشمل الشحن والضريبة. أنت تحدّد سعر البيع. *(removed 2026-09-13)*
 - Primary CTA: ابدأ بيع هذا المنتج → register URL with `utm_campaign=product&utm_content={slug}`
 - Secondary link: جرّب تصميمك عليه → `/#designer?product={slug}`
-- Section titles: الوصف · المواصفات · جدول المقاسات · منتجات أخرى
+- Section titles: الوصف · المواصفات · جدول المقاسات · منتجات أخرى *(2026-09-13: «الوصف» has no section of its own — the full description sits under the product name)*
 - Spec labels: الخامة · الوزن · المقاسات · الألوان · منطقة الطباعة · طريقة الطباعة
 - Print method value (all products): طباعة رقمية عالية الجودة
 - Print area value: الواجهة الأمامية، 28 × 38 سم
@@ -689,7 +689,7 @@ Each section below states purpose, layout (desktop ≥ 1024 px and mobile < 768 
 
 **6.3.1 CTA ribbon (component `CtaRibbon`, on every page before the footer):** full-bleed band, background `--color-primary`, white text, padding 72 px vertical (48 px mobile). Content centred: H2 (§4.4 ribbon), lead, then a white `Button` (primary text colour) "ابدأ براندك مجانًا". Top and bottom edges are `WaveDivider`s (§6.3.4) in the adjacent section's background colour so the band appears to sit between two gentle waves.
 
-**6.3.2 Footer:** background `--color-navy`, text white at 90% opacity, links white, hover `--color-accent`. Top edge: a `WaveDivider` in the ribbon's primary blue so the ribbon flows into the footer. Layout desktop: 4 columns (logo + tagline + social icons 3 | روابط | السياسات | النشرة البريدية form). Second row: badges strip (payment logos at 28 px height in white rounded tiles, then SBC, Ministry of Commerce, then the Misk logo with its line), separated by a 1 px white/10% hairline. Third row: contact line and copyright. Mobile: single column in the same order, badges wrap.
+**6.3.2 Footer:** background `--color-navy`, text white at 90% opacity, links white, hover `--color-accent`. Top edge: a `WaveDivider` in the ribbon's primary blue so the ribbon flows into the footer. Layout desktop: 4 columns (logo + tagline + social icons 3 | روابط | السياسات | النشرة البريدية form). Second row: badges strip (payment logos at 28 px height in white rounded tiles, then SBC, Ministry of Commerce, then the Misk logo with its line), separated by a 1 px white/10% hairline. Third row: contact line and copyright. *Amended 2026-09-13 (Dhia): four social icons (X, Instagram, TikTok, WhatsApp) with the contact line (e-mail · phone) under them in the first column; the Misk logo without its line; the third row is the copyright alone, centred.* Mobile: single column in the same order, badges wrap.
 
 **6.3.3 Newsletter form (footer):** email input (LTR) + button; POST `/api/newsletter`; inline success or error message (§4.5) with `aria-live`; honeypot field; disabled while submitting.
 
@@ -738,7 +738,7 @@ Section order: Hero → Product strip → Interactive designer and profit → Th
 **Controls (top to bottom, each group has its §4.4 label):**
 1. **المنتج**: 5 `Chip`s with 32 px product thumbnails and names; single select; default تيشيرت أساسي.
 2. **اللون**: swatches (28 px circles with a 2 px ring on selection) for the selected product's colours (tees and hoodie: white, black; onesie: white; tote: beige). Default: white for tees and hoodie, so the sample design is visible. *Amended 2026-09-13 (ADR-036): no colour control — every product shows in white, the tote in beige.*
-3. **التصميم**: a dashed dropzone (radius 13 px) with an `Upload` icon and the button "ارفع تصميمك" + helper text; accepts `image/png, image/jpeg, image/svg+xml, image/webp`, max 10 MB, drag-and-drop and click; below it the ghost button "جرّب تصميماً جاهزاً". After a design exists, the dropzone collapses to a 56 px row with the thumbnail, "غيّر التصميم" and "إعادة الضبط". Invalid files show the §4.4 file error inline. *Amended 2026-09-13 (ADR-036): the printable area on the mockup is the upload target — empty, it shows «اضغط لرفع شعارك أو صورتك» with the helper text and opens the picker on click or keyboard (drag-and-drop anywhere on the mockup); a placed design gets a 44 px «×» («إزالة التصميم») that clears it; the canvas starts empty and «جرّب تصميماً جاهزاً» under it places the sample. The print-area outline and the handles show only while a mouse pointer is inside the canvas or the design is selected by a tap; otherwise the mockup is a clean preview. The dropzone, its collapsed row and «غيّر التصميم» / «إعادة الضبط» are gone.*
+3. **التصميم**: a dashed dropzone (radius 13 px) with an `Upload` icon and the button "ارفع تصميمك" + helper text; accepts `image/png, image/jpeg, image/svg+xml, image/webp`, max 10 MB, drag-and-drop and click; below it the ghost button "جرّب تصميماً جاهزاً". After a design exists, the dropzone collapses to a 56 px row with the thumbnail, "غيّر التصميم" and "إعادة الضبط". Invalid files show the §4.4 file error inline. *Amended 2026-09-13 (ADR-036): the printable area on the mockup is the upload target — empty, it shows «اضغط لرفع شعارك أو صورتك» with the helper text and opens the picker on click or keyboard (drag-and-drop anywhere on the mockup); a placed design gets a 44 px «×» («إزالة التصميم») that clears it; the canvas starts empty and «جرّب تصميماً جاهزاً» under it places the sample. The print-area outline and the handles show only while a mouse pointer is inside the canvas or the design is selected by a tap; otherwise the mockup is a clean preview. The dropzone, its collapsed row and «غيّر التصميم» / «إعادة الضبط» are gone. Amended again 2026-09-13 (Dhia): no sample design and no «جرّب تصميماً جاهزاً» — the canvas fills only by upload; the «التسعير» legend and the «تقدير لا يشمل الشحن والضريبة» footnote are removed from the calculator.*
 4. **التسعير**: read-only row "التكلفة من بحر" with `SarAmount base`; "سعر البيع في متجرك" numeric input (LTR digits, `SarSymbol` prefix) bound to a `Slider` (min = base, max = base × 4, step 1, default = suggested price from Appendix A) with the helper "السعر المقترح {SarAmount}"; "مبيعات يومية" `Stepper` (min 1, max 100, default 10).
 
 **Results card (below the controls, tinted `--color-accent-tint`):** two figures with labels "ربحك لكل قطعة" = sell − base, "ربحك الشهري التقديري" = (sell − base) × dailySales × 30, both `SarAmount`, integers, count-up 300 ms on change; when sell < base show the warning in `--color-error` and render the figures in error colour; when sell = base show 0 in muted colour. Footnote. Then the section CTA "ابدأ بيع هذا المنتج" (primary lg, full width of the column) linking to the register URL with `utm_campaign=designer&product={slug}`.
@@ -755,13 +755,13 @@ Section order: Hero → Product strip → Interactive designer and profit → Th
 | baby-onesie | 0.375 | 0.27 | 0.25 | 0.34 |
 | tote-bag | 0.3375 | 0.42 | 0.325 | 0.44 |
 
-**Sample design:** `public/designs/sample-tasmeemak.png`, a 1200 × 600 transparent PNG with the text «تصميمك هنا» in ITF Rayat Round Bold, `--color-primary`, generated once by `scripts/generate-sample-design.ts` (Pillow or `sharp` + the OTF) and committed. It loads when the visitor clicks "جرّب تصميماً جاهزاً" and also as the default on first render, so the canvas is never empty.
+**Sample design:** *removed 2026-09-13 (Dhia) — there is no sample design; the canvas starts empty and fills only by upload.*
 
 **Deep link:** `/#designer?product=hoodie` (from product pages) scrolls to the section and preselects the product.
 
 **Privacy:** uploaded files stay in memory (`URL.createObjectURL`), are revoked on replace, and are never sent anywhere. State a one-line note under the dropzone only if a reviewer asks; otherwise keep the UI clean.
 
-**Analytics events:** `designer_product_change`, `designer_upload`, `designer_sample`, `calculator_change` (debounced 800 ms, with product and sell price), `cta_click{location:"designer"}`.
+**Analytics events:** `designer_product_change`, `designer_upload`, `calculator_change` (debounced 800 ms, with product and sell price), `cta_click{location:"designer"}`.
 
 **Acceptance:** works on iOS Safari and Chrome Android with touch; no layout shift when the design loads; 60 fps drag on a mid-range phone (Konva layer caching for the mockup); keyboard users can change product, colour, price, and sales; the numbers match the formula exactly for random inputs (unit-tested); the section is server-rendered as a shell with the client island hydrating (`dynamic(() => import(...), { ssr: false })` for the Konva part only).
 
@@ -805,7 +805,7 @@ H1 + lead (§4.8). Grid of 5 `ProductCard`s (3 columns desktop, 2 tablet, 1 mobi
 
 ### 6.6 Product detail `/products/{slug}`
 
-**Layout desktop:** breadcrumbs; two columns: start = content, end = gallery. Gallery: main image 1:1 (radius 20 px) with thumbnails below (front/back for each colour); colour swatches switch both; keyboard arrows move between images. *Amended 2026-09-13 (ADR-035): one photo of the active colour that shows the back on hover, tap or arrow keys, a visible front/back toggle under it, then the colour swatches — no thumbnails, no counter; description, specs and the size chart share one section side by side from `md`.* Content: H1, short description (one paragraph from Appendix A), price block (three lines from §4.8 with `SarAmount`, the profit line in success colour), footnote, primary CTA (lg) + secondary link to the designer, then sections: الوصف (full description), المواصفات (definition list: الخامة, الوزن, المقاسات, الألوان, منطقة الطباعة, طريقة الطباعة), جدول المقاسات (table; cm; LTR digits in RTL cells), منتجات أخرى (3 `ProductCard`s). Then the ribbon.
+**Layout desktop:** breadcrumbs; two columns: start = content, end = gallery. Gallery: main image 1:1 (radius 20 px) with thumbnails below (front/back for each colour); colour swatches switch both; keyboard arrows move between images. *Amended 2026-09-13 (ADR-035): one photo of the active colour that shows the back on hover, tap or arrow keys, a visible front/back toggle under it, then the colour swatches — no thumbnails, no counter; description, specs and the size chart share one section side by side from `md`. Amended again 2026-09-13 (Dhia): the full description replaces the short one under the H1, the price footnote is gone, and the details section holds only المواصفات and جدول المقاسات.* Content: H1, short description (one paragraph from Appendix A), price block (three lines from §4.8 with `SarAmount`, the profit line in success colour), footnote, primary CTA (lg) + secondary link to the designer, then sections: الوصف (full description), المواصفات (definition list: الخامة, الوزن, المقاسات, الألوان, منطقة الطباعة, طريقة الطباعة), جدول المقاسات (table; cm; LTR digits in RTL cells), منتجات أخرى (3 `ProductCard`s). Then the ribbon.
 
 **Mobile:** gallery first, then content; sticky bottom bar with price "يبدأ من" and the CTA.
 
@@ -815,13 +815,13 @@ H1 + lead (§4.8). Grid of 5 `ProductCard`s (3 columns desktop, 2 tablet, 1 mobi
 
 H1 + lead. Five step rows alternating image side (3D icons: `tee-plus-create-product`, `laptop-link-connect-store`, `bag-and-parcel-order`, `printer-print`, `truck-delivery`; icon on the end side for odd rows, start side for even rows; mobile stacks icon above text). Then the profit block: title, three tiles joined by "−" and "=" glyphs (mirrored order is natural in RTL: سعر البيع on the start), example line with `SarAmount`. Then the mini FAQ (3 items) and the ribbon.
 
-Amended 2026-09-13 (Dhia's design review): the five steps are one connected journey — numbered 3D icons in circular frames on a path that runs across the top from `lg` and down the start side on phones, with a progress line that fills as the section scrolls (CSS scroll timeline; static where unsupported and under reduced motion); the profit block is a highlighted card whose tiles stack on phones. Copy unchanged.
+Amended 2026-09-13 (Dhia's design review): the five steps are one connected journey — numbered 3D icons in circular frames on a path that runs across the top from `lg` and down the start side on phones, with a progress line that fills as the track scrolls through the viewport (a CSS view timeline named on the track; full and static where unsupported and under reduced motion); the profit block is a highlighted card whose tiles stack on phones. Copy unchanged.
 
 ### 6.8 About `/about`
 
 H1. Story block (title + paragraph, max-width 760 px). Three cards (رسالتنا, رؤيتنا, قيمنا) with Lucide icons `Target`, `Eye`, `Heart`. Misk credential block: a surface card with the Misk logo (`brand/trust-badges/misk-foundation-logo.png`, 200 px wide, on white) at the start and the title + text at the end. Location line with a `MapPin` icon. One lifestyle image is allowed (`lifestyle-mockups/hanging-tshirt-mockup.jpg`) as a decorative banner between the story and the cards, 21:9, radius 20 px. Then the ribbon.
 
-Amended 2026-09-13 (Dhia's design review, same copy): the lifestyle photo sits beside the story in a two-column header with the delivery origin as a chip over it and the location line under the story; a navy facts band follows with the welcome credit (`SarAmount`) and the three hero proof chips from §4.4, each with the matching why-us line; the three cards carry the 3D icons as art in a staggered grid; the MISK credential sits on an accent-tint card; then the ribbon.
+Amended 2026-09-13 (Dhia's design review, same copy): the lifestyle photo sits beside the story in a two-column header with the delivery origin as a chip over it and the location line under the story; a navy facts band follows with the welcome credit (`SarAmount`) and the three why-us pairs from §4.4 (title over text), labelled by the why-us section title; the three cards carry the 3D icons as art in a staggered grid; the MISK credential sits on an accent-tint card; then the ribbon.
 
 ### 6.9 Contact `/contact`
 
@@ -832,6 +832,8 @@ Amended 2026-09-13 (Dhia's design review, same copy): the lifestyle photo sits b
 **API `POST /api/contact`:** validates with the same zod schema; rejects if the honeypot is filled (returns 200 to fool bots); verifies Turnstile server-side when configured; rate-limits 5 requests per IP per 10 minutes (in-memory map; note the single-instance assumption); sends the email through Resend (§4.17) to `CONTACT_TO`; returns `{ ok: true }` or `{ ok: false, error }` with 400/429/500. Never logs message bodies in production.
 
 **Booking card:** button opens `BOOKING_URL` in a new tab when set; otherwise opens WhatsApp with the §4.11 prefilled message. Level 4 replaces this with an inline Cal.com embed.
+
+Amended 2026-09-13 (ADR-031): the section is the `contact` block of the contact page in the CMS (card titles and the booking card are content; the form's strings stay in code) and sits on the surface tone like the first section of every page.
 
 ### 6.10 FAQ `/faq`
 
@@ -1117,7 +1119,7 @@ A unit test parses every content file against its schema; the build fails on dri
 | `NEXT_PUBLIC_WHATSAPP` | `966501699572` | yes |
 | `NEXT_PUBLIC_GA_ID` | `G-JPB02M7C49` | yes |
 | `NEXT_PUBLIC_UMAMI_SRC`, `NEXT_PUBLIC_UMAMI_ID` | Umami script URL and website id | yes |
-| `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` | Contact form anti-spam | recommended |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` | Contact form anti-spam; the admin login gate (ADR-034) | yes (amended 2026-09-13: required in production since the login is gated by it) |
 | `RESEND_API_KEY`, `RESEND_FROM` (`بحر برنت <no-reply@b7r.sa>`), `CONTACT_TO` (`contact@b7r.sa`), `RESEND_AUDIENCE_ID` | Email | yes |
 | `BOOKING_URL` | Cal.com link; empty until Dhia creates it | no |
 | `INDEXNOW_KEY` | 32-char hex | yes |
@@ -1203,9 +1205,9 @@ Give Dhia and an editor a WordPress-like, Arabic, right-to-left admin at `https:
 - Users collection with roles `admin` and `editor`:
   - **admin**: everything, including users, settings, redirects, deleting.
   - **editor**: create/edit/publish content collections (pages, products, FAQ, testimonials, blog); no users, no site settings, no redirects, no deletes of published items.
-- Auth hardening: email + password (min 12 chars, checked against a breached-password list where feasible), login lockout after 5 failures for 15 minutes, Turnstile on the login form, session cookie `SameSite=Lax; Secure; HttpOnly`, admin routes `noindex` and excluded from the sitemap, `X-Robots-Tag: noindex` header on `/admin*`. 2FA is a later block (§12.6). Delivered in Phase 2a (ADR-027, ADR-028): the 12-character minimum and the Have I Been Pwned range check on every password write (fail-open with a warning when the service is down), the lockout, 8-hour sessions, and an admin header set on `/admin*` and `/api/payload/*` (`X-Robots-Tag: noindex, nofollow`, `Cache-Control: private, no-store`, a CSP without analytics origins). The Gravatar avatar is off. The login Turnstile ships in Phase 2b.
+- Auth hardening: email + password (min 12 chars, checked against a breached-password list where feasible), login lockout after 5 failures for 15 minutes, Turnstile on the login form, session cookie `SameSite=Lax; Secure; HttpOnly`, admin routes `noindex` and excluded from the sitemap, `X-Robots-Tag: noindex` header on `/admin*`. 2FA is a later block (§12.6). Delivered in Phase 2a (ADR-027, ADR-028): the 12-character minimum and the Have I Been Pwned range check on every password write (fail-open with a warning when the service is down), the lockout, 8-hour sessions, and an admin header set on `/admin*` and `/api/payload/*` (`X-Robots-Tag: noindex, nofollow`, `Cache-Control: private, no-store`, a CSP without analytics origins). The Gravatar avatar is off. The login Turnstile ships in Phase 2b (delivered 2026-09-13 as a verified gate cookie, ADR-034; the password-reset e-mail goes through Resend when configured).
 - Localisation: field-level `localized: true` on all text fields with locales `['ar', 'en']`, default `ar`, English left empty until the English phase.
-- Drafts and versions on Pages, Products, Posts; autosave; scheduled publish via Payload's jobs queue; live preview for Pages and Posts pointing at the public route. Phase 2a delivers drafts, versions (25 per document) and autosave on Products; scheduled publish and live preview come with Pages in 2b.
+- Drafts and versions on Pages, Products, Posts; autosave; scheduled publish via Payload's jobs queue; live preview for Pages and Posts pointing at the public route. Phase 2a delivers drafts, versions (25 per document) and autosave on Products; scheduled publish and live preview come with Pages in 2b. Amended 2026-09-13 (ADR-031): 2b phase 2 delivers drafts, versions and autosave on Pages and the `home` global; scheduled publish lands with the jobs in 2b phase 3; live preview is deferred (docs/IDEAS.md) because it needs draft rendering on the public routes, which the ISR + `revalidatePath` pipeline does not offer.
 
 ### 9.4 Collections and Globals (1:1 with the content contract in §8.4)
 
@@ -1214,18 +1216,20 @@ Give Dhia and an editor a WordPress-like, Arabic, right-to-left admin at `https:
 | `site-settings` | Global | brand, contact, social, offer.welcomeCredit, delivery.maxDays, delivery.origin, bookingUrl, appUrls, badges (media[]), consent text | `content/site.ts` |
 | `navigation` | Global | header items[], footer columns[], ctaLabel | `content/navigation.ts` |
 | `home` | Global | heroSlides[] (media desktop/mobile, headline, subline), productStripOrder[], designerDefaults, steps[], video (media, poster, heading, lead), whyUs[], integrationsIntro, faqSelection (5 relationship), ribbon | `content/home.ts` |
+| | | Amended 2026-09-13 (ADR-031, as shipped): groups `hero` (4 slides: headline, subline, desktop and mobile media; CTAs, microcopy, 3 chips), `productStrip` (copy + 5 product relationships), `designer` (eyebrow, title, lead, sample, cta), `steps` (copy, link, 3 items with media icons), `video` (copy; the file ships with the site), `whyUs` (3 items, icon select), `testimonials`, `integrations`, `faq` (copy + link; the entries are the `faqs` rows flagged `showOnHome`), `ribbon`; `enabled` on every group but hero, productStrip, designer and ribbon; drafts + autosave; interface strings (aria, hints, input labels, validation) stay in `src/messages/ar.json`. | `content/seed/home.ts` (seed) |
 | `seo-defaults` | Global | titleTemplate, defaultDescription, defaultOgImage, verification tokens (admin-only) | `content/seo.ts` |
 | `products` | Collection | slug, name, shortDescription, description (rich text), baseCost, suggestedPrice, colors[] (name, hex, front media, back media), sizes[], material, weightGrams, printArea (fixed 28×38 + canvas fractions), printMethodLabel, sortOrder, seo (plugin) | `content/products.ts` |
 | `pages` | Collection | slug (how-it-works, about, contact, faq, terms, shipping, privacy), title, lead, blocks[] (richText, steps, cards, miskCredential, contactCards, bookingCard, legalBody with updatedAt), seo | `content/pages/*`, `content/legal/*` |
-| `faqs` | Collection | group, question, answer, order, showOnHome | `content/faq.ts` |
+| | | Amended 2026-09-13 (ADR-031, as shipped): blocks `richText`, `story` (heading, text, line, photo, facts-band switch), `cards` (icon, title, text, art), `steps`, `profitEquation`, `faqList` (all groups or a slice of the home entries, link, closing line), `miskCredential`, `contact` (the cards' titles and the booking card; the form is interface copy in code), `legalBody` (Markdown + date), `mediaBanner`; `seo` group (title ≤ 70, description ≤ 160, share image) instead of `plugin-seo`; the seven slugs are reserved (route folders in code, no rename, no delete) and other published pages are served by `/[slug]`; unknown top-level URLs get the global 404 through the proxy (ADR-032). | `content/seed/pages.ts`, `content/seed/legal/*.md` (seed) |
+| `faqs` | Collection | group, question, answer, order, showOnHome, homeOrder (1–5; a sixth `showOnHome` is refused, ADR-031) | `content/seed/faq.ts` (seed) |
 | `testimonials` | Collection | quote, name, store, avatar, placeholder (default false), order | `content/testimonials.ts` |
-| `integrations` | Collection | slug, name, logo, status (available), order | `content/integrations.ts` |
+| `integrations` | Collection | platform (salla \| zid \| shopify — selects the brand SVG that ships with the code, ADR-031), name, nameLatin, order | `content/seed/integrations.ts` (seed) |
 | `media` | Collection | upload with alt (required, Arabic), focal point, credit | `public/images/*` |
 | `redirects` | Collection (plugin) | from, to, type 301/308/410 | `lib/redirects.ts` |
 | `users` | Collection | email, role, name | — |
 | `posts`, `categories`, `authors` | Collections | Level 3 (§10) | `content/blog/*` |
 
-Official plugins: `@payloadcms/plugin-seo` (title/description/OG fields with Arabic length hints and a preview), `@payloadcms/plugin-redirects`, `@payloadcms/plugin-form-builder` (Level 4), `@payloadcms/plugin-search` (Level 3), `@payloadcms/storage-s3`.
+Official plugins: `@payloadcms/plugin-seo` (title/description/OG fields with Arabic length hints and a preview), `@payloadcms/plugin-redirects`, `@payloadcms/plugin-form-builder` (Level 4), `@payloadcms/plugin-search` (Level 3), `@payloadcms/storage-s3`. Amended 2026-09-13 (ADR-031): `plugin-seo` is not used; each page carries a `seo` group with the same limits.
 
 Field rules: every text field shows its §4 default as the initial value after migration; numeric fields for money are integers in SAR; `suggestedPrice` must be ≥ `baseCost` (validation); `delivery.maxDays` is an integer; `offer.welcomeCredit` is an integer displayed everywhere from this single value.
 
@@ -1233,7 +1237,7 @@ Field rules: every text field shows its §4 default as the initial value after m
 
 - The home page is a Global with fixed sections (order not editable; Dhia wanted a designed page, not a page builder). Each section's fields are editable; each section has an `enabled` toggle except hero, product strip, designer, and ribbon.
 - Other pages use a small block set (rich text, cards, steps, media banner) so new pages can be assembled in Level 2 without code (for example a future `/creators` landing).
-- Rich text is Lexical with headings H2/H3, lists, links, images, and a "CTA block" custom node; RTL editing verified.
+- Rich text is Lexical with headings H2/H3, lists, links, images, and a "CTA block" custom node; RTL editing verified. Amended 2026-09-13 (ADR-031): shipped without the CTA node — no seeded page needs one; docs/IDEAS.md holds it.
 - Product prices, the welcome credit, and the delivery days each carry a help text reminding the editor that they must match the app (no API sync, decision D-41).
 - Media library requires Arabic alt text on upload.
 
@@ -1242,6 +1246,8 @@ Field rules: every text field shows its §4 default as the initial value after m
 On publish or update of any content: Payload `afterChange` hook → `revalidateTag('content')` and `revalidatePath` for affected routes → regenerate `sitemap.xml` (dynamic route reading from Payload with a 1-hour cache) → enqueue an IndexNow ping for the changed URLs (job) → clear the CDN zone for those paths if CranL exposes a purge API. Static pages stay static: the site reads content at build and via ISR (`revalidate` tags), never per-request from the database.
 
 Amended 2026-09-13 (Phase 2a, ADR-030): tag-based revalidation is not used. Every public page and the metadata routes carry `revalidate = 60` (ISR), the data layer reads Payload directly with per-render deduplication (published documents only), and the `afterChange` / `afterDelete` hooks call `revalidatePath` on the product's page and the routes that list it (home, listing, sitemap), and on every static route for a global. `/products/[slug]` accepts unknown params so a product published in the admin gets its page on first request. A publish is live at once; draft autosaves change nothing. The IndexNow ping and the CDN purge stay planned for 2b.
+
+Amended 2026-09-13 (Phase 2b, ADR-033): the jobs queue runs in-process on a one-minute cron (never during the build; the run endpoint answers nobody); scheduled publish is on for the home page, pages, products and testimonials, and a publish from a job falls back to the 60 s timer for regeneration; the IndexNow ping is a queued job with three retries, sent only on the production runtime (`B7R_RUNTIME=production`) with a key; admin-added redirects resolve in the `/[slug]` route (308/307) and join the proxy allowlist (ADR-032).
 
 ### 9.7 Migration from Level 1 content files
 
@@ -1257,6 +1263,8 @@ Amended 2026-09-13 (Phase 2a, ADR-026, ADR-029): the migrated files move to `src
 4. Migration script runs clean on an empty database and is idempotent on a second run.
 5. IndexNow and revalidation hooks fire on publish (visible in job logs).
 6. Backups exist and a restore has been rehearsed once (documented in `RUNBOOK.md`).
+
+Amended 2026-09-13 (Phase 2b, ADR-034): (1) proven by `e2e/admin.spec.ts` (a home publish is on `/` at once); (2) proven for users, settings, redirects, published products/pages/testimonials and live FAQ entries; (4) `scripts/ci/seed-check.sh` every CI run; (5) IndexNow is a queued job on the production runtime, revalidation runs from every publish hook; (6) the weekly `Backup` workflow writes to a private bucket and CI rehearses a restore on every run (`scripts/ci/restore-check.sh`) — the once-off rehearsal from a CranL snapshot remains a launch step. The login Turnstile is a verified gate cookie rather than a token per attempt (ADR-034).
 
 ---
 

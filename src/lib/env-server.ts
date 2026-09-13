@@ -1,4 +1,5 @@
 import 'server-only';
+import { isProductionRuntime } from '@/lib/cms/env';
 
 /**
  * Server-only environment (BRD 8.5). Read lazily so a missing key surfaces as a clear
@@ -57,7 +58,11 @@ export function verificationTokens(): { google?: string; bing?: string } {
   return { ...(google ? { google } : {}), ...(bing ? { bing } : {}) };
 }
 
-/** BRD 8.5 "required in prod", extended by the CMS set (BRD 9.2). */
+/**
+ * BRD 8.5 "required in prod", extended by the CMS set (BRD 9.2) and the Turnstile pair: with
+ * the admin login gated by it (ADR-034), a production boot without the keys would run the
+ * login open.
+ */
 export const PRODUCTION_REQUIRED_ENV = [
   'NEXT_PUBLIC_SITE_URL',
   'NEXT_PUBLIC_APP_URL',
@@ -70,6 +75,8 @@ export const PRODUCTION_REQUIRED_ENV = [
   'CONTACT_TO',
   'RESEND_AUDIENCE_ID',
   'INDEXNOW_KEY',
+  'NEXT_PUBLIC_TURNSTILE_SITE_KEY',
+  'TURNSTILE_SECRET_KEY',
   'GOOGLE_SITE_VERIFICATION',
   'BING_SITE_VERIFICATION',
   'DATABASE_URL',
@@ -87,9 +94,7 @@ export const PAYLOAD_SECRET_MIN_LENGTH = 32;
 
 export type RawEnv = Record<string, string | undefined>;
 
-export function isProductionRuntime(raw: RawEnv = process.env): boolean {
-  return raw['B7R_RUNTIME'] === 'production';
-}
+export { isProductionRuntime };
 
 export function missingProductionEnv(raw: RawEnv = process.env): string[] {
   return PRODUCTION_REQUIRED_ENV.filter((name) => !raw[name]);

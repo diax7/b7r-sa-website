@@ -4,7 +4,8 @@ import { SectionHeader } from '@/components/shared/section-header';
 import { productsPage } from '@/content/pages';
 import { getProducts } from '@/lib/cms';
 import { siteBase } from '@/lib/env';
-import { CtaRibbon, JsonLd, jsonLd } from '@/modules/core';
+import { JsonLd, jsonLd } from '@/modules/core';
+import { CtaRibbon } from '@/modules/core/cta-ribbon';
 import { ProductCard } from '@/modules/products/product-card';
 
 /** Products listing (BRD 6.5): H1 + lead, the five cards, the ribbon. */

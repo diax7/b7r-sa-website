@@ -17,7 +17,6 @@
     "e2e": "playwright test",
     "lhci": "lhci autorun",
     "assets": "tsx scripts/prepare-assets.ts && tsx scripts/hero-crops.ts",
-    "assets:sample-design": "tsx scripts/generate-sample-design.ts",
     "og": "tsx scripts/build-og.ts",
     "migrate": "payload migrate",
     "migrate:create": "payload migrate:create && tsx scripts/fix-migrations.ts",
@@ -29,7 +28,9 @@
   "dependencies": {
     "@next/third-parties": "16.3.5",
     "@payloadcms/db-postgres": "3.89.0",
+    "@payloadcms/email-resend": "3.89.0",
     "@payloadcms/next": "3.89.0",
+    "@payloadcms/plugin-redirects": "3.89.0",
     "@payloadcms/richtext-lexical": "3.89.0",
     "@payloadcms/storage-s3": "3.89.0",
     "@payloadcms/translations": "3.89.0",

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { testimonials } from '@/content/testimonials';
+import { testimonials } from '@/content/seed/testimonials';
 import { shouldRenderTestimonials } from '@/modules/home/testimonials/rule';
 
 describe('testimonials rendering rule (BRD 6.4.7, ADR-013)', () => {

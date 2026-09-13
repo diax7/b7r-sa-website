@@ -26,9 +26,9 @@ test.describe('hero (BRD 6.4.1)', () => {
 
   test('requests exactly one hero image per viewport and preloads it', async ({ page }) => {
     const heroImages: string[] = [];
+    // The hero photos come from the CMS media library (seeded as hero-set-*.jpg).
     page.on('request', (r) => {
-      if (r.url().includes('images%2Fhero') || r.url().includes('images/hero'))
-        heroImages.push(r.url());
+      if (/hero-set-[ab]-(desktop|mobile)/.test(r.url())) heroImages.push(r.url());
     });
     await page.goto('/');
     await page.waitForLoadState('load');

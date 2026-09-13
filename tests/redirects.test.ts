@@ -84,19 +84,19 @@ describe('410 list (BRD 5.2, ADR-017)', () => {
     for (const path of live) expect(isGone(path), path).toBe(false);
   });
 
-  it('keeps the proxy matcher identical to the map', () => {
-    expect(proxyConfig.matcher).toEqual(GONE_MATCHER);
+  it('keeps the proxy matcher identical to the map (plus the slug matcher, B0)', () => {
+    expect(proxyConfig.matcher.slice(0, GONE_MATCHER.length)).toEqual(GONE_MATCHER);
     expect(GONE_MATCHER).toHaveLength(goneExact.length + gonePrefixes.length);
   });
 
-  it('answers 410 with a cached Arabic HTML body and passes everything else', async () => {
-    const res = proxy(new Request('https://b7r.sa/wp-admin/'));
+  it('answers 410 with a cached Arabic HTML body and passes the code-owned routes', async () => {
+    const res = await proxy(new Request('https://b7r.sa/wp-admin/'));
     expect(res?.status).toBe(410);
     expect(res?.headers.get('content-type')).toBe('text/html; charset=utf-8');
     expect(res?.headers.get('cache-control')).toBe('public, max-age=86400');
     const html = (await res?.text()) ?? '';
     expect(html).toContain('<html lang="ar" dir="rtl">');
     expect(html).toContain('noindex');
-    expect(proxy(new Request('https://b7r.sa/products'))).toBeUndefined();
+    expect(await proxy(new Request('https://b7r.sa/products'))).toBeUndefined();
   });
 });

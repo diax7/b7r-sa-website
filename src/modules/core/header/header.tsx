@@ -73,7 +73,7 @@ export function Header({ navigation, site }: ShellData) {
                 priority
                 className={cn(
                   'w-auto transition-[height] duration-(--duration-base) ease-(--ease-standard)',
-                  scrolled ? 'h-7 lg:h-[30px]' : 'h-7 lg:h-9',
+                  scrolled ? 'h-7 lg:h-8' : 'h-8 lg:h-11',
                 )}
               />
             </Link>
@@ -89,7 +89,7 @@ export function Header({ navigation, site }: ShellData) {
                         aria-current={active ? 'page' : undefined}
                         className={cn(
                           'nav-link relative py-2 text-body font-medium text-text transition-colors duration-(--duration-fast) hover:text-primary',
-                          active && 'is-active text-primary',
+                          active && 'is-active font-bold text-primary',
                         )}
                       >
                         {item.label}

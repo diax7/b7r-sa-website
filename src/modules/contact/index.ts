@@ -1,4 +1,4 @@
-export { ContactPage } from '@/modules/contact/contact-page';
+export { ContactSection } from '@/modules/contact/contact-section';
 export {
   CONTACT_RATE_LIMIT,
   CONTACT_WINDOW_MS,

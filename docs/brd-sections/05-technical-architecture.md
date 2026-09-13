@@ -109,7 +109,7 @@ A unit test parses every content file against its schema; the build fails on dri
 | `NEXT_PUBLIC_WHATSAPP` | `966501699572` | yes |
 | `NEXT_PUBLIC_GA_ID` | `G-JPB02M7C49` | yes |
 | `NEXT_PUBLIC_UMAMI_SRC`, `NEXT_PUBLIC_UMAMI_ID` | Umami script URL and website id | yes |
-| `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` | Contact form anti-spam | recommended |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` | Contact form anti-spam; the admin login gate (ADR-034) | yes (amended 2026-09-13: required in production since the login is gated by it) |
 | `RESEND_API_KEY`, `RESEND_FROM` (`بحر برنت <no-reply@b7r.sa>`), `CONTACT_TO` (`contact@b7r.sa`), `RESEND_AUDIENCE_ID` | Email | yes |
 | `BOOKING_URL` | Cal.com link; empty until Dhia creates it | no |
 | `INDEXNOW_KEY` | 32-char hex | yes |

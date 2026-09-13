@@ -31,7 +31,7 @@ production reaches after the first visitor), then runs `lhci autorun` with three
 ```bash
 docker compose up -d        # Postgres 16 on :5435 (db/user/password b7r) + MinIO on :9000/:9001
 pnpm migrate                # apply src/migrations to the database in DATABASE_URL
-pnpm content:migrate        # seed products, media and the three globals (create-only, ADR-026)
+pnpm content:migrate        # seed products, media, the globals (home included), faqs, testimonials, integrations (create-only, ADR-026)
 pnpm admin:create           # first admin from ADMIN_EMAIL / ADMIN_PASSWORD (12+ chars, not breached)
 pnpm dev                    # admin at http://localhost:3004/admin (Arabic, RTL)
 ```
@@ -39,8 +39,13 @@ pnpm dev                    # admin at http://localhost:3004/admin (Arabic, RTL)
 `.env.local` needs `DATABASE_URL`, `PAYLOAD_SECRET` (any 32+ characters locally),
 `PAYLOAD_PUBLIC_SERVER_URL=http://localhost:3004` and the admin pair. Media goes to
 `public/media/` (gitignored) unless the `S3_*` rows point at MinIO (bucket `b7r-media`,
-public download). `bash scripts/ci/seed-check.sh` runs the seed and admin scripts through
+public download; add `IMAGES_ALLOW_LOCAL_IP=1` so the image optimiser accepts the
+localhost endpoint — never in production). `bash scripts/ci/seed-check.sh` runs the seed and admin scripts through
 their three outcomes against a fresh database, the way CI does.
+
+Admin components (a new field type such as rich text, a custom view): run
+`pnpm payload generate:importmap` and commit `src/app/(payload)/admin/importMap.js`, or the
+admin logs `PayloadComponent not found in importMap` and the field renders empty.
 
 Schema changes: edit the collection, then `pnpm migrate:create <name>` (writes an SQL
 migration under `src/migrations/` and normalises its imports), `pnpm migrate`, commit both
@@ -102,13 +107,18 @@ GitHub push and the first CranL deploy wait for Dhia's approval (ADR-008). When 
    `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `S3_BUCKET`, `S3_REGION`, `S3_ENDPOINT`, `S3_PUBLIC_URL`).
    Until the two secrets exist the workflow ends with a notice and deploys nothing. The
    GitHub runner must reach the database (public endpoint with TLS, or an allow-list); the
-   fallback is building on CranL from the `Dockerfile` with the same secrets.
+   fallback is building on CranL from the `Dockerfile` with the same secrets. `payload` is a
+   `serverExternalPackages` entry (ADR-033): the standalone trace copies it from
+   `node_modules`, so a slimmer image must keep that directory.
    Release order: migrate (the workflow does it) → new image starts → old image stops;
    migrations are additive so both images run on the schema (ADR-025).
 3. Runtime environment: every row of the matrix below; the same `NEXT_PUBLIC_*` values as
    the build args. First deploy only: `pnpm content:migrate` and `pnpm admin:create` against
    the production database from a machine with the secrets (ADR-026), then sign in at
-   `/admin` and change the password.
+   `/admin` and change the password. A database seeded before 2b already holds products and
+   the three settings globals, so the first 2b deploy runs `pnpm content:migrate --force`:
+   it adds only what is missing (home, faqs, testimonials, integrations, the hero and step
+   media) and never overwrites a document.
 4. Set `B7R_RUNTIME=production` **only in the CranL production app**. `instrumentation.ts`
    then asserts the BRD 8.5 + 9.2 required set at server start and throws if anything is
    missing, so the container fails its health check and CranL keeps the previous image
@@ -165,14 +175,81 @@ Old URLs with a trailing slash take two hops (`/showcase/` → 308 `/showcase` �
 `skipTrailingSlashRedirect` plus explicit slash sources in `src/lib/redirects.ts`; not worth it
 unless Dhia asks.
 
+Admin redirects (Settings → التحويلات, admins only, ADR-032): one lowercase segment as the
+source (`/old-name`), a page or a path/`https:` URL as the target, 301 or 302. A row added
+in the admin answers 308 (301) or 307 (302) from `/[slug]` within a minute. The BRD §5.2 map
+(`/showcase`, `/terms-conditions`, `/privacy-policy`, `/home-2`, `/en/*`) lives in
+`src/lib/redirects.ts` and `next.config` only; the site refuses an admin source that is one
+of its own routes and any loop.
+
+## Jobs (scheduled publish, IndexNow)
+
+The queue runs inside the app on a one-minute cron from the first request after a boot
+(`/api/health` → `jobs: on`); `/api/payload/payload-jobs/run` answers 403 to everyone by
+design. A scheduled publish is applied by the cron and the page regenerates on the 60 s
+timer (the hook logs one `revalidatePath … skipped outside a request` line at info). Failed
+jobs stay in the `payload-jobs` table with their error and show as `jobsFailed` in
+`/api/health`; clear one with `DELETE /api/payload/payload-jobs/<id>` as an admin after
+reading its `error`; completed ones are deleted.
+
+To rehearse a scheduled publish locally: create a draft page in the admin, open its
+«Schedule publish» drawer and pick a time a minute ahead (or, from a script,
+`payload.jobs.queue({ task: 'schedulePublish', waitUntil, input: { type: 'publish', doc: { relationTo: 'pages', value: id } } })`);
+within the next minute the log shows `Running 1 jobs.`, the document is published, and the
+page answers 200 within a minute more.
+
 ## IndexNow
 
+A publish in the admin queues an `indexnow-ping` job with the regenerated URLs (three
+retries, exponential backoff) — only when `B7R_RUNTIME=production` and `INDEXNOW_KEY` are
+set, so CI and previews never ping (ADR-033). For the deploy-time submission:
 `scripts/indexnow.ts <before.xml> <after.xml>` diffs two sitemap snapshots and POSTs the
 changed URLs with `keyLocation = https://b7r.sa/indexnow/{key}.txt`. It exits 0 without a
 request when `NEXT_PUBLIC_SITE_URL` or `INDEXNOW_KEY` is unset. Intended GitHub Actions step
 on `main` once CranL deploys from it: fetch the live `sitemap.xml` before the deploy, poll
 `/api/health` until `version` matches `package.json`, fetch it again, run the script. Until
 then it is a manual step.
+
+## Admin login gate (Turnstile)
+
+With `NEXT_PUBLIC_TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY` set, the login page runs
+the challenge on load and `/api/turnstile/login` sets a ten-minute gate cookie; a login
+without it answers 401 «أكمل التحقق من أنك لست روبوتاً» (ADR-034). Without the secret the
+gate is open and the boot log says so once. If the widget fails (script blocked), refresh
+the page; the gate never sends the visitor to Cloudflare's servers from the login itself.
+
+## Password reset (admin)
+
+With `RESEND_API_KEY` + `RESEND_FROM` the «نسيت كلمة المرور» link sends the Arabic reset
+e-mail through Resend (`/api/health` → `email: resend`). Without them (`email: console`) the
+message is printed in the app log: read the `/admin/reset/<token>` link there, or set a new
+password from a machine with the secrets: `pnpm payload …` is not needed — the
+`admin:create` script only creates the first admin; use the admin UI as another admin
+(Users → the account → new password).
+
+## Backups and restore
+
+Weekly, `.github/workflows/backup.yml` (Sundays 03:00 UTC, or «Run workflow») runs
+`scripts/backup.sh`: `pg_dump --format=custom` → `s3://$BACKUP_S3_BUCKET/YYYY-MM-DD.dump`.
+The bucket is **private** with its own key pair (put + list only); never the media bucket
+— the script refuses it. Retention: a lifecycle rule on the bucket, e.g.
+`mc ilm rule add --expire-days 30 cranl/b7r-backups` (or the provider's console). Set the
+five `BACKUP_S3_*` secrets in the `production` environment; until then the workflow ends
+with a notice.
+
+Restore into a scratch database (the CI rehearsal `scripts/ci/restore-check.sh` does the
+same on every run):
+
+```bash
+aws --endpoint-url "$BACKUP_S3_ENDPOINT" s3 cp "s3://$BACKUP_S3_BUCKET/2026-09-13.dump" ./backup.dump
+psql "$ADMIN_URL" -c 'CREATE DATABASE b7r_restore;'
+pg_restore --no-owner --no-privileges --dbname "$SCRATCH_URL" ./backup.dump
+psql "$SCRATCH_URL" -c 'select count(*) from pages;'   # 7 or more
+```
+
+To restore production itself: stop the app, restore into a fresh database the same way,
+point `DATABASE_URL` at it, run `pnpm migrate` (no-op when the dump is current), start the
+app. Media lives in the S3 bucket and is not part of the dump.
 
 ## Contact form
 

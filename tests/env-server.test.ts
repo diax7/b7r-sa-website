@@ -45,7 +45,15 @@ describe('production env gate (BRD 8.5)', () => {
   });
 
   it('requires the CMS set: database, a long secret, same-origin server URL, S3 (BRD 9.2)', () => {
-    for (const name of ['DATABASE_URL', 'PAYLOAD_SECRET', 'S3_BUCKET', 'S3_SECRET_ACCESS_KEY']) {
+    for (const name of [
+      'DATABASE_URL',
+      'PAYLOAD_SECRET',
+      'S3_BUCKET',
+      'S3_SECRET_ACCESS_KEY',
+      // The login gate (ADR-034) must not boot open in production.
+      'NEXT_PUBLIC_TURNSTILE_SITE_KEY',
+      'TURNSTILE_SECRET_KEY',
+    ]) {
       expect(PRODUCTION_REQUIRED_ENV).toContain(name);
     }
     expect(() => assertProductionEnv({ ...prod, PAYLOAD_SECRET: 'short' })).toThrow(
@@ -54,5 +62,35 @@ describe('production env gate (BRD 8.5)', () => {
     expect(() =>
       assertProductionEnv({ ...prod, PAYLOAD_PUBLIC_SERVER_URL: 'https://cms.b7r.sa' }),
     ).toThrow(/PAYLOAD_PUBLIC_SERVER_URL must be https:\/\/b7r\.sa/);
+  });
+});
+
+describe('the admin e-mail adapter (ADR-034)', async () => {
+  const { cmsEnv, parseFrom } = await import('@/lib/cms/env');
+  const base = { DATABASE_URL: 'postgres://x', PAYLOAD_SECRET: 'a'.repeat(40) };
+
+  it('parses «name <address>» and bare addresses; refuses anything else', () => {
+    expect(parseFrom('بحر برنت <no-reply@b7r.sa>')).toEqual({
+      fromName: 'بحر برنت',
+      fromAddress: 'no-reply@b7r.sa',
+    });
+    expect(parseFrom('no-reply@b7r.sa')).toEqual({
+      fromName: 'بحر برنت',
+      fromAddress: 'no-reply@b7r.sa',
+    });
+    expect(parseFrom('not an address')).toBeUndefined();
+    expect(parseFrom(undefined)).toBeUndefined();
+  });
+
+  it('is on only with a key and a valid sender', () => {
+    expect(cmsEnv(base).email).toBeUndefined();
+    expect(cmsEnv({ ...base, RESEND_API_KEY: 're_x' }).email).toBeUndefined();
+    expect(
+      cmsEnv({ ...base, RESEND_API_KEY: 're_x', RESEND_FROM: 'بحر برنت <a@b7r.sa>' }).email,
+    ).toEqual({
+      apiKey: 're_x',
+      fromName: 'بحر برنت',
+      fromAddress: 'a@b7r.sa',
+    });
   });
 });

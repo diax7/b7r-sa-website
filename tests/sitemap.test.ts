@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { blogPosts } from '@/content/blog';
-import { getLegalPages } from '@/content/legal';
+import { pages } from '@/content/seed/pages';
 import { products } from '@/content/seed/products';
 import { seo } from '@/content/seed/seo';
 import { site } from '@/content/seed/site';
@@ -11,13 +11,16 @@ import { contentDate, sitemapEntries } from '@/modules/core/seo/sitemap';
 const BASE = 'https://b7r.sa';
 
 describe('sitemap (BRD 7.5)', () => {
-  const entries = sitemapEntries(BASE, seo, products);
+  // The code-owned routes stay in seo-defaults; the seven designed pages are `pages` rows.
+  const codeRoutes = seo.filter((s) => ['/', '/products', '/blog'].includes(s.route));
+  const entries = sitemapEntries(BASE, codeRoutes, pages, products);
   const urls = entries.map((e) => e.url);
 
   it('lists every static page, every product and every published post, nothing else', () => {
-    for (const page of seo) {
+    for (const page of codeRoutes) {
       expect(urls).toContain(page.route === '/' ? BASE : `${BASE}${page.route}`);
     }
+    for (const page of pages) expect(urls).toContain(`${BASE}/${page.slug}`);
     for (const p of products) expect(urls).toContain(`${BASE}/products/${p.slug}`);
     expect(urls.filter((u) => u.includes('/blog/'))).toHaveLength(blogPosts.length);
     expect(urls.some((u) => u.includes('/api') || u.includes('?') || u.endsWith('/'))).toBe(false);
@@ -34,8 +37,8 @@ describe('sitemap (BRD 7.5)', () => {
     expect(hoodie?.images?.length).toBe(4);
   });
 
-  it('dates legal pages from the legal file so the visible date, JSON-LD and sitemap agree', () => {
-    for (const legal of getLegalPages()) {
+  it('dates legal pages from the legal body so the visible date, JSON-LD and sitemap agree', () => {
+    for (const legal of pages.filter((p) => p.blocks[0]?.blockType === 'legalBody')) {
       const entry = entries.find((e) => e.url === `${BASE}/${legal.slug}`);
       expect(entry?.lastModified).toEqual(contentDate(legal.updatedAt));
     }

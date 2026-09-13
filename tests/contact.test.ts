@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { contactPage } from '@/content/pages';
+import { contactForm } from '@/content/pages';
 import { buildContactEmail, getContactTransport } from '@/lib/contact-transport';
 import { verifyTurnstile } from '@/lib/turnstile';
 import { contactBodySchema, INQUIRY_OPTIONS } from '@/modules/contact/schema';
@@ -28,10 +28,10 @@ describe('contact schema (BRD 4.11, 6.9)', () => {
       inquiry: 'غير موجود',
       message: '   ',
     });
-    expect(errors.name).toBe(contactPage.validation.name);
-    expect(errors.phone).toBe(contactPage.validation.phone);
-    expect(errors.email).toBe(contactPage.validation.email);
-    expect(errors.message).toBe(contactPage.validation.message);
+    expect(errors.name).toBe(contactForm.validation.name);
+    expect(errors.phone).toBe(contactForm.validation.phone);
+    expect(errors.email).toBe(contactForm.validation.email);
+    expect(errors.message).toBe(contactForm.validation.message);
     expect(errors.inquiry).toBeDefined();
     expect(validateContact(valid)).toEqual({});
   });
