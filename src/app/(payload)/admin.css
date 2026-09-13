@@ -34,8 +34,19 @@
   --color-border: var(--theme-elevation-150);
   /* Status colours picked for AA on the greys. */
   --color-success: #3fbf6b;
+  --color-success-tint: rgb(63 191 107 / 0.16);
   --color-warning: #f5b53f;
   --color-error: #f26b6b;
+  /* Dashboard hues: identity for an entity (a page is violet wherever the dashboard shows
+     one), never a meaning; each is at least 5.8:1 on the surface (rgb 34 34 34). */
+  --color-violet: #a78bfa;
+  --color-violet-tint: rgb(167 139 250 / 0.16);
+  --color-teal: #2dd4bf;
+  --color-teal-tint: rgb(45 212 191 / 0.16);
+  --color-orange: #fb923c;
+  --color-orange-tint: rgb(251 146 60 / 0.16);
+  --color-pink: #f472b6;
+  --color-pink-tint: rgb(244 114 182 / 0.16);
   --color-whatsapp: #25d366;
   --color-white: #ffffff;
   --color-black: #000000;
@@ -106,6 +117,11 @@
 
   html {
     font-family: var(--font-sans);
+  }
+
+  /* Every view started flush under the 56 px header (Dhia, 2026-09-14): room above it. */
+  .template-default__wrap > .app-header + * {
+    padding-block-start: 24px;
   }
 
   /* The panel is English and left-to-right; the content it edits is Arabic. Every text

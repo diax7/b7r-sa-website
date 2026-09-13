@@ -214,6 +214,17 @@ test.describe('CMS admin', () => {
     expect(await links.count()).toBeGreaterThanOrEqual(12);
     for (const link of await links.all()) await expect(link.locator('svg')).toHaveCount(1);
     await expect(nav.locator('a[aria-current="page"]')).toHaveText(/Pages/);
+    // A sidebar click navigates inside the app: the page is not reloaded.
+    await page.evaluate(() => {
+      (window as unknown as { b7rMarker?: number }).b7rMarker = 1;
+    });
+    await nav.locator('#nav-products').click();
+    await page.waitForURL(/\/admin\/collections\/products/);
+    expect(await page.evaluate(() => (window as unknown as { b7rMarker?: number }).b7rMarker)).toBe(
+      1,
+    );
+    await expect(nav.locator('a[aria-current="page"]')).toHaveText(/Products/);
+    await page.goto('/admin/collections/pages');
     // Content first; a collapsed group stays collapsed across a reload (Payload's `nav` pref).
     await expect(nav.locator('[data-admin-group]').first()).toHaveAttribute(
       'data-admin-group',
@@ -342,6 +353,21 @@ test.describe('CMS admin', () => {
     const first = dashboard.locator('[data-admin-recent] li').first();
     await expect(first).toContainText(entry!.question);
     await expect(first).toContainText(/by /);
+    await expect(first.locator('[data-hue]')).toHaveAttribute('data-hue', 'orange');
+    await expect(dashboard.locator('[data-admin-action="add-page"]')).toHaveAttribute(
+      'data-hue',
+      'violet',
+    );
+    // A tile navigates inside the app: no reload.
+    await page.evaluate(() => {
+      (window as unknown as { b7rMarker?: number }).b7rMarker = 1;
+    });
+    await dashboard.locator('[data-admin-action="home"]').click();
+    await page.waitForURL(/\/admin\/globals\/home/);
+    expect(await page.evaluate(() => (window as unknown as { b7rMarker?: number }).b7rMarker)).toBe(
+      1,
+    );
+    await page.goto('/admin');
     const { AxeBuilder } = await import('@axe-core/playwright');
     const results = await new AxeBuilder({ page })
       .withTags(['wcag2a', 'wcag2aa'])

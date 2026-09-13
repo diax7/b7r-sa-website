@@ -7,11 +7,9 @@ import { useId } from 'react';
 import { Icon } from '@/components/shared/icon';
 import { relativeTime } from '@/modules/cms/admin/dashboard/relative-time';
 import { FieldShell } from '@/modules/cms/admin/fields/field-shell';
+import { adminStrings } from '@/modules/cms/admin/strings';
 
-const STRINGS = {
-  never: 'No save recorded yet.',
-  by: 'by',
-};
+const s = adminStrings.savedBy;
 
 /**
  * The `lastSavedBy` snapshot as one line ("by Dhia · 2 hours ago") instead of two read-only
@@ -37,7 +35,7 @@ export const SavedByField: GroupFieldClientComponent = ({ field, path }) => {
         <Icon icon={History} size={16} className="shrink-0 text-accent" />
         {savedBy ? (
           <span className="min-w-0 truncate">
-            {STRINGS.by} <span className="text-text">{savedBy}</span>
+            {s.by} <span className="text-text">{savedBy}</span>
             {savedAt && (
               <>
                 {' · '}
@@ -46,7 +44,7 @@ export const SavedByField: GroupFieldClientComponent = ({ field, path }) => {
             )}
           </span>
         ) : (
-          <span>{STRINGS.never}</span>
+          <span>{s.never}</span>
         )}
       </span>
     </FieldShell>

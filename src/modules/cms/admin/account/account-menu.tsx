@@ -1,5 +1,6 @@
 'use client';
 
+import { Link } from '@payloadcms/ui';
 import { ChevronDown, LogOut, UserRound } from 'lucide-react';
 import { Badge } from '@/components/shared/badge';
 import { Icon } from '@/components/shared/icon';
@@ -71,10 +72,10 @@ export function AccountMenu({
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <a href={`${adminRoute}/account`}>
+          <Link href={`${adminRoute}/account`}>
             <Icon icon={UserRound} size={16} />
             {s.profile}
-          </a>
+          </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild className="text-error data-highlighted:text-error">
           <a href={`${adminRoute}/logout`} data-admin-logout="">

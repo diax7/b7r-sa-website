@@ -55,3 +55,9 @@ Branch `admin/ui-1`, PR #4. CTO: plan 90, phase 1 94, phase 2 93.
 - [x] T513 Full review on screenshots (login, dashboard, palette, rail, lists, edit views,
   globals, create forms, versions, delete confirm, 404, phone); stray autosave drafts removed;
   e2e + unit tests; ADR-039 amendment; design system.
+- [x] T514 Dhia's third notes: collapse control at the start of its row; 24 px under the
+  header on every view; colour on the dashboard (name in the accent, a hue per entity on the
+  discs, "Start here" icon).
+- [x] T515 CTO closing review: Payload's `Link` for every in-admin link (no reload, e2e
+  marker); rail links named from the server; abandoned autosave drafts off the dashboard;
+  widget strings in `strings.ts`; IDEAS entries (content-locale `en`, upstream em dashes).

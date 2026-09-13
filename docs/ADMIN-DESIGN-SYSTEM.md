@@ -44,7 +44,8 @@ render in both worlds without a fork. Raw hex lives only in the token block.
 | `text` | `--theme-elevation-1000` | Body text (white). |
 | `text-muted` | `--theme-elevation-600` | Secondary text (rgb 181 181 181, 9.5:1). |
 | `border` | `--theme-elevation-150` | Hairlines (rgb 60 60 60). |
-| `success` / `warning` / `error` | `#3fbf6b` / `#f5b53f` / `#f26b6b` | Status text and badges; each ≥ 4.5:1 on `ground` and `surface`. |
+| `success` / `warning` / `error` | `#3fbf6b` / `#f5b53f` / `#f26b6b` | Status text and badges; each ≥ 4.5:1 on `ground` and `surface`. `success-tint` sits behind green icons. |
+| `violet` / `teal` / `orange` / `pink` (+ `-tint`) | `#a78bfa` / `#2dd4bf` / `#fb923c` / `#f472b6` | Dashboard hues: one per entity (`COLLECTION_HUES`, `GLOBAL_HUES` in `icons.ts`), used only on the tinted icon discs of the quick actions and the latest changes. Identity, never meaning. Each ≥ 5.8:1 on `surface`. |
 | `radius-base` / `radius-lg` / `radius-inner` / `radius-pill` | 13 / 20 / 6 / 999 px | From `src/styles/tokens.css` (shared with the site). |
 | `shadow-card` / `shadow-popover` | black at 40 % / 60 % | Depth on the dark surface. |
 | `font-sans` | ITF Rayat Round | Also set as Payload's `--font-body`. |
@@ -59,7 +60,7 @@ Payload's elements and ours.
 
 | Colour | Means | Where |
 |---|---|---|
-| Blue (`primary` fill, `accent` text) | the main action, the active place, a link | Create New, Save, the active nav entry, quick-action tiles, focus rings |
+| Blue (`primary` fill, `accent` text) | the main action, the active place, a link | Create New, Save, the active nav entry, the home and settings discs, focus rings |
 | Green (`--admin-green`) | publish, live | the publish button of a document with drafts, the Published pill, "answering/running" rows |
 | Red (`--admin-red`) | delete, failure | Delete items, row removal, the delete confirmation, failed rows, Log out |
 | Amber (`--admin-amber`) | careful | Unpublish, Revert, "off / test mode" rows |
@@ -93,7 +94,8 @@ published pill) is re-hued to the accent in `@layer payload`; its greys are unto
   `MessageSquareQuote`, integrations `Plug`, media `Image`, redirects `ArrowRightLeft`, users
   `Users`; home `House`, site-settings `Settings2`, navigation `Compass`, seo-defaults
   `Search`; groups المحتوى `LayoutGrid`, الإعدادات `SlidersHorizontal`, الإدارة `Shield`.
-- Colour: icons inherit text colour; the active nav item and quick-action tiles use `accent`.
+- Colour: icons inherit text colour; the active nav item uses `accent`. On the dashboard an
+  entity's disc takes its hue (§2), the same hue on its tile and in the latest changes.
 
 ## 5. Writing (Arabic)
 
@@ -140,12 +142,15 @@ Payload's own elements (buttons, fields, pills, toasts) are themed in `admin.css
 | Account menu | `modules/cms/admin/account/*` | Initials avatar, name, e-mail (LTR), role badge, "My account", "Log out" (red). In the rail only the avatar shows. |
 | Login | `modules/cms/admin/login/*` | One line under the form; the Turnstile widget above it (ADR-034). |
 
-| Dashboard | `modules/cms/admin/dashboard/*` | Greeting, quick-action tiles by permission, health card (`healthReport()`, rows with a colour and a sentence), latest saves with who saved them and a relative time (`relative-time.ts`); a row without a title reads "Untitled". |
+| Dashboard | `modules/cms/admin/dashboard/*` | Greeting (name in the accent), quick-action tiles by permission in their entity's hue, health card (`healthReport()`, rows with a colour and a sentence), latest saves with who saved them and a relative time (`relative-time.ts`); a draft nobody titled or saved (an unused "Create New") is left out. Every in-admin link is Payload's `Link`: no reload. |
 | Field widgets | `modules/cms/admin/fields/*` | `EnabledSwitch` (switch + the section's consequence), `IconSelect` (lucide tiles), `PlatformSelect` (brand SVG tiles), `SavedByField` (the `lastSavedBy` snapshot as one line, nothing on a create form); all on `FieldShell` (label, description, error), the pickers on `ChoiceGrid` (radiogroup). |
 | Preview | `lib/preview-token.ts`, `app/api/preview/*`, `modules/core/draft-bar.tsx` | The preview button opens a signed link → Next draft mode → the page with a warning bar; exit returns to the page. |
 
+**Links inside the admin are Payload's `Link`** (`@payloadcms/ui`): Next navigation with
+the route-transition bar, no reload. A plain `<a>` is for the site (new tab) and logout only.
+
 Payload puts the sidebar in a drawer at widths ≤ 1440 px (its `l` breakpoint), the header
-hamburger opens it; that is Payload's behaviour, kept. Payload's locale suffix on localized
+hamburger opens it; that is Payload's behaviour, kept. Every view gets 24 px under the header. Payload's locale suffix on localized
 labels (`.field-label .localized`) is hidden: the header's locale switcher names the locale,
 and the suffix is an em dash.
 

@@ -83,6 +83,49 @@ export function groupIcon(label: string): LucideIcon | undefined {
 
 export const ACTION_ICONS = { viewSite: Eye } as const;
 
+/**
+ * The dashboard's hues (design system §2): identity, never meaning. A page is violet on its
+ * quick-action tile and in the latest-changes list; the settings entities share the blue.
+ * Green is kept for "live" (the site link), so the four meaning colours stay honest.
+ */
+export type Hue = 'blue' | 'violet' | 'teal' | 'orange' | 'pink' | 'green';
+
+export const COLLECTION_HUES: Record<CollectionSlug, Hue> = {
+  products: 'teal',
+  pages: 'violet',
+  faqs: 'orange',
+  testimonials: 'pink',
+  integrations: 'teal',
+  media: 'pink',
+  redirects: 'blue',
+  users: 'blue',
+};
+
+export const GLOBAL_HUES: Record<GlobalSlug, Hue> = {
+  home: 'blue',
+  'site-settings': 'blue',
+  navigation: 'blue',
+  'seo-defaults': 'blue',
+};
+
+export function entityHue(type: 'collections' | 'globals', slug: string): Hue {
+  const hue =
+    type === 'collections'
+      ? COLLECTION_HUES[slug as CollectionSlug]
+      : GLOBAL_HUES[slug as GlobalSlug];
+  return hue ?? 'blue';
+}
+
+/** Tailwind classes per hue (literal, so the scanner keeps them): a tinted disc and its icon. */
+export const HUE_CLASSES: Record<Hue, string> = {
+  blue: 'bg-accent-tint text-accent',
+  violet: 'bg-violet-tint text-violet',
+  teal: 'bg-teal-tint text-teal',
+  orange: 'bg-orange-tint text-orange',
+  pink: 'bg-pink-tint text-pink',
+  green: 'bg-success-tint text-success',
+};
+
 /** The lucide names the content selects offer (`CARD_ICONS`, `WHY_US_ICONS`), for the picker. */
 export const WIDGET_ICONS: Record<string, LucideIcon> = {
   ShieldCheck,

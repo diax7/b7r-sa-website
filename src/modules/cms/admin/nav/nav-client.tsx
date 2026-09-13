@@ -1,7 +1,7 @@
 'use client';
 
 /* eslint-disable @next/next/no-img-element -- the brand mark is a plain image in the admin */
-import { Hamburger, useNav, usePreferences, useWindowInfo } from '@payloadcms/ui';
+import { Hamburger, Link, useNav, usePreferences, useWindowInfo } from '@payloadcms/ui';
 import { ChevronDown, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { PREFERENCE_KEYS } from 'payload/shared';
@@ -45,8 +45,9 @@ const iconButton =
  * second markup: the server renders the same tree open or closed, and `admin.css` hides
  * `[data-rail-hide]` and shows `[data-rail-show]` when the aside is closed above Payload's
  * `l` breakpoint, so a collapsed sidebar paints as a rail on the first frame of every page
- * with no shift. Hydration only adds what needs JS: tooltips, `aria-label`s, and lifting
- * `inert` (Payload marks a closed nav inert for the phone drawer).
+ * with no shift. Hydration only adds what needs JS: tooltips and lifting `inert` (Payload
+ * marks a closed nav inert for the phone drawer). Links are Payload's `Link` (Next's, with
+ * the route transition bar), so a click never reloads the admin.
  */
 export function NavClient({ groups, prefs, account, adminRoute }: NavClientProps) {
   const { hydrated, navOpen, navRef, setNavOpen, shouldAnimate } = useNav();
@@ -80,7 +81,7 @@ export function NavClient({ groups, prefs, account, adminRoute }: NavClientProps
       >
         <div className="nav__scroll flex flex-col" ref={navRef}>
           <nav aria-label={s.label} className="flex w-full flex-1 flex-col gap-4">
-            <a
+            <Link
               href={adminRoute}
               className="flex items-center gap-3 rounded-inner py-1 text-text"
               aria-label={s.brand}
@@ -96,7 +97,7 @@ export function NavClient({ groups, prefs, account, adminRoute }: NavClientProps
               <span className="text-body font-semibold" data-rail-hide="">
                 {s.brand}
               </span>
-            </a>
+            </Link>
 
             <div className="flex flex-col gap-1">
               {groups.map((group) => (
@@ -116,7 +117,6 @@ export function NavClient({ groups, prefs, account, adminRoute }: NavClientProps
               <RailButton
                 label={s.collapse}
                 onClick={() => setOpen(false)}
-                className="ms-auto"
                 data-rail-hide=""
                 data-admin-collapse=""
                 tooltip={rail}
@@ -167,7 +167,7 @@ function RailButton({
 }: {
   label: string;
   onClick: () => void;
-  className?: string;
+  className?: string | undefined;
   /** Tooltips need the client; the server render carries the aria-label alone. */
   tooltip: boolean;
   children: React.ReactNode;
@@ -240,12 +240,14 @@ function Group({
           {group.entities.map((entity) => {
             const EntityIcon = entityIcon(entity.type, entity.slug);
             const active = isActive(pathname, entity.href);
+            // The label is the visible text when open and the only name in the rail, where
+            // the CSS hides the span before any JS runs.
             const anchor = (
-              <a
+              <Link
                 href={entity.href}
                 id={`nav-${entity.type === 'globals' ? 'global-' : ''}${entity.slug}`}
                 aria-current={active ? 'page' : undefined}
-                aria-label={rail ? entity.label : undefined}
+                aria-label={entity.label}
                 className={cn(link, active && 'bg-accent-tint font-medium text-accent')}
                 data-rail-center=""
               >
@@ -253,7 +255,7 @@ function Group({
                 <span className="truncate" data-rail-hide="">
                   {entity.label}
                 </span>
-              </a>
+              </Link>
             );
             return (
               <li key={`${entity.type}-${entity.slug}`}>

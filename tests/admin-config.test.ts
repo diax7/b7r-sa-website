@@ -1,6 +1,6 @@
 import type { CollectionConfig, GlobalConfig } from 'payload';
 import { describe, expect, it } from 'vitest';
-import { titleOf } from '@/modules/cms/admin/dashboard/data';
+import { isAbandonedDraft, titleOf } from '@/modules/cms/admin/dashboard/data';
 import { COLLECTION_ICONS, GLOBAL_ICONS, groupIcon } from '@/modules/cms/admin/icons';
 import { Faqs } from '@/modules/cms/collections/faqs';
 import { Integrations } from '@/modules/cms/collections/integrations';
@@ -78,5 +78,12 @@ describe('dashboard recent list: a title for every row', () => {
     expect(titleOf('   ')).toBe('Untitled');
     expect(titleOf(null)).toBe('Untitled');
     expect(titleOf(undefined)).toBe('Untitled');
+  });
+
+  it('leaves out a draft nobody titled or saved (an abandoned "Create New")', () => {
+    expect(isAbandonedDraft({ _status: 'draft' }, '')).toBe(true);
+    expect(isAbandonedDraft({ _status: 'draft' }, 'A draft in progress')).toBe(false);
+    expect(isAbandonedDraft({ _status: 'draft', lastSavedBy: { name: 'Dhia' } }, '')).toBe(false);
+    expect(isAbandonedDraft({ _status: 'published' }, '')).toBe(false);
   });
 });

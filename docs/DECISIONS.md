@@ -672,3 +672,20 @@ title, and the dashboard's latest-changes list now says "Untitled" instead of th
 to the list view's "No Title". Known third-party traits, noted and left: Payload's upload
 meta line and pagination ellipsis use an em dash; the checker covers our sources, not
 `node_modules`.
+
+Amended 2026-09-14 (Dhia's third notes and the CTO's closing review). **No reload inside the
+admin.** Every in-admin link in our shell (sidebar entities and brand, quick-action tiles,
+latest changes, "My account") is Payload's `Link` (Next's, with Payload's route-transition
+bar), as Payload's own nav and our palette already were; a plain `<a>` remains only for the
+site link (new tab) and `/admin/logout`. The e2e asserts a window marker survives a sidebar
+click and a tile click. Rail links carry `aria-label` from the server render, since the CSS
+hides their text before any JS runs. **Abandoned drafts stay off the dashboard.** A row that
+is a draft with no title and no saver is an autosave nobody used; `recentActivity()` skips it.
+**Hues on the dashboard.** Dhia asked for more colour: the greeting's name in the accent, a
+rocket on "Start here", and a hue per entity on the quick-action discs and the latest-changes
+discs (pages violet, products and integrations teal, FAQ orange, media and testimonials pink,
+the settings and the home page blue, the site link green for "live"). Hues are identity, not
+meaning; the four meaning colours keep their jobs. Tokens `violet`, `teal`, `orange`, `pink`
+(each at least 5.8:1 on the surface) and `success-tint` were added. **Room under the header.**
+Every view started flush under Payload's 56 px header; 24 px now. **Collapse control** at the
+start of its row. The saved-by widget's strings moved to `strings.ts`.

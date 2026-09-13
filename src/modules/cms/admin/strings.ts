@@ -39,6 +39,10 @@ export const adminStrings = {
   login: {
     noAccount: 'No account? Ask the site admin for one.',
   },
+  savedBy: {
+    by: 'by',
+    never: 'No save recorded yet.',
+  },
   dashboard: {
     greeting: 'Welcome, {name}',
     intro: 'Everything on the site starts here.',
