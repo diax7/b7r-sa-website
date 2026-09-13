@@ -9,6 +9,7 @@ import { buildConfig } from 'payload';
 import { Faqs } from '@/modules/cms/collections/faqs';
 import { Integrations } from '@/modules/cms/collections/integrations';
 import { Media } from '@/modules/cms/collections/media';
+import { Pages } from '@/modules/cms/collections/pages';
 import { Products } from '@/modules/cms/collections/products';
 import { Testimonials } from '@/modules/cms/collections/testimonials';
 import { Users } from '@/modules/cms/collections/users';
@@ -67,7 +68,7 @@ export default buildConfig({
     fallback: true,
   },
   editor: lexicalEditor(),
-  collections: [Users, Media, Products, Faqs, Testimonials, Integrations],
+  collections: [Users, Media, Products, Pages, Faqs, Testimonials, Integrations],
   globals: [Home, SiteSettings, Navigation, SeoDefaults],
   db: postgresAdapter({
     pool: { connectionString: env.databaseUrl },

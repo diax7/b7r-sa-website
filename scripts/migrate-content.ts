@@ -16,12 +16,21 @@ import { faq } from '../src/content/seed/faq';
 import { home } from '../src/content/seed/home';
 import { integrations } from '../src/content/seed/integrations';
 import { navigation } from '../src/content/seed/navigation';
+import { pages } from '../src/content/seed/pages';
 import { products } from '../src/content/seed/products';
 import { seo } from '../src/content/seed/seo';
 import { site } from '../src/content/seed/site';
 import { testimonials } from '../src/content/seed/testimonials';
 import { SEO_TITLE_TEMPLATE } from '../src/content/seo-copy';
-import type { FaqItem, Integration, Product, Testimonial } from '../src/content/schema';
+import {
+  RESERVED_PAGE_SLUGS,
+  type Block,
+  type FaqItem,
+  type Integration,
+  type Page,
+  type Product,
+  type Testimonial,
+} from '../src/content/schema';
 
 // Same env files Next loads (.env.local first), so the script sees DATABASE_URL and the secret.
 nextEnv.loadEnvConfig(process.cwd());
@@ -361,13 +370,15 @@ async function ensureGlobals(payload: Payload): Promise<void> {
       data: {
         titleTemplate: SEO_TITLE_TEMPLATE,
         defaultOgImage: '/og/default.png',
-        routes: seo.map((row) => ({
-          route: row.route,
-          title: row.title,
-          description: row.description,
-          ...(row.ogImage ? { ogImage: row.ogImage } : {}),
-          updatedAt: `${row.updatedAt}T00:00:00.000Z`,
-        })),
+        routes: seo
+          .filter((row) => CODE_ROUTES.has(row.route))
+          .map((row) => ({
+            route: row.route,
+            title: row.title,
+            description: row.description,
+            ...(row.ogImage ? { ogImage: row.ogImage } : {}),
+            updatedAt: `${row.updatedAt}T00:00:00.000Z`,
+          })),
       },
       context: CONTEXT,
     });
@@ -375,12 +386,117 @@ async function ensureGlobals(payload: Payload): Promise<void> {
   }
 }
 
+/** Routes the code owns; every other BRD 4.16 row lives in the page's own `seo` group (ADR-031). */
+const CODE_ROUTES = new Set(['/', '/products', '/blog']);
+
+/**
+ * The one exception to "never overwrites" (ADR-026 amendment): a database seeded before 2b
+ * holds the seven pages' SEO rows in `seo-defaults`; once the pages exist those rows would
+ * be a second source, so they are removed here with a log line.
+ */
+async function pruneSeoRows(payload: Payload): Promise<void> {
+  const doc = await payload.findGlobal({ slug: 'seo-defaults', depth: 0 });
+  const rows = doc.routes ?? [];
+  const moved = rows.filter((r) => !CODE_ROUTES.has(r.route));
+  if (moved.length === 0) return;
+  await payload.updateGlobal({
+    slug: 'seo-defaults',
+    data: { routes: rows.filter((r) => CODE_ROUTES.has(r.route)) },
+    context: CONTEXT,
+  });
+  console.warn(
+    `content:migrate: removed ${moved.map((r) => r.route).join(', ')} from seo-defaults — their title and description now live in the page's SEO group (ADR-026 exception).`,
+  );
+}
+
+/** Block seeds → Payload block data: media paths become uploads, ids are dropped (Payload assigns rows). */
+async function blockData(payload: Payload, block: Block): Promise<Record<string, unknown>> {
+  const { id: _id, ...rest } = block;
+  switch (block.blockType) {
+    case 'story':
+      return {
+        ...rest,
+        photo: await ensureMedia(payload, block.photo.src, 'تيشيرت أسود معلّق مطبوع عليه تصميم جدة'),
+      };
+    case 'cards': {
+      const items = [];
+      for (const item of block.items) {
+        const { art, ...fields } = item;
+        // TODO(copy): admin-only alt (the page renders the art decorative); Appendix G row 17.
+        items.push({
+          ...fields,
+          ...(art ? { art: await ensureMedia(payload, art, `أيقونة مجسّمة: ${item.title}`) } : {}),
+        });
+      }
+      return { ...rest, items };
+    }
+    case 'steps': {
+      const items = [];
+      for (const item of block.items) {
+        const { order: _order, icon, ...fields } = item;
+        // TODO(copy): admin-only alt (the page renders the icon decorative); Appendix G row 17.
+        items.push({
+          ...fields,
+          icon: await ensureMedia(payload, icon, `أيقونة مجسّمة: ${item.title}`),
+        });
+      }
+      return { ...rest, items };
+    }
+    case 'faqList': {
+      const { link, ...fields } = block;
+      return { ...fields, ...(link ? { linkLabel: link.label, linkHref: link.href } : {}) };
+    }
+    case 'mediaBanner':
+      return { ...rest, media: await ensureMedia(payload, block.media.src, block.media.alt) };
+    case 'legalBody':
+      return { ...rest, updatedAt: `${block.updatedAt}T00:00:00.000Z` };
+    default:
+      return rest;
+  }
+}
+
+async function ensurePage(payload: Payload, page: Page): Promise<void> {
+  const existing = await payload.find({
+    collection: 'pages',
+    where: { slug: { equals: page.slug } },
+    limit: 1,
+    depth: 0,
+    draft: true,
+  });
+  if (existing.docs[0]) {
+    summary.skipped.push(`page ${page.slug}`);
+    return;
+  }
+  const blocks = [];
+  for (const block of page.blocks) blocks.push(await blockData(payload, block));
+  const ogImage = page.seo.ogImage
+    ? await ensureMedia(payload, page.seo.ogImage, `صورة مشاركة: ${page.title}`)
+    : undefined;
+  await payload.create({
+    collection: 'pages',
+    data: {
+      slug: page.slug,
+      title: page.title,
+      ...(page.lead ? { lead: page.lead } : {}),
+      blocks: blocks as never,
+      seo: {
+        title: page.seo.title,
+        description: page.seo.description,
+        ...(ogImage ? { ogImage } : {}),
+      },
+      _status: 'published',
+    },
+    context: CONTEXT,
+  });
+  summary.created.push(`page ${page.slug}`);
+}
+
 async function main(): Promise<number> {
   // Imported after the env files are loaded: the config reads DATABASE_URL and the secret at import.
   const { default: config } = await import('../src/payload.config');
   const payload = await getPayload({ config });
   const counts = await Promise.all(
-    (['products', 'faqs', 'testimonials', 'integrations'] as const).map((c) =>
+    (['products', 'pages', 'faqs', 'testimonials', 'integrations'] as const).map((c) =>
       payload.count({ collection: c }).then((r) => r.totalDocs),
     ),
   );
@@ -398,6 +514,13 @@ async function main(): Promise<number> {
   }
   await ensureGlobals(payload);
   await ensureHome(payload);
+  for (const page of pages) {
+    if (!(RESERVED_PAGE_SLUGS as readonly string[]).includes(page.slug)) {
+      throw new Error(`seed pages: ${page.slug} is not one of the seven designed pages`);
+    }
+    await ensurePage(payload, page);
+  }
+  await pruneSeoRows(payload);
   for (const item of faq) await ensureFaq(payload, item);
   for (const [i, item] of testimonials.entries()) await ensureTestimonial(payload, item, i + 1);
   for (const [i, item] of integrations.entries()) await ensureIntegration(payload, item, i + 1);

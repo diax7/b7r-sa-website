@@ -39,8 +39,13 @@ pnpm dev                    # admin at http://localhost:3004/admin (Arabic, RTL)
 `.env.local` needs `DATABASE_URL`, `PAYLOAD_SECRET` (any 32+ characters locally),
 `PAYLOAD_PUBLIC_SERVER_URL=http://localhost:3004` and the admin pair. Media goes to
 `public/media/` (gitignored) unless the `S3_*` rows point at MinIO (bucket `b7r-media`,
-public download). `bash scripts/ci/seed-check.sh` runs the seed and admin scripts through
+public download; add `IMAGES_ALLOW_LOCAL_IP=1` so the image optimiser accepts the
+localhost endpoint — never in production). `bash scripts/ci/seed-check.sh` runs the seed and admin scripts through
 their three outcomes against a fresh database, the way CI does.
+
+Admin components (a new field type such as rich text, a custom view): run
+`pnpm payload generate:importmap` and commit `src/app/(payload)/admin/importMap.js`, or the
+admin logs `PayloadComponent not found in importMap` and the field renders empty.
 
 Schema changes: edit the collection, then `pnpm migrate:create <name>` (writes an SQL
 migration under `src/migrations/` and normalises its imports), `pnpm migrate`, commit both

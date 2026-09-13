@@ -118,6 +118,34 @@ export const revalidateProducts: CollectionAfterChangeHook & CollectionAfterDele
   return doc;
 };
 
+/** The proxy's allowlist of top-level slugs (B0, ADR-032): published pages and redirect sources. */
+export const SLUGS_ENDPOINT = '/api/pages/slugs';
+
+/** A page's own route plus the sitemap and the proxy allowlist. */
+export function pathsForPage(slug: string): string[] {
+  return [`/${slug}`, '/sitemap.xml', SLUGS_ENDPOINT];
+}
+
+/**
+ * Pages: a publish, an unpublish, a slug change or a delete regenerates the page, the sitemap
+ * and the allowlist; a draft autosave of a never-published page is not visible.
+ */
+export const revalidatePages: CollectionAfterChangeHook & CollectionAfterDeleteHook = ({
+  doc,
+  req,
+  ...rest
+}) => {
+  if (!shouldRevalidate(req)) return doc;
+  const previous = (rest as { previousDoc?: { slug?: string } }).previousDoc;
+  if (!isVisibleChange({ doc, ...rest })) return doc;
+  const slugs = new Set<string>();
+  if (typeof doc?.['slug'] === 'string') slugs.add(doc['slug']);
+  if (typeof previous?.slug === 'string') slugs.add(previous.slug);
+  const paths = new Set([...slugs].flatMap((slug) => pathsForPage(slug)));
+  for (const path of paths) safeRevalidatePath(path);
+  return doc;
+};
+
 /** A collection hook that regenerates fixed routes on every visible change or delete. */
 export function revalidateRoutes(
   paths: readonly string[],

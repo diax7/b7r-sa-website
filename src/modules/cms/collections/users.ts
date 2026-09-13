@@ -1,4 +1,4 @@
-import { type CollectionConfig, type PayloadRequest, ValidationError } from 'payload';
+import { APIError, type CollectionConfig } from 'payload';
 import { passwordProblem } from '@/lib/pwned';
 import { adminField, isAdmin, isAdminOrSelf } from '@/modules/cms/access';
 
@@ -10,23 +10,18 @@ const PASSWORD_MESSAGES = {
 } as const;
 
 /**
- * Rejects a password that is too short or breached (ADR-027) as a field-level validation
- * error (HTTP 400, shown inline in the admin). `beforeValidate` is the one hook every path
- * runs: create, update and Payload's reset-password operation.
+ * Rejects a password that is too short or breached (ADR-027) with HTTP 400 and the Arabic
+ * reason as the response message (a public `APIError`: the built server cannot be trusted
+ * to recognise `ValidationError` by `instanceof`, and then drops its field data, ADR-031).
+ * `beforeValidate` is the one hook every path runs: create, update and Payload's
+ * reset-password operation.
  */
-async function enforcePasswordPolicy(
-  data: Record<string, unknown> | undefined,
-  req: PayloadRequest,
-): Promise<void> {
+async function enforcePasswordPolicy(data: Record<string, unknown> | undefined): Promise<void> {
   const password = data?.['password'];
   if (typeof password !== 'string') return;
   const problem = await passwordProblem(password);
   if (!problem) return;
-  throw new ValidationError({
-    collection: 'users',
-    errors: [{ path: 'password', message: PASSWORD_MESSAGES[problem] }],
-    req,
-  });
+  throw new APIError(PASSWORD_MESSAGES[problem], 400, undefined, true);
 }
 
 /** Admin users (BRD 9.3): admin | editor, lockout 5/15 min, hardened cookies. */
@@ -55,7 +50,7 @@ export const Users: CollectionConfig = {
     delete: isAdmin,
   },
   hooks: {
-    beforeValidate: [({ data, req }) => enforcePasswordPolicy(data, req).then(() => data)],
+    beforeValidate: [({ data }) => enforcePasswordPolicy(data).then(() => data)],
   },
   fields: [
     {

@@ -218,13 +218,127 @@ export const PageSeoSchema = z.object({
 });
 export type PageSeo = z.infer<typeof PageSeoSchema>;
 
-export const LegalPageSchema = z.object({
-  slug: z.enum(['terms', 'shipping', 'privacy']),
+/** Icons a card may carry (BRD 6.4.6, 6.8): the why-us trio and the About trio. */
+export const CARD_ICONS = ['ShieldCheck', 'Workflow', 'Zap', 'Target', 'Eye', 'Heart'] as const;
+export const FAQ_SELECTIONS = ['all', 'home'] as const;
+
+const optionalText = z.string().trim().optional();
+
+/**
+ * Page blocks (BRD 9.4, 9.5; ADR-031): each is a designed section. `richText` carries the
+ * Lexical editor state as Payload stores it; every other block is plain fields.
+ */
+const blockId = { id: nonEmpty };
+
+export const BlockSchema = z.discriminatedUnion('blockType', [
+  z.object({
+    ...blockId,
+    blockType: z.literal('richText'),
+    title: optionalText,
+    content: z.record(z.string(), z.unknown()),
+  }),
+  z.object({
+    ...blockId,
+    blockType: z.literal('story'),
+    heading: nonEmpty,
+    text: nonEmpty,
+    line: nonEmpty,
+    photo: z.object({ src: imageSrc, alt: z.string() }),
+    withFacts: z.boolean(),
+  }),
+  z.object({
+    ...blockId,
+    blockType: z.literal('cards'),
+    title: optionalText,
+    items: z
+      .array(
+        z.object({
+          icon: z.enum(CARD_ICONS),
+          title: nonEmpty,
+          text: nonEmpty,
+          art: imageSrc.optional(),
+        }),
+      )
+      .min(1),
+  }),
+  z.object({
+    ...blockId,
+    blockType: z.literal('steps'),
+    items: z.array(StepSchema).min(2),
+  }),
+  z.object({
+    ...blockId,
+    blockType: z.literal('profitEquation'),
+    title: nonEmpty,
+    sell: nonEmpty,
+    base: nonEmpty,
+    profit: nonEmpty,
+    exampleLine: nonEmpty,
+  }),
+  z.object({
+    ...blockId,
+    blockType: z.literal('faqList'),
+    selection: z.enum(FAQ_SELECTIONS),
+    offset: z.int().min(0),
+    limit: z.int().positive().optional(),
+    title: optionalText,
+    link: z.object({ label: nonEmpty, href: z.string().startsWith('/') }).optional(),
+    bottomLine: optionalText,
+    bottomLinkWord: optionalText,
+  }),
+  z.object({ ...blockId, blockType: z.literal('miskCredential'), title: nonEmpty, text: nonEmpty }),
+  z.object({
+    ...blockId,
+    blockType: z.literal('contact'),
+    whatsappTitle: nonEmpty,
+    whatsappText: nonEmpty,
+    emailTitle: nonEmpty,
+    phoneTitle: nonEmpty,
+    followTitle: nonEmpty,
+    booking: z.object({
+      title: nonEmpty,
+      text: nonEmpty,
+      button: nonEmpty,
+      whatsappMessage: nonEmpty,
+    }),
+  }),
+  z.object({ ...blockId, blockType: z.literal('legalBody'), updatedAt: isoDate, body: nonEmpty }),
+  z.object({
+    ...blockId,
+    blockType: z.literal('mediaBanner'),
+    media: z.object({ src: imageSrc, alt: z.string() }),
+    caption: optionalText,
+  }),
+]);
+export type Block = z.infer<typeof BlockSchema>;
+export type BlockOf<T extends Block['blockType']> = Extract<Block, { blockType: T }>;
+
+/** The seven designed pages carry a route folder in code; the collection may hold more. */
+export const RESERVED_PAGE_SLUGS = [
+  'about',
+  'how-it-works',
+  'contact',
+  'faq',
+  'terms',
+  'shipping',
+  'privacy',
+] as const;
+export type ReservedPageSlug = (typeof RESERVED_PAGE_SLUGS)[number];
+
+export const PageSchema = z.object({
+  slug: slug,
   title: nonEmpty,
+  lead: optionalText,
+  blocks: z.array(BlockSchema).min(1),
+  seo: z.object({
+    title: nonEmpty.max(70),
+    description: nonEmpty.max(160),
+    ogImage: imageSrc.optional(),
+  }),
+  /** Sitemap `lastModified`: the legal body's date when there is one, else the document's. */
   updatedAt: isoDate,
-  body: nonEmpty,
 });
-export type LegalPage = z.infer<typeof LegalPageSchema>;
+export type Page = z.infer<typeof PageSchema>;
 
 export const BlogHubSchema = z.object({ slug: slug, name: nonEmpty });
 

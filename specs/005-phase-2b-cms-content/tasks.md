@@ -27,21 +27,29 @@ Each phase ends with a CTO code review before the next starts.
   outsider seats.
 
 ## Phase 2 — pages with blocks, SSR 404, content files gone
-- [ ] T201 B0: `connection()` experiment on `/products/[slug]`; `src/app/api/pages/slugs/route.ts`
-  (published slugs ∪ redirect sources, ISR 60 s); proxy rewrite of unknown top-level slugs
-  to `/__404/<slug>` (127.0.0.1 self-fetch, 20 s SWR cache, fail-open to the static seven,
-  regex gate); unit test matcher list = `(site)` top-level folders; raw-HTML 404 e2e.
-- [ ] T202 `pages` collection (blocks set, reserved slugs, `seo` group, drafts/autosave);
-  block renderers `modules/pages/blocks/*` reusing the section components; `RichText`
-  converter map (Prose classes, link allowlist, upload nodes via `next/image`); `marked`
-  allowlist for `legalBody` + unit test.
-- [ ] T203 The seven pages render `<CmsPage slug>`; `[slug]` route (`dynamicParams = true`,
-  `generateStaticParams`); `pageMetadata` from `pages.seo` with the `seo-defaults` fallback;
-  sitemap lists pages with `legalBody.updatedAt`; seed moves the seven `seo-defaults` rows
-  (logged delete, ADR-026 exception); `src/content/{pages,legal}.ts` + `legal/*.md` → seed;
-  interface strings → `src/messages/ar.json`.
-- [ ] T204 E2E: new page `/creators-e2e` → 200, in sitemap, deleted → 404 with the full
-  document; JS-budget test on `/how-it-works`; Lexical RTL editing in the admin.
+- [x] T201 B0: `connection()` before `notFound()` throws DYNAMIC_SERVER_USAGE in an ISR render
+  (500) — closed; `src/app/api/pages/slugs/route.ts` (published slugs, ISR 60 s, revalidated by
+  the pages hook); proxy rewrite of unknown top-level slugs to `/__404/<slug>` (127.0.0.1
+  self-fetch, 20 s SWR cache in `lib/page-slugs.ts`, fail open, `SLUG_SHAPE` gate);
+  `tests/site-routes.test.ts` keeps `CODE_TOP_LEVEL`, the matcher literal and the `(site)`
+  folders equal; raw-HTML 404 e2e for `/no-such-page`, `/nope-123`, `/nope_123`.
+- [x] T202 `pages` collection (`src/modules/cms/blocks.ts` block set, reserved slugs guarded
+  in `beforeValidate`/`beforeDelete`, `seo` group, drafts/autosave); renderers
+  `modules/pages/blocks/*` + `CmsPage` (first block carries the H1, tones alternate); the
+  `contact` block lives in `modules/contact` and reaches `CmsPage` through the app-level
+  renderer map (constitution VII); `RichText` converters (Prose, link allowlist, uploads via
+  `next/image`); `lib/markdown.ts` allowlist + `tests/markdown-sanitise.test.ts`.
+- [x] T203 The seven routes render `<CmsPage slug>`; `[slug]` route (`dynamicParams = true`,
+  `generateStaticParams` minus the reserved seven); `cmsPageMetadata` from `pages.seo`;
+  sitemap lists published pages (legal date from the body); the seed creates the seven and
+  prunes their `seo-defaults` rows with a log line (ADR-026 exception); `src/content/
+  {pages(partly),legal,steps}.ts` + `legal/*.md` → `content/seed/{pages.ts,legal/}`;
+  `contactForm` + «آخر تحديث:» as interface copy; migration `20260913_142543_pages`;
+  admin import map regenerated for the Lexical field.
+- [x] T204 E2E: `/creators-e2e` published → 200 + sitemap + allowlist → deleted → bare 404 at
+  once, full document after the allowlist window; reserved/forbidden slugs → 400; designed
+  page delete/rename → 400; CMS pages ship no editor JS; the About document and a fresh
+  rich-text block render RTL in the admin.
 
 ## Phase 3 — redirects and the publish pipeline
 - [ ] T301 `@payloadcms/plugin-redirects` (option B): collection seeded from

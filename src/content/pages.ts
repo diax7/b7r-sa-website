@@ -1,4 +1,8 @@
-/** Page copy for BRD 4.8–4.12 and 4.15. */
+/**
+ * Copy the code still owns (ADR-031): the products listing and detail template (BRD 4.8), the
+ * contact form, the shell (footer, widget, consent) and the status pages (BRD 4.15). The seven
+ * designed pages live in the CMS, seeded from `content/seed/pages.ts`.
+ */
 
 /** BRD 4.8 products listing and detail. */
 export const productsPage = {
@@ -34,45 +38,12 @@ export const productsPage = {
   colorSwitchAria: 'اللون {colour}',
 };
 
-export const howItWorksPage = {
-  title: 'كيف تعمل الطباعة عند الطلب مع بحر؟',
-  lead: 'نموذج عمل يتيح لك بيع منتجات مخصصة دون أن تطبعها أو تخزنها.',
-  profitTitle: 'كيف تُحسب أرباحك؟',
-  equation: { sell: 'سعر البيع', base: 'التكلفة الأساسية', profit: 'ربحك' },
-  exampleLine: 'مثال: تيشيرت تبيعه بـ 89 وتكلفته 45، ربحك 44 لكل قطعة.',
-};
-
-export const aboutPage = {
-  title: 'من نحن',
-  storyTitle: 'حكاية بدأت بتحدٍّ وتحوّلت إلى فرصة',
-  story:
-    'وُلدت بحر برنت من تجربة مصمم حاول إطلاق علامته التجارية، فاصطدم بتكاليف مرتفعة وتعقيدات لوجستية عطّلت حلمه. تحوّل التحدي إلى فرصة لبناء حل محلي يفتح الباب لكل مبدع ورائد أعمال ليطلق منتجاته بأقل التكاليف. اليوم، بحر برنت منصة سعودية متكاملة تمكّن المؤثرين والمصممين وأصحاب الأفكار من تحويل إبداعاتهم إلى منتجات حقيقية تصل إلى عملائهم بسهولة واحترافية.',
-  cards: [
-    {
-      icon: 'Target',
-      title: 'رسالتنا',
-      text: 'تمكين أي شخص من إطلاق علامته التجارية بسهولة، عبر خدمة محلية للطباعة عند الطلب تشمل المنتجات والطباعة والتغليف والشحن، مع ربط ذكي بمتجره.',
-    },
-    {
-      icon: 'Eye',
-      title: 'رؤيتنا',
-      text: 'أن نكون الشريك الأول للمبدعين ورواد الأعمال في السعودية والخليج لإطلاق منتجاتهم المطبوعة، وأن نسهم في اقتصاد إبداعي مستدام يقوم على حلول تقنية محلية.',
-    },
-    {
-      icon: 'Heart',
-      title: 'قيمنا',
-      text: 'الإبداع الذي يحوّل الأفكار إلى منتجات، والتمكين الذي يمنح كل مبدع بداية بلا مخاطرة، والجودة التي نلتزم بها في الطباعة والتغليف.',
-    },
-  ],
-  miskTitle: 'خريجو برنامج Misk Launchpad',
-  miskText:
-    'بحر برنت من خريجي الدفعة التاسعة (2026) من برنامج Misk Launchpad، برنامج ما قبل التسريع من مؤسسة محمد بن سلمان «مسك».',
-  locationLine: 'نطبع ونشحن من جدة إلى كل مدن المملكة.',
-};
-
-export const contactPage = {
-  title: 'تواصل معنا',
-  lead: 'تاجر، شريك، أو مستثمر؟ نرد على الجميع.',
+/**
+ * Contact form (BRD 4.11): interface copy — labels, placeholders, the inquiry options the API
+ * validates, the states and the validation lines (ADR-031). The page's own copy (title, the
+ * cards, booking) is the `contact` block of the contact page in the CMS.
+ */
+export const contactForm = {
   labels: {
     name: 'الاسم',
     phone: 'رقم الجوال',
@@ -99,32 +70,12 @@ export const contactPage = {
     email: 'أدخل بريداً إلكترونياً صحيحاً',
     message: 'اكتب رسالتك',
   },
-  cards: {
-    whatsapp: { title: 'واتساب', text: 'راسلنا مباشرة' },
-    email: { title: 'البريد الإلكتروني' },
-    phone: { title: 'الهاتف' },
-    follow: { title: 'تابعنا' },
-  },
-  booking: {
-    title: 'احجز استشارة مجانية',
-    text: '30 دقيقة نجاوب فيها على أسئلتك ونساعدك تبدأ.',
-    button: 'احجز موعدك',
-    whatsappMessage: 'مرحباً، أرغب بحجز استشارة مجانية.',
-  },
 };
 
 /** BRD 4.17: the contact notification email. */
 export const contactEmail = {
   subject: 'رسالة جديدة من الموقع: {inquiryType}',
   replyOnWhatsapp: 'رد عبر واتساب',
-};
-
-export const faqPage = {
-  title: 'الأسئلة الشائعة',
-  lead: 'كل ما تحتاج معرفته قبل أن تبدأ.',
-  bottomLine: 'لم تجد إجابتك؟ راسلنا على واتساب.',
-  /** The word inside `bottomLine` that carries the WhatsApp link. */
-  bottomLinkWord: 'واتساب',
 };
 
 export const notFoundPage = {
@@ -139,10 +90,6 @@ export const gonePage = {
   title: 'هذه الصفحة أُزيلت',
   text: notFoundPage.text,
   button: notFoundPage.button,
-};
-
-export const legalCopy = {
-  updatedPrefix: 'آخر تحديث:',
 };
 
 export const footerCopy = {

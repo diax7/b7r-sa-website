@@ -14,20 +14,16 @@ import { seo } from '@/content/seed/seo';
 import { MERCHANT_COST_NOTE, productSeo } from '@/content/seo-copy';
 import {
   contactEmail,
+  contactForm,
   errorPage,
-  faqPage,
   gonePage,
-  legalCopy,
   productsPage,
-  aboutPage,
-  contactPage,
   footerCopy,
-  howItWorksPage,
   notFoundPage,
 } from '@/content/pages';
+import { pages } from '@/content/seed/pages';
 import { products } from '@/content/seed/products';
 import { site } from '@/content/seed/site';
-import { howItWorksSteps } from '@/content/steps';
 import messages from '@/messages/ar.json';
 
 const TODO_COPY = new Set<string>([
@@ -93,26 +89,28 @@ const sources: Record<string, unknown> = {
     strip: messages.strip.swipeHint,
     testimonials: messages.testimonials,
     integrations: messages.integrations,
+    legal: messages.legal.updatedPrefix,
   },
   'products.ts': products.map(({ colors, ...p }) => ({
     ...p,
     colorNames: colors.map((c) => c.name),
   })),
-  'steps.ts': howItWorksSteps,
   'seed/faq.ts': faq,
   'pages.ts': [
     productsPage,
-    howItWorksPage,
-    aboutPage,
-    contactPage,
+    contactForm,
     contactEmail,
-    faqPage,
-    legalCopy,
     footerCopy,
     notFoundPage,
     gonePage,
     errorPage,
   ],
+  // The seven pages' blocks; legal bodies are Appendix B (checked by length, not verbatim,
+  // because the BRD lays them out as tables) and the SEO rows are BRD 4.16.
+  'seed/pages.ts': pages.map((p) => ({
+    ...p,
+    blocks: p.blocks.filter((b) => b.blockType !== 'legalBody'),
+  })),
   'seo.ts': [seo, productSeo, MERCHANT_COST_NOTE],
   // Post titles and hub names are BRD 4.13; excerpts, takeaways and bodies are agent-written
   // samples listed for Dhia (ADR-018), so only the BRD fields are checked here.

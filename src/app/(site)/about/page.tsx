@@ -1,9 +1,10 @@
 import type { Metadata } from 'next';
-import { buildMetadata } from '@/modules/core/seo/metadata';
-import { AboutPage } from '@/modules/pages';
+import { SITE_BLOCK_RENDERERS } from '@/app/(site)/cms-blocks';
+import { cmsPageMetadata } from '@/modules/core/seo/metadata';
+import { CmsPage } from '@/modules/pages';
 
-export const generateMetadata = (): Promise<Metadata> => buildMetadata('/about');
+export const generateMetadata = (): Promise<Metadata> => cmsPageMetadata('about');
 
 export default function AboutRoute() {
-  return <AboutPage />;
+  return <CmsPage slug="about" renderers={SITE_BLOCK_RENDERERS} />;
 }

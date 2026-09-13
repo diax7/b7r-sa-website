@@ -33,7 +33,7 @@ test.describe('how it works (BRD 6.7)', () => {
     const digits = page.locator('[aria-labelledby="profit-title"] [data-sar-digits]');
     await expect(digits).toHaveText(['89', '45', '44']);
     await expect(page.getByRole('link', { name: 'كل الأسئلة' })).toHaveAttribute('href', '/faq');
-    await expect(page.locator('[aria-labelledby="hiw-faq-title"]')).toContainText('كيف أربح؟');
+    await expect(page.locator('[aria-labelledby="faq-list-title"]')).toContainText('كيف أربح؟');
   });
 
   test('the progress line fills as the track scrolls through the viewport', async ({

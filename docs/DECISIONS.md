@@ -311,10 +311,58 @@ gains `homeOrder` (BRD 4.4 orders the five home entries differently from Appendi
 `placeholder` and ADR-013's rule in the section; the home tones alternate over the sections
 that render (`alternateTones`, BRD 3.4). Every hook revalidates through
 `safeRevalidatePath`, which turns Next's missing-request-store invariant (a job, a scheduled
-publish) into one info line — the 60 s timer covers those. The seed (`content:migrate`) is
+publish) into one info line — the 60 s timer covers those. Hooks that refuse a save throw a
+public `APIError(message, 400, undefined, true)`, never `ValidationError`: the built server
+recognises Payload's error classes by `instanceof`, which fails once a class is bundled into
+more than one chunk, and then drops the field data (the FAQ home limit and the password
+policy both lost their Arabic reason on the runner that way). The seed (`content:migrate`) is
 still create-only: `src/content/seed/{home,faq,testimonials,integrations}.ts` are the
 verbatim sources and the fallback shapes; `src/content/{home,faq,testimonials,integrations,
 why-us}.ts` are gone. BRD §9.4 amended for `home`, `integrations` and `faqs`.
+
+Phase 2 (2026-09-13) adds the `pages` collection on the same lines. **A block is a designed
+section**, never a layout primitive: `story` (the About header with the facts band switch),
+`cards`, `steps` (the journey), `profitEquation`, `faqList` (all groups, or a slice of the
+home entries), `miskCredential`, `contact` (one block for the whole contact section — the
+form, the cards and booking are one designed grid, so the plan's three blocks became one),
+`legalBody` (Markdown + its date), `mediaBanner` and `richText` (Lexical, rendered on the
+server through the Prose converters with the same link allowlist as Markdown). The seven
+designed pages are `pages` rows with reserved slugs — their route folders stay in the code
+and render the matching document, the slug cannot change and the row cannot be deleted —
+and every other published page is served by `/[slug]`. The first block carries the page
+title as its H1; tones alternate over the blocks from surface; the ribbon follows the last
+one. A page's `seo` group replaces its `seo-defaults` row (BRD §9.4 wanted `plugin-seo`; a
+group with the same two limits needs no plugin), and the seed removes the seven moved rows
+with a log line — the one recorded exception to ADR-026's "never overwrites". The contact
+form's labels, placeholders, inquiry options (the API validates them) and validation lines
+stay interface copy in `src/content/pages.ts`; «آخر تحديث:» moves to `ar.json`. The legal
+Markdown is now admin content, so `lib/markdown.ts` allowlists: raw HTML is dropped, links
+keep `https?:`, `mailto:` and site paths only, off-site links open with `rel="noopener"`
+(closes the IDEAS item; `tests/markdown-sanitise.test.ts`). The `(site)/[slug]` route with
+its consequences for unknown URLs is ADR-032. Live preview stays deferred (BRD §9.3
+amended): it needs draft rendering on the public routes, which ISR + `revalidatePath` do
+not offer.
+
+## ADR-032 — Unknown top-level URLs: the proxy answers the global 404 (2026-09-13)
+
+With `src/app/(site)/[slug]/page.tsx` in place every unknown top-level URL would match the
+route and answer `notFound()` from a bare document (ADR-024) instead of `global-not-found`
+— a site-wide regression of the 404 page. The proxy now decides first: a top-level segment
+that is none of the code-owned names (`CODE_TOP_LEVEL` in `lib/site-routes.ts`, kept equal
+to the `(site)` folders by a unit test, repeated as a literal in the proxy matcher because
+Next reads `config` statically) and shaped like a slug is looked up in the published pages;
+anything unknown is rewritten to `/__404/<slug>`, a path no route matches, so Next renders
+the global 404 server-side with status 404 and the URL unchanged (`e2e` reads the raw HTML).
+The allowlist is `/api/pages/slugs` (ISR 60 s, revalidated by the pages hook), read from
+`http://127.0.0.1:${PORT}` — never the public origin — and cached in-process for 20 s with
+stale-while-revalidate; a slug that fails the shape check is refused without a lookup, and
+when the endpoint cannot be read the request passes through (fail open: a page keeps
+working, an unknown URL gets the route's bare 404 until the next read). A page deleted in
+the admin is a bare 404 for those 20 s and the full document after. `/products/<unknown>`
+keeps `notFound()` (ADR-030); `await connection()` before it, tried to keep junk slugs out
+of the ISR cache, throws `DYNAMIC_SERVER_USAGE` inside an ISR render and answers 500, so
+that idea is closed. Admin-added redirects join the allowlist and resolve in the `[slug]`
+route in 2b phase 3.
 
 ## ADR-035 — Product cards carry a colour state; the gallery is one photo with a toggle (2026-09-13)
 

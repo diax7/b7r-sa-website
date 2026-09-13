@@ -1,6 +1,8 @@
 import {
+  type Block,
   FaqItemSchema,
   HomeSchema,
+  PageSchema,
   IntegrationSchema,
   NavigationSchema,
   PageSeoSchema,
@@ -11,6 +13,7 @@ import {
   type Home,
   type Integration,
   type Navigation,
+  type Page,
   type PageSeo,
   type Product,
   type SiteSettings,
@@ -22,6 +25,7 @@ import type {
   Integration as IntegrationDoc,
   Media,
   Navigation as NavigationDoc,
+  Page as PageDoc,
   Product as ProductDoc,
   SeoDefault,
   SiteSetting,
@@ -273,5 +277,128 @@ export function toIntegration(doc: IntegrationDoc): Integration {
     nameLatin: doc.nameLatin,
     logo: `/images/integrations/${doc.platform}.svg`,
     status: 'available',
+  });
+}
+
+type BlockDoc = PageDoc['blocks'][number];
+
+/** An optional title field: present only when set (exactOptionalPropertyTypes). */
+const optional = (v: string | null | undefined) => (v ? { title: v } : {});
+
+/** One block document → the block contract; media populated (depth ≥ 1) becomes `{ src, alt }`. */
+function toBlock(block: BlockDoc, where: string, index: number): Block {
+  const id = block.id ?? `${block.blockType}-${index}`;
+  switch (block.blockType) {
+    case 'richText':
+      return { id, blockType: 'richText', ...optional(block.title), content: block.content };
+    case 'story':
+      return {
+        id,
+        blockType: 'story',
+        heading: block.heading,
+        text: block.text,
+        line: block.line,
+        photo: { src: requiredMedia(block.photo, `${where}.photo`), alt: mediaAlt(block.photo) },
+        withFacts: block.withFacts ?? true,
+      };
+    case 'cards':
+      return {
+        id,
+        blockType: 'cards',
+        ...optional(block.title),
+        items: block.items.map((item) => {
+          const art = mediaUrl(item.art);
+          return { icon: item.icon, title: item.title, text: item.text, ...(art ? { art } : {}) };
+        }),
+      };
+    case 'steps':
+      return {
+        id,
+        blockType: 'steps',
+        items: block.items.map((item, i) => ({
+          order: i + 1,
+          title: item.title,
+          text: item.text,
+          icon: requiredMedia(item.icon, `${where}.items[${i}].icon`),
+        })),
+      };
+    case 'profitEquation':
+      return {
+        id,
+        blockType: 'profitEquation',
+        title: block.title,
+        sell: block.sell,
+        base: block.base,
+        profit: block.profit,
+        exampleLine: block.exampleLine,
+      };
+    case 'faqList':
+      return {
+        id,
+        blockType: 'faqList',
+        selection: block.selection,
+        offset: block.offset ?? 0,
+        ...(block.limit ? { limit: block.limit } : {}),
+        ...optional(block.title),
+        ...(block.linkLabel && block.linkHref
+          ? { link: { label: block.linkLabel, href: block.linkHref } }
+          : {}),
+        ...(block.bottomLine ? { bottomLine: block.bottomLine } : {}),
+        ...(block.bottomLinkWord ? { bottomLinkWord: block.bottomLinkWord } : {}),
+      };
+    case 'miskCredential':
+      return { id, blockType: 'miskCredential', title: block.title, text: block.text };
+    case 'contact':
+      return {
+        id,
+        blockType: 'contact',
+        whatsappTitle: block.whatsappTitle,
+        whatsappText: block.whatsappText,
+        emailTitle: block.emailTitle,
+        phoneTitle: block.phoneTitle,
+        followTitle: block.followTitle,
+        booking: {
+          title: block.booking.title,
+          text: block.booking.text,
+          button: block.booking.button,
+          whatsappMessage: block.booking.whatsappMessage,
+        },
+      };
+    case 'legalBody':
+      return {
+        id,
+        blockType: 'legalBody',
+        updatedAt: block.updatedAt.slice(0, 10),
+        body: block.body,
+      };
+    case 'mediaBanner':
+      return {
+        id,
+        blockType: 'mediaBanner',
+        media: { src: requiredMedia(block.media, `${where}.media`), alt: mediaAlt(block.media) },
+        ...(block.caption ? { caption: block.caption } : {}),
+      };
+    default:
+      throw new Error(`${where}: unknown block ${(block as { blockType: string }).blockType}`);
+  }
+}
+
+/** A page document (depth ≥ 1) → the `Page` contract; published documents only. */
+export function toPage(doc: PageDoc): Page {
+  if (doc._status !== 'published') throw new Error(`page ${doc.slug}: not published`);
+  const blocks = doc.blocks.map((b, i) => toBlock(b, `page ${doc.slug} blocks[${i}]`, i));
+  const legal = blocks.find((b) => b.blockType === 'legalBody');
+  const ogImage = mediaUrl(doc.seo.ogImage);
+  return PageSchema.parse({
+    slug: doc.slug,
+    title: doc.title,
+    ...(doc.lead ? { lead: doc.lead } : {}),
+    blocks,
+    seo: {
+      title: doc.seo.title,
+      description: doc.seo.description,
+      ...(ogImage ? { ogImage } : {}),
+    },
+    updatedAt: legal ? legal.updatedAt : doc.updatedAt.slice(0, 10),
   });
 }

@@ -92,7 +92,36 @@ test.describe('CMS admin', () => {
       .click();
     await page.waitForURL(/\/admin\/collections\/products\/\d+/);
     await expect(page.locator('#field-slug')).toHaveValue(/\w+/);
+    // The pages editor: the About document opens right-to-left with its blocks in place, and
+    // a rich-text block's Lexical editor is an RTL surface (2b phase 2).
+    await page.goto('/admin/collections/pages');
+    await page
+      .getByRole('link', { name: /من نحن|About/ })
+      .first()
+      .click();
+    await page.waitForURL(/\/admin\/collections\/pages\/\d+/);
+    await expect(page.locator('#field-slug')).toHaveValue('about');
+    await expect(page.getByRole('textbox', { name: /عنوان الحكاية/ })).toHaveValue(/حكاية/);
+    await page.goto('/admin/collections/pages/create');
+    await page.getByRole('button', { name: /أضف قسم|Add Section/ }).click();
+    await page
+      .getByRole('button', { name: /نص منسّق|Rich text/ })
+      .first()
+      .click();
+    const editor = page.locator('[data-lexical-editor="true"]').first();
+    await expect(editor).toBeVisible({ timeout: 15_000 });
+    expect(await editor.evaluate((el) => getComputedStyle(el).direction)).toBe('rtl');
     expect(await page.evaluate(() => window.__cspViolations ?? [])).toEqual([]);
+  });
+
+  test('a short password is refused with the Arabic reason (ADR-027)', async ({ request }) => {
+    const adminAuth = await login(request, admin);
+    const refused = await request.post(`${API}/users`, {
+      headers: adminAuth,
+      data: { email: 'short@b7r.sa', password: 'abc123def', name: 'x', role: 'editor' },
+    });
+    expect(refused.status()).toBe(400);
+    expect(await refused.text()).toContain('قصيرة');
   });
 
   test('an editor edits content but is refused users, settings and published deletes', async ({
@@ -426,6 +455,93 @@ test.describe('CMS admin', () => {
           (await request.delete(`${API}/users/${editor.id}`, { headers: adminAuth })).status(),
         ).toBe(200);
       }
+    });
+
+    test('a page published in the admin gets its route and its sitemap entry; deleted, it is a full 404', async ({
+      request,
+    }) => {
+      test.setTimeout(150_000);
+      const auth = await login(request, ADMIN);
+      const slug = 'creators-e2e';
+      const status = async () => (await request.get(`/${slug}`)).status();
+      const created = await request.post(`${API}/pages`, {
+        headers: auth,
+        data: {
+          title: 'صفحة المبدعين',
+          slug,
+          lead: 'للاختبار',
+          blocks: [
+            {
+              blockType: 'cards',
+              items: [{ icon: 'Zap', title: 'بطاقة', text: 'نص البطاقة.' }],
+            },
+          ],
+          seo: { title: 'صفحة المبدعين', description: 'وصف للاختبار.' },
+          _status: 'published',
+        },
+      });
+      expect(created.status()).toBe(201);
+      const id = ((await created.json()) as { doc: { id: number } }).doc.id;
+      try {
+        await expect.poll(status, POLL).toBe(200);
+        const html = await (await request.get(`/${slug}`)).text();
+        expect(html).toContain('<h1');
+        expect(html).toContain('صفحة المبدعين');
+        expect(html).toContain('نص البطاقة.');
+        await expect.poll(shows(request, '/sitemap.xml', `/${slug}`), POLL).toBe(true);
+        const slugs = (await (
+          await request.get(`${API.replace('/payload', '')}/pages/slugs`)
+        ).json()) as {
+          slugs: string[];
+        };
+        expect(slugs.slugs).toContain(slug);
+      } finally {
+        expect((await request.delete(`${API}/pages/${id}`, { headers: auth })).status()).toBe(200);
+      }
+      await expect.poll(status, POLL).toBe(404);
+      // The page's own entry is regenerated at once (a bare 404 from the route); the proxy's
+      // allowlist follows within its 20 s stale-while-revalidate window, after which the
+      // URL is answered by the global 404 with the full document (B0).
+      const fullDocument = async () => {
+        const html = await (await request.get(`/${slug}`)).text();
+        return html.includes('<html lang="ar" dir="rtl"') && !html.includes('__next_error__');
+      };
+      await expect
+        .poll(fullDocument, { intervals: [1_000, 2_000, 5_000], timeout: 45_000 })
+        .toBe(true);
+      expect(await (await request.get(`/${slug}`)).text()).toContain('الصفحة غير موجودة');
+      await expect.poll(shows(request, '/sitemap.xml', `/${slug}`), POLL).toBe(false);
+    });
+
+    test('page slugs the code owns are refused; the seven designed pages cannot be deleted', async ({
+      request,
+    }) => {
+      const auth = await login(request, ADMIN);
+      for (const slug of ['products', 'Creators', 'a/b']) {
+        const refused = await request.post(`${API}/pages`, {
+          headers: auth,
+          data: {
+            title: 'x',
+            slug,
+            blocks: [{ blockType: 'miskCredential', title: 'x', text: 'y' }],
+            seo: { title: 'x', description: 'y' },
+          },
+        });
+        expect(refused.status(), slug).toBe(400);
+      }
+      const about = await request.get(`${API}/pages?where[slug][equals]=about&depth=0`, {
+        headers: auth,
+      });
+      const doc = ((await about.json()) as { docs: Array<{ id: number }> }).docs[0];
+      expect(doc).toBeDefined();
+      const del = await request.delete(`${API}/pages/${doc?.id}`, { headers: auth });
+      expect(del.status(), 'deleting a designed page').toBe(400);
+      const rename = await request.patch(`${API}/pages/${doc?.id}`, {
+        headers: auth,
+        data: { slug: 'about-us' },
+      });
+      expect(rename.status(), 'renaming a designed page').toBe(400);
+      expect(await (await request.get('/about')).text()).toContain('حكاية بدأت');
     });
 
     test('an outsider reads the FAQ and published testimonials, never the home drafts', async ({

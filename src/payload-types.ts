@@ -70,6 +70,7 @@ export interface Config {
     users: User;
     media: Media;
     products: Product;
+    pages: Page;
     faqs: Faq;
     testimonials: Testimonial;
     integrations: Integration;
@@ -83,6 +84,7 @@ export interface Config {
     users: UsersSelect<false> | UsersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     products: ProductsSelect<false> | ProductsSelect<true>;
+    pages: PagesSelect<false> | PagesSelect<true>;
     faqs: FaqsSelect<false> | FaqsSelect<true>;
     testimonials: TestimonialsSelect<false> | TestimonialsSelect<true>;
     integrations: IntegrationsSelect<false> | IntegrationsSelect<true>;
@@ -290,6 +292,150 @@ export interface Product {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "pages".
+ */
+export interface Page {
+  id: number;
+  title: string;
+  /**
+   * lowercase-hyphenated; served at /slug
+   */
+  slug: string;
+  lead?: string | null;
+  blocks: (
+    | {
+        title?: string | null;
+        content: {
+          root: {
+            type: string;
+            children: {
+              type: any;
+              version: number;
+              [k: string]: unknown;
+            }[];
+            direction: ('ltr' | 'rtl') | null;
+            format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+            indent: number;
+            version: number;
+          };
+          [k: string]: unknown;
+        };
+        id?: string | null;
+        blockName?: string | null;
+        blockType: 'richText';
+      }
+    | {
+        heading: string;
+        text: string;
+        line: string;
+        photo: number | Media;
+        /**
+         * The welcome credit and the why-us pairs from the home page
+         */
+        withFacts?: boolean | null;
+        id?: string | null;
+        blockName?: string | null;
+        blockType: 'story';
+      }
+    | {
+        title?: string | null;
+        items: {
+          icon: 'ShieldCheck' | 'Workflow' | 'Zap' | 'Target' | 'Eye' | 'Heart';
+          title: string;
+          text: string;
+          art?: (number | null) | Media;
+          id?: string | null;
+        }[];
+        id?: string | null;
+        blockName?: string | null;
+        blockType: 'cards';
+      }
+    | {
+        items: {
+          title: string;
+          text: string;
+          icon: number | Media;
+          id?: string | null;
+        }[];
+        id?: string | null;
+        blockName?: string | null;
+        blockType: 'steps';
+      }
+    | {
+        title: string;
+        sell: string;
+        base: string;
+        profit: string;
+        exampleLine: string;
+        id?: string | null;
+        blockName?: string | null;
+        blockType: 'profitEquation';
+      }
+    | {
+        selection: 'all' | 'home';
+        offset?: number | null;
+        limit?: number | null;
+        title?: string | null;
+        linkLabel?: string | null;
+        linkHref?: string | null;
+        bottomLine?: string | null;
+        bottomLinkWord?: string | null;
+        id?: string | null;
+        blockName?: string | null;
+        blockType: 'faqList';
+      }
+    | {
+        title: string;
+        text: string;
+        id?: string | null;
+        blockName?: string | null;
+        blockType: 'miskCredential';
+      }
+    | {
+        whatsappTitle: string;
+        whatsappText: string;
+        emailTitle: string;
+        phoneTitle: string;
+        followTitle: string;
+        booking: {
+          title: string;
+          text: string;
+          button: string;
+          whatsappMessage: string;
+        };
+        id?: string | null;
+        blockName?: string | null;
+        blockType: 'contact';
+      }
+    | {
+        updatedAt: string;
+        /**
+         * ## headings become the on-this-page list; no HTML.
+         */
+        body: string;
+        id?: string | null;
+        blockName?: string | null;
+        blockType: 'legalBody';
+      }
+    | {
+        media: number | Media;
+        caption?: string | null;
+        id?: string | null;
+        blockName?: string | null;
+        blockType: 'mediaBanner';
+      }
+  )[];
+  seo: {
+    title: string;
+    description: string;
+    ogImage?: (number | null) | Media;
+  };
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "faqs".
  */
 export interface Faq {
@@ -379,6 +525,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'products';
         value: number | Product;
+      } | null)
+    | ({
+        relationTo: 'pages';
+        value: number | Page;
       } | null)
     | ({
         relationTo: 'faqs';
@@ -578,6 +728,146 @@ export interface ProductsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "pages_select".
+ */
+export interface PagesSelect<T extends boolean = true> {
+  title?: T;
+  slug?: T;
+  lead?: T;
+  blocks?:
+    | T
+    | {
+        richText?:
+          | T
+          | {
+              title?: T;
+              content?: T;
+              id?: T;
+              blockName?: T;
+            };
+        story?:
+          | T
+          | {
+              heading?: T;
+              text?: T;
+              line?: T;
+              photo?: T;
+              withFacts?: T;
+              id?: T;
+              blockName?: T;
+            };
+        cards?:
+          | T
+          | {
+              title?: T;
+              items?:
+                | T
+                | {
+                    icon?: T;
+                    title?: T;
+                    text?: T;
+                    art?: T;
+                    id?: T;
+                  };
+              id?: T;
+              blockName?: T;
+            };
+        steps?:
+          | T
+          | {
+              items?:
+                | T
+                | {
+                    title?: T;
+                    text?: T;
+                    icon?: T;
+                    id?: T;
+                  };
+              id?: T;
+              blockName?: T;
+            };
+        profitEquation?:
+          | T
+          | {
+              title?: T;
+              sell?: T;
+              base?: T;
+              profit?: T;
+              exampleLine?: T;
+              id?: T;
+              blockName?: T;
+            };
+        faqList?:
+          | T
+          | {
+              selection?: T;
+              offset?: T;
+              limit?: T;
+              title?: T;
+              linkLabel?: T;
+              linkHref?: T;
+              bottomLine?: T;
+              bottomLinkWord?: T;
+              id?: T;
+              blockName?: T;
+            };
+        miskCredential?:
+          | T
+          | {
+              title?: T;
+              text?: T;
+              id?: T;
+              blockName?: T;
+            };
+        contact?:
+          | T
+          | {
+              whatsappTitle?: T;
+              whatsappText?: T;
+              emailTitle?: T;
+              phoneTitle?: T;
+              followTitle?: T;
+              booking?:
+                | T
+                | {
+                    title?: T;
+                    text?: T;
+                    button?: T;
+                    whatsappMessage?: T;
+                  };
+              id?: T;
+              blockName?: T;
+            };
+        legalBody?:
+          | T
+          | {
+              updatedAt?: T;
+              body?: T;
+              id?: T;
+              blockName?: T;
+            };
+        mediaBanner?:
+          | T
+          | {
+              media?: T;
+              caption?: T;
+              id?: T;
+              blockName?: T;
+            };
+      };
+  seo?:
+    | T
+    | {
+        title?: T;
+        description?: T;
+        ogImage?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "faqs_select".
  */
 export interface FaqsSelect<T extends boolean = true> {
@@ -685,6 +975,9 @@ export interface Home {
     lead: string;
     pricePrefix: string;
     button: string;
+    /**
+     * Published products only; one unpublished later drops out of the strip until it is published again.
+     */
     products: (number | Product)[];
   };
   designer: {

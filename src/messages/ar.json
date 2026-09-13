@@ -57,7 +57,8 @@
     "groupsNav": "أقسام الأسئلة"
   },
   "legal": {
-    "onThisPage": "في هذه الصفحة"
+    "onThisPage": "في هذه الصفحة",
+    "updatedPrefix": "آخر تحديث:"
   },
   "share": {
     "whatsapp": "شارك على واتساب",

@@ -10,6 +10,22 @@ test.describe('status pages', () => {
     await expect(page.locator('[aria-labelledby="cta-ribbon-title"]')).toHaveCount(0);
   });
 
+  test('an unknown top-level URL is a full 404 document in the raw HTML (B0, ADR-032)', async ({
+    request,
+  }) => {
+    for (const path of ['/no-such-page', '/nope-123', '/nope_123']) {
+      const res = await request.get(path);
+      expect(res.status(), path).toBe(404);
+      const html = await res.text();
+      expect(html, path).toContain('<html lang="ar" dir="rtl"');
+      expect(html, path).not.toContain('__next_error__');
+      expect(html, path).toContain('<h1 class="text-h1">الصفحة غير موجودة</h1>');
+      for (const landmark of ['<header', '<main', '<footer'])
+        expect(html, path).toContain(landmark);
+      expect(html, path).not.toContain('cta-ribbon-title');
+    }
+  });
+
   test('an unknown product slug is a 404 that still shows the site shell once hydrated', async ({
     page,
   }) => {
@@ -108,5 +124,22 @@ test.describe('budgets (BRD 7.8, constitution IV)', () => {
       type: 'js-bytes',
       description: `${jsTotal} (${isMobile ? 'mobile' : 'desktop'})`,
     });
+  });
+
+  test('CMS pages ship no editor or rich-text JS: their blocks render on the server', async ({
+    page,
+  }) => {
+    const scripts: string[] = [];
+    page.on('request', (r) => {
+      if (r.resourceType() === 'script') scripts.push(r.url());
+    });
+    for (const path of ['/how-it-works', '/terms']) {
+      await page.goto(path);
+      await page.waitForLoadState('load');
+    }
+    expect(scripts.some((u) => /lexical|payload|richtext/i.test(u))).toBe(false);
+    // The legal body and the flow are HTML before hydration.
+    const html = await (await page.request.get('/terms')).text();
+    expect(html).toMatch(/<h2 id="section-1">/);
   });
 });

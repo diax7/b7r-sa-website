@@ -5,9 +5,10 @@ import {
   type FaqItem,
   type Home,
   type Integration,
+  type Page,
   type Testimonial,
 } from '@/content/schema';
-import { toFaq, toHome, toIntegration, toTestimonial } from '@/lib/cms/mappers';
+import { toFaq, toHome, toIntegration, toPage, toTestimonial } from '@/lib/cms/mappers';
 import { cms, PUBLIC_READ, PUBLISHED } from '@/lib/cms/payload';
 
 /**
@@ -75,3 +76,23 @@ export const getIntegrations = cache(async (): Promise<Integration[]> => {
   });
   return docs.map(toIntegration);
 });
+
+/** Published pages, newest first; `depth: 1` populates the block media and the OG image. */
+export const getPages = cache(async (): Promise<Page[]> => {
+  const payload = await cms();
+  const { docs } = await payload.find({
+    collection: 'pages',
+    ...PUBLIC_READ,
+    where: PUBLISHED,
+    depth: 1,
+    limit: 200,
+    pagination: false,
+    sort: '-updatedAt',
+  });
+  return docs.map(toPage);
+});
+
+/** One published page by slug, or undefined. */
+export async function getPage(slug: string): Promise<Page | undefined> {
+  return (await getPages()).find((p) => p.slug === slug);
+}
