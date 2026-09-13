@@ -1,6 +1,4 @@
-import Image from 'next/image';
 import { Container } from '@/components/shared/container';
-import { SarAmount } from '@/components/shared/sar-amount';
 import { Section } from '@/components/shared/section';
 import { SectionHeader } from '@/components/shared/section-header';
 import { home } from '@/content/home';
@@ -9,6 +7,7 @@ import messages from '@/messages/ar.json';
 import { env } from '@/lib/env';
 import { registerUrl } from '@/lib/utm';
 import { DesignerLoader } from '@/modules/designer/designer-loader';
+import { DesignerStatic } from '@/modules/designer/designer-static';
 import type { DesignerCopy } from '@/modules/designer/types';
 
 const DEFAULT_SLUG = 'tee-essential';
@@ -22,7 +21,6 @@ export function DesignerSection() {
   const { designer } = home;
   const product = getProduct(DEFAULT_SLUG) ?? products[0];
   if (!product) throw new Error('No products for the designer');
-  const color = product.colors[0];
 
   const copy: DesignerCopy = {
     groups: designer.groups,
@@ -53,39 +51,13 @@ export function DesignerSection() {
     dropzoneAria: messages.designer.dropzoneLabel,
   };
 
+  const registerTemplate = registerUrl(env.appUrl, { campaign: 'designer', product: '__SLUG__' });
   const fallback = (
-    <div className="flex flex-col gap-8 lg:flex-row lg:gap-10" data-designer-fallback="">
-      <div className="order-first lg:order-last lg:w-[60%]">
-        <div className="relative mx-auto aspect-square w-full max-w-[640px] overflow-hidden rounded-lg bg-ground">
-          {color && (
-            <Image
-              src={color.images.front}
-              alt={`${product.name} ${color.name}، الواجهة الأمامية`}
-              fill
-              sizes="(min-width: 1024px) 640px, 100vw"
-              className="object-contain"
-            />
-          )}
-        </div>
-      </div>
-      <div className="flex flex-col gap-4 lg:w-[40%]">
-        <dl className="flex flex-col gap-4">
-          <div className="flex items-center justify-between rounded-base bg-ground px-4 py-3">
-            <dt className="text-small text-text-muted">{designer.baseCostLabel}</dt>
-            <dd>
-              <SarAmount value={product.baseCost} className="text-h4" />
-            </dd>
-          </div>
-          <div className="flex items-center justify-between rounded-base bg-ground px-4 py-3">
-            <dt className="text-small text-text-muted">{designer.suggestedPriceHelper}</dt>
-            <dd>
-              <SarAmount value={product.suggestedPrice} className="text-h4" />
-            </dd>
-          </div>
-        </dl>
-        <p className="text-caption text-text-muted">{designer.footnote}</p>
-      </div>
-    </div>
+    <DesignerStatic
+      products={products}
+      product={product}
+      ctaHref={registerTemplate.replace('__SLUG__', product.slug)}
+    />
   );
 
   return (
@@ -106,10 +78,7 @@ export function DesignerSection() {
           <DesignerLoader
             products={products}
             initialSlug={DEFAULT_SLUG}
-            registerUrlTemplate={registerUrl(env.appUrl, {
-              campaign: 'designer',
-              product: '__SLUG__',
-            })}
+            registerUrlTemplate={registerTemplate}
             copy={copy}
             fallback={fallback}
           />

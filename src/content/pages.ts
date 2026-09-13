@@ -102,6 +102,8 @@ export const footerCopy = {
   newsletterButton: 'اشترك',
   newsletterSuccess: 'اشتركت. سنرسل لك الجديد فقط.',
   newsletterError: 'أدخل بريداً إلكترونياً صحيحاً.',
+  // TODO(copy): not in BRD 4.5; used for 429/5xx (plan 1b §F), listed in Appendix G for Dhia
+  newsletterUnavailable: 'تعذّر الاشتراك الآن، حاول لاحقاً.',
   socialAria: {
     x: 'بحر برنت على X',
     instagram: 'بحر برنت على إنستغرام',
@@ -136,10 +138,4 @@ export const errorPage = {
   // TODO(copy): review with Dhia (plan §D)
   text: 'حاول تحديث الصفحة، أو راسلنا على واتساب.',
   button: 'العودة للرئيسية',
-};
-
-/** Preview-only developer label for sections that Phase 1b builds (plan §H). */
-export const placeholderCopy = {
-  // TODO(copy): developer label, never shown on b7r.sa
-  label: 'يُبنى في المرحلة 1b',
 };

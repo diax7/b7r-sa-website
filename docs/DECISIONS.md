@@ -85,3 +85,42 @@ The Radix Dialog (focus trap, scroll lock, portal) costs ~15 kB gzip and is used
 tap on the burger. The burger itself is a plain server-rendered button; the sheet chunk is
 fetched on pointer/touch/focus and mounted open on click. Keeps the home page's initial JS
 under the 180 kB budget with headroom for Phase 1b's widgets.
+
+## ADR-012 — Scroll-driven steps without `motion` (2026-09-13)
+
+BRD §8.1 listed `motion` for the steps and reveals. The steps section needs one number
+(scroll progress → active step) and CSS does the rest; a 1 kB rAF hook attached only while
+the section intersects does that, and the list layout is the default CSS so no-JS, reduced
+motion and phones share one branch. `motion` stays out of the bundle; §8.1 amended.
+
+## ADR-013 — Testimonials "production" = production host (2026-09-13)
+
+BRD §6.4.7 said `NODE_ENV=production` on `main`. A CranL preview build is also
+`NODE_ENV=production` and must still show the «نموذج» cards for review, and the app cannot know
+its branch at runtime. The rule now keys on `NEXT_PUBLIC_SITE_URL === https://b7r.sa`, the same
+signal that gates noindex. Verified: the production-origin build serves zero `data-placeholder`.
+
+## ADR-014 — Simulated LCP: measured floor (2026-09-13)
+
+Time-boxed investigation on `/` with every 1b section and analytics enabled. Lighthouse mobile
+(simulated): Performance 91, FCP 1.1 s, LCP 3.4 s, CLS 0, TBT 50 ms. DevTools throttling:
+LCP 2.1 s. Lighthouse's `largest-contentful-paint-element` audit reports *not applicable*
+for this page, so Lantern's estimate is not attributable to one element; it charges every
+resource started before first paint (four font weights ≈ 87 kB, hero image 12 kB, first-paint
+JS 176 kB of which 117 kB is React + the Next runtime) to the LCP path. What moved the needle
+this phase: tighter font subsets (27 → 21.7 kB per weight, Arabic features only), preloading the
+weights the document actually renders (Regular, Medium, Bold everywhere; Black on `/`), a 198 px
+`sizes` on the header logo (12 → 3 kB), and keeping every island (accordion, video, widget,
+consent, GA loader) out of the first-paint JS via client-side `dynamic(..., { ssr:false })`.
+What did not: dropping Bold from the preload set (browsers fetch a weight as soon as any text
+in the document uses it — the H2s below the fold need Bold). The remaining floor is the React
+runtime; `lighthouserc.json` keeps the LCP ≤ 2.5 s assertion so CI stays honestly red on it
+until the runtime shrinks or the threshold is renegotiated with Dhia.
+
+## ADR-015 — Newsletter mock transport for tests (2026-09-13)
+
+`NEWSLETTER_TRANSPORT=mock` swaps Resend for an in-memory set so the success path is e2e
+tested without a key. The mock is honoured only while `RESEND_API_KEY` is unset, and
+`GET /api/health` reports `newsletter: live | mock | off`, so a mocked production cannot go
+unnoticed. Not keyed on `NODE_ENV` or the site origin because CI's e2e runs the production
+build with the production origin.

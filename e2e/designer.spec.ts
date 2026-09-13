@@ -17,6 +17,10 @@ declare global {
 }
 
 async function openDesigner(page: Page) {
+  // Decide consent up front so the card never overlaps the canvas during pointer tests.
+  await page
+    .context()
+    .addCookies([{ name: 'b7r_consent', value: 'denied', url: 'http://localhost:3004' }]);
   await page.goto('/');
   await page.locator('#designer').scrollIntoViewIfNeeded();
   await page.waitForSelector('[data-designer-island] canvas', { timeout: 15_000 });
@@ -109,6 +113,9 @@ test.describe('designer and profit calculator (BRD 6.4.3)', () => {
   }) => {
     await openDesigner(page);
     const canvas = page.locator('[data-designer-island] canvas').last();
+    // Centre the canvas so neither the sticky results bar nor the widget sits under the pointer.
+    await canvas.evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }));
+    await page.waitForTimeout(300);
     const box = (await canvas.boundingBox())!;
     const start = await page.evaluate(() =>
       window.Konva!.stages[0]!.findOne('#design')!.getAbsolutePosition(),

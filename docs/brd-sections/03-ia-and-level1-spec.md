@@ -177,7 +177,7 @@ Section order: Hero → Product strip → Interactive designer and profit → Th
 
 #### 6.4.7 Testimonials
 
-**Layout:** `SectionHeader`. Three `Card`s: large quote glyph in accent tint, the quote (lead size, Light weight), then avatar (48 px circle or store logo) + name (Medium) + store (muted). Mobile: snap carousel. Source `content/testimonials.ts` with `placeholder: true` on the sample entries. **Rendering rule:** when every entry is a placeholder, render each card with a visible «نموذج» badge and add the `data-placeholder` attribute; in production builds (`NODE_ENV=production` on the `main` branch) the whole section is omitted until at least one non-placeholder entry exists. The launch checklist (§12.4) requires three real entries.
+**Layout:** `SectionHeader`. Three `Card`s: large quote glyph in accent tint, the quote (lead size, Light weight), then avatar (48 px circle or store logo) + name (Medium) + store (muted). Mobile: snap carousel. Source `content/testimonials.ts` with `placeholder: true` on the sample entries. **Rendering rule:** when every entry is a placeholder, render each card with a visible «نموذج» badge and add the `data-placeholder` attribute; on the production host (`NEXT_PUBLIC_SITE_URL` = `https://b7r.sa`, the same signal as the noindex guard; amended 2026-09-13, ADR-013 — a CranL preview is also `NODE_ENV=production` and must still show the sample cards) the whole section is omitted until at least one non-placeholder entry exists. The launch checklist (§12.4) requires three real entries.
 
 #### 6.4.8 Integrations
 

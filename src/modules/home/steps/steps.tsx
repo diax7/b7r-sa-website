@@ -1,0 +1,84 @@
+import { ArrowRight } from 'lucide-react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { Container } from '@/components/shared/container';
+import { Icon } from '@/components/shared/icon';
+import { Section } from '@/components/shared/section';
+import { SectionHeader } from '@/components/shared/section-header';
+import { home } from '@/content/home';
+import { homeSteps } from '@/content/steps';
+import { StepsProgress } from '@/modules/home/steps/steps-progress';
+
+/**
+ * Three steps (BRD 6.4.4). The list layout is the default CSS (mobile, no-JS, reduced
+ * motion); under `html.js` at `lg` the section becomes 300 vh with a pinned inner grid and
+ * `StepsProgress` maps scroll position to the active step. Native scroll only.
+ */
+export function Steps() {
+  const { steps } = home;
+  return (
+    <Section
+      id="steps"
+      tone="surface"
+      aria-labelledby="steps-title"
+      className="steps"
+      data-active="0"
+    >
+      <div className="steps-pin">
+        <Container className="flex flex-col gap-10">
+          <SectionHeader id="steps-title" eyebrow={steps.eyebrow} title={steps.title} />
+          <div className="steps-grid">
+            <ol className="steps-list">
+              {homeSteps.map((step, i) => (
+                <li
+                  key={step.order}
+                  className="steps-item"
+                  data-step={i}
+                  aria-current={i === 0 ? 'step' : undefined}
+                >
+                  <Image
+                    src={step.icon}
+                    alt=""
+                    width={96}
+                    height={96}
+                    className="steps-item-icon size-24 shrink-0 rounded-base"
+                    sizes="96px"
+                  />
+                  <span className="steps-badge" aria-hidden="true">
+                    {step.order}
+                  </span>
+                  <div className="flex flex-col gap-1">
+                    <h3 className="text-h3">{step.title}</h3>
+                    <p className="text-text-muted">{step.text}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+            <div className="steps-panel" aria-hidden="true">
+              {homeSteps.map((step, i) => (
+                <Image
+                  key={step.order}
+                  src={step.icon}
+                  alt=""
+                  width={480}
+                  height={480}
+                  className="steps-panel-icon"
+                  data-step={i}
+                  sizes="(min-width: 1024px) 480px, 0px"
+                />
+              ))}
+            </div>
+          </div>
+          <Link
+            href="/how-it-works"
+            className="steps-link inline-flex items-center gap-2 self-start py-2 font-medium text-primary hover:text-primary-hover"
+          >
+            {steps.link}
+            <Icon icon={ArrowRight} size={18} />
+          </Link>
+        </Container>
+      </div>
+      <StepsProgress />
+    </Section>
+  );
+}

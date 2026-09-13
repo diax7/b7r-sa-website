@@ -14,5 +14,5 @@ node -e '
 const r=require(process.argv[1]); const c=r.categories; const a=r.audits;
 console.log("perf",c.performance.score,"a11y",c.accessibility.score,"bp",c["best-practices"].score,"seo",c.seo.score);
 for (const k of ["first-contentful-paint","largest-contentful-paint","cumulative-layout-shift","total-blocking-time","speed-index"]) console.log(" ",k, a[k].displayValue);
-const el=a["largest-contentful-paint-element"]; console.log("  lcp element", JSON.stringify(el.details?.items?.[0]?.items?.[0]?.node?.snippet).slice(0,80), JSON.stringify(el.details?.items?.[1]?.items?.map(i=>[i.phase,Math.round(i.timing)])));
+const el=a["largest-contentful-paint-element"]; console.log("  lcp element", el.scoreDisplayMode, JSON.stringify(el.details?.items?.[0]?.items?.[0]?.node?.snippet ?? null)?.slice(0,80), JSON.stringify(el.details?.items?.[1]?.items?.map(i=>[i.phase,Math.round(i.timing)]) ?? null));
 ' "$OUT"

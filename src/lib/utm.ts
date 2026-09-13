@@ -25,8 +25,8 @@ export function loginUrl(appUrl: string): string {
   return new URL('/login', appUrl).toString();
 }
 
+/** wa.me link; the text is percent-encoded (WhatsApp expects %20, not +, for spaces). */
 export function whatsappUrl(number: string, message?: string): string {
-  const url = new URL(`https://wa.me/${number}`);
-  if (message) url.searchParams.set('text', message);
-  return url.toString();
+  const base = `https://wa.me/${number}`;
+  return message ? `${base}?text=${encodeURIComponent(message)}` : base;
 }

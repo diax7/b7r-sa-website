@@ -20,6 +20,8 @@
     "assets:sample-design": "tsx scripts/generate-sample-design.ts"
   },
   "dependencies": {
+    "@next/third-parties": "16.3.5",
+    "@radix-ui/react-accordion": "1.2.20",
     "@radix-ui/react-dialog": "1.1.23",
     "@radix-ui/react-slider": "1.4.7",
     "@radix-ui/react-slot": "1.3.3",
@@ -34,6 +36,8 @@
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "react-konva": "19.2.7",
+    "resend": "6.28.0",
+    "server-only": "0.0.1",
     "tailwind-merge": "3.6.0",
     "tailwindcss": "4.3.3",
     "zod": "4.6.2"

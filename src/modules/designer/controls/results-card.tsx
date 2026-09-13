@@ -5,7 +5,6 @@ import { Button } from '@/components/shared/button';
 import { SarAmount } from '@/components/shared/sar-amount';
 import { cn } from '@/lib/cn';
 import { useReducedMotion } from '@/lib/reduced-motion';
-import { track } from '@/modules/core';
 
 /**
  * Counts from the previous value to `value` over 300 ms whenever `commit` changes; when
@@ -106,12 +105,7 @@ export function ResultsCard({
       </div>
       <p className="text-caption text-text-muted">{copy.footnote}</p>
       <Button asChild size="lg" fullWidth>
-        <a
-          href={ctaHref}
-          data-track="cta_click"
-          data-location="designer"
-          onClick={() => track('cta_click', { location: 'designer' })}
-        >
+        <a href={ctaHref} data-track="cta_click" data-location="designer">
           {copy.cta}
         </a>
       </Button>

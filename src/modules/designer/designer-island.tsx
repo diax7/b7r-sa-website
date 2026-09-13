@@ -92,6 +92,21 @@ export function DesignerIsland({
     return () => io.disconnect();
   }, []);
 
+  // Tell the fixed widgets (WhatsApp, consent) how much of the bottom edge the sticky results
+  // bar occupies, so they lift above it on phones (plan 1b §D).
+  useEffect(() => {
+    const root = document.documentElement;
+    const mobile = window.matchMedia('(max-width: 1023px)');
+    const apply = () =>
+      root.style.setProperty('--bottom-dock', stickyVisible && mobile.matches ? '72px' : '0px');
+    apply();
+    mobile.addEventListener('change', apply);
+    return () => {
+      mobile.removeEventListener('change', apply);
+      root.style.removeProperty('--bottom-dock');
+    };
+  }, [stickyVisible]);
+
   // Debounced calculator event (800 ms); the mount-time defaults are not a change.
   const mounted = useRef(false);
   useEffect(() => {
@@ -254,7 +269,8 @@ export function DesignerIsland({
           <a
             href={ctaHref}
             tabIndex={stickyVisible ? 0 : -1}
-            onClick={() => track('cta_click', { location: 'designer' })}
+            data-track="cta_click"
+            data-location="designer"
           >
             {copy.cta}
           </a>

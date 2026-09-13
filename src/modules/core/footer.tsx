@@ -3,7 +3,6 @@ import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { InstagramIcon, TikTokIcon, XIcon } from '@/components/shared/brand-icons';
 import { Container } from '@/components/shared/container';
-import { Input } from '@/components/shared/input';
 import { navigation } from '@/content/navigation';
 import { footerCopy } from '@/content/pages';
 import { site } from '@/content/site';
@@ -26,8 +25,21 @@ const TRUST_BADGES = [
 const linkCls =
   'inline-block py-1 text-white/90 transition-colors duration-(--duration-fast) hover:text-accent focus-visible:outline-accent';
 
-/** Site footer (BRD 6.3.2, copy 4.5). Navy, four columns, badges strip, contact line. */
-export function Footer() {
+/** Strings the newsletter slot needs (BRD 4.5); the form itself lives in `modules/forms`. */
+export const newsletterCopy = {
+  label: footerCopy.newsletterLabel,
+  placeholder: footerCopy.newsletterPlaceholder,
+  button: footerCopy.newsletterButton,
+  success: footerCopy.newsletterSuccess,
+  invalid: footerCopy.newsletterError,
+  unavailable: footerCopy.newsletterUnavailable,
+};
+
+/**
+ * Site footer (BRD 6.3.2, copy 4.5). Navy, four columns, badges strip, contact line. The
+ * newsletter form is passed in by the layout so `core` never imports a feature module.
+ */
+export function Footer({ newsletter }: { newsletter: ReactNode }) {
   const year = new Date().getFullYear();
   const socials = [
     { href: site.social.x, label: footerCopy.socialAria.x, Icon: XIcon },
@@ -89,35 +101,7 @@ export function Footer() {
 
           <div>
             <h2 className="mb-4 text-h4 text-white">{footerCopy.newsletterTitle}</h2>
-            {/* Wired to /api/newsletter in Phase 1b (ADR-005); disabled until then. */}
-            <form className="flex flex-col gap-3">
-              <label
-                id="newsletter-label"
-                htmlFor="newsletter-email"
-                className="text-small text-white/75"
-              >
-                {footerCopy.newsletterLabel}
-              </label>
-              <div className="flex gap-2">
-                <Input
-                  id="newsletter-email"
-                  type="email"
-                  dir="ltr"
-                  inputMode="email"
-                  autoComplete="email"
-                  placeholder={footerCopy.newsletterPlaceholder}
-                  className="border-white/15 bg-white/5 text-white placeholder:text-white/40 focus:border-accent"
-                  disabled
-                />
-                <button
-                  type="submit"
-                  disabled
-                  className="h-11 shrink-0 rounded-base bg-accent px-5 text-button font-medium text-white opacity-60"
-                >
-                  {footerCopy.newsletterButton}
-                </button>
-              </div>
-            </form>
+            {newsletter}
           </div>
         </div>
 

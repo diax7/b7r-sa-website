@@ -1,2 +1,8 @@
 export { Hero } from '@/modules/home/hero/hero';
 export { ProductStrip } from '@/modules/home/product-strip/product-strip';
+export { Steps } from '@/modules/home/steps/steps';
+export { VideoSection } from '@/modules/home/video/video-section';
+export { WhyUs } from '@/modules/home/why-us/why-us';
+export { Testimonials } from '@/modules/home/testimonials/testimonials';
+export { Integrations } from '@/modules/home/integrations/integrations';
+export { HomeFaq } from '@/modules/home/faq/home-faq';

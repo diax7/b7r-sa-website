@@ -65,6 +65,7 @@ export function Header() {
                 alt=""
                 width={198}
                 height={72}
+                sizes="198px"
                 priority
                 className={cn(
                   'w-auto transition-[height] duration-(--duration-base) ease-(--ease-standard)',

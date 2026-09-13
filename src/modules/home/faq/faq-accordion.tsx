@@ -1,0 +1,34 @@
+'use client';
+
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
+import { track } from '@/modules/core';
+
+interface FaqAccordionProps {
+  items: Array<{ question: string; answer: string }>;
+}
+
+/** Single-open accordion for the FAQ items; tracks `faq_open{question}` (BRD 6.4.9). */
+export function FaqAccordion({ items }: FaqAccordionProps) {
+  return (
+    <Accordion
+      type="single"
+      collapsible
+      className="border-t border-border"
+      onValueChange={(value) => {
+        if (value) track('faq_open', { question: value });
+      }}
+    >
+      {items.map((item) => (
+        <AccordionItem key={item.question} value={item.question}>
+          <AccordionTrigger>{item.question}</AccordionTrigger>
+          <AccordionContent>{item.answer}</AccordionContent>
+        </AccordionItem>
+      ))}
+    </Accordion>
+  );
+}

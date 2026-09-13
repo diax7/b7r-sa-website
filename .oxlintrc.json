@@ -66,7 +66,7 @@
     "import/no-unassigned-import": [
       "error",
       {
-        "allow": ["**/*.css"]
+        "allow": ["**/*.css", "server-only"]
       }
     ]
   },
@@ -87,7 +87,13 @@
     {
       "files": ["tests/**", "e2e/**"],
       "rules": {
-        "no-restricted-imports": "off"
+        "no-restricted-imports": "off",
+        "no-underscore-dangle": [
+          "error",
+          {
+            "allow": ["__umamiEvents"]
+          }
+        ]
       }
     },
     {

@@ -95,6 +95,9 @@
   --animate-rise-out: rise-out var(--duration-base) var(--ease-exit) both;
   --animate-menu-in: menu-in var(--duration-slow) var(--ease-standard) both;
   --animate-menu-out: menu-out var(--duration-base) var(--ease-exit) both;
+  --animate-accordion-down: accordion-down var(--duration-base) var(--ease-standard);
+  --animate-accordion-up: accordion-up var(--duration-base) var(--ease-exit);
+  --animate-dot-pulse: dot-pulse 1.2s var(--ease-standard) 1;
   --animate-wave: wave-drift 20s linear infinite;
   --animate-wave-reverse: wave-drift-reverse 20s linear infinite;
 
@@ -153,6 +156,36 @@
     to {
       opacity: 0;
       transform: translateX(16px);
+    }
+  }
+  @keyframes accordion-down {
+    from {
+      height: 0;
+    }
+    to {
+      height: var(--radix-accordion-content-height);
+    }
+  }
+  @keyframes accordion-up {
+    from {
+      height: var(--radix-accordion-content-height);
+    }
+    to {
+      height: 0;
+    }
+  }
+  @keyframes dot-pulse {
+    0% {
+      transform: scale(0.6);
+      opacity: 0;
+    }
+    40% {
+      transform: scale(1.3);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
     }
   }
   @keyframes wave-drift {
@@ -459,6 +492,168 @@
   .strip-panel:hover .strip-label,
   .strip-panel:focus-visible .strip-label {
     opacity: 1;
+  }
+}
+
+/* Steps (BRD 6.4.4). Default = vertical list: 96 px icon at the start, connector line between
+   rows. Pinned scroll-driven layout only with JS, at lg, without reduced motion. */
+.steps-list {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  position: relative;
+}
+.steps-item {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  position: relative;
+}
+.steps-item + .steps-item::before {
+  content: '';
+  position: absolute;
+  inset-inline-start: 47px;
+  inset-block-start: -32px;
+  block-size: 32px;
+  inline-size: 2px;
+  background: var(--color-border);
+}
+.steps-badge {
+  display: none;
+}
+.steps-panel {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  html.js .steps {
+    min-height: 300vh;
+    padding-block: 0;
+  }
+  html.js .steps .steps-pin {
+    position: sticky;
+    top: var(--header-h);
+    height: calc(100vh - var(--header-h));
+    display: flex;
+    align-items: center;
+    padding-block: 48px;
+  }
+  html.js .steps .steps-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 480px;
+    gap: 64px;
+    align-items: center;
+  }
+  html.js .steps .steps-list {
+    gap: 40px;
+    padding-inline-start: 24px;
+  }
+  /* The link sits at the bottom-start of the pinned grid; keep it clear of the WhatsApp
+     button, which lives at the physical bottom-right (BRD 6.15). */
+  html.js .steps .steps-link {
+    margin-inline-end: 96px;
+  }
+  /* 2 px accent progress line beside the list, growing with --progress. */
+  html.js .steps .steps-list::before {
+    content: '';
+    position: absolute;
+    inset-inline-start: 0;
+    inset-block: 0;
+    inline-size: 2px;
+    background: linear-gradient(
+      to bottom,
+      var(--color-accent) calc(var(--progress, 0) * 100%),
+      var(--color-border) calc(var(--progress, 0) * 100%)
+    );
+    border-radius: var(--radius-pill);
+  }
+  html.js .steps .steps-item {
+    opacity: 0.4;
+    transition: opacity var(--duration-slow) var(--ease-standard);
+  }
+  html.js .steps .steps-item + .steps-item::before {
+    display: none;
+  }
+  html.js .steps .steps-item-icon {
+    display: none;
+  }
+  html.js .steps .steps-badge {
+    display: grid;
+    place-items: center;
+    inline-size: 40px;
+    block-size: 40px;
+    flex-shrink: 0;
+    border-radius: var(--radius-pill);
+    border: 2px solid var(--color-border);
+    font-weight: 500;
+    color: var(--color-text-muted);
+    font-variant-numeric: tabular-nums;
+    transition:
+      background-color var(--duration-slow) var(--ease-standard),
+      border-color var(--duration-slow) var(--ease-standard),
+      color var(--duration-slow) var(--ease-standard);
+  }
+  html.js .steps .steps-item[aria-current='step'] {
+    opacity: 1;
+  }
+  html.js .steps .steps-item[aria-current='step'] .steps-badge {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: var(--color-white);
+  }
+  html.js .steps .steps-panel {
+    display: grid;
+    inline-size: 480px;
+    block-size: 480px;
+    border-radius: var(--radius-lg);
+    background: var(--color-accent-tint);
+    overflow: hidden;
+    justify-self: end;
+  }
+  html.js .steps .steps-panel-icon {
+    grid-area: 1 / 1;
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+    border-radius: var(--radius-lg);
+    opacity: 0;
+    transform: scale(1.02);
+    transition:
+      opacity var(--duration-slow) var(--ease-standard),
+      transform var(--duration-slow) var(--ease-standard);
+  }
+  html.js .steps[data-active='0'] .steps-panel-icon[data-step='0'],
+  html.js .steps[data-active='1'] .steps-panel-icon[data-step='1'],
+  html.js .steps[data-active='2'] .steps-panel-icon[data-step='2'] {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  /* Desktop renders the mobile list under reduced motion (BRD 6.4.4). */
+  html.js .steps {
+    min-height: auto;
+  }
+  html.js .steps .steps-pin {
+    position: static;
+    height: auto;
+  }
+  html.js .steps .steps-grid {
+    display: block;
+  }
+  html.js .steps .steps-panel,
+  html.js .steps .steps-badge,
+  html.js .steps .steps-list::before {
+    display: none;
+  }
+  html.js .steps .steps-item {
+    opacity: 1;
+  }
+  html.js .steps .steps-item-icon {
+    display: block;
+  }
+  html.js .steps .steps-item + .steps-item::before {
+    display: block;
   }
 }
 

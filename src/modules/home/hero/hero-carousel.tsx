@@ -10,7 +10,6 @@ import { Icon } from '@/components/shared/icon';
 import type { HeroSlide } from '@/content/schema';
 import { cn } from '@/lib/cn';
 import { useReducedMotion } from '@/lib/reduced-motion';
-import { track } from '@/modules/core';
 
 export interface HeroImageSet {
   /** Props from `getImageProps` for the desktop 16:9 rendition. */
@@ -194,12 +193,7 @@ export function HeroCarousel({ slides, images, copy }: HeroCarouselProps) {
           <div className="flex w-full flex-col gap-3">
             <div className="flex w-full flex-col items-stretch gap-4 sm:flex-row sm:items-center sm:gap-6">
               <Button asChild size="lg" className="shadow-card-hover">
-                <a
-                  href={copy.primaryHref}
-                  data-track="cta_click"
-                  data-location="hero"
-                  onClick={() => track('cta_click', { location: 'hero' })}
-                >
+                <a href={copy.primaryHref} data-track="cta_click" data-location="hero">
                   {copy.primaryCta}
                 </a>
               </Button>

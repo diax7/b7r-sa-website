@@ -785,7 +785,7 @@ Section order: Hero → Product strip → Interactive designer and profit → Th
 
 #### 6.4.7 Testimonials
 
-**Layout:** `SectionHeader`. Three `Card`s: large quote glyph in accent tint, the quote (lead size, Light weight), then avatar (48 px circle or store logo) + name (Medium) + store (muted). Mobile: snap carousel. Source `content/testimonials.ts` with `placeholder: true` on the sample entries. **Rendering rule:** when every entry is a placeholder, render each card with a visible «نموذج» badge and add the `data-placeholder` attribute; in production builds (`NODE_ENV=production` on the `main` branch) the whole section is omitted until at least one non-placeholder entry exists. The launch checklist (§12.4) requires three real entries.
+**Layout:** `SectionHeader`. Three `Card`s: large quote glyph in accent tint, the quote (lead size, Light weight), then avatar (48 px circle or store logo) + name (Medium) + store (muted). Mobile: snap carousel. Source `content/testimonials.ts` with `placeholder: true` on the sample entries. **Rendering rule:** when every entry is a placeholder, render each card with a visible «نموذج» badge and add the `data-placeholder` attribute; on the production host (`NEXT_PUBLIC_SITE_URL` = `https://b7r.sa`, the same signal as the noindex guard; amended 2026-09-13, ADR-013 — a CranL preview is also `NODE_ENV=production` and must still show the sample cards) the whole section is omitted until at least one non-placeholder entry exists. The launch checklist (§12.4) requires three real entries.
 
 #### 6.4.8 Integrations
 
@@ -1008,7 +1008,7 @@ All indexable routes with `lastModified` (ISO 8601 with time; from the content f
 | Framework | Next.js 16.x App Router, React 19, TypeScript 5.x strict | `output: 'standalone'` for Docker; static rendering for all pages |
 | Styling | Tailwind CSS 4.x (CSS-first `@theme` tokens from §3), shadcn/ui primitives restyled | Logical utilities only; the lint in §8.8 enforces it |
 | Icons | `lucide-react` | RTL-aware `Icon` wrapper |
-| Motion | `motion` (React) for scroll-driven steps and reveals; CSS transitions elsewhere | Respect reduced motion via `useReducedMotion` |
+| Motion | CSS transitions and keyframes, plus small scroll/intersection hooks (`lib/reduced-motion.ts`, `modules/home/steps/steps-progress.tsx`); `motion` (React) only if a later phase needs what CSS cannot do (amended 2026-09-13, ADR-012: keeps the home page inside the JS budget) | Respect reduced motion via `useReducedMotion` |
 | Canvas | `konva` + `react-konva` | Designer only; loaded lazily |
 | Validation | `zod` | Content contract, forms, API bodies |
 | Email | `resend` SDK | Contact notification, newsletter audience |
@@ -1722,8 +1722,8 @@ Decision history: `docs/00-decisions-log.md` (rounds 1–4 with Dhia, 2026-09-12
 6. Cal.com account and `bookingUrl`.
 7. Higher-resolution Saudi Business Center and Ministry of Commerce badge files; a logo SVG.
 9. Confirm the ITF Rayat Round web licence permits subsetting the woff2 files (the site serves subsets, ADR-010); if not, serve the original files and re-measure.
-10. Review the agent-written aria/microcopy strings in `src/messages/ar.json` and the two `TODO(copy)` error-page strings in `src/content/pages.ts`.
-8. Whether the video needs an intro title card or Arabic captions (none specified).
+10. Review the agent-written aria/microcopy strings in `src/messages/ar.json` and the `TODO(copy)` strings in `src/content/pages.ts`: the two error-page strings and «تعذّر الاشتراك الآن، حاول لاحقاً.» (newsletter 429/5xx).
+8. Whether the video needs an intro title card or Arabic captions (none specified). Note: without a captions track the `<video>` element fails axe's `video-caption` rule (WCAG 1.2.2), so it mounts only after the visitor presses play until captions exist.
 
 ### Appendix H: Glossary of Arabic UI terms used in code comments and admin labels
 

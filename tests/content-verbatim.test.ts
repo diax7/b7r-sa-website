@@ -11,7 +11,6 @@ import { home } from '@/content/home';
 import { navigation } from '@/content/navigation';
 import {
   errorPage,
-  placeholderCopy,
   aboutPage,
   contactPage,
   footerCopy,
@@ -24,7 +23,11 @@ import { homeSteps, howItWorksSteps } from '@/content/steps';
 import { testimonials } from '@/content/testimonials';
 import { whyUs } from '@/content/why-us';
 
-const TODO_COPY = new Set<string>([errorPage.title, errorPage.text, placeholderCopy.label]);
+const TODO_COPY = new Set<string>([
+  errorPage.title,
+  errorPage.text,
+  footerCopy.newsletterUnavailable,
+]);
 
 const brd = readFileSync(join(process.cwd(), 'B7R-WEBSITE-MASTER-BRD.md'), 'utf8').replace(
   /\s+/g,
@@ -60,15 +63,7 @@ const sources: Record<string, unknown> = {
   'why-us.ts': whyUs,
   'faq.ts': faq,
   'testimonials.ts': testimonials,
-  'pages.ts': [
-    howItWorksPage,
-    aboutPage,
-    contactPage,
-    footerCopy,
-    notFoundPage,
-    errorPage,
-    placeholderCopy,
-  ],
+  'pages.ts': [howItWorksPage, aboutPage, contactPage, footerCopy, notFoundPage, errorPage],
 };
 
 describe('copy is verbatim from the BRD', () => {

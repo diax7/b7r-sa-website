@@ -6,6 +6,9 @@
  * - products: resources/products/{slug}/*.jpg        -> public/images/products/{slug}/ (q82)
  * - badges:   payment + trust + misk                 -> public/images/badges/
  * - icons-3d: resources/icons-3d/*.jpg (not sheet)   -> public/images/icons-3d/
+ * - video:    resources/video/*.mp4 + poster         -> public/video/ (poster = BRD 6.4.5 fallback still
+ *             until a frame can be extracted; see RUNBOOK)
+ * - integrations: resources/brand/integrations/*.svg -> public/images/integrations/
  */
 import { copyFileSync, mkdirSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
@@ -86,6 +89,25 @@ async function badges() {
     .toFile(pub('images', 'badges', 'misk-foundation-logo.png'));
 }
 
+async function video() {
+  ensure(pub('video'));
+  copyFileSync(res('video', 'printer-marketing.mp4'), pub('video', 'printer-marketing.mp4'));
+  // The stock still is a transparent PNG; flatten it onto the page ground colour.
+  await sharp(res('lifestyle-mockups', 'dtg-printer-stock.png'))
+    .flatten({ background: '#f6f8fb' })
+    .resize(1280, 720, { fit: 'contain', background: '#f6f8fb' })
+    .jpeg({ quality: 80, mozjpeg: true })
+    .toFile(pub('video', 'printer-marketing-poster.jpg'));
+}
+
+async function integrations() {
+  ensure(pub('images', 'integrations'));
+  for (const f of readdirSync(res('brand', 'integrations'))) {
+    if (f.endsWith('.svg'))
+      copyFileSync(res('brand', 'integrations', f), pub('images', 'integrations', f));
+  }
+}
+
 async function icons3d() {
   ensure(pub('images', 'icons-3d'));
   for (const f of readdirSync(res('icons-3d'))) {
@@ -100,4 +122,6 @@ await logos();
 await products();
 await badges();
 await icons3d();
+await video();
+await integrations();
 console.log('prepare-assets: public/ is up to date.');

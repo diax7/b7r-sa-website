@@ -8,7 +8,7 @@
 | Framework | Next.js 16.x App Router, React 19, TypeScript 5.x strict | `output: 'standalone'` for Docker; static rendering for all pages |
 | Styling | Tailwind CSS 4.x (CSS-first `@theme` tokens from §3), shadcn/ui primitives restyled | Logical utilities only; the lint in §8.8 enforces it |
 | Icons | `lucide-react` | RTL-aware `Icon` wrapper |
-| Motion | `motion` (React) for scroll-driven steps and reveals; CSS transitions elsewhere | Respect reduced motion via `useReducedMotion` |
+| Motion | CSS transitions and keyframes, plus small scroll/intersection hooks (`lib/reduced-motion.ts`, `modules/home/steps/steps-progress.tsx`); `motion` (React) only if a later phase needs what CSS cannot do (amended 2026-09-13, ADR-012: keeps the home page inside the JS budget) | Respect reduced motion via `useReducedMotion` |
 | Canvas | `konva` + `react-konva` | Designer only; loaded lazily |
 | Validation | `zod` | Content contract, forms, API bodies |
 | Email | `resend` SDK | Contact notification, newsletter audience |

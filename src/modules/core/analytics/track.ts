@@ -32,7 +32,13 @@ export function registerSink(sink: Sink): () => void {
   };
 }
 
-export function track<E extends TrackEvent>(name: E['name'], props: E['props']): void {
-  const event = { name, props } as TrackEvent;
+export function trackEvent(event: TrackEvent): void {
   for (const sink of sinks) sink(event);
 }
+
+export function track<E extends TrackEvent>(name: E['name'], props: E['props']): void {
+  trackEvent({ name, props } as TrackEvent);
+}
+
+export const CTA_LOCATIONS = ['header', 'hero', 'designer', 'ribbon', 'menu', 'product'] as const;
+export const WHATSAPP_LOCATIONS = ['widget', 'menu', 'contact', 'footer'] as const;

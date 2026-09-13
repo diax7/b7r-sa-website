@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { getNewsletterTransport } from '@/lib/newsletter-transport';
 
 export const dynamic = 'force-dynamic';
 
@@ -8,5 +9,7 @@ export function GET() {
     ok: true,
     version: process.env.APP_VERSION ?? 'dev',
     time: new Date().toISOString(),
+    // Which newsletter transport is active, so a mocked production is visible at a glance.
+    newsletter: getNewsletterTransport().kind,
   });
 }
