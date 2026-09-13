@@ -51,6 +51,31 @@ function saveHome(
   });
 }
 
+/** A one-paragraph Lexical editor state, as the admin would save it (RTL). */
+const paragraph = (text: string) => ({
+  root: {
+    type: 'root',
+    format: '',
+    indent: 0,
+    version: 1,
+    direction: 'rtl',
+    children: [
+      {
+        type: 'paragraph',
+        format: '',
+        indent: 0,
+        version: 1,
+        direction: 'rtl',
+        textFormat: 0,
+        textStyle: '',
+        children: [
+          { type: 'text', text, format: 0, detail: 0, mode: 'normal', style: '', version: 1 },
+        ],
+      },
+    ],
+  },
+});
+
 test.describe('CMS admin', () => {
   // One admin account: parallel logins race on its sessions list (a later login can drop an
   // earlier session's id), and the publish test mutates shared content.
@@ -75,7 +100,10 @@ test.describe('CMS admin', () => {
     expect(sitemap).not.toContain('/admin');
   });
 
-  test('signs in on an Arabic, right-to-left panel without a CSP violation', async ({ page }) => {
+  test('signs in on an Arabic, right-to-left panel without a CSP violation', async ({
+    page,
+    request,
+  }) => {
     await recordViolations(page);
     await page.goto('/admin/login');
     const html = page.locator('html');
@@ -94,12 +122,13 @@ test.describe('CMS admin', () => {
     await expect(page.locator('#field-slug')).toHaveValue(/\w+/);
     // The pages editor: the About document opens right-to-left with its blocks in place, and
     // a rich-text block's Lexical editor is an RTL surface (2b phase 2).
-    await page.goto('/admin/collections/pages');
-    await page
-      .getByRole('link', { name: /من نحن|About/ })
-      .first()
-      .click();
-    await page.waitForURL(/\/admin\/collections\/pages\/\d+/);
+    const auth = await login(request, admin);
+    const about = await request.get(`${API}/pages?where[slug][equals]=about&depth=0`, {
+      headers: auth,
+    });
+    const aboutId = ((await about.json()) as { docs: Array<{ id: number }> }).docs[0]?.id;
+    expect(aboutId).toBeDefined();
+    await page.goto(`/admin/collections/pages/${aboutId}`);
     await expect(page.locator('#field-slug')).toHaveValue('about');
     await expect(page.getByRole('textbox', { name: /عنوان الحكاية/ })).toHaveValue(/حكاية/);
     await page.goto('/admin/collections/pages/create');
@@ -112,6 +141,15 @@ test.describe('CMS admin', () => {
     await expect(editor).toBeVisible({ timeout: 15_000 });
     expect(await editor.evaluate((el) => getComputedStyle(el).direction)).toBe('rtl');
     expect(await page.evaluate(() => window.__cspViolations ?? [])).toEqual([]);
+    // Autosave turns the open create form into an empty draft document: remove it.
+    await page.goto('/admin');
+    const drafts = await request.get(
+      `${API}/pages?where[and][0][slug][exists]=false&where[and][1][_status][equals]=draft&draft=true&depth=0&limit=50`,
+      { headers: auth },
+    );
+    for (const doc of ((await drafts.json()) as { docs: Array<{ id: number }> }).docs) {
+      await request.delete(`${API}/pages/${doc.id}`, { headers: auth });
+    }
   });
 
   test('a short password is refused with the Arabic reason (ADR-027)', async ({ request }) => {
@@ -542,6 +580,85 @@ test.describe('CMS admin', () => {
       });
       expect(rename.status(), 'renaming a designed page').toBe(400);
       expect(await (await request.get('/about')).text()).toContain('حكاية بدأت');
+    });
+
+    test('a designed page cannot be unpublished; a draft save on it still passes', async ({
+      request,
+    }) => {
+      const auth = await login(request, ADMIN);
+      const about = await request.get(`${API}/pages?where[slug][equals]=about&depth=0`, {
+        headers: auth,
+      });
+      const doc = ((await about.json()) as { docs: Array<{ id: number; title: string }> }).docs[0];
+      expect(doc).toBeDefined();
+      if (!doc) return;
+      const unpublish = await request.patch(`${API}/pages/${doc.id}`, {
+        headers: auth,
+        data: { _status: 'draft' },
+      });
+      expect(unpublish.status(), 'unpublishing a designed page').toBe(400);
+      expect(await unpublish.text()).toContain('إلغاء نشرها');
+      expect((await request.get('/about')).status()).toBe(200);
+      // A draft on top of the published copy is fine: the site keeps the published title.
+      const draft = await request.patch(`${API}/pages/${doc.id}?draft=true`, {
+        headers: auth,
+        data: { title: `${doc.title} (مسودة)`, _status: 'draft' },
+      });
+      expect(draft.status(), 'saving a draft of a designed page').toBe(200);
+      await new Promise((r) => setTimeout(r, 2_000));
+      expect(await (await request.get('/about')).text()).not.toContain('(مسودة)');
+      const restore = await request.patch(`${API}/pages/${doc.id}`, {
+        headers: auth,
+        data: { title: doc.title, _status: 'published' },
+      });
+      expect(restore.status()).toBe(200);
+    });
+
+    test('two blocks of one type on a page get distinct ids and pass axe', async ({
+      page,
+      request,
+    }) => {
+      test.setTimeout(150_000);
+      const auth = await login(request, ADMIN);
+      const slug = 'two-blocks-e2e';
+      const created = await request.post(`${API}/pages`, {
+        headers: auth,
+        data: {
+          title: 'صفحة بقسمين',
+          slug,
+          blocks: [
+            { blockType: 'richText', title: 'المقدمة', content: paragraph('فقرة أولى.') },
+            { blockType: 'richText', title: 'التفاصيل', content: paragraph('فقرة ثانية.') },
+            { blockType: 'miskCredential', title: 'شهادة', text: 'نص الشهادة.' },
+          ],
+          seo: { title: 'صفحة بقسمين', description: 'وصف للاختبار.' },
+          _status: 'published',
+        },
+      });
+      expect(created.status()).toBe(201);
+      const id = ((await created.json()) as { doc: { id: number } }).doc.id;
+      try {
+        await expect.poll(async () => (await request.get(`/${slug}`)).status(), POLL).toBe(200);
+        await page.goto(`/${slug}`);
+        const labelled = page.locator('main section[aria-labelledby]');
+        const ids = await labelled.evaluateAll((els) =>
+          els.map((el) => el.getAttribute('aria-labelledby') ?? ''),
+        );
+        expect(ids).toEqual(['text-title', 'text-2-title', 'misk-title', 'cta-ribbon-title']);
+        for (const target of ids) expect(await page.locator(`#${target}`).count(), target).toBe(1);
+        await expect(page.locator('h1')).toHaveText('صفحة بقسمين');
+        await expect(page.locator('#text-2-title')).toHaveText('التفاصيل');
+        const { AxeBuilder } = await import('@axe-core/playwright');
+        const results = await new AxeBuilder({ page }).analyze();
+        const serious = results.violations.filter((v) =>
+          ['serious', 'critical'].includes(v.impact ?? ''),
+        );
+        expect(
+          serious.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`),
+        ).toEqual([]);
+      } finally {
+        expect((await request.delete(`${API}/pages/${id}`, { headers: auth })).status()).toBe(200);
+      }
     });
 
     test('an outsider reads the FAQ and published testimonials, never the home drafts', async ({

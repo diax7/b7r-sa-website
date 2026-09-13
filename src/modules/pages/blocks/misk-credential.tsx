@@ -5,13 +5,19 @@ import { cn } from '@/lib/cn';
 import type { BlockProps } from '@/modules/pages/blocks/types';
 
 /** The MISK Launchpad credential on an accent-tint card (BRD 6.8); the logo ships with the code. */
-export function MiskCredentialBlock({ block, tone, heading }: BlockProps<'miskCredential'>) {
+export function MiskCredentialBlock({
+  block,
+  tone,
+  anchor,
+  heading,
+}: BlockProps<'miskCredential'>) {
   const Heading = heading ? 'h1' : 'h2';
   return (
     <Section
       tone={tone}
       className={heading ? 'pt-10 md:pt-16' : undefined}
-      aria-labelledby="misk-title"
+      aria-labelledby={`${anchor}-title`}
+      data-block="miskCredential"
     >
       <Container>
         <div className="grid items-center gap-8 rounded-lg bg-accent-tint p-6 md:grid-cols-[240px_1fr] md:gap-12 md:p-10">
@@ -25,7 +31,10 @@ export function MiskCredentialBlock({ block, tone, heading }: BlockProps<'miskCr
             />
           </div>
           <div className="flex flex-col gap-3">
-            <Heading id="misk-title" className={cn(heading ? 'text-h1' : 'text-h3', 'text-text')}>
+            <Heading
+              id={`${anchor}-title`}
+              className={cn(heading ? 'text-h1' : 'text-h3', 'text-text')}
+            >
               {heading?.title ?? block.title}
             </Heading>
             <p className="text-body text-text-muted">{block.text}</p>

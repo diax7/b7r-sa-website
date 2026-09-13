@@ -7,6 +7,11 @@ export interface SlugCacheOptions {
   fetchSlugs: () => Promise<string[]>;
   /** How long a fetched list is fresh; after that it is served stale while a refresh runs. */
   ttlMs: number;
+  /**
+   * A miss re-reads the list at most this often, so a page published a moment ago answers
+   * on its first request while a flood of unknown URLs costs one loopback read per window.
+   */
+  missRefreshMs?: number;
   now?: () => number;
 }
 
@@ -21,6 +26,7 @@ export const SLUG_SHAPE = /^[a-z0-9-]{1,64}$/;
 export function createSlugCache({
   fetchSlugs,
   ttlMs,
+  missRefreshMs = 2_000,
   now = Date.now,
 }: SlugCacheOptions): SlugCache {
   let slugs: Set<string> | null = null;
@@ -44,10 +50,14 @@ export function createSlugCache({
 
   return {
     async knows(slug) {
-      const stale = now() - fetchedAt > ttlMs;
+      const age = now() - fetchedAt;
       if (slugs === null) await refresh();
-      else if (stale) void refresh();
-      return slugs === null ? null : slugs.has(slug);
+      else if (age > ttlMs) void refresh();
+      if (slugs === null) return null;
+      if (slugs.has(slug)) return true;
+      // A miss: the page may have been published since the last read.
+      if (age > missRefreshMs) await refresh();
+      return slugs.has(slug);
     },
   };
 }

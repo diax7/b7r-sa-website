@@ -34,23 +34,24 @@ export function OnThisPage({ headings }: { headings: Heading[] }) {
  * A legal text (BRD 6.12, Appendix B): Markdown from the admin rendered on the server through
  * the allowlisting renderer, the «آخر تحديث» line, the on-this-page list on desktop.
  */
-export function LegalBodyBlock({ block, page, tone, heading }: BlockProps<'legalBody'>) {
-  const { html, headings } = renderMarkdown(block.body);
+export function LegalBodyBlock({ block, page, tone, anchor, heading }: BlockProps<'legalBody'>) {
+  const { html, headings } = renderMarkdown(block.body, `${anchor}-section`);
   return (
     <Section
       tone={tone}
       className={heading ? 'pt-10 md:pt-16' : undefined}
-      aria-labelledby="legal-title"
+      aria-labelledby={`${anchor}-title`}
+      data-block="legalBody"
     >
       <Container className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_240px] lg:gap-16">
         <article className="flex max-w-(--container-prose) flex-col gap-6">
           <header className="flex flex-col gap-3">
             {heading ? (
-              <h1 id="legal-title" className="text-h1 text-text">
+              <h1 id={`${anchor}-title`} className="text-h1 text-text">
                 {heading.title}
               </h1>
             ) : (
-              <h2 id="legal-title" className="text-h2 text-text">
+              <h2 id={`${anchor}-title`} className="text-h2 text-text">
                 {page.title}
               </h2>
             )}

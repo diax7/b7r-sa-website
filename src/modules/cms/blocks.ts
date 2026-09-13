@@ -1,5 +1,34 @@
+import {
+  BoldFeature,
+  HeadingFeature,
+  ItalicFeature,
+  lexicalEditor,
+  LinkFeature,
+  OrderedListFeature,
+  ParagraphFeature,
+  UnorderedListFeature,
+  UploadFeature,
+} from '@payloadcms/richtext-lexical';
 import type { Block, Field } from 'payload';
 import { CARD_ICONS, FAQ_SELECTIONS } from '@/content/schema';
+
+/**
+ * The rich-text feature set (BRD 9.5): H2/H3 (the page owns its H1), bold, italic, lists,
+ * links to the site's pages and products or a URL, images from the media library. No H1,
+ * no alignment, no code, no tables; the «CTA block» custom node is deferred (ADR-031).
+ */
+export const richTextEditor = lexicalEditor({
+  features: [
+    ParagraphFeature(),
+    HeadingFeature({ enabledHeadingSizes: ['h2', 'h3'] }),
+    BoldFeature(),
+    ItalicFeature(),
+    UnorderedListFeature(),
+    OrderedListFeature(),
+    LinkFeature({ enabledCollections: ['pages', 'products'] }),
+    UploadFeature({ enabledCollections: ['media'] }),
+  ],
+});
 
 /**
  * The page blocks (BRD 9.4, 9.5; ADR-031): each one is a section the designed pages already
@@ -59,6 +88,7 @@ export const RichTextBlock: Block = {
       type: 'richText',
       required: true,
       localized: true,
+      editor: richTextEditor,
       label: { ar: 'المحتوى', en: 'Content' },
     },
   ],

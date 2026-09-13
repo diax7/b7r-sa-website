@@ -140,6 +140,6 @@ test.describe('budgets (BRD 7.8, constitution IV)', () => {
     expect(scripts.some((u) => /lexical|payload|richtext/i.test(u))).toBe(false);
     // The legal body and the flow are HTML before hydration.
     const html = await (await page.request.get('/terms')).text();
-    expect(html).toMatch(/<h2 id="section-1">/);
+    expect(html).toMatch(/<h2 id="legal-section-1">/);
   });
 });

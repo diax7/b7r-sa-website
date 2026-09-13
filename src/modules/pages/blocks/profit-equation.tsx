@@ -22,18 +22,27 @@ export function ExampleLine({ text }: { text: string }) {
 }
 
 /** The profit equation as a highlighted card (BRD 6.7): three tiles that stack on phones. */
-export function ProfitEquationBlock({ block, tone, heading }: BlockProps<'profitEquation'>) {
+export function ProfitEquationBlock({
+  block,
+  tone,
+  anchor,
+  heading,
+}: BlockProps<'profitEquation'>) {
   const tiles = [block.sell, block.base, block.profit];
   const Heading = heading ? 'h1' : 'h2';
   return (
     <Section
       tone={tone}
       className={heading ? 'pt-10 md:pt-16' : undefined}
-      aria-labelledby="profit-title"
+      aria-labelledby={`${anchor}-title`}
+      data-block="profitEquation"
     >
       <Container>
         <div className="flex flex-col items-center gap-8 rounded-lg border border-border bg-surface p-6 text-center shadow-card md:p-10">
-          <Heading id="profit-title" className={cn(heading ? 'text-h1' : 'text-h2', 'text-text')}>
+          <Heading
+            id={`${anchor}-title`}
+            className={cn(heading ? 'text-h1' : 'text-h2', 'text-text')}
+          >
             {heading?.title ?? block.title}
           </Heading>
           <ol

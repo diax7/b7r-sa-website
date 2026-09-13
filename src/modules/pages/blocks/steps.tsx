@@ -11,20 +11,21 @@ import type { BlockProps } from '@/modules/pages/blocks/types';
  * as the track scrolls through the viewport (CSS view timeline; full and static where
  * unsupported or under reduced motion).
  */
-export function StepsBlock({ block, tone, heading }: BlockProps<'steps'>) {
+export function StepsBlock({ block, tone, anchor, heading }: BlockProps<'steps'>) {
   return (
     <Section
       tone={tone}
       className={heading ? 'pt-10 md:pt-16' : undefined}
       {...(heading
-        ? { 'aria-labelledby': 'steps-title' }
+        ? { 'aria-labelledby': `${anchor}-title` }
         : { 'aria-label': block.items[0]?.title })}
+      data-block="steps"
     >
       <Container className="flex flex-col gap-14">
         {heading && (
           <SectionHeader
             as="h1"
-            id="steps-title"
+            id={`${anchor}-title`}
             title={heading.title}
             {...(heading.lead ? { lead: heading.lead } : {})}
           />

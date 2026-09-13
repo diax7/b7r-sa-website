@@ -9,8 +9,5 @@ export const revalidate = 60;
 
 export async function GET(): Promise<Response> {
   const pages = await getPages();
-  return Response.json(
-    { slugs: pages.map((p) => p.slug) },
-    { headers: { 'Cache-Control': 'no-store' } },
-  );
+  return Response.json({ slugs: pages.map((p) => p.slug) });
 }

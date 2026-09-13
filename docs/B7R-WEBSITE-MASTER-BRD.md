@@ -833,6 +833,8 @@ Amended 2026-09-13 (Dhia's design review, same copy): the lifestyle photo sits b
 
 **Booking card:** button opens `BOOKING_URL` in a new tab when set; otherwise opens WhatsApp with the §4.11 prefilled message. Level 4 replaces this with an inline Cal.com embed.
 
+Amended 2026-09-13 (ADR-031): the section is the `contact` block of the contact page in the CMS (card titles and the booking card are content; the form's strings stay in code) and sits on the surface tone like the first section of every page.
+
 ### 6.10 FAQ `/faq`
 
 H1 + lead. Groups as H2s (Appendix D) each with an `Accordion`. A sticky in-page group nav on desktop (start column). Bottom line with the WhatsApp link. JSON-LD: none (FAQ rich results are discontinued; keep the content only).
@@ -1235,7 +1237,7 @@ Field rules: every text field shows its §4 default as the initial value after m
 
 - The home page is a Global with fixed sections (order not editable; Dhia wanted a designed page, not a page builder). Each section's fields are editable; each section has an `enabled` toggle except hero, product strip, designer, and ribbon.
 - Other pages use a small block set (rich text, cards, steps, media banner) so new pages can be assembled in Level 2 without code (for example a future `/creators` landing).
-- Rich text is Lexical with headings H2/H3, lists, links, images, and a "CTA block" custom node; RTL editing verified.
+- Rich text is Lexical with headings H2/H3, lists, links, images, and a "CTA block" custom node; RTL editing verified. Amended 2026-09-13 (ADR-031): shipped without the CTA node — no seeded page needs one; docs/IDEAS.md holds it.
 - Product prices, the welcome credit, and the delivery days each carry a help text reminding the editor that they must match the app (no API sync, decision D-41).
 - Media library requires Arabic alt text on upload.
 

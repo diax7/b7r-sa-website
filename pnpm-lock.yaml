@@ -24,6 +24,9 @@ importers:
       '@payloadcms/next':
         specifier: 3.89.0
         version: 3.89.0(@types/react@19.3.0)(graphql@16.11.0)(monaco-editor@0.56.0)(next@16.3.5(@playwright/test@1.63.0)(@types/node@22.20.2)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(sass@1.77.4))(payload@3.89.0(graphql@16.11.0)(typescript@5.9.3))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(typescript@5.9.3)
+      '@payloadcms/plugin-redirects':
+        specifier: 3.89.0
+        version: 3.89.0(payload@3.89.0(graphql@16.11.0)(typescript@5.9.3))
       '@payloadcms/richtext-lexical':
         specifier: 3.89.0
         version: 3.89.0(@faceless-ui/modal@3.0.0(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(@faceless-ui/scroll-info@2.0.0(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(@payloadcms/next@3.89.0(@types/react@19.3.0)(graphql@16.11.0)(monaco-editor@0.56.0)(next@16.3.5(@playwright/test@1.63.0)(@types/node@22.20.2)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(sass@1.77.4))(payload@3.89.0(graphql@16.11.0)(typescript@5.9.3))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(typescript@5.9.3))(@types/react@19.3.0)(monaco-editor@0.56.0)(next@16.3.5(@playwright/test@1.63.0)(@types/node@22.20.2)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(sass@1.77.4))(payload@3.89.0(graphql@16.11.0)(typescript@5.9.3))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(typescript@5.9.3)(yjs@13.6.32)
@@ -1535,6 +1538,11 @@ packages:
       payload: 3.89.0
       react: ^19.0.1 || ^19.1.2 || ^19.2.1
       react-dom: ^19.0.1 || ^19.1.2 || ^19.2.1
+
+  '@payloadcms/plugin-redirects@3.89.0':
+    resolution: {integrity: sha512-8dvetrTEwLUosOt9zaRLQM/Y/bgXhajK/1Rgju2shcH3vwFuy191Mmh06YL5l+3qgf+qYMIwjB3Bwkd2NvDxcg==}
+    peerDependencies:
+      payload: 3.89.0
 
   '@payloadcms/richtext-lexical@3.89.0':
     resolution: {integrity: sha512-IV9sKT/fYptRJXk1XfIKW6V2sBWma4hofBMPI3b1Ab0ClKlyudwrtRtqv9cZzxwoNMYhtC8h+3SQMOq10eI2bQ==}
@@ -6598,6 +6606,11 @@ snapshots:
       - next
       - supports-color
       - typescript
+
+  '@payloadcms/plugin-redirects@3.89.0(payload@3.89.0(graphql@16.11.0)(typescript@5.9.3))':
+    dependencies:
+      '@payloadcms/translations': 3.89.0
+      payload: 3.89.0(graphql@16.11.0)(typescript@5.9.3)
 
   '@payloadcms/richtext-lexical@3.89.0(@faceless-ui/modal@3.0.0(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(@faceless-ui/scroll-info@2.0.0(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(@payloadcms/next@3.89.0(@types/react@19.3.0)(graphql@16.11.0)(monaco-editor@0.56.0)(next@16.3.5(@playwright/test@1.63.0)(@types/node@22.20.2)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(sass@1.77.4))(payload@3.89.0(graphql@16.11.0)(typescript@5.9.3))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(typescript@5.9.3))(@types/react@19.3.0)(monaco-editor@0.56.0)(next@16.3.5(@playwright/test@1.63.0)(@types/node@22.20.2)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(sass@1.77.4))(payload@3.89.0(graphql@16.11.0)(typescript@5.9.3))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(typescript@5.9.3)(yjs@13.6.32)':
     dependencies:

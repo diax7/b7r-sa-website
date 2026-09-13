@@ -3,6 +3,7 @@ import {
   LinkJSXConverter,
   RichText,
 } from '@payloadcms/richtext-lexical/react';
+import type { LinkFields } from '@payloadcms/richtext-lexical';
 import type { SerializedEditorState } from '@payloadcms/richtext-lexical/lexical';
 import Image from 'next/image';
 import { Container } from '@/components/shared/container';
@@ -13,16 +14,31 @@ import { safeHref } from '@/lib/markdown';
 import type { Media } from '@/payload-types';
 import type { BlockProps } from '@/modules/pages/blocks/types';
 
+/** An internal link's target: a page or a product picked in the admin, populated by depth. */
+function internalHref(doc: LinkFields['doc']): string | null {
+  if (!doc || typeof doc.value !== 'object' || doc.value === null) return null;
+  const slug = doc.value['slug'];
+  if (typeof slug !== 'string') return null;
+  if (doc.relationTo === 'pages') return `/${slug}`;
+  if (doc.relationTo === 'products') return `/products/${slug}`;
+  return null;
+}
+
 /**
  * Lexical → the design system's Prose markup on the server (no client JS): links go through
  * the same allowlist as Markdown (`https?:`, `mailto:`, site paths; off-site opens safely),
- * upload nodes render through `next/image` from the media library (ADR-029).
+ * internal links resolve to the linked page or product, upload nodes render through
+ * `next/image` from the media library (ADR-029).
  */
 const converters: JSXConvertersFunction = ({ defaultConverters }) => ({
   ...defaultConverters,
-  ...LinkJSXConverter({ internalDocToHref: () => '/' }),
+  ...LinkJSXConverter({
+    internalDocToHref: ({ linkNode }) => internalHref(linkNode.fields.doc) ?? '/',
+  }),
   link: ({ node, nodesToJSX }) => {
-    const href = safeHref(node.fields.url ?? '');
+    const target =
+      node.fields.linkType === 'internal' ? internalHref(node.fields.doc) : (node.fields.url ?? '');
+    const href = target ? safeHref(target) : null;
     if (!href) return nodesToJSX({ nodes: node.children });
     const external = /^https?:\/\//.test(href);
     return (
@@ -57,19 +73,20 @@ const converters: JSXConvertersFunction = ({ defaultConverters }) => ({
   },
 });
 
-export function RichTextBlock({ block, tone, heading }: BlockProps<'richText'>) {
+export function RichTextBlock({ block, tone, anchor, heading }: BlockProps<'richText'>) {
   const title = heading?.title ?? block.title;
   return (
     <Section
       tone={tone}
       className={heading ? 'pt-10 md:pt-16' : undefined}
-      {...(title ? { 'aria-labelledby': 'rich-text-title' } : {})}
+      {...(title ? { 'aria-labelledby': `${anchor}-title` } : {})}
+      data-block="richText"
     >
       <Container className="flex flex-col gap-8">
         {title && (
           <SectionHeader
             as={heading ? 'h1' : 'h2'}
-            id="rich-text-title"
+            id={`${anchor}-title`}
             title={title}
             {...(heading?.lead ? { lead: heading.lead } : {})}
           />

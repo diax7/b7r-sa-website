@@ -46,14 +46,11 @@ export const Pages: CollectionConfig = {
   },
   hooks: {
     beforeValidate: [
-      ({ data, originalDoc }) => {
+      ({ data, originalDoc, req }) => {
         const slug = data?.['slug'];
-        // A draft autosave may carry no slug yet; `required` refuses the empty slug at publish.
-        if (!slug) return data;
-        const problem = pageSlugProblem(slug);
-        if (problem) throw new APIError(problem, 400, undefined, true);
+        const isReserved = reserved(originalDoc?.['slug']);
         // The seven designed pages keep their slug: a route folder renders each one.
-        if (reserved(originalDoc?.['slug']) && slug !== originalDoc?.['slug']) {
+        if (isReserved && slug && slug !== originalDoc?.['slug']) {
           throw new APIError(
             'هذه الصفحة لها مسار ثابت في الموقع؛ لا يمكن تغيير معرّفها',
             400,
@@ -61,6 +58,27 @@ export const Pages: CollectionConfig = {
             true,
           );
         }
+        // …and stay published: «Unpublish» writes `_status: draft` to the main row (no
+        // `draft=true` on the request), which would leave the route with nothing to render.
+        // A draft save or autosave (`?draft=true`) creates a version and passes.
+        const draftSave = req.query?.['draft'] === true || req.query?.['draft'] === 'true';
+        const unpublishing =
+          isReserved &&
+          data?.['_status'] === 'draft' &&
+          originalDoc?.['_status'] === 'published' &&
+          !draftSave;
+        if (unpublishing) {
+          throw new APIError(
+            'هذه الصفحة ثابتة في الموقع؛ لا يمكن إلغاء نشرها',
+            400,
+            undefined,
+            true,
+          );
+        }
+        // A draft autosave may carry no slug yet; `required` refuses the empty slug at publish.
+        if (!slug) return data;
+        const problem = pageSlugProblem(slug);
+        if (problem) throw new APIError(problem, 400, undefined, true);
         return data;
       },
     ],

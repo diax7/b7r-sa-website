@@ -23,7 +23,7 @@ const COLUMNS: Record<number, string> = {
  * Value cards (BRD 6.8): a staggered grid, each with an icon circle and optional 3D art on
  * top. Labelled by the card titles when the block has no title of its own.
  */
-export function CardsBlock({ block, tone, heading }: BlockProps<'cards'>) {
+export function CardsBlock({ block, tone, anchor, heading }: BlockProps<'cards'>) {
   const cols = Math.min(block.items.length, 3);
   const title = heading?.title ?? block.title;
   return (
@@ -31,14 +31,15 @@ export function CardsBlock({ block, tone, heading }: BlockProps<'cards'>) {
       tone={tone}
       className={heading ? 'pt-10 md:pt-16' : undefined}
       {...(title
-        ? { 'aria-labelledby': 'cards-title' }
+        ? { 'aria-labelledby': `${anchor}-title` }
         : { 'aria-label': block.items.map((c) => c.title).join('، ') })}
+      data-block="cards"
     >
       <Container className="flex flex-col gap-10">
         {title && (
           <SectionHeader
             as={heading ? 'h1' : 'h2'}
-            id="cards-title"
+            id={`${anchor}-title`}
             title={title}
             {...(heading?.lead ? { lead: heading.lead } : {})}
           />

@@ -5,18 +5,19 @@ import { SectionHeader } from '@/components/shared/section-header';
 import type { BlockProps } from '@/modules/pages/blocks/types';
 
 /** A wide photo with an optional caption (BRD 9.5 block set). */
-export function MediaBannerBlock({ block, tone, heading }: BlockProps<'mediaBanner'>) {
+export function MediaBannerBlock({ block, tone, anchor, heading }: BlockProps<'mediaBanner'>) {
   return (
     <Section
       tone={tone}
       className={heading ? 'pt-10 md:pt-16' : undefined}
-      {...(heading ? { 'aria-labelledby': 'banner-title' } : { 'aria-label': block.media.alt })}
+      {...(heading ? { 'aria-labelledby': `${anchor}-title` } : { 'aria-label': block.media.alt })}
+      data-block="mediaBanner"
     >
       <Container className="flex flex-col gap-8">
         {heading && (
           <SectionHeader
             as="h1"
-            id="banner-title"
+            id={`${anchor}-title`}
             title={heading.title}
             {...(heading.lead ? { lead: heading.lead } : {})}
           />

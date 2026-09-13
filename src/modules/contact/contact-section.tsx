@@ -48,6 +48,8 @@ function ContactCard({
 interface ContactSectionProps {
   block: BlockOf<'contact'>;
   tone: Extract<SectionTone, 'surface' | 'ground'>;
+  /** Unique per page (`contact`, `contact-2`); element ids derive from it. */
+  anchor: string;
   heading?: { title: string; lead?: string | undefined } | undefined;
 }
 
@@ -56,7 +58,7 @@ interface ContactSectionProps {
  * are interface copy in code, ADR-031), the contact cards and the booking card at the end;
  * on phones the cards come first (WhatsApp is the fastest path), then booking, then the form.
  */
-export async function ContactSection({ block, tone, heading }: ContactSectionProps) {
+export async function ContactSection({ block, tone, anchor, heading }: ContactSectionProps) {
   const site = await getSiteSettings();
   const whatsapp = whatsappUrl(site.contact.whatsapp);
   const booking = site.bookingUrl ?? bookingUrl();
@@ -72,14 +74,15 @@ export async function ContactSection({ block, tone, heading }: ContactSectionPro
       tone={tone}
       className={heading ? 'pt-10 md:pt-16' : undefined}
       {...(heading
-        ? { 'aria-labelledby': 'contact-title' }
+        ? { 'aria-labelledby': `${anchor}-title` }
         : { 'aria-label': block.whatsappTitle })}
+      data-block="contact"
     >
       <Container className="flex flex-col gap-12">
         {heading && (
           <SectionHeader
             as="h1"
-            id="contact-title"
+            id={`${anchor}-title`}
             title={heading.title}
             {...(heading.lead ? { lead: heading.lead } : {})}
           />

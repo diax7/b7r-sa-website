@@ -6,7 +6,12 @@ import { siteBase } from '@/lib/env';
 import { JsonLd, jsonLd } from '@/modules/core';
 import { CtaRibbon } from '@/modules/core/cta-ribbon';
 import { rendererFor } from '@/modules/pages/blocks';
-import type { BlockComponent, BlockTone, ExtraRenderers } from '@/modules/pages/blocks/types';
+import {
+  blockAnchors,
+  type BlockComponent,
+  type BlockTone,
+  type ExtraRenderers,
+} from '@/modules/pages/blocks/types';
 
 interface CmsPageProps {
   slug: string;
@@ -42,6 +47,7 @@ export function CmsPageBody({
   const base = siteBase();
   const route = `/${page.slug}`;
   const tones = blockTones(page.blocks.length);
+  const anchors = blockAnchors(page.blocks);
   const legal = page.blocks.find((b) => b.blockType === 'legalBody');
   return (
     <>
@@ -71,6 +77,7 @@ export function CmsPageBody({
             block={block}
             page={page}
             tone={tones[i] ?? 'surface'}
+            anchor={anchors[i] ?? block.blockType}
             heading={i === 0 ? { title: page.title, lead: page.lead } : undefined}
           />
         );

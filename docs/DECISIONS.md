@@ -338,8 +338,15 @@ form's labels, placeholders, inquiry options (the API validates them) and valida
 stay interface copy in `src/content/pages.ts`; «آخر تحديث:» moves to `ar.json`. The legal
 Markdown is now admin content, so `lib/markdown.ts` allowlists: raw HTML is dropped, links
 keep `https?:`, `mailto:` and site paths only, off-site links open with `rel="noopener"`
-(closes the IDEAS item; `tests/markdown-sanitise.test.ts`). The `(site)/[slug]` route with
-its consequences for unknown URLs is ADR-032. Live preview stays deferred (BRD §9.3
+(closes the IDEAS item; `tests/markdown-sanitise.test.ts`). The rich-text editor carries the
+BRD §9.5 feature set (H2/H3, bold, italic, lists, links to pages/products or a URL, media
+images) and no more — no H1, alignment, code or tables — and the «CTA block» custom node
+is deferred to IDEAS because no seeded page needs it. Every block section derives its ids
+from an anchor computed per page (`faq`, `faq-2`…), so two blocks of one type never share
+an id. The seven designed pages cannot be unpublished either (the route would have nothing
+to render); a draft save or autosave still passes. The first block of every page sits on
+surface, so `/contact` moved from ground to surface (BRD §6.9 amended). The `(site)/[slug]`
+route with its consequences for unknown URLs is ADR-032. Live preview stays deferred (BRD §9.3
 amended): it needs draft rendering on the public routes, which ISR + `revalidatePath` do
 not offer.
 
@@ -355,10 +362,12 @@ anything unknown is rewritten to `/__404/<slug>`, a path no route matches, so Ne
 the global 404 server-side with status 404 and the URL unchanged (`e2e` reads the raw HTML).
 The allowlist is `/api/pages/slugs` (ISR 60 s, revalidated by the pages hook), read from
 `http://127.0.0.1:${PORT}` — never the public origin — and cached in-process for 20 s with
-stale-while-revalidate; a slug that fails the shape check is refused without a lookup, and
-when the endpoint cannot be read the request passes through (fail open: a page keeps
+stale-while-revalidate; a miss re-reads the list at most once every 2 s, so a page
+published a moment ago answers on its first request while a flood of unknown URLs costs one
+loopback read per window; a slug that fails the shape check is refused without a lookup,
+and when the endpoint cannot be read the request passes through (fail open: a page keeps
 working, an unknown URL gets the route's bare 404 until the next read). A page deleted in
-the admin is a bare 404 for those 20 s and the full document after. `/products/<unknown>`
+the admin is a bare 404 for up to 20 s and the full document after. `/products/<unknown>`
 keeps `notFound()` (ADR-030); `await connection()` before it, tried to keep junk slugs out
 of the ISR cache, throws `DYNAMIC_SERVER_USAGE` inside an ISR render and answers 500, so
 that idea is closed. Admin-added redirects join the allowlist and resolve in the `[slug]`

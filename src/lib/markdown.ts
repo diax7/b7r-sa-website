@@ -45,7 +45,7 @@ function plain(tokens: Tokens.Generic[] | undefined): string {
     .join('');
 }
 
-export function renderMarkdown(source: string): Rendered {
+export function renderMarkdown(source: string, headingPrefix = 'section'): Rendered {
   const headings: Heading[] = [];
   const marked = new Marked({
     gfm: true,
@@ -54,7 +54,7 @@ export function renderMarkdown(source: string): Rendered {
       heading({ tokens, depth }: Tokens.Heading) {
         const text = this.parser.parseInline(tokens);
         if (depth !== 2) return `<h${depth}>${text}</h${depth}>\n`;
-        const id = `section-${headings.length + 1}`;
+        const id = `${headingPrefix}-${headings.length + 1}`;
         headings.push({ id, text: plain(tokens), depth });
         return `<h2 id="${id}">${text}</h2>\n`;
       },

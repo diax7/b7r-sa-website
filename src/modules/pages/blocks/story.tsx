@@ -12,14 +12,15 @@ import type { BlockProps } from '@/modules/pages/blocks/types';
  * as H1 when this is the first block — with the delivery origin as a chip over the photo,
  * then the facts band built from the home page (welcome credit + the why-us pairs).
  */
-export async function StoryBlock({ block, tone, heading }: BlockProps<'story'>) {
+export async function StoryBlock({ block, tone, anchor, heading }: BlockProps<'story'>) {
   const [site, home] = await Promise.all([getSiteSettings(), getHome()]);
   return (
     <>
       <Section
         tone={tone}
         className={heading ? 'pt-10 md:pt-16' : undefined}
-        aria-labelledby="story-title"
+        aria-labelledby={`${anchor}-title`}
+        data-block="story"
       >
         <Container className="grid items-center gap-10 lg:grid-cols-[1fr_1.1fr] lg:gap-16">
           <div className="flex flex-col gap-6">
@@ -28,7 +29,7 @@ export async function StoryBlock({ block, tone, heading }: BlockProps<'story'>) 
                 {heading.title}
               </h1>
             )}
-            <h2 id="story-title" className="text-h2 text-text">
+            <h2 id={`${anchor}-title`} className="text-h2 text-text">
               {block.heading}
             </h2>
             <p className="lead text-text-muted">{block.text}</p>

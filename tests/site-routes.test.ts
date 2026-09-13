@@ -64,8 +64,8 @@ describe('slug cache: fresh, stale-while-revalidate, fail open', () => {
     expect(fetchSlugs).toHaveBeenCalledTimes(1);
     now = 25_000;
     fetchSlugs.mockResolvedValueOnce(['creators', 'partners']);
-    expect(await cache.knows('partners')).toBe(false); // stale answer, refresh in flight
-    await new Promise((r) => setTimeout(r, 0));
+    // Stale: a hit is served from the old list while a refresh runs; a miss waits for it.
+    expect(await cache.knows('creators')).toBe(true);
     expect(await cache.knows('partners')).toBe(true);
     expect(fetchSlugs).toHaveBeenCalledTimes(2);
 
@@ -76,6 +76,28 @@ describe('slug cache: fresh, stale-while-revalidate, fail open', () => {
       ttlMs: 1,
     });
     expect(await failing.knows('anything')).toBeNull();
+  });
+
+  it('re-reads on a miss, at most once per window, so a page just published answers', async () => {
+    let now = 0;
+    const fetchSlugs = vi.fn(async () => ['creators']);
+    const cache = createSlugCache({
+      fetchSlugs,
+      ttlMs: 20_000,
+      missRefreshMs: 2_000,
+      now: () => now,
+    });
+    expect(await cache.knows('creators')).toBe(true);
+    fetchSlugs.mockResolvedValue(['creators', 'partners']);
+    now = 1_000;
+    expect(await cache.knows('partners')).toBe(false); // inside the window: no re-read
+    expect(fetchSlugs).toHaveBeenCalledTimes(1);
+    now = 3_000;
+    expect(await cache.knows('partners')).toBe(true); // the miss triggered a re-read
+    expect(fetchSlugs).toHaveBeenCalledTimes(2);
+    now = 4_000;
+    expect(await cache.knows('nope')).toBe(false);
+    expect(fetchSlugs).toHaveBeenCalledTimes(2); // one re-read per window
   });
 
   it('keeps the last good list when a refresh fails', async () => {

@@ -12,7 +12,7 @@ import type { BlockProps } from '@/modules/pages/blocks/types';
 type Item = { question: string; answer: string };
 
 /** Appendix D groups in first-appearance order, each with an id for the in-page nav. */
-export function faqGroups(faq: FaqItem[]) {
+export function faqGroups(faq: FaqItem[], prefix = 'faq') {
   const groups = new Map<string, Item[]>();
   for (const item of faq) {
     const list = groups.get(item.group) ?? [];
@@ -21,7 +21,7 @@ export function faqGroups(faq: FaqItem[]) {
   }
   return [...groups.entries()].map(([name, items], i) => ({
     name,
-    id: `faq-group-${i + 1}`,
+    id: `${prefix}-group-${i + 1}`,
     items,
   }));
 }
@@ -53,7 +53,7 @@ async function BottomLine({ line, word }: { line: string; word: string }) {
  * H2 with its own accordion and a sticky group nav on desktop. `home`: a slice of the home
  * entries (offset/limit) beside a title and a link — the how-it-works mini FAQ.
  */
-export async function FaqListBlock({ block, tone, heading }: BlockProps<'faqList'>) {
+export async function FaqListBlock({ block, tone, anchor, heading }: BlockProps<'faqList'>) {
   const first = Boolean(heading);
   const padding = first ? 'pt-10 md:pt-16' : undefined;
   if (block.selection === 'home') {
@@ -63,13 +63,18 @@ export async function FaqListBlock({ block, tone, heading }: BlockProps<'faqList
       .map((f) => ({ question: f.question, answer: f.answer }));
     const title = heading?.title ?? block.title;
     return (
-      <Section tone={tone} className={padding} aria-labelledby="faq-list-title">
+      <Section
+        tone={tone}
+        className={padding}
+        aria-labelledby={`${anchor}-title`}
+        data-block="faqList"
+      >
         <Container className="grid gap-10 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:gap-16">
           <div className="flex flex-col items-start gap-6">
             {title && (
               <SectionHeader
                 as={first ? 'h1' : 'h2'}
-                id="faq-list-title"
+                id={`${anchor}-title`}
                 title={title}
                 {...(heading?.lead ? { lead: heading.lead } : {})}
               />
@@ -89,15 +94,20 @@ export async function FaqListBlock({ block, tone, heading }: BlockProps<'faqList
     );
   }
 
-  const groups = faqGroups(await getFaqs());
+  const groups = faqGroups(await getFaqs(), anchor);
   const title = heading?.title ?? block.title;
   return (
-    <Section tone={tone} className={padding} aria-labelledby="faq-list-title">
+    <Section
+      tone={tone}
+      className={padding}
+      aria-labelledby={`${anchor}-title`}
+      data-block="faqList"
+    >
       <Container className="flex flex-col gap-12">
         {title && (
           <SectionHeader
             as={first ? 'h1' : 'h2'}
-            id="faq-list-title"
+            id={`${anchor}-title`}
             title={title}
             {...(heading?.lead ? { lead: heading.lead } : {})}
           />
