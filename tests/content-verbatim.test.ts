@@ -27,7 +27,6 @@ import {
 import { products } from '@/content/products';
 import { site } from '@/content/site';
 import { homeSteps, howItWorksSteps } from '@/content/steps';
-import { testimonials } from '@/content/testimonials';
 import { whyUs } from '@/content/why-us';
 
 const TODO_COPY = new Set<string>([
@@ -58,6 +57,8 @@ function collectStrings(value: unknown, out: string[] = []): string[] {
   return out;
 }
 
+// testimonials.ts is not checked: its three sample cards are agent-written on Dhia's
+// instruction (ADR-023) and stay `placeholder: true` until Dhia publishes them.
 const sources: Record<string, unknown> = {
   'site.ts': site,
   'navigation.ts': navigation,
@@ -73,7 +74,6 @@ const sources: Record<string, unknown> = {
   'steps.ts': [homeSteps, howItWorksSteps],
   'why-us.ts': whyUs,
   'faq.ts': faq,
-  'testimonials.ts': testimonials,
   'pages.ts': [
     productsPage,
     howItWorksPage,

@@ -1,27 +1,32 @@
 import type { Testimonial } from '@/content/schema';
 
 /**
- * BRD 4.4 sample cards. Every entry is a placeholder: rendered with a visible «نموذج» tag in
- * preview builds and omitted entirely in production until real testimonials exist (BRD 0.4.9,
- * 12.4 item 1).
+ * Three sample cards written on Dhia's instruction (2026-09-13, ADR-023) under BRD 4.1 with
+ * facts from BRD 1.1 only. They stay `placeholder: true`: previews show them with the «نموذج»
+ * badge and the production host omits the section (BRD 6.4.7, ADR-013). Publishing them on
+ * b7r.sa is a one-line decision — set `placeholder: false` — that Dhia makes, because these
+ * are not the words of real merchants (BRD 3.14: no fake reviews).
  */
 export const testimonials: Testimonial[] = [
   {
-    quote: 'ربطت متجري في سلة خلال دقائق، وأول طلب وصل عميلي خلال أربعة أيام.',
-    name: 'اسم التاجر',
-    store: 'اسم المتجر',
+    quote:
+      'ربطت متجري في سلة خلال دقائق، وأول طلب وصل عميلتي في جدة بعد ثلاثة أيام. ما لمست قطعة واحدة بيدي.',
+    name: 'سارة العتيبي',
+    store: 'متجر نقش',
     placeholder: true,
   },
   {
-    quote: 'بدأت بدون أي مخزون، والآن عندي 12 تصميماً تبيع كل أسبوع.',
-    name: 'اسم التاجر',
-    store: 'اسم المتجر',
+    quote:
+      'بدأت بتصميم واحد وبدون مخزون. اليوم عندي عشرة تصاميم تبيع كل أسبوع، وكل شحنة تصل باسم متجري.',
+    name: 'فيصل الحربي',
+    store: 'هودي الرياض',
     placeholder: true,
   },
   {
-    quote: 'جودة الطباعة أفضل مما توقعت، والتغليف باسم متجري.',
-    name: 'اسم التاجر',
-    store: 'اسم المتجر',
+    quote:
+      'جودة الطباعة على البربتوز أفضل مما توقعت، والتغليف نظيف وباسم متجري. عملائي لا يعرفون أن أحداً غيري يطبع.',
+    name: 'ريم القحطاني',
+    store: 'بيبي كيوت',
     placeholder: true,
   },
 ];

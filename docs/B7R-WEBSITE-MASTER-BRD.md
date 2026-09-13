@@ -1729,6 +1729,7 @@ Decision history: `docs/00-decisions-log.md` (rounds 1–4 with Dhia, 2026-09-12
 13. About banner: §6.8 names `hanging-tshirt-mockup.jpg`, but that file carries the vendor's "Free t-shirt mockup" sample print, so the site uses `hanging-tshirt-mockup-2.jpg` (same subject, real design). Blog covers use `designer-at-desk-stock.jpg`, `hodie2.jpg` and `totebag1.jpg`. Swap when final photography exists.
 14. `NEXT_PUBLIC_TURNSTILE_SITE_KEY` is set to Cloudflare's public always-pass test key in `.env.local` and CI so the widget island renders in tests; production needs the real pair (§12.4 item 5).
 15. Product OG images use `og:type website` (see §7.3 amendment); confirm in WhatsApp/X previews at cutover (§12.4 item 8).
+16. Three sample testimonials (`src/content/testimonials.ts`) were written by the agent on Dhia's instruction (ADR-023) and stay `placeholder: true`; to show them on b7r.sa set `placeholder: false` (they are not real merchants' words — §3.14) or replace them with real entries (§12.4 item 1).
 
 ### Appendix H: Glossary of Arabic UI terms used in code comments and admin labels
 

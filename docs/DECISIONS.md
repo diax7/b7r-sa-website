@@ -194,3 +194,14 @@ sinks (children's effects run first) and before the Umami script has loaded. `tr
 holds events until the first sink registers and replays them once; the Umami sink holds
 events until `window.umami` exists (retrying for ten seconds). Without this the BRD 6.6
 `product_view` event was silently dropped on every product page.
+
+## ADR-023 — Sample testimonials written by the agent, still placeholders (2026-09-13)
+
+Dhia asked for three complete testimonial cards ("generate 3 ones"). They are written under
+BRD 4.1 with facts from BRD 1.1 only (Salla link, delivery inside 5 days, shipping under the
+merchant's brand, no stock) and replace the «اسم التاجر / اسم المتجر» stand-ins in
+`src/content/testimonials.ts`. They keep `placeholder: true`: previews show them with the
+«نموذج» badge and the production host omits the section (BRD 6.4.7, ADR-013), because they
+are not the words of real merchants and BRD 3.14 forbids fake reviews. Publishing them on
+b7r.sa is a one-line decision for Dhia (`placeholder: false`), recorded here so the choice is
+explicit. The verbatim-copy test no longer covers `testimonials.ts`.
