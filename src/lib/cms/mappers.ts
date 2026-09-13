@@ -168,6 +168,9 @@ function mediaAlt(value: number | Media | null | undefined): string {
  * product slugs.
  */
 export function toHome(doc: HomeDoc): Home {
+  // `draft: false` returns the main row whatever its status: a never-published home must not
+  // render its draft copy.
+  if (doc._status !== 'published') throw new Error('home: not published yet');
   const strip = doc.productStrip.products.map((p, i) => {
     if (typeof p === 'number') throw new Error(`home.productStrip.products[${i}]: not populated`);
     return p.slug;

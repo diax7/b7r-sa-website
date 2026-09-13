@@ -17,13 +17,18 @@ import { StripHint } from '@/modules/home/product-strip/strip-hint';
 export async function ProductStrip() {
   const { productStrip } = await getHome();
   const found = await Promise.all(productStrip.order.map((slug) => getProduct(slug)));
-  const items = productStrip.order.map((slug, i) => {
+  const items = productStrip.order.flatMap((slug, i) => {
     const product = found[i];
-    if (!product) throw new Error(`Product strip references unknown product ${slug}`);
+    // A strip product unpublished or deleted after the home was published: the strip keeps
+    // rendering without it rather than freezing the home page's regeneration.
+    if (!product) {
+      console.warn(`product strip: ${slug} is not published, skipping the panel`);
+      return [];
+    }
     const color =
       product.colors.find((c) => c.slug === stripColorFor(product)) ?? product.colors[0];
     if (!color) throw new Error(`Product ${slug} has no colours`);
-    return { product, color };
+    return [{ product, color }];
   });
 
   return (

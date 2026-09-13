@@ -1,6 +1,6 @@
 import { type CollectionConfig, type PayloadRequest, ValidationError } from 'payload';
 import { FAQ_GROUPS } from '@/content/schema';
-import { isEditorOrAdmin } from '@/modules/cms/access';
+import { isAdmin, isEditorOrAdmin } from '@/modules/cms/access';
 import { PATHS_FOR_FAQS, revalidateRoutes } from '@/modules/cms/hooks/revalidate';
 
 /** The home accordion shows exactly this many entries (BRD 4.4, 6.4.9). */
@@ -47,7 +47,8 @@ async function guardHomeLimit({
 
 /**
  * FAQ entries (BRD 4.10, Appendix D): grouped, ordered, with at most five flagged for the
- * home accordion in their own order. No drafts: each entry is one small, atomic edit.
+ * home accordion in their own order. No drafts: each entry is one small, atomic edit — and
+ * live the moment it exists, so deleting one is an admin's call (BRD 9.3).
  */
 export const Faqs: CollectionConfig = {
   slug: 'faqs',
@@ -64,7 +65,7 @@ export const Faqs: CollectionConfig = {
     read: () => true,
     create: isEditorOrAdmin,
     update: isEditorOrAdmin,
-    delete: isEditorOrAdmin,
+    delete: isAdmin,
   },
   hooks: {
     beforeValidate: [guardHomeLimit],

@@ -122,7 +122,15 @@ export const Home: GlobalConfig = {
           required: true,
           minRows: STRIP_SIZE,
           maxRows: STRIP_SIZE,
-          label: { ar: `المنتجات الخمسة بالترتيب`, en: 'The five products, in order' },
+          // Drafts never reach the strip: the picker lists published products only.
+          filterOptions: { _status: { equals: 'published' } },
+          label: { ar: 'المنتجات الخمسة بالترتيب', en: 'The five products, in order' },
+          admin: {
+            description: {
+              ar: 'منتجات منشورة فقط؛ منتج يُلغى نشره لاحقاً يسقط من الشريط حتى يُنشر من جديد.',
+              en: 'Published products only; one unpublished later drops out of the strip until it is published again.',
+            },
+          },
           validate: (value: unknown) => {
             const ids = Array.isArray(value)
               ? value.map((v) => (typeof v === 'object' && v ? (v as { id?: unknown }).id : v))

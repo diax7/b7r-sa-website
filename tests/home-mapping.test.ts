@@ -103,6 +103,10 @@ describe('toHome', () => {
     expect(toHome({ ...doc, whyUs: { ...doc.whyUs, enabled: false } }).whyUs.enabled).toBe(false);
   });
 
+  it('refuses a home that was never published', () => {
+    expect(() => toHome(homeDoc({ _status: 'draft' }))).toThrow(/not published/);
+  });
+
   it('fails loudly on a depth-0 read (ids instead of documents)', () => {
     const doc = homeDoc();
     expect(() =>

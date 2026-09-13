@@ -321,6 +321,32 @@ test.describe('CMS admin', () => {
       await expect.poll(async () => (await html()).includes('id="why-us"'), POLL).toBe(true);
     });
 
+    test('a strip product unpublished later drops out of the strip; the home stays up', async ({
+      request,
+    }) => {
+      test.setTimeout(150_000);
+      const auth = await login(request, ADMIN);
+      const list = await request.get(`${API}/products?where[slug][equals]=tote-bag&depth=0`, {
+        headers: auth,
+      });
+      const tote = ((await list.json()) as { docs: Array<{ id: number }> }).docs[0];
+      expect(tote).toBeDefined();
+      if (!tote) return;
+      const setStatus = (status: 'draft' | 'published') =>
+        request.patch(`${API}/products/${tote.id}`, { headers: auth, data: { _status: status } });
+      const panel = async () =>
+        (await (await request.get('/')).text()).includes('data-strip-panel="tote-bag"');
+      expect(await panel()).toBe(true);
+      try {
+        expect((await setStatus('draft')).status()).toBe(200);
+        await expect.poll(panel, POLL).toBe(false);
+        expect((await request.get('/')).status(), 'home renders the four other panels').toBe(200);
+      } finally {
+        expect((await setStatus('published')).status()).toBe(200);
+      }
+      await expect.poll(panel, POLL).toBe(true);
+    });
+
     test('a sixth «show on home» FAQ entry is refused with the Arabic message', async ({
       request,
     }) => {
@@ -378,9 +404,13 @@ test.describe('CMS admin', () => {
         });
         expect(created.status(), 'editor adding a FAQ entry').toBe(201);
         const newId = ((await created.json()) as { doc: { id: number } }).doc.id;
+        // Live the moment it exists: only an admin deletes it (BRD 9.3).
         expect((await request.delete(`${API}/faqs/${newId}`, { headers: auth })).status()).toBe(
-          200,
+          403,
         );
+        expect(
+          (await request.delete(`${API}/faqs/${newId}`, { headers: adminAuth })).status(),
+        ).toBe(200);
         const testimonials = await request.get(`${API}/testimonials?limit=1`, { headers: auth });
         const t = ((await testimonials.json()) as { docs: Array<{ id: number }> }).docs[0];
         expect(t).toBeDefined();

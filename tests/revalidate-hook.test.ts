@@ -159,6 +159,13 @@ describe('safeRevalidatePath (ADR-033): outside a request the timer covers it', 
     expect(logger.info.mock.calls[0]?.[0]).toMatch(/outside a request.*60 s timer/);
   });
 
+  it('rethrows anything that is not the missing-store invariant', () => {
+    revalidatePath.mockImplementation(() => {
+      throw new Error('ENOSPC');
+    });
+    expect(() => safeRevalidatePath('/', { info: vi.fn() })).toThrow('ENOSPC');
+  });
+
   it('a hook fired from a job (no request store) neither throws nor stops the other paths', () => {
     revalidatePath.mockImplementation(storeMissing);
     const logger = { info: vi.fn() };

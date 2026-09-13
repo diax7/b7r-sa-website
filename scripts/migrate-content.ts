@@ -9,7 +9,7 @@
  * Exit codes: 0 done, 1 failure, 2 refused (content exists, no --force).
  */
 import { readFileSync } from 'node:fs';
-import { basename, dirname, join } from 'node:path';
+import { basename, dirname, extname, join } from 'node:path';
 import nextEnv from '@next/env';
 import { getPayload, type Payload } from 'payload';
 import { faq } from '../src/content/seed/faq';
@@ -36,6 +36,20 @@ const summary = { created: [] as string[], skipped: [] as string[] };
  */
 const mediaIds = new Map<string, number>();
 
+const MIME: Record<string, string> = {
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.png': 'image/png',
+  '.webp': 'image/webp',
+  '.avif': 'image/avif',
+};
+
+function mimeType(publicPath: string): string {
+  const type = MIME[extname(publicPath).toLowerCase()];
+  if (!type) throw new Error(`content:migrate: no media type for ${publicPath}`);
+  return type;
+}
+
 async function ensureMedia(payload: Payload, publicPath: string, alt: string): Promise<number> {
   const filename = `${basename(dirname(publicPath))}-${basename(publicPath)}`;
   // The same photo can serve two places (hero set A on slides 1 and 3): one document.
@@ -57,7 +71,7 @@ async function ensureMedia(payload: Payload, publicPath: string, alt: string): P
   const doc = await payload.create({
     collection: 'media',
     data: { alt },
-    file: { data: file, name: filename, mimetype: 'image/jpeg', size: file.byteLength },
+    file: { data: file, name: filename, mimetype: mimeType(publicPath), size: file.byteLength },
     context: CONTEXT,
   });
   summary.created.push(`media ${filename}`);
@@ -182,6 +196,7 @@ async function ensureHome(payload: Payload): Promise<void> {
     steps.push({
       title: step.title,
       text: step.text,
+      // TODO(copy): admin-only alt (the page renders the icon decorative); Appendix G row 17.
       icon: await ensureMedia(payload, step.icon, `أيقونة مجسّمة: ${step.title}`),
     });
   }

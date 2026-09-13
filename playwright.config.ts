@@ -40,6 +40,7 @@ export default defineConfig({
     {
       // The admin suite publishes, drafts and switches sections off: it runs alone, after the
       // device projects, so a mutation never overlaps a public assertion on another worker.
+      // A red device project skips it (Playwright dependencies): fix the public failure first.
       name: 'cms',
       use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 } },
       testMatch: CMS_SPECS,

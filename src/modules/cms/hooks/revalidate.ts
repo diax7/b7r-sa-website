@@ -69,10 +69,12 @@ export function safeRevalidatePath(path: string, logger: Pick<Console, 'info'> =
   try {
     revalidatePath(path);
   } catch (error) {
+    // Anything else is a real failure and must surface.
+    if (!(error instanceof Error) || !/store missing/i.test(error.message)) throw error;
     if (!warnedOutsideRequest) {
       warnedOutsideRequest = true;
       logger.info(
-        `revalidatePath(${path}) skipped outside a request (${error instanceof Error ? error.message : String(error)}); the 60 s timer covers it.`,
+        `revalidatePath(${path}) skipped outside a request (${error.message}); the 60 s timer covers it.`,
       );
     }
   }
