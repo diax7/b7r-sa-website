@@ -9,8 +9,15 @@ import { describe, expect, it } from 'vitest';
 import { faq } from '@/content/faq';
 import { home } from '@/content/home';
 import { navigation } from '@/content/navigation';
+import { blogCopy, blogHubs, blogPosts } from '@/content/blog';
+import { MERCHANT_COST_NOTE, productSeo, seo } from '@/content/seo';
 import {
+  contactEmail,
   errorPage,
+  faqPage,
+  gonePage,
+  legalCopy,
+  productsPage,
   aboutPage,
   contactPage,
   footerCopy,
@@ -27,6 +34,10 @@ const TODO_COPY = new Set<string>([
   errorPage.title,
   errorPage.text,
   footerCopy.newsletterUnavailable,
+  gonePage.title,
+  blogCopy.allHubs,
+  blogCopy.emptyHub,
+  blogCopy.copied,
 ]);
 
 const brd = readFileSync(join(process.cwd(), 'B7R-WEBSITE-MASTER-BRD.md'), 'utf8').replace(
@@ -63,7 +74,23 @@ const sources: Record<string, unknown> = {
   'why-us.ts': whyUs,
   'faq.ts': faq,
   'testimonials.ts': testimonials,
-  'pages.ts': [howItWorksPage, aboutPage, contactPage, footerCopy, notFoundPage, errorPage],
+  'pages.ts': [
+    productsPage,
+    howItWorksPage,
+    aboutPage,
+    contactPage,
+    contactEmail,
+    faqPage,
+    legalCopy,
+    footerCopy,
+    notFoundPage,
+    gonePage,
+    errorPage,
+  ],
+  'seo.ts': [seo, productSeo, MERCHANT_COST_NOTE],
+  // Post titles and hub names are BRD 4.13; excerpts, takeaways and bodies are agent-written
+  // samples listed for Dhia (ADR-018), so only the BRD fields are checked here.
+  'blog/index.ts': [blogCopy, blogHubs, blogPosts.map((p) => p.title)],
 };
 
 describe('copy is verbatim from the BRD', () => {

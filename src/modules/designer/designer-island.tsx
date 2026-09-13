@@ -2,12 +2,13 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/shared/button';
+import { ColorPicker } from '@/components/shared/color-picker';
 import { SarAmount } from '@/components/shared/sar-amount';
+import { useBottomDock } from '@/components/shared/use-bottom-dock';
 import type { Product } from '@/content/schema';
 import { cn } from '@/lib/cn';
 import { track } from '@/modules/core';
 import { DesignCanvas } from '@/modules/designer/canvas/design-canvas';
-import { ColorPicker } from '@/modules/designer/controls/color-picker';
 import { DesignDropzone } from '@/modules/designer/controls/design-dropzone';
 import { PricingControls } from '@/modules/designer/controls/pricing-controls';
 import { ResultsCard } from '@/modules/designer/controls/results-card';
@@ -92,20 +93,7 @@ export function DesignerIsland({
     return () => io.disconnect();
   }, []);
 
-  // Tell the fixed widgets (WhatsApp, consent) how much of the bottom edge the sticky results
-  // bar occupies, so they lift above it on phones (plan 1b §D).
-  useEffect(() => {
-    const root = document.documentElement;
-    const mobile = window.matchMedia('(max-width: 1023px)');
-    const apply = () =>
-      root.style.setProperty('--bottom-dock', stickyVisible && mobile.matches ? '72px' : '0px');
-    apply();
-    mobile.addEventListener('change', apply);
-    return () => {
-      mobile.removeEventListener('change', apply);
-      root.style.removeProperty('--bottom-dock');
-    };
-  }, [stickyVisible]);
+  useBottomDock(stickyVisible);
 
   // Debounced calculator event (800 ms); the mount-time defaults are not a change.
   const mounted = useRef(false);
@@ -183,6 +171,7 @@ export function DesignerIsland({
           groupLabel={copy.productGroupAria}
         />
         <ColorPicker
+          name="designer-color"
           colors={state.product.colors}
           value={state.colorSlug}
           onChange={(slug) => dispatch({ type: 'selectColor', colorSlug: slug })}

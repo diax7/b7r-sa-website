@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { clientIp, createRateLimiter } from '@/lib/rate-limit';
-import { env } from '@/lib/env';
+import { acceptsJsonFrom } from '@/lib/request-guards';
 import {
   NEWSLETTER_RATE_LIMIT,
   NEWSLETTER_WINDOW_MS,
@@ -12,24 +12,13 @@ export const dynamic = 'force-dynamic';
 
 const limiter = createRateLimiter(NEWSLETTER_RATE_LIMIT, NEWSLETTER_WINDOW_MS);
 
-function originAllowed(req: Request): boolean {
-  const origin = req.headers.get('origin');
-  if (!origin) return true;
-  const allowed = env.siteUrl ? new URL(env.siteUrl).host : req.headers.get('host');
-  try {
-    return new URL(origin).host === allowed;
-  } catch {
-    return false;
-  }
-}
-
 /**
  * Newsletter subscription (BRD 6.14): JSON only, same-origin, honeypot, 5 requests per IP per
  * 10 minutes, then the configured transport. Duplicates are `ok: true`. Nothing personal is
  * logged. Errors to the client are generic; the form maps them to the BRD 4.5 copy.
  */
 export async function POST(req: Request) {
-  if (!req.headers.get('content-type')?.includes('application/json') || !originAllowed(req)) {
+  if (!acceptsJsonFrom(req)) {
     return NextResponse.json({ ok: false, error: 'forbidden' }, { status: 403 });
   }
   let body: unknown;

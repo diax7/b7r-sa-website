@@ -33,6 +33,32 @@ const GoogleAnalytics = dynamic(
 
 const CONSENT_EVENT = 'b7r:consent';
 
+/**
+ * Umami's script loads after hydration, so events fired on mount (`product_view`) would be
+ * lost; they queue here and flush as soon as `window.umami` exists (checked on each event and
+ * on a short retry loop). Exported for the unit test.
+ */
+const pendingUmami: TrackEvent[] = [];
+let umamiRetry: ReturnType<typeof setTimeout> | null = null;
+
+export function sendToUmami(event: TrackEvent): void {
+  pendingUmami.push(event);
+  flushUmami();
+}
+
+export function flushUmami(attempt = 0): void {
+  if (window.umami) {
+    for (const e of pendingUmami) window.umami.track(e.name, e.props);
+    pendingUmami.length = 0;
+    return;
+  }
+  if (pendingUmami.length === 0 || umamiRetry || attempt > 40) return;
+  umamiRetry = setTimeout(() => {
+    umamiRetry = null;
+    flushUmami(attempt + 1);
+  }, 250);
+}
+
 /** The consent bar announces a decision; the bridge owns everything that follows. */
 export function announceConsent(value: Consent): void {
   window.dispatchEvent(new CustomEvent<Consent>(CONSENT_EVENT, { detail: value }));
@@ -97,9 +123,7 @@ export function AnalyticsBridge({ gaId }: AnalyticsBridgeProps) {
   }, []);
 
   useEffect(() => {
-    const unregisterUmami = registerSink((event) => {
-      window.umami?.track(event.name, event.props);
-    });
+    const unregisterUmami = registerSink(sendToUmami);
     const unregisterGa = registerSink((event) => {
       if (granted && gaId) gtag('event', event.name, event.props);
     });

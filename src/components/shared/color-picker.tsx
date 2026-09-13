@@ -10,10 +10,19 @@ interface ColorPickerProps {
   label: string;
   /** "اللون {color}" template for each swatch's accessible name. */
   optionLabel: string;
+  /** Radio group name; two pickers on one page must differ. */
+  name?: string;
 }
 
-/** 28 px colour swatches with a 2 px ring on selection (BRD 6.4.3). */
-export function ColorPicker({ colors, value, onChange, label, optionLabel }: ColorPickerProps) {
+/** 28 px colour swatches with a 2 px ring on selection (BRD 6.4.3, 6.6). */
+export function ColorPicker({
+  colors,
+  value,
+  onChange,
+  label,
+  optionLabel,
+  name = 'color',
+}: ColorPickerProps) {
   return (
     <fieldset className="flex flex-col gap-3">
       <legend className="text-small font-medium text-text">{label}</legend>
@@ -31,7 +40,7 @@ export function ColorPicker({ colors, value, onChange, label, optionLabel }: Col
             >
               <input
                 type="radio"
-                name="designer-color"
+                name={name}
                 value={color.slug}
                 checked={checked}
                 onChange={() => onChange(color.slug)}

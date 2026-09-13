@@ -1,4 +1,39 @@
-/** Page copy for BRD 4.9–4.12 and 4.15 (built in Phase 1c; strings live here from 1a). */
+/** Page copy for BRD 4.8–4.12 and 4.15. */
+
+/** BRD 4.8 products listing and detail. */
+export const productsPage = {
+  title: 'المنتجات',
+  lead: 'منتجات بجودة عالية، تُطبع عند الطلب وتُشحن باسم متجرك.',
+  pricePrefix: 'يبدأ من',
+  breadcrumbHome: 'الرئيسية',
+  priceBlock: {
+    cost: 'التكلفة تبدأ من',
+    suggested: 'سعر بيع مقترح',
+    profit: 'ربحك التقديري',
+    perPiece: 'لكل قطعة',
+  },
+  priceFootnote: 'تقدير لا يشمل الشحن والضريبة. أنت تحدّد سعر البيع.',
+  primaryCta: 'ابدأ بيع هذا المنتج',
+  secondaryLink: 'جرّب تصميمك عليه',
+  sections: {
+    description: 'الوصف',
+    specs: 'المواصفات',
+    sizeChart: 'جدول المقاسات',
+    related: 'منتجات أخرى',
+  },
+  specLabels: {
+    material: 'الخامة',
+    weight: 'الوزن',
+    sizes: 'المقاسات',
+    colors: 'الألوان',
+    printArea: 'منطقة الطباعة',
+    printMethod: 'طريقة الطباعة',
+  },
+  weightUnit: 'غم',
+  sizeChartHeaders: { size: 'المقاس', length: 'الطول', chest: 'عرض الصدر', sleeve: 'طول الكم' },
+  colorSwitchAria: 'اللون {colour}',
+  galleryAria: 'صورة {n} من {total}',
+};
 
 export const howItWorksPage = {
   title: 'كيف تعمل الطباعة عند الطلب مع بحر؟',
@@ -56,6 +91,8 @@ export const contactPage = {
   submit: 'أرسل الرسالة',
   sending: 'جارٍ الإرسال',
   success: 'وصلتنا رسالتك. سنرد عليك قريباً.',
+  /** Secondary link on the success card (BRD 6.9). */
+  successWhatsapp: 'راسلنا على واتساب',
   failure: 'تعذّر الإرسال. حاول مرة أخرى أو راسلنا على واتساب.',
   validation: {
     name: 'أدخل اسمك',
@@ -77,16 +114,32 @@ export const contactPage = {
   },
 };
 
+/** BRD 4.17: the contact notification email. */
+export const contactEmail = {
+  subject: 'رسالة جديدة من الموقع: {inquiryType}',
+  replyOnWhatsapp: 'رد عبر واتساب',
+};
+
 export const faqPage = {
   title: 'الأسئلة الشائعة',
   lead: 'كل ما تحتاج معرفته قبل أن تبدأ.',
   bottomLine: 'لم تجد إجابتك؟ راسلنا على واتساب.',
+  /** The word inside `bottomLine` that carries the WhatsApp link. */
+  bottomLinkWord: 'واتساب',
 };
 
 export const notFoundPage = {
   title: 'الصفحة غير موجودة',
   text: 'يبدو أن الرابط تغيّر أو حُذف.',
   button: 'العودة للرئيسية',
+};
+
+/** Static 410 body served by `src/proxy.ts` for the retired WordPress URLs (BRD 5.2). */
+export const gonePage = {
+  // TODO(copy): not in BRD 4; listed in Appendix G for Dhia
+  title: 'هذه الصفحة أُزيلت',
+  text: notFoundPage.text,
+  button: notFoundPage.button,
 };
 
 export const legalCopy = {

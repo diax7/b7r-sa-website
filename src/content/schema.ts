@@ -18,7 +18,7 @@ export const SiteSettingsSchema = z.object({
   contact: z.object({ phone: nonEmpty, phoneIntl: nonEmpty, whatsapp: nonEmpty, email: z.email() }),
   social: z.object({ x: z.url(), instagram: z.url(), tiktok: z.url() }),
   offer: z.object({ welcomeCredit: z.int().positive() }),
-  delivery: z.object({ maxDays: z.int().positive(), origin: nonEmpty }),
+  delivery: z.object({ maxDays: z.int().positive(), origin: nonEmpty, region: nonEmpty }),
   bookingUrl: z.url().optional(),
   appUrls: z.object({ register: z.url(), login: z.url() }),
   legalEntity: nonEmpty,
@@ -153,6 +153,7 @@ export const ProductSchema = z
     }),
     printMethodLabel: nonEmpty,
     sortOrder: z.int(),
+    updatedAt: isoDate,
   })
   .refine((p) => p.suggestedPrice >= p.baseCost, { message: 'suggestedPrice must be >= baseCost' });
 export type Product = z.infer<typeof ProductSchema>;
@@ -203,6 +204,8 @@ export const PageSeoSchema = z.object({
   title: nonEmpty,
   description: nonEmpty.max(160),
   ogImage: publicPath.optional(),
+  /** Sitemap `lastModified` (BRD 7.5); bump only on a real content change. */
+  updatedAt: isoDate,
 });
 export type PageSeo = z.infer<typeof PageSeoSchema>;
 
@@ -221,13 +224,11 @@ export const BlogPostSchema = z.object({
   title: nonEmpty,
   hub: slug,
   sample: z.boolean(),
-  excerpt: z.string().optional(),
-  cover: publicPath.optional(),
-  publishedAt: isoDate.optional(),
-  updatedAt: isoDate.optional(),
-  readingMinutes: z.int().positive().optional(),
-  takeaways: z.array(nonEmpty).length(3).optional(),
-  body: z.string().optional(),
-  author: nonEmpty.optional(),
+  excerpt: nonEmpty.max(160),
+  cover: publicPath,
+  publishedAt: isoDate,
+  updatedAt: isoDate,
+  takeaways: z.array(nonEmpty).length(3),
+  author: nonEmpty,
 });
 export type BlogPost = z.infer<typeof BlogPostSchema>;

@@ -45,6 +45,14 @@ test.describe('budgets (BRD 7.8, constitution IV)', () => {
     const js: Array<{ url: string; bytes: number }> = [];
     const fonts: Array<{ url: string; bytes: number }> = [];
     const hero: Array<{ url: string; bytes: number }> = [];
+    // The budget is the home route's own JS (BRD 7.8). Next prefetches the routes linked in
+    // the viewport (header, footer) after load and preloads their chunks; those belong to
+    // the next navigation, so the RSC prefetch requests are blocked for this measurement.
+    await page.route('**/*', (route) => {
+      const headers = route.request().headers();
+      if (headers['next-router-prefetch'] || headers['rsc']) return route.abort();
+      return route.continue();
+    });
     page.on('response', async (r) => {
       const url = r.url();
       const type = r.request().resourceType();

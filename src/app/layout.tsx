@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import Script from 'next/script';
 import type { ReactNode } from 'react';
 import { env } from '@/lib/env';
+import { verificationTokens } from '@/lib/env-server';
 import { BRAND_PRIMARY_HEX } from '@/lib/tokens';
 import { Footer, Header, newsletterCopy, SkipLink } from '@/modules/core';
 import { NewsletterForm } from '@/modules/forms';
@@ -9,7 +10,15 @@ import { PageExtras } from '@/modules/core/page-extras';
 import { rootMetadata } from '@/modules/core/seo/metadata';
 import '@/styles/globals.css';
 
-export const metadata: Metadata = rootMetadata;
+const tokens = verificationTokens();
+export const metadata: Metadata = {
+  ...rootMetadata,
+  // Search Console and Bing verification metas (BRD 7.3); absent until Dhia sets the tokens.
+  verification: {
+    ...(tokens.google ? { google: tokens.google } : {}),
+    ...(tokens.bing ? { other: { 'msvalidate.01': tokens.bing } } : {}),
+  },
+};
 
 export const viewport: Viewport = {
   width: 'device-width',

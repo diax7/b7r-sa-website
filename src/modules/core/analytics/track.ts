@@ -22,10 +22,17 @@ export type TrackEvent =
 type Sink = (event: TrackEvent) => void;
 
 const sinks: Sink[] = [];
+/** Events fired before any sink exists (mount-time `product_view`) wait for the first one. */
+const pending: TrackEvent[] = [];
+const PENDING_MAX = 50;
 
-/** Registered by the analytics island in Phase 1b. */
+/** Registered by the analytics bridge; the first sink receives everything fired before it. */
 export function registerSink(sink: Sink): () => void {
   sinks.push(sink);
+  if (pending.length > 0) {
+    const queued = pending.splice(0, pending.length);
+    for (const event of queued) sink(event);
+  }
   return () => {
     const i = sinks.indexOf(sink);
     if (i >= 0) sinks.splice(i, 1);
@@ -33,6 +40,10 @@ export function registerSink(sink: Sink): () => void {
 }
 
 export function trackEvent(event: TrackEvent): void {
+  if (sinks.length === 0) {
+    if (pending.length < PENDING_MAX) pending.push(event);
+    return;
+  }
   for (const sink of sinks) sink(event);
 }
 

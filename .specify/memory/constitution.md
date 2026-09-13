@@ -138,4 +138,4 @@ for wording). Every plan's Constitution Check and every CTO review verifies comp
 principles I–X; a breach of I, II, III, IV, VI, or X is a BLOCKER. Complexity beyond what
 the current phase needs must be justified in the plan's Complexity Tracking table or removed.
 
-**Version**: 1.0.0 | **Ratified**: 2026-09-12 | **Last Amended**: 2026-09-12
+**Version**: 1.0.1 | **Ratified**: 2026-09-12 | **Last Amended**: 2026-09-13 (BRD §7.3, §7.6, §8.10 amended in Phase 1c; principles unchanged)

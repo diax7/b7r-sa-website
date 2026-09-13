@@ -1,5 +1,6 @@
-import { describe, expect, it } from 'vitest';
-import { eventsForClick, isAppHost } from '@/modules/core/analytics/analytics-bridge';
+import { describe, expect, it, vi } from 'vitest';
+import { eventsForClick, isAppHost, sendToUmami } from '@/modules/core/analytics/analytics-bridge';
+import { registerSink, track } from '@/modules/core/analytics/track';
 
 function el(html: string): Element {
   const root = document.createElement('div');
@@ -44,5 +45,43 @@ describe('analytics bridge click mapping (BRD 6.16)', () => {
     expect(eventsForClick(a.firstElementChild)).toEqual([
       { name: 'cta_click', props: { location: 'ribbon' } },
     ]);
+  });
+});
+
+describe('Umami queue (events fired before the script loads)', () => {
+  it('holds events until window.umami exists, then flushes them in order', async () => {
+    vi.useFakeTimers();
+    const w = window as { umami?: { track: (n: string, d?: unknown) => void } };
+    delete w.umami;
+    sendToUmami({ name: 'product_view', props: { slug: 'hoodie' } });
+    sendToUmami({ name: 'video_play', props: {} });
+    const umamiTrack = vi.fn();
+    vi.advanceTimersByTime(600);
+    expect(umamiTrack).not.toHaveBeenCalled();
+    w.umami = { track: umamiTrack };
+    vi.advanceTimersByTime(300);
+    expect(umamiTrack.mock.calls).toEqual([
+      ['product_view', { slug: 'hoodie' }],
+      ['video_play', {}],
+    ]);
+    // Once the script is there, new events go straight through.
+    sendToUmami({ name: 'faq_open', props: { question: 'q' } });
+    expect(umamiTrack).toHaveBeenCalledTimes(3);
+    vi.useRealTimers();
+    delete w.umami;
+  });
+});
+
+describe('track() before any sink exists', () => {
+  it('replays mount-time events to the first sink, once', () => {
+    track('product_view', { slug: 'tote-bag' });
+    const first = vi.fn();
+    const unregister = registerSink(first);
+    expect(first).toHaveBeenCalledWith({ name: 'product_view', props: { slug: 'tote-bag' } });
+    const second = vi.fn();
+    const unregisterSecond = registerSink(second);
+    expect(second).not.toHaveBeenCalled();
+    unregister();
+    unregisterSecond();
   });
 });

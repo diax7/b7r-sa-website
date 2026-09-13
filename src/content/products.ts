@@ -53,6 +53,7 @@ export const products: Product[] = [
     },
     printMethodLabel: PRINT_METHOD,
     sortOrder: 1,
+    updatedAt: '2026-09-12',
   },
   {
     slug: 'tee-oversize',
@@ -75,6 +76,7 @@ export const products: Product[] = [
     },
     printMethodLabel: PRINT_METHOD,
     sortOrder: 2,
+    updatedAt: '2026-09-12',
   },
   {
     slug: 'hoodie',
@@ -97,6 +99,7 @@ export const products: Product[] = [
     },
     printMethodLabel: PRINT_METHOD,
     sortOrder: 3,
+    updatedAt: '2026-09-12',
   },
   {
     slug: 'baby-onesie',
@@ -124,6 +127,7 @@ export const products: Product[] = [
     },
     printMethodLabel: PRINT_METHOD,
     sortOrder: 4,
+    updatedAt: '2026-09-12',
   },
   {
     slug: 'tote-bag',
@@ -153,6 +157,7 @@ export const products: Product[] = [
     },
     printMethodLabel: PRINT_METHOD,
     sortOrder: 5,
+    updatedAt: '2026-09-12',
   },
 ];
 

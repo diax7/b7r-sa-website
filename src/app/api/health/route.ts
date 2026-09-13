@@ -1,4 +1,7 @@
 import { NextResponse } from 'next/server';
+import { getContactTransport } from '@/lib/contact-transport';
+import { contactEnv } from '@/lib/env-server';
+import { indexNowKey } from '@/lib/indexnow';
 import { getNewsletterTransport } from '@/lib/newsletter-transport';
 
 export const dynamic = 'force-dynamic';
@@ -9,7 +12,10 @@ export function GET() {
     ok: true,
     version: process.env.APP_VERSION ?? 'dev',
     time: new Date().toISOString(),
-    // Which newsletter transport is active, so a mocked production is visible at a glance.
+    // Which integrations are live, so a mocked or unconfigured production is visible at a glance.
     newsletter: getNewsletterTransport().kind,
+    contact: getContactTransport().kind,
+    turnstile: contactEnv().turnstileSecretKey ? 'on' : 'off',
+    indexnow: indexNowKey() ? 'on' : 'off',
   });
 }

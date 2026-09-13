@@ -6,7 +6,7 @@ import { Section, type SectionTone } from '@/components/shared/section';
 import { SectionHeader } from '@/components/shared/section-header';
 import { homeFaq } from '@/content/faq';
 import { home } from '@/content/home';
-import { FaqAccordionLoader } from '@/modules/home/faq/faq-accordion-loader';
+import { FaqAccordionLoader, FaqStaticList } from '@/modules/core';
 
 /**
  * Home FAQ (BRD 6.4.9): header + link at the start, accordion at the end. The questions and
@@ -16,16 +16,6 @@ import { FaqAccordionLoader } from '@/modules/home/faq/faq-accordion-loader';
 export function HomeFaq({ tone = 'ground' }: { tone?: SectionTone }) {
   const { faq } = home;
   const items = homeFaq.map((f) => ({ question: f.question, answer: f.answer }));
-  const staticList = (
-    <dl className="divide-y divide-border">
-      {items.map((item) => (
-        <div key={item.question} className="py-5">
-          <dt className="font-medium text-text">{item.question}</dt>
-          <dd className="mt-2 text-text-muted">{item.answer}</dd>
-        </div>
-      ))}
-    </dl>
-  );
 
   return (
     <Section id="faq" tone={tone} aria-labelledby="faq-title">
@@ -40,7 +30,7 @@ export function HomeFaq({ tone = 'ground' }: { tone?: SectionTone }) {
             <Icon icon={ArrowRight} size={18} />
           </Link>
         </div>
-        <FaqAccordionLoader items={items} fallback={staticList} />
+        <FaqAccordionLoader items={items} fallback={<FaqStaticList items={items} />} />
       </Container>
     </Section>
   );

@@ -91,7 +91,7 @@
         "no-underscore-dangle": [
           "error",
           {
-            "allow": ["__umamiEvents"]
+            "allow": ["__umamiEvents", "__cspViolations"]
           }
         ]
       }
@@ -118,7 +118,9 @@
                   "@/modules/blog",
                   "@/modules/blog/*",
                   "@/modules/forms",
-                  "@/modules/forms/*"
+                  "@/modules/forms/*",
+                  "@/modules/contact",
+                  "@/modules/contact/*"
                 ],
                 "message": "A feature module may import only components/*, content/*, lib/*, modules/core, and its own files (constitution VII)."
               }
@@ -149,7 +151,9 @@
                   "@/modules/blog",
                   "@/modules/blog/*",
                   "@/modules/forms",
-                  "@/modules/forms/*"
+                  "@/modules/forms/*",
+                  "@/modules/contact",
+                  "@/modules/contact/*"
                 ],
                 "message": "A feature module may import only components/*, content/*, lib/*, modules/core, and its own files (constitution VII)."
               }
@@ -180,7 +184,9 @@
                   "@/modules/blog",
                   "@/modules/blog/*",
                   "@/modules/forms",
-                  "@/modules/forms/*"
+                  "@/modules/forms/*",
+                  "@/modules/contact",
+                  "@/modules/contact/*"
                 ],
                 "message": "A feature module may import only components/*, content/*, lib/*, modules/core, and its own files (constitution VII)."
               }
@@ -211,7 +217,9 @@
                   "@/modules/blog",
                   "@/modules/blog/*",
                   "@/modules/forms",
-                  "@/modules/forms/*"
+                  "@/modules/forms/*",
+                  "@/modules/contact",
+                  "@/modules/contact/*"
                 ],
                 "message": "A feature module may import only components/*, content/*, lib/*, modules/core, and its own files (constitution VII)."
               }
@@ -242,7 +250,9 @@
                   "@/modules/pages",
                   "@/modules/pages/*",
                   "@/modules/forms",
-                  "@/modules/forms/*"
+                  "@/modules/forms/*",
+                  "@/modules/contact",
+                  "@/modules/contact/*"
                 ],
                 "message": "A feature module may import only components/*, content/*, lib/*, modules/core, and its own files (constitution VII)."
               }
@@ -273,7 +283,42 @@
                   "@/modules/pages",
                   "@/modules/pages/*",
                   "@/modules/blog",
-                  "@/modules/blog/*"
+                  "@/modules/blog/*",
+                  "@/modules/contact",
+                  "@/modules/contact/*"
+                ],
+                "message": "A feature module may import only components/*, content/*, lib/*, modules/core, and its own files (constitution VII)."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["src/modules/contact/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["../*", "./../*"],
+                "message": "Use absolute imports via @/… (constitution VII)."
+              },
+              {
+                "group": [
+                  "@/modules/home",
+                  "@/modules/home/*",
+                  "@/modules/designer",
+                  "@/modules/designer/*",
+                  "@/modules/products",
+                  "@/modules/products/*",
+                  "@/modules/pages",
+                  "@/modules/pages/*",
+                  "@/modules/blog",
+                  "@/modules/blog/*",
+                  "@/modules/forms",
+                  "@/modules/forms/*"
                 ],
                 "message": "A feature module may import only components/*, content/*, lib/*, modules/core, and its own files (constitution VII)."
               }

@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { testimonials } from '@/content/testimonials';
-import { env } from '@/lib/env';
-import { buildMetadata, CtaRibbon } from '@/modules/core';
+import { env, siteBase } from '@/lib/env';
+import { buildMetadata, CtaRibbon, JsonLd, jsonLd } from '@/modules/core';
 import { DesignerSection } from '@/modules/designer';
 import {
   Hero,
@@ -28,8 +28,10 @@ export default function HomePage() {
   const withTestimonials = shouldRenderTestimonials(testimonials, env.isProductionSite);
   const integrationsTone = withTestimonials ? 'surface' : 'ground';
   const faqTone = withTestimonials ? 'ground' : 'surface';
+  const base = siteBase();
   return (
     <>
+      <JsonLd nodes={[jsonLd.onlineStore(base), jsonLd.webSite(base)]} />
       <Hero />
       <ProductStrip />
       <DesignerSection />

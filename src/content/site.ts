@@ -17,7 +17,7 @@ export const site: SiteSettings = {
     tiktok: 'https://tiktok.com/@b7rprint',
   },
   offer: { welcomeCredit: 30 },
-  delivery: { maxDays: 5, origin: 'جدة' },
+  delivery: { maxDays: 5, origin: 'جدة', region: 'منطقة مكة المكرمة' },
   appUrls: {
     register: 'https://b7r.app/register',
     login: 'https://b7r.app/login',

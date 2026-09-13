@@ -18,6 +18,8 @@ export type Env = {
   umami: { src: string; id: string } | undefined;
   /** True only when the canonical production origin is configured (BRD 7.2 noindex guard). */
   isProductionSite: boolean;
+  /** Cloudflare Turnstile site key; the contact form renders the widget only when set. */
+  turnstileSiteKey: string | undefined;
 };
 
 function isUrl(value: string): boolean {
@@ -57,7 +59,13 @@ export function parseEnv(raw: Record<string, string | undefined>): Env {
     gaId,
     umami: umamiSrc && umamiId ? { src: umamiSrc, id: umamiId } : undefined,
     isProductionSite: siteUrl === PRODUCTION_SITE_URL,
+    turnstileSiteKey: raw['NEXT_PUBLIC_TURNSTILE_SITE_KEY'] || undefined,
   };
+}
+
+/** Absolute origin for canonical URLs, JSON-LD and the sitemap: the configured site or production. */
+export function siteBase(): string {
+  return env.siteUrl ?? PRODUCTION_SITE_URL;
 }
 
 // Next.js inlines NEXT_PUBLIC_* only when accessed as literal `process.env.X` expressions,
@@ -69,4 +77,5 @@ export const env: Env = parseEnv({
   NEXT_PUBLIC_GA_ID: process.env.NEXT_PUBLIC_GA_ID,
   NEXT_PUBLIC_UMAMI_SRC: process.env.NEXT_PUBLIC_UMAMI_SRC,
   NEXT_PUBLIC_UMAMI_ID: process.env.NEXT_PUBLIC_UMAMI_ID,
+  NEXT_PUBLIC_TURNSTILE_SITE_KEY: process.env['NEXT_PUBLIC_TURNSTILE_SITE_KEY'],
 });

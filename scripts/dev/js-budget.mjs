@@ -3,6 +3,12 @@ const [, , url] = process.argv;
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
 const rows = [];
+// Same rule as the e2e budget: route prefetches belong to the next navigation.
+await page.route('**/*', (route) => {
+  const h = route.request().headers();
+  if (h['next-router-prefetch'] || h['rsc']) return route.abort();
+  return route.continue();
+});
 page.on('response', async (r) => {
   if (r.request().resourceType() !== 'script') return;
   try {

@@ -46,7 +46,7 @@ Training crawlers (`GPTBot`, `ClaudeBot`, `Google-Extended`, `CCBot`, `Meta-Exte
 - `title` from §4.16 with the template `%s | بحر برنت`; the home page uses the full title without the template.
 - `description` from §4.16 (≤ 155 characters).
 - `alternates.canonical`.
-- Open Graph: `type` (`website`, `product` on product pages, `article` on posts), `locale: ar_SA`, `siteName: بحر برنت`, `title`, `description`, `images` (1200 × 630). Default OG image: designed once (`public/og/default.png`): white background, the colour logo, the tagline منصة الطباعة عند الطلب في السعودية, and a row of the five product photos; product pages use a generated OG image with the product photo and "يبدأ من {price}" (`next/og` `ImageResponse`, ITF Rayat Round Bold loaded from the woff2 files); posts use the cover.
+- Open Graph: `type` (`website` everywhere except `article` on posts; `product` is not an `og:type` the previews read and Next's typed metadata does not emit it, so product pages use `website` and the `Product` JSON-LD carries the commerce data — amended in Phase 1c), `locale: ar_SA`, `siteName: بحر برنت`, `title`, `description`, `images` (1200 × 630). Default OG image: designed once (`public/og/default.png`): white background, the colour logo, the tagline منصة الطباعة عند الطلب في السعودية, and a row of the five product photos; product pages use `public/og/products/{slug}.png` with the product photo and "يبدأ من {price}"; posts use the cover. All OG images are static PNGs rendered once by `scripts/build-og.ts` (`pnpm og`) with Playwright and the self-hosted ITF Rayat Round files, because Satori (`next/og`) does not shape Arabic (ADR-020, amended in Phase 1c).
 - Twitter card `summary_large_image`, `site: @b7rprint`.
 - `robots: { index, follow, 'max-image-preview': 'large' }`; `noindex` on 404 and on any non-production host.
 - Icons: `favicon.ico` (32), `icon.svg` if available else PNG 192/512, `apple-touch-icon` 180, `manifest.webmanifest` (name "بحر برنت", `lang: ar`, `dir: rtl`, `theme_color: #0058B0`, `background_color: #FFFFFF`, display `browser`).
@@ -70,7 +70,7 @@ All indexable routes with `lastModified` (ISO 8601 with time; from the content f
 
 ### 7.6 IndexNow
 
-`public/{INDEXNOW_KEY}.txt` containing the key. A small utility `lib/indexnow.ts` posts `{ host, key, keyLocation, urlList }` to `https://api.indexnow.org/indexnow`. In Level 1 it runs from a GitHub Actions step after a production deploy with the list of changed routes (diff of `sitemap.xml` before/after). Level 2 moves it to a publish hook.
+The key is served at `/indexnow/{INDEXNOW_KEY}.txt` by `app/indexnow/[key]/route.ts` (any other name is a plain 404; a root-level catch-all would soft-404 every unknown URL — amended in Phase 1c). A small utility `lib/indexnow.ts` posts `{ host, key, keyLocation, urlList }` to `https://api.indexnow.org/indexnow` with `keyLocation` pointing at that path. In Level 1 it runs from a GitHub Actions step after a production deploy with the list of changed routes (diff of `sitemap.xml` before/after). Level 2 moves it to a publish hook.
 
 ### 7.7 Measurement setup
 

@@ -6,7 +6,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-import { track } from '@/modules/core';
+import { track } from '@/modules/core/analytics/track';
 
 interface FaqAccordionProps {
   items: Array<{ question: string; answer: string }>;

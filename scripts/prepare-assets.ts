@@ -9,8 +9,9 @@
  * - video:    resources/video/*.mp4 + poster         -> public/video/ (poster = BRD 6.4.5 fallback still
  *             until a frame can be extracted; see RUNBOOK)
  * - integrations: resources/brand/integrations/*.svg -> public/images/integrations/
+ * - lifestyle: decorative mockups for the about banner (21:9) and blog covers (16:9)
  */
-import { copyFileSync, mkdirSync, readdirSync } from 'node:fs';
+import { copyFileSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import sharp from 'sharp';
 
@@ -47,6 +48,37 @@ async function logos() {
     .flatten({ background: '#ffffff' })
     .png()
     .toFile(join(root, 'src', 'app', 'apple-icon.png'));
+  // Manifest icons (BRD 7.3) and a classic favicon.ico (a 32 px PNG in an ICO container).
+  ensure(pub('icons'));
+  for (const size of [192, 512]) {
+    await sharp(res('brand', 'logo', 'icon.png'))
+      .resize(size, size)
+      .png()
+      .toFile(pub('icons', `icon-${size}.png`));
+  }
+  const png32 = await sharp(res('brand', 'logo', 'icon.png'))
+    .resize(32, 32)
+    .png()
+    .toBuffer();
+  writeFileSync(join(root, 'src', 'app', 'favicon.ico'), icoFromPng(png32, 32));
+}
+
+/** ICO container around one PNG image (valid since Windows Vista; every browser reads it). */
+function icoFromPng(png: Buffer, size: number): Buffer {
+  const header = Buffer.alloc(6);
+  header.writeUInt16LE(0, 0); // reserved
+  header.writeUInt16LE(1, 2); // type: icon
+  header.writeUInt16LE(1, 4); // one image
+  const entry = Buffer.alloc(16);
+  entry.writeUInt8(size, 0);
+  entry.writeUInt8(size, 1);
+  entry.writeUInt8(0, 2); // palette
+  entry.writeUInt8(0, 3); // reserved
+  entry.writeUInt16LE(1, 4); // planes
+  entry.writeUInt16LE(32, 6); // bits per pixel
+  entry.writeUInt32LE(png.length, 8);
+  entry.writeUInt32LE(header.length + entry.length, 12);
+  return Buffer.concat([header, entry, png]);
 }
 
 async function products() {
@@ -118,10 +150,36 @@ async function icons3d() {
   }
 }
 
+/** Decorative only (BRD 6.8, 6.11): never listed as products. */
+async function lifestyle() {
+  ensure(pub('images', 'lifestyle'));
+  const src = (f: string) => res('lifestyle-mockups', f);
+  // BRD 6.8 names hanging-tshirt-mockup.jpg, but that file carries the vendor's
+  // "Free t-shirt mockup" sample print; -2 is the same subject with a real design
+  // (flagged for Dhia in Appendix G).
+  await sharp(src('hanging-tshirt-mockup-2.jpg'))
+    .resize(1920, 823, { fit: 'cover', position: 'centre' })
+    .jpeg({ quality: 82, mozjpeg: true })
+    .toFile(pub('images', 'lifestyle', 'hanging-tshirt-mockup.jpg'));
+  // 16:9 covers; the focal point of each source is known, so the crop anchor is explicit.
+  const covers: Array<[string, string, 'centre' | 'top']> = [
+    ['designer-at-desk-stock.jpg', 'cover-start-brand.jpg', 'centre'],
+    ['hodie2.jpg', 'cover-print-on-demand.jpg', 'top'],
+    ['totebag1.jpg', 'cover-pricing.jpg', 'centre'],
+  ];
+  for (const [from, to, position] of covers) {
+    await sharp(src(from))
+      .resize(1600, 900, { fit: 'cover', position })
+      .jpeg({ quality: 80, mozjpeg: true })
+      .toFile(pub('images', 'lifestyle', to));
+  }
+}
+
 await logos();
 await products();
 await badges();
 await icons3d();
 await video();
 await integrations();
+await lifestyle();
 console.log('prepare-assets: public/ is up to date.');

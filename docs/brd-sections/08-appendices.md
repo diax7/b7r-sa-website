@@ -286,6 +286,11 @@ Decision history: `docs/00-decisions-log.md` (rounds 1–4 with Dhia, 2026-09-12
 9. Confirm the ITF Rayat Round web licence permits subsetting the woff2 files (the site serves subsets, ADR-010); if not, serve the original files and re-measure.
 10. Review the agent-written aria/microcopy strings in `src/messages/ar.json` and the `TODO(copy)` strings in `src/content/pages.ts`: the two error-page strings and «تعذّر الاشتراك الآن، حاول لاحقاً.» (newsletter 429/5xx).
 8. Whether the video needs an intro title card or Arabic captions (none specified). Note: without a captions track the `<video>` element fails axe's `video-caption` rule (WCAG 1.2.2), so it mounts only after the visitor presses play until captions exist.
+11. Phase 1c `TODO(copy)` strings: the 410 page title «هذه الصفحة أُزيلت» (`src/content/pages.ts`), the blog «الكل» chip, «لا مقالات في هذا القسم بعد.» and «نُسخ الرابط» (`src/content/blog/index.ts`), and the new aria strings in `src/messages/ar.json` (gallery, breadcrumbs, FAQ group nav, on-this-page, share). The reading-time meta line inflects the noun by count (دقيقة قراءة · دقيقتا قراءة · {n} دقائق قراءة · {n} دقيقة قراءة); §4.13's template is the 3–10 form.
+12. The three sample blog posts (bodies in `src/content/blog/posts/*.md`, excerpts and takeaways in `src/content/blog/index.ts`) are agent-written under §4.1 with facts from §1.1 only and marked `sample: true` (ADR-018); review or replace before Level 3.
+13. About banner: §6.8 names `hanging-tshirt-mockup.jpg`, but that file carries the vendor's "Free t-shirt mockup" sample print, so the site uses `hanging-tshirt-mockup-2.jpg` (same subject, real design). Blog covers use `designer-at-desk-stock.jpg`, `hodie2.jpg` and `totebag1.jpg`. Swap when final photography exists.
+14. `NEXT_PUBLIC_TURNSTILE_SITE_KEY` is set to Cloudflare's public always-pass test key in `.env.local` and CI so the widget island renders in tests; production needs the real pair (§12.4 item 5).
+15. Product OG images use `og:type website` (see §7.3 amendment); confirm in WhatsApp/X previews at cutover (§12.4 item 8).
 
 ### Appendix H: Glossary of Arabic UI terms used in code comments and admin labels
 

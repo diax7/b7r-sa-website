@@ -54,7 +54,8 @@ line, sticky on-this-page list on desktop, `WebPage` + `BreadcrumbList` JSON-LD.
 ### US6 — Machine files and redirects (P1)
 `sitemap.xml` (all indexable routes, `lastModified` from content `updatedAt`, product image
 entries), `robots.txt` (§7.2 full rules with the answer-engine allow list; `Disallow: /` on
-non-production hosts), `/{INDEXNOW_KEY}.txt` served when the key is set, `manifest.webmanifest`
+non-production hosts), `/indexnow/{INDEXNOW_KEY}.txt` served when the key is set (404 for any
+other name; `keyLocation` in the IndexNow body), `manifest.webmanifest`
 (§7.3), favicon set. §5.2 redirects in `next.config.ts` from `src/lib/redirects.ts`; the 410
 list served by `proxy.ts` (Next 16's middleware) with a static 410 body; `/en/*` → 302 to the
 Arabic route; trailing slashes → 308. `Content-Language: ar` header on every page.
@@ -62,22 +63,27 @@ Arabic route; trailing slashes → 308. `Content-Language: ar` header on every p
 ### US7 — Metadata, OG, JSON-LD (P1)
 Every route: title/description from `content/seo.ts` (product/post titles from their data),
 canonical, Open Graph (`website` / `product` / `article`), Twitter card, verification metas
-from env. `public/og/default.png` generated once by `scripts/build-og.ts` (white, colour logo,
-tagline, five product photos); product OG via `opengraph-image.tsx` (`ImageResponse`, ITF
-Rayat Round Bold, photo + «يبدأ من {price}»); posts use the cover. JSON-LD per §7.4 table with
+from env. `public/og/default.png` and `public/og/products/{slug}.png` generated once by
+`scripts/build-og.ts` with Playwright (white, colour logo, tagline, five product photos;
+product variant: photo + «يبدأ من {price}» in ITF Rayat Round Bold) and committed as static
+PNGs (ADR-020); posts use the cover. JSON-LD per §7.4 table with
 a unit test on required fields; home gets `OnlineStore` + `WebSite`.
 
 ### US8 — Security headers and hygiene (P1)
 §8.10 headers via `next.config.ts` `headers()`: HSTS, nosniff, referrer policy, permissions
 policy, `X-Frame-Options: DENY`, and a CSP allowing self, GTM, Turnstile, the Umami origin,
-GA connect endpoints, `data:`/`blob:` images. Nonces are deferred (ADR) because Next's static
-rendering cannot vary a nonce per response without dynamic rendering — `'unsafe-inline'` for
-scripts as the BRD's CSP already lists.
+GA connect endpoints, `data:`/`blob:` images, `style-src 'self' 'unsafe-inline'` (inline
+`style` attributes from `next/image` and the motion primitives), `object-src 'none'`,
+`base-uri 'self'`, `form-action 'self'`, `frame-ancestors 'none'`. Nonces are deferred (ADR)
+because Next's static rendering cannot vary a nonce per response without dynamic rendering —
+`'unsafe-inline'` for scripts as the BRD's CSP already lists. An e2e asserts zero
+`securitypolicyviolation` events on the flows that touch third parties.
 
 ### US9 — Cutover readiness (P2)
 `docs/RUNBOOK.md` deploy/rollback/cutover sections; `docs/LAUNCH-CHECKLIST.md` with §12.4
 items and who owns each; IndexNow GitHub Actions step (`scripts/indexnow.ts`) guarded on
-`main` + healthy deploy; `.env.example` complete; `lib/env.ts` production-required set final.
+`main` + healthy deploy; `.env.example` complete; the production-required env set is asserted
+at server start only when `B7R_RUNTIME=production` (set in the CranL app, never in CI).
 
 ## Requirements
 - FR-001 Routes and status codes per §5.1; 404 stays; `/api/contact` added.

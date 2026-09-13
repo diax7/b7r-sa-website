@@ -695,3 +695,56 @@ html.js .reveal.is-visible {
     transition-property: opacity, color, background-color, border-color !important;
   }
 }
+
+/* Long-form text (BRD 6.11, 6.12): rendered Markdown from lib/markdown.ts. */
+.prose {
+  max-width: var(--container-prose);
+  color: var(--color-text);
+  font-size: var(--text-body);
+  line-height: 1.8;
+}
+.prose > * + * {
+  margin-block-start: 1em;
+}
+.prose h2 {
+  font-size: var(--text-h3);
+  line-height: var(--text-h3--line-height);
+  font-weight: 700;
+  margin-block-start: 2em;
+  scroll-margin-block-start: calc(var(--header-h) + 24px);
+}
+.prose h3 {
+  font-size: var(--text-h4);
+  font-weight: 700;
+  margin-block-start: 1.5em;
+}
+.prose p,
+.prose li {
+  color: var(--color-text);
+}
+.prose ul,
+.prose ol {
+  padding-inline-start: 1.5em;
+}
+.prose ul {
+  list-style: disc;
+}
+.prose ol {
+  list-style: decimal;
+}
+.prose li + li {
+  margin-block-start: 0.4em;
+}
+.prose a {
+  color: var(--color-primary);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.prose strong {
+  font-weight: 700;
+}
+.prose blockquote {
+  border-inline-start: 3px solid var(--color-accent);
+  padding-inline-start: 1em;
+  color: var(--color-text-muted);
+}

@@ -24,8 +24,12 @@ env:
   NEXT_PUBLIC_GA_ID: G-TEST00000
   NEXT_PUBLIC_UMAMI_SRC: http://localhost:3004/umami-test.js
   NEXT_PUBLIC_UMAMI_ID: test
-  # In-memory newsletter transport for the e2e success path (no Resend key in CI).
+  # In-memory newsletter and contact transports for the e2e success paths (no Resend key).
   NEWSLETTER_TRANSPORT: mock
+  CONTACT_TRANSPORT: mock
+  # Cloudflare's public always-pass test site key so the Turnstile island renders; the e2e
+  # serves a stub for the widget script and no secret is set, so nothing reaches Cloudflare.
+  NEXT_PUBLIC_TURNSTILE_SITE_KEY: 1x00000000000000000000AA
 
 jobs:
   quality:
