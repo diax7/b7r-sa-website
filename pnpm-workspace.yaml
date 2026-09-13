@@ -12,6 +12,11 @@ overrides:
   tmp: 0.2.7
   'uuid@<11.1.1': 11.1.1
   qs: 6.16.0
+  # Payload's admin (monaco editor) pins dompurify 3.4.8; the patched line is API-compatible.
+  'dompurify@<3.4.13': 3.4.13
+  # drizzle-kit (dev-time CLI under db-postgres) drags esbuild 0.18; the dev server hole
+  # (GHSA-67mh-4wv8-2f99) is patched from 0.24.3 and the CLI works on the current line.
+  'esbuild@<0.24.3': 0.28.2
 auditConfig:
   ignoreGhsas:
     # extract-zip <=2.0.1 via @lhci/cli > lighthouse > puppeteer-core (dev-only, never in the

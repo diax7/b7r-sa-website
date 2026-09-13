@@ -29,8 +29,8 @@ though 2a stores plain text; used by `description` on products), `graphql` (peer
 | IV | Budgets | Public pages load no Payload JS; LHCI five URLs unchanged; admin excluded |
 | V | Tokens | Admin uses Payload's own theme (out of the design system by design); brand icon + title only |
 | VI | No fabrication | Seed = existing content; testimonials untouched (2b) |
-| VII | Modules | `src/lib/cms/` (Local API + cache) is `lib`; collections live in `src/cms/` (config, collections, globals, access, hooks) — a new top-level folder documented in ADR-024 because Payload config is neither a module nor lib |
-| VIII | ADRs | ADR-024 folder + route groups, ADR-025 build-time DB, ADR-026 seed fixtures replace content files, ADR-027 login Turnstile deferred + HIBP check, ADR-028 admin CSP |
+| VII | Modules | `src/lib/cms/` (Local API + cache) is `lib`; the admin is a feature block: `src/modules/cms/` (config, collections, globals, access, hooks; `index.ts` exports the config) — no new top-level folder (ADR-024); seed fixtures are content: `src/content/seed/` |
+| VIII | ADRs | ADR-024 `modules/cms` + route groups, ADR-025 build-time DB with the CI-built image as the primary deploy path, ADR-026 create-only seed migration, ADR-027 login Turnstile designed for 2b + HIBP now, ADR-028 admin header set, ADR-029 media served same-origin through `next/image` |
 | IX | Tests | listed per area below |
 | X | No attribution | Yes |
 
@@ -51,22 +51,45 @@ though 2a stores plain text; used by `description` on products), `graphql` (peer
   `localization: { locales: [{ code: 'ar', label: 'العربية', rtl: true }, { code: 'en', label: 'English' }], defaultLocale: 'ar', fallback: true }`,
   `admin.meta.titleSuffix ' | لوحة بحر برنت'`, custom `Logo`/`Icon` components (brand icon).
 - Headers: `/admin/:path*` and `/api/payload/:path*` get `X-Robots-Tag: noindex, nofollow`
-  and a looser CSP (Payload's admin needs `'unsafe-eval'` for Lexical? — verified at build;
-  if not needed, the site CSP applies) from `lib/security-headers.ts` `adminHeaders()`.
-  `robots.ts` already disallows `/admin/` and `/api/`; `sitemap.ts` reads routes, never admin.
+  and their own CSP from `lib/security-headers.ts` `adminHeaders()` (the public policy is
+  the starting point; `'unsafe-eval'` added only if the admin bundle needs it — verified at
+  build and asserted by a unit test). `robots.ts` already disallows `/admin/` and `/api/`;
+  `sitemap.ts` reads routes, never admin. `(site)/[...missing]` catches unknown site paths;
+  `/api/*` unknown paths are outside the group and keep Next's JSON-less 404 — the existing
+  `/api/nope` behaviour is asserted in the routes e2e.
 
-### B. Collections and globals — `src/cms/`
+### B. Collections and globals — `src/modules/cms/`
 - `access.ts`: `isAdmin`, `isEditorOrAdmin`, `isAdminOrSelf`, `canDeleteProduct` (admin, or
   editor when `_status !== 'published'`), `publishedOnly` for anonymous reads
   (`{ _status: { equals: 'published' } }`), `hideFromEditor` field access for verification
   tokens.
 - `users.ts`: auth (`maxLoginAttempts: 5`, `lockTime: 15 * 60 * 1000`, `cookies: { sameSite: 'Lax', secure: isProduction }`), fields `name`, `role` (select, admin-only update),
-  `beforeValidate` password policy: length ≥ 12 + `lib/pwned.ts` (SHA-1 prefix to
-  `https://api.pwnedpasswords.com/range/`, fail-open with `console.warn`); Arabic labels.
+  password policy in a `beforeValidate` hook and again in `beforeChange` on `password`
+  (covers `create`, `update` and `resetPassword`, Local API included — the `admin:create`
+  script goes through the same hooks and is tested): length ≥ 12 + `lib/pwned.ts` (SHA-1
+  prefix to `https://api.pwnedpasswords.com/range/`, fail-open with `console.warn`); Arabic
+  labels. Login Turnstile ships in 2b with the design in ADR-027: `admin.components.beforeLogin`
+  renders the widget, its callback writes the token to a short-lived cookie, and the users
+  `auth.beforeLogin`-equivalent (`hooks.beforeLogin`) reads it from `req.headers`, verifies
+  with Cloudflare through `lib/turnstile.ts`, and throws on failure — no view replacement.
 - `media.ts`: upload, `alt` (required, Arabic — regex on Arabic letters), `focalPoint: true`,
   `imageSizes` thumbnail 400, card 800, hero 1920, og 1200×630 (`fit: cover`), `mimeTypes`
-  images; storage: `@payloadcms/storage-s3` when `S3_BUCKET` is set (public read via ACL or
-  bucket policy, `prefix: 'media'`), else `staticDir: 'media'` (gitignored).
+  images; storage: `@payloadcms/storage-s3` when `S3_BUCKET` is set (public read via bucket
+  policy, `prefix: 'media'`), else `staticDir: 'public/media'` (gitignored; `next start`
+  serves `public/` from disk at runtime). `sharp` moves to `dependencies` (Payload resizes at
+  runtime in the container).
+- **Media on the public site (ADR-029):** the data layer returns the stored URL (S3 or
+  `/media/...`), and the browser never requests it directly: every render goes through
+  `next/image`, so the requested `src` is the same-origin `/_next/image?url=…`; the designer's
+  `useImage()` loads mockups through the same optimizer URL (`lib/image-url.ts`
+  `optimizedSrc(src, width)`), which also keeps the Konva canvas untainted. `next.config`
+  `images.remotePatterns` allows the S3 host derived from `S3_ENDPOINT`/`S3_PUBLIC_URL`;
+  `img-src` stays `'self' data: blob: …`. CI runs the e2e twice: the full suite on local disk
+  and `admin.spec.ts` + `csp.spec.ts` + `products.spec.ts` against MinIO (`docker run` step),
+  so the S3 URL shape is exercised before CranL. RUNBOOK: the CDN zone covers
+  `/_next/static`, `/_next/image`, `/images`, `/fonts`, `/video`, `/media` only — never HTML
+  (Next's `s-maxage` on prerendered pages would otherwise defeat `revalidateTag`); a purge step
+  joins the 2b IndexNow hook.
 - `products.ts`: fields 1:1 with `Product` (slug unique, name, shortDescription, description
   as richText → serialised to plain text for the site until 2b's Prose renderer,
   baseCost/suggestedPrice integers with `validate` on the pair, colors array {slug, name, hex,
@@ -83,11 +106,15 @@ though 2a stores plain text; used by `description` on products), `graphql` (peer
 
 ### C. Data layer — `src/lib/cms/`
 - `payload.ts`: `getPayloadClient()` (cached `getPayload({ config })`).
-- `products.ts`: `getProducts()`, `getProduct(slug)` — `unstable_cache(fn, key, { tags })`,
-  published only, mapped to `Product` and parsed with `ProductSchema`; image URLs from media
-  (S3 URL or `/media/...`).
+- `products.ts`: `getProducts()`, `getProduct(slug)` — `unstable_cache(fn, key incl. locale, { tags })`,
+  Local API with `draft: false` (explicit: the Local API bypasses access, so published-only
+  is a read option, not an access rule) and `locale: 'ar'`, mapped to `Product` and parsed
+  with `ProductSchema`; image URLs from media (S3 URL or `/media/...`).
 - `settings.ts`, `navigation.ts`, `seo.ts` — same shape, mapped to `SiteSettings`, `Navigation`,
-  `PageSeo[]` (+ `getSeo(route)` keeps its signature, now async).
+  `PageSeo[]` (+ `getSeo(route)` keeps its signature, now async). Call sites of `getSeo` /
+  `buildMetadata` (every `page.tsx` `metadata` export becomes `generateMetadata`), `site`,
+  `navigation`, `products`, `getProduct`, `stripColorFor` are enumerated in `tasks.md` so none
+  is missed (`rg` list at task time).
 - Call sites: every `import { products } from '@/content/products'` → `await getProducts()`
   (server components and route metadata). Client islands keep receiving props. `content/schema.ts`
   stays the type source; `src/seed/` holds the fixtures.
@@ -95,39 +122,65 @@ though 2a stores plain text; used by `description` on products), `graphql` (peer
   header, ribbon, contact page — each switched to the data layer; `scripts/build-og.ts` reads
   the seed (design-time asset).
 
-### D. Migration and seed — `scripts/migrate-content.ts`, `src/seed/`
-- Seed fixtures: `src/seed/{site,navigation,seo,products}.ts` (moved files; schema test and
-  verbatim test point at them).
-- Script: `getPayload` → for each product: upload front/back photos from `public/images/products`
+### D. Migration and seed — `scripts/migrate-content.ts`, `src/content/seed/`
+- Seed fixtures: `src/content/seed/{site,navigation,seo,products}.ts` (moved files; schema
+  test and verbatim test point at them). BRD §9.7 amended: the fixtures stay as the
+  deterministic empty-database seed; Payload is the runtime source of truth.
+- Script (**create-only**, ADR-026): refuses to run when the database already holds any
+  product or a filled global unless `--force` is passed (prints what exists and exits 2); with
+  or without `--force` it never overwrites an existing document — it creates what is missing
+  and logs every skip. For each product: upload front/back photos from `public/images/products`
   into media (alt from the existing card alt text; skip when a media doc with the same
-  `filename` exists) → upsert product by slug (`_status: 'published'`, `context: { disableRevalidate: true }`) →
-  upsert globals. Prints a summary; exits non-zero on any failure. `pnpm content:migrate`.
+  `filename` exists) → create the product (`_status: 'published'`,
+  `context: { disableRevalidate: true }`) → create the globals when empty. Summary printed;
+  non-zero exit on any failure. `pnpm content:migrate`. Idempotent = a second run creates
+  nothing and exits 0 with `--force`, 2 without.
 - `scripts/create-admin.ts` (`pnpm admin:create`): creates the first admin from
-  `ADMIN_EMAIL`/`ADMIN_PASSWORD` if no user exists.
-- Migrations: `pnpm payload migrate:create initial` → `src/migrations/`; `prodMigrations`
-  wired; `push: false`.
+  `ADMIN_EMAIL`/`ADMIN_PASSWORD` if no user exists, through the Local API so the password
+  hooks apply (tested with a 10-char password → rejected).
+- `scripts/build-og.ts`: reads products from Payload when `DATABASE_URL` is set, else the
+  seed, so `pnpm og` after a CMS price change regenerates the right numbers (RUNBOOK step).
+- Migrations: `pnpm payload migrate:create initial` → `src/migrations/`; `push: false`
+  everywhere; `prodMigrations` wired **but gated off during `next build`**
+  (`process.env.NEXT_PHASE !== 'phase-production-build'`) so a build never mutates the
+  production schema; migrations are written additive-only (expand/contract) because the
+  previous container keeps serving for a few seconds after a deploy.
 
-### E. Env, health, Docker, CI
-- `env-server.ts`: `payloadEnv()` (`DATABASE_URL`, `PAYLOAD_SECRET`, `PAYLOAD_PUBLIC_SERVER_URL`,
-  S3 set); production-required adds `DATABASE_URL`, `PAYLOAD_SECRET`, `PAYLOAD_PUBLIC_SERVER_URL`,
-  the five `S3_*`; `/api/health` adds `db: ok | error` (a `SELECT 1` through Payload) and
-  `media: s3 | local`.
-- `compose.yaml`: `postgres:16-alpine` (db `b7r`, port 5433) + `minio` (9000/9001) with a
-  bucket-init container; `.env.example` rows; RUNBOOK "Local CMS" section.
-- CI: `services: postgres`; steps `pnpm payload migrate` → `pnpm content:migrate` →
-  `pnpm admin:create` (test credentials) → build → e2e. Build gets `DATABASE_URL`.
-- Dockerfile: `DATABASE_URL` and `PAYLOAD_SECRET` as build secrets (`--mount=type=secret`) for
-  the prerender; runtime env from CranL; migrations run in-process at start. RUNBOOK documents
-  the GHCR fallback (build in Actions, CranL pulls the image) if CranL's build cannot reach
-  Postgres.
+### E. Env, health, Docker, CI, deploy sequence
+- `env-server.ts`: `payloadEnv()` (`DATABASE_URL`, `PAYLOAD_SECRET` ≥ 32 chars asserted,
+  `PAYLOAD_PUBLIC_SERVER_URL`, S3 set); production-required adds `DATABASE_URL`,
+  `PAYLOAD_SECRET`, `PAYLOAD_PUBLIC_SERVER_URL`, the five `S3_*`. `/api/health` stays a
+  liveness probe: `ok: true` while the process is alive; `db: ok | error` (a `SELECT 1`
+  through Payload, timed out at 2 s) and `media: s3 | local` are reported fields only, never
+  a reason to fail the probe (a DB blip must not become a restart loop).
+- `compose.yaml`: `postgres:16-alpine` (db `b7r`, host port 5433) + MinIO (quay.io images;
+  9000/9001) with a bucket-init container; `.env.example` rows; RUNBOOK "Local CMS" section.
+- CI (`ci.yml`): `services: postgres`; steps `pnpm payload migrate` → `pnpm content:migrate`
+  → `pnpm admin:create` (test credentials) → build (with `DATABASE_URL`) → full e2e (local
+  disk media) → Lighthouse; then a second job: MinIO via `docker run`, a fresh database
+  (`payload migrate:fresh`), seed, build with `S3_*` set, and the S3 subset of e2e
+  (`admin`, `csp`, `products`).
+- **Deploy sequence (ADR-025, primary path):** a `deploy.yml` job on `main` (environment
+  `production`, secrets `DATABASE_URL`, `PAYLOAD_SECRET`, S3 set as GitHub environment
+  secrets) runs `pnpm payload migrate` against the production database, builds the Docker
+  image with the same values as build secrets (`--mount=type=secret`), pushes it to GHCR
+  (`ghcr.io/diax7/b7r-sa-website:{sha}` + `:latest`), and CranL pulls the image. One build,
+  verified by the same e2e, no build secrets on the host. Fallback documented in RUNBOOK:
+  CranL builds from the Dockerfile with the same build secrets, if Dhia prefers. The
+  workflow is written now and no-ops until the environment secrets exist.
+- Dockerfile: build secrets mounted only in the build stage; runtime env from CranL;
+  `prodMigrations` runs at container start as the safety net for anything CI did not apply.
 
 ### F. Tests
 - Unit: `access.test.ts` (matrix per role × operation, incl. delete of published vs draft),
   `cms-mapping.test.ts` (Payload doc → `Product`/`SiteSettings` parse, media URL resolution
-  for S3 and local), `pwned.test.ts` (range parsing, fail-open), `revalidate-hook.test.ts`
-  (paths/tags per collection; skipped when `disableRevalidate`).
-- Integration (CI, needs Postgres): `scripts/migrate-content.ts` twice → counts equal, no new
-  versions on the second run; `payload.db.migrateStatus()` clean.
+  for S3 and local, `optimizedSrc`), `pwned.test.ts` (range parsing, fail-open),
+  `revalidate-hook.test.ts` (paths/tags per collection; skipped when `disableRevalidate`),
+  `security-headers.test.ts` extended (admin header set), `env-server.test.ts` (secret length).
+- Integration (CI, needs Postgres): `scripts/migrate-content.ts` on an empty DB → counts;
+  second run without `--force` exits 2 and changes nothing; with `--force` exits 0 and
+  changes nothing; `admin:create` with a 10-char password fails; `payload.db.migrateStatus()`
+  clean.
 - E2E: `admin.spec.ts` — login page `html[lang=ar][dir=rtl]`, title suffix; admin logs in;
   editor session via REST cannot list users (403), cannot PATCH site-settings (403), cannot
   DELETE a published product (403) but can PATCH a draft; product edit + publish → GET
@@ -135,14 +188,19 @@ though 2a stores plain text; used by `description` on products), `graphql` (peer
   `<meta name="robots" content="noindex">`; sitemap has no `/admin`. Existing suites untouched.
 
 ## Judgment calls (ADRs)
-- ADR-024 `src/cms/` + route groups (`(site)`, `(payload)`), catch-all 404.
-- ADR-025 The build needs the database (prerender reads Payload); CI service, CranL build
-  arg/secret, GHCR fallback. Constitution II kept (still prerendered).
-- ADR-026 Content files for migrated collections become seed fixtures under `src/seed/`;
-  `content/schema.ts` remains the domain type and validates what the CMS returns.
-- ADR-027 Login Turnstile deferred (Payload's login view has no widget slot without replacing
-  the view); lockout 5/15 min + HIBP check + 12-char minimum ship now.
-- ADR-028 Admin routes get their own header set (noindex; CSP as verified).
+- ADR-024 `src/modules/cms/` + route groups (`(site)`, `(payload)`), catch-all 404.
+- ADR-025 The build needs the database (prerender reads Payload); the CI-built image on GHCR
+  is the primary deploy path (migrate → build → push → CranL pulls); `prodMigrations` gated off
+  during build; additive-only migrations. Constitution II kept (still prerendered).
+- ADR-026 Content files for migrated collections become seed fixtures under
+  `src/content/seed/`; the migration is create-only with a non-empty-database guard;
+  `content/schema.ts` remains the domain type and validates what the CMS returns. BRD §9.7
+  amended.
+- ADR-027 Login Turnstile: designed (beforeLogin widget → cookie → `beforeLogin` hook verify),
+  built in 2b; lockout 5/15 min + HIBP check + 12-char minimum (create, update, reset) ship now.
+- ADR-028 Admin routes get their own header set (noindex; CSP as verified at build).
+- ADR-029 Media is served same-origin through `next/image` (site and designer); the CDN zone
+  never caches HTML.
 
 ## Open items for Dhia (do not block)
 CranL Postgres + S3 (values for the env matrix), `PAYLOAD_SECRET`, first admin credentials,

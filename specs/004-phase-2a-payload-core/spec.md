@@ -70,20 +70,28 @@ through `revalidateTag`/`revalidatePath` only.
   cookies `SameSite=Lax; Secure` in production. Turnstile on the login form is deferred (ADR).
 - FR-004 Localization `['ar', 'en']`, default `ar`, `localized: true` on text fields; English
   stays empty.
-- FR-005 Data layer `src/lib/cms/*` (Local API + `unstable_cache` with tags `products`,
-  `site-settings`, `navigation`, `seo`) returning the existing `content/schema.ts` types
-  (zod-parsed so drift fails loudly); components unchanged. `afterChange`/`afterDelete` hooks
-  revalidate tags and the affected paths.
-- FR-006 Migrations in `src/migrations/` (`push: false` everywhere); `prodMigrations` runs them at
-  server start; CI runs `pnpm payload migrate` against a Postgres service; RUNBOOK covers CranL.
-- FR-007 Seed fixtures: the migrated content files move to `src/seed/*.ts` (still schema-validated
-  and BRD-verbatim tested); `src/content/{site,navigation,seo,products}.ts` are deleted.
+- FR-005 Data layer `src/lib/cms/*` (Local API with `draft: false` + `unstable_cache` with
+  tags `products`, `site-settings`, `navigation`, `seo`) returning the existing
+  `content/schema.ts` types (zod-parsed so drift fails loudly); components unchanged.
+  `afterChange`/`afterDelete` hooks revalidate tags and the affected paths. Media URLs are
+  never requested raw by the browser: every image (cards, gallery, strip, designer mockups)
+  goes through `next/image`, so the CSP `img-src` stays `'self'` and the Konva canvas stays
+  untainted.
+- FR-006 Migrations in `src/migrations/` (`push: false` everywhere, additive-only); CI runs
+  `pnpm payload migrate` against a Postgres service; the production deploy is a CI job that
+  migrates the production database, builds the image and pushes it to GHCR for CranL to pull;
+  `prodMigrations` runs at container start as a safety net and never during `next build`.
+- FR-007 Seed fixtures: the migrated content files move to `src/content/seed/*.ts` (still
+  schema-validated and BRD-verbatim tested); `src/content/{site,navigation,seo,products}.ts`
+  are deleted. The seed script is create-only and refuses a non-empty database without
+  `--force`; it never overwrites a document the CMS holds.
 - FR-008 Env: `DATABASE_URL`, `PAYLOAD_SECRET`, `PAYLOAD_PUBLIC_SERVER_URL`, `S3_BUCKET`,
   `S3_REGION`, `S3_ENDPOINT`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` (+ `ADMIN_EMAIL`,
-  `ADMIN_PASSWORD` for the one-off create); production-required set extended; `/api/health`
-  reports `db` and `media` states.
-- FR-009 `compose.yaml` with Postgres 16 and MinIO for local dev; Dockerfile unchanged in shape
-  (migrations run in-process at start).
+  `ADMIN_PASSWORD` for the one-off create); production-required set extended
+  (`PAYLOAD_SECRET` ≥ 32 chars); `/api/health` reports `db` and `media` as fields while
+  staying a liveness probe (`ok: true` whenever the process answers).
+- FR-009 `compose.yaml` with Postgres 16 and MinIO for local dev; CI also runs the admin, CSP
+  and products e2e against MinIO so the S3 URL shape is exercised before CranL.
 - FR-010 Tests: unit (access matrix, data-layer mapping, breached-password client, revalidation
   hook wiring); integration (migration idempotency against Postgres, in CI); e2e (admin login
   RTL/Arabic, editor 403s via REST, product edit → public page within 60 s, admin noindex +
