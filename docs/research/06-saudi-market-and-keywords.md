@@ -24,10 +24,10 @@
 | **Riyadh Prints** | riyadhprints.com | Local print shop with POD SKU family; DTG + screen; same-day for <25 pcs | Quote via WhatsApp | None | Strong English local SEO pages, "240+ companies" | Quote-driven; not a workflow |
 | **Print Design T-Shirt** | brand-sa.com | Salla-hosted store selling custom tees/caps/mugs | Retail | Salla store | Consumer-friendly | 5-7 days; B2C |
 | **Sahl Shop (Jeddah)** | sahlshop.com | Custom printing incl. DTF polos/uniforms; 48h delivery | Per-product; bulk | None | Uniform/corporate SEO | Not POD for resellers |
-| **itba3ly.com** | itba3ly.com | Salla store, women-run, POD (consumer) | Retail |, | Female-team positioning | Public review: fabric "heavy", print limited to A4, a live quality objection |
-| **Madar Print** | ar.madarprint.com | Bulk custom apparel, quote-based | From 1,050 SAR lots; 70% deposit; 7-10 days |, | Corporate | MOQ/deposit, the anti-POD |
-| **Print.sa (اطبع)** | print.sa | Document-printing marketplace (600k customers) |, |، | Owns "اطبع" | Not merch |
-| **Samawy (سماوي)** | samawy.com | Book POD (Riyadh) |, |, | POD term resonates for books | Different vertical |
+| **itba3ly.com** | itba3ly.com | Salla store, women-run, POD (consumer) | Retail | | Female-team positioning | Public review: fabric "heavy", print limited to A4, a live quality objection |
+| **Madar Print** | ar.madarprint.com | Bulk custom apparel, quote-based | From 1,050 SAR lots; 70% deposit; 7-10 days | | Corporate | MOQ/deposit, the anti-POD |
+| **Print.sa (اطبع)** | print.sa | Document-printing marketplace (600k customers) | | | Owns "اطبع" | Not merch |
+| **Samawy (سماوي)** | samawy.com | Book POD (Riyadh) | | | POD term resonates for books | Different vertical |
 
 Adjacent: PopupSnap "Product Studio" (Grovlix), live product-customizer app on both Salla and Zid; natural integration partner. Fulfilment/3PLs: Isnaad, Salasa, Premium, Shorages, IQ Fulfillment. Dropshipping apps on Salla: Mahalk (SHEIN), DropIt, Masfufat, DropCard; on Zid: Taajer. Salla runs a "حزمة الدروب شيبينق" bundle.
 
@@ -44,8 +44,8 @@ Adjacent: PopupSnap "Product Studio" (Grovlix), live product-customizer app on b
 |---|---|---|---|---|---|
 | **Printful** | "Worldwide" zone from US/EU | 2-5 bd production + 10-20 bd transit; KSA flagged for customs holds | $12.49 first item + $6.00 additional | DDU: customer pays on delivery | None native |
 | **Printify** | No MEA providers | 10-30 days | Provider-dependent | DDU | None native |
-| **Prodigi** | KSA landing page; no GCC facility | Not specified |, | DDU | None |
-| **Redbubble / TeePublic** | Marketplaces recommended by Arabic bloggers | Long |, |, | N/A |
+| **Prodigi** | KSA landing page; no GCC facility | Not specified | | DDU | None |
+| **Redbubble / TeePublic** | Marketplaces recommended by Arabic bloggers | Long | | | N/A |
 
 Implication: every Arabic "how to start POD" article names Printful/Printify/Redbubble. None can serve a Saudi customer in under two weeks or under ~50 SAR shipping. That gap is B7R's whole story.
 

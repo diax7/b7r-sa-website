@@ -37,7 +37,7 @@ admin. Colour photos come from the media collection (front required, back option
 ### US4: Settings and navigation from the admin (P2)
 `site-settings` (brand, contact, social, welcome credit, delivery days/origin, booking URL,
 app URLs), `navigation` (six primary items, four policy links, labels) and `seo-defaults`
-(title template, per-route titles/descriptions, default OG image, verification tokens, 
+(title template, per-route titles/descriptions, default OG image, verification tokens,
 admin-only fields) drive the shell, the footer, the ribbon, the contact page and metadata.
 Editing any of them revalidates every page that reads it.
 

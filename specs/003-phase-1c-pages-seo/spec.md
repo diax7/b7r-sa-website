@@ -75,7 +75,7 @@ policy, `X-Frame-Options: DENY`, and a CSP allowing self, GTM, Turnstile, the Um
 GA connect endpoints, `data:`/`blob:` images, `style-src 'self' 'unsafe-inline'` (inline
 `style` attributes from `next/image` and the motion primitives), `object-src 'none'`,
 `base-uri 'self'`, `form-action 'self'`, `frame-ancestors 'none'`. Nonces are deferred (ADR)
-because Next's static rendering cannot vary a nonce per response without dynamic rendering, 
+because Next's static rendering cannot vary a nonce per response without dynamic rendering,
 `'unsafe-inline'` for scripts as the BRD's CSP already lists. An e2e asserts zero
 `securitypolicyviolation` events on the flows that touch third parties.
 

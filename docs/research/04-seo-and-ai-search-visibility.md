@@ -115,8 +115,8 @@ Implication: being in Google's *and* Bing's indexes (IndexNow + sitemaps) covers
 | Only **1.5% of cited URLs are homepages**; 74.7% ≥2 path segments deep | Foglift Q3 2026 | Small panel |
 | **Freshness**: AI assistants cite content ~26% newer than organic SERPs; median server `Last-Modified` of cited pages = 3 days | Ahrefs 17M citations; parse.gl 8.2M | parse.gl aged only 1.4% of citations |
 | **Brand mentions beat links**: YouTube mentions r≈0.74, branded web mentions 0.66–0.71, branded search 0.35–0.47, backlinks 0.22 | Ahrefs, 75K brands (Dec 2025) | Correlational |
-| **Rank ≠ citation**: 38% of AIO citations rank top-10 (down from 76%); 18% of non-ranking citations are YouTube; ChatGPT overlap with Google top-10 4–12% | Ahrefs Mar 2026 |, |
-| **Engines don't agree**: mean pairwise Jaccard 0.094 across five engines | Foglift; Wellows 22.7M citations |, |
+| **Rank ≠ citation**: 38% of AIO citations rank top-10 (down from 76%); 18% of non-ranking citations are YouTube; ChatGPT overlap with Google top-10 4–12% | Ahrefs Mar 2026 | |
+| **Engines don't agree**: mean pairwise Jaccard 0.094 across five engines | Foglift; Wellows 22.7M citations | |
 
 Sources: [GEO paper](https://arxiv.org/abs/2311.09735), [Semrush](https://www.semrush.com/blog/content-optimization-ai-search-study/), [Indig](https://www.growth-memo.com/p/the-science-of-how-ai-picks-its-sources), [Foglift](https://foglift.io/research/ai-search-citation-benchmark-2026-q3), [Ahrefs freshness](https://ahrefs.com/blog/do-ai-assistants-prefer-to-cite-fresh-content/), [parse.gl](https://parse.gl/research/how-old-are-the-pages-ai-cites), [Ahrefs brand factors](https://ahrefs.com/blog/ai-brand-visibility-correlations/), [Ahrefs top-10](https://ahrefs.com/blog/ai-overview-citations-top-10/), [Wellows](https://wellows.com/blog/ai-citation-overlap-study/).
 

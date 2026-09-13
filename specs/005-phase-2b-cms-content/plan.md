@@ -201,7 +201,7 @@ minute in the container; skipped during build and in the CLI).
   `tests/content-verbatim.test.ts` re-pointed; `src/content/{home,pages,faq,testimonials,
   integrations,steps,why-us,legal}.ts` deleted. UI copy that stays in code moves to
   `src/messages/ar.json` (interface strings only).
-- Access: `home`, `pages`, `faqs`, `testimonials`, `integrations` are content, 
+- Access: `home`, `pages`, `faqs`, `testimonials`, `integrations` are content,
   `create/update: isEditorOrAdmin`, `delete: canDeleteVersioned` where versioned, visible
   to editors; `redirects` admin-only and hidden from editors like the settings globals.
 - Migrations: each phase adds an additive migration (`pnpm migrate:create`), including the

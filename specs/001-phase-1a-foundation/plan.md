@@ -167,7 +167,7 @@ e2e/
    swatches, which are data). Unit-tested with fixtures: `ml-4` fails, `text-left` fails,
    `rounded-l` fails, `ms-4` passes, `right-6 // rtl-allow` passes, `#0058B0` in tsx fails.
 5. Vitest (jsdom + plugin-react), Playwright (`webServer: pnpm start` on :3004 against the
-   built app; projects: Desktop Chrome 1280, Pixel 7 (Chromium), iPhone 15 (WebKit, 
+   built app; projects: Desktop Chrome 1280, Pixel 7 (Chromium), iPhone 15 (WebKit,
    `playwright install chromium webkit`)), LHCI (`lighthouserc.json`
    mobile preset, assertions Performance 0.9, Accessibility 0.95, Best Practices 0.95, SEO 1.0
    on `http://localhost:3004/`, `NEXT_PUBLIC_SITE_URL=https://b7r.sa` for the run).

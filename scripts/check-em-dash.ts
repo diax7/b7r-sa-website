@@ -20,10 +20,15 @@ export interface Violation {
   text: string;
 }
 
+/** A table cell holding only a comma: what a mechanical dash replacement leaves behind. */
+const COMMA_CELL = /\|\s*[,\u060C]\s*\|/;
+
 export function checkSource(file: string, source: string): Violation[] {
   return source
     .split(/\r?\n/)
-    .flatMap((text, i) => (text.includes(EM_DASH) ? [{ file, line: i + 1, text }] : []));
+    .flatMap((text, i) =>
+      text.includes(EM_DASH) || COMMA_CELL.test(text) ? [{ file, line: i + 1, text }] : [],
+    );
 }
 
 function walk(dir: string, out: string[] = []): string[] {
@@ -66,7 +71,7 @@ if (isMain) {
   } else {
     for (const v of violations) console.error(`${v.file}:${v.line}  ${v.text.trim()}`);
     console.error(
-      `\ncheck:dash: ${violations.length} em dash(es). Use «،», a comma, a colon or a new sentence (.claude/rules/writing.md).`,
+      `\ncheck:dash: ${violations.length} em dash(es) or comma-only cell(s). A colon for label/value, a semicolon or full stop for a pause, an empty cell (.claude/rules/writing.md).`,
     );
     process.exit(1);
   }

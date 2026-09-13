@@ -17,7 +17,7 @@ Arabic lives at the root. `/en/*` is reserved for the English phase and must not
 | `/blog/{slug}` | Post (3 samples in L1) | yes | §6.11 |
 | `/terms` · `/shipping` · `/privacy` | Legal | yes | §6.12 |
 | `/404` (not-found) | 404 | no | §6.13, returns HTTP 404 |
-| `/sitemap.xml`, `/robots.txt`, `/{INDEXNOW_KEY}.txt`, `/manifest.webmanifest`, favicon set | Machine files |, | §7 |
+| `/sitemap.xml`, `/robots.txt`, `/{INDEXNOW_KEY}.txt`, `/manifest.webmanifest`, favicon set | Machine files | | §7 |
 | `POST /api/contact`, `POST /api/newsletter`, `GET /api/health` | API | no | §6.9, §6.14, §8.6 |
 
 Hub slugs for the blog (used as filters in L1, as routes in L3): `getting-started`, `pod-basics`, `salla-zid-shopify`, `design`, `pricing-profit`, `seasons`.

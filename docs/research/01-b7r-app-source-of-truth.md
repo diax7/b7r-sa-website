@@ -70,10 +70,10 @@ Canonical implementation is `app/globals.css`; canonical design intent (with hex
 | Primary | `#019CE6` = `hsl(199 99% 45%)` | `#33C3F5` = `hsl(199 99% 55%)` | `b7r-handoff/UserInterface.md:32`; `app/globals.css:302,428` |
 | Primary foreground | `hsl(0 0% 100%)` | `hsl(0 0% 100%)` | `app/globals.css:303,429` |
 | Brand secondary / navy | `#015CB5` | `#015CB5` | `b7r-handoff/UserInterface.md:33`, `docs/DESIGN_SYSTEM.md:12` |
-| Primary cyan (hover/highlight) | `#1EC7FF` |, | `docs/board-presentation-designer-brief.md:88` |
-| Email/deck dark navy | `#0a2747` |, | `server/email/internal/templates/base-layout.ts:105` |
-| Email brand cyan | `#0297E0` |, | `base-layout.ts:99` |
-| PWA theme color | `#019CE4` |, | `public/manifest.webmanifest` |
+| Primary cyan (hover/highlight) | `#1EC7FF` | | `docs/board-presentation-designer-brief.md:88` |
+| Email/deck dark navy | `#0a2747` | | `server/email/internal/templates/base-layout.ts:105` |
+| Email brand cyan | `#0297E0` | | `base-layout.ts:99` |
+| PWA theme color | `#019CE4` | | `public/manifest.webmanifest` |
 
 **Surfaces / text (light)**, `app/globals.css:296-315`, `b7r-handoff/UserInterface.md:37-47`
 - Background `hsl(0 0% 94.12%)` = `#F0F0F0`
@@ -346,7 +346,7 @@ profit = (Σ(selling_price × qty) + customer_shipping_amount) − (Σ(base_cost
 | AR name | Price (SAR, VAT-incl) | Method | ETA | Default |
 |---|---|---|---|---|
 | SMSA Express - توصيل للمنزل | **25.00** | `home` | **2–4 days** | ✅ |
-| SMSA Express - استلام من الفرع | **20.00** | `pickup` | **1–3 days** |, |
+| SMSA Express - استلام من الفرع | **20.00** | `pickup` | **1–3 days** | |
 
 **OTO carrier options (COST to B7R, 1 kg, snapshot 2026-06-14)**, `docs/OTO_CARRIER_CATALOG.md:31-46`: SMSA 23.2 SAR (6/6 coverage, launch carrier); J&T 19.0; Aymakan 19.95; Naqel 20.9; Aramex 20.33 (1–2 days); UPS 23.5; iMile 18.0; Shipa 18.0; others. Pickup/locker: Redbox 13.0; SMSA PUDO 13.92; SPL PUDO 14.0; Aramex PUDO 16.0.
 

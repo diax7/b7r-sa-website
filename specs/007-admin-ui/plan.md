@@ -193,7 +193,7 @@ docs/ADMIN-DESIGN-SYSTEM.md, .claude/rules/admin-ui.md, docs/DECISIONS.md ADR-03
 - Field widgets (`admin.components.Field`): `IconSelect` for `CARD_ICONS` fields (grid of
   icon buttons, radiogroup semantics); `PlatformSelect` for `integrations.platform` (radio
   cards with the brand SVGs); `EnabledSwitch` for every `enabled` checkbox (switch + one
-  sentence taken from the field's own `admin.description`, so each names its section, 
+  sentence taken from the field's own `admin.description`, so each names its section,
   «عند الإيقاف يختفي قسم «لماذا بحر برنت» من الصفحة الرئيسية»). Each uses `useField` and
   works with drafts/autosave.
 - Collection polish: Arabic `admin.description` on every collection and global,

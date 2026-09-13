@@ -74,7 +74,7 @@ mobile Lighthouse Performance from 82 to 90 and LCP under DevTools throttling to
 is not painted above the fold on `/` (H2s only), so it is no longer preloaded there; pages
 whose H1 is Bold preload it themselves. BRD 3.3 and 7.8 amended accordingly.
 Lighthouse's simulated LCP stays at 3.4–3.6 s (removing Bold from the preload set changed
-nothing measurable) because Lantern charges every resource that starts before first paint, 
+nothing measurable) because Lantern charges every resource that starts before first paint,
 all JS chunks included, to the LCP path. `lighthouserc.json` now asserts LCP ≤ 2.5 s and
 CLS ≤ 0.1 as the constitution requires, so CI will be red on LCP until the simulated value
 drops; tracked as a Phase 1b task (reduce initial JS: hero island slimming, no new eager
@@ -114,7 +114,7 @@ weights the document actually renders (Regular, Medium, Bold everywhere; Black o
 `sizes` on the header logo (12 → 3 kB), and keeping every island (accordion, video, widget,
 consent, GA loader) out of the first-paint JS via client-side `dynamic(..., { ssr:false })`.
 What did not: dropping Bold from the preload set (browsers fetch a weight as soon as any text
-in the document uses it, the H2s below the fold need Bold). The remaining floor is the React
+in the document uses it; the H2s below the fold need Bold). The remaining floor is the React
 runtime. Phase 1c amendment: the LCP ≤ 2.5 s assertion is `warn` in `lighthouserc.json` (the
 threshold stays), because a permanently red step would hide an accessibility or SEO regression
 under the same red; every other assertion stays `error`. Re-arm condition: flip it back to
@@ -183,7 +183,7 @@ data. BRD 7.3 amended.
 CI builds and serves with the production origin (for the noindex and Lighthouse SEO checks),
 so a required-variable check keyed on `NEXT_PUBLIC_SITE_URL` would turn CI red. The BRD 8.5
 "required in prod" set is asserted by `assertProductionEnv()` from `instrumentation.ts`
-`register()`, at server start, not at build, and only when `B7R_RUNTIME=production`, a
+`register()` (at server start, not at build) and only when `B7R_RUNTIME=production`, a
 variable set solely in the CranL app. It throws, so a misconfigured deploy fails its health
 check and CranL keeps the previous image. `/api/health` reports `newsletter`, `contact`,
 `turnstile` and `indexnow` so a mocked or unconfigured production is visible.
@@ -232,7 +232,7 @@ while the schema moves.
 
 ## ADR-026: Seed fixtures, create-only migration (2026-09-13)
 
-Amended 2026-09-13 (2b phase 2, ADR-031): the one exception to "never overwrites", the
+Amended 2026-09-13 (2b phase 2, ADR-031): the one exception to "never overwrites": the
 seed removes the seven designed pages' rows from `seo-defaults` once those pages exist,
 with a log line, so their title and description have one source (the page's `seo` group).
 
@@ -307,7 +307,7 @@ verbatim against the BRD where it came from the BRD. An editor rewrites the pitc
 calculator. (2) **Brand assets are code**: the integration logos (SVG, which the media
 library refuses on purpose, ADR-029) and the marketing loop ship with the site, so the
 `integrations` document carries the platform (which selects the logo), the name and the
-order, and the `home.video` group carries the copy and the switch, a new platform or a new
+order, and the `home.video` group carries the copy and the switch; a new platform or a new
 film is a deploy. (3) **Drafts are staff-only on the REST API**: the `home` global answers
 403 to anonymous reads because a versioned global would otherwise hand its draft to anyone
 with `?draft=true`; the site reads it through the Local API with `draft: false`. `faqs`
@@ -316,7 +316,7 @@ gains `homeOrder` (BRD 4.4 orders the five home entries differently from Appendi
 `placeholder` and ADR-013's rule in the section; the home tones alternate over the sections
 that render (`alternateTones`, BRD 3.4). Every hook revalidates through
 `safeRevalidatePath`, which turns Next's missing-request-store invariant (a job, a scheduled
-publish) into one info line, the 60 s timer covers those. Hooks that refuse a save throw a
+publish) into one info line; the 60 s timer covers those. Hooks that refuse a save throw a
 public `APIError(message, 400, undefined, true)`, never `ValidationError`: the built server
 recognises Payload's error classes by `instanceof`, which fails once a class is bundled into
 more than one chunk, and then drops the field data (the FAQ home limit and the password
@@ -328,24 +328,24 @@ why-us}.ts` are gone. BRD §9.4 amended for `home`, `integrations` and `faqs`.
 Phase 2 (2026-09-13) adds the `pages` collection on the same lines. **A block is a designed
 section**, never a layout primitive: `story` (the About header with the facts band switch),
 `cards`, `steps` (the journey), `profitEquation`, `faqList` (all groups, or a slice of the
-home entries), `miskCredential`, `contact` (one block for the whole contact section, the
+home entries), `miskCredential`, `contact` (one block for the whole contact section; the
 form, the cards and booking are one designed grid, so the plan's three blocks became one),
 `legalBody` (Markdown + its date), `mediaBanner` and `richText` (Lexical, rendered on the
 server through the Prose converters with the same link allowlist as Markdown). The seven
-designed pages are `pages` rows with reserved slugs, their route folders stay in the code
-and render the matching document, the slug cannot change and the row cannot be deleted, 
+designed pages are `pages` rows with reserved slugs: their route folders stay in the code
+and render the matching document, the slug cannot change and the row cannot be deleted;
 and every other published page is served by `/[slug]`. The first block carries the page
 title as its H1; tones alternate over the blocks from surface; the ribbon follows the last
 one. A page's `seo` group replaces its `seo-defaults` row (BRD §9.4 wanted `plugin-seo`; a
 group with the same two limits needs no plugin), and the seed removes the seven moved rows
-with a log line, the one recorded exception to ADR-026's "never overwrites". The contact
+with a log line; the one recorded exception to ADR-026's "never overwrites". The contact
 form's labels, placeholders, inquiry options (the API validates them) and validation lines
 stay interface copy in `src/content/pages.ts`; «آخر تحديث:» moves to `ar.json`. The legal
 Markdown is now admin content, so `lib/markdown.ts` allowlists: raw HTML is dropped, links
 keep `https?:`, `mailto:` and site paths only, off-site links open with `rel="noopener"`
 (closes the IDEAS item; `tests/markdown-sanitise.test.ts`). The rich-text editor carries the
 BRD §9.5 feature set (H2/H3, bold, italic, lists, links to pages/products or a URL, media
-images) and no more, no H1, alignment, code or tables, and the «CTA block» custom node
+images) and no more (no H1, alignment, code or tables), and the «CTA block» custom node
 is deferred to IDEAS because no seeded page needs it. Every block section derives its ids
 from an anchor computed per page (`faq`, `faq-2`…), so two blocks of one type never share
 an id. The seven designed pages cannot be unpublished either (the route would have nothing
@@ -359,14 +359,14 @@ not offer.
 
 With `src/app/(site)/[slug]/page.tsx` in place every unknown top-level URL would match the
 route and answer `notFound()` from a bare document (ADR-024) instead of `global-not-found`
-, a site-wide regression of the 404 page. The proxy now decides first: a top-level segment
+: a site-wide regression of the 404 page. The proxy now decides first: a top-level segment
 that is none of the code-owned names (`CODE_TOP_LEVEL` in `lib/site-routes.ts`, kept equal
 to the `(site)` folders by a unit test, repeated as a literal in the proxy matcher because
 Next reads `config` statically) and shaped like a slug is looked up in the published pages;
 anything unknown is rewritten to `/__404/<slug>`, a path no route matches, so Next renders
 the global 404 server-side with status 404 and the URL unchanged (`e2e` reads the raw HTML).
 The allowlist is `/api/pages/slugs` (ISR 60 s, revalidated by the pages hook), read from
-`http://127.0.0.1:${PORT}`, never the public origin, and cached in-process for 20 s with
+`http://127.0.0.1:${PORT}` (never the public origin) and cached in-process for 20 s with
 stale-while-revalidate; a miss re-reads the list at most once every 2 s, so a page
 published a moment ago answers on its first request while a flood of unknown URLs costs one
 loopback read per window; a slug that fails the shape check is refused without a lookup,
@@ -401,24 +401,24 @@ the proxy at once.
 Payload's jobs queue runs inside the Next process (BRD 9.6): `autoRun` on a one-minute
 cron with `shouldAutoRun: () => !isBuildPhase()` so `next build` never starts it, completed
 jobs deleted, and `access.run: () => false` so `/api/payload/payload-jobs/run` answers
-nobody, the cron is the only runner (e2e). The site's own Payload client (`cms()`)
+nobody; the cron is the only runner (e2e). The site's own Payload client (`cms()`)
 initialises with `cron: true`, so the first page render or health probe after a boot starts
-the runner, a boot invariant, not something the first admin visit does, and `/api/health`
+the runner (a boot invariant, not something the first admin visit does), and `/api/health`
 reports `jobs: on` plus `jobsFailed`, the count of jobs that exhausted their retries. Two
 things run on it.
 **Scheduled publish** (`schedulePublish: true` on `home`, `pages`, `products`,
 `testimonials`): the publish fires the same `afterChange` hooks, but from a job there is no
 request store, and when the cron fires inside a render's context Next refuses
-`revalidatePath` with "during render which is unsupported", `safeRevalidatePath` files
+`revalidatePath` with "during render which is unsupported"; `safeRevalidatePath` files
 both refusals under one info line and lets the 60 s timer regenerate the page (verified:
 a page scheduled through the Local API was published by the cron and served within a
 minute); any other failure still surfaces. **IndexNow** (`indexnow-ping` task, three
 retries with exponential backoff): queued by the products, pages, faqs, testimonials,
 integrations and global hooks with the routes they regenerated (pages only, never the
-sitemap, the manifest or an API path), but only when `B7R_RUNTIME=production`, the flag
-set solely in the CranL production app, never derived from the origin, and a valid
+sitemap, the manifest or an API path), but only when `B7R_RUNTIME=production` (the flag
+set solely in the CranL production app, never derived from the origin) and a valid
 `INDEXNOW_KEY` exist, so CI and previews never reach the endpoint, and never on a draft
-save or autosave of a published document (`isDraftSave` reads the request's `draft` flag, 
+save or autosave of a published document (`isDraftSave` reads the request's `draft` flag,
 an editor typing into a live page must not ping every 1.5 s); a queue failure is logged and
 the publish stands. `scripts/indexnow.ts` (the sitemap diff after a deploy)
 remains for the deploy-time submission.
@@ -439,14 +439,14 @@ needed a fresh challenge on every retry. Shipped instead: the widget above the l
 (`admin.components.beforeLogin`) executes once on mount and posts its token to
 `/api/turnstile/login` (JSON + same-origin, 10 per 10 min per IP), which verifies it with
 `siteverify` and answers a signed, HttpOnly, `SameSite=Lax` cookie scoped to `/api/payload`
-, `<exp>.<hmac>` over the expiry and the client address with the Payload secret, ten minutes,
+: `<exp>.<hmac>` over the expiry and the client address with the Payload secret, ten minutes,
 refreshed by the widget before it expires; binding the address means one solved challenge
 cannot be shared across a farm (a visitor whose network changes mid-flow solves it once
 more). `users.hooks.beforeOperation` (`gateLogin`, login only) admits a request whose
 cookie verifies and throws a 401 with the Arabic reason before Payload touches the password
 or the attempt counter; no network call on the login path itself. Without
 `TURNSTILE_SECRET_KEY` the gate is open (204, no cookie, one warning at boot) so a fresh
-install can sign in, and `/api/health` shows `turnstile: off`, but both Turnstile keys are
+install can sign in, and `/api/health` shows `turnstile: off`; but both Turnstile keys are
 in the production-required set, so a production boot never runs the login open (ADR-019's
 "optional until the keys exist" was the contact form; the login is a different risk). CI
 keeps the always-pass site key and no secret; the pure pieces (`makeLoginGate`,
@@ -462,7 +462,7 @@ is Arabic and right-to-left with one button to `/admin/reset/<token>` on
 
 **Backups** (BRD 9.8). `scripts/backup.sh` runs `pg_dump --format=custom` and uploads
 `YYYY-MM-DD.dump` with the AWS CLI to a **separate private bucket** with its own key pair
-(`BACKUP_S3_*`; endpoint/region fall back to the media bucket's), never the public-read
+(`BACKUP_S3_*`; endpoint/region fall back to the media bucket's); never the public-read
 media bucket, which would hand password hashes and drafts to anyone guessing a date; the
 script refuses `BACKUP_S3_BUCKET = S3_BUCKET`. `.github/workflows/backup.yml` runs it
 weekly from the `production` environment (a notice, not a failure, while the secrets are
@@ -505,12 +505,12 @@ canvas starts empty with the prompt (Dhia can flip it to the pre-placed sample i
 the island revokes a replaced object URL. The two new strings are Appendix G rows and are
 listed for the 2b `home` seed. BRD §6.4.3 amended.
 
-Amended 2026-09-13 (Dhia's quick edits): the sample design is gone، no «جرّب تصميماً
+Amended 2026-09-13 (Dhia's quick edits): the sample design is gone: no «جرّب تصميماً
 جاهزاً» link, no `designer.sample` CMS field, no `designer_sample` event, no
 `public/designs/sample-tasmeemak.png` (ADR-007 retired). The canvas starts empty and only an
 upload fills it; every design is an object URL. The pricing legend «التسعير» and the
 «تقدير لا يشمل الشحن والضريبة» footnote are gone from the calculator too. The migration
-drops the `designer_sample` column in place, pre-launch, with no running image to protect;
+drops the `designer_sample` column in place (pre-launch, with no running image to protect);
 after launch a removed field is a two-release contract (ADR-025).
 
 ## ADR-037: The video is a muted background loop (2026-09-13)
@@ -519,7 +519,7 @@ Dhia's design review: a continuous looping background video with the copy over i
 poster with a play button. This departs from BRD §3.7 ("no continuous background
 animations except the waves") and §6.4.5 ("no autoplay anywhere, no loop"), so both are
 amended and constitution principle V is bumped to 1.1.0 naming the loop. The conditions
-that keep it acceptable: muted (`muted` set as a property before `play()`, React omits the
+that keep it acceptable: muted (`muted` set as a property before `play()`; React omits the
 attribute in server HTML), decorative (`aria-hidden`, no controls, the copy carries the
 meaning), lazy (poster and copy are server-rendered; the loop mounts near the viewport with
 `preload="none"`, so nothing is fetched above the fold and Lighthouse is unaffected) and
@@ -530,7 +530,7 @@ fixed scrim keeps the copy at AA on every frame. The `video_play` event is retir
 ## ADR-038: Widget at the bottom-left, grouped numbers, a smaller riyal symbol (2026-09-13)
 
 Dhia's design review, three global changes. The WhatsApp widget moves to the bottom-left,
-which in this RTL-only site is the inline end: `end-6`, no physical property, BRD §6.15's
+which in this RTL-only site is the inline end: `end-6`, no physical property; BRD §6.15's
 "one intentional physical property" is retired (a future LTR locale would put it
 bottom-right, the conventional LTR spot). Its panel is positioned inside the fixed dock above
 the button, so opening it never moves the button (the old flex layout shifted it). Every
@@ -541,8 +541,8 @@ riyal symbol renders at 0.85 em instead of 1 em. BRD §3.11 and §6.15 amended.
 ## ADR-039: The admin panel: shadcn/ui shell on Payload's engine, dark only (2026-09-13)
 
 Dhia asked for the panel to be rebuilt on shadcn/ui with icons everywhere, easy to use, and a
-design system for whatever comes next. Payload keeps rendering the edit and list views, 
-rebuilding them would re-implement drafts, versions, uploads and Lexical for no editor gain, 
+design system for whatever comes next. Payload keeps rendering the edit and list views
+(rebuilding them would re-implement drafts, versions, uploads and Lexical for no editor gain)
 and we own everything around them (`specs/007-admin-ui/`): the theme, the sidebar, the header,
 the account menu, the login, the dashboard, the field widgets and the descriptions.
 
@@ -566,7 +566,7 @@ utilities are imported into `admin.css` without a layer and without preflight, s
 Payload's rules on our own elements without `!important`, and brand overrides of Payload's
 elements go in `@layer payload` as Payload documents. One thing to know: the site's stylesheet
 also reaches `/admin` because `global-not-found.tsx` (a root-level route) imports it and Next
-bundles root-level CSS everywhere, the site's utilities are layered (`@layer utilities`), so
+bundles root-level CSS everywhere; the site's utilities are layered (`@layer utilities`), so
 the admin's unlayered copies win, and its `@theme inline` values are inlined into the
 utilities, so the site's `:root` variables cannot leak into them. Admin components therefore
 use utilities only, never `var(--color-*)`.
@@ -582,9 +582,9 @@ columns. `docs/ADMIN-DESIGN-SYSTEM.md` is the reference and `.claude/rules/admin
 checklist. Deliberately no `defineCollection` wrapper: a test over a dozen call sites is the
 same guarantee with no API surface (CTO plan review, 90).
 
-Phases: (1) foundation, this ADR, tokens, primitives, icons, descriptions; (2) the shell, 
+Phases: (1) foundation: this ADR, tokens, primitives, icons, descriptions; (2) the shell:
 sidebar, header, palette, account, login; (3) the dashboard, the preview button (Next draft
-mode; the proxy passes requests carrying the draft cookie), `lastPublishedBy`, field widgets.
+mode; the proxy passes requests carrying the draft cookie), `lastSavedBy`, field widgets.
 
 Phase 3 (2026-09-13, as shipped). **Dashboard** (`views.dashboard.Component`, rendered inside
 Payload's template): a greeting, quick-action tiles filtered by the user's permissions, the
@@ -606,7 +606,10 @@ warning-coloured bar on the site says what the editor sees is not public. **Widg
 (`admin.components.Field`): `EnabledSwitch` on every section switch with a description that
 names the section, `IconSelect` for the lucide selects, `PlatformSelect` with the brand SVGs.
 Not shown on the dashboard: the last backup date (only the bucket knows; a status posted by
-the weekly workflow is the way, docs/IDEAS.md).
+the weekly workflow is the way, docs/IDEAS.md). Accepted edge: the proxy passes through on
+the *presence* of the draft cookie, so a visitor who sets a junk cookie of that name reaches
+the `[slug]` route, where Next rejects the value and the published read runs; an unknown slug
+then gets the route's own 404 instead of the global one. Nothing leaks.
 
 ## ADR-040: No em dashes anywhere (2026-09-13)
 

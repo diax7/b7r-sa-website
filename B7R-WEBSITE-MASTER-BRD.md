@@ -324,10 +324,9 @@ No hue gradients, no glassmorphism, no glow, no neon, no rainbow text, no oversi
 
 Writing rule (Dhia, 2026-09-13, ADR-040): no em dashes in any copy, search title or description, admin string or e-mail. Arabic uses «،» or a colon; English a comma, a colon or a new sentence. `pnpm check:dash` enforces it.
 
-
 Every user-visible string in Level 1 is here. Copy it exactly, including punctuation. Strings in `{braces}` are variables. Where a string depends on a product, see Appendix A.
 
-**Reading this section:** where a line reads `Title, text`, the em dash is markdown structure separating a heading from its body text; it is never rendered on screen. The middle dot `·` between list items likewise means "separate elements", not a character to display. Arabic on-screen copy never contains an em dash (§4.1).
+**Reading this section:** where a line reads `Title: text`, the colon is markdown structure separating a heading from its body text; it is never rendered on screen. The middle dot `·` between list items likewise means "separate elements", not a character to display. Arabic on-screen copy never contains an em dash (§4.1).
 
 ### 4.1 Voice and writing rules (for the rare new string)
 
@@ -352,7 +351,7 @@ Every user-visible string in Level 1 is here. Copy it exactly, including punctua
 | Brand | براندك (CTA only, per Dhia) · علامتك التجارية (prose) | ماركتك |
 | Register | أنشئ حسابك / ابدأ براندك مجانًا | سجّل الآن (allowed only in the ribbon lead) |
 | Delivery | التوصيل, نوصّل | الشحن as the customer-facing verb (use شحن for the act B7R does) |
-| Sign in | تسجيل الدخول |، |
+| Sign in | تسجيل الدخول | |
 
 ### 4.3 Global elements
 
@@ -412,9 +411,9 @@ Every user-visible string in Level 1 is here. Copy it exactly, including punctua
 - Eyebrow: كيف نعمل
 - H2: ثلاث خطوات وتبدأ
 - Steps:
-  1. صمّم منتجك، ارفع تصميمك وشاهده على المنتج فوراً.
-  2. اربط متجرك، سلة أو زد أو شوبيفاي بضغطة واحدة.
-  3. نطبع ونشحن، كل طلب يصلنا تلقائياً ويوصل عميلك باسم متجرك.
+  1. صمّم منتجك: ارفع تصميمك وشاهده على المنتج فوراً.
+  2. اربط متجرك: سلة أو زد أو شوبيفاي بضغطة واحدة.
+  3. نطبع ونشحن: كل طلب يصلنا تلقائياً ويوصل عميلك باسم متجرك.
 - Link under the steps: اعرف أكثر عن طريقة العمل → `/how-it-works`
 
 **Video section**
@@ -426,17 +425,17 @@ Every user-visible string in Level 1 is here. Copy it exactly, including punctua
 - Eyebrow: لماذا بحر
 - H2: لماذا يختارنا التجار؟
 - Cards:
-  1. بدون مخاطرة، صفر رأس مال، صفر مخزون، بدون حد أدنى للطلبات.
-  2. كل شيء تلقائي، الطلبات تتزامن من متجرك وتُنفّذ بدون تدخل منك.
-  3. جودة محلية وسريعة، طباعة في جدة وتوصيل لكل المملكة خلال 5 أيام.
+  1. بدون مخاطرة: صفر رأس مال، صفر مخزون، بدون حد أدنى للطلبات.
+  2. كل شيء تلقائي: الطلبات تتزامن من متجرك وتُنفّذ بدون تدخل منك.
+  3. جودة محلية وسريعة: طباعة في جدة وتوصيل لكل المملكة خلال 5 أيام.
 
 **Testimonials section**
 - Eyebrow: آراء التجار
 - H2: تجار بدأوا معنا
 - Sample cards (render only while `testimonials.placeholder = true`; each card carries a visible tag **نموذج** and the whole section is hidden in production until real content exists):
-  1. «نموذج»، "ربطت متجري في سلة خلال دقائق، وأول طلب وصل عميلي خلال أربعة أيام."، اسم التاجر، اسم المتجر
-  2. «نموذج»، "بدأت بدون أي مخزون، والآن عندي 12 تصميماً تبيع كل أسبوع."، اسم التاجر، اسم المتجر
-  3. «نموذج»، "جودة الطباعة أفضل مما توقعت، والتغليف باسم متجري."، اسم التاجر، اسم المتجر
+  1. «نموذج»: "ربطت متجري في سلة خلال دقائق، وأول طلب وصل عميلي خلال أربعة أيام.": اسم التاجر، اسم المتجر
+  2. «نموذج»: "بدأت بدون أي مخزون، والآن عندي 12 تصميماً تبيع كل أسبوع.": اسم التاجر، اسم المتجر
+  3. «نموذج»: "جودة الطباعة أفضل مما توقعت، والتغليف باسم متجري.": اسم التاجر، اسم المتجر
 
 **Integrations section**
 - H2: اربط متجرك بضغطة واحدة
@@ -447,11 +446,11 @@ Every user-visible string in Level 1 is here. Copy it exactly, including punctua
 **FAQ section (5)**
 - H2: الأسئلة الشائعة
 - Items:
-  1. كم أحتاج لأبدأ؟، لا شيء. تسجّل مجاناً وتحصل على 30 ريالاً رصيداً ترحيبياً.
-  2. كيف أربح؟، تحدّد سعر البيع في متجرك. عند كل طلب نخصم تكلفة المنتج والشحن من محفظتك، والباقي ربحك.
-  3. هل يعرف عميلي أن الطباعة من بحر برنت؟، لا. الطرد وبوليصة الشحن باسم متجرك فقط.
-  4. كم يستغرق التوصيل؟، 5 أيام كحد أقصى لأي مدينة في السعودية.
-  5. ما المتاجر التي أقدر أربطها؟، سلة وزد وشوبيفاي، والربط مجاني.
+  1. كم أحتاج لأبدأ؟: لا شيء. تسجّل مجاناً وتحصل على 30 ريالاً رصيداً ترحيبياً.
+  2. كيف أربح؟: تحدّد سعر البيع في متجرك. عند كل طلب نخصم تكلفة المنتج والشحن من محفظتك، والباقي ربحك.
+  3. هل يعرف عميلي أن الطباعة من بحر برنت؟: لا. الطرد وبوليصة الشحن باسم متجرك فقط.
+  4. كم يستغرق التوصيل؟: 5 أيام كحد أقصى لأي مدينة في السعودية.
+  5. ما المتاجر التي أقدر أربطها؟: سلة وزد وشوبيفاي، والربط مجاني.
 - Link: كل الأسئلة → `/faq`
 
 **CTA ribbon (on every page, before the footer)**
@@ -462,9 +461,9 @@ Every user-visible string in Level 1 is here. Copy it exactly, including punctua
 ### 4.5 Footer
 
 - Tagline under the white logo: منصة الطباعة عند الطلب في السعودية
-- Column 1 title: روابط، items: الرئيسية · المنتجات · كيف نعمل · من نحن · المدونة · تواصل معنا
-- Column 2 title: السياسات، items: الشروط والأحكام · الشحن والتوصيل · سياسة الخصوصية · الأسئلة الشائعة
-- Column 3 title: النشرة البريدية، label: اشترك ليصلك الجديد، placeholder: name@example.com، button: اشترك، success: اشتركت. سنرسل لك الجديد فقط.، error: أدخل بريداً إلكترونياً صحيحاً.
+- Column 1 title: روابط; items: الرئيسية · المنتجات · كيف نعمل · من نحن · المدونة · تواصل معنا
+- Column 2 title: السياسات; items: الشروط والأحكام · الشحن والتوصيل · سياسة الخصوصية · الأسئلة الشائعة
+- Column 3 title: النشرة البريدية; label: اشترك ليصلك الجديد; placeholder: name@example.com; button: اشترك; success: اشتركت. سنرسل لك الجديد فقط.; error: أدخل بريداً إلكترونياً صحيحاً.
 - Contact line: contact@b7r.sa · 0501699572 (both LTR inside `<bdi>`; the number links to `tel:+966501699572`)
 - Social aria labels: بحر برنت على X · بحر برنت على إنستغرام · بحر برنت على تيك توك · بحر برنت على واتساب
 - Badges row caption (visually hidden, aria): وسائل الدفع وجهات التوثيق
@@ -474,7 +473,7 @@ Every user-visible string in Level 1 is here. Copy it exactly, including punctua
 ### 4.6 WhatsApp widget
 
 - Floating button aria: تواصل معنا عبر واتساب
-- Popup header title: بحر برنت، subtitle: فريق الدعم
+- Popup header title: بحر برنت; subtitle: فريق الدعم
 - Greeting bubble: أهلاً 👋 كيف نقدر نساعدك؟
 - Action button: ابدأ المحادثة
 - Prefilled message: مرحباً، أرغب بمعرفة المزيد عن بحر برنت.
@@ -500,7 +499,7 @@ Every user-visible string in Level 1 is here. Copy it exactly, including punctua
 - Price footnote: تقدير لا يشمل الشحن والضريبة. أنت تحدّد سعر البيع. *(removed 2026-09-13)*
 - Primary CTA: ابدأ بيع هذا المنتج → register URL with `utm_campaign=product&utm_content={slug}`
 - Secondary link: جرّب تصميمك عليه → `/#designer?product={slug}`
-- Section titles: الوصف · المواصفات · جدول المقاسات · منتجات أخرى *(2026-09-13: «الوصف» has no section of its own, the full description sits under the product name)*
+- Section titles: الوصف · المواصفات · جدول المقاسات · منتجات أخرى *(2026-09-13: «الوصف» has no section of its own; the full description sits under the product name)*
 - Spec labels: الخامة · الوزن · المقاسات · الألوان · منطقة الطباعة · طريقة الطباعة
 - Print method value (all products): طباعة رقمية عالية الجودة
 - Print area value: الواجهة الأمامية، 28 × 38 سم
@@ -513,11 +512,11 @@ Every user-visible string in Level 1 is here. Copy it exactly, including punctua
 - H1: كيف تعمل الطباعة عند الطلب مع بحر؟
 - Lead: نموذج عمل يتيح لك بيع منتجات مخصصة دون أن تطبعها أو تخزنها.
 - Steps (5, each with a 3D icon):
-  1. أنشئ حسابك مجاناً، سجّل خلال دقيقة واحصل على 30 ريالاً رصيداً ترحيبياً.
-  2. اختر منتجك وصمّمه، ارفع تصميمك وشاهده على المنتج مباشرة، وحدّد سعر البيع.
-  3. اربط متجرك، سلة أو زد أو شوبيفاي، بربط آمن وبدون مشاركة أي بيانات حساسة.
-  4. انشر المنتج بضغطة، يُزامَن الاسم والصور والخيارات والسعر إلى متجرك تلقائياً.
-  5. نطبع ونغلّف ونشحن، كل طلب يصلنا فور شرائه، نخصم التكلفة من محفظتك، ونشحنه باسم متجرك خلال 5 أيام كحد أقصى.
+  1. أنشئ حسابك مجاناً: سجّل خلال دقيقة واحصل على 30 ريالاً رصيداً ترحيبياً.
+  2. اختر منتجك وصمّمه: ارفع تصميمك وشاهده على المنتج مباشرة، وحدّد سعر البيع.
+  3. اربط متجرك: سلة أو زد أو شوبيفاي، بربط آمن وبدون مشاركة أي بيانات حساسة.
+  4. انشر المنتج بضغطة: يُزامَن الاسم والصور والخيارات والسعر إلى متجرك تلقائياً.
+  5. نطبع ونغلّف ونشحن: كل طلب يصلنا فور شرائه، نخصم التكلفة من محفظتك، ونشحنه باسم متجرك خلال 5 أيام كحد أقصى.
 - Profit block title: كيف تُحسب أرباحك؟
 - Equation tiles: سعر البيع − التكلفة الأساسية = ربحك
 - Equation example line: مثال: تيشيرت تبيعه بـ 89 وتكلفته 45، ربحك 44 لكل قطعة. (render the three numbers with `SarAmount`)
@@ -530,9 +529,9 @@ Every user-visible string in Level 1 is here. Copy it exactly, including punctua
 - Story title: حكاية بدأت بتحدٍّ وتحوّلت إلى فرصة
 - Story: وُلدت بحر برنت من تجربة مصمم حاول إطلاق علامته التجارية، فاصطدم بتكاليف مرتفعة وتعقيدات لوجستية عطّلت حلمه. تحوّل التحدي إلى فرصة لبناء حل محلي يفتح الباب لكل مبدع ورائد أعمال ليطلق منتجاته بأقل التكاليف. اليوم، بحر برنت منصة سعودية متكاملة تمكّن المؤثرين والمصممين وأصحاب الأفكار من تحويل إبداعاتهم إلى منتجات حقيقية تصل إلى عملائهم بسهولة واحترافية.
 - Cards:
-  - رسالتنا، تمكين أي شخص من إطلاق علامته التجارية بسهولة، عبر خدمة محلية للطباعة عند الطلب تشمل المنتجات والطباعة والتغليف والشحن، مع ربط ذكي بمتجره.
-  - رؤيتنا، أن نكون الشريك الأول للمبدعين ورواد الأعمال في السعودية والخليج لإطلاق منتجاتهم المطبوعة، وأن نسهم في اقتصاد إبداعي مستدام يقوم على حلول تقنية محلية.
-  - قيمنا، الإبداع الذي يحوّل الأفكار إلى منتجات، والتمكين الذي يمنح كل مبدع بداية بلا مخاطرة، والجودة التي نلتزم بها في الطباعة والتغليف.
+  - رسالتنا: تمكين أي شخص من إطلاق علامته التجارية بسهولة، عبر خدمة محلية للطباعة عند الطلب تشمل المنتجات والطباعة والتغليف والشحن، مع ربط ذكي بمتجره.
+  - رؤيتنا: أن نكون الشريك الأول للمبدعين ورواد الأعمال في السعودية والخليج لإطلاق منتجاتهم المطبوعة، وأن نسهم في اقتصاد إبداعي مستدام يقوم على حلول تقنية محلية.
+  - قيمنا: الإبداع الذي يحوّل الأفكار إلى منتجات، والتمكين الذي يمنح كل مبدع بداية بلا مخاطرة، والجودة التي نلتزم بها في الطباعة والتغليف.
 - Misk block title: خريجو برنامج Misk Launchpad
 - Misk block text: بحر برنت من خريجي الدفعة التاسعة (2026) من برنامج Misk Launchpad، برنامج ما قبل التسريع من مؤسسة محمد بن سلمان «مسك».
 - Location line: نطبع ونشحن من جدة إلى كل مدن المملكة.
@@ -549,7 +548,7 @@ Every user-visible string in Level 1 is here. Copy it exactly, including punctua
 - Success: وصلتنا رسالتك. سنرد عليك قريباً.
 - Failure: تعذّر الإرسال. حاول مرة أخرى أو راسلنا على واتساب.
 - Validation: أدخل اسمك · أدخل رقم جوال صحيح · أدخل بريداً إلكترونياً صحيحاً · اكتب رسالتك
-- Contact cards: واتساب، راسلنا مباشرة · البريد الإلكتروني، contact@b7r.sa · الهاتف، 0501699572 · تابعنا، (social icons)
+- Contact cards: واتساب; راسلنا مباشرة · البريد الإلكتروني: contact@b7r.sa · الهاتف: 0501699572 · تابعنا: (social icons)
 - Booking card title: احجز استشارة مجانية
 - Booking card text: 30 دقيقة نجاوب فيها على أسئلتك ونساعدك تبدأ.
 - Booking button: احجز موعدك (opens `bookingUrl`; if unset, opens WhatsApp with the message: مرحباً، أرغب بحجز استشارة مجانية.)
@@ -570,7 +569,7 @@ Every user-visible string in Level 1 is here. Copy it exactly, including punctua
 - Key takeaways box title: أهم النقاط
 - Related title: مقالات ذات صلة
 - Share: شارك
-- In-post CTA block: title ابدأ براندك اليوم، text بدون رأس مال وبدون مخزون.، button ابدأ براندك مجانًا
+- In-post CTA block: title ابدأ براندك اليوم; text بدون رأس مال وبدون مخزون.: button ابدأ براندك مجانًا
 - Placeholder posts (3, marked as samples in the CMS data, real content to come in Level 3):
   1. كيف تبدأ براند ملابس في السعودية بدون مصنع وبدون مخزون
   2. ما هي الطباعة عند الطلب؟ شرح مبسط بالأمثلة السعودية
@@ -606,7 +605,7 @@ Every user-visible string in Level 1 is here. Copy it exactly, including punctua
 
 ### 4.17 Transactional emails (Level 1, sent through Resend)
 
-- Contact notification to contact@b7r.sa، subject: رسالة جديدة من الموقع: {inquiryType}, body lists all fields, LTR-safe formatting for phone and email, plus a "رد عبر واتساب" link if the phone is Saudi.
+- Contact notification to contact@b7r.sa: subject: رسالة جديدة من الموقع: {inquiryType}; body lists all fields, LTR-safe formatting for phone and email, plus a "رد عبر واتساب" link if the phone is Saudi.
 - Newsletter: no welcome email in Level 1; the address is added to a Resend audience named "b7r.sa newsletter".
 
 ---
@@ -630,7 +629,7 @@ Arabic lives at the root. `/en/*` is reserved for the English phase and must not
 | `/blog/{slug}` | Post (3 samples in L1) | yes | §6.11 |
 | `/terms` · `/shipping` · `/privacy` | Legal | yes | §6.12 |
 | `/404` (not-found) | 404 | no | §6.13, returns HTTP 404 |
-| `/sitemap.xml`, `/robots.txt`, `/{INDEXNOW_KEY}.txt`, `/manifest.webmanifest`, favicon set | Machine files |, | §7 |
+| `/sitemap.xml`, `/robots.txt`, `/{INDEXNOW_KEY}.txt`, `/manifest.webmanifest`, favicon set | Machine files | | §7 |
 | `POST /api/contact`, `POST /api/newsletter`, `GET /api/health` | API | no | §6.9, §6.14, §8.6 |
 
 Hub slugs for the blog (used as filters in L1, as routes in L3): `getting-started`, `pod-basics`, `salla-zid-shopify`, `design`, `pricing-profit`, `seasons`.
@@ -1229,7 +1228,7 @@ Give Dhia and an editor a WordPress-like, Arabic, right-to-left admin at `https:
 | `integrations` | Collection | platform (salla \| zid \| shopify, selects the brand SVG that ships with the code, ADR-031), name, nameLatin, order | `content/seed/integrations.ts` (seed) |
 | `media` | Collection | upload with alt (required, Arabic), focal point, credit | `public/images/*` |
 | `redirects` | Collection (plugin) | from, to, type 301/308/410 | `lib/redirects.ts` |
-| `users` | Collection | email, role, name |, |
+| `users` | Collection | email, role, name | |
 | `posts`, `categories`, `authors` | Collections | Level 3 (§10) | `content/blog/*` |
 
 Official plugins: `@payloadcms/plugin-seo` (title/description/OG fields with Arabic length hints and a preview), `@payloadcms/plugin-redirects`, `@payloadcms/plugin-form-builder` (Level 4), `@payloadcms/plugin-search` (Level 3), `@payloadcms/storage-s3`. Amended 2026-09-13 (ADR-031): `plugin-seo` is not used; each page carries a `seo` group with the same limits.

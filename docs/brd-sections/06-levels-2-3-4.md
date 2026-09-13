@@ -40,7 +40,7 @@ Give Dhia and an editor a WordPress-like, Arabic, right-to-left admin at `https:
 | `integrations` | Collection | platform (salla \| zid \| shopify, selects the brand SVG that ships with the code, ADR-031), name, nameLatin, order | `content/seed/integrations.ts` (seed) |
 | `media` | Collection | upload with alt (required, Arabic), focal point, credit | `public/images/*` |
 | `redirects` | Collection (plugin) | from, to, type 301/308/410 | `lib/redirects.ts` |
-| `users` | Collection | email, role, name |, |
+| `users` | Collection | email, role, name | |
 | `posts`, `categories`, `authors` | Collections | Level 3 (§10) | `content/blog/*` |
 
 Official plugins: `@payloadcms/plugin-seo` (title/description/OG fields with Arabic length hints and a preview), `@payloadcms/plugin-redirects`, `@payloadcms/plugin-form-builder` (Level 4), `@payloadcms/plugin-search` (Level 3), `@payloadcms/storage-s3`. Amended 2026-09-13 (ADR-031): `plugin-seo` is not used; each page carries a `seo` group with the same limits.

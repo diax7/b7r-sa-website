@@ -8,7 +8,7 @@ Read `docs/ADMIN-DESIGN-SYSTEM.md` before touching anything under `src/modules/c
 
 1. `admin.group` in Arabic + English, one of the existing groups (المحتوى / الإعدادات /
    الإدارة) unless a new group is a deliberate decision (then add its icon to `GROUP_ICONS`).
-2. One icon in `src/modules/cms/admin/icons.ts` (`COLLECTION_ICONS` / `GLOBAL_ICONS`), 
+2. One icon in `src/modules/cms/admin/icons.ts` (`COLLECTION_ICONS` / `GLOBAL_ICONS`),
    a noun for a collection, a place for a global. Missing = type error + failing test.
 3. `labels.singular` / `labels.plural` (collections) or `label` (globals) in Arabic + English;
    nouns, never sentences.
