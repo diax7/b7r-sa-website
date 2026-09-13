@@ -13,7 +13,9 @@ is the checklist, `tests/admin-config.test.ts` and `tests/admin-icons.test.ts` a
 2. **English panel, Arabic content.** The UI language is English for everyone (Dhia,
    2026-09-13); labels and descriptions are written in English with an Arabic version kept in
    the config. The content is Arabic: every text control follows the direction of its own
-   text (`unicode-bidi: plaintext`), so Arabic reads right-to-left inside the panel.
+   text (`unicode-bidi: plaintext`), so Arabic reads right-to-left inside the panel. Caveat:
+   the direction follows the first strong character, so a title that starts with a Latin
+   word aligns left; if that ever bites, an explicit `dir="rtl"` on that field is the fix.
 3. **Icon + label, always.** An icon never stands alone except in an icon button with an
    `aria-label` and a tooltip. Every collection and global has one icon (§4) and it is the
    same icon everywhere it appears (nav, palette, dashboard, empty state).

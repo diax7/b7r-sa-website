@@ -63,8 +63,11 @@
     --admin-white: #ffffff;
     --admin-green: #3fbf6b;
     --admin-green-hover: #34a95d;
+    --admin-green-ink: #10241a;
     --admin-green-tint: rgb(63 191 107 / 0.16);
     --admin-red: #f26b6b;
+    --admin-red-hover: #e05050;
+    --admin-red-ink: #2a0f0f;
     --admin-red-tint: rgb(242 107 107 / 0.14);
     --admin-amber: #f5b53f;
     --admin-ring: rgb(0 152 224 / 0.4);
@@ -214,9 +217,9 @@
   .doc-controls:has(.status) .form-submit .btn--withPopup,
   .doc-controls:has(.status) .form-submit .btn--withPopup .popup-button {
     --bg-color: var(--admin-green);
-    --color: #10241a;
+    --color: var(--admin-green-ink);
     --hover-bg: var(--admin-green-hover);
-    --hover-color: #10241a;
+    --hover-color: var(--admin-green-ink);
   }
   .doc-controls #action-save-draft {
     --hover-color: var(--admin-accent);
@@ -245,9 +248,9 @@
   .delete-documents__confirm,
   .confirmation-modal__controls .btn--style-primary {
     --bg-color: var(--admin-red);
-    --color: #2a0f0f;
-    --hover-bg: #e05050;
-    --hover-color: #2a0f0f;
+    --color: var(--admin-red-ink);
+    --hover-bg: var(--admin-red-hover);
+    --hover-color: var(--admin-red-ink);
   }
   .pill--style-error {
     background: var(--admin-red-tint);

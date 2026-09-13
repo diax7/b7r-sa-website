@@ -49,7 +49,9 @@ export function NavClient({ groups, prefs, account, adminRoute }: NavClientProps
     setNavOpen(next);
     void setPreference(PREFERENCE_KEYS.NAV, { open: next }, true);
   }
-  // Payload treats widths at or under its `l` breakpoint as a drawer; above it, closed = rail.
+  // Payload treats widths at or under its `l` breakpoint (1440 px) as a drawer; above it,
+  // closed = rail. `undefined` means "not measured yet" and counts as a drawer, so nothing
+  // flashes into a rail before hydration.
   const drawer = breakpoints['l'] !== false;
   const rail = !navOpen && !drawer && hydrated;
 

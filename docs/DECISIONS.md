@@ -80,6 +80,9 @@ CLS ≤ 0.1 as the constitution requires, so CI will be red on LCP until the sim
 drops; tracked as a Phase 1b task (reduce initial JS: hero island slimming, no new eager
 scripts). The category gate (Performance ≥ 90) and the DevTools-throttled LCP (2.1 s) pass.
 
+Amended 2026-09-13 (ADR-039): `/fonts/*` is served immutable for a year, so a changed font
+file takes a new name; the same path is never reused (RUNBOOK, fonts).
+
 ## ADR-011: Mobile menu sheet loads on first intent (2026-09-13)
 
 The Radix Dialog (focus trap, scroll lock, portal) costs ~15 kB gzip and is used only after a

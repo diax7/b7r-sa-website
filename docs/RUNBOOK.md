@@ -70,7 +70,9 @@ again (move `public/media` aside first so filenames do not collide).
 
 `public/fonts/*.woff2` are subsets of the licensed ITF Rayat Round files
 (`bash scripts/subset-fonts.sh`, needs `uv`): Arabic, Basic Latin and punctuation only,
-~27 kB per weight. Re-run after `resources/brand/fonts/web` changes.
+~27 kB per weight. Re-run after `resources/brand/fonts/web` changes. The files are served
+`Cache-Control: immutable` for a year (ADR-039), so a changed woff2 must get a **new file
+name** (a version suffix); never overwrite the same path, browsers will keep the old bytes.
 
 ## Docker
 
