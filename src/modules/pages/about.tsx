@@ -24,18 +24,13 @@ const CARD_ART = [
 
 /**
  * About (BRD 6.8, amended 2026-09-13): the brand photo beside the story, a facts band built
- * from strings the site already carries (the hero proof chips and the welcome credit), the
+ * from strings the site already carries (the welcome credit and the three why-us pairs), the
  * three value cards with 3D art, the MISK credential on a tinted card, then the ribbon.
  */
 export async function AboutPage() {
   const copy = aboutPage;
   const base = siteBase();
   const [seo, site] = await Promise.all([getSeo(ROUTE), getSiteSettings()]);
-  const facts = [
-    { text: home.hero.chips[0] ?? '', detail: whyUs[0]?.text ?? '' },
-    { text: home.hero.chips[1] ?? '', detail: whyUs[1]?.text ?? '' },
-    { text: home.hero.chips[2] ?? '', detail: whyUs[2]?.text ?? '' },
-  ];
 
   return (
     <>
@@ -81,17 +76,17 @@ export async function AboutPage() {
         </Container>
       </Section>
 
-      {/* Facts band: the proof the hero already makes, as a navy strip. */}
-      <section className="bg-navy text-white" aria-label={home.hero.microcopy}>
+      {/* Facts band: the welcome credit and the three why-us pairs (BRD 4.4), as a navy strip. */}
+      <section className="bg-navy text-white" aria-label={home.whyUs.title}>
         <Container className="grid gap-6 py-10 sm:grid-cols-2 lg:grid-cols-4 lg:py-12">
           <div className="flex flex-col gap-1">
             <SarAmount value={site.offer.welcomeCredit} className="text-h2 text-white" />
             <span className="text-small text-white/75">{home.hero.microcopy}</span>
           </div>
-          {facts.map((fact) => (
-            <div key={fact.text} className="flex flex-col gap-1">
-              <span className="text-h4 text-white">{fact.text}</span>
-              <span className="text-small text-white/75">{fact.detail}</span>
+          {whyUs.map((fact) => (
+            <div key={fact.title} className="flex flex-col gap-1">
+              <span className="text-h4 text-white">{fact.title}</span>
+              <span className="text-small text-white/75">{fact.text}</span>
             </div>
           ))}
         </Container>

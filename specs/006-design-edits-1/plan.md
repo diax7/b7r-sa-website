@@ -105,9 +105,9 @@ view()` with a static fallback (no JS), matching ADR-012.
 ### Phase C — About + How We Work
 - About: header (`Section` surface) with a two-column feature — brand photo (`next/image`,
   `hanging-tshirt-mockup.jpg`, `priority`, explicit `sizes`, ≤ 220 kB) and the story; facts
-  band (ground tone) built only from strings the BRD already has — the hero proof chips
-  («مجاني 100%», «بدون حد أدنى للطلبات», «توصيل لكل المملكة خلال 5 أيام») and the welcome
-  credit as `SarAmount value={30}` with the hero microcopy — no new labels; the three value
+  band (navy) built only from strings the BRD already has — the three why-us pairs
+  («بدون مخاطرة» / «كل شيء تلقائي» / «جودة محلية وسريعة», each over its text) and the welcome
+  credit as `SarAmount` with the hero microcopy — no new labels; the three value
   cards as a staggered grid with the 3D icons (`icons-3d`), `Reveal`; MISK credential card
   with the logo on a primary-tint surface; closing band with the location line and the
   register CTA. Verbatim test untouched (same strings).

@@ -660,8 +660,9 @@
 /* ---------------------------------------------------------------------------------------
    How-it-works journey (§6.7, amended 2026-09-13): five steps on one connected path. Phones
    stack the steps down the start side; from lg the steps sit in a row and the path runs
-   across the top through the icons. The progress line fills with the section's scroll
-   position (scroll-driven animation) and is simply full where that is unsupported.
+   across the top through the icons. The progress line fills as the track scrolls through the
+   viewport (a view timeline named on the track, whose size never changes) and is simply full
+   where that is unsupported or under reduced motion.
    --------------------------------------------------------------------------------------- */
 .flow {
   position: relative;
@@ -711,6 +712,7 @@
   inset-block: 48px;
   inline-size: 2px;
   background: var(--color-border);
+  view-timeline: --flow block;
 }
 .flow-progress {
   position: absolute;
@@ -750,12 +752,18 @@
 @supports (animation-timeline: view()) {
   .flow-progress {
     animation: flow-grow-block linear both;
-    animation-timeline: view();
+    animation-timeline: --flow;
     animation-range: entry 30% cover 80%;
   }
   @media (min-width: 1024px) {
     .flow-progress {
       animation-name: flow-grow-inline;
+    }
+  }
+  /* Scroll-driven progress ignores the global 0.01 ms duration: switch it off outright. */
+  @media (prefers-reduced-motion: reduce) {
+    .flow-progress {
+      animation: none;
     }
   }
 }

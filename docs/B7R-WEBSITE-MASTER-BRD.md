@@ -269,7 +269,7 @@ Scroll-reveal: elements fade up 12 px over 400 ms, once, when 20% visible, stagg
 
 Under `prefers-reduced-motion: reduce`: disable auto-advance, parallax-like effects, waves, stagger, and count-ups; keep opacity transitions ≤ 150 ms.
 
-Amended 2026-09-13 (ADR-037): the marketing video in §6.4.5 is the second continuous animation, a muted, decorative loop mounted near the viewport with the poster under reduced motion and Save-Data. The how-it-works journey (§6.7) fills its path with a CSS scroll-driven progress line, static where unsupported.
+Amended 2026-09-13 (ADR-037): the marketing video in §6.4.5 is the second continuous animation, a muted, decorative loop mounted near the viewport with the poster under reduced motion and Save-Data. The how-it-works journey (§6.7) fills its path with a CSS scroll-driven progress line, full and static where unsupported and under reduced motion (`animation: none`: scroll-driven progress ignores the global 0.01 ms duration).
 
 ### 3.8 Iconography and illustration
 
@@ -815,13 +815,13 @@ H1 + lead (§4.8). Grid of 5 `ProductCard`s (3 columns desktop, 2 tablet, 1 mobi
 
 H1 + lead. Five step rows alternating image side (3D icons: `tee-plus-create-product`, `laptop-link-connect-store`, `bag-and-parcel-order`, `printer-print`, `truck-delivery`; icon on the end side for odd rows, start side for even rows; mobile stacks icon above text). Then the profit block: title, three tiles joined by "−" and "=" glyphs (mirrored order is natural in RTL: سعر البيع on the start), example line with `SarAmount`. Then the mini FAQ (3 items) and the ribbon.
 
-Amended 2026-09-13 (Dhia's design review): the five steps are one connected journey — numbered 3D icons in circular frames on a path that runs across the top from `lg` and down the start side on phones, with a progress line that fills as the section scrolls (CSS scroll timeline; static where unsupported and under reduced motion); the profit block is a highlighted card whose tiles stack on phones. Copy unchanged.
+Amended 2026-09-13 (Dhia's design review): the five steps are one connected journey — numbered 3D icons in circular frames on a path that runs across the top from `lg` and down the start side on phones, with a progress line that fills as the track scrolls through the viewport (a CSS view timeline named on the track; full and static where unsupported and under reduced motion); the profit block is a highlighted card whose tiles stack on phones. Copy unchanged.
 
 ### 6.8 About `/about`
 
 H1. Story block (title + paragraph, max-width 760 px). Three cards (رسالتنا, رؤيتنا, قيمنا) with Lucide icons `Target`, `Eye`, `Heart`. Misk credential block: a surface card with the Misk logo (`brand/trust-badges/misk-foundation-logo.png`, 200 px wide, on white) at the start and the title + text at the end. Location line with a `MapPin` icon. One lifestyle image is allowed (`lifestyle-mockups/hanging-tshirt-mockup.jpg`) as a decorative banner between the story and the cards, 21:9, radius 20 px. Then the ribbon.
 
-Amended 2026-09-13 (Dhia's design review, same copy): the lifestyle photo sits beside the story in a two-column header with the delivery origin as a chip over it and the location line under the story; a navy facts band follows with the welcome credit (`SarAmount`) and the three hero proof chips from §4.4, each with the matching why-us line; the three cards carry the 3D icons as art in a staggered grid; the MISK credential sits on an accent-tint card; then the ribbon.
+Amended 2026-09-13 (Dhia's design review, same copy): the lifestyle photo sits beside the story in a two-column header with the delivery origin as a chip over it and the location line under the story; a navy facts band follows with the welcome credit (`SarAmount`) and the three why-us pairs from §4.4 (title over text), labelled by the why-us section title; the three cards carry the 3D icons as art in a staggered grid; the MISK credential sits on an accent-tint card; then the ribbon.
 
 ### 6.9 Contact `/contact`
 
