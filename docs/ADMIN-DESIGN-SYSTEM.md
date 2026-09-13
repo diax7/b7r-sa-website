@@ -113,7 +113,18 @@ The admin's strings are interface copy (ADR-031): written by us, under the ux-ar
 | `Separator`, `Kbd` | `ui/separator.tsx`, `ui/kbd.tsx` | Group hairlines; key hints («Ctrl K»). |
 
 Payload's own elements (buttons, fields, pills, toasts) are themed in `admin.css` under
-`@layer payload` — never re-implemented.
+`@layer payload` — never re-implemented. The shell pieces built on these primitives:
+
+| Piece | File | Notes |
+|---|---|---|
+| Sidebar | `modules/cms/admin/nav/*` | Groups (المحتوى · الإعدادات · الإدارة) as collapsibles that remember their state in Payload's `nav` preference; an icon per entity; `aria-current="page"`; «عرض الموقع»; the account block. Keeps Payload's outer `nav` classes (layout, mobile drawer). |
+| Header actions | `modules/cms/admin/header/actions*` | Palette trigger and site link as icon buttons with tooltips; hidden under 768 px (both live in the sidebar too). |
+| Command palette | `modules/cms/admin/header/palette*` | Ctrl/⌘ K; sections first, then documents of collections with `listSearchableFields` (5 per collection, from two characters); combobox semantics; ranking in `palette-rank.ts`. |
+| Account menu | `modules/cms/admin/account/*` | Initials avatar, name, e-mail (LTR), role badge, «حسابي», «تسجيل الخروج». |
+| Login | `modules/cms/admin/login/*` | One line under the form; the Turnstile widget above it (ADR-034). |
+
+Payload puts the sidebar in a drawer at widths ≤ 1440 px (its `l` breakpoint) — the header
+hamburger opens it; that is Payload's behaviour, kept.
 
 ## 7. States
 
@@ -129,8 +140,11 @@ Payload's own elements (buttons, fields, pills, toasts) are themed in `admin.css
 
 ## 8. Accessibility
 
-- Contrast AA on every custom surface (the tokens above are chosen for it); axe runs on the
-  login, the dashboard, the palette, a list view and an edit view in `e2e/admin.spec.ts`.
+- Contrast AA on every custom surface (the tokens above are chosen for it); axe runs on
+  **our** surfaces (`[data-admin-nav]`, `.app-header`, the palette, the dashboard) in
+  `e2e/admin.spec.ts`. Payload's own edit-view chrome has known gaps (unnamed drag handles and
+  popup buttons) that are its engine's, not the shell's; its locale label is lifted to AA in
+  `admin.css`.
 - Focus visible everywhere: Payload's outline is the accent; our components use
   `focus-visible:ring-2 ring-accent/40`.
 - Keyboard: the palette opens with Ctrl/⌘ K, arrows move, Enter opens, Esc closes; nav groups

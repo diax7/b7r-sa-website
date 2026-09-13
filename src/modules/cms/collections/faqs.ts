@@ -54,6 +54,7 @@ export const Faqs: CollectionConfig = {
   admin: {
     useAsTitle: 'question',
     defaultColumns: ['question', 'group', 'order', 'showOnHome'],
+    listSearchableFields: ['question'],
     group: { ar: 'المحتوى', en: 'Content' },
     description: {
       ar: 'الأسئلة الشائعة بمجموعاتها. حتى خمسة أسئلة تظهر في الصفحة الرئيسية.',

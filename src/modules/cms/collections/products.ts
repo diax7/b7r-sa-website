@@ -17,6 +17,7 @@ export const Products: CollectionConfig = {
   admin: {
     useAsTitle: 'name',
     defaultColumns: ['name', 'slug', 'baseCost', 'suggestedPrice', 'sortOrder', '_status'],
+    listSearchableFields: ['name', 'slug'],
     group: { ar: 'المحتوى', en: 'Content' },
     description: {
       ar: 'المنتجات المعروضة في الموقع والمصمّم: الأسعار، الصور، المقاسات والألوان.',

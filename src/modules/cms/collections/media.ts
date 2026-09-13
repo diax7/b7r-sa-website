@@ -19,6 +19,8 @@ export const Media: CollectionConfig = {
       en: 'Images and files used by pages and products. Give every image alt text.',
     },
     defaultColumns: ['filename', 'alt', 'updatedAt'],
+    useAsTitle: 'filename',
+    listSearchableFields: ['filename', 'alt'],
   },
   access: {
     read: () => true,

@@ -36,6 +36,7 @@ export const Pages: CollectionConfig = {
   admin: {
     useAsTitle: 'title',
     defaultColumns: ['title', 'slug', 'updatedAt', '_status'],
+    listSearchableFields: ['title', 'slug'],
     group: { ar: 'المحتوى', en: 'Content' },
     description: {
       ar: 'صفحات الموقع كأقسام قابلة للتحرير. الصفحات السبع الأساسية ثابتة الرابط؛ أضف صفحات جديدة بحرّية.',

@@ -1,6 +1,6 @@
 import type { CollectionConfig, GlobalConfig } from 'payload';
 import { describe, expect, it } from 'vitest';
-import { COLLECTION_ICONS, GLOBAL_ICONS, GROUP_ICONS } from '@/modules/cms/admin/icons';
+import { COLLECTION_ICONS, GLOBAL_ICONS, groupIcon } from '@/modules/cms/admin/icons';
 import { Faqs } from '@/modules/cms/collections/faqs';
 import { Integrations } from '@/modules/cms/collections/integrations';
 import { Media } from '@/modules/cms/collections/media';
@@ -48,12 +48,13 @@ describe('admin config shape (ADR-039)', () => {
     it(`collection ${c.slug}: icon, group, Arabic labels + description, title, columns`, () => {
       expect(isIcon(COLLECTION_ICONS[c.slug as keyof typeof COLLECTION_ICONS]), 'icon').toBe(true);
       expect(arabic(c.admin?.group), 'admin.group').toBe(true);
-      expect(isIcon(GROUP_ICONS[groupOf(c.admin)]), 'group icon').toBe(true);
+      expect(isIcon(groupIcon(groupOf(c.admin))), 'group icon').toBe(true);
       expect(arabic(c.labels?.singular), 'labels.singular').toBe(true);
       expect(arabic(c.labels?.plural), 'labels.plural').toBe(true);
       expect(arabic(c.admin?.description), 'admin.description').toBe(true);
-      if (c.slug !== 'media') expect(c.admin?.useAsTitle, 'useAsTitle').toBeTruthy();
+      expect(c.admin?.useAsTitle, 'useAsTitle').toBeTruthy();
       expect(c.admin?.defaultColumns?.length ?? 0, 'defaultColumns').toBeGreaterThan(1);
+      expect(c.admin?.listSearchableFields?.length ?? 0, 'listSearchableFields').toBeGreaterThan(0);
     });
   }
 
@@ -61,7 +62,7 @@ describe('admin config shape (ADR-039)', () => {
     it(`global ${g.slug}: icon, group, Arabic label + description`, () => {
       expect(isIcon(GLOBAL_ICONS[g.slug as keyof typeof GLOBAL_ICONS]), 'icon').toBe(true);
       expect(arabic(g.admin?.group), 'admin.group').toBe(true);
-      expect(isIcon(GROUP_ICONS[groupOf(g.admin)]), 'group icon').toBe(true);
+      expect(isIcon(groupIcon(groupOf(g.admin))), 'group icon').toBe(true);
       expect(arabic(g.label), 'label').toBe(true);
       expect(arabic(g.admin?.description), 'admin.description').toBe(true);
     });

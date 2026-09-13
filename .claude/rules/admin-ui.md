@@ -35,7 +35,9 @@ Read `docs/ADMIN-DESIGN-SYSTEM.md` before touching anything under `src/modules/c
 - Icons through `components/shared/icon.tsx`, from the registry when the icon stands for an
   entity. Icon-only buttons carry `aria-label` + `Tooltip`.
 - Strings: Arabic, ux-araby rules (verb-first actions, nominal labels, no «تم», no «قم بـ»,
-  Arabic comma, no «!»). Keep them in the component or `src/messages/ar.json` (`admin.*`).
+  Arabic comma, no «!»). They live in `src/modules/cms/admin/strings.ts`, never inline.
+- Roots of our shell carry `data-admin-ui` (the scoped element reset in `admin.css`) and a
+  `data-admin-*` hook for the e2e; the sidebar keeps Payload's outer `nav` classes.
 - After adding or renaming a component referenced from the Payload config, run
   `pnpm payload generate:importmap` and commit `src/app/(payload)/admin/importMap.js`.
 - Add the surface to the axe pass in `e2e/admin.spec.ts` when it is a new view.

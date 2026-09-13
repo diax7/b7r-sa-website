@@ -61,8 +61,12 @@ export default buildConfig({
         Logo: '@/modules/cms/components/logo#Logo',
         Icon: '@/modules/cms/components/logo#Icon',
       },
-      // The Turnstile widget above the login form (ADR-034).
+      // The shell (ADR-039): sidebar with an icon per entity, header palette + site link.
+      Nav: '@/modules/cms/admin/nav/nav#Nav',
+      actions: ['@/modules/cms/admin/header/actions#HeaderActions'],
+      // The Turnstile widget above the login form (ADR-034); one line under it (ADR-039).
       beforeLogin: ['@/modules/cms/auth/login-turnstile#LoginTurnstile'],
+      afterLogin: ['@/modules/cms/admin/login/after-login#AfterLogin'],
     },
     importMap: { baseDir: path.resolve(dirname, '../..') },
   },

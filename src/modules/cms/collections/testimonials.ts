@@ -16,6 +16,7 @@ export const Testimonials: CollectionConfig = {
   admin: {
     useAsTitle: 'name',
     defaultColumns: ['name', 'store', 'placeholder', 'order', '_status'],
+    listSearchableFields: ['name', 'store'],
     group: { ar: 'المحتوى', en: 'Content' },
     description: {
       ar: 'آراء التجار في الصفحة الرئيسية. النماذج المؤقتة لا تظهر في الموقع.',

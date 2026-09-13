@@ -47,6 +47,7 @@ export const Users: CollectionConfig = {
   admin: {
     useAsTitle: 'name',
     defaultColumns: ['name', 'email', 'role'],
+    listSearchableFields: ['name', 'email'],
     group: { ar: 'الإدارة', en: 'Administration' },
     description: {
       ar: 'حسابات لوحة التحكم. المحرّر يعدّل المحتوى؛ المدير يعدّل الإعدادات والمستخدمين.',

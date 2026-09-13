@@ -17,6 +17,7 @@ export const Integrations: CollectionConfig = {
   admin: {
     useAsTitle: 'name',
     defaultColumns: ['name', 'platform', 'order'],
+    listSearchableFields: ['name'],
     group: { ar: 'المحتوى', en: 'Content' },
     description: {
       ar: 'المنصات المتصلة (سلة، زد، شوبيفاي) وترتيبها في شريط التكاملات.',

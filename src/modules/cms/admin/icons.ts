@@ -45,17 +45,29 @@ export const GLOBAL_ICONS: Record<GlobalSlug, LucideIcon> = {
   'seo-defaults': Search,
 };
 
-/** Nav groups are keyed by their Arabic label (Payload groups by the rendered label). */
-export const GROUP_ICONS: Record<string, LucideIcon> = {
-  المحتوى: LayoutGrid,
-  الإعدادات: SlidersHorizontal,
-  الإدارة: Shield,
+/** The three nav groups (`admin.group.ar`); Payload groups entities by the rendered label. */
+export const ADMIN_GROUPS = {
+  content: { ar: 'المحتوى', en: 'Content' },
+  settings: { ar: 'الإعدادات', en: 'Settings' },
+  administration: { ar: 'الإدارة', en: 'Administration' },
+} as const;
+
+export type AdminGroupLabel = (typeof ADMIN_GROUPS)[keyof typeof ADMIN_GROUPS]['ar'];
+
+export const GROUP_ICONS: Record<AdminGroupLabel, LucideIcon> = {
+  [ADMIN_GROUPS.content.ar]: LayoutGrid,
+  [ADMIN_GROUPS.settings.ar]: SlidersHorizontal,
+  [ADMIN_GROUPS.administration.ar]: Shield,
 };
+
+export function groupIcon(label: string): LucideIcon | undefined {
+  return GROUP_ICONS[label as AdminGroupLabel];
+}
 
 export const ACTION_ICONS = { viewSite: Eye } as const;
 
-export function entityIcon(type: 'collection' | 'global', slug: string): LucideIcon | undefined {
-  return type === 'collection'
+export function entityIcon(type: 'collections' | 'globals', slug: string): LucideIcon | undefined {
+  return type === 'collections'
     ? COLLECTION_ICONS[slug as CollectionSlug]
     : GLOBAL_ICONS[slug as GlobalSlug];
 }

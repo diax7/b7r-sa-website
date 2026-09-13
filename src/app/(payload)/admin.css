@@ -54,16 +54,25 @@
    are ours. Selectors and custom properties checked against @payloadcms/ui 3.89.0.
    --------------------------------------------------------------------------------------- */
 @layer payload {
+  /* Raw values on purpose: this block must not depend on which stylesheet's `:root` wins or
+     on which utilities happen to be generated (the site's globals.css also reaches /admin). */
   :root {
+    --admin-primary: #0058b0;
+    --admin-primary-hover: #1a6ac0;
+    --admin-accent: #0098e0;
+    --admin-white: #ffffff;
+    --admin-green: #3fbf6b;
+    --admin-green-tint: rgb(63 191 107 / 0.16);
     --font-body: var(--font-sans);
     --style-radius-s: var(--radius-inner);
     --style-radius-m: 8px;
     --style-radius-l: var(--radius-base);
-    --accessibility-outline: 2px solid var(--color-accent);
+    --accessibility-outline: 2px solid var(--admin-accent);
   }
 
-  /* Payload's "success" ramp is its selection/focus colour: checkboxes, radios, focus rings,
-     the published pill. Re-hued to the B7R accent. */
+  /* Payload's "success" ramp is its selection/focus colour (checkboxes, radios, focus rings,
+     selected rows, the drop zone). Re-hued to the B7R accent; "published" and "success" keep
+     their green below, because editors read that colour without thinking. */
   html[data-theme='dark'] {
     --color-success-50: #e6f5fc;
     --color-success-100: #cdeaf9;
@@ -90,16 +99,58 @@
     font-family: var(--font-sans);
   }
 
+  /* Our shell renders without Tailwind's preflight, so Payload's element defaults (button
+     chrome, underlined links, list bullets, input boxes) are neutralised inside it; the
+     unlayered utilities then paint exactly what each component declares. */
+  [data-admin-ui] :is(button, input) {
+    font: inherit;
+    color: inherit;
+    background: none;
+    border: 0;
+    border-radius: 0;
+    padding: 0;
+    margin: 0;
+    appearance: none;
+    box-shadow: none;
+  }
+  [data-admin-ui] :is(button, a) {
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+  }
+  [data-admin-ui] :is(ul, ol) {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  [data-admin-ui] :is(p, h1, h2, h3, h4) {
+    margin: 0;
+  }
+  [data-admin-ui] img {
+    display: block;
+  }
+
+  .pill--style-success,
+  .banner--type-success {
+    background: var(--admin-green-tint);
+    color: var(--admin-green);
+  }
+
   .btn--style-primary {
-    --bg-color: var(--color-primary);
-    --color: var(--color-white);
-    --hover-bg: var(--color-primary-hover);
-    --hover-color: var(--color-white);
+    --bg-color: var(--admin-primary);
+    --color: var(--admin-white);
+    --hover-bg: var(--admin-primary-hover);
+    --hover-color: var(--admin-white);
   }
 
   .btn--style-secondary {
-    --hover-color: var(--color-accent);
-    --hover-btn-border: 1px solid var(--color-accent);
+    --hover-color: var(--admin-accent);
+    --hover-btn-border: 1px solid var(--admin-accent);
+  }
+
+  /* Payload's locale label sits on an elevation-100 pill at elevation-500: 3.4:1. Lifted to AA. */
+  .localizer-button__label {
+    color: var(--theme-elevation-700);
   }
 
   .graphic-logo img {
