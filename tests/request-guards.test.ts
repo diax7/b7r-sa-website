@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { acceptsJsonFrom, isJsonRequest, originAllowed } from '@/lib/request-guards';
 
 const req = (headers: Record<string, string>) =>
@@ -21,6 +21,17 @@ describe('request guards (BRD 8.10: API hygiene)', () => {
       false,
     );
     expect(originAllowed(req({ origin: 'not a url', host: 'localhost:3004' }))).toBe(false);
+  });
+
+  it('accepts the configured production origin behind a proxy that rewrites Host', () => {
+    vi.stubEnv('NEXT_PUBLIC_SITE_URL', 'https://b7r.sa');
+    vi.resetModules();
+    return import('@/lib/request-guards').then(({ originAllowed: allowed }) => {
+      expect(allowed(req({ origin: 'https://b7r.sa', host: 'internal:3000' }))).toBe(true);
+      expect(allowed(req({ origin: 'http://localhost:3004', host: 'localhost:3004' }))).toBe(true);
+      expect(allowed(req({ origin: 'https://evil.example', host: 'internal:3000' }))).toBe(false);
+      vi.unstubAllEnvs();
+    });
   });
 
   it('combines both', () => {
