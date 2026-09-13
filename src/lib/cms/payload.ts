@@ -1,4 +1,6 @@
 import 'server-only';
+// The config is the CMS module's entry point; `lib` importing it is the one intended
+// exception to the modules → lib direction (constitution VII, ADR-024).
 import config from '@payload-config';
 import { getPayload, type Payload } from 'payload';
 
@@ -7,5 +9,4 @@ export function cms(): Promise<Payload> {
   return getPayload({ config });
 }
 
-/** Every public read: the Arabic locale, published documents only (drafts stay in the admin). */
-export const PUBLIC_READ = { locale: 'ar', draft: false, overrideAccess: true } as const;
+export { PUBLIC_READ, PUBLISHED } from '@/lib/cms/read';

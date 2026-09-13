@@ -70,17 +70,18 @@ async function fromCms(): Promise<OgSource> {
   const { getPayload } = await import('payload');
   const { default: config } = await import('../src/payload.config');
   const { toProduct, toSiteSettings } = await import('../src/lib/cms/mappers');
+  const { PUBLIC_READ, PUBLISHED } = await import('../src/lib/cms/read');
   const payload = await getPayload({ config });
-  const read = { locale: 'ar', draft: false, overrideAccess: true } as const;
   const [found, settings] = await Promise.all([
     payload.find({
       collection: 'products',
-      ...read,
+      ...PUBLIC_READ,
+      where: PUBLISHED,
       depth: 1,
       pagination: false,
       sort: 'sortOrder',
     }),
-    payload.findGlobal({ slug: 'site-settings', ...read }),
+    payload.findGlobal({ slug: 'site-settings', ...PUBLIC_READ }),
   ]);
   return { products: found.docs.map(toProduct), tagline: toSiteSettings(settings).tagline };
 }

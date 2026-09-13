@@ -44,3 +44,7 @@ export const canDeleteVersioned: Access = ({ req }) => {
 
 /** Field-level: only admins read or change (verification tokens, roles). */
 export const adminField: FieldAccess = ({ req }) => roleOf(req) === 'admin';
+
+/** `admin.hidden` for the settings globals: editors do not see them in the panel (BRD 9.3). */
+export const hiddenUnlessAdmin = ({ user }: { user: CmsUser | null | undefined }): boolean =>
+  user?.role !== 'admin';

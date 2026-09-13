@@ -2,6 +2,7 @@ import type { MetadataRoute } from 'next';
 import { blogPosts } from '@/content/blog';
 import { getLegalPages } from '@/content/legal';
 import type { PageSeo, Product } from '@/content/schema';
+import { absoluteUrl } from '@/lib/absolute-url';
 
 const LEGAL_ROUTES = new Set(['/terms', '/shipping', '/privacy']);
 
@@ -34,7 +35,7 @@ export function sitemapEntries(
     lastModified: contentDate(product.updatedAt),
     images: product.colors
       .flatMap((c) => [c.images.front, c.images.back].filter((p): p is string => Boolean(p)))
-      .map((path) => (path.startsWith('http') ? path : `${base}${path}`)),
+      .map((path) => absoluteUrl(base, path)),
   }));
   const postEntries = blogPosts.map((post) => ({
     url: `${base}/blog/${post.slug}`,

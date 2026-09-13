@@ -277,8 +277,13 @@ value; and the file-system cache returns `null` for a page whose tags expired, w
 `dynamicParams = false` route (`/products/[slug]`) ends in `NoFallbackError` and a permanent
 404 (`file-system-cache.js` documents the alternative it does not take). The design now:
 every `(site)` page and the metadata routes carry `revalidate = 60`; the data layer reads
-Payload directly, deduplicated per render with `React.cache`; the publish hooks call
-`revalidatePath` on the static routes that render the content (home, listing, sitemap, and
-the pages a global feeds) and never on a product detail page. A publish is on the listing at
-once and on the product page within a minute (stale once, then fresh). Unknown slugs stay
-routing-level 404s with the full document. `e2e/admin.spec.ts` keeps this honest.
+Payload directly, deduplicated per render with `React.cache`, published documents only
+(`draft: false` alone still returns a never-published draft); the publish hooks call
+`revalidatePath` on the product's page and the routes that list it, and on every static
+route for a global. `/products/[slug]` is `dynamicParams = true` (code review, 2026-09-13):
+a product published in the admin gets its page on first request instead of a 404 until the
+next deploy, and the file-system-cache constraint above no longer applies, so a publish is
+live on the page at once. The cost is that an unknown product slug answers `notFound()`
+from a bare document (ADR-024) rather than the global 404; the client renders the view
+inside the layout, crawlers get the 404 status. `e2e/admin.spec.ts` covers publish, draft,
+create and delete; `tests/revalidate-hook.test.ts` the paths.

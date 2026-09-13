@@ -7,23 +7,41 @@ import type {
 } from 'payload';
 
 /**
- * Publish → live (BRD 9.6, ADR-030). Every page revalidates on a 60 s timer; on top of that
- * a publish regenerates the static routes that show the content right away.
+ * Publish → live (BRD 9.6, ADR-030). Every page revalidates on a 60 s timer; on top of that a
+ * publish regenerates the routes that show the content right away with `revalidatePath`.
  *
- * Product detail pages are deliberately left to the timer: they are `dynamicParams = false`
- * routes, and Next 16's file-system cache answers 404 for such a route once its path has
- * been revalidated on demand (`file-system-cache.js` returns null for expired tags, then the
- * page module throws NoFallbackError). Never add `/products/:slug` here.
+ * `/products/[slug]` has `dynamicParams = true` so it may be revalidated on demand: with
+ * `dynamicParams = false` Next 16's file-system cache answers 404 for the route after its
+ * path is expired (`file-system-cache.js` returns null → `NoFallbackError`). Keep it that
+ * way, or product pages must go back to the timer only.
  */
 
-/** Static routes that render products: the home strip and designer, the listing, the sitemap. */
+/** Routes that render the products: home strip and designer, the listing, the sitemap. */
 export const PATHS_FOR_PRODUCTS = ['/', '/products', '/sitemap.xml'];
 
-export const PATHS_FOR_GLOBAL: Record<string, string[]> = {
-  'site-settings': ['/', '/contact', '/about', '/how-it-works', '/faq', '/products', '/blog'],
-  navigation: ['/'],
-  'seo-defaults': ['/', '/products', '/how-it-works', '/about', '/contact', '/faq', '/blog'],
-};
+/**
+ * Every static route of the site: the three globals feed the shell (header, footer, meta) of
+ * all of them, so any global change regenerates all at once; product pages follow the timer.
+ */
+export const STATIC_ROUTES = [
+  '/',
+  '/products',
+  '/how-it-works',
+  '/about',
+  '/contact',
+  '/faq',
+  '/blog',
+  '/terms',
+  '/shipping',
+  '/privacy',
+  '/sitemap.xml',
+  '/manifest.webmanifest',
+];
+
+/** The product's own page plus the routes that list it. */
+export function pathsForProduct(slug: string): string[] {
+  return [`/products/${slug}`, ...PATHS_FOR_PRODUCTS];
+}
 
 /** Skips revalidation for the migration script (`context.disableRevalidate`) and during build. */
 export function shouldRevalidate(req: PayloadRequest): boolean {
@@ -31,7 +49,11 @@ export function shouldRevalidate(req: PayloadRequest): boolean {
   return process.env['NEXT_PHASE'] !== 'phase-production-build';
 }
 
-/** Products: a publish, an unpublish or a delete is visible; a draft autosave is not. */
+/**
+ * Products: a publish, an unpublish, a slug change or a delete is visible; a draft autosave
+ * is not. (An autosave on an already published document looks like an unpublish here and
+ * regenerates too; harmless at this scale.)
+ */
 export const revalidateProducts: CollectionAfterChangeHook & CollectionAfterDeleteHook = ({
   doc,
   req,
@@ -39,18 +61,20 @@ export const revalidateProducts: CollectionAfterChangeHook & CollectionAfterDele
 }) => {
   if (!shouldRevalidate(req)) return doc;
   const status = (doc as { _status?: string } | undefined)?._status;
-  const previous = (rest as { previousDoc?: { _status?: string } }).previousDoc;
+  const previous = (rest as { previousDoc?: { slug?: string; _status?: string } }).previousDoc;
   const wasPublished = previous?._status === 'published';
   if ('operation' in rest && status && status !== 'published' && !wasPublished) return doc;
-  for (const path of PATHS_FOR_PRODUCTS) revalidatePath(path);
+  const slugs = new Set<string>();
+  if (typeof doc?.['slug'] === 'string') slugs.add(doc['slug']);
+  if (typeof previous?.slug === 'string') slugs.add(previous.slug);
+  const paths = new Set([...slugs].flatMap((slug) => pathsForProduct(slug)));
+  for (const path of paths) revalidatePath(path);
   return doc;
 };
 
-/** Globals: every static route that renders them. */
-export function revalidateGlobal(slug: string): GlobalAfterChangeHook {
-  return ({ doc, req }) => {
-    if (!shouldRevalidate(req)) return doc;
-    for (const path of PATHS_FOR_GLOBAL[slug] ?? ['/']) revalidatePath(path);
-    return doc;
-  };
-}
+/** Globals: every static route (they all render the shell the globals feed). */
+export const revalidateGlobal: GlobalAfterChangeHook = ({ doc, req }) => {
+  if (!shouldRevalidate(req)) return doc;
+  for (const path of STATIC_ROUTES) revalidatePath(path);
+  return doc;
+};

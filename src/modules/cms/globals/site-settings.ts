@@ -1,5 +1,5 @@
 import type { GlobalConfig } from 'payload';
-import { isAdmin } from '@/modules/cms/access';
+import { hiddenUnlessAdmin, isAdmin } from '@/modules/cms/access';
 import { revalidateGlobal } from '@/modules/cms/hooks/revalidate';
 
 const APP_HELP = {
@@ -11,9 +11,9 @@ const APP_HELP = {
 export const SiteSettings: GlobalConfig = {
   slug: 'site-settings',
   label: { ar: 'إعدادات الموقع', en: 'Site settings' },
-  admin: { group: { ar: 'الإعدادات', en: 'Settings' } },
+  admin: { group: { ar: 'الإعدادات', en: 'Settings' }, hidden: hiddenUnlessAdmin },
   access: { read: () => true, update: isAdmin },
-  hooks: { afterChange: [revalidateGlobal('site-settings')] },
+  hooks: { afterChange: [revalidateGlobal] },
   fields: [
     {
       type: 'row',

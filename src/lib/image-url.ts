@@ -28,16 +28,22 @@ export function s3PublicOrigin(raw: RawEnv = process.env): string | undefined {
   return s3PublicBase(raw)?.origin;
 }
 
-/** `images.remotePatterns` entry for the S3 public host, when configured. */
+/**
+ * `images.remotePatterns` entry for the S3 public host, when configured. On a shared
+ * path-style endpoint only this site's bucket is allowed, so the optimizer never proxies
+ * another tenant's objects; a dedicated public host (`S3_PUBLIC_URL`) allows its whole path.
+ */
 export function s3RemotePatterns(raw: RawEnv = process.env): RemotePattern[] {
   const url = s3PublicBase(raw);
   if (!url) return [];
+  const bucket = raw['S3_BUCKET'];
+  const pathname = raw['S3_PUBLIC_URL'] || !bucket ? '/**' : `/${bucket}/**`;
   return [
     {
       protocol: url.protocol === 'http:' ? 'http' : 'https',
       hostname: url.hostname,
       ...(url.port ? { port: url.port } : {}),
-      pathname: '/**',
+      pathname,
     },
   ];
 }

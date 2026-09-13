@@ -7,11 +7,12 @@ vi.mock('next/cache', () => ({
 }));
 
 const {
-  PATHS_FOR_GLOBAL,
   PATHS_FOR_PRODUCTS,
+  pathsForProduct,
   revalidateGlobal,
   revalidateProducts,
   shouldRevalidate,
+  STATIC_ROUTES,
 } = await import('@/modules/cms/hooks/revalidate');
 
 type Hook = (args: unknown) => unknown;
@@ -46,17 +47,12 @@ function deleted(doc: Doc) {
 beforeEach(() => revalidatePath.mockClear());
 afterEach(() => vi.unstubAllEnvs());
 
-describe('publish hooks (BRD 9.6, ADR-030): static routes regenerate at once, never a rebuild', () => {
-  it('a published product change regenerates the home, the listing and the sitemap', () => {
+describe('publish hooks (BRD 9.6, ADR-030): the affected routes regenerate at once', () => {
+  it('a published product change regenerates its page, the home, the listing and the sitemap', () => {
     changed({ slug: 'hoodie', _status: 'published' });
-    expect(paths()).toEqual([...PATHS_FOR_PRODUCTS].toSorted());
-  });
-
-  it('never revalidates a product detail page: dynamicParams=false routes 404 afterwards', () => {
-    changed({ slug: 'hoodie', _status: 'published' });
-    deleted({ slug: 'hoodie', _status: 'published' });
-    expect(paths().some((p) => p.startsWith('/products/'))).toBe(false);
-    expect(PATHS_FOR_PRODUCTS).not.toContain(expect.stringMatching(/^\/products\/./));
+    expect(paths()).toEqual(pathsForProduct('hoodie').toSorted());
+    expect(paths()).toContain('/products/hoodie');
+    expect(PATHS_FOR_PRODUCTS).toEqual(['/', '/products', '/sitemap.xml']);
   });
 
   it('a draft autosave changes nothing on the site', () => {
@@ -66,12 +62,21 @@ describe('publish hooks (BRD 9.6, ADR-030): static routes regenerate at once, ne
 
   it('unpublishing removes the product, so it regenerates like a publish', () => {
     changed({ slug: 'hoodie', _status: 'draft' }, { slug: 'hoodie', _status: 'published' });
-    expect(paths()).toEqual([...PATHS_FOR_PRODUCTS].toSorted());
+    expect(paths()).toContain('/products/hoodie');
+    expect(paths()).toContain('/products');
   });
 
-  it('a delete always regenerates', () => {
+  it('a slug change clears the old URL as well as the new one', () => {
+    changed({ slug: 'hoodie-2', _status: 'published' }, { slug: 'hoodie', _status: 'published' });
+    expect(paths()).toContain('/products/hoodie');
+    expect(paths()).toContain('/products/hoodie-2');
+    expect(revalidatePath).toHaveBeenCalledTimes(5);
+  });
+
+  it('a delete always regenerates, the page included so it turns 404', () => {
     deleted({ slug: 'hoodie', _status: 'published' });
-    expect(paths()).toContain('/products');
+    expect(paths()).toContain('/products/hoodie');
+    expect(paths()).toContain('/sitemap.xml');
   });
 
   it('the seed script and the build phase are exempt', () => {
@@ -83,12 +88,10 @@ describe('publish hooks (BRD 9.6, ADR-030): static routes regenerate at once, ne
     expect(revalidatePath).not.toHaveBeenCalled();
   });
 
-  it('a global regenerates every static route that renders it', () => {
-    (revalidateGlobal('site-settings') as Hook)({ doc: {}, req: req(), global: {}, context: {} });
-    expect(paths()).toEqual([...(PATHS_FOR_GLOBAL['site-settings'] ?? [])].toSorted());
+  it('a global regenerates every static route, never a product page', () => {
+    (revalidateGlobal as Hook)({ doc: {}, req: req(), global: {}, context: {} });
+    expect(paths()).toEqual([...STATIC_ROUTES].toSorted());
     expect(paths()).toContain('/contact');
-    revalidatePath.mockClear();
-    (revalidateGlobal('something-new') as Hook)({ doc: {}, req: req(), global: {}, context: {} });
-    expect(paths()).toEqual(['/']);
+    expect(paths().some((p) => p.startsWith('/products/'))).toBe(false);
   });
 });

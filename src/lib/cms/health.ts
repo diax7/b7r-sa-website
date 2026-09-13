@@ -1,7 +1,7 @@
 import 'server-only';
 import { type PostgresAdapter, sql } from '@payloadcms/db-postgres';
 import { cms } from '@/lib/cms/payload';
-import { cmsEnv } from '@/modules/cms';
+import { cmsEnv } from '@/lib/cms/env';
 
 const DB_TIMEOUT_MS = 2000;
 

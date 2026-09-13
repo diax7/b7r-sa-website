@@ -9,13 +9,11 @@ import { buildConfig } from 'payload';
 import { Media } from '@/modules/cms/collections/media';
 import { Products } from '@/modules/cms/collections/products';
 import { Users } from '@/modules/cms/collections/users';
-import { cmsEnv, isBuildPhase } from '@/modules/cms/env';
+import { cmsEnv, isBuildPhase } from '@/lib/cms/env';
 import { Navigation } from '@/modules/cms/globals/navigation';
 import { SeoDefaults } from '@/modules/cms/globals/seo-defaults';
 import { SiteSettings } from '@/modules/cms/globals/site-settings';
 import { migrations } from '@/migrations';
-
-export { cmsEnv, type CmsEnv } from '@/modules/cms/env';
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 const env = cmsEnv();

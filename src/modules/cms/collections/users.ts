@@ -1,20 +1,32 @@
-import type { CollectionConfig } from 'payload';
+import { type CollectionConfig, type PayloadRequest, ValidationError } from 'payload';
 import { passwordProblem } from '@/lib/pwned';
 import { adminField, isAdmin, isAdminOrSelf } from '@/modules/cms/access';
 
 const LOCK_MINUTES = 15;
 
-/** Rejects a password that is too short or breached; runs on create, update and reset. */
-async function enforcePasswordPolicy(data: Record<string, unknown> | undefined) {
+const PASSWORD_MESSAGES = {
+  too_short: 'كلمة المرور قصيرة: 12 حرفاً على الأقل.',
+  breached: 'كلمة المرور ظهرت في تسريبات معروفة، اختر كلمة أخرى.',
+} as const;
+
+/**
+ * Rejects a password that is too short or breached (ADR-027) as a field-level validation
+ * error (HTTP 400, shown inline in the admin). `beforeValidate` is the one hook every path
+ * runs: create, update and Payload's reset-password operation.
+ */
+async function enforcePasswordPolicy(
+  data: Record<string, unknown> | undefined,
+  req: PayloadRequest,
+): Promise<void> {
   const password = data?.['password'];
   if (typeof password !== 'string') return;
   const problem = await passwordProblem(password);
-  if (problem === 'too_short') {
-    throw new Error('كلمة المرور قصيرة: 12 حرفاً على الأقل.');
-  }
-  if (problem === 'breached') {
-    throw new Error('كلمة المرور ظهرت في تسريبات معروفة، اختر كلمة أخرى.');
-  }
+  if (!problem) return;
+  throw new ValidationError({
+    collection: 'users',
+    errors: [{ path: 'password', message: PASSWORD_MESSAGES[problem] }],
+    req,
+  });
 }
 
 /** Admin users (BRD 9.3): admin | editor, lockout 5/15 min, hardened cookies. */
@@ -43,8 +55,7 @@ export const Users: CollectionConfig = {
     delete: isAdmin,
   },
   hooks: {
-    beforeValidate: [({ data }) => enforcePasswordPolicy(data).then(() => data)],
-    beforeChange: [({ data }) => enforcePasswordPolicy(data).then(() => data)],
+    beforeValidate: [({ data, req }) => enforcePasswordPolicy(data, req).then(() => data)],
   },
   fields: [
     {

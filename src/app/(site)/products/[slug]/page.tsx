@@ -8,7 +8,11 @@ interface Params {
   params: Promise<{ slug: string }>;
 }
 
-export const dynamicParams = false;
+/**
+ * A product published in the admin after the build gets its page on first request (ISR),
+ * so unknown slugs must reach the page and `notFound()`; the 404 is cached like any page.
+ */
+export const dynamicParams = true;
 
 export async function generateStaticParams() {
   return (await getProducts()).map((p) => ({ slug: p.slug }));

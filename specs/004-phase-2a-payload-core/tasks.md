@@ -35,3 +35,12 @@
 - Extra: Gravatar off in the admin (found by the CSP recorder), font preloads via
   `react-dom` `preload()` (each face was emitted twice), product OG fallback to the default
   image when `pnpm og` has not run for a new product.
+- Code review (CTO, 2026-09-13): public reads filter `_status = published` (a never-published
+  draft was returned by `draft: false`); `/products/[slug]` is `dynamicParams = true` and the
+  hook revalidates the product page (a product added in the admin had no page until the next
+  deploy); JSON-LD/sitemap share `absoluteUrl` for S3 media; the password policy throws a
+  `ValidationError` (400, inline) from `beforeValidate` only; globals hidden from editors in
+  the panel; SVG uploads dropped; print area validated at the API; `.gitattributes` LF;
+  `@payloadcms/plugin-seo` removed (never imported — the BRD 4.16 templates cover titles and
+  descriptions; the plugin returns with `pages` in 2b if wanted); `lib/cms/env.ts` moved out
+  of the module so `lib` no longer imports `modules`.

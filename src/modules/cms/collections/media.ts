@@ -24,7 +24,8 @@ export const Media: CollectionConfig = {
   },
   upload: {
     staticDir: 'public/media',
-    mimeTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/avif', 'image/svg+xml'],
+    // Raster only: an editor-uploaded SVG served same-origin would run script in the admin.
+    mimeTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/avif'],
     focalPoint: true,
     imageSizes: [
       { name: 'thumbnail', width: 400, height: undefined, position: 'centre' },

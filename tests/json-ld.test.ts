@@ -87,6 +87,19 @@ describe('JSON-LD builders (BRD 7.4)', () => {
     }
   });
 
+  it('product images: site paths get the origin, CMS media on S3 stays absolute (ADR-029)', () => {
+    const local = products[0]!;
+    expect(product(BASE, local, site)['image']).toEqual(
+      local.colors.map((c) => `${BASE}${c.images.front}`),
+    );
+    const s3 = 'https://media.b7r.sa/media/hoodie-black-front.jpg';
+    const onS3 = {
+      ...local,
+      colors: [{ ...local.colors[0]!, images: { front: s3 } }],
+    };
+    expect(product(BASE, onS3, site)['image']).toEqual([s3]);
+  });
+
   it('breadcrumbs: positions start at 1 and the home item is the bare origin', () => {
     const node = breadcrumbs(BASE, [
       { name: 'الرئيسية', path: '/' },

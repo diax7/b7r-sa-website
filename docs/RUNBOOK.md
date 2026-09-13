@@ -46,9 +46,17 @@ tables, never drop or rename in the same release): the running image keeps servi
 old schema until the new image starts (ADR-025). Drop the old column in a later release.
 
 Publish → live (ADR-030): every page regenerates at most once a minute when requested; a
-publish also regenerates the home, the listing, the sitemap and the pages a global feeds
-right away. A product detail page shows the change within a minute (refresh twice). Never
-add `/products/:slug` to `revalidatePath` in `src/modules/cms/hooks/revalidate.ts`.
+publish also regenerates the product's page, the home, the listing and the sitemap right
+away, and a global change regenerates every static route. A product created in the admin
+gets its page on first request (`dynamicParams = true`); keep it that way, a
+`dynamicParams = false` route 404s after an on-demand revalidation in Next 16.
+
+Password resets: no e-mail adapter is wired yet (Phase 2b candidate), so «نسيت كلمة المرور»
+sends nothing. An admin resets a colleague's password from the user's document in `/admin`.
+
+A local database created before 2026-09-13 ran an earlier initial migration; rebuild it once
+with `pnpm payload migrate:fresh --force-accept-warning`, then seed and create the admin
+again (move `public/media` aside first so filenames do not collide).
 
 ## Fonts
 
