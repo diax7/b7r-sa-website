@@ -105,9 +105,10 @@ export function PrintAreaOverlay({
         onClick={onRemove}
         aria-label={copy.removeAria}
         data-design-remove=""
+        // 44 px target; invisible AND inert while the chrome is hidden, except for keyboard focus.
         className={cn(
-          'pointer-events-auto absolute end-0 top-0 grid size-9 -translate-y-1/2 translate-x-1/2 place-items-center rounded-pill border border-border bg-surface text-text shadow-popover transition-opacity duration-(--duration-fast) hover:text-error focus-visible:opacity-100 rtl:-translate-x-1/2',
-          chrome ? 'opacity-100' : 'opacity-0',
+          'absolute end-0 top-0 grid size-11 -translate-y-1/2 translate-x-1/2 place-items-center rounded-pill border border-border bg-surface text-text shadow-popover transition-opacity duration-(--duration-fast) hover:text-error focus-visible:pointer-events-auto focus-visible:opacity-100 rtl:-translate-x-1/2',
+          chrome ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0',
         )}
       >
         <Icon icon={X} size={18} />

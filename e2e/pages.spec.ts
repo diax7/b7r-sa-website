@@ -5,6 +5,9 @@ test.describe('how it works (BRD 6.7)', () => {
     await page.goto('/how-it-works');
     await expect(page.locator('ol li h2')).toHaveCount(5);
     await expect(page.locator('ol li h2').first()).toHaveText('أنشئ حسابك مجاناً');
+    // The connected path: one track with a progress line, five numbered icons.
+    await expect(page.locator('[data-flow] .flow-track .flow-progress')).toHaveCount(1);
+    await expect(page.locator('[data-flow] .flow-number')).toHaveText(['1', '2', '3', '4', '5']);
     const equation = page.locator('[data-equation]');
     await expect(equation).toContainText('سعر البيع');
     await expect(equation).toContainText('ربحك');
@@ -25,8 +28,14 @@ test.describe('about (BRD 6.8)', () => {
     }
     await expect(page.locator('img[alt="Misk Foundation"]')).toBeAttached();
     await expect(page.getByText('نطبع ونشحن من جدة إلى كل مدن المملكة.')).toBeVisible();
-    // Decorative banner only: alt="" and never a product link.
+    // Decorative photo only: alt="" and never a product link.
     await expect(page.locator('img[src*="lifestyle"]')).toHaveAttribute('alt', '');
+    // Facts band: the welcome credit and the three hero proof chips, no new copy.
+    const facts = page.locator('section.bg-navy');
+    await expect(facts.locator('[data-sar-digits]')).toHaveText('30');
+    for (const chip of ['مجاني 100%', 'بدون حد أدنى للطلبات', 'توصيل لكل المملكة خلال 5 أيام']) {
+      await expect(facts.getByText(chip, { exact: true })).toBeVisible();
+    }
   });
 });
 

@@ -131,6 +131,8 @@ test.describe('designer and profit calculator (BRD 6.4.3)', () => {
       await canvas.hover();
     }
     await expect(remove).toHaveCSS('opacity', '1');
+    const box = (await remove.boundingBox())!;
+    expect(Math.min(box.width, box.height)).toBeGreaterThanOrEqual(44);
     await remove.click();
     await expect(page.locator('[data-print-area-prompt]')).toBeVisible();
     await page.getByLabel('ارفع ملف التصميم').setInputFiles('e2e/fixtures/not-an-image.txt');

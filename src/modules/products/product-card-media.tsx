@@ -97,7 +97,7 @@ export function ProductCardMedia({
         {price}
         <div className="mt-auto flex items-center justify-between gap-3 text-small text-text-muted">
           {/* Above the stretched link (z-10): the swatches act without navigating. */}
-          <ul className="relative z-10 flex items-center gap-2" aria-label={swatchesLabel}>
+          <ul className="relative z-10 -ms-2.5 flex items-center" aria-label={swatchesLabel}>
             {swatches.map((c) => (
               <li key={c.slug}>
                 <button
@@ -110,19 +110,24 @@ export function ProductCardMedia({
                   onFocus={() => setPreview(c.slug)}
                   onBlur={() => setPreview(null)}
                   onClick={() => setActive(c.slug)}
-                  className={cn(
-                    'grid size-6 place-items-center rounded-pill border transition-[box-shadow,border-color] duration-(--duration-fast)',
-                    c.slug === active
-                      ? 'border-primary ring-2 ring-primary/30'
-                      : 'border-border hover:border-text-muted',
-                  )}
+                  // 44 px hit area around a 24 px swatch (BRD 3.13).
+                  className="group/swatch grid size-11 place-items-center rounded-pill"
                 >
                   <span
                     aria-hidden="true"
-                    className="size-4 rounded-pill border border-black/10"
-                    // Swatch colours are product data (BRD Appendix A), not a design token.
-                    style={{ backgroundColor: c.hex }}
-                  />
+                    className={cn(
+                      'grid size-6 place-items-center rounded-pill border transition-[box-shadow,border-color] duration-(--duration-fast)',
+                      c.slug === active
+                        ? 'border-primary ring-2 ring-primary/30'
+                        : 'border-border group-hover/swatch:border-text-muted',
+                    )}
+                  >
+                    <span
+                      className="size-4 rounded-pill border border-black/10"
+                      // Swatch colours are product data (BRD Appendix A), not a design token.
+                      style={{ backgroundColor: c.hex }}
+                    />
+                  </span>
                 </button>
               </li>
             ))}

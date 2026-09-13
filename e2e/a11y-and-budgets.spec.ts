@@ -37,6 +37,14 @@ test.describe('accessibility (BRD 3.13)', () => {
     test(`axe reports no serious or critical violations on ${path}`, async ({ page }) => {
       await page.goto(path);
       await page.waitForLoadState('load');
+      if (path === '/') {
+        // Mount the lazy islands (designer, video loop, widgets) so they are inside the scan.
+        await page.locator('#designer').scrollIntoViewIfNeeded();
+        await page.waitForSelector('[data-designer-island] canvas', { timeout: 15_000 });
+        await page.locator('#video').scrollIntoViewIfNeeded();
+        await page.waitForTimeout(500);
+        await page.evaluate(() => window.scrollTo(0, 0));
+      }
       const results = await new AxeBuilder({ page })
         .withTags(['wcag2a', 'wcag2aa', 'wcag22aa'])
         .analyze();

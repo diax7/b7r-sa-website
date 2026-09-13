@@ -104,7 +104,7 @@ export function Gallery({ productName, colors, copy }: GalleryProps) {
                 onClick={() => setFlipped(view === 'back')}
                 data-gallery-view={view}
                 className={cn(
-                  'inline-flex h-9 items-center rounded-pill border px-4 text-small font-medium transition-colors duration-(--duration-fast)',
+                  'inline-flex h-11 items-center rounded-pill border px-5 text-small font-medium transition-colors duration-(--duration-fast)',
                   on
                     ? 'border-primary bg-accent-tint text-primary'
                     : 'border-border bg-surface text-text hover:border-text-muted',

@@ -18,6 +18,9 @@ test.describe('products listing (BRD 6.5)', () => {
     await expect(first).toContainText('يبدأ من');
     await expect(first.locator('[data-sar-digits]')).toHaveText('45');
     await expect(first.locator('button[data-swatch]')).toHaveCount(2);
+    // Touch targets (BRD 3.13): swatches and the gallery pills are at least 44 px.
+    const swatch = (await first.locator('button[data-swatch]').first().boundingBox())!;
+    expect(Math.min(swatch.width, swatch.height)).toBeGreaterThanOrEqual(44);
     await expect(first).toContainText('S – 2XL');
   });
 
@@ -104,6 +107,8 @@ test.describe('product detail (BRD 6.6)', () => {
     const state = gallery.locator('[aria-live="polite"]');
     await expect(state).toHaveText('أبيض، الواجهة الأمامية');
     // The visible toggle works everywhere; hover and keys are extras on desktop.
+    const pill = (await gallery.locator('[data-gallery-view="back"]').boundingBox())!;
+    expect(pill.height).toBeGreaterThanOrEqual(44);
     await gallery.locator('[data-gallery-view="back"]').click();
     await expect(photo).toHaveAttribute('data-gallery-side', 'back');
     await expect(gallery.locator('[data-gallery-view="back"]')).toHaveAttribute(

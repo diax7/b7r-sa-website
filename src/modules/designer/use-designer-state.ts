@@ -83,7 +83,6 @@ export function reducer(state: DesignerState, action: DesignerAction): DesignerS
     case 'useSample':
       return { ...state, design: { ...SAMPLE_DESIGN, kind: 'sample' }, fileError: false };
     case 'removeDesign':
-      if (state.design?.kind === 'upload') URL.revokeObjectURL(state.design.url);
       return { ...state, design: null, fileError: false };
     case 'fileError':
       return { ...state, fileError: action.error };

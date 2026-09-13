@@ -34,15 +34,14 @@ async function measure(file: File, url: string): Promise<{ width: number; height
 
 /**
  * Turns a chosen file into a design (BRD 6.4.3). Files stay in memory as object URLs and
- * never leave the browser; a previous upload's URL is revoked. `null` means the file was
+ * never leave the browser (the island revokes a replaced URL). `null` means the file was
  * refused (type or size) or could not be decoded.
  */
-export async function acceptFile(file: File, current: Design | null): Promise<Design | null> {
+export async function acceptFile(file: File): Promise<Design | null> {
   if (!isAccepted(file)) return null;
   const url = URL.createObjectURL(file);
   try {
     const size = await measure(file, url);
-    if (current?.kind === 'upload') URL.revokeObjectURL(current.url);
     return { url, kind: 'upload', ...size };
   } catch {
     URL.revokeObjectURL(url);

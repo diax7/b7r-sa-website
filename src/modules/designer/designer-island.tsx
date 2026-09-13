@@ -129,7 +129,7 @@ export function DesignerIsland({
 
   async function onFile(file: File | undefined) {
     if (!file) return;
-    const design = await acceptFile(file, state.design);
+    const design = await acceptFile(file);
     if (!design) {
       dispatch({ type: 'fileError', error: true });
       return;
@@ -147,6 +147,15 @@ export function DesignerIsland({
 
   const onChromeChange = useCallback((visible: boolean) => setChrome(visible), []);
 
+  // An uploaded design is an object URL: revoke it whenever it is replaced or on unmount.
+  const design = state.design;
+  useEffect(
+    () => () => {
+      if (design?.kind === 'upload') URL.revokeObjectURL(design.url);
+    },
+    [design],
+  );
+
   return (
     <div
       ref={sectionHost}
@@ -162,8 +171,6 @@ export function DesignerIsland({
             'relative mx-auto aspect-square w-full max-w-[600px] overflow-hidden rounded-lg bg-ground transition-shadow duration-(--duration-fast)',
             dragOver && 'ring-2 ring-primary/50',
           )}
-          aria-label={copy.canvasLabel}
-          role="img"
           onDragOver={(e) => {
             e.preventDefault();
             setDragOver(true);
@@ -178,15 +185,18 @@ export function DesignerIsland({
         >
           {size > 0 && color && (
             <>
-              <DesignCanvas
-                size={size}
-                mockupSrc={color.images.front}
-                design={state.design}
-                area={area}
-                hovered={hovered}
-                onInteract={dismissHint}
-                onChromeChange={onChromeChange}
-              />
+              {/* The picture alone is the image; the upload input and «×» stay exposed. */}
+              <div role="img" aria-label={copy.canvasLabel}>
+                <DesignCanvas
+                  size={size}
+                  mockupSrc={color.images.front}
+                  design={state.design}
+                  area={area}
+                  hovered={hovered}
+                  onInteract={dismissHint}
+                  onChromeChange={onChromeChange}
+                />
+              </div>
               <PrintAreaOverlay
                 area={area}
                 hasDesign={state.design !== null}
