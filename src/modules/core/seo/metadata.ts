@@ -1,3 +1,5 @@
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
 import type { Metadata } from 'next';
 import type { BlogPost, Product } from '@/content/schema';
 import { productSeo, SEO_TITLE_TEMPLATE } from '@/content/seo-copy';
@@ -79,9 +81,15 @@ export async function buildMetadata(route: string): Promise<Metadata> {
   });
 }
 
-/** Product detail (BRD 4.16 templates): its own OG image from `public/og/products/`. */
+/**
+ * Product detail (BRD 4.16 templates): its own OG image from `public/og/products/` when
+ * `pnpm og` has rendered one; a product added in the admin falls back to the default until
+ * then (docs/RUNBOOK.md, "Open Graph images").
+ */
 export async function productMetadata(product: Product): Promise<Metadata> {
   const site = await getSiteSettings();
+  const ogPath = `/og/products/${product.slug}.png`;
+  const hasOwnImage = existsSync(join(process.cwd(), 'public', ogPath));
   return pageMetadata({
     route: `/products/${product.slug}`,
     siteName: site.brandName,
@@ -89,7 +97,7 @@ export async function productMetadata(product: Product): Promise<Metadata> {
     description: productSeo.description
       .replace('{short description}', product.shortDescription.replace(/\.$/, ''))
       .replace('{base}', String(product.baseCost)),
-    ogImage: `/og/products/${product.slug}.png`,
+    ...(hasOwnImage ? { ogImage: ogPath } : {}),
   });
 }
 
