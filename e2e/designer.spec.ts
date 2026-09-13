@@ -59,8 +59,11 @@ test.describe('designer and profit calculator (BRD 6.4.3)', () => {
     await openDesigner(page);
     await expect(digits(page, 'per-piece')).toHaveText('44');
     await expect(digits(page, 'monthly')).toHaveText('13,200');
-    await expect(page.locator('[data-print-area-prompt]')).toContainText(
-      'اضغط لرفع شعارك أو صورتك',
+    const prompt = page.locator('[data-print-area-prompt]');
+    await expect(prompt).toContainText('اضغط لرفع شعارك أو صورتك');
+    // The prompt fits inside the print area on every stage size (nothing spills past it).
+    expect(await prompt.locator('label').evaluate((el) => el.scrollHeight - el.clientHeight)).toBe(
+      0,
     );
     await expect(page.locator('[data-designer-island] input[name="designer-color"]')).toHaveCount(
       0,
@@ -136,9 +139,9 @@ test.describe('designer and profit calculator (BRD 6.4.3)', () => {
     await remove.click();
     await expect(page.locator('[data-print-area-prompt]')).toBeVisible();
     await page.getByLabel('ارفع ملف التصميم').setInputFiles('e2e/fixtures/not-an-image.txt');
-    await expect(page.locator('[data-print-area-prompt] [role="alert"]')).toHaveText(
-      'الملف غير مدعوم أو أكبر من 10 ميجابايت.',
-    );
+    const alert = page.locator('[data-print-area-prompt] [role="alert"]');
+    await expect(alert).toHaveText('الملف غير مدعوم أو أكبر من 10 ميجابايت.');
+    await expect(alert).toBeInViewport({ ratio: 1 });
   });
 
   test('edit chrome shows only while the pointer is inside or the design is selected', async ({
