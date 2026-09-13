@@ -24,8 +24,8 @@ though 2a stores plain text; used by `description` on products), `graphql` (peer
 | # | Gate | Pass? |
 |---|---|---|
 | I | RTL | Admin: `ar` from `@payloadcms/translations`, Payload flips `dir` for `ar`; public unchanged |
-| II | Static | Yes — pages still prerender at build (DB reachable at build: Postgres service in CI, build arg on CranL; RUNBOOK gives the GHCR fallback), refresh only via tags/paths |
-| III | Copy | Migrated content is the BRD copy, seeded from `src/seed/*` which keep the verbatim test |
+| II | Static | Yes — pages still prerender at build (DB reachable at build: Postgres service in CI; production images are built by CI after `payload migrate` and pushed to GHCR for CranL to pull; CranL-builds-from-Dockerfile is the documented fallback), refresh only via tags/paths |
+| III | Copy | Migrated content is the BRD copy, seeded from `src/content/seed/*` which keep the verbatim test |
 | IV | Budgets | Public pages load no Payload JS; LHCI five URLs unchanged; admin excluded |
 | V | Tokens | Admin uses Payload's own theme (out of the design system by design); brand icon + title only |
 | VI | No fabrication | Seed = existing content; testimonials untouched (2b) |
@@ -204,4 +204,5 @@ though 2a stores plain text; used by `description` on products), `graphql` (peer
 
 ## Open items for Dhia (do not block)
 CranL Postgres + S3 (values for the env matrix), `PAYLOAD_SECRET`, first admin credentials,
-decision on the GHCR fallback if CranL's build cannot reach the database.
+the GitHub `production` environment secrets for `deploy.yml`, and CranL set to pull the GHCR
+image (or the documented Dockerfile fallback).
