@@ -18,7 +18,13 @@
     "lhci": "lhci autorun",
     "assets": "tsx scripts/prepare-assets.ts && tsx scripts/hero-crops.ts",
     "assets:sample-design": "tsx scripts/generate-sample-design.ts",
-    "og": "tsx scripts/build-og.ts"
+    "og": "tsx scripts/build-og.ts",
+    "migrate": "payload migrate",
+    "migrate:create": "payload migrate:create && tsx scripts/fix-migrations.ts",
+    "migrate:status": "payload migrate:status",
+    "content:migrate": "tsx scripts/migrate-content.ts",
+    "admin:create": "tsx scripts/create-admin.ts",
+    "payload": "payload"
   },
   "dependencies": {
     "@next/third-parties": "16.3.5",

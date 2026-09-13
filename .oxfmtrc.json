@@ -16,6 +16,9 @@
     "docs",
     "specs",
     "*.md",
-    "next-env.d.ts"
+    "next-env.d.ts",
+    "src/app/(payload)/admin/importMap.js",
+    "src/payload-types.ts",
+    "src/migrations/**"
   ]
 }

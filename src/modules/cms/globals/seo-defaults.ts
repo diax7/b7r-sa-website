@@ -1,0 +1,110 @@
+import type { GlobalConfig } from 'payload';
+import { adminField, isAdmin } from '@/modules/cms/access';
+import { CACHE_TAGS, revalidateGlobal } from '@/modules/cms/hooks/revalidate';
+
+/** BRD 9.4 `seo-defaults` ⇄ `content/seo.ts` (per-route titles/descriptions, BRD 4.16). */
+export const SeoDefaults: GlobalConfig = {
+  slug: 'seo-defaults',
+  label: { ar: 'إعدادات SEO', en: 'SEO defaults' },
+  admin: { group: { ar: 'الإعدادات', en: 'Settings' } },
+  access: { read: () => true, update: isAdmin },
+  hooks: { afterChange: [revalidateGlobal('seo-defaults', CACHE_TAGS.seo)] },
+  fields: [
+    {
+      name: 'titleTemplate',
+      type: 'text',
+      required: true,
+      localized: true,
+      label: { ar: 'قالب العنوان', en: 'Title template' },
+      admin: { description: { ar: '%s يُستبدل بعنوان الصفحة', en: '%s is the page title' } },
+    },
+    {
+      name: 'defaultOgImage',
+      type: 'text',
+      required: true,
+      label: { ar: 'صورة المشاركة الافتراضية', en: 'Default OG image' },
+      admin: {
+        description: {
+          ar: 'مسار داخل الموقع، مثال /og/default.png',
+          en: 'Site path, e.g. /og/default.png',
+        },
+      },
+    },
+    {
+      name: 'routes',
+      type: 'array',
+      required: true,
+      label: { ar: 'الصفحات', en: 'Routes' },
+      labels: { singular: { ar: 'صفحة', en: 'Route' }, plural: { ar: 'الصفحات', en: 'Routes' } },
+      admin: {
+        description: {
+          ar: 'العنوان والوصف لكل صفحة ثابتة (BRD 4.16)',
+          en: 'Title and description per static route',
+        },
+      },
+      fields: [
+        {
+          type: 'row',
+          fields: [
+            {
+              name: 'route',
+              type: 'text',
+              required: true,
+              label: { ar: 'المسار', en: 'Route' },
+              validate: (value: unknown) =>
+                typeof value === 'string' && value.startsWith('/') ? true : 'المسار يبدأ بـ /',
+            },
+            {
+              name: 'updatedAt',
+              type: 'date',
+              required: true,
+              label: { ar: 'آخر تحديث للمحتوى', en: 'Content updated' },
+              admin: {
+                date: { pickerAppearance: 'dayOnly' },
+                description: { ar: 'يظهر في خريطة الموقع', en: 'Used for the sitemap' },
+              },
+            },
+          ],
+        },
+        {
+          name: 'title',
+          type: 'text',
+          required: true,
+          localized: true,
+          label: { ar: 'العنوان', en: 'Title' },
+          maxLength: 70,
+        },
+        {
+          name: 'description',
+          type: 'textarea',
+          required: true,
+          localized: true,
+          label: { ar: 'الوصف', en: 'Description' },
+          maxLength: 160,
+          admin: { description: { ar: '155 حرفاً كحد أقصى للأفضل', en: 'Aim for ≤ 155 characters' } },
+        },
+        {
+          name: 'ogImage',
+          type: 'text',
+          label: { ar: 'صورة المشاركة (اختياري)', en: 'OG image (optional)' },
+        },
+      ],
+    },
+    {
+      name: 'verification',
+      type: 'group',
+      label: { ar: 'رموز التحقق (للمدير فقط)', en: 'Verification tokens (admin only)' },
+      access: { read: adminField, update: adminField },
+      admin: {
+        description: {
+          ar: 'اختياري: تُقرأ من متغيرات البيئة عند تركها فارغة.',
+          en: 'Optional: env variables are used when empty.',
+        },
+      },
+      fields: [
+        { name: 'google', type: 'text', label: 'Google Search Console' },
+        { name: 'bing', type: 'text', label: 'Bing Webmaster Tools' },
+      ],
+    },
+  ],
+};

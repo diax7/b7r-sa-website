@@ -32,3 +32,4 @@ resources/source-files/
 
 # typescript incremental cache
 *.tsbuildinfo
+public/media/
