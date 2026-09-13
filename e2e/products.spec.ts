@@ -3,9 +3,15 @@ import { expect, test } from '@playwright/test';
 test.describe('products listing (BRD 6.5)', () => {
   test('shows five linked cards with name, price, two swatches and sizes', async ({ page }) => {
     await page.goto('/products');
+    // The admin suite may be creating a temporary product in parallel, so the five seed
+    // products are asserted by slug rather than by an exact count.
     const cards = page.locator('[data-product-grid] [data-product-card]');
-    await expect(cards).toHaveCount(5);
-    await expect(page.locator('[data-product-grid] a[href^="/products/"]')).toHaveCount(5);
+    for (const slug of ['tee-essential', 'tee-oversize', 'hoodie', 'baby-onesie', 'tote-bag']) {
+      await expect(page.locator(`[data-product-card="${slug}"]`)).toHaveCount(1);
+    }
+    expect(await page.locator('[data-product-grid] a[href^="/products/"]').count()).toBe(
+      await cards.count(),
+    );
     const first = cards.first();
     await expect(first).toContainText('تيشيرت أساسي');
     await expect(first.getByRole('link')).toHaveAccessibleName('تيشيرت أساسي');

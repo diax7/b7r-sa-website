@@ -69,8 +69,7 @@ export function ProductCardMedia({
           priority={priority}
           className={cn(
             'object-cover transition-opacity duration-(--duration-slow) ease-(--ease-standard)',
-            shown.images.back &&
-              'group-hover:opacity-0 group-focus-within:opacity-0 group-data-[preview]:opacity-100',
+            shown.images.back && 'group-hover:opacity-0 group-data-[preview]:opacity-100',
           )}
         />
         {shown.images.back && (
@@ -79,7 +78,7 @@ export function ProductCardMedia({
             alt=""
             fill
             sizes={SIZES}
-            className="object-cover opacity-0 transition-opacity duration-(--duration-slow) ease-(--ease-standard) group-hover:opacity-100 group-focus-within:opacity-100 group-data-[preview]:opacity-0"
+            className="object-cover opacity-0 transition-opacity duration-(--duration-slow) ease-(--ease-standard) group-hover:opacity-100 group-data-[preview]:opacity-0"
           />
         )}
       </div>
