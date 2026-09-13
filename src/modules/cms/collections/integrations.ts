@@ -18,6 +18,10 @@ export const Integrations: CollectionConfig = {
     useAsTitle: 'name',
     defaultColumns: ['name', 'platform', 'order'],
     group: { ar: 'المحتوى', en: 'Content' },
+    description: {
+      ar: 'المنصات المتصلة (سلة، زد، شوبيفاي) وترتيبها في شريط التكاملات.',
+      en: 'Connected platforms (Salla, Zid, Shopify) and their order in the integrations strip.',
+    },
   },
   access: {
     read: () => true,

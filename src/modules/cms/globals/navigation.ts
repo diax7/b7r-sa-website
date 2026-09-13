@@ -35,7 +35,14 @@ const navItem: Field[] = [
 export const Navigation: GlobalConfig = {
   slug: 'navigation',
   label: { ar: 'التنقل', en: 'Navigation' },
-  admin: { group: { ar: 'الإعدادات', en: 'Settings' }, hidden: hiddenUnlessAdmin },
+  admin: {
+    group: { ar: 'الإعدادات', en: 'Settings' },
+    hidden: hiddenUnlessAdmin,
+    description: {
+      ar: 'روابط القائمة الرئيسية والتذييل ونصوص الأزرار.',
+      en: 'Header and footer links and the button labels.',
+    },
+  },
   access: { read: () => true, update: isAdmin },
   hooks: { afterChange: [revalidateGlobal] },
   fields: [

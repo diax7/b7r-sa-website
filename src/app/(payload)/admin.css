@@ -1,0 +1,108 @@
+/* ---------------------------------------------------------------------------------------
+   Admin stylesheet (BRD 9.3, ADR-039). Loaded by the (payload) layout only.
+
+   Payload's own CSS sits in `@layer payload-default, payload`; unlayered rules beat any layer,
+   so Tailwind's utilities are imported WITHOUT a layer and style our shell, dashboard and
+   field widgets without `!important`. Brand overrides of Payload's elements go in
+   `@layer payload`, as Payload documents. Preflight is not imported: Payload keeps its resets.
+
+   Tokens carry the SAME names the site uses (`bg-surface`, `text-text-muted`, `rounded-base`…)
+   but resolve to Payload's dark greys, so `src/components/shared|ui` render here unchanged.
+   Dark only (Dhia, 2026-09-13). The only raw hex in the admin lives in the token block.
+   --------------------------------------------------------------------------------------- */
+@import '../../styles/tokens.css';
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css' source(none);
+@source '../../modules/cms/admin';
+@source '../../components';
+
+@theme inline {
+  --color-*: initial;
+  /* Blue fills: white text on them (6.9:1). */
+  --color-primary: #0058b0;
+  --color-primary-hover: #1a6ac0;
+  --color-primary-dark: #0a2f5e;
+  --color-navy: #0a2f5e;
+  /* Blue text, icons, links and focus on the greys (5.7:1 on the page background). */
+  --color-accent: #0098e0;
+  --color-accent-tint: rgb(0 152 224 / 0.14);
+  /* Payload's greys. */
+  --color-ground: var(--theme-elevation-0);
+  --color-surface: var(--theme-elevation-50);
+  --color-text: var(--theme-elevation-1000);
+  --color-text-muted: var(--theme-elevation-600);
+  --color-border: var(--theme-elevation-150);
+  /* Status colours picked for AA on the greys. */
+  --color-success: #3fbf6b;
+  --color-warning: #f5b53f;
+  --color-error: #f26b6b;
+  --color-whatsapp: #25d366;
+  --color-white: #ffffff;
+  --color-black: #000000;
+  --color-transparent: transparent;
+  --color-current: currentColor;
+
+  --shadow-*: initial;
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.4);
+  --shadow-card-hover: 0 4px 14px rgb(0 0 0 / 0.5);
+  --shadow-popover: 0 12px 32px rgb(0 0 0 / 0.6);
+  --shadow-header: 0 1px 0 rgb(255 255 255 / 0.06);
+}
+
+/* ---------------------------------------------------------------------------------------
+   Brand on Payload's own elements. Greys stay Payload's; the accent, the font and the radii
+   are ours. Selectors and custom properties checked against @payloadcms/ui 3.89.0.
+   --------------------------------------------------------------------------------------- */
+@layer payload {
+  :root {
+    --font-body: var(--font-sans);
+    --style-radius-s: var(--radius-inner);
+    --style-radius-m: 8px;
+    --style-radius-l: var(--radius-base);
+    --accessibility-outline: 2px solid var(--color-accent);
+  }
+
+  /* Payload's "success" ramp is its selection/focus colour: checkboxes, radios, focus rings,
+     the published pill. Re-hued to the B7R accent. */
+  html[data-theme='dark'] {
+    --color-success-50: #e6f5fc;
+    --color-success-100: #cdeaf9;
+    --color-success-150: #b3dff6;
+    --color-success-200: #99d4f3;
+    --color-success-250: #80c9f0;
+    --color-success-300: #66beec;
+    --color-success-350: #4db3e9;
+    --color-success-400: #33a8e6;
+    --color-success-450: #1a9de3;
+    --color-success-500: #0098e0;
+    --color-success-550: #0086c9;
+    --color-success-600: #0075b3;
+    --color-success-650: #00639c;
+    --color-success-700: #005286;
+    --color-success-750: #004670;
+    --color-success-800: #003a59;
+    --color-success-850: #002e43;
+    --color-success-900: #00222d;
+    --color-success-950: #001116;
+  }
+
+  html {
+    font-family: var(--font-sans);
+  }
+
+  .btn--style-primary {
+    --bg-color: var(--color-primary);
+    --color: var(--color-white);
+    --hover-bg: var(--color-primary-hover);
+    --hover-color: var(--color-white);
+  }
+
+  .btn--style-secondary {
+    --hover-color: var(--color-accent);
+    --hover-btn-border: 1px solid var(--color-accent);
+  }
+
+  .graphic-logo img {
+    max-height: 56px;
+  }
+}

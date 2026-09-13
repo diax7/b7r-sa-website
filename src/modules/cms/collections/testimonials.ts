@@ -17,6 +17,10 @@ export const Testimonials: CollectionConfig = {
     useAsTitle: 'name',
     defaultColumns: ['name', 'store', 'placeholder', 'order', '_status'],
     group: { ar: 'المحتوى', en: 'Content' },
+    description: {
+      ar: 'آراء التجار في الصفحة الرئيسية. النماذج المؤقتة لا تظهر في الموقع.',
+      en: 'Merchant quotes on the home page. Placeholders never show on the site.',
+    },
   },
   versions: { drafts: { autosave: { interval: 1500 }, schedulePublish: true }, maxPerDoc: 10 },
   access: {

@@ -83,7 +83,12 @@ export const REDIRECT_OVERRIDES: Omit<Partial<CollectionConfig>, 'fields'> & {
   admin: {
     group: { ar: 'الإعدادات', en: 'Settings' },
     hidden: hiddenUnlessAdmin,
+    useAsTitle: 'from',
     defaultColumns: ['from', 'to.type', 'type', 'updatedAt'],
+    description: {
+      ar: 'تحويل رابط قديم إلى صفحة أو رابط جديد. يعمل فور الحفظ.',
+      en: 'Send an old URL to a page or a new URL. Live as soon as it is saved.',
+    },
   },
   access: { read: () => true, create: isAdmin, update: isAdmin, delete: isAdmin },
   hooks: {

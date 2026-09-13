@@ -6,7 +6,14 @@ import { revalidateGlobal } from '@/modules/cms/hooks/revalidate';
 export const SeoDefaults: GlobalConfig = {
   slug: 'seo-defaults',
   label: { ar: 'إعدادات SEO', en: 'SEO defaults' },
-  admin: { group: { ar: 'الإعدادات', en: 'Settings' }, hidden: hiddenUnlessAdmin },
+  admin: {
+    group: { ar: 'الإعدادات', en: 'Settings' },
+    hidden: hiddenUnlessAdmin,
+    description: {
+      ar: 'عناوين ووصف محركات البحث للصفحات الثابتة، وصورة المشاركة الافتراضية.',
+      en: 'Search titles and descriptions for the fixed pages, and the default share image.',
+    },
+  },
   access: { read: () => true, update: isAdmin },
   hooks: { afterChange: [revalidateGlobal] },
   fields: [

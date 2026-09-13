@@ -37,6 +37,10 @@ export const Pages: CollectionConfig = {
     useAsTitle: 'title',
     defaultColumns: ['title', 'slug', 'updatedAt', '_status'],
     group: { ar: 'المحتوى', en: 'Content' },
+    description: {
+      ar: 'صفحات الموقع كأقسام قابلة للتحرير. الصفحات السبع الأساسية ثابتة الرابط؛ أضف صفحات جديدة بحرّية.',
+      en: 'Site pages as editable blocks. The seven designed pages keep their URLs; add new ones freely.',
+    },
   },
   versions: { drafts: { autosave: { interval: 1500 }, schedulePublish: true }, maxPerDoc: 25 },
   access: {

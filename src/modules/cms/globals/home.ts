@@ -34,7 +34,13 @@ const header = (withEyebrow = true, withLead = true): Field[] => [
 export const Home: GlobalConfig = {
   slug: 'home',
   label: { ar: 'الصفحة الرئيسية', en: 'Home page' },
-  admin: { group: { ar: 'المحتوى', en: 'Content' } },
+  admin: {
+    group: { ar: 'المحتوى', en: 'Content' },
+    description: {
+      ar: 'أقسام الصفحة الرئيسية بالترتيب. احفظ مسودة بحرّية؛ النشر يظهر في الموقع خلال ثوانٍ.',
+      en: 'The home page, section by section. Drafts are free; publishing is live within seconds.',
+    },
+  },
   versions: { drafts: { autosave: { interval: 1500 }, schedulePublish: true }, max: 25 },
   // Drafts sit next to the published copy: the REST read is for signed-in staff; the site
   // reads through the Local API with `draft: false`.

@@ -537,3 +537,51 @@ the button, so opening it never moves the button (the old flex layout shifted it
 displayed number goes through `formatNumber` (`Intl.NumberFormat('en-US')` grouping,
 integers without decimals, two otherwise); form inputs never receive grouped strings. The
 riyal symbol renders at 0.85 em instead of 1 em. BRD §3.11 and §6.15 amended.
+
+## ADR-039 — The admin panel: shadcn/ui shell on Payload's engine, dark only (2026-09-13)
+
+Dhia asked for the panel to be rebuilt on shadcn/ui with icons everywhere, easy to use, and a
+design system for whatever comes next. Payload keeps rendering the edit and list views —
+rebuilding them would re-implement drafts, versions, uploads and Lexical for no editor gain —
+and we own everything around them (`specs/007-admin-ui/`): the theme, the sidebar, the header,
+the account menu, the login, the dashboard, the field widgets and the descriptions.
+
+**Dark only.** Dhia likes Payload's dark grey; `admin.theme = 'dark'` removes the light theme
+and the brand sits on top: ITF Rayat Round as `--font-body`, the B7R accent on Payload's
+selection colour (its "success" ramp: focus rings, checkboxes, radios, the published pill), the
+primary blue on `.btn--style-primary`, radii 6/8/13 px. The greys are untouched. Constitution V
+("light only") governs the public site; the panel is outside the site design system by the 2a
+plan.
+
+**Two stylesheets, one token vocabulary.** `src/styles/tokens.css` holds the shared,
+colour-free tokens (font, type scale, radius, motion, the `@font-face`s); the site's
+`globals.css` adds the light palette, `src/app/(payload)/admin.css` adds a dark palette with
+the **same names** mapped onto Payload's variables via `@theme inline`. So
+`src/components/shared|ui/*` render in both worlds with no fork. The blue splits on dark:
+`primary` (`#0058b0`) is a fill with white text, `accent` (`#0098e0`) is the colour of blue
+text, icons and focus; `text-primary` is not used in admin components (2.6:1 on the greys).
+
+**Why unlayered utilities.** Payload's CSS lives in `@layer payload-default, payload`. Tailwind's
+utilities are imported into `admin.css` without a layer and without preflight, so they beat
+Payload's rules on our own elements without `!important`, and brand overrides of Payload's
+elements go in `@layer payload` as Payload documents. One thing to know: the site's stylesheet
+also reaches `/admin` because `global-not-found.tsx` (a root-level route) imports it and Next
+bundles root-level CSS everywhere — the site's utilities are layered (`@layer utilities`), so
+the admin's unlayered copies win, and its `@theme inline` values are inlined into the
+utilities, so the site's `:root` variables cannot leak into them. Admin components therefore
+use utilities only, never `var(--color-*)`.
+
+**Public bundle.** The site's Tailwind sources exclude `src/modules/cms/admin` and
+`src/app/(payload)` (`@source not`), the admin stylesheet scans only `src/modules/cms/admin`
+and `src/components`, and the budget e2e guards the public CSS size and JS.
+
+**Future things.** `src/modules/cms/admin/icons.ts` types its keys from the generated config,
+so a new collection or global without an icon is a type error; `tests/admin-config.test.ts`
+walks every collection and global for group, Arabic labels, description, title field and list
+columns. `docs/ADMIN-DESIGN-SYSTEM.md` is the reference and `.claude/rules/admin-ui.md` the
+checklist. Deliberately no `defineCollection` wrapper: a test over a dozen call sites is the
+same guarantee with no API surface (CTO plan review, 90).
+
+Phases: (1) foundation — this ADR, tokens, primitives, icons, descriptions; (2) the shell —
+sidebar, header, palette, account, login; (3) the dashboard, the preview button (Next draft
+mode; the proxy passes requests carrying the draft cookie), `lastPublishedBy`, field widgets.

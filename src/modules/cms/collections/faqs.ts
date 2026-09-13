@@ -55,6 +55,10 @@ export const Faqs: CollectionConfig = {
     useAsTitle: 'question',
     defaultColumns: ['question', 'group', 'order', 'showOnHome'],
     group: { ar: 'المحتوى', en: 'Content' },
+    description: {
+      ar: 'الأسئلة الشائعة بمجموعاتها. حتى خمسة أسئلة تظهر في الصفحة الرئيسية.',
+      en: 'FAQ entries by group. Up to five show on the home page.',
+    },
   },
   access: {
     read: () => true,

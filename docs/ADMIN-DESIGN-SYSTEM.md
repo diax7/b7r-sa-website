@@ -1,0 +1,146 @@
+# B7R admin panel — design system
+
+The rules for every screen an editor sees at `/admin` (BRD §9.3, ADR-039). Payload renders
+the forms and lists; we own the shell, the dashboard, the field widgets and the theme. New
+collections, globals and admin components follow this document — `.claude/rules/admin-ui.md`
+is the checklist, `tests/admin-config.test.ts` and `tests/admin-icons.test.ts` are the gate.
+
+## 1. Principles
+
+1. **One product.** The panel looks and reads like بحر برنت: the brand font, the 13 px radius,
+   the accent blue, the same Arabic voice as the site. Payload's dark greys stay — Dhia's
+   choice (dark only) — the brand sits on top.
+2. **Arabic first.** Every label, description, empty state and error is Arabic, written under
+   the ux-araby rules (§5). English is the fallback locale only.
+3. **Icon + label, always.** An icon never stands alone except in an icon button with an
+   `aria-label` and a tooltip. Every collection and global has one icon (§4) and it is the
+   same icon everywhere it appears (nav, palette, dashboard, empty state).
+4. **One primary action per view.** Blue fill for the one thing to do (save, publish, add);
+   everything else is secondary or a link.
+5. **Explain before you toggle.** A switch or a destructive button carries one sentence that
+   names the consequence on the site («عند الإيقاف يختفي قسم … من الصفحة الرئيسية»).
+6. **Nothing reaches the public site.** The admin stylesheet and components live in
+   `src/app/(payload)/admin.css` and `src/modules/cms/admin/**`; the site's Tailwind sources
+   exclude them and the budget e2e guards the public CSS and JS.
+
+## 2. Tokens
+
+The admin stylesheet declares the **same token names the site uses**, mapped onto Payload's
+dark variables (`@theme inline`), so `src/components/shared/*` and `src/components/ui/*`
+render in both worlds without a fork. Raw hex lives only in the token block.
+
+| Token | Admin value | Use |
+|---|---|---|
+| `primary` | `#0058b0` | Blue **fills** — primary buttons, the on state of a switch. White text on it (6.9:1). |
+| `primary-hover` | `#1a6ac0` | Hover of a blue fill. |
+| `accent` | `#0098e0` | Blue **text, icons, links, focus rings, active nav** (5.7:1 on the page). Never white text on it. |
+| `accent-tint` | `rgb(0 152 224 / .14)` | Active/hover background behind accent text. |
+| `ground` | `--theme-elevation-0` | Page background (rgb 20 20 20). |
+| `surface` | `--theme-elevation-50` | Cards, menus, the sidebar (rgb 34 34 34). |
+| `text` | `--theme-elevation-1000` | Body text (white). |
+| `text-muted` | `--theme-elevation-600` | Secondary text (rgb 181 181 181, 9.5:1). |
+| `border` | `--theme-elevation-150` | Hairlines (rgb 60 60 60). |
+| `success` / `warning` / `error` | `#3fbf6b` / `#f5b53f` / `#f26b6b` | Status text and badges; each ≥ 4.5:1 on `ground` and `surface`. |
+| `radius-base` / `radius-lg` / `radius-inner` / `radius-pill` | 13 / 20 / 6 / 999 px | From `src/styles/tokens.css` (shared with the site). |
+| `shadow-card` / `shadow-popover` | black at 40 % / 60 % | Depth on the dark surface. |
+| `font-sans` | ITF Rayat Round | Also set as Payload's `--font-body`. |
+
+**Blue rule on dark:** `primary` is a fill, `accent` is a colour for text. `text-primary` is
+never used in an admin component; `bg-accent` is never used behind white text. The `Badge`
+`primary` tone (blue text on a blue tint) is not used in the admin — use `success`,
+`warning`, `error` or `muted`.
+
+Payload's own selection colour (its "success" ramp: checkboxes, radios, focus rings, the
+published pill) is re-hued to the accent in `@layer payload`; its greys are untouched.
+
+## 3. Type, spacing, radius
+
+- Text sizes are the site scale from `tokens.css`: `text-body` 17 px for form copy is Payload's
+  business; our surfaces use `text-h4` (20/500) for card titles, `text-small` (15) for rows,
+  `text-caption` (13) for meta and descriptions.
+- Spacing on the 4 px grid: 8 between icon and label, 12 inside a row, 16 inside a card,
+  24 between cards, 32 between dashboard sections.
+- Radius: cards and dialogs 13 px, menus 13 px, chips and inputs inside Payload 8 px
+  (`--style-radius-m`), key caps and small tiles 6 px, avatars and switches pill.
+- Motion: `duration-fast` (150 ms) for hover and focus, `duration-base` (200 ms) for menus and
+  tooltips; `motion-reduce:animate-none` on anything that moves.
+
+## 4. Icons
+
+- Library: `lucide-react`, stroke 1.75, through `components/shared/icon.tsx` (directional
+  icons mirror in RTL automatically).
+- Sizes: 20 px in the sidebar and quick-action tiles, 16 px inline next to text, 24 px alone
+  in an empty state.
+- Registry: `src/modules/cms/admin/icons.ts` — `COLLECTION_ICONS`, `GLOBAL_ICONS`,
+  `GROUP_ICONS`, `ACTION_ICONS`. A collection or global without an entry is a type error and a
+  failing test. Pick a noun icon for a collection (a shirt, a file, a question mark), a place
+  icon for a global (a house, sliders), a verb icon for an action (an eye for "view site").
+- Current registry: products `Shirt`, pages `FileText`, faqs `CircleHelp`, testimonials
+  `MessageSquareQuote`, integrations `Plug`, media `Image`, redirects `ArrowRightLeft`, users
+  `Users`; home `House`, site-settings `Settings2`, navigation `Compass`, seo-defaults
+  `Search`; groups المحتوى `LayoutGrid`, الإعدادات `SlidersHorizontal`, الإدارة `Shield`.
+- Colour: icons inherit text colour; the active nav item and quick-action tiles use `accent`.
+
+## 5. Writing (Arabic)
+
+The admin's strings are interface copy (ADR-031): written by us, under the ux-araby rules.
+
+- Labels are nouns: «المنتجات», «الصفحة الرئيسية», «إعدادات الموقع». Never a sentence.
+- Actions are verb-first imperatives: «أضف صفحة», «ارفع ملفاً», «عرض الموقع». No «قم بـ».
+- Descriptions are one sentence that says what the thing is *for the site*: «الأسئلة الشائعة
+  بمجموعاتها. حتى خمسة أسئلة تظهر في الصفحة الرئيسية.» Not how Payload stores it.
+- Consequences before switches: «عند الإيقاف يختفي قسم «لماذا بحر برنت» من الصفحة الرئيسية.»
+- Success and status: light passives or nominal («حُفظت المسودة», «الوظائف تعمل»), never «تم».
+- Empty states: why it is empty + the next step: «لا صفحات بعد. أضف الأولى.»
+- Errors: what happened + how to recover, no blame: «تعذّر الحفظ. تحقق من الحقول المعلّمة.»
+- Numbers Western (`1, 2, 3`), dates relative when recent («قبل 3 دقائق»), otherwise
+  `dd/MM/yyyy`. Brand and product names stay Latin: Salla, Zid, Shopify, Turnstile, Resend.
+- Punctuation: Arabic comma «،», «أو» not «/», no «!», no em dash.
+
+## 6. Components
+
+| Component | File | Use in the admin |
+|---|---|---|
+| `Button` | `shared/button.tsx` | `primary` only for the one main action; `secondary`/`ghost`/`link` variants are blue text → **not** on dark; use `variant="inverse"` for a white-on-blue exception. |
+| `Card` | `shared/card.tsx` | Dashboard tiles and sections. `hoverable` for tiles that are links. |
+| `Badge` | `shared/badge.tsx` | Status: `success` (live, running), `warning` (off, console), `error` (failed), `muted` (n/a). |
+| `Icon` | `shared/icon.tsx` | Every icon. |
+| `Tooltip` | `ui/tooltip.tsx` | Icon-only buttons and truncated titles. Not for essential information. |
+| `DropdownMenu` | `ui/dropdown-menu.tsx` | Account menu, row actions. Icon before each item. |
+| `Switch` | `ui/switch.tsx` | `enabled` fields (the `EnabledSwitch` widget). Never for an immediate action. |
+| `Collapsible` | `ui/collapsible.tsx` | Nav groups; remembers its state in Payload preferences. |
+| `Dialog` | `ui/dialog.tsx` | The command palette; confirmations. |
+| `Separator`, `Kbd` | `ui/separator.tsx`, `ui/kbd.tsx` | Group hairlines; key hints («Ctrl K»). |
+
+Payload's own elements (buttons, fields, pills, toasts) are themed in `admin.css` under
+`@layer payload` — never re-implemented.
+
+## 7. States
+
+- **Empty:** icon (24 px, muted) + one line + one action. Example: «لا تحويلات بعد. أضف
+  الأول عندما تغيّر رابطاً.»
+- **Loading:** Payload's own loaders; our server components render with data, so there is no
+  spinner on the dashboard.
+- **Error:** the Arabic reason + a recovery; status badges turn `error`; never a bare code.
+- **Disabled:** 50 % opacity and `cursor-not-allowed`; the tooltip says why when it is not
+  obvious.
+- **Permission:** an editor never sees an entry they cannot open (the nav and the palette
+  filter by `visibleEntities` and permissions); nothing is rendered greyed-out "for admins".
+
+## 8. Accessibility
+
+- Contrast AA on every custom surface (the tokens above are chosen for it); axe runs on the
+  login, the dashboard, the palette, a list view and an edit view in `e2e/admin.spec.ts`.
+- Focus visible everywhere: Payload's outline is the accent; our components use
+  `focus-visible:ring-2 ring-accent/40`.
+- Keyboard: the palette opens with Ctrl/⌘ K, arrows move, Enter opens, Esc closes; nav groups
+  are buttons with `aria-expanded`; the current page has `aria-current="page"`.
+- RTL: logical utilities only (`ms-`, `me-`, `ps-`, `pe-`, `start-`, `end-`); `check:rtl`
+  scans the admin too. Latin tokens (e-mails, URLs, key caps) sit in `dir="ltr"` spans.
+
+## 9. Adding something new
+
+Follow `.claude/rules/admin-ui.md`. In short: group, icon, Arabic labels and description,
+`useAsTitle`, `defaultColumns`, `listSearchableFields`, a description on every switch,
+`admin.preview` if the thing has a route, `pnpm payload generate:importmap` after any new
+admin component, and the config test must pass.

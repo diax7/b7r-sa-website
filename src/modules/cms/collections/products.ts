@@ -18,6 +18,10 @@ export const Products: CollectionConfig = {
     useAsTitle: 'name',
     defaultColumns: ['name', 'slug', 'baseCost', 'suggestedPrice', 'sortOrder', '_status'],
     group: { ar: 'المحتوى', en: 'Content' },
+    description: {
+      ar: 'المنتجات المعروضة في الموقع والمصمّم: الأسعار، الصور، المقاسات والألوان.',
+      en: 'Products on the site and in the designer: prices, photos, sizes and colours.',
+    },
   },
   versions: { drafts: { autosave: { interval: 1500 }, schedulePublish: true }, maxPerDoc: 25 },
   access: {

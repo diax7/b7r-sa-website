@@ -11,7 +11,14 @@ const APP_HELP = {
 export const SiteSettings: GlobalConfig = {
   slug: 'site-settings',
   label: { ar: 'إعدادات الموقع', en: 'Site settings' },
-  admin: { group: { ar: 'الإعدادات', en: 'Settings' }, hidden: hiddenUnlessAdmin },
+  admin: {
+    group: { ar: 'الإعدادات', en: 'Settings' },
+    hidden: hiddenUnlessAdmin,
+    description: {
+      ar: 'اسم الموقع، بيانات التواصل، الحسابات الاجتماعية والعرض الترحيبي.',
+      en: 'Site name, contact details, social accounts and the welcome offer.',
+    },
+  },
   access: { read: () => true, update: isAdmin },
   hooks: { afterChange: [revalidateGlobal] },
   fields: [

@@ -30,7 +30,11 @@ const PHYSICAL_CSS =
   /(margin-left|margin-right|padding-left|padding-right|border-left|border-right|text-align\s*:\s*(left|right)|(?<![\w-])(left|right)\s*:)/;
 const RAW_HEX = /#[0-9a-fA-F]{3,8}(?![0-9a-fA-F])/;
 
-const HEX_ALLOWED_FILES = new Set(['src/styles/globals.css', 'src/content/products.ts']);
+const HEX_ALLOWED_FILES = new Set([
+  'src/styles/globals.css',
+  'src/app/(payload)/admin.css',
+  'src/content/products.ts',
+]);
 
 export function checkLine(file: string, lineNumber: number, text: string): Violation[] {
   if (text.includes('rtl-allow')) return [];

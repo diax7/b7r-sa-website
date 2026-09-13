@@ -1201,7 +1201,7 @@ Give Dhia and an editor a WordPress-like, Arabic, right-to-left admin at `https:
 ### 9.3 Payload setup
 
 - Routes: admin UI at `/admin`, REST at `/api/payload/*` (rename from the default `/api` to avoid clashing with the site's API routes), GraphQL disabled.
-- Admin locale: `ar` from `@payloadcms/translations`, `rtl: true`; the admin's document title "لوحة بحر برنت"; the logo and favicon replaced with the brand icon.
+- Admin locale: `ar` from `@payloadcms/translations`, `rtl: true`; the admin's document title "لوحة بحر برنت"; the logo and favicon replaced with the brand icon. Amended 2026-09-13 (ADR-039, `specs/007-admin-ui/`): the panel is dark only on Payload's greys with the brand font, radii and accent; the sidebar, header, account menu, login and dashboard are rebuilt on shadcn/ui primitives with an icon for every collection and global; every collection and global carries an Arabic description; the rules live in `docs/ADMIN-DESIGN-SYSTEM.md` and `.claude/rules/admin-ui.md`.
 - Users collection with roles `admin` and `editor`:
   - **admin**: everything, including users, settings, redirects, deleting.
   - **editor**: create/edit/publish content collections (pages, products, FAQ, testimonials, blog); no users, no site settings, no redirects, no deletes of published items.

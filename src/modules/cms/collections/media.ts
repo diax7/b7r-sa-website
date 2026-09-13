@@ -14,6 +14,10 @@ export const Media: CollectionConfig = {
   labels: { singular: { ar: 'ملف وسائط', en: 'Media' }, plural: { ar: 'الوسائط', en: 'Media' } },
   admin: {
     group: { ar: 'المحتوى', en: 'Content' },
+    description: {
+      ar: 'الصور والملفات المستخدمة في الصفحات والمنتجات. اكتب نصاً بديلاً لكل صورة.',
+      en: 'Images and files used by pages and products. Give every image alt text.',
+    },
     defaultColumns: ['filename', 'alt', 'updatedAt'],
   },
   access: {

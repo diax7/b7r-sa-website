@@ -48,6 +48,8 @@ export default buildConfig({
   },
   admin: {
     user: Users.slug,
+    // Dark only (Dhia, 2026-09-13; ADR-039): the panel keeps Payload's dark greys.
+    theme: 'dark',
     // The default avatar fetches gravatar.com with a hash of the user's email (ADR-028).
     avatar: 'default',
     meta: {

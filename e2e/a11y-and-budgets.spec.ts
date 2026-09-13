@@ -80,6 +80,7 @@ test.describe('budgets (BRD 7.8, constitution IV)', () => {
     isMobile,
   }) => {
     const js: Array<{ url: string; bytes: number }> = [];
+    const css: Array<{ url: string; bytes: number }> = [];
     const fonts: Array<{ url: string; bytes: number }> = [];
     const hero: Array<{ url: string; bytes: number }> = [];
     // The budget is the home route's own JS (BRD 7.8). Next prefetches the routes linked in
@@ -97,6 +98,7 @@ test.describe('budgets (BRD 7.8, constitution IV)', () => {
         const sizes = await r.request().sizes();
         const bytes = sizes.responseBodySize;
         if (type === 'script') js.push({ url, bytes });
+        if (type === 'stylesheet') css.push({ url, bytes });
         if (url.includes('/fonts/')) fonts.push({ url, bytes });
         // The hero photos are CMS media (seeded as hero-set-*.jpg, ADR-031).
         if (/hero-set-[ab]-(desktop|mobile)/.test(url)) hero.push({ url, bytes });
@@ -111,6 +113,11 @@ test.describe('budgets (BRD 7.8, constitution IV)', () => {
     const jsTotal = js.reduce((n, r) => n + r.bytes, 0);
     expect(jsTotal, js.map((r) => `${r.bytes}\t${r.url}`).join('\n')).toBeLessThanOrEqual(
       180 * 1024,
+    );
+    // The admin has its own stylesheet (ADR-039); the site's must not grow with it.
+    const cssTotal = css.reduce((n, r) => n + r.bytes, 0);
+    expect(cssTotal, css.map((r) => `${r.bytes}\t${r.url}`).join('\n')).toBeLessThanOrEqual(
+      80 * 1024,
     );
     for (const f of fonts) expect(f.bytes, f.url).toBeLessThanOrEqual(40 * 1024);
     expect(fonts.length).toBeGreaterThanOrEqual(2);
