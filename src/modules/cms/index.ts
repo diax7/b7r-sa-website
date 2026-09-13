@@ -6,10 +6,14 @@ import { s3Storage } from '@payloadcms/storage-s3';
 import { ar } from '@payloadcms/translations/languages/ar';
 import { en } from '@payloadcms/translations/languages/en';
 import { buildConfig } from 'payload';
+import { Faqs } from '@/modules/cms/collections/faqs';
+import { Integrations } from '@/modules/cms/collections/integrations';
 import { Media } from '@/modules/cms/collections/media';
 import { Products } from '@/modules/cms/collections/products';
+import { Testimonials } from '@/modules/cms/collections/testimonials';
 import { Users } from '@/modules/cms/collections/users';
 import { cmsEnv, isBuildPhase } from '@/lib/cms/env';
+import { Home } from '@/modules/cms/globals/home';
 import { Navigation } from '@/modules/cms/globals/navigation';
 import { SeoDefaults } from '@/modules/cms/globals/seo-defaults';
 import { SiteSettings } from '@/modules/cms/globals/site-settings';
@@ -63,8 +67,8 @@ export default buildConfig({
     fallback: true,
   },
   editor: lexicalEditor(),
-  collections: [Users, Media, Products],
-  globals: [SiteSettings, Navigation, SeoDefaults],
+  collections: [Users, Media, Products, Faqs, Testimonials, Integrations],
+  globals: [Home, SiteSettings, Navigation, SeoDefaults],
   db: postgresAdapter({
     pool: { connectionString: env.databaseUrl },
     push: false,

@@ -8,7 +8,8 @@ import { getSeo } from '@/lib/cms';
 import { siteBase } from '@/lib/env';
 import { renderMarkdown, type Heading } from '@/lib/markdown';
 import messages from '@/messages/ar.json';
-import { CtaRibbon, JsonLd, jsonLd } from '@/modules/core';
+import { JsonLd, jsonLd } from '@/modules/core';
+import { CtaRibbon } from '@/modules/core/cta-ribbon';
 
 /** Sticky list of the H2s on desktop (BRD 6.12). */
 export function OnThisPage({ headings }: { headings: Heading[] }) {

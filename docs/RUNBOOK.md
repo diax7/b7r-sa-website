@@ -31,7 +31,7 @@ production reaches after the first visitor), then runs `lhci autorun` with three
 ```bash
 docker compose up -d        # Postgres 16 on :5435 (db/user/password b7r) + MinIO on :9000/:9001
 pnpm migrate                # apply src/migrations to the database in DATABASE_URL
-pnpm content:migrate        # seed products, media and the three globals (create-only, ADR-026)
+pnpm content:migrate        # seed products, media, the globals (home included), faqs, testimonials, integrations (create-only, ADR-026)
 pnpm admin:create           # first admin from ADMIN_EMAIL / ADMIN_PASSWORD (12+ chars, not breached)
 pnpm dev                    # admin at http://localhost:3004/admin (Arabic, RTL)
 ```
@@ -108,7 +108,10 @@ GitHub push and the first CranL deploy wait for Dhia's approval (ADR-008). When 
 3. Runtime environment: every row of the matrix below; the same `NEXT_PUBLIC_*` values as
    the build args. First deploy only: `pnpm content:migrate` and `pnpm admin:create` against
    the production database from a machine with the secrets (ADR-026), then sign in at
-   `/admin` and change the password.
+   `/admin` and change the password. A database seeded before 2b already holds products and
+   the three settings globals, so the first 2b deploy runs `pnpm content:migrate --force`:
+   it adds only what is missing (home, faqs, testimonials, integrations, the hero and step
+   media) and never overwrites a document.
 4. Set `B7R_RUNTIME=production` **only in the CranL production app**. `instrumentation.ts`
    then asserts the BRD 8.5 + 9.2 required set at server start and throws if anything is
    missing, so the container fails its health check and CranL keeps the previous image

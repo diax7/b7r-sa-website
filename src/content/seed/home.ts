@@ -1,8 +1,10 @@
 import type { Home } from '@/content/schema';
 
 /**
- * BRD 4.4 homepage copy, verbatim. Placeholder hero photos per BRD 6.4.1: slides 1 and 3 use
- * set A, slides 2 and 4 use set B, until Dhia supplies the final four photographs.
+ * BRD 4.4 homepage copy, verbatim: the seed for the `home` global (ADR-026) and the shape
+ * the verbatim test checks. Placeholder hero photos per BRD 6.4.1: slides 1 and 3 use set A,
+ * slides 2 and 4 use set B, until Dhia supplies the final four photographs. Interface
+ * strings live in `src/messages/ar.json` (ADR-031).
  */
 export const home: Home = {
   hero: {
@@ -44,9 +46,6 @@ export const home: Home = {
     secondaryCta: 'استكشف المنتجات',
     microcopy: 'رصيد ترحيبي 30 ريالاً، بدون بطاقة',
     chips: ['مجاني 100%', 'بدون حد أدنى للطلبات', 'توصيل لكل المملكة خلال 5 أيام'],
-    slideIndicatorAria: 'الشريحة {n} من 4',
-    pauseAria: 'إيقاف التبديل التلقائي',
-    resumeAria: 'استئناف التبديل التلقائي',
   },
   productStrip: {
     eyebrow: 'المنتجات',
@@ -55,45 +54,74 @@ export const home: Home = {
     pricePrefix: 'يبدأ من',
     button: 'تصفح كل المنتجات',
     order: ['tee-essential', 'hoodie', 'tee-oversize', 'tote-bag', 'baby-onesie'],
-    swipeHint: 'اسحب',
   },
   designer: {
     eyebrow: 'جرّب بنفسك',
     title: 'شاهد تصميمك واحسب ربحك',
     lead: 'ارفع تصميمك، حرّكه على المنتج، وحدّد سعرك.',
-    groups: { product: 'المنتج', pricing: 'التسعير' },
-    // TODO(copy): Appendix G — the print area is the upload target (Dhia, 2026-09-13).
-    uploadPrompt: 'اضغط لرفع شعارك أو صورتك',
-    uploadHelper: 'PNG أو JPG أو SVG، حتى 10 ميجابايت',
     sample: 'جرّب تصميماً جاهزاً',
-    // TODO(copy): Appendix G — the «×» that clears the placed design.
-    removeAria: 'إزالة التصميم',
-    canvasHint: 'اسحب التصميم لتحريكه، واستخدم الزوايا لتغيير الحجم.',
-    baseCostLabel: 'التكلفة من بحر',
-    sellPriceLabel: 'سعر البيع في متجرك',
-    suggestedPriceHelper: 'السعر المقترح',
-    dailySalesLabel: 'مبيعات يومية',
-    perPieceLabel: 'ربحك لكل قطعة',
-    monthlyLabel: 'ربحك الشهري التقديري',
-    negativeWarning: 'سعر البيع أقل من التكلفة. ارفع السعر لتربح.',
-    footnote: 'تقدير لا يشمل الشحن والضريبة.',
     cta: 'ابدأ بيع هذا المنتج',
-    fileError: 'الملف غير مدعوم أو أكبر من 10 ميجابايت.',
   },
-  steps: { eyebrow: 'كيف نعمل', title: 'ثلاث خطوات وتبدأ', link: 'اعرف أكثر عن طريقة العمل' },
+  steps: {
+    enabled: true,
+    eyebrow: 'كيف نعمل',
+    title: 'ثلاث خطوات وتبدأ',
+    link: 'اعرف أكثر عن طريقة العمل',
+    items: [
+      {
+        order: 1,
+        title: 'صمّم منتجك',
+        text: 'ارفع تصميمك وشاهده على المنتج فوراً.',
+        icon: '/images/icons-3d/tee-plus-create-product.jpg',
+      },
+      {
+        order: 2,
+        title: 'اربط متجرك',
+        text: 'سلة أو زد أو شوبيفاي بضغطة واحدة.',
+        icon: '/images/icons-3d/laptop-link-connect-store.jpg',
+      },
+      {
+        order: 3,
+        title: 'نطبع ونشحن',
+        text: 'كل طلب يصلنا تلقائياً ويوصل عميلك باسم متجرك.',
+        icon: '/images/icons-3d/printer-print.jpg',
+      },
+    ],
+  },
   video: {
+    enabled: true,
     title: 'شاهد كيف نطبع طلبك',
     lead: 'من ملف التصميم إلى الطرد الجاهز، كل شيء يتم عندنا في جدة.',
   },
-  whyUs: { eyebrow: 'لماذا بحر', title: 'لماذا يختارنا التجار؟' },
-  testimonials: { eyebrow: 'آراء التجار', title: 'تجار بدأوا معنا', placeholderTag: 'نموذج' },
+  whyUs: {
+    enabled: true,
+    eyebrow: 'لماذا بحر',
+    title: 'لماذا يختارنا التجار؟',
+    items: [
+      {
+        icon: 'ShieldCheck',
+        title: 'بدون مخاطرة',
+        text: 'صفر رأس مال، صفر مخزون، بدون حد أدنى للطلبات.',
+      },
+      {
+        icon: 'Workflow',
+        title: 'كل شيء تلقائي',
+        text: 'الطلبات تتزامن من متجرك وتُنفّذ بدون تدخل منك.',
+      },
+      {
+        icon: 'Zap',
+        title: 'جودة محلية وسريعة',
+        text: 'طباعة في جدة وتوصيل لكل المملكة خلال 5 أيام.',
+      },
+    ],
+  },
+  testimonials: { enabled: true, eyebrow: 'آراء التجار', title: 'تجار بدأوا معنا' },
   integrations: {
+    enabled: true,
     title: 'اربط متجرك بضغطة واحدة',
     lead: 'الطلبات تتزامن تلقائياً من متجرك إلى بحر.',
-    availableTag: 'متاح الآن',
-    tileAria: 'ربط متجر {platform}',
   },
-  faq: { title: 'الأسئلة الشائعة', link: 'كل الأسئلة' },
+  faq: { enabled: true, title: 'الأسئلة الشائعة', link: 'كل الأسئلة' },
   ribbon: {
     title: 'ابدأ اليوم واحصل على 30 ريالاً رصيداً ترحيبياً',
     lead: 'سجّل مجاناً بدون بطاقة، وأطلق أول منتج خلال دقائق.',

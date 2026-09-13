@@ -4,12 +4,13 @@ import { Container } from '@/components/shared/container';
 import { Reveal } from '@/components/shared/reveal';
 import { Section, type SectionTone } from '@/components/shared/section';
 import { SectionHeader } from '@/components/shared/section-header';
-import { home } from '@/content/home';
-import { integrations } from '@/content/integrations';
+import { getHome, getIntegrations } from '@/lib/cms';
+import messages from '@/messages/ar.json';
 
-/** Integrations (BRD 6.4.8): three logo tiles with the «متاح الآن» badge; not links in L1. */
-export function Integrations({ tone = 'surface' }: { tone?: SectionTone }) {
-  const { integrations: copy } = home;
+/** Integrations (BRD 6.4.8): logo tiles with the «متاح الآن» badge; not links in L1. */
+export async function Integrations({ tone = 'surface' }: { tone?: SectionTone }) {
+  const [{ integrations: copy }, integrations] = await Promise.all([getHome(), getIntegrations()]);
+  if (!copy.enabled) return null;
   return (
     <Section id="integrations" tone={tone} aria-labelledby="integrations-title">
       <Container className="flex flex-col items-center gap-10">
@@ -20,7 +21,7 @@ export function Integrations({ tone = 'surface' }: { tone?: SectionTone }) {
               as="li"
               index={i}
               key={item.slug}
-              aria-label={copy.tileAria.replace('{platform}', item.name)}
+              aria-label={messages.integrations.tileAria.replace('{platform}', item.name)}
               className="flex flex-col items-center gap-3 rounded-base border border-border bg-surface px-3 py-6 text-center sm:px-6"
             >
               <Image
@@ -31,7 +32,7 @@ export function Integrations({ tone = 'surface' }: { tone?: SectionTone }) {
                 className="h-10 w-auto"
               />
               <span className="text-h4 text-text">{item.name}</span>
-              <Badge tone="success">{copy.availableTag}</Badge>
+              <Badge tone="success">{messages.integrations.availableTag}</Badge>
             </Reveal>
           ))}
         </ul>

@@ -1,9 +1,15 @@
 import * as migration_20260913_091427_initial from './20260913_091427_initial';
+import * as migration_20260913_133525_home_faqs_testimonials_integrations from './20260913_133525_home_faqs_testimonials_integrations';
 
 export const migrations = [
   {
     up: migration_20260913_091427_initial.up,
     down: migration_20260913_091427_initial.down,
-    name: '20260913_091427_initial'
+    name: '20260913_091427_initial',
+  },
+  {
+    up: migration_20260913_133525_home_faqs_testimonials_integrations.up,
+    down: migration_20260913_133525_home_faqs_testimonials_integrations.down,
+    name: '20260913_133525_home_faqs_testimonials_integrations'
   },
 ];

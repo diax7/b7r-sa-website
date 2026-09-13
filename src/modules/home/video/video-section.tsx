@@ -1,8 +1,8 @@
 import Image from 'next/image';
 import { Button } from '@/components/shared/button';
 import { Container } from '@/components/shared/container';
-import { Section } from '@/components/shared/section';
-import { home } from '@/content/home';
+import { Section, type SectionTone } from '@/components/shared/section';
+import { getHome } from '@/lib/cms';
 import { env } from '@/lib/env';
 import { registerUrl } from '@/lib/utm';
 import { VideoLoopLoader } from '@/modules/home/video/video-loop-loader';
@@ -17,10 +17,11 @@ const POSTER_ALT = 'طابعة رقمية تطبع تصميماً على تيش�
  * every frame), and a muted looping video mounted near the viewport by a small island. No
  * controls: the video is decorative, the text carries the meaning.
  */
-export function VideoSection() {
-  const { video, hero } = home;
+export async function VideoSection({ tone = 'ground' }: { tone?: SectionTone }) {
+  const { video, hero } = await getHome();
+  if (!video.enabled) return null;
   return (
-    <Section id="video" tone="ground" className="py-0 md:py-0" aria-labelledby="video-title">
+    <Section id="video" tone={tone} className="py-0 md:py-0" aria-labelledby="video-title">
       <div className="relative isolate min-h-[420px] overflow-hidden md:min-h-[520px]">
         <Image src={VIDEO_POSTER} alt={POSTER_ALT} fill sizes="100vw" className="object-cover" />
         <VideoLoopLoader src={VIDEO_SRC} poster={VIDEO_POSTER} />

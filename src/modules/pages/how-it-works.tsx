@@ -5,14 +5,13 @@ import { Reveal } from '@/components/shared/reveal';
 import { SarAmount } from '@/components/shared/sar-amount';
 import { Section } from '@/components/shared/section';
 import { SectionHeader } from '@/components/shared/section-header';
-import { homeFaq } from '@/content/faq';
-import { home } from '@/content/home';
 import { howItWorksPage, productsPage } from '@/content/pages';
-import { getSeo } from '@/lib/cms';
+import { getHome, getHomeFaqs, getSeo } from '@/lib/cms';
 import { howItWorksSteps } from '@/content/steps';
 import { cn } from '@/lib/cn';
 import { siteBase } from '@/lib/env';
-import { CtaRibbon, FaqAccordionLoader, FaqStaticList, JsonLd, jsonLd } from '@/modules/core';
+import { FaqAccordionLoader, FaqStaticList, JsonLd, jsonLd } from '@/modules/core';
+import { CtaRibbon } from '@/modules/core/cta-ribbon';
 
 const ROUTE = '/how-it-works';
 
@@ -37,7 +36,7 @@ export function ExampleLine({ text }: { text: string }) {
 export async function HowItWorksPage() {
   const copy = howItWorksPage;
   const base = siteBase();
-  const seo = await getSeo(ROUTE);
+  const [seo, home, homeFaq] = await Promise.all([getSeo(ROUTE), getHome(), getHomeFaqs()]);
   // Mini FAQ: home items 2, 3, 4 (BRD 4.9).
   const mini = homeFaq.slice(1, 4).map((f) => ({ question: f.question, answer: f.answer }));
   const tiles = [copy.equation.sell, copy.equation.base, copy.equation.profit];

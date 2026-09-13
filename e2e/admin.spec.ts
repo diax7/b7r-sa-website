@@ -1,5 +1,5 @@
-import { randomBytes } from 'node:crypto';
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
+import { ADMIN, API, createEditor, hasAdmin, login, POLL, shows } from './helpers/cms';
 
 /**
  * The CMS from three seats (BRD 9.3, 9.6, ADR-028): the admin who signs in through the
@@ -7,21 +7,10 @@ import { expect, test, type APIRequestContext, type Page } from '@playwright/tes
  * holding no credential at all. Needs the admin created by `pnpm admin:create`
  * (ADMIN_EMAIL / ADMIN_PASSWORD); skipped without them.
  */
-const email = process.env['ADMIN_EMAIL'];
-const password = process.env['ADMIN_PASSWORD'];
-const API = '/api/payload';
-
 declare global {
   interface Window {
     __cspViolations?: string[];
   }
-}
-
-async function login(request: APIRequestContext, credentials: { email: string; password: string }) {
-  const res = await request.post(`${API}/users/login`, { data: credentials });
-  expect(res.status(), 'login').toBe(200);
-  const { token } = (await res.json()) as { token: string };
-  return { Authorization: `JWT ${token}` };
 }
 
 /** Array rows carry their own ids; a copied document must not reuse them. */
@@ -37,13 +26,37 @@ async function recordViolations(page: Page) {
   });
 }
 
+type HomeDoc = {
+  hero: { microcopy: string };
+  whyUs: { enabled?: boolean };
+  _status?: string;
+};
+
+async function readHome(request: APIRequestContext, auth: Record<string, string>) {
+  const res = await request.get(`${API}/globals/home?depth=0&draft=true`, { headers: auth });
+  expect(res.status()).toBe(200);
+  return (await res.json()) as HomeDoc & Record<string, unknown>;
+}
+
+function saveHome(
+  request: APIRequestContext,
+  auth: Record<string, string>,
+  doc: HomeDoc,
+  status: 'published' | 'draft',
+) {
+  const { _status: _s, ...rest } = doc as Record<string, unknown>;
+  return request.post(`${API}/globals/home${status === 'draft' ? '?draft=true' : ''}`, {
+    headers: auth,
+    data: { ...rest, _status: status },
+  });
+}
+
 test.describe('CMS admin', () => {
   // One admin account: parallel logins race on its sessions list (a later login can drop an
   // earlier session's id), and the publish test mutates shared content.
   test.describe.configure({ mode: 'serial' });
-  test.skip(!email || !password, 'ADMIN_EMAIL / ADMIN_PASSWORD unset');
-  test.skip(({ browserName, isMobile }) => browserName !== 'chromium' || isMobile, 'one project');
-  const admin = { email: email ?? '', password: password ?? '' };
+  test.skip(!hasAdmin, 'ADMIN_EMAIL / ADMIN_PASSWORD unset');
+  const admin = ADMIN;
 
   test('the panel and its API are noindex, uncached and under the admin CSP', async ({
     request,
@@ -86,16 +99,8 @@ test.describe('CMS admin', () => {
     request,
   }) => {
     const adminAuth = await login(request, admin);
-    const editor = {
-      email: `e2e-editor-${randomBytes(4).toString('hex')}@b7r.sa`,
-      password: randomBytes(18).toString('base64url'),
-    };
-    const created = await request.post(`${API}/users`, {
-      headers: adminAuth,
-      data: { ...editor, name: 'محرر الاختبار', role: 'editor' },
-    });
-    expect(created.status()).toBe(201);
-    const editorId = ((await created.json()) as { doc: { id: number } }).doc.id;
+    const editor = await createEditor(request, adminAuth);
+    const editorId = editor.id;
     try {
       const auth = await login(request, editor);
       const settings = await request.post(`${API}/globals/site-settings`, {
@@ -148,8 +153,8 @@ test.describe('CMS admin', () => {
     expect(create.status()).toBeGreaterThanOrEqual(401);
   });
 
-  // Mutates `tote-bag` while products.spec.ts may run on another worker: safe only because
-  // no public assertion reads `material` or `sizesSummary` of that product.
+  // Mutates `tote-bag`; the `cms` project runs after the device projects, so no public
+  // assertion is reading it meanwhile.
   test('a publish is live on the listing and the product page at once', async ({ request }) => {
     test.setTimeout(150_000);
     const auth = await login(request, admin);
@@ -166,8 +171,7 @@ test.describe('CMS admin', () => {
         headers: auth,
         data: { ...data, _status: 'published' },
       });
-    const shows = (path: string, text: string) => async () =>
-      (await (await request.get(path)).text()).includes(text);
+    const showsText = (path: string, text: string) => shows(request, path, text);
     const poll = { intervals: [1_000, 2_000, 3_000] };
     expect(
       (await publish({ material: `${doc.material} (${stamp})`, sizesSummary: stamp })).status(),
@@ -175,16 +179,16 @@ test.describe('CMS admin', () => {
     try {
       // The publish hook regenerates the listing and the page (revalidatePath, ADR-030);
       // the 60 s timer is only the floor.
-      await expect.poll(shows('/products', stamp), { ...poll, timeout: 15_000 }).toBe(true);
+      await expect.poll(showsText('/products', stamp), { ...poll, timeout: 15_000 }).toBe(true);
       await expect
-        .poll(shows('/products/tote-bag', stamp), { ...poll, timeout: 15_000 })
+        .poll(showsText('/products/tote-bag', stamp), { ...poll, timeout: 15_000 })
         .toBe(true);
     } finally {
       expect(
         (await publish({ material: doc.material, sizesSummary: doc.sizesSummary })).status(),
       ).toBe(200);
     }
-    await expect.poll(shows('/products', stamp), { ...poll, timeout: 15_000 }).toBe(false);
+    await expect.poll(showsText('/products', stamp), { ...poll, timeout: 15_000 }).toBe(false);
   });
 
   test('a draft never reaches the site; a new product gets its page; a deleted one turns 404', async ({
@@ -207,8 +211,7 @@ test.describe('CMS admin', () => {
     };
     const poll = { intervals: [1_000, 2_000, 3_000] };
     const status = (path: string) => async () => (await request.get(path)).status();
-    const shows = (path: string, text: string) => async () =>
-      (await (await request.get(path)).text()).includes(text);
+    const showsText = (path: string, text: string) => shows(request, path, text);
 
     // 1. A draft (never published) must not be listed, even though it is a complete document.
     const draftSlug = `e2e-draft-${stamp}`;
@@ -227,11 +230,13 @@ test.describe('CMS admin', () => {
     expect(created.status()).toBe(201);
     const newId = ((await created.json()) as { doc: { id: number } }).doc.id;
     try {
-      await expect.poll(shows('/products', newSlug), { ...poll, timeout: 15_000 }).toBe(true);
+      await expect.poll(showsText('/products', newSlug), { ...poll, timeout: 15_000 }).toBe(true);
       await expect.poll(status(`/products/${newSlug}`), { ...poll, timeout: 15_000 }).toBe(200);
-      await expect.poll(shows('/sitemap.xml', newSlug), { ...poll, timeout: 15_000 }).toBe(true);
-      expect(await shows('/products', draftSlug)()).toBe(false);
-      expect(await shows('/sitemap.xml', draftSlug)()).toBe(false);
+      await expect
+        .poll(showsText('/sitemap.xml', newSlug), { ...poll, timeout: 15_000 })
+        .toBe(true);
+      expect(await showsText('/products', draftSlug)()).toBe(false);
+      expect(await showsText('/sitemap.xml', draftSlug)()).toBe(false);
       expect(await status(`/products/${draftSlug}`)()).toBe(404);
     } finally {
       expect((await request.delete(`${API}/products/${newId}`, { headers: auth })).status()).toBe(
@@ -243,6 +248,170 @@ test.describe('CMS admin', () => {
     }
     // 3. Deleting regenerates the page (404) and the listing.
     await expect.poll(status(`/products/${newSlug}`), { ...poll, timeout: 15_000 }).toBe(404);
-    await expect.poll(shows('/products', newSlug), { ...poll, timeout: 15_000 }).toBe(false);
+    await expect.poll(showsText('/products', newSlug), { ...poll, timeout: 15_000 }).toBe(false);
+  });
+
+  /**
+   * The home page and its small collections (BRD 9.4, 9.6; 2b phase 1, ADR-031): a publish
+   * is live at once, a draft never reaches the site, a section switches off, the FAQ home
+   * limit holds, and the editor / outsider seats see exactly what BRD 9.3 allows. This file
+   * runs alone after every other project (the `cms` project), so the mutations below never
+   * overlap a public assertion on another worker.
+   */
+  test.describe('content: home, faqs, testimonials, integrations', () => {
+    test('a published hero line is live at once; a draft never reaches the site', async ({
+      request,
+    }) => {
+      test.setTimeout(150_000);
+      const auth = await login(request, ADMIN);
+      const original = await readHome(request, auth);
+      const microcopy = original.hero.microcopy;
+      expect(microcopy).toBeTruthy();
+      const stamp = `e2e ${Date.now()}`;
+      const withMicrocopy = (text: string): HomeDoc => ({
+        ...original,
+        hero: { ...original.hero, microcopy: text },
+      });
+      try {
+        expect(
+          (
+            await saveHome(request, auth, withMicrocopy(`${microcopy} ${stamp}`), 'published')
+          ).status(),
+        ).toBe(200);
+        await expect.poll(shows(request, '/', stamp), POLL).toBe(true);
+        // A draft autosave on top of the published copy: the site keeps the published line.
+        const draftStamp = `${stamp} draft`;
+        expect((await saveHome(request, auth, withMicrocopy(draftStamp), 'draft')).status()).toBe(
+          200,
+        );
+        await new Promise((r) => setTimeout(r, 2_500));
+        expect(await shows(request, '/', draftStamp)()).toBe(false);
+        expect(await shows(request, '/', stamp)()).toBe(true);
+      } finally {
+        expect(
+          (await saveHome(request, auth, withMicrocopy(microcopy), 'published')).status(),
+        ).toBe(200);
+      }
+      await expect.poll(shows(request, '/', stamp), POLL).toBe(false);
+    });
+
+    test('switching «why us» off removes the section and keeps the tones alternating', async ({
+      request,
+    }) => {
+      test.setTimeout(150_000);
+      const auth = await login(request, ADMIN);
+      const original = await readHome(request, auth);
+      const html = async () => (await request.get('/')).text();
+      expect(await html()).toContain('id="why-us"');
+      try {
+        const off = { ...original, whyUs: { ...original.whyUs, enabled: false } };
+        expect((await saveHome(request, auth, off, 'published')).status()).toBe(200);
+        await expect.poll(async () => (await html()).includes('id="why-us"'), POLL).toBe(false);
+        // Video (ground) is now followed by the next rendered section on surface.
+        const page = await html();
+        const afterVideo = page.slice(page.indexOf('id="video"'));
+        const next = afterVideo.match(
+          /<section data-tone="(\w+)"[^>]*id="(testimonials|integrations)"/,
+        );
+        expect(next?.[1]).toBe('surface');
+      } finally {
+        const on = { ...original, whyUs: { ...original.whyUs, enabled: true } };
+        expect((await saveHome(request, auth, on, 'published')).status()).toBe(200);
+      }
+      await expect.poll(async () => (await html()).includes('id="why-us"'), POLL).toBe(true);
+    });
+
+    test('a sixth «show on home» FAQ entry is refused with the Arabic message', async ({
+      request,
+    }) => {
+      const auth = await login(request, ADMIN);
+      const list = await request.get(`${API}/faqs?limit=100&depth=0`, { headers: auth });
+      type Faq = { id: number; showOnHome?: boolean; question: string };
+      const docs = ((await list.json()) as { docs: Faq[] }).docs;
+      expect(docs.filter((d) => d.showOnHome)).toHaveLength(5);
+      const spare = docs.find((d) => !d.showOnHome);
+      expect(spare).toBeDefined();
+      if (!spare) return;
+      const refused = await request.patch(`${API}/faqs/${spare.id}`, {
+        headers: auth,
+        data: { showOnHome: true, homeOrder: 1 },
+      });
+      expect(refused.status()).toBe(400);
+      expect(await refused.text()).toContain('فقط');
+      const after = await request.get(`${API}/faqs/${spare.id}?depth=0`, { headers: auth });
+      expect(((await after.json()) as Faq).showOnHome).toBeFalsy();
+      // Editing a flagged entry itself is fine: the count excludes the document being saved.
+      const flagged = docs.find((d) => d.showOnHome);
+      const kept = await request.patch(`${API}/faqs/${flagged?.id}`, {
+        headers: auth,
+        data: { showOnHome: true },
+      });
+      expect(kept.status()).toBe(200);
+    });
+
+    test('an editor edits the home page and the FAQ, never deletes a published testimonial', async ({
+      request,
+    }) => {
+      const adminAuth = await login(request, ADMIN);
+      const editor = await createEditor(request, adminAuth);
+      try {
+        const auth = await login(request, editor);
+        expect((await request.get(`${API}/globals/home?depth=0`, { headers: auth })).status()).toBe(
+          200,
+        );
+        const faqs = await request.get(`${API}/faqs?limit=1&depth=0`, { headers: auth });
+        const faq = ((await faqs.json()) as { docs: Array<{ id: number; order: number }> }).docs[0];
+        expect(faq).toBeDefined();
+        const edit = await request.patch(`${API}/faqs/${faq?.id}`, {
+          headers: auth,
+          data: { order: faq?.order },
+        });
+        expect(edit.status(), 'editor editing a FAQ entry').toBe(200);
+        const created = await request.post(`${API}/faqs`, {
+          headers: auth,
+          data: {
+            question: `سؤال اختبار ${Date.now()}`,
+            answer: 'إجابة.',
+            group: 'البداية',
+            order: 99,
+          },
+        });
+        expect(created.status(), 'editor adding a FAQ entry').toBe(201);
+        const newId = ((await created.json()) as { doc: { id: number } }).doc.id;
+        expect((await request.delete(`${API}/faqs/${newId}`, { headers: auth })).status()).toBe(
+          200,
+        );
+        const testimonials = await request.get(`${API}/testimonials?limit=1`, { headers: auth });
+        const t = ((await testimonials.json()) as { docs: Array<{ id: number }> }).docs[0];
+        expect(t).toBeDefined();
+        const del = await request.delete(`${API}/testimonials/${t?.id}`, { headers: auth });
+        expect(del.status(), 'editor deleting a published testimonial').toBe(403);
+        const integration = await request.post(`${API}/integrations`, {
+          headers: auth,
+          data: { platform: 'salla', name: 'x', nameLatin: 'x', order: 9 },
+        });
+        expect(integration.status(), 'editor adding a platform (a deploy, not content)').toBe(403);
+      } finally {
+        expect(
+          (await request.delete(`${API}/users/${editor.id}`, { headers: adminAuth })).status(),
+        ).toBe(200);
+      }
+    });
+
+    test('an outsider reads the FAQ and published testimonials, never the home drafts', async ({
+      request,
+    }) => {
+      const home = await request.get(`${API}/globals/home`);
+      expect(home.status(), 'home global carries drafts: staff only').toBe(403);
+      const faqs = await request.get(`${API}/faqs?limit=100`);
+      expect(((await faqs.json()) as { totalDocs: number }).totalDocs).toBeGreaterThanOrEqual(16);
+      const drafts = await request.get(`${API}/testimonials?draft=true&limit=100`);
+      const docs = ((await drafts.json()) as { docs: Array<{ _status?: string }> }).docs;
+      expect(docs.length).toBeGreaterThan(0);
+      expect(docs.every((d) => d._status === 'published')).toBe(true);
+      expect(
+        (await request.post(`${API}/faqs`, { data: { question: 'x' } })).status(),
+      ).toBeGreaterThanOrEqual(401);
+    });
   });
 });

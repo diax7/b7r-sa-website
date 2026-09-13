@@ -1,6 +1,6 @@
 import type { Integration } from '@/content/schema';
 
-/** BRD 4.4 integrations tiles. Logos are added in Phase 1b from the official brand assets. */
+/** BRD 4.4 integrations tiles: seed for the `integrations` collection; the logos ship with the code. */
 export const integrations: Integration[] = [
   {
     slug: 'salla',

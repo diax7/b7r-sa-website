@@ -20,8 +20,9 @@ import type {
 export const PATHS_FOR_PRODUCTS = ['/', '/products', '/sitemap.xml'];
 
 /**
- * Every static route of the site: the three globals feed the shell (header, footer, meta) of
- * all of them, so any global change regenerates all at once; product pages follow the timer.
+ * Every static route of the site: the globals feed the shell (header, footer, meta, the CTA
+ * ribbon) of all of them, so any global change regenerates all at once; product pages
+ * follow the timer.
  */
 export const STATIC_ROUTES = [
   '/',
@@ -38,6 +39,9 @@ export const STATIC_ROUTES = [
   '/manifest.webmanifest',
 ];
 
+/** Routes that list the FAQ entries: the home accordion, the FAQ page, the mini FAQ. */
+export const PATHS_FOR_FAQS = ['/', '/faq', '/how-it-works'];
+
 /** The product's own page plus the routes that list it. */
 export function pathsForProduct(slug: string): string[] {
   return [`/products/${slug}`, ...PATHS_FOR_PRODUCTS];
@@ -49,10 +53,52 @@ export function shouldRevalidate(req: PayloadRequest): boolean {
   return process.env['NEXT_PHASE'] !== 'phase-production-build';
 }
 
+let warnedOutsideRequest = false;
+
+/** Reset for the unit tests only. */
+export function resetRevalidateWarning(): void {
+  warnedOutsideRequest = false;
+}
+
 /**
- * Products: a publish, an unpublish, a slug change or a delete is visible; a draft autosave
- * is not. (An autosave on an already published document looks like an unpublish here and
- * regenerates too; harmless at this scale.)
+ * `revalidatePath` needs Next's request store: called from a job (the queue cron, a scheduled
+ * publish) it throws the "static generation store missing" invariant. Outside a request the
+ * 60 s timer covers the change, so the helper logs that once and moves on (ADR-033, 2b phase 3).
+ */
+export function safeRevalidatePath(path: string, logger: Pick<Console, 'info'> = console): void {
+  try {
+    revalidatePath(path);
+  } catch (error) {
+    if (!warnedOutsideRequest) {
+      warnedOutsideRequest = true;
+      logger.info(
+        `revalidatePath(${path}) skipped outside a request (${error instanceof Error ? error.message : String(error)}); the 60 s timer covers it.`,
+      );
+    }
+  }
+}
+
+type ChangeArgs = {
+  doc?: Record<string, unknown>;
+  previousDoc?: Record<string, unknown>;
+};
+
+/**
+ * A versioned document's change is visible when it is published now or was published
+ * before (an unpublish, a slug change, a delete); a draft autosave or a draft delete of a
+ * never-published document is not. Unversioned documents are always visible. (An autosave
+ * on an already published document looks like an unpublish here and regenerates too;
+ * harmless at this scale.)
+ */
+export function isVisibleChange({ doc, previousDoc }: ChangeArgs): boolean {
+  const status = doc?.['_status'];
+  if (typeof status !== 'string') return true;
+  return status === 'published' || previousDoc?.['_status'] === 'published';
+}
+
+/**
+ * Products: a publish, an unpublish, a slug change or a delete regenerates the product's page
+ * and every route that lists it; a draft autosave is not visible.
  */
 export const revalidateProducts: CollectionAfterChangeHook & CollectionAfterDeleteHook = ({
   doc,
@@ -60,21 +106,32 @@ export const revalidateProducts: CollectionAfterChangeHook & CollectionAfterDele
   ...rest
 }) => {
   if (!shouldRevalidate(req)) return doc;
-  const status = (doc as { _status?: string } | undefined)?._status;
   const previous = (rest as { previousDoc?: { slug?: string; _status?: string } }).previousDoc;
-  const wasPublished = previous?._status === 'published';
-  if ('operation' in rest && status && status !== 'published' && !wasPublished) return doc;
+  if (!isVisibleChange({ doc, ...rest })) return doc;
   const slugs = new Set<string>();
   if (typeof doc?.['slug'] === 'string') slugs.add(doc['slug']);
   if (typeof previous?.slug === 'string') slugs.add(previous.slug);
   const paths = new Set([...slugs].flatMap((slug) => pathsForProduct(slug)));
-  for (const path of paths) revalidatePath(path);
+  for (const path of paths) safeRevalidatePath(path);
   return doc;
 };
 
+/** A collection hook that regenerates fixed routes on every visible change or delete. */
+export function revalidateRoutes(
+  paths: readonly string[],
+): CollectionAfterChangeHook & CollectionAfterDeleteHook {
+  return ({ doc, req, ...rest }) => {
+    if (!shouldRevalidate(req)) return doc;
+    if (!isVisibleChange({ doc, ...rest })) return doc;
+    for (const path of paths) safeRevalidatePath(path);
+    return doc;
+  };
+}
+
 /** Globals: every static route (they all render the shell the globals feed). */
-export const revalidateGlobal: GlobalAfterChangeHook = ({ doc, req }) => {
+export const revalidateGlobal: GlobalAfterChangeHook = ({ doc, previousDoc, req }) => {
   if (!shouldRevalidate(req)) return doc;
-  for (const path of STATIC_ROUTES) revalidatePath(path);
+  if (!isVisibleChange({ doc, previousDoc })) return doc;
+  for (const path of STATIC_ROUTES) safeRevalidatePath(path);
   return doc;
 };

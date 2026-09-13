@@ -70,6 +70,9 @@ export interface Config {
     users: User;
     media: Media;
     products: Product;
+    faqs: Faq;
+    testimonials: Testimonial;
+    integrations: Integration;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -80,6 +83,9 @@ export interface Config {
     users: UsersSelect<false> | UsersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     products: ProductsSelect<false> | ProductsSelect<true>;
+    faqs: FaqsSelect<false> | FaqsSelect<true>;
+    testimonials: TestimonialsSelect<false> | TestimonialsSelect<true>;
+    integrations: IntegrationsSelect<false> | IntegrationsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -90,11 +96,13 @@ export interface Config {
   };
   fallbackLocale: ('false' | 'none' | 'null') | false | null | ('ar' | 'en') | ('ar' | 'en')[];
   globals: {
+    home: Home;
     'site-settings': SiteSetting;
     navigation: Navigation;
     'seo-defaults': SeoDefault;
   };
   globalsSelect: {
+    home: HomeSelect<false> | HomeSelect<true>;
     'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
     navigation: NavigationSelect<false> | NavigationSelect<true>;
     'seo-defaults': SeoDefaultsSelect<false> | SeoDefaultsSelect<true>;
@@ -282,6 +290,62 @@ export interface Product {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "faqs".
+ */
+export interface Faq {
+  id: number;
+  question: string;
+  /**
+   * Plain text, no links
+   */
+  answer: string;
+  group: 'البداية' | 'الأسعار والربح' | 'الطلبات والتوصيل' | 'المتاجر والربط' | 'الجودة والدعم';
+  order: number;
+  /**
+   * At most 5 entries
+   */
+  showOnHome?: boolean | null;
+  homeOrder?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "testimonials".
+ */
+export interface Testimonial {
+  id: number;
+  quote: string;
+  name: string;
+  store: string;
+  avatar?: (number | null) | Media;
+  order: number;
+  /**
+   * Placeholders show a «sample» badge on previews and are omitted on b7r.sa until a real entry exists.
+   */
+  placeholder?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "integrations".
+ */
+export interface Integration {
+  id: number;
+  /**
+   * Selects the logo
+   */
+  platform: 'salla' | 'zid' | 'shopify';
+  order: number;
+  name: string;
+  nameLatin: string;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
@@ -315,6 +379,18 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'products';
         value: number | Product;
+      } | null)
+    | ({
+        relationTo: 'faqs';
+        value: number | Faq;
+      } | null)
+    | ({
+        relationTo: 'testimonials';
+        value: number | Testimonial;
+      } | null)
+    | ({
+        relationTo: 'integrations';
+        value: number | Integration;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -502,6 +578,47 @@ export interface ProductsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "faqs_select".
+ */
+export interface FaqsSelect<T extends boolean = true> {
+  question?: T;
+  answer?: T;
+  group?: T;
+  order?: T;
+  showOnHome?: T;
+  homeOrder?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "testimonials_select".
+ */
+export interface TestimonialsSelect<T extends boolean = true> {
+  quote?: T;
+  name?: T;
+  store?: T;
+  avatar?: T;
+  order?: T;
+  placeholder?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "integrations_select".
+ */
+export interface IntegrationsSelect<T extends boolean = true> {
+  platform?: T;
+  order?: T;
+  name?: T;
+  nameLatin?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv_select".
  */
 export interface PayloadKvSelect<T extends boolean = true> {
@@ -539,6 +656,104 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
   batch?: T;
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "home".
+ */
+export interface Home {
+  id: number;
+  hero: {
+    slides: {
+      headline: string;
+      subline: string;
+      imageDesktop: number | Media;
+      imageMobile: number | Media;
+      id?: string | null;
+    }[];
+    primaryCta: string;
+    secondaryCta: string;
+    microcopy: string;
+    chips: {
+      text: string;
+      id?: string | null;
+    }[];
+  };
+  productStrip: {
+    eyebrow: string;
+    title: string;
+    lead: string;
+    pricePrefix: string;
+    button: string;
+    products: (number | Product)[];
+  };
+  designer: {
+    eyebrow: string;
+    title: string;
+    lead: string;
+    sample: string;
+    cta: string;
+  };
+  steps: {
+    enabled?: boolean | null;
+    eyebrow: string;
+    title: string;
+    link: string;
+    items: {
+      title: string;
+      text: string;
+      icon: number | Media;
+      id?: string | null;
+    }[];
+  };
+  /**
+   * The loop itself ships with the site; only the copy lives here.
+   */
+  video: {
+    enabled?: boolean | null;
+    title: string;
+    lead: string;
+  };
+  whyUs: {
+    enabled?: boolean | null;
+    eyebrow: string;
+    title: string;
+    items: {
+      icon: 'ShieldCheck' | 'Workflow' | 'Zap';
+      title: string;
+      text: string;
+      id?: string | null;
+    }[];
+  };
+  /**
+   * The entries live in Testimonials; the section title lives here.
+   */
+  testimonials: {
+    enabled?: boolean | null;
+    eyebrow: string;
+    title: string;
+  };
+  integrations: {
+    enabled?: boolean | null;
+    title: string;
+    lead: string;
+  };
+  /**
+   * The entries flagged «show on home» in the FAQ collection.
+   */
+  faq: {
+    enabled?: boolean | null;
+    title: string;
+    link: string;
+  };
+  ribbon: {
+    title: string;
+    lead: string;
+    button: string;
+  };
+  _status?: ('draft' | 'published') | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -655,6 +870,123 @@ export interface SeoDefault {
   };
   updatedAt?: string | null;
   createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "home_select".
+ */
+export interface HomeSelect<T extends boolean = true> {
+  hero?:
+    | T
+    | {
+        slides?:
+          | T
+          | {
+              headline?: T;
+              subline?: T;
+              imageDesktop?: T;
+              imageMobile?: T;
+              id?: T;
+            };
+        primaryCta?: T;
+        secondaryCta?: T;
+        microcopy?: T;
+        chips?:
+          | T
+          | {
+              text?: T;
+              id?: T;
+            };
+      };
+  productStrip?:
+    | T
+    | {
+        eyebrow?: T;
+        title?: T;
+        lead?: T;
+        pricePrefix?: T;
+        button?: T;
+        products?: T;
+      };
+  designer?:
+    | T
+    | {
+        eyebrow?: T;
+        title?: T;
+        lead?: T;
+        sample?: T;
+        cta?: T;
+      };
+  steps?:
+    | T
+    | {
+        enabled?: T;
+        eyebrow?: T;
+        title?: T;
+        link?: T;
+        items?:
+          | T
+          | {
+              title?: T;
+              text?: T;
+              icon?: T;
+              id?: T;
+            };
+      };
+  video?:
+    | T
+    | {
+        enabled?: T;
+        title?: T;
+        lead?: T;
+      };
+  whyUs?:
+    | T
+    | {
+        enabled?: T;
+        eyebrow?: T;
+        title?: T;
+        items?:
+          | T
+          | {
+              icon?: T;
+              title?: T;
+              text?: T;
+              id?: T;
+            };
+      };
+  testimonials?:
+    | T
+    | {
+        enabled?: T;
+        eyebrow?: T;
+        title?: T;
+      };
+  integrations?:
+    | T
+    | {
+        enabled?: T;
+        title?: T;
+        lead?: T;
+      };
+  faq?:
+    | T
+    | {
+        enabled?: T;
+        title?: T;
+        link?: T;
+      };
+  ribbon?:
+    | T
+    | {
+        title?: T;
+        lead?: T;
+        button?: T;
+      };
+  _status?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

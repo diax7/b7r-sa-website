@@ -82,7 +82,8 @@ test.describe('budgets (BRD 7.8, constitution IV)', () => {
         const bytes = sizes.responseBodySize;
         if (type === 'script') js.push({ url, bytes });
         if (url.includes('/fonts/')) fonts.push({ url, bytes });
-        if (url.includes('images%2Fhero') || url.includes('images/hero')) hero.push({ url, bytes });
+        // The hero photos are CMS media (seeded as hero-set-*.jpg, ADR-031).
+        if (/hero-set-[ab]-(desktop|mobile)/.test(url)) hero.push({ url, bytes });
       } catch {
         // Cached or aborted responses have no sizes; ignore.
       }

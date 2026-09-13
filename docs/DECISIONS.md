@@ -288,6 +288,34 @@ from a bare document (ADR-024) rather than the global 404; the client renders th
 inside the layout, crawlers get the 404 status. `e2e/admin.spec.ts` covers publish, draft,
 create and delete; `tests/revalidate-hook.test.ts` the paths.
 
+## ADR-031 — The home page is a global of designed sections; interface strings stay in code (2026-09-13)
+
+Phase 2b moves the home page into Payload as the `home` global (BRD 9.4, 9.5): one group
+per section in page order, each with its copy and an «enabled» switch on every section
+except the hero, the strip, the designer and the ribbon; drafts with autosave; the strip is
+five product relationships validated to five distinct products; the hero photos and the
+step icons are media. Three lines are drawn on purpose. (1) **Content vs. interface**: what a
+visitor reads as prose (headlines, leads, buttons, chips, the sample link, the FAQ link) is
+CMS content; what is attached to a control (input labels, legends, hints, helper text,
+validation, aria) is interface copy and lives in `src/messages/ar.json`, still checked
+verbatim against the BRD where it came from the BRD. An editor rewrites the pitch, not the
+calculator. (2) **Brand assets are code**: the integration logos (SVG, which the media
+library refuses on purpose, ADR-029) and the marketing loop ship with the site, so the
+`integrations` document carries the platform (which selects the logo), the name and the
+order, and the `home.video` group carries the copy and the switch — a new platform or a new
+film is a deploy. (3) **Drafts are staff-only on the REST API**: the `home` global answers
+403 to anonymous reads because a versioned global would otherwise hand its draft to anyone
+with `?draft=true`; the site reads it through the Local API with `draft: false`. `faqs`
+gains `homeOrder` (BRD 4.4 orders the five home entries differently from Appendix D) and a
+`beforeValidate` count guard that refuses a sixth «show on home»; `testimonials` keeps
+`placeholder` and ADR-013's rule in the section; the home tones alternate over the sections
+that render (`alternateTones`, BRD 3.4). Every hook revalidates through
+`safeRevalidatePath`, which turns Next's missing-request-store invariant (a job, a scheduled
+publish) into one info line — the 60 s timer covers those. The seed (`content:migrate`) is
+still create-only: `src/content/seed/{home,faq,testimonials,integrations}.ts` are the
+verbatim sources and the fallback shapes; `src/content/{home,faq,testimonials,integrations,
+why-us}.ts` are gone. BRD §9.4 amended for `home`, `integrations` and `faqs`.
+
 ## ADR-035 — Product cards carry a colour state; the gallery is one photo with a toggle (2026-09-13)
 
 Dhia's design review: cards show two colours, hovering a swatch previews it, clicking makes

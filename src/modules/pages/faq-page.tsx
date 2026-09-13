@@ -1,18 +1,19 @@
 import { Container } from '@/components/shared/container';
 import { Section } from '@/components/shared/section';
 import { SectionHeader } from '@/components/shared/section-header';
-import { faq } from '@/content/faq';
 import { faqPage, productsPage } from '@/content/pages';
-import { getSeo, getSiteSettings } from '@/lib/cms';
+import type { FaqItem } from '@/content/schema';
+import { getFaqs, getSeo, getSiteSettings } from '@/lib/cms';
 import { siteBase } from '@/lib/env';
 import { whatsappUrl } from '@/lib/utm';
 import messages from '@/messages/ar.json';
-import { CtaRibbon, FaqAccordionLoader, FaqStaticList, JsonLd, jsonLd } from '@/modules/core';
+import { FaqAccordionLoader, FaqStaticList, JsonLd, jsonLd } from '@/modules/core';
+import { CtaRibbon } from '@/modules/core/cta-ribbon';
 
 const ROUTE = '/faq';
 
 /** Appendix D groups in first-appearance order. */
-export function faqGroups() {
+export function faqGroups(faq: FaqItem[]) {
   const groups = new Map<string, Array<{ question: string; answer: string }>>();
   for (const item of faq) {
     const list = groups.get(item.group) ?? [];
@@ -34,8 +35,8 @@ export function faqGroups() {
 export async function FaqPage() {
   const copy = faqPage;
   const base = siteBase();
-  const [seo, site] = await Promise.all([getSeo(ROUTE), getSiteSettings()]);
-  const groups = faqGroups();
+  const [seo, site, faq] = await Promise.all([getSeo(ROUTE), getSiteSettings(), getFaqs()]);
+  const groups = faqGroups(faq);
   // Only the platform word in the bottom line becomes the link.
   const [before, after] = copy.bottomLine.split(copy.bottomLinkWord);
 

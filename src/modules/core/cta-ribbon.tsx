@@ -1,6 +1,6 @@
 import { Button } from '@/components/shared/button';
 import { Container } from '@/components/shared/container';
-import { home } from '@/content/home';
+import { getHome } from '@/lib/cms';
 import { env } from '@/lib/env';
 import { registerUrl } from '@/lib/utm';
 import { WaveDivider, type WaveFill } from '@/modules/core/wave-divider';
@@ -16,8 +16,8 @@ interface CtaRibbonProps {
  * Full-bleed primary band before the footer on every page (BRD 6.3.1). Sits between two
  * waves: the section above flows in from the top, the navy footer rises from the bottom.
  */
-export function CtaRibbon({ topTone, page }: CtaRibbonProps) {
-  const { title, lead, button } = home.ribbon;
+export async function CtaRibbon({ topTone, page }: CtaRibbonProps) {
+  const { title, lead, button } = (await getHome()).ribbon;
   return (
     <section aria-labelledby="cta-ribbon-title" className="relative bg-primary text-white">
       <WaveDivider fill={topTone} position="top" />

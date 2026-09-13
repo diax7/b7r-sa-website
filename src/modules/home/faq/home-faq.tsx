@@ -4,8 +4,7 @@ import { Container } from '@/components/shared/container';
 import { Icon } from '@/components/shared/icon';
 import { Section, type SectionTone } from '@/components/shared/section';
 import { SectionHeader } from '@/components/shared/section-header';
-import { homeFaq } from '@/content/faq';
-import { home } from '@/content/home';
+import { getHome, getHomeFaqs } from '@/lib/cms';
 import { FaqAccordionLoader, FaqStaticList } from '@/modules/core';
 
 /**
@@ -13,8 +12,9 @@ import { FaqAccordionLoader, FaqStaticList } from '@/modules/core';
  * answers are server-rendered as a plain list (crawlers, no-JS) until the Radix accordion
  * mounts near the viewport.
  */
-export function HomeFaq({ tone = 'ground' }: { tone?: SectionTone }) {
-  const { faq } = home;
+export async function HomeFaq({ tone = 'ground' }: { tone?: SectionTone }) {
+  const [{ faq }, homeFaq] = await Promise.all([getHome(), getHomeFaqs()]);
+  if (!faq.enabled) return null;
   const items = homeFaq.map((f) => ({ question: f.question, answer: f.answer }));
 
   return (

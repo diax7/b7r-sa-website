@@ -190,7 +190,9 @@ jobs:
 
       - name: E2E (S3 subset)
         timeout-minutes: 15
-        run: pnpm exec playwright test e2e/admin.spec.ts e2e/csp.spec.ts e2e/products.spec.ts e2e/machine-files.spec.ts --project=desktop-chrome
+        run: |
+          pnpm exec playwright test e2e/csp.spec.ts e2e/products.spec.ts e2e/machine-files.spec.ts --project=desktop-chrome
+          pnpm exec playwright test --project=cms --no-deps
 
       - name: Upload Playwright report
         if: always()

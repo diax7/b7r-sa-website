@@ -5,14 +5,15 @@ import { Icon } from '@/components/shared/icon';
 import { SarAmount } from '@/components/shared/sar-amount';
 import { SarSymbol } from '@/components/shared/sar-symbol';
 import type { Product } from '@/content/schema';
-import { home } from '@/content/home';
 import { stripColorFor } from '@/lib/product-helpers';
 import { cn } from '@/lib/cn';
 import { monthlyProfit, perPieceProfit } from '@/modules/designer/profit';
+import type { DesignerCopy } from '@/modules/designer/types';
 
 interface DesignerStaticProps {
   products: Product[];
   product: Product;
+  copy: DesignerCopy;
   ctaHref: string;
 }
 
@@ -21,8 +22,8 @@ interface DesignerStaticProps {
  * no handlers, so crawlers and no-JS visitors see the real section and the page does not
  * shift when the island mounts (it mirrors the island's height on every breakpoint).
  */
-export function DesignerStatic({ products, product, ctaHref }: DesignerStaticProps) {
-  const { designer } = home;
+export function DesignerStatic({ products, product, copy, ctaHref }: DesignerStaticProps) {
+  const designer = copy;
   const color = product.colors[0];
   const perPiece = perPieceProfit(product.suggestedPrice, product.baseCost);
   const monthly = monthlyProfit(product.suggestedPrice, product.baseCost, 10);

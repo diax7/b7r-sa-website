@@ -12,7 +12,8 @@ import { getSeo, getSiteSettings } from '@/lib/cms';
 import { env, siteBase } from '@/lib/env';
 import { bookingUrl } from '@/lib/env-server';
 import { whatsappUrl } from '@/lib/utm';
-import { CtaRibbon, JsonLd, jsonLd } from '@/modules/core';
+import { JsonLd, jsonLd } from '@/modules/core';
+import { CtaRibbon } from '@/modules/core/cta-ribbon';
 import { ContactForm } from '@/modules/contact/contact-form';
 
 const ROUTE = '/contact';

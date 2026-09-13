@@ -15,7 +15,8 @@ import { renderMarkdown } from '@/lib/markdown';
 import { registerUrl } from '@/lib/utm';
 import messages from '@/messages/ar.json';
 import { getSiteSettings } from '@/lib/cms';
-import { CtaRibbon, JsonLd, jsonLd } from '@/modules/core';
+import { JsonLd, jsonLd } from '@/modules/core';
+import { CtaRibbon } from '@/modules/core/cta-ribbon';
 import { PostCard, postMeta } from '@/modules/blog/post-card';
 import { ShareButtons } from '@/modules/blog/share-buttons';
 

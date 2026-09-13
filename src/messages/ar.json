@@ -23,10 +23,26 @@
     "dailySalesDecrement": "أنقص المبيعات اليومية",
     "dailySalesIncrement": "زد المبيعات اليومية",
     "designThumbnail": "التصميم الحالي",
-    "dropzoneLabel": "ارفع ملف التصميم"
+    "dropzoneLabel": "ارفع ملف التصميم",
+    "productGroup": "المنتج",
+    "pricingGroup": "التسعير",
+    "uploadPrompt": "اضغط لرفع شعارك أو صورتك",
+    "uploadHelper": "PNG أو JPG أو SVG، حتى 10 ميجابايت",
+    "remove": "إزالة التصميم",
+    "canvasHint": "اسحب التصميم لتحريكه، واستخدم الزوايا لتغيير الحجم.",
+    "baseCost": "التكلفة من بحر",
+    "sellPrice": "سعر البيع في متجرك",
+    "suggestedPrice": "السعر المقترح",
+    "dailySales": "مبيعات يومية",
+    "perPiece": "ربحك لكل قطعة",
+    "monthly": "ربحك الشهري التقديري",
+    "negativeWarning": "سعر البيع أقل من التكلفة. ارفع السعر لتربح.",
+    "footnote": "تقدير لا يشمل الشحن والضريبة.",
+    "fileError": "الملف غير مدعوم أو أكبر من 10 ميجابايت."
   },
   "strip": {
-    "label": "المنتجات المتاحة"
+    "label": "المنتجات المتاحة",
+    "swipeHint": "اسحب"
   },
   "gallery": {
     "label": "صور المنتج",
@@ -47,5 +63,12 @@
     "whatsapp": "شارك على واتساب",
     "x": "شارك على X",
     "copy": "انسخ الرابط"
+  },
+  "testimonials": {
+    "placeholderTag": "نموذج"
+  },
+  "integrations": {
+    "availableTag": "متاح الآن",
+    "tileAria": "ربط متجر {platform}"
   }
 }

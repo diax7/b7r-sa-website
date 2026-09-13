@@ -4,19 +4,27 @@
 Each phase ends with a CTO code review before the next starts.
 
 ## Phase 1 — home, faqs, testimonials, integrations
-- [ ] T101 `hooks/revalidate.ts`: `safeRevalidatePath` helper tolerant of the missing work
-  store (job context), unit test with the store absent; every hook uses it.
-- [ ] T102 Collections `faqs` (showOnHome ≤ 5 guard), `testimonials` (drafts), `integrations`;
-  global `home` (groups, `enabled` toggles, strip = five product relationships,
-  `schedulePublish` ready flag); Arabic labels/help; access per plan H; migration.
-- [ ] T103 Data layer `getHome`, `getFaqs`, `getTestimonials`, `getIntegrations` + mappers
-  (`toHome` → `HomeSchema`, media via `mediaUrl`), unit tests.
-- [ ] T104 Seed: `src/content/seed/{home,faq,testimonials,integrations,steps,why-us}.ts`,
-  `migrate-content.ts` extended (create-only), `seed-check.sh` counts updated; verbatim
-  tests re-pointed; `src/content/{home,faq,testimonials,integrations,steps,why-us}.ts` deleted.
-- [ ] T105 Home sections read the CMS (`modules/home/*`), FAQ page reads `faqs`; `enabled`
-  toggles honoured; ADR-013 rule kept; e2e: hero headline edit → `/` at once; editor seat on
-  `home` + the three collections; FAQ sixth `showOnHome` → 400.
+- [x] T101 `hooks/revalidate.ts`: `safeRevalidatePath` (missing-store invariant → one info line),
+  `isVisibleChange`, `revalidateRoutes`; unit tests with the store absent; every hook uses it.
+- [x] T102 Collections `faqs` (`homeOrder`, ≤ 5 guard in `beforeValidate`), `testimonials`
+  (drafts), `integrations` (platform selects the code-shipped logo); global `home` (groups,
+  `enabled` on every section but hero/strip/designer/ribbon, strip = five distinct product
+  relationships, drafts + autosave, REST read staff-only); Arabic labels/help; migration
+  `20260913_133525_home_faqs_testimonials_integrations`. `schedulePublish` waits for the jobs
+  (phase 3).
+- [x] T103 Data layer `getHome`, `getFaqs`, `getHomeFaqs`, `getTestimonials`, `getIntegrations`
+  + mappers (`toHome` → `HomeSchema`, media via `mediaUrl`), `tests/home-mapping.test.ts`.
+- [x] T104 Seed: `src/content/seed/{home,faq,testimonials,integrations}.ts`; `migrate-content.ts`
+  extended (create-only, media deduplicated within a run); seed check green from an empty
+  database; verbatim + schema tests re-pointed; `src/content/{home,faq,testimonials,
+  integrations,why-us}.ts` deleted (`steps.ts` keeps the how-it-works five until phase 2).
+  Interface strings → `src/messages/ar.json` (ADR-031).
+- [x] T105 Home sections, About, How-we-work and the FAQ page read the CMS; `enabled` toggles
+  honoured with `alternateTones`; ADR-013 rule kept; `CtaRibbon` reads `home.ribbon`
+  (imported from `@/modules/core/cta-ribbon` so the core index stays client-safe); e2e
+  `admin-content.spec.ts`: hero headline publish → `/` at once + a draft never shows,
+  «why us» off → section gone and tones alternate, sixth `showOnHome` → 400, editor and
+  outsider seats.
 
 ## Phase 2 — pages with blocks, SSR 404, content files gone
 - [ ] T201 B0: `connection()` experiment on `/products/[slug]`; `src/app/api/pages/slugs/route.ts`

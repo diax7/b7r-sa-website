@@ -6,8 +6,8 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { faq } from '@/content/faq';
-import { home } from '@/content/home';
+import { faq } from '@/content/seed/faq';
+import { home } from '@/content/seed/home';
 import { navigation } from '@/content/seed/navigation';
 import { blogCopy, blogHubs, blogPosts } from '@/content/blog';
 import { seo } from '@/content/seed/seo';
@@ -27,13 +27,13 @@ import {
 } from '@/content/pages';
 import { products } from '@/content/seed/products';
 import { site } from '@/content/seed/site';
-import { homeSteps, howItWorksSteps } from '@/content/steps';
-import { whyUs } from '@/content/why-us';
+import { howItWorksSteps } from '@/content/steps';
+import messages from '@/messages/ar.json';
 
 const TODO_COPY = new Set<string>([
   // Designer upload target and its remove control (design review 2026-09-13, Appendix G).
-  home.designer.uploadPrompt,
-  home.designer.removeAria,
+  messages.designer.uploadPrompt,
+  messages.designer.remove,
   errorPage.title,
   errorPage.text,
   footerCopy.newsletterUnavailable,
@@ -67,17 +67,39 @@ const sources: Record<string, unknown> = {
   'site.ts': site,
   'navigation.ts': navigation,
   // Alt text is written by the agent per BRD 3.9 (meaningful Arabic), so it is excluded.
-  'home.ts': {
+  'seed/home.ts': {
     ...home,
     hero: { ...home.hero, slides: home.hero.slides.map(({ alt: _alt, ...s }) => s) },
+  },
+  // Interface strings that left the content files (ADR-031); aria labels stay agent-written.
+  'messages/ar.json': {
+    designer: [
+      messages.designer.productGroup,
+      messages.designer.pricingGroup,
+      messages.designer.uploadPrompt,
+      messages.designer.uploadHelper,
+      messages.designer.remove,
+      messages.designer.canvasHint,
+      messages.designer.baseCost,
+      messages.designer.sellPrice,
+      messages.designer.suggestedPrice,
+      messages.designer.dailySales,
+      messages.designer.perPiece,
+      messages.designer.monthly,
+      messages.designer.negativeWarning,
+      messages.designer.footnote,
+      messages.designer.fileError,
+    ],
+    strip: messages.strip.swipeHint,
+    testimonials: messages.testimonials,
+    integrations: messages.integrations,
   },
   'products.ts': products.map(({ colors, ...p }) => ({
     ...p,
     colorNames: colors.map((c) => c.name),
   })),
-  'steps.ts': [homeSteps, howItWorksSteps],
-  'why-us.ts': whyUs,
-  'faq.ts': faq,
+  'steps.ts': howItWorksSteps,
+  'seed/faq.ts': faq,
   'pages.ts': [
     productsPage,
     howItWorksPage,

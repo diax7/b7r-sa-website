@@ -6,6 +6,8 @@ nextEnv.loadEnvConfig(process.cwd());
 
 const PORT = 3004;
 export const BASE_URL = `http://localhost:${PORT}`;
+/** Suites that mutate the CMS (one serial file). */
+const CMS_SPECS = '**/admin.spec.ts';
 
 export default defineConfig({
   testDir: './e2e',
@@ -31,8 +33,17 @@ export default defineConfig({
     {
       name: 'desktop-chrome',
       use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 } },
+      testIgnore: CMS_SPECS,
     },
-    { name: 'pixel-7', use: { ...devices['Pixel 7'] } },
-    { name: 'iphone-15', use: { ...devices['iPhone 15'] } },
+    { name: 'pixel-7', use: { ...devices['Pixel 7'] }, testIgnore: CMS_SPECS },
+    { name: 'iphone-15', use: { ...devices['iPhone 15'] }, testIgnore: CMS_SPECS },
+    {
+      // The admin suite publishes, drafts and switches sections off: it runs alone, after the
+      // device projects, so a mutation never overlaps a public assertion on another worker.
+      name: 'cms',
+      use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 } },
+      testMatch: CMS_SPECS,
+      dependencies: ['desktop-chrome', 'pixel-7', 'iphone-15'],
+    },
   ],
 });

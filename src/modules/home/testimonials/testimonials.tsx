@@ -1,11 +1,11 @@
 import { Badge } from '@/components/shared/badge';
 import { Card } from '@/components/shared/card';
 import { Container } from '@/components/shared/container';
-import { Section } from '@/components/shared/section';
+import { Section, type SectionTone } from '@/components/shared/section';
 import { SectionHeader } from '@/components/shared/section-header';
-import { home } from '@/content/home';
-import { testimonials } from '@/content/testimonials';
+import { getHome, getTestimonials } from '@/lib/cms';
 import { env } from '@/lib/env';
+import messages from '@/messages/ar.json';
 import { shouldRenderTestimonials } from '@/modules/home/testimonials/rule';
 
 /**
@@ -13,12 +13,12 @@ import { shouldRenderTestimonials } from '@/modules/home/testimonials/rule';
  * `data-placeholder`; on the production host the section is omitted until a real entry
  * exists (ADR-013). Mobile: snap carousel.
  */
-export function Testimonials() {
-  if (!shouldRenderTestimonials(testimonials, env.isProductionSite)) return null;
-  const { testimonials: copy } = home;
+export async function Testimonials({ tone = 'ground' }: { tone?: SectionTone }) {
+  const [{ testimonials: copy }, testimonials] = await Promise.all([getHome(), getTestimonials()]);
+  if (!copy.enabled || !shouldRenderTestimonials(testimonials, env.isProductionSite)) return null;
 
   return (
-    <Section id="testimonials" tone="ground" aria-labelledby="testimonials-title">
+    <Section id="testimonials" tone={tone} aria-labelledby="testimonials-title">
       <Container className="flex flex-col gap-10">
         <SectionHeader id="testimonials-title" eyebrow={copy.eyebrow} title={copy.title} />
       </Container>
@@ -41,7 +41,9 @@ export function Testimonials() {
                 >
                   «
                 </span>
-                {t.placeholder && <Badge tone="muted">{copy.placeholderTag}</Badge>}
+                {t.placeholder && (
+                  <Badge tone="muted">{messages.testimonials.placeholderTag}</Badge>
+                )}
               </div>
               <p className="lead font-light text-text">{t.quote}</p>
               <div className="mt-auto flex items-center gap-3 pt-2">

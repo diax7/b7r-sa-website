@@ -1,14 +1,13 @@
 import { Container } from '@/components/shared/container';
 import { Section } from '@/components/shared/section';
 import { SectionHeader } from '@/components/shared/section-header';
-import { home } from '@/content/home';
-import { getProduct, getProducts } from '@/lib/cms';
+import { getHome, getProduct, getProducts } from '@/lib/cms';
 import messages from '@/messages/ar.json';
 import { env } from '@/lib/env';
 import { registerUrl } from '@/lib/utm';
 import { DesignerLoader } from '@/modules/designer/designer-loader';
 import { DesignerStatic } from '@/modules/designer/designer-static';
-import type { DesignerCopy } from '@/modules/designer/types';
+import { designerMessages, type DesignerCopy } from '@/modules/designer/types';
 
 const DEFAULT_SLUG = 'tee-essential';
 
@@ -18,28 +17,14 @@ const DEFAULT_SLUG = 'tee-essential';
  * island replaces the preview when the section nears the viewport.
  */
 export async function DesignerSection() {
-  const { designer } = home;
-  const products = await getProducts();
+  const [{ designer }, products] = await Promise.all([getHome(), getProducts()]);
   const product = (await getProduct(DEFAULT_SLUG)) ?? products[0];
   if (!product) throw new Error('No products for the designer');
 
   const copy: DesignerCopy = {
-    groups: designer.groups,
-    uploadPrompt: designer.uploadPrompt,
-    uploadHelper: designer.uploadHelper,
+    ...designerMessages,
     sample: designer.sample,
-    removeAria: designer.removeAria,
-    canvasHint: designer.canvasHint,
-    baseCostLabel: designer.baseCostLabel,
-    sellPriceLabel: designer.sellPriceLabel,
-    suggestedPriceHelper: designer.suggestedPriceHelper,
-    dailySalesLabel: designer.dailySalesLabel,
-    perPieceLabel: designer.perPieceLabel,
-    monthlyLabel: designer.monthlyLabel,
-    negativeWarning: designer.negativeWarning,
-    footnote: designer.footnote,
     cta: designer.cta,
-    fileError: designer.fileError,
     canvasLabel: messages.designer.canvasLabel,
     productGroupAria: messages.designer.productGroupLabel,
     sellInputAria: messages.designer.sellPriceInput,
@@ -54,6 +39,7 @@ export async function DesignerSection() {
     <DesignerStatic
       products={products}
       product={product}
+      copy={copy}
       ctaHref={registerTemplate.replace('__SLUG__', product.slug)}
     />
   );

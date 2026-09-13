@@ -6,12 +6,11 @@ import { Icon } from '@/components/shared/icon';
 import { Reveal } from '@/components/shared/reveal';
 import { SarAmount } from '@/components/shared/sar-amount';
 import { Section } from '@/components/shared/section';
-import { home } from '@/content/home';
 import { aboutPage, productsPage } from '@/content/pages';
-import { whyUs } from '@/content/why-us';
-import { getSeo, getSiteSettings } from '@/lib/cms';
+import { getHome, getSeo, getSiteSettings } from '@/lib/cms';
 import { siteBase } from '@/lib/env';
-import { CtaRibbon, JsonLd, jsonLd } from '@/modules/core';
+import { JsonLd, jsonLd } from '@/modules/core';
+import { CtaRibbon } from '@/modules/core/cta-ribbon';
 
 const ROUTE = '/about';
 const ICONS: Record<string, LucideIcon> = { Target, Eye, Heart };
@@ -30,7 +29,8 @@ const CARD_ART = [
 export async function AboutPage() {
   const copy = aboutPage;
   const base = siteBase();
-  const [seo, site] = await Promise.all([getSeo(ROUTE), getSiteSettings()]);
+  const [seo, site, home] = await Promise.all([getSeo(ROUTE), getSiteSettings(), getHome()]);
+  const whyUs = home.whyUs.items;
 
   return (
     <>
