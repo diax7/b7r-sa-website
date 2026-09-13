@@ -41,3 +41,17 @@ Branch `admin/ui-1`, PR #4. CTO: plan 90, phase 1 94, phase 2 93.
 - [x] T505 Header: bordered search box + "View website" with text; both removed from the sidebar.
 - [x] T506 Square brand icon in the header.
 - [x] T507 e2e + unit tests updated; ADR-039 amendment; design system + rules.
+
+## Phase 5: second review round + closing review (2026-09-14, `admin/ui-2`)
+- [x] T508 Sidebar foot: collapse/expand above the account block; brand row "B7R Print Website"
+  at body size; the header icon whole (24 px wrapper).
+- [x] T509 Palette dialog centred in LTR (direction-aware transform).
+- [x] T510 The rail is CSS (`data-rail-*` attributes toggled by `admin.css`): a collapsed
+  sidebar paints as the rail on the first frame of every page, no shift; the drawer never
+  shows the collapse control.
+- [x] T511 `SavedByField`: the `lastSavedBy` group as one line; nothing on a create form.
+- [x] T512 Payload's localized-label suffix hidden; redirect type defaults to 301; dashboard
+  rows without a title read "Untitled".
+- [x] T513 Full review on screenshots (login, dashboard, palette, rail, lists, edit views,
+  globals, create forms, versions, delete confirm, 404, phone); stray autosave drafts removed;
+  e2e + unit tests; ADR-039 amendment; design system.

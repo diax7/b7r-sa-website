@@ -134,18 +134,20 @@ Payload's own elements (buttons, fields, pills, toasts) are themed in `admin.css
 
 | Piece | File | Notes |
 |---|---|---|
-| Sidebar | `modules/cms/admin/nav/*` | Groups (Content · Settings · Administration) as collapsibles that remember their state in Payload's `nav` preference; an icon per entity; `aria-current="page"`; the account block. Collapsed on a desktop it is a 72 px icon rail with tooltips (`data-admin-rail`), still usable; at or under 1440 px it is Payload's drawer. Keeps Payload's outer `nav` classes (layout, drawer). |
+| Sidebar | `modules/cms/admin/nav/*` | Groups (Content · Settings · Administration) as collapsibles that remember their state in Payload's `nav` preference; an icon per entity; `aria-current="page"`; the collapse/expand control and the account block at the foot. Collapsed on a desktop it is a 72 px icon rail with tooltips, still usable, and it is CSS: the server renders one tree, `admin.css` toggles `[data-rail-hide]` / `[data-rail-show]` / `[data-rail-center]` / `[data-rail-list]` while the aside is closed above 1440 px, so the rail paints on the first frame with no shift; hydration adds `data-admin-rail`, tooltips and `aria-label`s. At or under 1440 px it is Payload's drawer without the collapse control. Keeps Payload's outer `nav` classes (layout, drawer). |
 | Header actions | `modules/cms/admin/header/actions*` | A bordered search box that opens the palette (with the Ctrl K hint) and a bordered "View website" link with text; icons only under 768 px. |
 | Command palette | `modules/cms/admin/header/palette*` | Ctrl/⌘ K; sections first, then documents of collections with `listSearchableFields` (5 per collection, from two characters); combobox semantics; ranking in `palette-rank.ts`. |
-| Account menu | `modules/cms/admin/account/*` | Initials avatar, name, e-mail (LTR), role badge, «حسابي», «تسجيل الخروج». |
+| Account menu | `modules/cms/admin/account/*` | Initials avatar, name, e-mail (LTR), role badge, "My account", "Log out" (red). In the rail only the avatar shows. |
 | Login | `modules/cms/admin/login/*` | One line under the form; the Turnstile widget above it (ADR-034). |
 
-| Dashboard | `modules/cms/admin/dashboard/*` | Greeting, quick-action tiles by permission, health card (`healthReport()`, rows with a colour and a sentence), latest saves with «آخر حفظ» and Arabic relative time (`relative-time.ts`). |
-| Field widgets | `modules/cms/admin/fields/*` | `EnabledSwitch` (switch + the section's consequence), `IconSelect` (lucide tiles), `PlatformSelect` (brand SVG tiles); all on `FieldShell` (label, description, error) and `ChoiceGrid` (radiogroup). |
-| Preview | `lib/preview-token.ts`, `app/api/preview/*`, `modules/core/draft-bar.tsx` | «معاينة» opens a signed link → Next draft mode → the page with a warning bar; exit returns to the page. |
+| Dashboard | `modules/cms/admin/dashboard/*` | Greeting, quick-action tiles by permission, health card (`healthReport()`, rows with a colour and a sentence), latest saves with who saved them and a relative time (`relative-time.ts`); a row without a title reads "Untitled". |
+| Field widgets | `modules/cms/admin/fields/*` | `EnabledSwitch` (switch + the section's consequence), `IconSelect` (lucide tiles), `PlatformSelect` (brand SVG tiles), `SavedByField` (the `lastSavedBy` snapshot as one line, nothing on a create form); all on `FieldShell` (label, description, error), the pickers on `ChoiceGrid` (radiogroup). |
+| Preview | `lib/preview-token.ts`, `app/api/preview/*`, `modules/core/draft-bar.tsx` | The preview button opens a signed link → Next draft mode → the page with a warning bar; exit returns to the page. |
 
 Payload puts the sidebar in a drawer at widths ≤ 1440 px (its `l` breakpoint), the header
-hamburger opens it; that is Payload's behaviour, kept.
+hamburger opens it; that is Payload's behaviour, kept. Payload's locale suffix on localized
+labels (`.field-label .localized`) is hidden: the header's locale switcher names the locale,
+and the suffix is an em dash.
 
 ## 7. States
 

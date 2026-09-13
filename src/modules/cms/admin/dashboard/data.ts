@@ -117,6 +117,14 @@ function savedByName(doc: Doc): string | null {
   return typeof snapshot?.name === 'string' && snapshot.name ? snapshot.name : null;
 }
 
+/** An autosaved document may not have a title yet; the list view says the same. */
+const UNTITLED = 'Untitled';
+
+export function titleOf(value: unknown): string {
+  if (typeof value === 'number') return String(value);
+  return typeof value === 'string' && value.trim() ? value : UNTITLED;
+}
+
 function statusOf(doc: Doc): RecentItem['status'] {
   const status = doc['_status'];
   return status === 'draft' || status === 'published' ? status : null;
@@ -163,7 +171,7 @@ export async function recentActivity(args: {
         }
         const collection = payload.config.collections.find((c) => c.slug === entity.slug);
         if (!collection) return;
-        const title = collection.admin.useAsTitle || 'id';
+        const titleField = collection.admin.useAsTitle || 'id';
         const { docs } = await payload.find({
           collection: entity.slug as Parameters<Payload['find']>[0]['collection'],
           depth: 0,
@@ -178,7 +186,7 @@ export async function recentActivity(args: {
           items.push({
             key: `c-${entity.slug}-${String(raw.id)}`,
             href: `${entity.href}/${String(raw.id)}`,
-            title: String(raw[title] ?? raw.id),
+            title: titleOf(raw[titleField]),
             entity: getTranslation(collection.labels.singular, i18n),
             icon: entityIcon('collections', entity.slug),
             savedBy: savedByName(raw),

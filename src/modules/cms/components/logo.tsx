@@ -11,9 +11,9 @@ export function Icon() {
     <img
       src="/images/logo/icon.png"
       alt=""
-      width={28}
-      height={28}
-      style={{ height: 28, width: 28, maxWidth: 'none', objectFit: 'contain', display: 'block' }}
+      width={24}
+      height={24}
+      style={{ height: 24, width: 24, maxWidth: 'none', objectFit: 'contain', display: 'block' }}
     />
   );
 }

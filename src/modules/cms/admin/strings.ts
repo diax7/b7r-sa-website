@@ -6,7 +6,7 @@
 export const adminStrings = {
   nav: {
     label: 'Main navigation',
-    brand: 'B7R Print',
+    brand: 'B7R Print Website',
     expand: 'Expand the sidebar',
     collapse: 'Collapse the sidebar',
     closeMenu: 'Close the menu',

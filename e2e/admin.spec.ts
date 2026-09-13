@@ -293,13 +293,15 @@ test.describe('CMS admin', () => {
       await editorContext.close();
       await request.delete(`${API}/users/${editor.id}`, { headers: adminAuth });
     }
-    // On a phone the sidebar is a drawer: the header opens it, its own button closes it.
+    // On a phone the sidebar is a drawer: the header opens it, its own button closes it,
+    // and the desktop's collapse control stays out of it.
     await page.setViewportSize({ width: 412, height: 915 });
     await page.goto('/admin/collections/pages');
     await expect(nav).not.toHaveClass(/nav--nav-open/);
     await page.locator('.app-header__mobile-nav-toggler').click({ force: true });
     await expect(nav).toHaveClass(/nav--nav-open/);
     await expect(nav.locator('#nav-pages')).toBeVisible();
+    await expect(nav.locator('[data-admin-collapse]')).toBeHidden();
     await nav.locator('.nav__mobile-close').click();
     await expect(nav).not.toHaveClass(/nav--nav-open/);
   });
@@ -356,10 +358,17 @@ test.describe('CMS admin', () => {
     await expect(stepsSwitch).toHaveAttribute('role', 'switch');
     await expect(stepsSwitch).toHaveAttribute('aria-checked', 'true');
     await expect(page.locator('[data-admin-field="enabled"]').first()).toContainText(/hides/);
+    // Payload's locale suffix on localized labels (an em dash) is hidden; the header's locale
+    // switcher carries that information.
+    await expect(page.locator('.field-label .localized').first()).toBeHidden();
     await page.goto('/admin/collections/integrations/create');
     await expect(page.locator('[data-admin-choice="salla"]')).toHaveAttribute('role', 'radio');
     await page.locator('[data-admin-choice="zid"]').click();
     await expect(page.locator('[data-admin-choice="zid"]')).toHaveAttribute('aria-checked', 'true');
+    // "Last saved" is one line on an edit view and absent from the create form.
+    await expect(page.locator('[data-admin-saved-by]')).toHaveCount(0);
+    await page.goto(`/admin/collections/faqs/${entry!.id}`);
+    await expect(page.locator('[data-admin-saved-by]')).toContainText(/by .+ · /);
   });
 
   test('preview (ADR-039): a signed link shows a draft page that the public never sees', async ({

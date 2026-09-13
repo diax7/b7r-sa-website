@@ -21,6 +21,7 @@ export const savedByField: Field = {
   admin: {
     position: 'sidebar',
     readOnly: true,
+    components: { Field: '@/modules/cms/admin/fields/saved-by-field#SavedByField' },
     description: {
       ar: 'من حفظ النسخة الحالية ومتى. المسودات لا تغيّره.',
       en: 'Who saved the current version and when. Drafts do not change it.',

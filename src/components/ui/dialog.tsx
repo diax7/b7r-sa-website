@@ -46,7 +46,7 @@ export function DialogContent({ className, variant = 'card', ...rest }: DialogCo
         className={cn(
           'fixed z-50 bg-surface focus:outline-hidden',
           variant === 'card' &&
-            'start-1/2 top-1/2 w-[calc(100vw-32px)] max-w-md -translate-y-1/2 translate-x-1/2 rounded-base p-6 shadow-popover',
+            'start-1/2 top-1/2 w-[calc(100vw-32px)] max-w-md -translate-y-1/2 rounded-base p-6 shadow-popover ltr:-translate-x-1/2 rtl:translate-x-1/2',
           variant === 'sheet' && 'inset-0 overflow-y-auto',
           className,
         )}

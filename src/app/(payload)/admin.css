@@ -188,7 +188,12 @@
     .template-default__nav-toggler-wrapper {
       display: none;
     }
-    .template-default--nav-hydrated:not(.template-default--nav-open) {
+    /* Payload hides the nav until it hydrates and gives a closed one no column; the rail
+       needs neither, so the server render already paints it and nothing shifts. */
+    .template-default .nav {
+      display: block;
+    }
+    .template-default:not(.template-default--nav-open) {
       grid-template-columns: var(--admin-rail-width) auto;
     }
     .nav:not(.nav--nav-open) {
@@ -198,6 +203,21 @@
     .nav:not(.nav--nav-open) .nav__scroll {
       padding-inline: 12px;
     }
+  }
+
+  /* The brand mark in Payload's header: its 18 px wrapper cropped a 28 px icon. */
+  .step-nav__home,
+  .step-nav__home > span {
+    width: 24px;
+    height: 24px;
+    overflow: visible;
+  }
+
+  /* Payload suffixes every localized field label with the locale (a dash and its name).
+     The header's locale switcher already says which locale is open, nearly every content
+     field is localized, and the suffix is an em dash (.claude/rules/writing.md); hidden. */
+  .field-label .localized {
+    display: none;
   }
 
   /* ----------------------------------------------------------------------------------------
@@ -304,5 +324,42 @@
   }
   .step-nav a:hover {
     color: var(--admin-accent);
+  }
+}
+
+/* ---------------------------------------------------------------------------------------
+   The icon rail's element rules. Unlayered on purpose: `[data-rail-show]` must beat the
+   `hidden` utility on the same element. Only above Payload's `l` breakpoint and only while
+   the aside is closed; the phone drawer never sees them.
+   --------------------------------------------------------------------------------------- */
+@media (max-width: 1440px) {
+  /* The drawer closes with Payload's own control; the rail toggle belongs to the desktop. */
+  .nav [data-admin-toggle] {
+    display: none;
+  }
+}
+@media (min-width: 1441px) {
+  .nav:not(.nav--nav-open) [data-rail-hide] {
+    display: none;
+  }
+  .nav:not(.nav--nav-open) [data-rail-show] {
+    display: block;
+  }
+  .nav:not(.nav--nav-open) [data-rail-center] {
+    justify-content: center;
+    padding-inline: 0;
+    width: 100%;
+  }
+  .nav:not(.nav--nav-open) [data-rail-list] {
+    align-items: center;
+    border-top: 1px solid var(--theme-elevation-150);
+    padding-block: 8px;
+  }
+  .nav:not(.nav--nav-open) [data-admin-group]:first-child [data-rail-list] {
+    border-top: 0;
+    padding-block-start: 0;
+  }
+  .nav:not(.nav--nav-open) [data-rail-list] a {
+    width: 40px;
   }
 }

@@ -50,10 +50,20 @@ export function redirectProblem(
 const label = (name: string, ar: string, en: string) => (field: Field) =>
   'name' in field && field.name === name ? { ...field, label: { ar, en } } : field;
 
-/** Arabic labels on the plugin's fields (it ships no `ar` translations). */
+/**
+ * Arabic labels on the plugin's fields (it ships no `ar` translations), and a permanent
+ * redirect by default: the plugin's `type` select is required but starts empty.
+ */
 export function redirectFields(defaultFields: Field[]): Field[] {
   return defaultFields.map((field) => {
     const withLabel = label('from', 'المصدر (المسار القديم)', 'From (old path)')(field);
+    if ('name' in withLabel && withLabel.name === 'type' && withLabel.type === 'select') {
+      return {
+        ...withLabel,
+        defaultValue: '301',
+        label: { ar: 'نوع التحويل', en: 'Redirect type' },
+      };
+    }
     if ('name' in withLabel && withLabel.name === 'to' && withLabel.type === 'group') {
       return {
         ...withLabel,
@@ -64,7 +74,7 @@ export function redirectFields(defaultFields: Field[]): Field[] {
           .map(label('url', 'مسار أو رابط', 'Path or URL')),
       };
     }
-    return label('type', 'نوع التحويل', 'Redirect type')(withLabel);
+    return withLabel;
   });
 }
 

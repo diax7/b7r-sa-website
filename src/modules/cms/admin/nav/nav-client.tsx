@@ -30,30 +30,39 @@ function isActive(pathname: string, href: string): boolean {
 }
 
 const link =
-  'flex h-10 items-center gap-2.5 rounded-inner text-small text-text transition-colors duration-(--duration-fast) hover:bg-accent-tint focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-accent/40';
+  'flex h-10 items-center gap-2.5 rounded-inner ps-8 pe-2.5 text-small text-text transition-colors duration-(--duration-fast) hover:bg-accent-tint focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-accent/40';
+
+const iconButton =
+  'grid size-9 place-items-center rounded-inner text-text-muted transition-colors duration-(--duration-fast) hover:bg-accent-tint hover:text-text focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-accent/40';
 
 /**
  * Sidebar contents. The outer element keeps Payload's classes (`nav`, `nav--nav-open`,
  * `nav--nav-animate`, `nav--nav-hydrated`, `nav__scroll`, `nav__header`, `nav__mobile-close`;
  * checked against @payloadcms/next 3.89.0) because the template's grid, the phone drawer and
- * the `inert` state are theirs. Closed on a desktop it does not vanish: it becomes an icon
- * rail (`data-admin-rail`, sized in admin.css) with a tooltip per entry, still usable.
+ * the `inert` state are theirs.
+ *
+ * Closed on a desktop the sidebar is an icon rail, still usable. The rail is CSS, not a
+ * second markup: the server renders the same tree open or closed, and `admin.css` hides
+ * `[data-rail-hide]` and shows `[data-rail-show]` when the aside is closed above Payload's
+ * `l` breakpoint, so a collapsed sidebar paints as a rail on the first frame of every page
+ * with no shift. Hydration only adds what needs JS: tooltips, `aria-label`s, and lifting
+ * `inert` (Payload marks a closed nav inert for the phone drawer).
  */
 export function NavClient({ groups, prefs, account, adminRoute }: NavClientProps) {
   const { hydrated, navOpen, navRef, setNavOpen, shouldAnimate } = useNav();
   const { breakpoints } = useWindowInfo();
   const { setPreference } = usePreferences();
   const pathname = usePathname();
+  // Payload treats widths at or under its `l` breakpoint (1440 px) as a drawer; above it,
+  // closed = rail. `undefined` means "not measured yet" and counts as a drawer, so the JS
+  // extras wait for a real measurement (the CSS rail does not).
+  const drawer = breakpoints['l'] !== false;
+  const rail = !navOpen && !drawer && hydrated;
   // Payload's own toggler stores the state under the `nav` preference; so do we.
   function setOpen(next: boolean) {
     setNavOpen(next);
     void setPreference(PREFERENCE_KEYS.NAV, { open: next }, true);
   }
-  // Payload treats widths at or under its `l` breakpoint (1440 px) as a drawer; above it,
-  // closed = rail. `undefined` means "not measured yet" and counts as a drawer, so nothing
-  // flashes into a rail before hydration.
-  const drawer = breakpoints['l'] !== false;
-  const rail = !navOpen && !drawer && hydrated;
 
   return (
     <TooltipProvider delayDuration={200}>
@@ -70,43 +79,24 @@ export function NavClient({ groups, prefs, account, adminRoute }: NavClientProps
         data-admin-rail={rail ? '' : undefined}
       >
         <div className="nav__scroll flex flex-col" ref={navRef}>
-          <nav aria-label={s.label} className="flex w-full flex-1 flex-col gap-5">
-            <div className={cn('flex items-center gap-2.5', rail && 'justify-center')}>
-              <a
-                href={adminRoute}
-                className="flex items-center gap-2.5 rounded-inner py-1 text-text"
-                aria-label={s.brand}
-              >
-                <img
-                  src="/images/logo/icon.png"
-                  alt=""
-                  width={28}
-                  height={28}
-                  className="size-7 shrink-0"
-                />
-                {!rail && <span className="text-small font-medium">{s.brand}</span>}
-              </a>
-              {!rail && !drawer && (
-                <IconButton
-                  label={s.collapse}
-                  onClick={() => setOpen(false)}
-                  className="ms-auto"
-                  data-admin-collapse=""
-                >
-                  <Icon icon={PanelLeftClose} size={18} className="mirror-rtl" />
-                </IconButton>
-              )}
-            </div>
-            {rail && (
-              <IconButton
-                label={s.expand}
-                onClick={() => setOpen(true)}
-                className="mx-auto"
-                data-admin-expand=""
-              >
-                <Icon icon={PanelLeftOpen} size={18} className="mirror-rtl" />
-              </IconButton>
-            )}
+          <nav aria-label={s.label} className="flex w-full flex-1 flex-col gap-4">
+            <a
+              href={adminRoute}
+              className="flex items-center gap-3 rounded-inner py-1 text-text"
+              aria-label={s.brand}
+              data-rail-center=""
+            >
+              <img
+                src="/images/logo/icon.png"
+                alt=""
+                width={32}
+                height={32}
+                className="size-8 shrink-0"
+              />
+              <span className="text-body font-semibold" data-rail-hide="">
+                {s.brand}
+              </span>
+            </a>
 
             <div className="flex flex-col gap-1">
               {groups.map((group) => (
@@ -121,11 +111,31 @@ export function NavClient({ groups, prefs, account, adminRoute }: NavClientProps
             </div>
           </nav>
 
-          {account && (
-            <div className="mt-4 border-t border-border pt-4">
-              <AccountMenu account={account} adminRoute={adminRoute} compact={rail} />
+          <div className="mt-6 flex flex-col gap-2 border-t border-border pt-3">
+            <div className="flex items-center" data-rail-center="" data-admin-toggle="">
+              <RailButton
+                label={s.collapse}
+                onClick={() => setOpen(false)}
+                className="ms-auto"
+                data-rail-hide=""
+                data-admin-collapse=""
+                tooltip={rail}
+              >
+                <Icon icon={PanelLeftClose} size={18} className="mirror-rtl" />
+              </RailButton>
+              <RailButton
+                label={s.expand}
+                onClick={() => setOpen(true)}
+                className="hidden"
+                data-rail-show=""
+                data-admin-expand=""
+                tooltip={rail}
+              >
+                <Icon icon={PanelLeftOpen} size={18} className="mirror-rtl" />
+              </RailButton>
             </div>
-          )}
+            {account && <AccountMenu account={account} adminRoute={adminRoute} compact={rail} />}
+          </div>
         </div>
 
         {/* Phone: the close control Payload positions over the header. */}
@@ -147,36 +157,40 @@ export function NavClient({ groups, prefs, account, adminRoute }: NavClientProps
   );
 }
 
-function IconButton({
+function RailButton({
   label,
   onClick,
   className,
+  tooltip,
   children,
   ...rest
 }: {
   label: string;
   onClick: () => void;
   className?: string;
+  /** Tooltips need the client; the server render carries the aria-label alone. */
+  tooltip: boolean;
   children: React.ReactNode;
+  'data-rail-hide'?: string;
+  'data-rail-show'?: string;
   'data-admin-expand'?: string;
   'data-admin-collapse'?: string;
 }) {
+  const button = (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      className={cn(iconButton, className)}
+      {...rest}
+    >
+      {children}
+    </button>
+  );
+  if (!tooltip) return button;
   return (
     <Tooltip>
-      <TooltipTrigger asChild>
-        <button
-          type="button"
-          onClick={onClick}
-          aria-label={label}
-          className={cn(
-            'grid size-9 place-items-center rounded-inner text-text-muted transition-colors duration-(--duration-fast) hover:bg-accent-tint hover:text-text focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-accent/40',
-            className,
-          )}
-          {...rest}
-        >
-          {children}
-        </button>
-      </TooltipTrigger>
+      <TooltipTrigger asChild>{button}</TooltipTrigger>
       <TooltipContent side="right">{label}</TooltipContent>
     </Tooltip>
   );
@@ -202,45 +216,12 @@ function Group({
     void setPreference(PREFERENCE_KEYS.NAV, { groups: { [group.label]: { open: next } } }, true);
   }
 
-  if (rail) {
-    // The rail shows every entry: a collapsed group would hide what the rail exists to reach.
-    return (
-      <ul className="flex flex-col items-center gap-0.5 border-t border-border pt-2 first:border-t-0 first:pt-0">
-        {group.entities.map((entity) => {
-          const EntityIcon = entityIcon(entity.type, entity.slug);
-          const active = isActive(pathname, entity.href);
-          return (
-            <li key={`${entity.type}-${entity.slug}`}>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <a
-                    href={entity.href}
-                    id={`nav-${entity.type === 'globals' ? 'global-' : ''}${entity.slug}`}
-                    aria-label={entity.label}
-                    aria-current={active ? 'page' : undefined}
-                    className={cn(
-                      link,
-                      'w-10 justify-center',
-                      active && 'bg-accent-tint text-accent',
-                    )}
-                  >
-                    {EntityIcon && <Icon icon={EntityIcon} size={20} />}
-                  </a>
-                </TooltipTrigger>
-                <TooltipContent side="right">{entity.label}</TooltipContent>
-              </Tooltip>
-            </li>
-          );
-        })}
-      </ul>
-    );
-  }
-
   return (
     <Collapsible open={isOpen} onOpenChange={toggle} data-admin-group={group.label}>
       <CollapsibleTrigger
         className="flex h-9 w-full items-center gap-2 rounded-inner px-2.5 text-caption font-medium text-text-muted transition-colors duration-(--duration-fast) hover:text-text focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-accent/40"
         aria-label={`${group.label}: ${s.groupToggle}`}
+        data-rail-hide=""
       >
         {GroupIcon && <Icon icon={GroupIcon} size={16} />}
         <span className="flex-1 text-start">{group.label}</span>
@@ -253,26 +234,37 @@ function Group({
           )}
         />
       </CollapsibleTrigger>
-      <CollapsibleContent>
-        <ul className="flex flex-col gap-0.5 pb-2">
+      {/* Mounted while closed so the rail (which ignores group state) still lists every entry. */}
+      <CollapsibleContent forceMount className="data-[state=closed]:hidden" data-rail-show="">
+        <ul className="flex flex-col gap-0.5 pb-2" data-rail-list="">
           {group.entities.map((entity) => {
             const EntityIcon = entityIcon(entity.type, entity.slug);
             const active = isActive(pathname, entity.href);
+            const anchor = (
+              <a
+                href={entity.href}
+                id={`nav-${entity.type === 'globals' ? 'global-' : ''}${entity.slug}`}
+                aria-current={active ? 'page' : undefined}
+                aria-label={rail ? entity.label : undefined}
+                className={cn(link, active && 'bg-accent-tint font-medium text-accent')}
+                data-rail-center=""
+              >
+                {EntityIcon && <Icon icon={EntityIcon} size={18} className="shrink-0" />}
+                <span className="truncate" data-rail-hide="">
+                  {entity.label}
+                </span>
+              </a>
+            );
             return (
               <li key={`${entity.type}-${entity.slug}`}>
-                <a
-                  href={entity.href}
-                  id={`nav-${entity.type === 'globals' ? 'global-' : ''}${entity.slug}`}
-                  aria-current={active ? 'page' : undefined}
-                  className={cn(
-                    link,
-                    'ps-8 pe-2.5',
-                    active && 'bg-accent-tint font-medium text-accent',
-                  )}
-                >
-                  {EntityIcon && <Icon icon={EntityIcon} size={18} />}
-                  <span className="truncate">{entity.label}</span>
-                </a>
+                {rail ? (
+                  <Tooltip>
+                    <TooltipTrigger asChild>{anchor}</TooltipTrigger>
+                    <TooltipContent side="right">{entity.label}</TooltipContent>
+                  </Tooltip>
+                ) : (
+                  anchor
+                )}
               </li>
             );
           })}

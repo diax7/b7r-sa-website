@@ -87,5 +87,7 @@ describe('redirectProblem: the rules an admin row must pass', () => {
       'label' in f && typeof f.label === 'object' ? f.label : null,
     );
     expect(labels.every((l) => l && 'ar' in l)).toBe(true);
+    const type = fields.find((f) => 'name' in f && f.name === 'type');
+    expect(type && 'defaultValue' in type ? type.defaultValue : null).toBe('301');
   });
 });

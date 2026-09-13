@@ -11,7 +11,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { cn } from '@/lib/cn';
 import { adminStrings } from '@/modules/cms/admin/strings';
 
 const s = adminStrings.account;
@@ -26,7 +25,8 @@ export function initials(name: string, email: string): string {
 
 /**
  * The account block at the foot of the sidebar: who is signed in, and where to go from here.
- * `compact` (the icon rail) shows the avatar alone; the menu still opens from it.
+ * In the icon rail the CSS hides the name and e-mail (`data-rail-hide`); the avatar keeps the
+ * menu. `compact` only widens the accessible label once the client knows it is a rail.
  */
 export function AccountMenu({
   account,
@@ -41,12 +41,10 @@ export function AccountMenu({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        className={cn(
-          'flex items-center gap-2.5 rounded-inner p-2 text-start transition-colors duration-(--duration-fast) hover:bg-accent-tint focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-accent/40 data-[state=open]:bg-accent-tint',
-          compact ? 'mx-auto' : 'w-full',
-        )}
+        className="flex w-full items-center gap-2.5 rounded-inner p-2 text-start transition-colors duration-(--duration-fast) hover:bg-accent-tint focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-accent/40 data-[state=open]:bg-accent-tint"
         aria-label={compact ? `${s.menu}: ${account.name}` : s.menu}
         data-admin-account=""
+        data-rail-center=""
       >
         <span
           aria-hidden="true"
@@ -54,26 +52,15 @@ export function AccountMenu({
         >
           {initials(account.name, account.email)}
         </span>
-        {!compact && (
-          <>
-            <span className="min-w-0 flex-1">
-              <span className="block truncate text-small font-medium text-text">
-                {account.name}
-              </span>
-              <span className="block truncate text-caption text-text-muted" dir="ltr">
-                {account.email}
-              </span>
-            </span>
-            <Icon icon={ChevronDown} size={16} className="shrink-0 text-text-muted" />
-          </>
-        )}
+        <span className="min-w-0 flex-1" data-rail-hide="">
+          <span className="block truncate text-small font-medium text-text">{account.name}</span>
+          <span className="block truncate text-caption text-text-muted" dir="ltr">
+            {account.email}
+          </span>
+        </span>
+        <Icon icon={ChevronDown} size={16} className="shrink-0 text-text-muted" data-rail-hide="" />
       </DropdownMenuTrigger>
-      <DropdownMenuContent
-        align="start"
-        side="top"
-        className={compact ? 'min-w-56' : 'w-(--radix-dropdown-menu-trigger-width)'}
-        data-admin-ui=""
-      >
+      <DropdownMenuContent align="start" side="top" className="min-w-56" data-admin-ui="">
         <DropdownMenuLabel className="flex items-center justify-between gap-2">
           <span className="truncate">{account.name}</span>
           {role && (

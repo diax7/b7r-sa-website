@@ -646,3 +646,29 @@ re-validated them and painted the fallback first; they are now `immutable` for a
 preloaded from the admin layout too. **Brand icon.** The site's preflight (`img { max-width:
 100% }`, which reaches `/admin`) squeezed the header icon into an 18 px column; the inline
 `max-width: none` restores the square. Widgets keep their per-field descriptions in English.
+
+Amended 2026-09-14 (Dhia's second review round and the closing review, `admin/ui-2`).
+**The rail is CSS, not a second markup.** The first version decided "rail or not" in the
+client after hydration, so a collapsed sidebar painted late and shifted every page it landed
+on. The server now renders the same tree open or closed; `admin.css` hides `[data-rail-hide]`
+and shows `[data-rail-show]` when the aside is closed above the `l` breakpoint, keeps the
+72 px column and the aside visible regardless of Payload's hide-until-hydrated rule, and the
+first frame of every navigation is already the rail. Hydration only adds tooltips, `aria-label`s
+and lifts `inert`. **Sidebar foot.** The collapse/expand control sits above the account block
+(not beside the brand); the brand row reads "B7R Print Website" at body size; the drawer at
+or under 1440 px never shows the collapse control (Payload's own close button serves it).
+**Header icon.** Payload's `.step-nav__home` wrapper is 18 px; it is 24 px now so the brand
+mark is whole. **Palette centring.** The dialog's card variant assumed RTL (`translate-x-1/2`);
+the admin is LTR, so the transform is direction-aware. **"Last saved" widget.** The
+`lastSavedBy` group rendered as two empty read-only inputs; `SavedByField` renders one line
+("by Dhia · 2 hours ago", or "No save recorded yet." for a row seeded or saved before the
+field existed) and nothing on a create form. **Locale suffix hidden.** Payload appends an em
+dash and the locale name to every localized label; nearly every content field is localized,
+the header's locale switcher already names the locale, and the dash breaks ADR-040, so
+`.field-label .localized` is hidden. **Redirect type defaults to 301.** The plugin's required
+select started empty. **Untitled rows.** Payload's autosave creates a document the moment
+"Create New" opens (its behaviour, kept: it is what makes autosave work); such a row has no
+title, and the dashboard's latest-changes list now says "Untitled" instead of the id, next
+to the list view's "No Title". Known third-party traits, noted and left: Payload's upload
+meta line and pagination ellipsis use an em dash; the checker covers our sources, not
+`node_modules`.

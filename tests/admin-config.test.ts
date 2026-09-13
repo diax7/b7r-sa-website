@@ -1,5 +1,6 @@
 import type { CollectionConfig, GlobalConfig } from 'payload';
 import { describe, expect, it } from 'vitest';
+import { titleOf } from '@/modules/cms/admin/dashboard/data';
 import { COLLECTION_ICONS, GLOBAL_ICONS, groupIcon } from '@/modules/cms/admin/icons';
 import { Faqs } from '@/modules/cms/collections/faqs';
 import { Integrations } from '@/modules/cms/collections/integrations';
@@ -67,4 +68,15 @@ describe('admin config shape (ADR-039)', () => {
       expect(arabic(g.admin?.description), 'admin.description').toBe(true);
     });
   }
+});
+
+describe('dashboard recent list: a title for every row', () => {
+  it('shows the title, the id when the title is the id, and "Untitled" for an empty one', () => {
+    expect(titleOf('من نحن')).toBe('من نحن');
+    expect(titleOf(63)).toBe('63');
+    expect(titleOf('')).toBe('Untitled');
+    expect(titleOf('   ')).toBe('Untitled');
+    expect(titleOf(null)).toBe('Untitled');
+    expect(titleOf(undefined)).toBe('Untitled');
+  });
 });
