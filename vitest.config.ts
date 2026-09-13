@@ -15,7 +15,23 @@ export default defineConfig({
     environment: 'jsdom',
     include: ['tests/**/*.test.{ts,tsx}'],
     globals: false,
-    // The env contract fails fast on import (src/lib/env.ts); tests get the 1a minimum.
-    env: { NEXT_PUBLIC_APP_URL: 'https://b7r.app', NEXT_PUBLIC_WHATSAPP: '966501699572' },
+    // The env contract fails fast on import (src/lib/env.ts); tests get the 1a minimum and
+    // nothing else: CI's job-level production origin and mock transports must not leak into
+    // unit tests that assert the unconfigured defaults.
+    env: {
+      NEXT_PUBLIC_APP_URL: 'https://b7r.app',
+      NEXT_PUBLIC_WHATSAPP: '966501699572',
+      NEXT_PUBLIC_SITE_URL: '',
+      NEXT_PUBLIC_GA_ID: '',
+      NEXT_PUBLIC_UMAMI_SRC: '',
+      NEXT_PUBLIC_UMAMI_ID: '',
+      NEXT_PUBLIC_TURNSTILE_SITE_KEY: '',
+      NEWSLETTER_TRANSPORT: '',
+      CONTACT_TRANSPORT: '',
+      RESEND_API_KEY: '',
+      TURNSTILE_SECRET_KEY: '',
+      INDEXNOW_KEY: '',
+      B7R_RUNTIME: '',
+    },
   },
 });
