@@ -31,6 +31,9 @@ import { homeSteps, howItWorksSteps } from '@/content/steps';
 import { whyUs } from '@/content/why-us';
 
 const TODO_COPY = new Set<string>([
+  // Designer upload target and its remove control (design review 2026-09-13, Appendix G).
+  home.designer.uploadPrompt,
+  home.designer.removeAria,
   errorPage.title,
   errorPage.text,
   footerCopy.newsletterUnavailable,

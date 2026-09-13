@@ -5,13 +5,9 @@ test.describe('products listing (BRD 6.5)', () => {
     await page.goto('/products');
     const cards = page.locator('[data-product-grid] [data-product-card]');
     await expect(cards).toHaveCount(5);
-    // Each card links twice (photo + name); only the name link is exposed to assistive tech.
-    await expect(page.locator('[data-product-grid] a[href^="/products/"]')).toHaveCount(10);
-    await expect(page.locator('[data-product-grid]').getByRole('link')).toHaveCount(5);
+    await expect(page.locator('[data-product-grid] a[href^="/products/"]')).toHaveCount(5);
     const first = cards.first();
     await expect(first).toContainText('تيشيرت أساسي');
-    // The photo link is hidden from assistive tech; the name link is the accessible one.
-    await expect(first.getByRole('link')).toHaveCount(1);
     await expect(first.getByRole('link')).toHaveAccessibleName('تيشيرت أساسي');
     await expect(first).toContainText('يبدأ من');
     await expect(first.locator('[data-sar-digits]')).toHaveText('45');
@@ -39,10 +35,16 @@ test.describe('products listing (BRD 6.5)', () => {
     await expect(photo).toHaveAttribute('data-card-photo', 'white');
     await expect(page).toHaveURL(/\/products$/);
     const back = photo.locator('img').nth(1);
-    await expect(back).toHaveCSS('opacity', '0');
-    await photo.hover();
+    await page.mouse.move(0, 0);
+    await expect(back).toHaveCSS('opacity', '0', { timeout: 10_000 });
+    // Hovering the card flips; hovering a swatch previews without flipping.
+    await card.locator('h2').hover();
     await expect(back).toHaveCSS('opacity', '1');
-    await photo.click();
+    await white.hover();
+    await expect(back).toHaveCSS('opacity', '0');
+    // The whole card is the link (stretched from the name): a click on the price line
+    // navigates too. `force` skips the stability wait while the hover lift is animating.
+    await card.getByText('يبدأ من').click({ force: true });
     await expect(page).toHaveURL(/\/products\/tee-essential$/);
   });
 });
@@ -73,6 +75,7 @@ test.describe('product detail (BRD 6.6)', () => {
   test('the tote bag has no size chart and keeps the section alternation', async ({ page }) => {
     await page.goto('/products/tote-bag');
     await expect(page.locator('table')).toHaveCount(0);
+    await expect(page.locator('[data-gallery-view]')).toHaveCount(0);
     const tones = await page
       .locator('section[data-tone]')
       .evaluateAll((els) => els.map((el) => el.getAttribute('data-tone')));
@@ -94,6 +97,15 @@ test.describe('product detail (BRD 6.6)', () => {
     await expect(gallery.getByText(/صورة \d+ من/)).toHaveCount(0);
     const state = gallery.locator('[aria-live="polite"]');
     await expect(state).toHaveText('أبيض، الواجهة الأمامية');
+    // The visible toggle works everywhere; hover and keys are extras on desktop.
+    await gallery.locator('[data-gallery-view="back"]').click();
+    await expect(photo).toHaveAttribute('data-gallery-side', 'back');
+    await expect(gallery.locator('[data-gallery-view="back"]')).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    await gallery.locator('[data-gallery-view="front"]').click();
+    await expect(photo).toHaveAttribute('data-gallery-side', 'front');
     if (isMobile) {
       await photo.tap();
     } else {

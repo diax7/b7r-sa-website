@@ -3,11 +3,6 @@ import { cn } from '@/lib/cn';
 import { formatNumber } from '@/components/shared/format-number';
 import { SarSymbol } from '@/components/shared/sar-symbol';
 
-/** Integers render without decimals, anything else with exactly two, grouped (BRD 3.11). */
-export function formatSarDigits(value: number): string {
-  return formatNumber(value);
-}
-
 interface SarAmountProps extends ComponentPropsWithoutRef<'bdi'> {
   value: number;
   symbolClassName?: string | undefined;
@@ -26,7 +21,7 @@ export function SarAmount({ value, className, symbolClassName, ...rest }: SarAmo
       {...rest}
     >
       <SarSymbol className={symbolClassName} />
-      <span data-sar-digits="">{formatSarDigits(value)}</span>
+      <span data-sar-digits="">{formatNumber(value)}</span>
     </bdi>
   );
 }

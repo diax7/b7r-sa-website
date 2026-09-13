@@ -18,10 +18,11 @@ export default defineConfig({
     locale: 'ar-SA',
     trace: 'on-first-retry',
   },
+  // CI warms the ISR entries and image transforms before the first test (a cold AVIF
+  // transform on the runner stalls the load event); Playwright runs it after the server is up.
+  ...(process.env['CI'] ? { globalSetup: './e2e/global-setup.ts' } : {}),
   webServer: {
-    // CI warms the ISR entries and image transforms on the same server before the tests run
-    // (a cold AVIF transform on the runner stalls the load event); locally the server is reused.
-    command: process.env['CI'] ? 'bash scripts/ci/serve-warm.sh' : 'pnpm start',
+    command: 'pnpm start',
     url: BASE_URL,
     reuseExistingServer: !process.env['CI'],
     timeout: 60_000,

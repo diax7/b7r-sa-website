@@ -1,11 +1,12 @@
 /** Strings the designer island receives from the server shell (BRD 4.4 + aria microcopy). */
 export interface DesignerCopy {
-  groups: { product: string; color: string; design: string; pricing: string };
-  upload: string;
+  groups: { product: string; pricing: string };
+  /** «اضغط لرفع شعارك أو صورتك» — the prompt over the empty print area. */
+  uploadPrompt: string;
   uploadHelper: string;
   sample: string;
-  replace: string;
-  reset: string;
+  /** «إزالة التصميم» */
+  removeAria: string;
   canvasHint: string;
   baseCostLabel: string;
   sellPriceLabel: string;
@@ -19,11 +20,9 @@ export interface DesignerCopy {
   fileError: string;
   canvasLabel: string;
   productGroupAria: string;
-  colorOptionAria: string;
   sellInputAria: string;
   sellSliderAria: string;
   dailyDecrementAria: string;
   dailyIncrementAria: string;
-  thumbnailAria: string;
   dropzoneAria: string;
 }

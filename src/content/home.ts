@@ -61,12 +61,13 @@ export const home: Home = {
     eyebrow: 'جرّب بنفسك',
     title: 'شاهد تصميمك واحسب ربحك',
     lead: 'ارفع تصميمك، حرّكه على المنتج، وحدّد سعرك.',
-    groups: { product: 'المنتج', color: 'اللون', design: 'التصميم', pricing: 'التسعير' },
-    upload: 'ارفع تصميمك',
+    groups: { product: 'المنتج', pricing: 'التسعير' },
+    // TODO(copy): Appendix G — the print area is the upload target (Dhia, 2026-09-13).
+    uploadPrompt: 'اضغط لرفع شعارك أو صورتك',
     uploadHelper: 'PNG أو JPG أو SVG، حتى 10 ميجابايت',
     sample: 'جرّب تصميماً جاهزاً',
-    replace: 'غيّر التصميم',
-    reset: 'إعادة الضبط',
+    // TODO(copy): Appendix G — the «×» that clears the placed design.
+    removeAria: 'إزالة التصميم',
     canvasHint: 'اسحب التصميم لتحريكه، واستخدم الزوايا لتغيير الحجم.',
     baseCostLabel: 'التكلفة من بحر',
     sellPriceLabel: 'سعر البيع في متجرك',
@@ -83,7 +84,6 @@ export const home: Home = {
   video: {
     title: 'شاهد كيف نطبع طلبك',
     lead: 'من ملف التصميم إلى الطرد الجاهز، كل شيء يتم عندنا في جدة.',
-    playAria: 'تشغيل الفيديو',
   },
   whyUs: { eyebrow: 'لماذا بحر', title: 'لماذا يختارنا التجار؟' },
   testimonials: { eyebrow: 'آراء التجار', title: 'تجار بدأوا معنا', placeholderTag: 'نموذج' },

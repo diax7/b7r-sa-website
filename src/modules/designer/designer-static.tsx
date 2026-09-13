@@ -9,7 +9,6 @@ import { home } from '@/content/home';
 import { stripColorFor } from '@/lib/product-helpers';
 import { cn } from '@/lib/cn';
 import { monthlyProfit, perPieceProfit } from '@/modules/designer/profit';
-import { SAMPLE_DESIGN } from '@/modules/designer/use-designer-state';
 
 interface DesignerStaticProps {
   products: Product[];
@@ -29,36 +28,40 @@ export function DesignerStatic({ products, product, ctaHref }: DesignerStaticPro
   const monthly = monthlyProfit(product.suggestedPrice, product.baseCost, 10);
 
   return (
-    <div className="flex flex-col gap-8 lg:flex-row lg:gap-10" data-designer-fallback="">
-      <div className="order-first lg:order-last lg:w-[60%]">
-        <div className="relative mx-auto aspect-square w-full max-w-[640px] overflow-hidden rounded-lg bg-ground">
+    <div className="flex flex-col gap-6 lg:flex-row lg:gap-8" data-designer-fallback="">
+      <div className="order-first lg:order-last lg:w-[54%]">
+        <div className="relative mx-auto aspect-square w-full max-w-[600px] overflow-hidden rounded-lg bg-ground">
           {color && (
             <Image
               src={color.images.front}
               alt={`${product.name} ${color.name}، الواجهة الأمامية`}
               fill
-              sizes="(min-width: 1024px) 640px, 100vw"
+              sizes="(min-width: 1024px) 600px, 100vw"
               className="object-contain"
             />
           )}
-          {/* The sample design sits where the island places it: 60 % of the print-area width. */}
-          <Image
-            src={SAMPLE_DESIGN.url}
-            alt=""
-            width={SAMPLE_DESIGN.width}
-            height={SAMPLE_DESIGN.height}
-            className="absolute"
+          {/* The empty print area with the upload prompt, exactly where the island puts it. */}
+          <div
+            className="absolute flex flex-col items-center justify-center gap-2 rounded-inner border-2 border-dashed border-primary/50 bg-surface/70 px-3 text-center"
             style={{
-              insetInlineStart: `${(product.printArea.canvas.x + product.printArea.canvas.w * 0.2) * 100}%`,
-              top: `${(product.printArea.canvas.y + product.printArea.canvas.h * 0.5) * 100}%`,
-              width: `${product.printArea.canvas.w * 0.6 * 100}%`,
-              transform: 'translateY(-50%)',
+              // The mockup is a picture: physical offsets match the canvas pixel space.
+              left: `${product.printArea.canvas.x * 100}%`, // rtl-allow: canvas pixel space
+              top: `${product.printArea.canvas.y * 100}%`,
+              width: `${product.printArea.canvas.w * 100}%`,
+              height: `${product.printArea.canvas.h * 100}%`,
             }}
-          />
+          >
+            <span className="grid size-11 place-items-center rounded-pill bg-accent-tint text-primary">
+              <Icon icon={Upload} size={20} />
+            </span>
+            <span className="text-small font-medium text-primary">{designer.uploadPrompt}</span>
+            <span className="text-caption text-text-muted">{designer.uploadHelper}</span>
+          </div>
         </div>
+        <p className="mt-3 text-center text-small font-medium text-primary">{designer.sample}</p>
       </div>
 
-      <div className="flex flex-col gap-8 lg:w-[40%]">
+      <div className="flex flex-col gap-6 lg:w-[46%]">
         <fieldset className="flex flex-col gap-3">
           <legend className="text-small font-medium text-text">{designer.groups.product}</legend>
           <div className="flex flex-wrap gap-2">
@@ -91,38 +94,6 @@ export function DesignerStatic({ products, product, ctaHref }: DesignerStaticPro
             })}
           </div>
         </fieldset>
-
-        <fieldset className="flex flex-col gap-3">
-          <legend className="text-small font-medium text-text">{designer.groups.color}</legend>
-          <div className="flex items-center gap-3">
-            {product.colors.map((c, i) => (
-              <span key={c.slug} className="grid size-11 place-items-center" title={c.name}>
-                <span
-                  className={cn(
-                    'block size-7 rounded-pill border border-border',
-                    i === 0 && 'ring-2 ring-primary ring-offset-2 ring-offset-surface',
-                  )}
-                  // Swatch colours are product data (BRD Appendix A), not a design token.
-                  style={{ backgroundColor: c.hex }}
-                />
-              </span>
-            ))}
-          </div>
-        </fieldset>
-
-        <div className="flex flex-col gap-3">
-          <p className="text-small font-medium text-text">{designer.groups.design}</p>
-          <div className="flex flex-col items-center justify-center gap-2 rounded-base border border-dashed border-border bg-ground px-4 py-6 text-center">
-            <span className="grid size-11 place-items-center rounded-pill bg-accent-tint text-primary">
-              <Icon icon={Upload} size={20} />
-            </span>
-            <span className="text-body font-medium text-primary">{designer.upload}</span>
-            <span className="text-caption text-text-muted">{designer.uploadHelper}</span>
-          </div>
-          <span className="inline-flex h-11 items-center px-5 font-medium text-primary">
-            {designer.sample}
-          </span>
-        </div>
 
         <div className="flex flex-col gap-5">
           <p className="text-small font-medium text-text">{designer.groups.pricing}</p>

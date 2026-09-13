@@ -18,7 +18,8 @@ export interface Design {
 export interface DesignerState {
   product: Product;
   colorSlug: string;
-  design: Design;
+  /** `null` until the visitor uploads or places the sample: the print area shows the prompt. */
+  design: Design | null;
   sellPrice: number;
   dailySales: number;
   belowCost: boolean;
@@ -31,15 +32,18 @@ export interface DesignerState {
 
 export type DesignerAction =
   | { type: 'selectProduct'; product: Product }
-  | { type: 'selectColor'; colorSlug: string }
   | { type: 'setDesign'; design: Design }
-  | { type: 'resetDesign' }
+  | { type: 'useSample' }
+  | { type: 'removeDesign' }
   | { type: 'fileError'; error: boolean }
   | { type: 'setSell'; value: number; live?: boolean }
   | { type: 'commitSell'; value: number }
   | { type: 'setDaily'; value: number };
 
-/** Default colour: white for tees and hoodie so the sample design is visible (BRD 6.4.3). */
+/**
+ * The designer shows every product in one colour (BRD 6.4.3, amended 2026-09-13): white,
+ * or the product's only colour (the tote's beige).
+ */
 export function defaultColor(product: Product): string {
   return product.colors.find((c) => c.slug === 'white')?.slug ?? product.colors[0]?.slug ?? 'white';
 }
@@ -48,7 +52,7 @@ export function initialState(product: Product): DesignerState {
   return {
     product,
     colorSlug: defaultColor(product),
-    design: { ...SAMPLE_DESIGN, kind: 'sample' },
+    design: null,
     sellPrice: product.suggestedPrice,
     dailySales: 10,
     belowCost: false,
@@ -74,12 +78,13 @@ export function reducer(state: DesignerState, action: DesignerAction): DesignerS
         live: false,
       };
     }
-    case 'selectColor':
-      return { ...state, colorSlug: action.colorSlug };
     case 'setDesign':
       return { ...state, design: action.design, fileError: false };
-    case 'resetDesign':
+    case 'useSample':
       return { ...state, design: { ...SAMPLE_DESIGN, kind: 'sample' }, fileError: false };
+    case 'removeDesign':
+      if (state.design?.kind === 'upload') URL.revokeObjectURL(state.design.url);
+      return { ...state, design: null, fileError: false };
     case 'fileError':
       return { ...state, fileError: action.error };
     case 'setSell': {

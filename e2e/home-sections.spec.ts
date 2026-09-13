@@ -56,28 +56,42 @@ test.describe('steps (BRD 6.4.4)', () => {
   });
 });
 
-test.describe('video (BRD 6.4.5)', () => {
-  test('poster then a controlled video after play, tracked once', async ({ page, browserName }) => {
+test.describe('video (BRD 6.4.5, amended 2026-09-13)', () => {
+  test('poster and copy are server-rendered; a muted loop plays once the section is near', async ({
+    page,
+  }) => {
+    await page.goto('/');
+    const section = page.locator('#video');
+    await expect(section.locator('h2')).toHaveText('شاهد كيف نطبع طلبك');
+    await expect(section.locator('img[alt]:not([alt=""])')).toHaveCount(1);
+    await expect(section.locator('video')).toHaveCount(0);
+    await section.scrollIntoViewIfNeeded();
+    const video = page.getByTestId('video');
+    await expect(video).toHaveAttribute('loop', '');
+    await expect(video).toHaveAttribute('playsinline', '');
+    await expect(video).toHaveAttribute('aria-hidden', 'true');
+    await expect(video).not.toHaveAttribute('controls');
+    expect(await video.evaluate((v: HTMLVideoElement) => v.muted)).toBe(true);
+    await expect
+      .poll(() => video.evaluate((v: HTMLVideoElement) => !v.paused || v.currentTime > 0), {
+        timeout: 10_000,
+      })
+      .toBe(true);
+    await expect(section.getByRole('link', { name: 'ابدأ براندك مجانًا' })).toHaveAttribute(
+      'href',
+      /utm_campaign=video/,
+    );
+  });
+
+  test('reduced motion keeps the poster and never mounts the video', async ({ browser }) => {
+    const ctx = await browser.newContext({ reducedMotion: 'reduce' });
+    const page = await ctx.newPage();
     await page.goto('/');
     await page.locator('#video').scrollIntoViewIfNeeded();
+    await page.waitForTimeout(1200);
     await expect(page.locator('#video video')).toHaveCount(0);
-    const play = page.getByTestId('video-play');
-    await expect(play).toBeVisible();
-    await play.click();
-    const video = page.getByTestId('video');
-    await expect(video).toHaveAttribute('controls', '');
-    await expect(video).toHaveAttribute('playsinline', '');
-    await expect(video).not.toHaveAttribute('autoplay');
-    await expect(video).not.toHaveAttribute('loop');
-    if (browserName === 'webkit') {
-      await expect
-        .poll(() => video.evaluate((v: HTMLVideoElement) => !v.paused || v.currentTime > 0))
-        .toBe(true);
-    }
-    const events = await page.evaluate(
-      () => (window as { __umamiEvents?: Array<{ name: string }> }).__umamiEvents ?? [],
-    );
-    expect(events.filter((e) => e.name === 'video_play')).toHaveLength(1);
+    await expect(page.locator('#video img[alt]:not([alt=""])')).toHaveCount(1);
+    await ctx.close();
   });
 });
 

@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { type ReactNode, useState } from 'react';
+import { Card } from '@/components/shared/card';
 import type { ProductColor } from '@/content/schema';
 import { cn } from '@/lib/cn';
 
@@ -25,11 +26,13 @@ interface ProductCardMediaProps {
 }
 
 /**
- * Card interior (BRD 6.5, amended 2026-09-13, ADR-035): the photo and the name both link to
- * the product; two colour swatches sit in the footer. Hovering a swatch previews that
- * colour, clicking it makes it the active colour; hovering the photo shows the back of the
- * active colour when there is one. Before hydration the first colour renders front and
- * back, so a no-JS visitor sees today's card.
+ * The card (BRD 6.5, amended 2026-09-13, ADR-035): the name is a stretched link that makes
+ * the whole card clickable; two colour swatches sit above it in the footer. Hovering a
+ * swatch previews that colour (and pauses the flip through `data-preview`), clicking it
+ * makes it the active colour; hovering the card shows the back of the active colour when
+ * there is one. Changing `src` in place keeps the previous photo painted until the next one
+ * decodes. Before hydration the first colour renders front and back, so a no-JS visitor
+ * sees today's card.
  */
 export function ProductCardMedia({
   colors,
@@ -51,18 +54,14 @@ export function ProductCardMedia({
   const swatches = colors.slice(0, 2);
 
   return (
-    <>
-      {/* The photo is a second link to the product, hidden from assistive tech (the name link
-          below is the accessible one); `group/photo` scopes the flip to the photo alone. */}
-      <Link
-        href={href}
-        aria-hidden="true"
-        tabIndex={-1}
-        className="group/photo relative block aspect-[4/5] overflow-hidden bg-ground"
-        data-card-photo={shown.slug}
-      >
+    <Card
+      hoverable
+      className="group relative flex h-full flex-col overflow-hidden"
+      data-product-card={slug}
+      data-preview={preview ? '' : undefined}
+    >
+      <div className="relative aspect-[4/5] overflow-hidden bg-ground" data-card-photo={shown.slug}>
         <Image
-          key={`${shown.slug}-front`}
           src={shown.images.front}
           alt={alt}
           fill
@@ -70,33 +69,36 @@ export function ProductCardMedia({
           priority={priority}
           className={cn(
             'object-cover transition-opacity duration-(--duration-slow) ease-(--ease-standard)',
-            shown.images.back && 'group-hover/photo:opacity-0',
+            shown.images.back &&
+              'group-hover:opacity-0 group-focus-within:opacity-0 group-data-[preview]:opacity-100',
           )}
         />
         {shown.images.back && (
           <Image
-            key={`${shown.slug}-back`}
             src={shown.images.back}
             alt=""
             fill
             sizes={SIZES}
-            className="object-cover opacity-0 transition-opacity duration-(--duration-slow) ease-(--ease-standard) group-hover/photo:opacity-100"
+            className="object-cover opacity-0 transition-opacity duration-(--duration-slow) ease-(--ease-standard) group-hover:opacity-100 group-focus-within:opacity-100 group-data-[preview]:opacity-0"
           />
         )}
-      </Link>
+      </div>
       <div className="flex flex-1 flex-col gap-3 p-5">
         <Heading className="text-h4 text-text">
+          {/* Stretched link: its pseudo-element covers the card, so the whole card navigates
+              while the name stays the link's accessible name. */}
           <Link
             href={href}
             data-slug={slug}
-            className="rounded-inner focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+            className="after:absolute after:inset-0 after:rounded-base focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-primary/40"
           >
             {name}
           </Link>
         </Heading>
         {price}
         <div className="mt-auto flex items-center justify-between gap-3 text-small text-text-muted">
-          <ul className="flex items-center gap-2" aria-label={swatchesLabel}>
+          {/* Above the stretched link (z-10): the swatches act without navigating. */}
+          <ul className="relative z-10 flex items-center gap-2" aria-label={swatchesLabel}>
             {swatches.map((c) => (
               <li key={c.slug}>
                 <button
@@ -130,6 +132,6 @@ export function ProductCardMedia({
           <bdi className="tabular">{sizesSummary}</bdi>
         </div>
       </div>
-    </>
+    </Card>
   );
 }

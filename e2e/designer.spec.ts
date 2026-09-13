@@ -10,6 +10,7 @@ declare global {
           position: (p?: { x: number; y: number }) => { x: number; y: number };
           fire: (evt: string, e?: unknown, bubbles?: boolean) => void;
           getStage: () => { container: () => HTMLElement };
+          isVisible: () => boolean;
         } | null;
       }>;
     };
@@ -24,6 +25,11 @@ async function openDesigner(page: Page) {
   await page.goto('/');
   await page.locator('#designer').scrollIntoViewIfNeeded();
   await page.waitForSelector('[data-designer-island] canvas', { timeout: 15_000 });
+}
+
+/** The print area starts empty (ADR-036); most tests want the sample design placed. */
+async function placeSample(page: Page) {
+  await page.locator('[data-design-sample]').click();
   await page.waitForFunction(() => !!window.Konva?.stages[0]?.findOne('#design'));
 }
 
@@ -47,14 +53,27 @@ test.describe('designer and profit calculator (BRD 6.4.3)', () => {
     expect(await page.evaluate(() => typeof window.Konva)).toBe('object');
   });
 
-  test('shows the sample design by default and the BRD example figures', async ({ page }) => {
+  test('starts with the upload prompt on the print area, white only, and the BRD example figures', async ({
+    page,
+  }) => {
     await openDesigner(page);
     await expect(digits(page, 'per-piece')).toHaveText('44');
-    await expect(digits(page, 'monthly')).toHaveText('13200');
+    await expect(digits(page, 'monthly')).toHaveText('13,200');
+    await expect(page.locator('[data-print-area-prompt]')).toContainText(
+      'اضغط لرفع شعارك أو صورتك',
+    );
+    await expect(page.locator('[data-designer-island] input[name="designer-color"]')).toHaveCount(
+      0,
+    );
+    expect(
+      await page.evaluate(() => window.Konva?.stages[0]?.findOne('#design') ?? null),
+    ).toBeNull();
+    await placeSample(page);
     const rect = await page.evaluate(() =>
       window.Konva!.stages[0]!.findOne('#design')!.getClientRect(),
     );
     expect(rect.width).toBeGreaterThan(40);
+    await expect(page.locator('[data-print-area-prompt]')).toHaveCount(0);
   });
 
   test('warns below cost and shows zero at cost', async ({ page }) => {
@@ -83,14 +102,15 @@ test.describe('designer and profit calculator (BRD 6.4.3)', () => {
     await expect(page.getByLabel('سعر البيع بالريال')).toHaveValue('189');
     await expect(digits(page, 'per-piece')).toHaveText('94');
     await page.getByRole('button', { name: 'زد المبيعات اليومية' }).click();
-    await expect(digits(page, 'monthly')).toHaveText(String(94 * 11 * 30));
+    await expect(digits(page, 'monthly')).toHaveText('31,020');
     await expect(
       page.locator('[data-designer-island] a[data-location="designer"]').first(),
     ).toHaveAttribute('href', /utm_campaign=designer&product=hoodie/);
   });
 
-  test('uploads a PNG in memory, rejects unsupported files, resets to the sample', async ({
+  test('uploads a PNG through the print area in memory, removes it with «×», rejects bad files', async ({
     page,
+    isMobile,
   }) => {
     await openDesigner(page);
     const uploads: string[] = [];
@@ -98,20 +118,65 @@ test.describe('designer and profit calculator (BRD 6.4.3)', () => {
       if (r.method() !== 'GET') uploads.push(r.url());
     });
     await page.getByLabel('ارفع ملف التصميم').setInputFiles('e2e/fixtures/design.png');
-    await expect(page.getByRole('button', { name: 'غيّر التصميم' })).toBeVisible();
+    await page.waitForFunction(() => !!window.Konva?.stages[0]?.findOne('#design'));
+    await expect(page.locator('[data-print-area-prompt]')).toHaveCount(0);
     expect(uploads).toEqual([]);
-    await page.getByRole('button', { name: 'إعادة الضبط' }).click();
-    await expect(page.getByRole('button', { name: 'جرّب تصميماً جاهزاً' })).toBeVisible();
+    // The «×» shows with the edit chrome: hover on desktop, a tap on the design on touch.
+    const remove = page.locator('[data-design-remove]');
+    const canvas = page.locator('[data-designer-island] canvas').last();
+    if (isMobile) {
+      await expect(remove).toHaveCSS('opacity', '0');
+      await canvas.tap();
+    } else {
+      await canvas.hover();
+    }
+    await expect(remove).toHaveCSS('opacity', '1');
+    await remove.click();
+    await expect(page.locator('[data-print-area-prompt]')).toBeVisible();
     await page.getByLabel('ارفع ملف التصميم').setInputFiles('e2e/fixtures/not-an-image.txt');
-    await expect(page.locator('p[role="alert"]')).toHaveText(
+    await expect(page.locator('[data-print-area-prompt] [role="alert"]')).toHaveText(
       'الملف غير مدعوم أو أكبر من 10 ميجابايت.',
     );
+  });
+
+  test('edit chrome shows only while the pointer is inside or the design is selected', async ({
+    page,
+    isMobile,
+  }) => {
+    await openDesigner(page);
+    await placeSample(page);
+    const canvas = page.locator('[data-designer-island] canvas').last();
+    const host = page.locator('[data-design-dropzone]');
+    const remove = page.locator('[data-design-remove]');
+    // Centre the canvas so neither the sticky header nor the results bar covers a tap.
+    await canvas.evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }));
+    await page.waitForTimeout(300);
+    await page.mouse.move(0, 0);
+    await expect(host).toHaveAttribute('data-chrome', 'false');
+    await expect(remove).toHaveCSS('opacity', '0');
+    if (isMobile) {
+      const box = (await canvas.boundingBox())!;
+      const pos = await page.evaluate(() =>
+        window.Konva!.stages[0]!.findOne('#design')!.getAbsolutePosition(),
+      );
+      await page.touchscreen.tap(box.x + pos.x, box.y + pos.y);
+      await expect(host).toHaveAttribute('data-chrome', 'true');
+      // A tap on the mockup outside the design (the print area is centred) clears the selection.
+      await page.touchscreen.tap(box.x + 12, box.y + box.height / 2);
+      await expect(host).toHaveAttribute('data-chrome', 'false');
+    } else {
+      await canvas.hover();
+      await expect(host).toHaveAttribute('data-chrome', 'true');
+      await page.mouse.move(0, 0);
+      await expect(host).toHaveAttribute('data-chrome', 'false');
+    }
   });
 
   test('drag moves the design and it snaps back when dragged mostly outside the area', async ({
     page,
   }) => {
     await openDesigner(page);
+    await placeSample(page);
     const canvas = page.locator('[data-designer-island] canvas').last();
     // Centre the canvas so neither the sticky results bar nor the widget sits under the pointer.
     await canvas.evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }));

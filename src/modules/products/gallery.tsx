@@ -26,8 +26,9 @@ interface GalleryProps {
 /**
  * Product gallery (BRD 6.6, amended 2026-09-13): one 1:1 photo of the active colour that
  * shows the back while hovered (pointer) or after a tap/click/Enter (touch, keyboard —
- * ArrowLeft/ArrowRight flip too); swatches below switch the colour. No thumbnails, no
- * counter: a visually hidden live region announces colour and side for screen readers.
+ * ArrowLeft/ArrowRight flip too), a visible front/back toggle under it so the back is
+ * discoverable on a phone, and the colour swatches. No thumbnails, no counter: a visually
+ * hidden live region announces colour and side for screen readers.
  */
 export function Gallery({ productName, colors, copy }: GalleryProps) {
   const id = useId();
@@ -64,7 +65,6 @@ export function Gallery({ productName, colors, copy }: GalleryProps) {
         data-gallery-side={showBack ? 'back' : 'front'}
       >
         <Image
-          key={`${color.slug}-front`}
           src={color.images.front}
           alt={`${productName} — ${color.name}، ${copy.front}`}
           fill
@@ -77,7 +77,6 @@ export function Gallery({ productName, colors, copy }: GalleryProps) {
         />
         {color.images.back && (
           <Image
-            key={`${color.slug}-back`}
             src={color.images.back}
             alt={`${productName} — ${color.name}، ${copy.back}`}
             fill
@@ -93,6 +92,30 @@ export function Gallery({ productName, colors, copy }: GalleryProps) {
       <p id={`${id}-state`} aria-live="polite" className="sr-only">
         {color.name}، {side}
       </p>
+      {hasBack && (
+        <div className="flex gap-2" role="group" aria-label={copy.flip}>
+          {(['front', 'back'] as const).map((view) => {
+            const on = view === 'back' ? flipped : !flipped;
+            return (
+              <button
+                key={view}
+                type="button"
+                aria-pressed={on}
+                onClick={() => setFlipped(view === 'back')}
+                data-gallery-view={view}
+                className={cn(
+                  'inline-flex h-9 items-center rounded-pill border px-4 text-small font-medium transition-colors duration-(--duration-fast)',
+                  on
+                    ? 'border-primary bg-accent-tint text-primary'
+                    : 'border-border bg-surface text-text hover:border-text-muted',
+                )}
+              >
+                {view === 'front' ? copy.front : copy.back}
+              </button>
+            );
+          })}
+        </div>
+      )}
       <ColorPicker
         name="gallery-color"
         colors={colors}

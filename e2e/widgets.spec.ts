@@ -14,10 +14,11 @@ test.describe('WhatsApp widget (BRD 6.15)', () => {
     await button.click();
     const panel = page.getByTestId('whatsapp-panel');
     await expect(panel).toBeVisible();
-    // The panel anchors above the button; the button itself stays put.
+    // The panel anchors above the button; the button itself stays put (its centre is
+    // compared because a tap leaves the hover scale on touch browsers).
     const after = (await button.boundingBox())!;
-    expect(Math.abs(after.x - box.x)).toBeLessThan(1);
-    expect(Math.abs(after.y - box.y)).toBeLessThan(1);
+    expect(Math.abs(after.x + after.width / 2 - (box.x + box.width / 2))).toBeLessThan(1);
+    expect(Math.abs(after.y + after.height / 2 - (box.y + box.height / 2))).toBeLessThan(1);
     const panelBox = (await panel.boundingBox())!;
     expect(panelBox.y + panelBox.height).toBeLessThanOrEqual(box.y + 1);
     await expect(panel).toContainText('فريق الدعم');

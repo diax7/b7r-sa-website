@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from 'react';
 
-/** Loads an image element for Konva; `null` until decoded (no `use-image` dependency). */
-export function useImage(src: string): HTMLImageElement | null {
+/** Loads an image element for Konva; `null` until decoded, or while `src` is empty. */
+export function useImage(src: string | null): HTMLImageElement | null {
   const [image, setImage] = useState<HTMLImageElement | null>(null);
 
   useEffect(() => {
+    if (!src) return undefined;
     let cancelled = false;
     const img = new Image();
     img.decoding = 'async';

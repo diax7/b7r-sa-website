@@ -3,7 +3,7 @@
  * `utm_source=b7r.sa&utm_medium=website&utm_campaign=<campaign>` plus optional content.
  */
 export interface RegisterUrlOptions {
-  campaign: 'header' | 'hero' | 'designer' | 'ribbon' | 'product' | 'menu';
+  campaign: 'header' | 'hero' | 'designer' | 'video' | 'ribbon' | 'product' | 'menu';
   content?: string;
   product?: string;
 }
