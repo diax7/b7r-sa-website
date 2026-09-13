@@ -231,6 +231,10 @@ while the schema moves.
 
 ## ADR-026 — Seed fixtures, create-only migration (2026-09-13)
 
+Amended 2026-09-13 (2b phase 2, ADR-031): the one exception to "never overwrites" — the
+seed removes the seven designed pages' rows from `seo-defaults` once those pages exist,
+with a log line, so their title and description have one source (the page's `seo` group).
+
 The Level 1 content files moved to `src/content/seed/*` unchanged (still schema-validated and
 BRD-verbatim tested). `scripts/migrate-content.ts` creates what is missing and never
 overwrites: a non-empty database is refused without `--force`, and `--force` only adds. The
@@ -374,13 +378,15 @@ that idea is closed.
 
 Phase 3 (2026-09-13) adds the redirects. `@payloadcms/plugin-redirects` provides the
 `redirects` collection (admin only, hidden from editors like the settings globals, Arabic
-labels laid over the plugin's fields); the seeded BRD §5.2 rows (`renamed`) are created as
-custom-URL rows for the admin's eyes, while `next.config` keeps answering them first with
-the exact 301/302 and the proxy keeps the 410 map — the two code lists are unchanged. A row
-added or changed in the admin is validated in `beforeValidate` (`redirectProblem`, pure and
+labels laid over the plugin's fields). The BRD §5.2 map stays in the code only
+(`next.config` answers it first with the exact 301/302, the proxy keeps the 410 map, the
+RUNBOOK lists it): seeding those rows into the admin was tried and dropped in review, because
+an editable row that `next.config` answers before the route is a control that does nothing.
+A row added in the admin is validated in `beforeValidate` (`redirectProblem`, pure and
 unit-tested: one lowercase segment as the source, never a code-owned segment such as
 `/about` or `/en`, a site path or an `https:` URL as the target, no self-target, no target
-that is another row's source) and resolves in the `[slug]` route: `resolveSlug` puts a
+that is another row's source; a page reference is checked as the path it resolves to, so
+two references cannot loop either) and resolves in the `[slug]` route: `resolveSlug` puts a
 redirect before a page of the same slug, `permanentRedirect()` answers 308 for 301 rows and
 `redirect()` 307 for 302 rows, cached by ISR and live within the allowlist window. The
 trade-off stands as planned: admin-added rows answer 308/307 rather than 301/302 (both
@@ -394,9 +400,11 @@ the proxy at once.
 Payload's jobs queue runs inside the Next process (BRD 9.6): `autoRun` on a one-minute
 cron with `shouldAutoRun: () => !isBuildPhase()` so `next build` never starts it, completed
 jobs deleted, and `access.run: () => false` so `/api/payload/payload-jobs/run` answers
-nobody — the cron is the only runner (e2e). The crons start with the first admin or REST
-request (`@payloadcms/next` initialises Payload with `cron: true`; the site's own Local API
-reads do not), which `/api/health` reports as `jobs: on | off`. Two things run on it.
+nobody — the cron is the only runner (e2e). The site's own Payload client (`cms()`)
+initialises with `cron: true`, so the first page render or health probe after a boot starts
+the runner — a boot invariant, not something the first admin visit does — and `/api/health`
+reports `jobs: on` plus `jobsFailed`, the count of jobs that exhausted their retries. Two
+things run on it.
 **Scheduled publish** (`schedulePublish: true` on `home`, `pages`, `products`,
 `testimonials`): the publish fires the same `afterChange` hooks, but from a job there is no
 request store, and when the cron fires inside a render's context Next refuses
@@ -408,8 +416,10 @@ retries with exponential backoff): queued by the products, pages, faqs, testimon
 integrations and global hooks with the routes they regenerated (pages only — never the
 sitemap, the manifest or an API path), but only when `B7R_RUNTIME=production` — the flag
 set solely in the CranL production app, never derived from the origin — and a valid
-`INDEXNOW_KEY` exist, so CI and previews never reach the endpoint; a queue failure is
-logged and the publish stands. `scripts/indexnow.ts` (the sitemap diff after a deploy)
+`INDEXNOW_KEY` exist, so CI and previews never reach the endpoint, and never on a draft
+save or autosave of a published document (`isDraftSave` reads the request's `draft` flag —
+an editor typing into a live page must not ping every 1.5 s); a queue failure is logged and
+the publish stands. `scripts/indexnow.ts` (the sitemap diff after a deploy)
 remains for the deploy-time submission.
 
 The build now marks `payload` as a `serverExternalPackages` entry: bundled and minified
@@ -419,6 +429,43 @@ so every expected 4xx logged at ERROR) and `instanceof` failed across chunks (th
 site raises on purpose throws `Refused` (an `APIError` subclass with its own name and the
 Arabic reason as the response message), filed under info by `loggingLevels`.
 
+
+## ADR-034 — Login gate, Resend for the admin's e-mail, backups in a private bucket (2026-09-13)
+
+**Login Turnstile** (BRD 9.3). The plan verified a token per login attempt inside
+`beforeOperation`; Turnstile tokens are single-use, so a mistyped password would have
+needed a fresh challenge on every retry. Shipped instead: the widget above the login form
+(`admin.components.beforeLogin`) executes once on mount and posts its token to
+`/api/turnstile/login` (JSON + same-origin, 10 per 10 min per IP), which verifies it with
+`siteverify` and answers a signed, HttpOnly, `SameSite=Lax` cookie scoped to `/api/payload`
+— `<exp>.<hmac>` over the Payload secret, ten minutes, refreshed by the widget before it
+expires. `users.hooks.beforeOperation` (`gateLogin`, login only) admits a request whose
+cookie verifies and throws a 401 with the Arabic reason before Payload touches the password
+or the attempt counter; no network call on the login path itself. Without
+`TURNSTILE_SECRET_KEY` the gate is open (204, no cookie, one warning at boot) so a fresh
+install can sign in, and `/api/health` shows `turnstile: off`. CI keeps the always-pass site
+key and no secret; the pure pieces (`makeLoginGate`, `verifyLoginGate`, `loginAllowed`) are
+unit-tested and the sign-in e2e asserts the widget opens the gate.
+
+**E-mail.** `@payloadcms/email-resend@3.89.0` is the adapter when `RESEND_API_KEY` and a
+valid `RESEND_FROM` («بحر برنت <no-reply@b7r.sa>» or a bare address) are set; otherwise
+Payload logs the message and the RUNBOOK's manual reset applies. The forgot-password mail
+is Arabic and right-to-left with one button to `/admin/reset/<token>` on the request's own
+origin; `/api/health` reports `email: resend | console`.
+
+**Backups** (BRD 9.8). `scripts/backup.sh` runs `pg_dump --format=custom` and uploads
+`YYYY-MM-DD.dump` with the AWS CLI to a **separate private bucket** with its own key pair
+(`BACKUP_S3_*`; endpoint/region fall back to the media bucket's) — never the public-read
+media bucket, which would hand password hashes and drafts to anyone guessing a date; the
+script refuses `BACKUP_S3_BUCKET = S3_BUCKET`. `.github/workflows/backup.yml` runs it
+weekly from the `production` environment (a notice, not a failure, while the secrets are
+unset). Retention is a lifecycle rule on the bucket (`mc ilm rule add --expire-days 30`,
+RUNBOOK). A backup that cannot be restored is not a backup, so CI rehearses one every run:
+`scripts/ci/restore-check.sh` dumps the seeded database, restores it into `b7r_restore`
+and counts products, pages, FAQ entries and media; the MinIO job uploads a real dump to a
+private `b7r-backups` bucket and asserts that an outsider gets 403 on the object and on the
+listing, and that the script refuses the media bucket. LAUNCH-CHECKLIST 25 carries the CI
+evidence; the once-off rehearsal from a CranL snapshot stays Dhia's.
 
 ## ADR-035 — Product cards carry a colour state; the gallery is one photo with a toggle (2026-09-13)
 

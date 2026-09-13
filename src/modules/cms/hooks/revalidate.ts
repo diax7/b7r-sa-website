@@ -91,6 +91,20 @@ type ChangeArgs = {
   previousDoc?: Record<string, unknown>;
 };
 
+/** A draft save or autosave (`?draft=true`; Payload parses the flag to a boolean). */
+export function isDraftSave(req: PayloadRequest): boolean {
+  const draft = req.query?.['draft'];
+  return draft === true || draft === 'true';
+}
+
+/**
+ * IndexNow is told about a publish, an unpublish or a delete — never a draft save of a
+ * published document, which regenerates the page (harmless) but must not ping (ADR-033).
+ */
+function pingWorthy(req: PayloadRequest, change: ChangeArgs): boolean {
+  return !isDraftSave(req) && isVisibleChange(change);
+}
+
 /**
  * A versioned document's change is visible when it is published now or was published
  * before (an unpublish, a slug change, a delete); a draft autosave or a draft delete of a
@@ -121,7 +135,7 @@ export const revalidateProducts: CollectionAfterChangeHook & CollectionAfterDele
   if (typeof previous?.slug === 'string') slugs.add(previous.slug);
   const paths = new Set([...slugs].flatMap((slug) => pathsForProduct(slug)));
   for (const path of paths) safeRevalidatePath(path);
-  await queueIndexNow(req, paths);
+  if (pingWorthy(req, { doc, ...rest })) await queueIndexNow(req, paths);
   return doc;
 };
 
@@ -150,7 +164,7 @@ export const revalidatePages: CollectionAfterChangeHook & CollectionAfterDeleteH
   if (typeof previous?.slug === 'string') slugs.add(previous.slug);
   const paths = new Set([...slugs].flatMap((slug) => pathsForPage(slug)));
   for (const path of paths) safeRevalidatePath(path);
-  await queueIndexNow(req, paths);
+  if (pingWorthy(req, { doc, ...rest })) await queueIndexNow(req, paths);
   return doc;
 };
 
@@ -180,7 +194,7 @@ export function revalidateRoutes(
     if (!shouldRevalidate(req)) return doc;
     if (!isVisibleChange({ doc, ...rest })) return doc;
     for (const path of paths) safeRevalidatePath(path);
-    await queueIndexNow(req, paths);
+    if (pingWorthy(req, { doc, ...rest })) await queueIndexNow(req, paths);
     return doc;
   };
 }
@@ -190,6 +204,6 @@ export const revalidateGlobal: GlobalAfterChangeHook = async ({ doc, previousDoc
   if (!shouldRevalidate(req)) return doc;
   if (!isVisibleChange({ doc, previousDoc })) return doc;
   for (const path of STATIC_ROUTES) safeRevalidatePath(path);
-  await queueIndexNow(req, STATIC_ROUTES);
+  if (pingWorthy(req, { doc, previousDoc })) await queueIndexNow(req, STATIC_ROUTES);
   return doc;
 };

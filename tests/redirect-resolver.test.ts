@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { resolveSlug, type SiteRedirect } from '@/lib/resolve-slug';
-import { redirectFields, redirectProblem } from '@/modules/cms/collections/redirects';
+import { redirectFields, redirectProblem, referenceId } from '@/modules/cms/collections/redirects';
 
 const redirects: SiteRedirect[] = [
   { from: '/showcase', to: '/products', permanent: true },
@@ -52,6 +52,19 @@ describe('redirectProblem: the rules an admin row must pass', () => {
     expect(redirectProblem('/old', custom('/old/x'), [])).toMatch(/المصدر نفسه/);
     expect(redirectProblem('/old', custom('/older'), ['/older'])).toMatch(/حلقات/);
     expect(redirectProblem('/old', custom('/older'), ['/other'])).toBeNull();
+  });
+
+  it('reads the page id out of a reference target so the same self/loop rules apply', () => {
+    expect(referenceId({ type: 'reference', reference: { relationTo: 'pages', value: 7 } })).toBe(
+      7,
+    );
+    expect(
+      referenceId({ type: 'reference', reference: { relationTo: 'pages', value: { id: 7 } } }),
+    ).toBe(7);
+    expect(referenceId({ type: 'custom', url: '/x' })).toBeUndefined();
+    // Resolved to its path, a reference loops like a custom URL would.
+    expect(redirectProblem('/a', custom('/b'), ['/b'])).toMatch(/حلقات/);
+    expect(redirectProblem('/x', custom('/x'), [])).toMatch(/المصدر نفسه/);
   });
 
   it('labels the plugin fields in Arabic without changing their names', () => {

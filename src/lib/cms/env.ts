@@ -7,6 +7,8 @@ export interface CmsEnv {
   databaseUrl: string;
   secret: string;
   serverUrl: string;
+  /** Resend for the admin's own e-mail (password resets); undefined → console. */
+  email: { apiKey: string; fromAddress: string; fromName: string } | undefined;
   s3:
     | {
         bucket: string;
@@ -47,7 +49,11 @@ export function cmsEnv(raw: Record<string, string | undefined> = process.env): C
           ),
         }
       : undefined;
+  const from = parseFrom(raw['RESEND_FROM']);
+  const email =
+    raw['RESEND_API_KEY'] && from ? { apiKey: raw['RESEND_API_KEY'], ...from } : undefined;
   return {
+    email,
     databaseUrl: raw['DATABASE_URL'] ?? '',
     secret: raw['PAYLOAD_SECRET'] ?? '',
     serverUrl:
@@ -59,4 +65,17 @@ export function cmsEnv(raw: Record<string, string | undefined> = process.env): C
 /** True while `next build` runs: hooks and start-up migrations must not touch production. */
 export function isBuildPhase(raw: Record<string, string | undefined> = process.env): boolean {
   return raw['NEXT_PHASE'] === 'phase-production-build';
+}
+
+/** `بحر برنت <no-reply@b7r.sa>` or a bare address → the adapter's name + address. */
+export function parseFrom(
+  value: string | undefined,
+): { fromAddress: string; fromName: string } | undefined {
+  if (!value) return undefined;
+  const match = /^\s*(?:"?([^"<]*?)"?\s*)?<([^<>\s]+@[^<>\s]+)>\s*$/.exec(value);
+  if (match) return { fromName: match[1]?.trim() || 'بحر برنت', fromAddress: match[2] ?? '' };
+  if (/^[^<>\s]+@[^<>\s]+$/.test(value.trim())) {
+    return { fromName: 'بحر برنت', fromAddress: value.trim() };
+  }
+  return undefined;
 }

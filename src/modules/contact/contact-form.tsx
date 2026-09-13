@@ -16,7 +16,7 @@ import {
   type ContactField,
   type ContactValues,
 } from '@/modules/contact/validate';
-import { useTurnstile } from '@/modules/contact/turnstile';
+import { useTurnstile } from '@/components/shared/use-turnstile';
 
 export interface ContactFormCopy {
   labels: { name: string; phone: string; email: string; inquiry: string; message: string };

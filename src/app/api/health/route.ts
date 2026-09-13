@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { databaseStatus, jobsStatus, mediaStorage } from '@/lib/cms/health';
+import { cmsEnv } from '@/lib/cms/env';
+import { databaseStatus, failedJobs, jobsStatus, mediaStorage } from '@/lib/cms/health';
 import { getContactTransport } from '@/lib/contact-transport';
 import { contactEnv } from '@/lib/env-server';
 import { indexNowKey } from '@/lib/indexnow';
@@ -23,6 +24,8 @@ export async function GET() {
     contact: getContactTransport().kind,
     turnstile: contactEnv().turnstileSecretKey ? 'on' : 'off',
     indexnow: indexNowKey() ? 'on' : 'off',
+    email: cmsEnv().email ? 'resend' : 'console',
     jobs: await jobsStatus(),
+    jobsFailed: await failedJobs(),
   });
 }

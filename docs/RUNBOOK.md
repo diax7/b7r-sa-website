@@ -107,7 +107,9 @@ GitHub push and the first CranL deploy wait for Dhia's approval (ADR-008). When 
    `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `S3_BUCKET`, `S3_REGION`, `S3_ENDPOINT`, `S3_PUBLIC_URL`).
    Until the two secrets exist the workflow ends with a notice and deploys nothing. The
    GitHub runner must reach the database (public endpoint with TLS, or an allow-list); the
-   fallback is building on CranL from the `Dockerfile` with the same secrets.
+   fallback is building on CranL from the `Dockerfile` with the same secrets. `payload` is a
+   `serverExternalPackages` entry (ADR-033): the standalone trace copies it from
+   `node_modules`, so a slimmer image must keep that directory.
    Release order: migrate (the workflow does it) → new image starts → old image stops;
    migrations are additive so both images run on the schema (ADR-025).
 3. Runtime environment: every row of the matrix below; the same `NEXT_PUBLIC_*` values as
@@ -174,18 +176,27 @@ Old URLs with a trailing slash take two hops (`/showcase/` → 308 `/showcase` �
 unless Dhia asks.
 
 Admin redirects (Settings → التحويلات, admins only, ADR-032): one lowercase segment as the
-source (`/old-name`), a page or a path/`https:` URL as the target, 301 or 302. The seeded
-BRD §5.2 rows are listed there for reference but still answered by `next.config` first; a
-row added in the admin answers 308 (301) or 307 (302) from `/[slug]` within a minute. The
-site refuses a source that is one of its own routes and any loop.
+source (`/old-name`), a page or a path/`https:` URL as the target, 301 or 302. A row added
+in the admin answers 308 (301) or 307 (302) from `/[slug]` within a minute. The BRD §5.2 map
+(`/showcase`, `/terms-conditions`, `/privacy-policy`, `/home-2`, `/en/*`) lives in
+`src/lib/redirects.ts` and `next.config` only; the site refuses an admin source that is one
+of its own routes and any loop.
 
 ## Jobs (scheduled publish, IndexNow)
 
-The queue runs inside the app on a one-minute cron once the first admin request has started
-it (`/api/health` → `jobs: on`); `/api/payload/payload-jobs/run` answers 403 to everyone by
+The queue runs inside the app on a one-minute cron from the first request after a boot
+(`/api/health` → `jobs: on`); `/api/payload/payload-jobs/run` answers 403 to everyone by
 design. A scheduled publish is applied by the cron and the page regenerates on the 60 s
 timer (the hook logs one `revalidatePath … skipped outside a request` line at info). Failed
-jobs stay in the `payload-jobs` table with their error; completed ones are deleted.
+jobs stay in the `payload-jobs` table with their error and show as `jobsFailed` in
+`/api/health`; clear one with `DELETE /api/payload/payload-jobs/<id>` as an admin after
+reading its `error`; completed ones are deleted.
+
+To rehearse a scheduled publish locally: create a draft page in the admin, open its
+«Schedule publish» drawer and pick a time a minute ahead (or, from a script,
+`payload.jobs.queue({ task: 'schedulePublish', waitUntil, input: { type: 'publish', doc: { relationTo: 'pages', value: id } } })`);
+within the next minute the log shows `Running 1 jobs.`, the document is published, and the
+page answers 200 within a minute more.
 
 ## IndexNow
 
@@ -198,6 +209,47 @@ request when `NEXT_PUBLIC_SITE_URL` or `INDEXNOW_KEY` is unset. Intended GitHub 
 on `main` once CranL deploys from it: fetch the live `sitemap.xml` before the deploy, poll
 `/api/health` until `version` matches `package.json`, fetch it again, run the script. Until
 then it is a manual step.
+
+## Admin login gate (Turnstile)
+
+With `NEXT_PUBLIC_TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY` set, the login page runs
+the challenge on load and `/api/turnstile/login` sets a ten-minute gate cookie; a login
+without it answers 401 «أكمل التحقق من أنك لست روبوتاً» (ADR-034). Without the secret the
+gate is open and the boot log says so once. If the widget fails (script blocked), refresh
+the page; the gate never sends the visitor to Cloudflare's servers from the login itself.
+
+## Password reset (admin)
+
+With `RESEND_API_KEY` + `RESEND_FROM` the «نسيت كلمة المرور» link sends the Arabic reset
+e-mail through Resend (`/api/health` → `email: resend`). Without them (`email: console`) the
+message is printed in the app log: read the `/admin/reset/<token>` link there, or set a new
+password from a machine with the secrets: `pnpm payload …` is not needed — the
+`admin:create` script only creates the first admin; use the admin UI as another admin
+(Users → the account → new password).
+
+## Backups and restore
+
+Weekly, `.github/workflows/backup.yml` (Sundays 03:00 UTC, or «Run workflow») runs
+`scripts/backup.sh`: `pg_dump --format=custom` → `s3://$BACKUP_S3_BUCKET/YYYY-MM-DD.dump`.
+The bucket is **private** with its own key pair (put + list only); never the media bucket
+— the script refuses it. Retention: a lifecycle rule on the bucket, e.g.
+`mc ilm rule add --expire-days 30 cranl/b7r-backups` (or the provider's console). Set the
+five `BACKUP_S3_*` secrets in the `production` environment; until then the workflow ends
+with a notice.
+
+Restore into a scratch database (the CI rehearsal `scripts/ci/restore-check.sh` does the
+same on every run):
+
+```bash
+aws --endpoint-url "$BACKUP_S3_ENDPOINT" s3 cp "s3://$BACKUP_S3_BUCKET/2026-09-13.dump" ./backup.dump
+psql "$ADMIN_URL" -c 'CREATE DATABASE b7r_restore;'
+pg_restore --no-owner --no-privileges --dbname "$SCRATCH_URL" ./backup.dump
+psql "$SCRATCH_URL" -c 'select count(*) from pages;'   # 7 or more
+```
+
+To restore production itself: stop the app, restore into a fresh database the same way,
+point `DATABASE_URL` at it, run `pnpm migrate` (no-op when the dump is current), start the
+app. Media lives in the S3 bucket and is not part of the dump.
 
 ## Contact form
 

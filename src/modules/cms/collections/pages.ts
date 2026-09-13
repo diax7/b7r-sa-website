@@ -4,7 +4,7 @@ import { CODE_TOP_LEVEL } from '@/lib/site-routes';
 import { canDeleteVersioned, isEditorOrAdmin, publishedOrStaff } from '@/modules/cms/access';
 import { Refused } from '@/modules/cms/refused';
 import { PAGE_BLOCKS } from '@/modules/cms/blocks';
-import { revalidatePages } from '@/modules/cms/hooks/revalidate';
+import { isDraftSave, revalidatePages } from '@/modules/cms/hooks/revalidate';
 
 /** Slugs a page may never take: every code-owned segment except the seven designed pages. */
 export const FORBIDDEN_PAGE_SLUGS: readonly string[] = CODE_TOP_LEVEL.filter(
@@ -57,12 +57,11 @@ export const Pages: CollectionConfig = {
         // …and stay published: «Unpublish» writes `_status: draft` to the main row (no
         // `draft=true` on the request), which would leave the route with nothing to render.
         // A draft save or autosave (`?draft=true`) creates a version and passes.
-        const draftSave = req.query?.['draft'] === true || req.query?.['draft'] === 'true';
         const unpublishing =
           isReserved &&
           data?.['_status'] === 'draft' &&
           originalDoc?.['_status'] === 'published' &&
-          !draftSave;
+          !isDraftSave(req);
         if (unpublishing) {
           throw new Refused('هذه الصفحة ثابتة في الموقع؛ لا يمكن إلغاء نشرها');
         }

@@ -1,6 +1,8 @@
 import type { CollectionConfig } from 'payload';
 import { passwordProblem } from '@/lib/pwned';
 import { adminField, isAdmin, isAdminOrSelf } from '@/modules/cms/access';
+import { gateLogin } from '@/modules/cms/auth/login-gate';
+import { generateResetHtml, generateResetSubject } from '@/modules/cms/auth/reset-email';
 import { Refused } from '@/modules/cms/refused';
 
 const LOCK_MINUTES = 15;
@@ -36,6 +38,11 @@ export const Users: CollectionConfig = {
       sameSite: 'Lax',
       secure: process.env.NODE_ENV === 'production',
     },
+    // The Arabic reset e-mail (ADR-034); sent through Resend when configured.
+    forgotPassword: {
+      generateEmailSubject: generateResetSubject,
+      generateEmailHTML: generateResetHtml,
+    },
   },
   admin: {
     useAsTitle: 'name',
@@ -50,6 +57,8 @@ export const Users: CollectionConfig = {
     delete: isAdmin,
   },
   hooks: {
+    // The login gate runs before the password check and the attempt counter (ADR-034).
+    beforeOperation: [gateLogin],
     beforeValidate: [({ data }) => enforcePasswordPolicy(data).then(() => data)],
   },
   fields: [

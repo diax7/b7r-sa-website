@@ -27,7 +27,7 @@ async function recordViolations(page: Page) {
 }
 
 type HomeDoc = {
-  hero: { microcopy: string };
+  ribbon: { lead: string };
   whyUs: { enabled?: boolean };
   _status?: string;
 };
@@ -109,6 +109,17 @@ test.describe('CMS admin', () => {
     const html = page.locator('html');
     await expect(html).toHaveAttribute('lang', 'ar');
     await expect(html).toHaveAttribute('dir', /rtl/i);
+    // The login gate (ADR-034): the widget renders with a site key and opens the gate; the
+    // verify endpoint answers 204 with no cookie while the Turnstile secret is unset.
+    if (process.env['NEXT_PUBLIC_TURNSTILE_SITE_KEY']) {
+      await expect(page.locator('[data-login-turnstile]')).toBeAttached();
+      await expect(page.locator('[data-login-turnstile="ok"]')).toBeAttached({ timeout: 20_000 });
+    }
+    const gate = await request.post('/api/turnstile/login', {
+      data: { token: 'x' },
+      headers: { Origin: new URL(page.url()).origin },
+    });
+    expect(gate.status()).toBe(204);
     await page.locator('#field-email').fill(admin.email);
     await page.locator('#field-password').fill(admin.password);
     await page.locator('form button[type="submit"]').click();
@@ -326,38 +337,33 @@ test.describe('CMS admin', () => {
    * overlap a public assertion on another worker.
    */
   test.describe('content: home, faqs, testimonials, integrations', () => {
-    test('a published hero line is live at once; a draft never reaches the site', async ({
+    test('a published ribbon line is live at once; a draft never reaches the site', async ({
       request,
     }) => {
       test.setTimeout(150_000);
       const auth = await login(request, ADMIN);
       const original = await readHome(request, auth);
-      const microcopy = original.hero.microcopy;
-      expect(microcopy).toBeTruthy();
+      // The ribbon's lead line is on every page; no other suite asserts on it.
+      const lead = original.ribbon.lead;
+      expect(lead).toBeTruthy();
       const stamp = `e2e ${Date.now()}`;
-      const withMicrocopy = (text: string): HomeDoc => ({
+      const withLead = (text: string): HomeDoc => ({
         ...original,
-        hero: { ...original.hero, microcopy: text },
+        ribbon: { ...original.ribbon, lead: text },
       });
       try {
         expect(
-          (
-            await saveHome(request, auth, withMicrocopy(`${microcopy} ${stamp}`), 'published')
-          ).status(),
+          (await saveHome(request, auth, withLead(`${lead} ${stamp}`), 'published')).status(),
         ).toBe(200);
         await expect.poll(shows(request, '/', stamp), POLL).toBe(true);
         // A draft autosave on top of the published copy: the site keeps the published line.
         const draftStamp = `${stamp} draft`;
-        expect((await saveHome(request, auth, withMicrocopy(draftStamp), 'draft')).status()).toBe(
-          200,
-        );
+        expect((await saveHome(request, auth, withLead(draftStamp), 'draft')).status()).toBe(200);
         await new Promise((r) => setTimeout(r, 2_500));
         expect(await shows(request, '/', draftStamp)()).toBe(false);
         expect(await shows(request, '/', stamp)()).toBe(true);
       } finally {
-        expect(
-          (await saveHome(request, auth, withMicrocopy(microcopy), 'published')).status(),
-        ).toBe(200);
+        expect((await saveHome(request, auth, withLead(lead), 'published')).status()).toBe(200);
       }
       await expect.poll(shows(request, '/', stamp), POLL).toBe(false);
     });

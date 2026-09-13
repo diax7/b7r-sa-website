@@ -1,6 +1,7 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { postgresAdapter } from '@payloadcms/db-postgres';
+import { resendAdapter } from '@payloadcms/email-resend';
 import { redirectsPlugin } from '@payloadcms/plugin-redirects';
 import { lexicalEditor } from '@payloadcms/richtext-lexical';
 import { s3Storage } from '@payloadcms/storage-s3';
@@ -58,6 +59,8 @@ export default buildConfig({
         Logo: '@/modules/cms/components/logo#Logo',
         Icon: '@/modules/cms/components/logo#Icon',
       },
+      // The Turnstile widget above the login form (ADR-034).
+      beforeLogin: ['@/modules/cms/auth/login-turnstile#LoginTurnstile'],
     },
     importMap: { baseDir: path.resolve(dirname, '../..') },
   },
@@ -71,6 +74,17 @@ export default buildConfig({
     fallback: true,
   },
   editor: lexicalEditor(),
+  // Password resets go out through Resend when configured (ADR-034); otherwise Payload logs
+  // the e-mail and the RUNBOOK's manual reset applies.
+  ...(env.email
+    ? {
+        email: resendAdapter({
+          apiKey: env.email.apiKey,
+          defaultFromAddress: env.email.fromAddress,
+          defaultFromName: env.email.fromName,
+        }),
+      }
+    : {}),
   collections: [Users, Media, Products, Pages, Faqs, Testimonials, Integrations],
   globals: [Home, SiteSettings, Navigation, SeoDefaults],
   db: postgresAdapter({

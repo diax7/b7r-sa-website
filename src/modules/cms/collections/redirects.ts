@@ -10,6 +10,15 @@ export const FROM_PATTERN = /^\/[a-z0-9-]{1,64}$/;
 export interface RedirectTarget {
   type: 'custom' | 'reference';
   url?: string | null;
+  /** A page reference: its id (or the populated document) as the admin sends it. */
+  reference?: { relationTo?: string; value?: number | string | { id?: number | string } } | null;
+}
+
+/** The page id a reference target points at, or undefined. */
+export function referenceId(to: RedirectTarget | undefined): number | string | undefined {
+  if (to?.type !== 'reference' || !to.reference?.value) return undefined;
+  const value = to.reference.value;
+  return typeof value === 'object' ? value.id : value;
 }
 
 /**
@@ -81,7 +90,19 @@ export const REDIRECT_OVERRIDES: Omit<Partial<CollectionConfig>, 'fields'> & {
     beforeValidate: [
       async ({ data, originalDoc, req }) => {
         const from = data?.['from'] ?? originalDoc?.['from'];
-        const to = (data?.['to'] ?? originalDoc?.['to']) as RedirectTarget | undefined;
+        let to = (data?.['to'] ?? originalDoc?.['to']) as RedirectTarget | undefined;
+        // A page reference is checked as the path it will resolve to (self and loops).
+        const pageId = referenceId(to);
+        if (pageId !== undefined) {
+          const page = await req.payload.findByID({
+            collection: 'pages',
+            id: pageId,
+            depth: 0,
+            draft: true,
+            req,
+          });
+          to = { type: 'custom', url: `/${page.slug}` };
+        }
         const others = await req.payload.find({
           collection: 'redirects',
           where: originalDoc?.['id'] ? { id: { not_equals: originalDoc['id'] } } : {},

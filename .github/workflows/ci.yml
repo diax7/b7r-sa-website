@@ -97,6 +97,11 @@ jobs:
       - name: Seed content and the first admin (integration check)
         run: bash scripts/ci/seed-check.sh
 
+      # A backup that cannot be restored is not a backup (ADR-034): dump the seeded database
+      # the way scripts/backup.sh does, restore into a scratch database, count the documents.
+      - name: Restore rehearsal
+        run: bash scripts/ci/restore-check.sh
+
       - name: Build
         run: pnpm build
 
@@ -166,7 +171,7 @@ jobs:
             quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z server /data
           for _ in $(seq 1 30); do curl -sf http://localhost:9000/minio/health/live && break; sleep 1; done
           docker run --rm --network host --entrypoint sh quay.io/minio/mc:RELEASE.2025-08-13T08-35-41Z -c \
-            "mc alias set ci http://localhost:9000 $S3_ACCESS_KEY_ID $S3_SECRET_ACCESS_KEY && mc mb --ignore-existing ci/$S3_BUCKET && mc anonymous set download ci/$S3_BUCKET"
+            "mc alias set ci http://localhost:9000 $S3_ACCESS_KEY_ID $S3_SECRET_ACCESS_KEY && mc mb --ignore-existing ci/$S3_BUCKET && mc anonymous set download ci/$S3_BUCKET && mc mb --ignore-existing ci/b7r-backups"
 
       - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
 
@@ -183,6 +188,26 @@ jobs:
           pnpm migrate
           pnpm content:migrate
           pnpm admin:create
+
+      # The backup lands in a PRIVATE bucket (ADR-034): the script refuses the media bucket,
+      # and an outsider can neither list the bucket nor read the dump.
+      - name: Backup to the private bucket and check it from the outside
+        env:
+          BACKUP_S3_BUCKET: b7r-backups
+          BACKUP_S3_ACCESS_KEY_ID: ${{ env.S3_ACCESS_KEY_ID }}
+          BACKUP_S3_SECRET_ACCESS_KEY: ${{ env.S3_SECRET_ACCESS_KEY }}
+        run: |
+          pipx install awscli --quiet 2>/dev/null || pip install --quiet --user awscli
+          bash scripts/backup.sh
+          stamp=$(date -u +%Y-%m-%d)
+          code=$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:9000/b7r-backups/$stamp.dump")
+          list=$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:9000/b7r-backups/")
+          echo "dump=$code list=$list"
+          [ "$code" = "403" ] && [ "$list" = "403" ] || { echo "the backup bucket is readable without credentials" >&2; exit 1; }
+          if BACKUP_S3_BUCKET="$S3_BUCKET" bash scripts/backup.sh; then
+            echo "the script accepted the media bucket" >&2
+            exit 1
+          fi
 
       - name: Build
         run: pnpm build

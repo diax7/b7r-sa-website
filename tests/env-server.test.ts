@@ -56,3 +56,33 @@ describe('production env gate (BRD 8.5)', () => {
     ).toThrow(/PAYLOAD_PUBLIC_SERVER_URL must be https:\/\/b7r\.sa/);
   });
 });
+
+describe('the admin e-mail adapter (ADR-034)', async () => {
+  const { cmsEnv, parseFrom } = await import('@/lib/cms/env');
+  const base = { DATABASE_URL: 'postgres://x', PAYLOAD_SECRET: 'a'.repeat(40) };
+
+  it('parses «name <address>» and bare addresses; refuses anything else', () => {
+    expect(parseFrom('بحر برنت <no-reply@b7r.sa>')).toEqual({
+      fromName: 'بحر برنت',
+      fromAddress: 'no-reply@b7r.sa',
+    });
+    expect(parseFrom('no-reply@b7r.sa')).toEqual({
+      fromName: 'بحر برنت',
+      fromAddress: 'no-reply@b7r.sa',
+    });
+    expect(parseFrom('not an address')).toBeUndefined();
+    expect(parseFrom(undefined)).toBeUndefined();
+  });
+
+  it('is on only with a key and a valid sender', () => {
+    expect(cmsEnv(base).email).toBeUndefined();
+    expect(cmsEnv({ ...base, RESEND_API_KEY: 're_x' }).email).toBeUndefined();
+    expect(
+      cmsEnv({ ...base, RESEND_API_KEY: 're_x', RESEND_FROM: 'بحر برنت <a@b7r.sa>' }).email,
+    ).toEqual({
+      apiKey: 're_x',
+      fromName: 'بحر برنت',
+      fromAddress: 'a@b7r.sa',
+    });
+  });
+});

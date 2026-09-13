@@ -68,12 +68,20 @@ Each phase ends with a CTO code review before the next starts.
   `tests/indexnow-job.test.ts`.
 
 ## Phase 4 — login Turnstile, e-mail, backups, polish, docs
-- [ ] T401 Login Turnstile: `beforeLogin` widget component, cookie, `beforeOperation` verify
-  (fail-open without keys), unit + e2e with the stub.
-- [ ] T402 `@payloadcms/email-resend` adapter, Arabic reset e-mail, RUNBOOK.
-- [ ] T403 Backups: `scripts/backup.sh` (private bucket, `BACKUP_S3_*`), `backup.yml` weekly,
-  `scripts/ci/restore-check.sh`, S3 job outsider 403 test, RUNBOOK restore procedure,
-  LAUNCH-CHECKLIST 25.
-- [ ] T404 Admin polish (groups, `useAsTitle`, Arabic everywhere); ADR-031…034 (+ ADR-026
-  amendment); BRD §9.3/§9.4/§9.6 amendments; RUNBOOK (`content:migrate --force` on the
-  first 2b deploy); `.env.example`; gates; CTO review; squash-merge; push.
+- [x] T401 Login gate: `beforeLogin` widget (`modules/cms/auth/login-turnstile*.tsx`, the shared
+  `useTurnstile` hook moved to `components/shared`), `/api/turnstile/login` → signed
+  ten-minute gate cookie (`lib/login-gate.ts`), `users.hooks.beforeOperation` `gateLogin`
+  (fail-open without the secret, 401 with the Arabic reason otherwise);
+  `tests/login-gate.test.ts`; the sign-in e2e asserts the widget opens the gate.
+- [x] T402 `@payloadcms/email-resend@3.89.0` when `RESEND_API_KEY` + `RESEND_FROM` parse;
+  Arabic RTL reset e-mail (`modules/cms/auth/reset-email.ts`, unit-tested); `/api/health`
+  `email`; RUNBOOK manual reset.
+- [x] T403 Backups: `scripts/backup.sh` (private bucket, refuses the media bucket, `BACKUP_S3_*`),
+  `.github/workflows/backup.yml` weekly from the production environment,
+  `scripts/ci/restore-check.sh` in the quality job (rehearsed locally: products=5 pages=7
+  faqs=16), MinIO job uploads a dump and asserts the outsider 403s, RUNBOOK "Backups and
+  restore", LAUNCH-CHECKLIST 25, `.env.example`.
+- [x] T404 Admin groups/titles Arabic (Content / Settings / Administration); ADR-031…034 (+ the
+  ADR-026 amendment); BRD §9.3/§9.4/§9.6/§9.8 amendments; RUNBOOK (`content:migrate --force`
+  on the first 2b deploy, login gate, password reset, backups, jobs); gates; CTO review;
+  squash-merge; push.
