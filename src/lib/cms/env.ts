@@ -20,6 +20,16 @@ export interface CmsEnv {
     | undefined;
 }
 
+/**
+ * The production runtime: `B7R_RUNTIME=production` is set solely in the CranL production
+ * app, never derived from the origin, so CI and previews never act as production.
+ */
+export function isProductionRuntime(
+  raw: Record<string, string | undefined> = process.env,
+): boolean {
+  return raw['B7R_RUNTIME'] === 'production';
+}
+
 export function cmsEnv(raw: Record<string, string | undefined> = process.env): CmsEnv {
   const bucket = raw['S3_BUCKET'];
   const endpoint = raw['S3_ENDPOINT'];

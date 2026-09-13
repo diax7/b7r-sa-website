@@ -19,7 +19,7 @@ export const Products: CollectionConfig = {
     defaultColumns: ['name', 'slug', 'baseCost', 'suggestedPrice', 'sortOrder', '_status'],
     group: { ar: 'المحتوى', en: 'Content' },
   },
-  versions: { drafts: { autosave: { interval: 1500 } }, maxPerDoc: 25 },
+  versions: { drafts: { autosave: { interval: 1500 }, schedulePublish: true }, maxPerDoc: 25 },
   access: {
     read: publishedOrStaff,
     create: isEditorOrAdmin,

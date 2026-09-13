@@ -1,7 +1,8 @@
-import { APIError, type CollectionConfig } from 'payload';
+import type { CollectionConfig } from 'payload';
 import { RESERVED_PAGE_SLUGS } from '@/content/schema';
 import { CODE_TOP_LEVEL } from '@/lib/site-routes';
 import { canDeleteVersioned, isEditorOrAdmin, publishedOrStaff } from '@/modules/cms/access';
+import { Refused } from '@/modules/cms/refused';
 import { PAGE_BLOCKS } from '@/modules/cms/blocks';
 import { revalidatePages } from '@/modules/cms/hooks/revalidate';
 
@@ -37,7 +38,7 @@ export const Pages: CollectionConfig = {
     defaultColumns: ['title', 'slug', 'updatedAt', '_status'],
     group: { ar: 'المحتوى', en: 'Content' },
   },
-  versions: { drafts: { autosave: { interval: 1500 } }, maxPerDoc: 25 },
+  versions: { drafts: { autosave: { interval: 1500 }, schedulePublish: true }, maxPerDoc: 25 },
   access: {
     read: publishedOrStaff,
     create: isEditorOrAdmin,
@@ -51,12 +52,7 @@ export const Pages: CollectionConfig = {
         const isReserved = reserved(originalDoc?.['slug']);
         // The seven designed pages keep their slug: a route folder renders each one.
         if (isReserved && slug && slug !== originalDoc?.['slug']) {
-          throw new APIError(
-            'هذه الصفحة لها مسار ثابت في الموقع؛ لا يمكن تغيير معرّفها',
-            400,
-            undefined,
-            true,
-          );
+          throw new Refused('هذه الصفحة لها مسار ثابت في الموقع؛ لا يمكن تغيير معرّفها');
         }
         // …and stay published: «Unpublish» writes `_status: draft` to the main row (no
         // `draft=true` on the request), which would leave the route with nothing to render.
@@ -68,17 +64,12 @@ export const Pages: CollectionConfig = {
           originalDoc?.['_status'] === 'published' &&
           !draftSave;
         if (unpublishing) {
-          throw new APIError(
-            'هذه الصفحة ثابتة في الموقع؛ لا يمكن إلغاء نشرها',
-            400,
-            undefined,
-            true,
-          );
+          throw new Refused('هذه الصفحة ثابتة في الموقع؛ لا يمكن إلغاء نشرها');
         }
         // A draft autosave may carry no slug yet; `required` refuses the empty slug at publish.
         if (!slug) return data;
         const problem = pageSlugProblem(slug);
-        if (problem) throw new APIError(problem, 400, undefined, true);
+        if (problem) throw new Refused(problem);
         return data;
       },
     ],
@@ -86,12 +77,7 @@ export const Pages: CollectionConfig = {
       async ({ id, req }) => {
         const doc = await req.payload.findByID({ collection: 'pages', id, depth: 0, req });
         if (reserved(doc.slug)) {
-          throw new APIError(
-            'هذه الصفحة لها مسار ثابت في الموقع؛ لا يمكن حذفها',
-            400,
-            undefined,
-            true,
-          );
+          throw new Refused('هذه الصفحة لها مسار ثابت في الموقع؛ لا يمكن حذفها');
         }
       },
     ],

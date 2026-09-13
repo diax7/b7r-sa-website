@@ -16,6 +16,10 @@ const nextConfig: NextConfig = {
   // Two root layouts (site + admin): the 404 must render its own document (ADR-024).
   experimental: { globalNotFound: true },
   trailingSlash: false,
+  // Payload stays a single runtime module instead of being bundled and minified into the
+  // server chunks: its error classes keep their names (`loggingLevels` reads `err.name`) and
+  // `instanceof` holds across the config boundary (ADR-033).
+  serverExternalPackages: ['payload'],
   reactStrictMode: true,
   poweredByHeader: false,
   env: {

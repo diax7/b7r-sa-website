@@ -52,13 +52,20 @@ Each phase ends with a CTO code review before the next starts.
   rich-text block render RTL in the admin.
 
 ## Phase 3 — redirects and the publish pipeline
-- [ ] T301 `@payloadcms/plugin-redirects` (option B): collection seeded from
-  `lib/redirects.ts`, `beforeValidate` rules, `[slug]` resolution (308/307), hook
-  revalidating the allowlist endpoint; unit + e2e (redirect added → 308 live).
-- [ ] T302 Jobs: `indexnow-ping` task, queue from hooks under `isProductionRuntime()` + key,
-  `autoRun` cron guarded by `isBuildPhase`, `access.run: () => false` (+ e2e 403),
-  `schedulePublish` on home/pages/products/testimonials, `/api/health` `jobs` field;
-  migration for `payload-jobs`.
+- [x] T301 `@payloadcms/plugin-redirects@3.89.0` (option B): `redirects` collection admin-only
+  with Arabic labels, seeded from `lib/redirects.ts` (`renamed`; `/en` is a reserved segment
+  and the glob stays in code), `redirectProblem` rules in `beforeValidate`, `resolveSlug`
+  (redirect before page) in `[slug]` (308/307), hook revalidating the source and the
+  allowlist, allowlist = pages ∪ redirect sources; `tests/redirect-resolver.test.ts`; e2e:
+  301/302 rows live as 308/307, refused rows (code-owned source, loop, http), editor 403.
+- [x] T302 Jobs: `indexnow-ping` task (`modules/cms/jobs/indexnow.ts`, three retries), queued
+  from every publish hook under `B7R_RUNTIME=production` + key, `autoRun` one-minute cron
+  guarded by `isBuildPhase`, `deleteJobOnComplete`, `access.run: () => false` (e2e 401/403
+  for outsider and admin), `schedulePublish` on home/pages/products/testimonials (verified
+  end to end through the cron), `/api/health` `jobs` field, migration
+  `20260913_151043_redirects_jobs`; `safeRevalidatePath` also files Next's "during render"
+  refusal; `payload` is a server-external package and guards throw `Refused` (ADR-033);
+  `tests/indexnow-job.test.ts`.
 
 ## Phase 4 — login Turnstile, e-mail, backups, polish, docs
 - [ ] T401 Login Turnstile: `beforeLogin` widget component, cookie, `beforeOperation` verify

@@ -21,6 +21,7 @@ import { products } from '../src/content/seed/products';
 import { seo } from '../src/content/seed/seo';
 import { site } from '../src/content/seed/site';
 import { testimonials } from '../src/content/seed/testimonials';
+import { renamed, type Redirect } from '../src/lib/redirects';
 import { SEO_TITLE_TEMPLATE } from '../src/content/seo-copy';
 import {
   RESERVED_PAGE_SLUGS,
@@ -455,6 +456,35 @@ async function blockData(payload: Payload, block: Block): Promise<Record<string,
   }
 }
 
+/**
+ * The BRD 5.2 redirects as admin rows, for the admin's eyes (ADR-032): `next.config` still
+ * answers them first with the exact 301/302, so these rows are informational until a row is
+ * added or changed in the admin. The English rows stay in the code: `/en` is a reserved
+ * segment (a code-owned route once the English phase lands) and `/en/:path*` is a glob.
+ */
+async function ensureRedirect(payload: Payload, row: Redirect): Promise<void> {
+  const existing = await payload.find({
+    collection: 'redirects',
+    where: { from: { equals: row.source } },
+    limit: 1,
+    depth: 0,
+  });
+  if (existing.docs[0]) {
+    summary.skipped.push(`redirect ${row.source}`);
+    return;
+  }
+  await payload.create({
+    collection: 'redirects',
+    data: {
+      from: row.source,
+      to: { type: 'custom', url: row.destination },
+      type: row.statusCode === 301 ? '301' : '302',
+    },
+    context: CONTEXT,
+  });
+  summary.created.push(`redirect ${row.source}`);
+}
+
 async function ensurePage(payload: Payload, page: Page): Promise<void> {
   const existing = await payload.find({
     collection: 'pages',
@@ -496,7 +526,7 @@ async function main(): Promise<number> {
   const { default: config } = await import('../src/payload.config');
   const payload = await getPayload({ config });
   const counts = await Promise.all(
-    (['products', 'pages', 'faqs', 'testimonials', 'integrations'] as const).map((c) =>
+    (['products', 'pages', 'faqs', 'testimonials', 'integrations', 'redirects'] as const).map((c) =>
       payload.count({ collection: c }).then((r) => r.totalDocs),
     ),
   );
@@ -521,6 +551,7 @@ async function main(): Promise<number> {
     await ensurePage(payload, page);
   }
   await pruneSeoRows(payload);
+  for (const row of renamed) await ensureRedirect(payload, row);
   for (const item of faq) await ensureFaq(payload, item);
   for (const [i, item] of testimonials.entries()) await ensureTestimonial(payload, item, i + 1);
   for (const [i, item] of integrations.entries()) await ensureIntegration(payload, item, i + 1);

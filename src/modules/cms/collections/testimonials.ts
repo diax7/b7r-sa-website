@@ -18,7 +18,7 @@ export const Testimonials: CollectionConfig = {
     defaultColumns: ['name', 'store', 'placeholder', 'order', '_status'],
     group: { ar: 'المحتوى', en: 'Content' },
   },
-  versions: { drafts: { autosave: { interval: 1500 } }, maxPerDoc: 10 },
+  versions: { drafts: { autosave: { interval: 1500 }, schedulePublish: true }, maxPerDoc: 10 },
   access: {
     read: publishedOrStaff,
     create: isEditorOrAdmin,

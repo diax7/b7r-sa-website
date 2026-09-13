@@ -1,6 +1,7 @@
-import { APIError, type CollectionConfig } from 'payload';
+import type { CollectionConfig } from 'payload';
 import { passwordProblem } from '@/lib/pwned';
 import { adminField, isAdmin, isAdminOrSelf } from '@/modules/cms/access';
+import { Refused } from '@/modules/cms/refused';
 
 const LOCK_MINUTES = 15;
 
@@ -11,8 +12,7 @@ const PASSWORD_MESSAGES = {
 
 /**
  * Rejects a password that is too short or breached (ADR-027) with HTTP 400 and the Arabic
- * reason as the response message (a public `APIError`: the built server cannot be trusted
- * to recognise `ValidationError` by `instanceof`, and then drops its field data, ADR-031).
+ * reason as the response message (`Refused`, ADR-031).
  * `beforeValidate` is the one hook every path runs: create, update and Payload's
  * reset-password operation.
  */
@@ -21,7 +21,7 @@ async function enforcePasswordPolicy(data: Record<string, unknown> | undefined):
   if (typeof password !== 'string') return;
   const problem = await passwordProblem(password);
   if (!problem) return;
-  throw new APIError(PASSWORD_MESSAGES[problem], 400, undefined, true);
+  throw new Refused(PASSWORD_MESSAGES[problem]);
 }
 
 /** Admin users (BRD 9.3): admin | editor, lockout 5/15 min, hardened cookies. */

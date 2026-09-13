@@ -1,6 +1,7 @@
-import { APIError, type CollectionConfig, type PayloadRequest } from 'payload';
+import type { CollectionConfig, PayloadRequest } from 'payload';
 import { FAQ_GROUPS } from '@/content/schema';
 import { isAdmin, isEditorOrAdmin } from '@/modules/cms/access';
+import { Refused } from '@/modules/cms/refused';
 import { PATHS_FOR_FAQS, revalidateRoutes } from '@/modules/cms/hooks/revalidate';
 
 /** The home accordion shows exactly this many entries (BRD 4.4, 6.4.9). */
@@ -35,9 +36,7 @@ async function guardHomeLimit({
     req,
   });
   const problem = homeFlagProblem(true, others.totalDocs);
-  // A public APIError: the Arabic message is the response's own message (a ValidationError
-  // keeps it in `data`, which the built server drops when the error class is duplicated).
-  if (problem) throw new APIError(problem, 400, undefined, true);
+  if (problem) throw new Refused(problem);
   return data;
 }
 

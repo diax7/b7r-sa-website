@@ -1,6 +1,7 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { postgresAdapter } from '@payloadcms/db-postgres';
+import { redirectsPlugin } from '@payloadcms/plugin-redirects';
 import { lexicalEditor } from '@payloadcms/richtext-lexical';
 import { s3Storage } from '@payloadcms/storage-s3';
 import { ar } from '@payloadcms/translations/languages/ar';
@@ -11,6 +12,8 @@ import { Integrations } from '@/modules/cms/collections/integrations';
 import { Media } from '@/modules/cms/collections/media';
 import { Pages } from '@/modules/cms/collections/pages';
 import { Products } from '@/modules/cms/collections/products';
+import { REDIRECT_OVERRIDES } from '@/modules/cms/collections/redirects';
+import { indexNowTask } from '@/modules/cms/jobs/indexnow';
 import { Testimonials } from '@/modules/cms/collections/testimonials';
 import { Users } from '@/modules/cms/collections/users';
 import { cmsEnv, isBuildPhase } from '@/lib/cms/env';
@@ -77,7 +80,24 @@ export default buildConfig({
     // Safety net for anything CI did not apply; never during the build (ADR-025).
     ...(isBuildPhase() ? {} : { prodMigrations: migrations }),
   }),
+  /**
+   * Jobs (ADR-033): the IndexNow ping and Payload's scheduled publish run in-process on a
+   * one-minute cron (never during `next build`); the run endpoint answers nobody — the cron
+   * is the only runner. Completed jobs are deleted.
+   */
+  jobs: {
+    tasks: [indexNowTask],
+    autoRun: [{ cron: '* * * * *', limit: 10 }],
+    shouldAutoRun: () => !isBuildPhase(),
+    deleteJobOnComplete: true,
+    access: { run: () => false },
+  },
   plugins: [
+    redirectsPlugin({
+      collections: ['pages'],
+      redirectTypes: ['301', '302'],
+      overrides: REDIRECT_OVERRIDES,
+    }),
     s3Storage({
       enabled: Boolean(env.s3),
       // The `prefix` column exists whether or not S3 is on, so one migration fits both

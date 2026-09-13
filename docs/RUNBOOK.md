@@ -173,8 +173,25 @@ Old URLs with a trailing slash take two hops (`/showcase/` → 308 `/showcase` �
 `skipTrailingSlashRedirect` plus explicit slash sources in `src/lib/redirects.ts`; not worth it
 unless Dhia asks.
 
+Admin redirects (Settings → التحويلات, admins only, ADR-032): one lowercase segment as the
+source (`/old-name`), a page or a path/`https:` URL as the target, 301 or 302. The seeded
+BRD §5.2 rows are listed there for reference but still answered by `next.config` first; a
+row added in the admin answers 308 (301) or 307 (302) from `/[slug]` within a minute. The
+site refuses a source that is one of its own routes and any loop.
+
+## Jobs (scheduled publish, IndexNow)
+
+The queue runs inside the app on a one-minute cron once the first admin request has started
+it (`/api/health` → `jobs: on`); `/api/payload/payload-jobs/run` answers 403 to everyone by
+design. A scheduled publish is applied by the cron and the page regenerates on the 60 s
+timer (the hook logs one `revalidatePath … skipped outside a request` line at info). Failed
+jobs stay in the `payload-jobs` table with their error; completed ones are deleted.
+
 ## IndexNow
 
+A publish in the admin queues an `indexnow-ping` job with the regenerated URLs (three
+retries, exponential backoff) — only when `B7R_RUNTIME=production` and `INDEXNOW_KEY` are
+set, so CI and previews never ping (ADR-033). For the deploy-time submission:
 `scripts/indexnow.ts <before.xml> <after.xml>` diffs two sitemap snapshots and POSTs the
 changed URLs with `keyLocation = https://b7r.sa/indexnow/{key}.txt`. It exits 0 without a
 request when `NEXT_PUBLIC_SITE_URL` or `INDEXNOW_KEY` is unset. Intended GitHub Actions step

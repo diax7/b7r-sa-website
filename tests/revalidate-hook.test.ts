@@ -159,6 +159,17 @@ describe('safeRevalidatePath (ADR-033): outside a request the timer covers it', 
     expect(logger.info.mock.calls[0]?.[0]).toMatch(/outside a request.*60 s timer/);
   });
 
+  it('also swallows the "during render" refusal a cron inside a render context gets', () => {
+    revalidatePath.mockImplementation(() => {
+      throw new Error(
+        'Route /admin/[[...segments]] used "revalidatePath /x" during render which is unsupported.',
+      );
+    });
+    const logger = { info: vi.fn() };
+    expect(() => safeRevalidatePath('/x', logger)).not.toThrow();
+    expect(logger.info).toHaveBeenCalledTimes(1);
+  });
+
   it('rethrows anything that is not the missing-store invariant', () => {
     revalidatePath.mockImplementation(() => {
       throw new Error('ENOSPC');

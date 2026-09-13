@@ -1,4 +1,5 @@
 import { revalidatePath } from 'next/cache';
+import { queueIndexNow } from '@/modules/cms/jobs/indexnow';
 import type {
   CollectionAfterChangeHook,
   CollectionAfterDeleteHook,
@@ -60,17 +61,22 @@ export function resetRevalidateWarning(): void {
   warnedOutsideRequest = false;
 }
 
+/** Next's two refusals when `revalidatePath` runs outside a request's action or route handler. */
+const OUTSIDE_REQUEST = /store missing|during render/i;
+
 /**
  * `revalidatePath` needs Next's request store: called from a job (the queue cron, a scheduled
- * publish) it throws the "static generation store missing" invariant. Outside a request the
- * 60 s timer covers the change, so the helper logs that once and moves on (ADR-033, 2b phase 3).
+ * publish) it throws the "static generation store missing" invariant, or — when the cron
+ * fires inside a render's context — "used revalidatePath during render which is
+ * unsupported". Outside a request the 60 s timer covers the change, so the helper logs that
+ * once and moves on (ADR-033).
  */
 export function safeRevalidatePath(path: string, logger: Pick<Console, 'info'> = console): void {
   try {
     revalidatePath(path);
   } catch (error) {
     // Anything else is a real failure and must surface.
-    if (!(error instanceof Error) || !/store missing/i.test(error.message)) throw error;
+    if (!(error instanceof Error) || !OUTSIDE_REQUEST.test(error.message)) throw error;
     if (!warnedOutsideRequest) {
       warnedOutsideRequest = true;
       logger.info(
@@ -102,7 +108,7 @@ export function isVisibleChange({ doc, previousDoc }: ChangeArgs): boolean {
  * Products: a publish, an unpublish, a slug change or a delete regenerates the product's page
  * and every route that lists it; a draft autosave is not visible.
  */
-export const revalidateProducts: CollectionAfterChangeHook & CollectionAfterDeleteHook = ({
+export const revalidateProducts: CollectionAfterChangeHook & CollectionAfterDeleteHook = async ({
   doc,
   req,
   ...rest
@@ -115,6 +121,7 @@ export const revalidateProducts: CollectionAfterChangeHook & CollectionAfterDele
   if (typeof previous?.slug === 'string') slugs.add(previous.slug);
   const paths = new Set([...slugs].flatMap((slug) => pathsForProduct(slug)));
   for (const path of paths) safeRevalidatePath(path);
+  await queueIndexNow(req, paths);
   return doc;
 };
 
@@ -130,7 +137,7 @@ export function pathsForPage(slug: string): string[] {
  * Pages: a publish, an unpublish, a slug change or a delete regenerates the page, the sitemap
  * and the allowlist; a draft autosave of a never-published page is not visible.
  */
-export const revalidatePages: CollectionAfterChangeHook & CollectionAfterDeleteHook = ({
+export const revalidatePages: CollectionAfterChangeHook & CollectionAfterDeleteHook = async ({
   doc,
   req,
   ...rest
@@ -143,6 +150,25 @@ export const revalidatePages: CollectionAfterChangeHook & CollectionAfterDeleteH
   if (typeof previous?.slug === 'string') slugs.add(previous.slug);
   const paths = new Set([...slugs].flatMap((slug) => pathsForPage(slug)));
   for (const path of paths) safeRevalidatePath(path);
+  await queueIndexNow(req, paths);
+  return doc;
+};
+
+/**
+ * Redirects: the source path (old and new) and the proxy allowlist; the `[slug]` route answers
+ * the redirect on the next request (ADR-032).
+ */
+export const revalidateRedirects: CollectionAfterChangeHook & CollectionAfterDeleteHook = ({
+  doc,
+  req,
+  ...rest
+}) => {
+  if (!shouldRevalidate(req)) return doc;
+  const previous = (rest as { previousDoc?: { from?: string } }).previousDoc;
+  const paths = new Set<string>([SLUGS_ENDPOINT]);
+  if (typeof doc?.['from'] === 'string') paths.add(doc['from']);
+  if (typeof previous?.from === 'string') paths.add(previous.from);
+  for (const path of paths) safeRevalidatePath(path);
   return doc;
 };
 
@@ -150,18 +176,20 @@ export const revalidatePages: CollectionAfterChangeHook & CollectionAfterDeleteH
 export function revalidateRoutes(
   paths: readonly string[],
 ): CollectionAfterChangeHook & CollectionAfterDeleteHook {
-  return ({ doc, req, ...rest }) => {
+  return async ({ doc, req, ...rest }) => {
     if (!shouldRevalidate(req)) return doc;
     if (!isVisibleChange({ doc, ...rest })) return doc;
     for (const path of paths) safeRevalidatePath(path);
+    await queueIndexNow(req, paths);
     return doc;
   };
 }
 
 /** Globals: every static route (they all render the shell the globals feed). */
-export const revalidateGlobal: GlobalAfterChangeHook = ({ doc, previousDoc, req }) => {
+export const revalidateGlobal: GlobalAfterChangeHook = async ({ doc, previousDoc, req }) => {
   if (!shouldRevalidate(req)) return doc;
   if (!isVisibleChange({ doc, previousDoc })) return doc;
   for (const path of STATIC_ROUTES) safeRevalidatePath(path);
+  await queueIndexNow(req, STATIC_ROUTES);
   return doc;
 };

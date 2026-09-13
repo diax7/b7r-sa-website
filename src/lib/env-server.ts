@@ -1,4 +1,5 @@
 import 'server-only';
+import { isProductionRuntime } from '@/lib/cms/env';
 
 /**
  * Server-only environment (BRD 8.5). Read lazily so a missing key surfaces as a clear
@@ -87,9 +88,7 @@ export const PAYLOAD_SECRET_MIN_LENGTH = 32;
 
 export type RawEnv = Record<string, string | undefined>;
 
-export function isProductionRuntime(raw: RawEnv = process.env): boolean {
-  return raw['B7R_RUNTIME'] === 'production';
-}
+export { isProductionRuntime };
 
 export function missingProductionEnv(raw: RawEnv = process.env): string[] {
   return PRODUCTION_REQUIRED_ENV.filter((name) => !raw[name]);

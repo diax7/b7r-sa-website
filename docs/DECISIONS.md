@@ -370,8 +370,55 @@ working, an unknown URL gets the route's bare 404 until the next read). A page d
 the admin is a bare 404 for up to 20 s and the full document after. `/products/<unknown>`
 keeps `notFound()` (ADR-030); `await connection()` before it, tried to keep junk slugs out
 of the ISR cache, throws `DYNAMIC_SERVER_USAGE` inside an ISR render and answers 500, so
-that idea is closed. Admin-added redirects join the allowlist and resolve in the `[slug]`
-route in 2b phase 3.
+that idea is closed.
+
+Phase 3 (2026-09-13) adds the redirects. `@payloadcms/plugin-redirects` provides the
+`redirects` collection (admin only, hidden from editors like the settings globals, Arabic
+labels laid over the plugin's fields); the seeded BRD §5.2 rows (`renamed`) are created as
+custom-URL rows for the admin's eyes, while `next.config` keeps answering them first with
+the exact 301/302 and the proxy keeps the 410 map — the two code lists are unchanged. A row
+added or changed in the admin is validated in `beforeValidate` (`redirectProblem`, pure and
+unit-tested: one lowercase segment as the source, never a code-owned segment such as
+`/about` or `/en`, a site path or an `https:` URL as the target, no self-target, no target
+that is another row's source) and resolves in the `[slug]` route: `resolveSlug` puts a
+redirect before a page of the same slug, `permanentRedirect()` answers 308 for 301 rows and
+`redirect()` 307 for 302 rows, cached by ISR and live within the allowlist window. The
+trade-off stands as planned: admin-added rows answer 308/307 rather than 301/302 (both
+permanent or temporary for Google) and single-segment sources only; the proxy design with a
+runtime map is the documented upgrade if exact codes or nested sources are ever needed.
+The redirects hook revalidates the source path and the allowlist, so a new source passes
+the proxy at once.
+
+## ADR-033 — Jobs run in-process; IndexNow only on the production runtime (2026-09-13)
+
+Payload's jobs queue runs inside the Next process (BRD 9.6): `autoRun` on a one-minute
+cron with `shouldAutoRun: () => !isBuildPhase()` so `next build` never starts it, completed
+jobs deleted, and `access.run: () => false` so `/api/payload/payload-jobs/run` answers
+nobody — the cron is the only runner (e2e). The crons start with the first admin or REST
+request (`@payloadcms/next` initialises Payload with `cron: true`; the site's own Local API
+reads do not), which `/api/health` reports as `jobs: on | off`. Two things run on it.
+**Scheduled publish** (`schedulePublish: true` on `home`, `pages`, `products`,
+`testimonials`): the publish fires the same `afterChange` hooks, but from a job there is no
+request store, and when the cron fires inside a render's context Next refuses
+`revalidatePath` with "during render which is unsupported" — `safeRevalidatePath` files
+both refusals under one info line and lets the 60 s timer regenerate the page (verified:
+a page scheduled through the Local API was published by the cron and served within a
+minute); any other failure still surfaces. **IndexNow** (`indexnow-ping` task, three
+retries with exponential backoff): queued by the products, pages, faqs, testimonials,
+integrations and global hooks with the routes they regenerated (pages only — never the
+sitemap, the manifest or an API path), but only when `B7R_RUNTIME=production` — the flag
+set solely in the CranL production app, never derived from the origin — and a valid
+`INDEXNOW_KEY` exist, so CI and previews never reach the endpoint; a queue failure is
+logged and the publish stands. `scripts/indexnow.ts` (the sitemap diff after a deploy)
+remains for the deploy-time submission.
+
+The build now marks `payload` as a `serverExternalPackages` entry: bundled and minified
+into the server chunks its error classes lost their names (`loggingLevels` reads `err.name`,
+so every expected 4xx logged at ERROR) and `instanceof` failed across chunks (the
+`ValidationError` data loss of phase 1). As one runtime module both hold. Every guard the
+site raises on purpose throws `Refused` (an `APIError` subclass with its own name and the
+Arabic reason as the response message), filed under info by `loggingLevels`.
+
 
 ## ADR-035 — Product cards carry a colour state; the gallery is one photo with a toggle (2026-09-13)
 

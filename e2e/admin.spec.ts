@@ -483,6 +483,11 @@ test.describe('CMS admin', () => {
         expect(t).toBeDefined();
         const del = await request.delete(`${API}/testimonials/${t?.id}`, { headers: auth });
         expect(del.status(), 'editor deleting a published testimonial').toBe(403);
+        const redirect = await request.post(`${API}/redirects`, {
+          headers: auth,
+          data: { from: '/editor-e2e', to: { type: 'custom', url: '/products' }, type: '301' },
+        });
+        expect(redirect.status(), 'editor adding a redirect').toBe(403);
         const integration = await request.post(`${API}/integrations`, {
           headers: auth,
           data: { platform: 'salla', name: 'x', nameLatin: 'x', order: 9 },
@@ -659,6 +664,60 @@ test.describe('CMS admin', () => {
       } finally {
         expect((await request.delete(`${API}/pages/${id}`, { headers: auth })).status()).toBe(200);
       }
+    });
+
+    test('a redirect added in the admin answers live: 301 rows as 308, 302 rows as 307', async ({
+      request,
+    }) => {
+      test.setTimeout(150_000);
+      const auth = await login(request, ADMIN);
+      const created: number[] = [];
+      const add = async (from: string, url: string, type: '301' | '302') => {
+        const res = await request.post(`${API}/redirects`, {
+          headers: auth,
+          data: { from, to: { type: 'custom', url }, type },
+        });
+        if (res.status() === 201)
+          created.push(((await res.json()) as { doc: { id: number } }).doc.id);
+        return res;
+      };
+      const status = (path: string) => async () =>
+        (await request.get(path, { maxRedirects: 0 })).status();
+      try {
+        expect((await add('/old-e2e', '/products', '301')).status()).toBe(201);
+        expect((await add('/temp-e2e', 'https://example.com/promo', '302')).status()).toBe(201);
+        await expect.poll(status('/old-e2e'), POLL).toBe(308);
+        expect((await request.get('/old-e2e', { maxRedirects: 0 })).headers()['location']).toMatch(
+          /\/products$/,
+        );
+        await expect.poll(status('/temp-e2e'), POLL).toBe(307);
+        expect((await request.get('/temp-e2e', { maxRedirects: 0 })).headers()['location']).toBe(
+          'https://example.com/promo',
+        );
+        // The rules: a code-owned source, a loop and an http target are refused.
+        expect((await add('/about', '/products', '301')).status()).toBe(400);
+        expect((await add('/loop-e2e', '/old-e2e', '301')).status()).toBe(400);
+        expect((await add('/http-e2e', 'http://example.com', '301')).status()).toBe(400);
+      } finally {
+        for (const id of created) {
+          expect((await request.delete(`${API}/redirects/${id}`, { headers: auth })).status()).toBe(
+            200,
+          );
+        }
+      }
+      await expect
+        .poll(status('/old-e2e'), { intervals: [1_000, 2_000, 5_000], timeout: 45_000 })
+        .toBe(404);
+    });
+
+    test('the jobs run endpoint answers nobody; health reports the cron', async ({ request }) => {
+      const adminAuth = await login(request, ADMIN);
+      for (const headers of [undefined, adminAuth]) {
+        const res = await request.get(`${API}/payload-jobs/run`, headers ? { headers } : {});
+        expect(res.status(), headers ? 'admin' : 'outsider').toBeGreaterThanOrEqual(401);
+      }
+      const health = (await (await request.get('/api/health')).json()) as { jobs: string };
+      expect(['on', 'off']).toContain(health.jobs);
     });
 
     test('an outsider reads the FAQ and published testimonials, never the home drafts', async ({
