@@ -29,9 +29,9 @@ test.describe('machine files (BRD 7.2, 7.3, 7.5, 7.6)', () => {
     }
     expect(locs.some((l) => l?.includes('/api') || l?.includes('?'))).toBe(false);
     expect(xml).toMatch(/<lastmod>\d{4}-\d{2}-\d{2}T00:00:00\.000Z<\/lastmod>/);
-    expect(xml).toContain(
-      '<image:loc>https://b7r.sa/images/products/hoodie/black-front.jpg</image:loc>',
-    );
+    // Product photos come from the CMS: same-origin `/api/payload/media/file/...` with local
+    // storage, an absolute S3 URL when S3 is configured (ADR-029).
+    expect(xml).toMatch(/<image:loc>https?:\/\/[^<]+\/hoodie-black-front\.jpg<\/image:loc>/);
   });
 
   test('robots.txt disallows everything on a non-production host', async ({ request }) => {

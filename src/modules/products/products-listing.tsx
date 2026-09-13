@@ -2,14 +2,14 @@ import { Container } from '@/components/shared/container';
 import { Section } from '@/components/shared/section';
 import { SectionHeader } from '@/components/shared/section-header';
 import { productsPage } from '@/content/pages';
-import { products } from '@/content/products';
+import { getProducts } from '@/lib/cms';
 import { siteBase } from '@/lib/env';
 import { CtaRibbon, JsonLd, jsonLd } from '@/modules/core';
 import { ProductCard } from '@/modules/products/product-card';
 
 /** Products listing (BRD 6.5): H1 + lead, the five cards, the ribbon. */
-export function ProductsListing() {
-  const ordered = products.toSorted((a, b) => a.sortOrder - b.sortOrder);
+export async function ProductsListing() {
+  const ordered = await getProducts();
   const base = siteBase();
   return (
     <>

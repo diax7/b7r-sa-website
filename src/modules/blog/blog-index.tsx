@@ -6,7 +6,7 @@ import { SectionHeader } from '@/components/shared/section-header';
 import { blogCopy, blogHubs, blogPosts } from '@/content/blog';
 import { loadBlogPost } from '@/content/blog/load';
 import { footerCopy, productsPage } from '@/content/pages';
-import { getSeo } from '@/content/seo';
+import { getSeo } from '@/lib/cms';
 import { siteBase } from '@/lib/env';
 import { CtaRibbon, JsonLd, jsonLd } from '@/modules/core';
 import { HubFilter } from '@/modules/blog/hub-filter';
@@ -19,9 +19,9 @@ const ROUTE = '/blog';
  * in as a slot from the route (same pattern as the footer) so this module never imports the
  * forms module.
  */
-export function BlogIndex({ newsletter }: { newsletter: ReactNode }) {
+export async function BlogIndex({ newsletter }: { newsletter: ReactNode }) {
   const base = siteBase();
-  const seo = getSeo(ROUTE);
+  const seo = await getSeo(ROUTE);
   const posts = blogPosts
     .map((post) => loadBlogPost(post))
     .toSorted((a, b) => b.publishedAt.localeCompare(a.publishedAt));

@@ -6,7 +6,8 @@ import { SarAmount } from '@/components/shared/sar-amount';
 import { Section } from '@/components/shared/section';
 import { SectionHeader } from '@/components/shared/section-header';
 import { home } from '@/content/home';
-import { getProduct, stripColorFor } from '@/content/products';
+import { getProduct } from '@/lib/cms';
+import { stripColorFor } from '@/lib/product-helpers';
 import messages from '@/messages/ar.json';
 import { StripHint } from '@/modules/home/product-strip/strip-hint';
 
@@ -14,10 +15,11 @@ import { StripHint } from '@/modules/home/product-strip/strip-hint';
  * Hover-expand product strip (BRD 6.4.2). Five real links; CSS owns the expansion so it works
  * with keyboard focus and without JS. Mobile: native snap carousel with labels always visible.
  */
-export function ProductStrip() {
+export async function ProductStrip() {
   const { productStrip } = home;
-  const items = productStrip.order.map((slug) => {
-    const product = getProduct(slug);
+  const found = await Promise.all(productStrip.order.map((slug) => getProduct(slug)));
+  const items = productStrip.order.map((slug, i) => {
+    const product = found[i];
     if (!product) throw new Error(`Product strip references unknown product ${slug}`);
     const color =
       product.colors.find((c) => c.slug === stripColorFor(product)) ?? product.colors[0];

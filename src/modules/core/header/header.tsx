@@ -6,8 +6,7 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/shared/button';
 import { Container } from '@/components/shared/container';
-import { navigation } from '@/content/navigation';
-import { site } from '@/content/site';
+import type { Navigation, SiteSettings } from '@/content/schema';
 import messages from '@/messages/ar.json';
 import { cn } from '@/lib/cn';
 import { env } from '@/lib/env';
@@ -20,7 +19,12 @@ import { MobileMenuTrigger } from '@/modules/core/header/mobile-menu-trigger';
  * state; the outer wrapper reserves `--header-h` so the inner shrink never shifts layout.
  * Transparent over the hero at the top of `/` only.
  */
-export function Header() {
+export interface ShellData {
+  navigation: Navigation;
+  site: SiteSettings;
+}
+
+export function Header({ navigation, site }: ShellData) {
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const sentinel = useRef<HTMLDivElement>(null);
@@ -114,7 +118,7 @@ export function Header() {
               </Button>
             </div>
 
-            <MobileMenuTrigger pathname={pathname} />
+            <MobileMenuTrigger pathname={pathname} navigation={navigation} site={site} />
           </Container>
         </header>
       </div>

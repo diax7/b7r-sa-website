@@ -8,8 +8,7 @@ import { Icon } from '@/components/shared/icon';
 import { Section } from '@/components/shared/section';
 import { SectionHeader } from '@/components/shared/section-header';
 import { contactPage, footerCopy, productsPage } from '@/content/pages';
-import { getSeo } from '@/content/seo';
-import { site } from '@/content/site';
+import { getSeo, getSiteSettings } from '@/lib/cms';
 import { env, siteBase } from '@/lib/env';
 import { bookingUrl } from '@/lib/env-server';
 import { whatsappUrl } from '@/lib/utm';
@@ -53,12 +52,12 @@ function ContactCard({
  * the end; on phones the cards come first (WhatsApp is the fastest path), then booking,
  * then the form.
  */
-export function ContactPage() {
+export async function ContactPage() {
   const copy = contactPage;
   const base = siteBase();
-  const seo = getSeo(ROUTE);
+  const [seo, site] = await Promise.all([getSeo(ROUTE), getSiteSettings()]);
   const whatsapp = whatsappUrl(site.contact.whatsapp);
-  const booking = bookingUrl();
+  const booking = site.bookingUrl ?? bookingUrl();
   const bookingHref = booking ?? whatsappUrl(site.contact.whatsapp, copy.booking.whatsappMessage);
   const social = [
     { href: site.social.x, label: footerCopy.socialAria.x, Icon: XIcon },

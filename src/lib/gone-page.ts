@@ -1,5 +1,6 @@
 import { gonePage } from '@/content/pages';
-import { site } from '@/content/site';
+// The proxy answers before any database call; the seed brand name is the static fallback.
+import { site } from '@/content/seed/site';
 import { TOKEN_HEX } from '@/lib/tokens';
 
 /**

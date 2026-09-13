@@ -21,6 +21,8 @@ export interface HeaderRoute {
 export interface SecurityHeaderOptions {
   /** Origin of the Umami script (`NEXT_PUBLIC_UMAMI_SRC`), added to script and connect. */
   umamiOrigin?: string | undefined;
+  /** Origin of the S3 public URL: the admin shows upload previews straight from storage. */
+  mediaOrigin?: string | undefined;
   /** Next dev needs `eval` for React Refresh; never set in production builds. */
   allowEval?: boolean;
 }
@@ -65,6 +67,44 @@ export function contentSecurityPolicy({
   return directives.map(([name, values]) => `${name} ${values.join(' ')}`).join('; ');
 }
 
+/**
+ * The admin (ADR-028): Payload's UI is one React app with inline styles, blob previews for
+ * uploads, same-origin API calls and, from Phase 2b, the Turnstile widget on the login form.
+ * No analytics, no third-party scripts.
+ */
+export function adminContentSecurityPolicy({
+  mediaOrigin,
+  allowEval = false,
+}: SecurityHeaderOptions = {}): string {
+  const directives: Array<[string, string[]]> = [
+    ['default-src', ["'self'"]],
+    [
+      'script-src',
+      unique(["'self'", "'unsafe-inline'", allowEval ? "'unsafe-eval'" : undefined, TURNSTILE]),
+    ],
+    ['style-src', ["'self'", "'unsafe-inline'"]],
+    ['img-src', unique(["'self'", 'data:', 'blob:', mediaOrigin])],
+    ['connect-src', unique(["'self'", mediaOrigin])],
+    ['frame-src', [TURNSTILE]],
+    ['font-src', ["'self'", 'data:']],
+    ['media-src', ["'self'", 'blob:']],
+    ['object-src', ["'none'"]],
+    ['base-uri', ["'self'"]],
+    ['form-action', ["'self'"]],
+    ['frame-ancestors', ["'none'"]],
+  ];
+  return directives.map(([name, values]) => `${name} ${values.join(' ')}`).join('; ');
+}
+
+/** Every response under `/admin` and `/api/payload`: never indexed, never cached by a shared cache. */
+export function adminHeaders(options: SecurityHeaderOptions = {}): HeaderEntry[] {
+  return [
+    { key: 'X-Robots-Tag', value: 'noindex, nofollow' },
+    { key: 'Cache-Control', value: 'private, no-store' },
+    { key: 'Content-Security-Policy', value: adminContentSecurityPolicy(options) },
+  ];
+}
+
 export function securityHeaders(options: SecurityHeaderOptions = {}): HeaderEntry[] {
   return [
     // `preload` commits every future *.b7r.sa subdomain to HTTPS (RUNBOOK notes this).
@@ -83,11 +123,18 @@ export function securityHeaders(options: SecurityHeaderOptions = {}): HeaderEntr
 /** Page routes only: not the API, not Next internals, not files with an extension. */
 export const PAGE_ROUTE_SOURCE = '/((?!api/|_next/|.*\\..*).*)';
 
-/** Header routes for `next.config.ts`: security headers everywhere, the language on pages. */
+/** The CMS surfaces (ADR-028); later routes override earlier ones for the same header key. */
+export const ADMIN_ROUTE_SOURCES = ['/admin/:path*', '/api/payload/:path*'];
+
+/**
+ * Header routes for `next.config.ts`: security headers everywhere, the language on pages,
+ * the admin set on the CMS surfaces.
+ */
 export function headerRoutes(options: SecurityHeaderOptions = {}): HeaderRoute[] {
   return [
     { source: '/(.*)', headers: securityHeaders(options) },
     { source: PAGE_ROUTE_SOURCE, headers: [{ key: 'Content-Language', value: 'ar' }] },
+    ...ADMIN_ROUTE_SOURCES.map((source) => ({ source, headers: adminHeaders(options) })),
   ];
 }
 

@@ -6,7 +6,7 @@ import { SarAmount } from '@/components/shared/sar-amount';
 import { SarSymbol } from '@/components/shared/sar-symbol';
 import type { Product } from '@/content/schema';
 import { home } from '@/content/home';
-import { stripColorFor } from '@/content/products';
+import { stripColorFor } from '@/lib/product-helpers';
 import { cn } from '@/lib/cn';
 import { monthlyProfit, perPieceProfit } from '@/modules/designer/profit';
 import { SAMPLE_DESIGN } from '@/modules/designer/use-designer-state';

@@ -1,4 +1,5 @@
 import { getImageProps } from 'next/image';
+import { preload } from 'react-dom';
 import { home } from '@/content/home';
 import messages from '@/messages/ar.json';
 import { env } from '@/lib/env';
@@ -30,17 +31,16 @@ export function Hero() {
   const images = hero.slides.map((s) => imageSet(s.imageDesktop, s.imageMobile));
   const first = images[0];
 
+  // The H1 is the only Black-weight text; preloading it here (home only) removes a font swap
+  // from the LCP path (measured: LCP fell below the 2.5 s gate, see ADR-010).
+  preload('/fonts/ITFRayatRound-Black.woff2', {
+    as: 'font',
+    type: 'font/woff2',
+    crossOrigin: 'anonymous',
+  });
+
   return (
     <>
-      {/* The H1 is the only Black-weight text; preloading it here (home only) removes a font
-          swap from the LCP path (measured: LCP fell below the 2.5 s gate, see ADR-010). */}
-      <link
-        rel="preload"
-        href="/fonts/ITFRayatRound-Black.woff2"
-        as="font"
-        type="font/woff2"
-        crossOrigin="anonymous"
-      />
       {first && (
         <>
           <link

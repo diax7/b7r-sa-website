@@ -6,8 +6,8 @@ import { SarAmount } from '@/components/shared/sar-amount';
 import { Section, type SectionTone } from '@/components/shared/section';
 import { SectionHeader } from '@/components/shared/section-header';
 import { productsPage } from '@/content/pages';
-import { products } from '@/content/products';
 import type { Product } from '@/content/schema';
+import { getProducts, getSiteSettings } from '@/lib/cms';
 import { env, siteBase } from '@/lib/env';
 import { registerUrl } from '@/lib/utm';
 import messages from '@/messages/ar.json';
@@ -21,7 +21,7 @@ import { ProductViewTracker } from '@/modules/products/product-view-tracker';
 const PRIMARY_CTA_ID = 'product-primary-cta';
 
 /** Three other products, in catalogue order, wrapping around (BRD 5.3, 6.6). */
-export function relatedProducts(current: Product): Product[] {
+export function relatedProducts(current: Product, products: Product[]): Product[] {
   const ordered = products.toSorted((a, b) => a.sortOrder - b.sortOrder);
   const start = ordered.findIndex((p) => p.slug === current.slug);
   const others: Product[] = [];
@@ -33,7 +33,8 @@ export function relatedProducts(current: Product): Product[] {
 }
 
 /** Product detail (BRD 6.6). */
-export function ProductPage({ product }: { product: Product }) {
+export async function ProductPage({ product }: { product: Product }) {
+  const [products, site] = await Promise.all([getProducts(), getSiteSettings()]);
   const copy = productsPage;
   const base = siteBase();
   const registerHref = registerUrl(env.appUrl, { campaign: 'product', content: product.slug });
@@ -51,7 +52,7 @@ export function ProductPage({ product }: { product: Product }) {
     <>
       <JsonLd
         nodes={[
-          jsonLd.product(base, product),
+          jsonLd.product(base, product, site),
           jsonLd.breadcrumbs(
             base,
             crumbs.map((c) => ({ name: c.name, path: c.href })),
@@ -152,7 +153,7 @@ export function ProductPage({ product }: { product: Product }) {
         <Container className="flex flex-col gap-10">
           <SectionHeader id="product-related-title" title={copy.sections.related} />
           <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {relatedProducts(product).map((other) => (
+            {relatedProducts(product, products).map((other) => (
               <li key={other.slug}>
                 <ProductCard product={other} />
               </li>

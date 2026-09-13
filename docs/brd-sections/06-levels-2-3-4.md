@@ -8,8 +8,9 @@ Give Dhia and an editor a WordPress-like, Arabic, right-to-left admin at `https:
 
 - CranL managed **Postgres** in the same project; connection string in `DATABASE_URL`. Daily automated snapshots (CranL) plus a weekly `pg_dump` to the S3 bucket by a job.
 - CranL **S3 bucket** for media through `@payloadcms/storage-s3`; public read for images; served through the CDN zone. Original uploads are kept; Payload generates sizes (thumbnail 400, card 800, hero 1920, og 1200 × 630) with focal-point cropping.
-- New env vars: `DATABASE_URL`, `PAYLOAD_SECRET` (≥ 32 random bytes), `S3_BUCKET`, `S3_REGION`, `S3_ENDPOINT`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `PAYLOAD_PUBLIC_SERVER_URL`.
-- The Docker image now runs migrations on start (`payload migrate`) before `next start`.
+- New env vars: `DATABASE_URL`, `PAYLOAD_SECRET` (≥ 32 random bytes), `S3_BUCKET`, `S3_REGION`, `S3_ENDPOINT`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `PAYLOAD_PUBLIC_SERVER_URL` (+ `S3_PUBLIC_URL` when objects are served from a host other than the endpoint). All of them join the production-required set asserted at start (§8.5); `PAYLOAD_PUBLIC_SERVER_URL` must equal the site origin.
+- Migrations are SQL files under `src/migrations/` run by the deploy workflow before the image is built and again by Payload at start-up; they are additive so the running image keeps serving during a release. Because every page is prerendered from the database, `next build` needs `DATABASE_URL` and `PAYLOAD_SECRET`: the image is built in GitHub Actions with BuildKit secrets and pushed to GHCR, and CranL pulls it (amended 2026-09-13, ADR-025).
+- `/api/health` reports `db` (`ok` when `select 1` answers within 2 s) and `media` (`s3` | `local`) as fields; `ok` stays the liveness signal so a database blip never restarts the container.
 
 ### 9.3 Payload setup
 
@@ -18,9 +19,9 @@ Give Dhia and an editor a WordPress-like, Arabic, right-to-left admin at `https:
 - Users collection with roles `admin` and `editor`:
   - **admin**: everything, including users, settings, redirects, deleting.
   - **editor**: create/edit/publish content collections (pages, products, FAQ, testimonials, blog); no users, no site settings, no redirects, no deletes of published items.
-- Auth hardening: email + password (min 12 chars, checked against a breached-password list where feasible), login lockout after 5 failures for 15 minutes, Turnstile on the login form, session cookie `SameSite=Lax; Secure; HttpOnly`, admin routes `noindex` and excluded from the sitemap, `X-Robots-Tag: noindex` header on `/admin*`. 2FA is a later block (§12.6).
+- Auth hardening: email + password (min 12 chars, checked against a breached-password list where feasible), login lockout after 5 failures for 15 minutes, Turnstile on the login form, session cookie `SameSite=Lax; Secure; HttpOnly`, admin routes `noindex` and excluded from the sitemap, `X-Robots-Tag: noindex` header on `/admin*`. 2FA is a later block (§12.6). Delivered in Phase 2a (ADR-027, ADR-028): the 12-character minimum and the Have I Been Pwned range check on every password write (fail-open with a warning when the service is down), the lockout, 8-hour sessions, and an admin header set on `/admin*` and `/api/payload/*` (`X-Robots-Tag: noindex, nofollow`, `Cache-Control: private, no-store`, a CSP without analytics origins). The Gravatar avatar is off. The login Turnstile ships in Phase 2b.
 - Localisation: field-level `localized: true` on all text fields with locales `['ar', 'en']`, default `ar`, English left empty until the English phase.
-- Drafts and versions on Pages, Products, Posts; autosave; scheduled publish via Payload's jobs queue; live preview for Pages and Posts pointing at the public route.
+- Drafts and versions on Pages, Products, Posts; autosave; scheduled publish via Payload's jobs queue; live preview for Pages and Posts pointing at the public route. Phase 2a delivers drafts, versions (25 per document) and autosave on Products; scheduled publish and live preview come with Pages in 2b.
 
 ### 9.4 Collections and Globals (1:1 with the content contract in §8.4)
 
@@ -56,9 +57,13 @@ Field rules: every text field shows its §4 default as the initial value after m
 
 On publish or update of any content: Payload `afterChange` hook → `revalidateTag('content')` and `revalidatePath` for affected routes → regenerate `sitemap.xml` (dynamic route reading from Payload with a 1-hour cache) → enqueue an IndexNow ping for the changed URLs (job) → clear the CDN zone for those paths if CranL exposes a purge API. Static pages stay static: the site reads content at build and via ISR (`revalidate` tags), never per-request from the database.
 
+Amended 2026-09-13 (Phase 2a, ADR-030): tag-based revalidation is not used. Every public page and the metadata routes carry `revalidate = 60` (ISR), the data layer reads Payload directly with per-render deduplication (published documents only), and the `afterChange` / `afterDelete` hooks call `revalidatePath` on the product's page and the routes that list it (home, listing, sitemap), and on every static route for a global. `/products/[slug]` accepts unknown params so a product published in the admin gets its page on first request. A publish is live at once; draft autosaves change nothing. The IndexNow ping and the CDN purge stay planned for 2b.
+
 ### 9.7 Migration from Level 1 content files
 
 `scripts/migrate-content.ts`: reads `content/*` (already schema-validated), uploads referenced images to the media collection with their alt text, and creates documents. Idempotent (upserts by slug). After migration, the content files are deleted and `content/schema.ts` becomes the typed client for Payload's generated types. Level 1 pages are refactored to read from Payload through a thin data layer (`modules/*/data.ts`) with `unstable_cache` tags; components do not change.
+
+Amended 2026-09-13 (Phase 2a, ADR-026, ADR-029): the migrated files move to `src/content/seed/*` and stay as fixtures (schema-validated, BRD-verbatim tested, the static fallback for the error page and the 410 body). The script is create-only: it refuses a non-empty database without `--force` and never overwrites a document the CMS holds; media files are named `{product}-{colour}-{side}.jpg` and matched by filename. The data layer is `src/lib/cms/*` (Local API, published Arabic documents, zod-parsed into the §8.4 contract, deduplicated per render). Media is served through Next's image optimizer, never from the storage URL directly, so the site CSP keeps `img-src 'self'` and the designer canvas stays untainted.
 
 ### 9.8 Acceptance (Level 2)
 

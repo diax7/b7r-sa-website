@@ -30,12 +30,34 @@ env:
   # Cloudflare's public always-pass test site key so the Turnstile island renders; the e2e
   # serves a stub for the widget script and no secret is set, so nothing reaches Cloudflare.
   NEXT_PUBLIC_TURNSTILE_SITE_KEY: 1x00000000000000000000AA
+  # The CMS (BRD 9): a throwaway Postgres service, a CI-only secret and admin. The admin
+  # panel is exercised on localhost, so Payload's own origin is the local one while the
+  # site origin above keeps the noindex guard off.
+  DATABASE_URL: postgres://b7r:b7r@localhost:5432/b7r
+  PAYLOAD_SECRET: ci-only-secret-never-used-outside-github-actions
+  PAYLOAD_PUBLIC_SERVER_URL: http://localhost:3004
+  ADMIN_EMAIL: ci-admin@b7r.sa
+  ADMIN_PASSWORD: Ci-Admin-Password-For-Tests-2026
 
 jobs:
   quality:
-    name: Typecheck, lint, tests, build, e2e, Lighthouse
+    name: Typecheck, lint, tests, seed, build, e2e, Lighthouse
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: b7r
+          POSTGRES_PASSWORD: b7r
+          POSTGRES_DB: b7r
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U b7r"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -69,6 +91,12 @@ jobs:
       - name: Unit tests
         run: pnpm test
 
+      - name: Migrate the schema
+        run: pnpm migrate
+
+      - name: Seed content and the first admin (integration check)
+        run: bash scripts/ci/seed-check.sh
+
       - name: Build
         run: pnpm build
 
@@ -76,10 +104,11 @@ jobs:
         run: pnpm exec playwright install --with-deps chromium webkit
 
       - name: E2E
+        timeout-minutes: 20
         run: pnpm e2e
 
       - name: Upload Playwright report
-        if: failure()
+        if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: playwright-report
@@ -87,7 +116,7 @@ jobs:
           retention-days: 7
 
       - name: Lighthouse CI
-        run: pnpm lhci
+        run: bash scripts/ci/lighthouse.sh
 
       - name: Upload Lighthouse report
         if: always()
@@ -96,3 +125,77 @@ jobs:
           name: lighthouse-report
           path: .lighthouseci
           retention-days: 14
+
+  s3:
+    name: Media on S3 (MinIO) — admin, CSP, products, machine files
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: b7r
+          POSTGRES_PASSWORD: b7r
+          POSTGRES_DB: b7r
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U b7r"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      S3_BUCKET: b7r-media
+      S3_REGION: auto
+      S3_ENDPOINT: http://localhost:9000
+      S3_PUBLIC_URL: http://localhost:9000/b7r-media
+      S3_ACCESS_KEY_ID: minio-ci
+      S3_SECRET_ACCESS_KEY: minio-ci-secret
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # GitHub service containers cannot take a command, and MinIO needs `server /data`.
+      - name: Start MinIO and create the public bucket
+        run: |
+          docker run -d --name minio -p 9000:9000 \
+            -e MINIO_ROOT_USER="$S3_ACCESS_KEY_ID" -e MINIO_ROOT_PASSWORD="$S3_SECRET_ACCESS_KEY" \
+            quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z server /data
+          for _ in $(seq 1 30); do curl -sf http://localhost:9000/minio/health/live && break; sleep 1; done
+          docker run --rm --network host --entrypoint sh quay.io/minio/mc:RELEASE.2025-08-13T08-35-41Z -c \
+            "mc alias set ci http://localhost:9000 $S3_ACCESS_KEY_ID $S3_SECRET_ACCESS_KEY && mc mb --ignore-existing ci/$S3_BUCKET && mc anonymous set download ci/$S3_BUCKET"
+
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Migrate, seed, first admin
+        run: |
+          pnpm migrate
+          pnpm content:migrate
+          pnpm admin:create
+
+      - name: Build
+        run: pnpm build
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: E2E (S3 subset)
+        timeout-minutes: 15
+        run: pnpm exec playwright test e2e/admin.spec.ts e2e/csp.spec.ts e2e/products.spec.ts e2e/machine-files.spec.ts --project=desktop-chrome
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: playwright-report-s3
+          path: playwright-report
+          retention-days: 7

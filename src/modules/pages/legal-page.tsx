@@ -4,7 +4,7 @@ import { Section } from '@/components/shared/section';
 import { getLegalPages } from '@/content/legal';
 import { legalCopy, productsPage } from '@/content/pages';
 import type { LegalPage as LegalPageData } from '@/content/schema';
-import { getSeo } from '@/content/seo';
+import { getSeo } from '@/lib/cms';
 import { siteBase } from '@/lib/env';
 import { renderMarkdown, type Heading } from '@/lib/markdown';
 import messages from '@/messages/ar.json';
@@ -42,11 +42,11 @@ export function getLegalPage(slug: LegalPageData['slug']): LegalPageData {
 }
 
 /** `/terms`, `/shipping`, `/privacy` (BRD 6.12, Appendix B verbatim). */
-export function LegalPage({ slug }: { slug: LegalPageData['slug'] }) {
+export async function LegalPage({ slug }: { slug: LegalPageData['slug'] }) {
   const page = getLegalPage(slug);
   const route = `/${slug}`;
   const base = siteBase();
-  const seo = getSeo(route);
+  const seo = await getSeo(route);
   const { html, headings } = renderMarkdown(page.body);
 
   return (

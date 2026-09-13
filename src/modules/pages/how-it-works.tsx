@@ -8,7 +8,7 @@ import { SectionHeader } from '@/components/shared/section-header';
 import { homeFaq } from '@/content/faq';
 import { home } from '@/content/home';
 import { howItWorksPage, productsPage } from '@/content/pages';
-import { getSeo } from '@/content/seo';
+import { getSeo } from '@/lib/cms';
 import { howItWorksSteps } from '@/content/steps';
 import { cn } from '@/lib/cn';
 import { siteBase } from '@/lib/env';
@@ -34,10 +34,10 @@ export function ExampleLine({ text }: { text: string }) {
 }
 
 /** How it works (BRD 6.7, 4.9). */
-export function HowItWorksPage() {
+export async function HowItWorksPage() {
   const copy = howItWorksPage;
   const base = siteBase();
-  const seo = getSeo(ROUTE);
+  const seo = await getSeo(ROUTE);
   // Mini FAQ: home items 2, 3, 4 (BRD 4.9).
   const mini = homeFaq.slice(1, 4).map((f) => ({ question: f.question, answer: f.answer }));
   const tiles = [copy.equation.sell, copy.equation.base, copy.equation.profit];

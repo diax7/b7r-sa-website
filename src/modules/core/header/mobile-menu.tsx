@@ -11,9 +11,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { navigation } from '@/content/navigation';
 import { footerCopy } from '@/content/pages';
-import { site } from '@/content/site';
+import type { Navigation, SiteSettings } from '@/content/schema';
 import messages from '@/messages/ar.json';
 import { cn } from '@/lib/cn';
 import { Burger, burgerButtonClass } from '@/modules/core/header/burger';
@@ -29,9 +28,13 @@ import { loginUrl, registerUrl, whatsappUrl } from '@/lib/utm';
  */
 export function MobileMenu({
   pathname,
+  navigation,
+  site,
   autoOpen = false,
 }: {
   pathname: string;
+  navigation: Navigation;
+  site: SiteSettings;
   autoOpen?: boolean;
 }) {
   const [open, setOpen] = useState(false);

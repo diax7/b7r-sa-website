@@ -88,9 +88,16 @@ test.describe('why us, testimonials, integrations (BRD 6.4.6–6.4.8)', () => {
     expect(titles).toEqual(['بدون مخاطرة', 'كل شيء تلقائي', 'جودة محلية وسريعة']);
   });
 
-  test('testimonials show the sample badge on preview hosts', async ({ page }) => {
+  test('testimonials: sample badge on preview hosts, section omitted on the production host', async ({
+    page,
+  }) => {
     await page.goto('/');
     const cards = page.locator('#testimonials [data-placeholder]');
+    // CI builds with the production origin (ADR-013): the placeholders must not ship there.
+    if (process.env['NEXT_PUBLIC_SITE_URL'] === 'https://b7r.sa') {
+      await expect(page.locator('#testimonials')).toHaveCount(0);
+      return;
+    }
     await expect(cards).toHaveCount(3);
     await expect(cards.first()).toContainText('نموذج');
   });

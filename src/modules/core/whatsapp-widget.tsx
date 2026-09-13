@@ -6,7 +6,6 @@ import { useEffect, useId, useRef, useState } from 'react';
 import { WhatsAppIcon } from '@/components/shared/brand-icons';
 import { Icon } from '@/components/shared/icon';
 import { whatsappWidgetCopy as copy } from '@/content/pages';
-import { site } from '@/content/site';
 import { cn } from '@/lib/cn';
 import { whatsappUrl } from '@/lib/utm';
 
@@ -21,14 +20,14 @@ const dockClass =
  * pulses once 6 s after load, once per session. The button sits at the PHYSICAL bottom-right
  * in RTL too (Dhia's explicit choice) — the one sanctioned physical placement.
  */
-export function WhatsAppWidget() {
+export function WhatsAppWidget({ number }: { number: string }) {
   const [open, setOpen] = useState(false);
   const [shown, setShown] = useState(false);
   const [pulse, setPulse] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const titleId = useId();
-  const href = whatsappUrl(site.contact.whatsapp, copy.prefilled);
+  const href = whatsappUrl(number, copy.prefilled);
 
   useEffect(() => {
     const show = window.setTimeout(() => setShown(true), 50);

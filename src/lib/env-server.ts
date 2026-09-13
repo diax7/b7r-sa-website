@@ -57,7 +57,7 @@ export function verificationTokens(): { google?: string; bing?: string } {
   return { ...(google ? { google } : {}), ...(bing ? { bing } : {}) };
 }
 
-/** BRD 8.5 "required in prod". */
+/** BRD 8.5 "required in prod", extended by the CMS set (BRD 9.2). */
 export const PRODUCTION_REQUIRED_ENV = [
   'NEXT_PUBLIC_SITE_URL',
   'NEXT_PUBLIC_APP_URL',
@@ -72,7 +72,18 @@ export const PRODUCTION_REQUIRED_ENV = [
   'INDEXNOW_KEY',
   'GOOGLE_SITE_VERIFICATION',
   'BING_SITE_VERIFICATION',
+  'DATABASE_URL',
+  'PAYLOAD_SECRET',
+  'PAYLOAD_PUBLIC_SERVER_URL',
+  'S3_BUCKET',
+  'S3_REGION',
+  'S3_ENDPOINT',
+  'S3_ACCESS_KEY_ID',
+  'S3_SECRET_ACCESS_KEY',
 ] as const;
+
+/** Payload signs sessions with it; anything shorter is guessable. */
+export const PAYLOAD_SECRET_MIN_LENGTH = 32;
 
 export type RawEnv = Record<string, string | undefined>;
 
@@ -96,6 +107,12 @@ export function assertProductionEnv(raw: RawEnv = process.env): void {
   }
   if (raw['NEXT_PUBLIC_SITE_URL'] && raw['NEXT_PUBLIC_SITE_URL'] !== 'https://b7r.sa') {
     problems.push('NEXT_PUBLIC_SITE_URL must be https://b7r.sa in production');
+  }
+  if (raw['PAYLOAD_PUBLIC_SERVER_URL'] && raw['PAYLOAD_PUBLIC_SERVER_URL'] !== 'https://b7r.sa') {
+    problems.push('PAYLOAD_PUBLIC_SERVER_URL must be https://b7r.sa in production (same origin)');
+  }
+  if (raw['PAYLOAD_SECRET'] && raw['PAYLOAD_SECRET'].length < PAYLOAD_SECRET_MIN_LENGTH) {
+    problems.push(`PAYLOAD_SECRET must be at least ${PAYLOAD_SECRET_MIN_LENGTH} characters`);
   }
   if (problems.length > 0) {
     throw new Error(

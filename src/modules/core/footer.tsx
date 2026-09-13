@@ -3,9 +3,8 @@ import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { InstagramIcon, TikTokIcon, XIcon } from '@/components/shared/brand-icons';
 import { Container } from '@/components/shared/container';
-import { navigation } from '@/content/navigation';
 import { footerCopy } from '@/content/pages';
-import { site } from '@/content/site';
+import type { Navigation, SiteSettings } from '@/content/schema';
 import { cn } from '@/lib/cn';
 
 const PAYMENT_BADGES = [
@@ -39,7 +38,15 @@ export const newsletterCopy = {
  * Site footer (BRD 6.3.2, copy 4.5). Navy, four columns, badges strip, contact line. The
  * newsletter form is passed in by the layout so `core` never imports a feature module.
  */
-export function Footer({ newsletter }: { newsletter: ReactNode }) {
+export function Footer({
+  newsletter,
+  navigation,
+  site,
+}: {
+  newsletter: ReactNode;
+  navigation: Navigation;
+  site: SiteSettings;
+}) {
   const year = new Date().getFullYear();
   const socials = [
     { href: site.social.x, label: footerCopy.socialAria.x, Icon: XIcon },

@@ -1,12 +1,12 @@
-import type { BlogPost, Product } from '@/content/schema';
-import { MERCHANT_COST_NOTE } from '@/content/seo';
-import { site } from '@/content/site';
+import type { BlogPost, Product, SiteSettings } from '@/content/schema';
+import { MERCHANT_COST_NOTE } from '@/content/seo-copy';
+import { absoluteUrl } from '@/lib/absolute-url';
 
 /**
  * JSON-LD builders (BRD 7.4). Each page renders exactly one `<script type="application/ld+json">`
  * holding a `@graph` of the types the BRD table lists for it; `tests/json-ld.test.ts` asserts
  * the required fields per type. Facts (name, phone, city, delivery days, return window) come
- * from `content/site.ts` and the legal texts, never from literals here.
+ * from the CMS site settings and the legal texts, never from literals here.
  */
 export type JsonLdNode = Record<string, unknown> & { '@type': string };
 
@@ -18,11 +18,7 @@ export interface Crumb {
 export const LOGO_PATH = '/images/logo/icon.png';
 export const RETURN_WINDOW_DAYS = 10;
 
-function absolute(base: string, path: string): string {
-  return path === '/' ? base : `${base}${path}`;
-}
-
-export function onlineStore(base: string): JsonLdNode {
+export function onlineStore(base: string, site: SiteSettings): JsonLdNode {
   return {
     '@type': 'OnlineStore',
     '@id': `${base}/#store`,
@@ -67,7 +63,7 @@ export function onlineStore(base: string): JsonLdNode {
   };
 }
 
-export function webSite(base: string): JsonLdNode {
+export function webSite(base: string, site: SiteSettings): JsonLdNode {
   return {
     '@type': 'WebSite',
     '@id': `${base}/#website`,
@@ -86,7 +82,7 @@ export function breadcrumbs(base: string, crumbs: Crumb[]): JsonLdNode {
       '@type': 'ListItem',
       position: i + 1,
       name: crumb.name,
-      item: absolute(base, crumb.path),
+      item: absoluteUrl(base, crumb.path),
     })),
   };
 }
@@ -97,19 +93,19 @@ export function itemList(base: string, paths: string[]): JsonLdNode {
     itemListElement: paths.map((path, i) => ({
       '@type': 'ListItem',
       position: i + 1,
-      url: absolute(base, path),
+      url: absoluteUrl(base, path),
     })),
   };
 }
 
-export function product(base: string, item: Product): JsonLdNode {
+export function product(base: string, item: Product, site: SiteSettings): JsonLdNode {
   const url = `${base}/products/${item.slug}`;
   return {
     '@type': 'Product',
     '@id': `${url}#product`,
     name: item.name,
     description: item.shortDescription,
-    image: item.colors.map((c) => `${base}${c.images.front}`),
+    image: item.colors.map((c) => absoluteUrl(base, c.images.front)),
     brand: { '@type': 'Brand', name: site.brandName },
     material: item.material,
     url,
@@ -139,8 +135,8 @@ export function webPage(
 ): JsonLdNode {
   return {
     '@type': 'WebPage',
-    '@id': `${absolute(base, route)}#webpage`,
-    url: absolute(base, route),
+    '@id': `${absoluteUrl(base, route)}#webpage`,
+    url: absoluteUrl(base, route),
     name,
     description,
     inLanguage: 'ar',
@@ -149,7 +145,12 @@ export function webPage(
   };
 }
 
-export function blogPosting(base: string, post: BlogPost, authorName: string): JsonLdNode {
+export function blogPosting(
+  base: string,
+  post: BlogPost,
+  authorName: string,
+  site: SiteSettings,
+): JsonLdNode {
   const url = `${base}/blog/${post.slug}`;
   return {
     '@type': 'BlogPosting',
@@ -157,7 +158,7 @@ export function blogPosting(base: string, post: BlogPost, authorName: string): J
     mainEntityOfPage: url,
     headline: post.title,
     description: post.excerpt,
-    image: [`${base}${post.cover}`],
+    image: [absoluteUrl(base, post.cover)],
     datePublished: post.publishedAt,
     dateModified: post.updatedAt,
     inLanguage: 'ar',

@@ -7,12 +7,8 @@ export { WaveDivider } from '@/modules/core/wave-divider';
 export { track, trackEvent, registerSink, type TrackEvent } from '@/modules/core/analytics/track';
 export { AnalyticsBridge, announceConsent } from '@/modules/core/analytics/analytics-bridge';
 export { NearViewport, AfterDelay } from '@/modules/core/lazy-mount';
-export {
-  buildMetadata,
-  pageMetadata,
-  postMetadata,
-  productMetadata,
-} from '@/modules/core/seo/metadata';
+// Metadata helpers read the CMS (server only) and are imported from
+// '@/modules/core/seo/metadata' directly, so this barrel stays safe for client components.
 export { JsonLd } from '@/modules/core/seo/json-ld-script';
 export * as jsonLd from '@/modules/core/seo/json-ld';
 export { FaqAccordionLoader } from '@/modules/core/faq/faq-accordion-loader';

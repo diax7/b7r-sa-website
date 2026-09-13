@@ -20,8 +20,46 @@ First time only: `pnpm exec playwright install chromium webkit`, `uv tool instal
 (set `NEXT_PUBLIC_SITE_URL=https://b7r.sa` for the run so SEO can reach 100).
 
 On Windows `pnpm lhci` completes the audit but chrome-launcher fails to delete its temp
-profile (EPERM) and reports failure; use `bash scripts/dev/lh.sh` locally, which builds,
-serves and prints the same mobile scores. CI runs `pnpm lhci` on Ubuntu.
+profile (EPERM) and reports failure; use `bash scripts/dev/lh-all.sh` locally, which builds,
+serves, warms the image cache and prints the same mobile scores. CI runs
+`bash scripts/ci/lighthouse.sh` on Ubuntu: it starts the server, requests every audited page
+and its image transforms once (ISR entries and the `next/image` cache warm, the steady state
+production reaches after the first visitor), then runs `lhci autorun` with three runs.
+
+## Local CMS (Phase 2a)
+
+```bash
+docker compose up -d        # Postgres 16 on :5435 (db/user/password b7r) + MinIO on :9000/:9001
+pnpm migrate                # apply src/migrations to the database in DATABASE_URL
+pnpm content:migrate        # seed products, media and the three globals (create-only, ADR-026)
+pnpm admin:create           # first admin from ADMIN_EMAIL / ADMIN_PASSWORD (12+ chars, not breached)
+pnpm dev                    # admin at http://localhost:3004/admin (Arabic, RTL)
+```
+
+`.env.local` needs `DATABASE_URL`, `PAYLOAD_SECRET` (any 32+ characters locally),
+`PAYLOAD_PUBLIC_SERVER_URL=http://localhost:3004` and the admin pair. Media goes to
+`public/media/` (gitignored) unless the `S3_*` rows point at MinIO (bucket `b7r-media`,
+public download). `bash scripts/ci/seed-check.sh` runs the seed and admin scripts through
+their three outcomes against a fresh database, the way CI does.
+
+Schema changes: edit the collection, then `pnpm migrate:create <name>` (writes an SQL
+migration under `src/migrations/` and normalises its imports), `pnpm migrate`, commit both
+the migration and `src/payload-types.ts`. Migrations must be **additive** (add columns and
+tables, never drop or rename in the same release): the running image keeps serving on the
+old schema until the new image starts (ADR-025). Drop the old column in a later release.
+
+Publish → live (ADR-030): every page regenerates at most once a minute when requested; a
+publish also regenerates the product's page, the home, the listing and the sitemap right
+away, and a global change regenerates every static route. A product created in the admin
+gets its page on first request (`dynamicParams = true`); keep it that way, a
+`dynamicParams = false` route 404s after an on-demand revalidation in Next 16.
+
+Password resets: no e-mail adapter is wired yet (Phase 2b candidate), so «نسيت كلمة المرور»
+sends nothing. An admin resets a colleague's password from the user's document in `/admin`.
+
+A local database created before 2026-09-13 ran an earlier initial migration; rebuild it once
+with `pnpm payload migrate:fresh --force-accept-warning`, then seed and create the admin
+again (move `public/media` aside first so filenames do not collide).
 
 ## Fonts
 
@@ -31,35 +69,61 @@ serves and prints the same mobile scores. CI runs `pnpm lhci` on Ubuntu.
 
 ## Docker
 
+The build prerenders every page from the CMS, so it needs the database and the Payload secret
+as BuildKit secrets (ADR-025); `NEXT_PUBLIC_*` and the storage location are build args:
+
 ```bash
-docker build -t b7r-website:local .
-docker run --rm -p 3000:3000 b7r-website:local
-curl http://localhost:3000/api/health   # {"ok":true,"version":"0.1.0","time":"…"}
+DATABASE_URL=postgres://b7r:b7r@host.docker.internal:5435/b7r PAYLOAD_SECRET=… \
+docker build -t b7r-website:local \
+  --secret id=DATABASE_URL --secret id=PAYLOAD_SECRET \
+  --build-arg PAYLOAD_PUBLIC_SERVER_URL=http://localhost:3000 .
+docker run --rm -p 3000:3000 -e DATABASE_URL=… -e PAYLOAD_SECRET=… \
+  -e PAYLOAD_PUBLIC_SERVER_URL=http://localhost:3000 b7r-website:local
+curl http://localhost:3000/api/health   # {"ok":true,"version":"0.1.0","db":"ok","media":"local",…}
 ```
 
-Runtime env: `NEXT_PUBLIC_*` values are inlined at build (pass them as `--build-arg`).
+`docker build --secret id=NAME` reads the value from the environment variable of the same
+name. Local uploads (`public/media`) are not copied into the image.
 
 ## Deploy (CranL)
 
 GitHub push and the first CranL deploy wait for Dhia's approval (ADR-008). When enabled:
 
-1. Connect the repo; build from the `Dockerfile`; region Saudi Arabia; port 3000; health
-   check `GET /api/health` (returns `ok`, `version`, and `newsletter | contact | turnstile |
-   indexnow` states).
-2. Environment: every row of the matrix below. `NEXT_PUBLIC_*` values are inlined at build,
-   so pass them as build args as well as runtime env.
-3. Set `B7R_RUNTIME=production` **only in the CranL production app**. `instrumentation.ts`
-   then asserts the BRD 8.5 required set at server start and throws if anything is missing,
-   so the container fails its health check and CranL keeps the previous image (ADR-021).
-   Never set it in CI or previews.
-4. Confirm the platform proxy sets `x-forwarded-for` (`curl -sI` from outside and read it
+1. Provision on CranL: Postgres 16 (a database `b7r`, a user with DDL rights, TLS) and an
+   S3-compatible bucket `b7r-media` with public read; note the values for the matrix below.
+   Region Saudi Arabia; port 3000; health check `GET /api/health` (`ok` is the liveness
+   signal; `db`, `media`, `newsletter`, `contact`, `turnstile`, `indexnow` are reported).
+2. Image: `.github/workflows/deploy.yml` runs on every push to `main` and on demand. It
+   migrates the production database (`pnpm migrate`), builds the image with the database and
+   secret as BuildKit secrets, and pushes `ghcr.io/diax7/b7r-sa-website:{sha,latest}`. Point
+   CranL at that image (deploy on new tag / webhook). Secrets go in the GitHub `production`
+   environment (`DATABASE_URL`, `PAYLOAD_SECRET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`);
+   non-secret values are environment **variables** (`NEXT_PUBLIC_GA_ID`, `NEXT_PUBLIC_UMAMI_*`,
+   `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `S3_BUCKET`, `S3_REGION`, `S3_ENDPOINT`, `S3_PUBLIC_URL`).
+   Until the two secrets exist the workflow ends with a notice and deploys nothing. The
+   GitHub runner must reach the database (public endpoint with TLS, or an allow-list); the
+   fallback is building on CranL from the `Dockerfile` with the same secrets.
+   Release order: migrate (the workflow does it) → new image starts → old image stops;
+   migrations are additive so both images run on the schema (ADR-025).
+3. Runtime environment: every row of the matrix below; the same `NEXT_PUBLIC_*` values as
+   the build args. First deploy only: `pnpm content:migrate` and `pnpm admin:create` against
+   the production database from a machine with the secrets (ADR-026), then sign in at
+   `/admin` and change the password.
+4. Set `B7R_RUNTIME=production` **only in the CranL production app**. `instrumentation.ts`
+   then asserts the BRD 8.5 + 9.2 required set at server start and throws if anything is
+   missing, so the container fails its health check and CranL keeps the previous image
+   (ADR-021). Never set it in CI or previews.
+5. Confirm the platform proxy sets `x-forwarded-for` (`curl -sI` from outside and read it
    back from a debug log line, or check the platform docs). The API rate limiters key on the
    last hop of that header; if it never arrives every visitor shares the `unknown` key and the
    sixth signup or message in ten minutes site-wide is refused.
-5. HSTS carries `preload`. Submitting `b7r.sa` to the preload list commits every future
+6. HSTS carries `preload`. Submitting `b7r.sa` to the preload list commits every future
    `*.b7r.sa` subdomain to HTTPS; do that only once every subdomain (app, umami, …) serves TLS.
-6. Rollback: redeploy the previous image from CranL's deployment list. Nothing is stateful in
-   Level 1 (the rate limiters and mock transports are in memory).
+7. CDN / proxy rule: cache `/_next/static/*` and `/_next/image*` freely; never cache `/admin*`
+   or `/api/*` (they answer `Cache-Control: private, no-store`); pages carry Next's own
+   `s-maxage=60, stale-while-revalidate` and may be cached at the edge on those terms.
+8. Rollback: redeploy the previous image from CranL's deployment list. The database is
+   shared and migrations are additive, so the previous image runs on the current schema.
 
 ### Environment matrix
 
@@ -77,6 +141,12 @@ GitHub push and the first CranL deploy wait for Dhia's approval (ADR-008). When 
 | `GOOGLE_SITE_VERIFICATION`, `BING_SITE_VERIFICATION` | prod | verification tokens → `<meta>` tags |
 | `B7R_RUNTIME` | prod only | `production` (turns on the startup assertion) |
 | `NEWSLETTER_TRANSPORT`, `CONTACT_TRANSPORT` | CI/local only | `mock`; refused in production |
+| `DATABASE_URL` | all | Postgres connection string (build **and** runtime) |
+| `PAYLOAD_SECRET` | all | 32+ random characters; signs admin sessions (rotating it signs everyone out) |
+| `PAYLOAD_PUBLIC_SERVER_URL` | all | `https://b7r.sa` in production (same origin as the site); `http://localhost:3004` locally and in CI |
+| `S3_BUCKET`, `S3_REGION`, `S3_ENDPOINT`, `S3_PUBLIC_URL` | prod (+ local MinIO) | bucket, region (`auto` for MinIO/R2), API endpoint, public base URL of objects |
+| `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` | prod (+ local MinIO) | credentials with read/write on the bucket |
+| `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_NAME` | one-off | `pnpm admin:create` on an empty users table; the e2e admin suite signs in with the pair |
 
 ### Cutover (BRD 12.4 items 13–18)
 
@@ -114,8 +184,10 @@ only, refused with a key) keeps messages in memory. Message bodies are never log
 ## Open Graph images
 
 `pnpm og` re-renders `public/og/default.png` and `public/og/products/*.png` with Playwright
-(ADR-020). Run it after a product or tagline change and commit the PNGs;
-`tests/og-images.test.ts` fails when a product has no image.
+(ADR-020). It reads the CMS when `DATABASE_URL` is set (the live catalogue and tagline),
+else the seed fixtures. Run it after a product or tagline change and commit the PNGs;
+`tests/og-images.test.ts` fails when a product has no image. A product added in the admin
+has no OG image until this runs: the page falls back to the default image.
 
 ## Lighthouse
 

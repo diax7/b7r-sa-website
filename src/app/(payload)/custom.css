@@ -1,0 +1,4 @@
+/* Admin tweaks (BRD 9.3): brand mark sizing only; Payload's own theme is kept by design. */
+.graphic-logo img {
+  max-height: 56px;
+}

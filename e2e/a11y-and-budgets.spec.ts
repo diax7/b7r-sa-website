@@ -10,6 +10,19 @@ test.describe('status pages', () => {
     await expect(page.locator('[aria-labelledby="cta-ribbon-title"]')).toHaveCount(0);
   });
 
+  test('an unknown product slug is a 404 that still shows the site shell once hydrated', async ({
+    page,
+  }) => {
+    // notFound() from a page answers from a bare document; the client renders the
+    // not-found view inside the site layout (ADR-024).
+    const res = await page.goto('/products/this-product-does-not-exist');
+    expect(res?.status()).toBe(404);
+    await expect(page.locator('h1')).toHaveText('الصفحة غير موجودة');
+    await expect(page.getByRole('banner')).toBeVisible();
+    await expect(page.getByRole('contentinfo')).toBeVisible();
+    await expect(page.locator('main#content')).toBeVisible();
+  });
+
   test('health endpoint reports ok and a version', async ({ request }) => {
     const res = await request.get('/api/health');
     expect(res.status()).toBe(200);

@@ -1,7 +1,7 @@
 import { readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { products } from '@/content/products';
+import { products } from '@/content/seed/products';
 
 /** PNG IHDR: width and height are the two big-endian uint32s after the 16-byte signature+chunk header. */
 function pngSize(path: string): { width: number; height: number; bytes: number } {

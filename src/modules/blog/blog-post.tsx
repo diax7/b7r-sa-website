@@ -14,6 +14,7 @@ import { env, siteBase } from '@/lib/env';
 import { renderMarkdown } from '@/lib/markdown';
 import { registerUrl } from '@/lib/utm';
 import messages from '@/messages/ar.json';
+import { getSiteSettings } from '@/lib/cms';
 import { CtaRibbon, JsonLd, jsonLd } from '@/modules/core';
 import { PostCard, postMeta } from '@/modules/blog/post-card';
 import { ShareButtons } from '@/modules/blog/share-buttons';
@@ -34,7 +35,8 @@ export function splitAfterSecondSection(html: string): [string, string] {
 }
 
 /** Post template (BRD 6.11). */
-export function BlogPostPage({ post }: { post: BlogPostData }) {
+export async function BlogPostPage({ post }: { post: BlogPostData }) {
+  const site = await getSiteSettings();
   const loaded = loadBlogPost(post);
   const base = siteBase();
   const route = `/blog/${post.slug}`;
@@ -71,7 +73,7 @@ export function BlogPostPage({ post }: { post: BlogPostData }) {
     <>
       <JsonLd
         nodes={[
-          jsonLd.blogPosting(base, post, blogCopy.author.name),
+          jsonLd.blogPosting(base, post, blogCopy.author.name, site),
           jsonLd.breadcrumbs(
             base,
             crumbs.map((c) => ({ name: c.name, path: c.href })),

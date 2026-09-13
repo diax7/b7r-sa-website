@@ -1,0 +1,8 @@
+# Normalise line endings in the repository (Windows checkouts commit LF too).
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.webp binary
+*.woff2 binary
+*.ico binary
+*.mp4 binary
