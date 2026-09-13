@@ -1,4 +1,4 @@
-import { type CollectionConfig, type PayloadRequest, ValidationError } from 'payload';
+import { APIError, type CollectionConfig, type PayloadRequest } from 'payload';
 import { FAQ_GROUPS } from '@/content/schema';
 import { isAdmin, isEditorOrAdmin } from '@/modules/cms/access';
 import { PATHS_FOR_FAQS, revalidateRoutes } from '@/modules/cms/hooks/revalidate';
@@ -35,13 +35,9 @@ async function guardHomeLimit({
     req,
   });
   const problem = homeFlagProblem(true, others.totalDocs);
-  if (problem) {
-    throw new ValidationError({
-      collection: 'faqs',
-      errors: [{ path: 'showOnHome', message: problem }],
-      req,
-    });
-  }
+  // A public APIError: the Arabic message is the response's own message (a ValidationError
+  // keeps it in `data`, which the built server drops when the error class is duplicated).
+  if (problem) throw new APIError(problem, 400, undefined, true);
   return data;
 }
 

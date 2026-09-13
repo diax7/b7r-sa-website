@@ -27,6 +27,9 @@ const nextConfig: NextConfig = {
     qualities: [75, 82],
     // CMS media on S3 (ADR-029): the optimizer fetches it, the browser never does.
     remotePatterns: s3RemotePatterns(),
+    // Next refuses to optimise images from a private IP (SSRF guard). Only the CI MinIO job
+    // serves media from localhost; production media sits on a public host.
+    ...(process.env['IMAGES_ALLOW_LOCAL_IP'] === '1' ? { dangerouslyAllowLocalIP: true } : {}),
   },
   // BRD 8.10 headers and 5.2 redirects live in src/lib so they are unit-tested as data.
   async headers() {

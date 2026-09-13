@@ -151,6 +151,8 @@ jobs:
       S3_PUBLIC_URL: http://localhost:9000/b7r-media
       S3_ACCESS_KEY_ID: minio-ci
       S3_SECRET_ACCESS_KEY: minio-ci-secret
+      # MinIO answers on localhost, which the image optimiser refuses by default (SSRF guard).
+      IMAGES_ALLOW_LOCAL_IP: '1'
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
