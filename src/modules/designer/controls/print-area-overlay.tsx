@@ -60,8 +60,9 @@ export function PrintAreaOverlay({
   }
 
   if (!hasDesign) {
-    // The area is ~100 × 140 px on a phone stage: the icon and the helper line appear only
-    // once the area is wide enough for them (container queries), the prompt never overflows.
+    // The area is ~100 × 140 px on a phone stage and ~130–200 px wide on desktop: the icon,
+    // the small text and the helper line appear as the area grows (container queries on the
+    // area's width; the areas are all about 3:4), so the prompt never overflows the box.
     return (
       <div className="@container absolute" style={style} data-print-area-prompt="">
         <input
@@ -79,25 +80,31 @@ export function PrintAreaOverlay({
         <label
           htmlFor={inputId}
           className={cn(
-            'flex size-full cursor-pointer flex-col items-center justify-center gap-1 overflow-hidden rounded-inner border-2 border-dashed px-2 text-center transition-colors duration-(--duration-fast) @min-[10rem]:gap-2 @min-[10rem]:px-3',
+            'flex size-full cursor-pointer flex-col items-center justify-center gap-1 overflow-hidden rounded-inner border-2 border-dashed px-2 text-center transition-colors duration-(--duration-fast) @min-[8rem]:gap-2 @min-[8rem]:px-3',
             'border-primary/50 bg-surface/70 backdrop-blur-[2px] hover:border-primary hover:bg-surface/85',
             'peer-focus-visible:border-primary peer-focus-visible:ring-2 peer-focus-visible:ring-primary/40',
             fileError && 'border-error',
           )}
         >
-          <span className="hidden size-11 place-items-center rounded-pill bg-accent-tint text-primary @min-[10rem]:grid">
+          <span
+            className={cn(
+              'hidden size-11 place-items-center rounded-pill bg-accent-tint text-primary',
+              // The error takes the icon's room; nothing to upload until the file is fixed.
+              !fileError && '@min-[8rem]:grid',
+            )}
+          >
             <Icon icon={Upload} size={20} />
           </span>
           <span
             className={cn(
-              'text-caption leading-snug font-medium text-primary @min-[10rem]:text-small',
+              'text-caption leading-snug font-medium text-primary @min-[8rem]:text-small',
               // A narrow area has room for one message: the error takes the prompt's place.
-              fileError && '@max-[10rem]:hidden',
+              fileError && '@max-[8rem]:hidden',
             )}
           >
             {copy.prompt}
           </span>
-          <span className="hidden text-caption text-text-muted @min-[13rem]:block">
+          <span className="hidden text-caption text-text-muted @min-[11rem]:block">
             {copy.helper}
           </span>
           {fileError && (
