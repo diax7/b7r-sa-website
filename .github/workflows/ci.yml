@@ -103,6 +103,9 @@ jobs:
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps chromium webkit
 
+      - name: Warm the ISR and image caches
+        run: bash scripts/ci/warm.sh
+
       - name: E2E
         run: pnpm e2e
 
@@ -186,6 +189,9 @@ jobs:
 
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps chromium
+
+      - name: Warm the ISR and image caches
+        run: bash scripts/ci/warm.sh
 
       - name: E2E (S3 subset)
         run: pnpm exec playwright test e2e/admin.spec.ts e2e/csp.spec.ts e2e/products.spec.ts e2e/machine-files.spec.ts --project=desktop-chrome
