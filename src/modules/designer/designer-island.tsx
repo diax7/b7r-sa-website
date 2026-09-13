@@ -147,11 +147,11 @@ export function DesignerIsland({
 
   const onChromeChange = useCallback((visible: boolean) => setChrome(visible), []);
 
-  // An uploaded design is an object URL: revoke it whenever it is replaced or on unmount.
+  // A design is an object URL: revoke it whenever it is replaced or on unmount.
   const design = state.design;
   useEffect(
     () => () => {
-      if (design?.kind === 'upload') URL.revokeObjectURL(design.url);
+      if (design) URL.revokeObjectURL(design.url);
     },
     [design],
   );
@@ -223,19 +223,6 @@ export function DesignerIsland({
             </p>
           )}
         </div>
-        <p className="mt-3 text-center text-small text-text-muted">
-          <button
-            type="button"
-            onClick={() => {
-              dispatch({ type: 'useSample' });
-              track('designer_sample', {});
-            }}
-            className="font-medium text-primary underline-offset-4 hover:underline"
-            data-design-sample=""
-          >
-            {copy.sample}
-          </button>
-        </p>
       </div>
 
       {/* Controls: start column. */}
@@ -259,7 +246,6 @@ export function DesignerIsland({
           onSellCommit={(value) => dispatch({ type: 'commitSell', value })}
           onDaily={(value) => dispatch({ type: 'setDaily', value })}
           copy={{
-            label: copy.groups.pricing,
             baseCostLabel: copy.baseCostLabel,
             sellPriceLabel: copy.sellPriceLabel,
             suggestedPriceHelper: copy.suggestedPriceHelper,
@@ -282,7 +268,6 @@ export function DesignerIsland({
               perPieceLabel: copy.perPieceLabel,
               monthlyLabel: copy.monthlyLabel,
               negativeWarning: copy.negativeWarning,
-              footnote: copy.footnote,
               cta: copy.cta,
             }}
           />

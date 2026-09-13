@@ -1158,7 +1158,6 @@ export interface Home {
     eyebrow: string;
     title: string;
     lead: string;
-    sample: string;
     cta: string;
   };
   steps: {
@@ -1381,7 +1380,6 @@ export interface HomeSelect<T extends boolean = true> {
         eyebrow?: T;
         title?: T;
         lead?: T;
-        sample?: T;
         cta?: T;
       };
   steps?:

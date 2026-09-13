@@ -23,7 +23,6 @@ export async function DesignerSection() {
 
   const copy: DesignerCopy = {
     ...designerMessages,
-    sample: designer.sample,
     cta: designer.cta,
     canvasLabel: messages.designer.canvasLabel,
     productGroupAria: messages.designer.productGroupLabel,

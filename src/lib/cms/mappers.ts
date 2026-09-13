@@ -206,7 +206,6 @@ export function toHome(doc: HomeDoc): Home {
       eyebrow: doc.designer.eyebrow,
       title: doc.designer.title,
       lead: doc.designer.lead,
-      sample: doc.designer.sample,
       cta: doc.designer.cta,
     },
     steps: {

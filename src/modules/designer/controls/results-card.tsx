@@ -52,7 +52,6 @@ interface ResultsCardProps {
     perPieceLabel: string;
     monthlyLabel: string;
     negativeWarning: string;
-    footnote: string;
     cta: string;
   };
 }
@@ -103,7 +102,6 @@ export function ResultsCard({
           </p>
         )}
       </div>
-      <p className="text-caption text-text-muted">{copy.footnote}</p>
       <Button asChild size="lg" fullWidth>
         <a href={ctaHref} data-track="cta_click" data-location="designer">
           {copy.cta}

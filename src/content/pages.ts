@@ -16,11 +16,9 @@ export const productsPage = {
     profit: 'ربحك التقديري',
     perPiece: 'لكل قطعة',
   },
-  priceFootnote: 'تقدير لا يشمل الشحن والضريبة. أنت تحدّد سعر البيع.',
   primaryCta: 'ابدأ بيع هذا المنتج',
   secondaryLink: 'جرّب تصميمك عليه',
   sections: {
-    description: 'الوصف',
     specs: 'المواصفات',
     sizeChart: 'جدول المقاسات',
     related: 'منتجات أخرى',
@@ -107,9 +105,9 @@ export const footerCopy = {
     x: 'بحر برنت على X',
     instagram: 'بحر برنت على إنستغرام',
     tiktok: 'بحر برنت على تيك توك',
+    whatsapp: 'بحر برنت على واتساب',
   },
   badgesCaption: 'وسائل الدفع وجهات التوثيق',
-  miskLine: 'خريجو برنامج Misk Launchpad، الدفعة 9، 2026',
   copyright: '© {year} بحر برنت. جميع الحقوق محفوظة.',
 };
 

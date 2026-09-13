@@ -71,7 +71,6 @@ export async function Hero() {
           primaryHref: registerUrl(env.appUrl, { campaign: 'hero' }),
           secondaryCta: hero.secondaryCta,
           secondaryHref: '/products',
-          microcopy: hero.microcopy,
           chips: hero.chips,
           slideIndicatorAria: messages.hero.slideIndicator.replace(
             '{total}',

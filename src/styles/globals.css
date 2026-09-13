@@ -62,7 +62,7 @@
 
   /* Type scale (§3.3) */
   --text-display: clamp(40px, 6vw, 72px);
-  --text-display--line-height: 1.15;
+  --text-display--line-height: 1.25;
   --text-display--font-weight: 900;
   --text-h1: clamp(32px, 4.5vw, 52px);
   --text-h1--line-height: 1.2;

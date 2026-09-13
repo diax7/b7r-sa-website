@@ -97,7 +97,7 @@ Scroll-reveal: elements fade up 12 px over 400 ms, once, when 20% visible, stagg
 
 Under `prefers-reduced-motion: reduce`: disable auto-advance, parallax-like effects, waves, stagger, and count-ups; keep opacity transitions ≤ 150 ms.
 
-Amended 2026-09-13 (ADR-037): the marketing video in §6.4.5 is the second continuous animation, a muted, decorative loop mounted near the viewport with the poster under reduced motion and Save-Data. The how-it-works journey (§6.7) fills its path with a CSS scroll-driven progress line, static where unsupported.
+Amended 2026-09-13 (ADR-037): the marketing video in §6.4.5 is the second continuous animation, a muted, decorative loop mounted near the viewport with the poster under reduced motion and Save-Data. The how-it-works journey (§6.7) fills its path with a CSS scroll-driven progress line, full and static where unsupported and under reduced motion (`animation: none`: scroll-driven progress ignores the global 0.01 ms duration).
 
 ### 3.8 Iconography and illustration
 

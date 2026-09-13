@@ -44,12 +44,13 @@ two `<link rel="preload" as="image" imagesrcset … media=…>` elements (hoiste
 React 19); browsers honour `media` on preloads, so exactly one image is fetched and preloaded
 per viewport. E2E asserts one hero image request per project.
 
-## ADR-007 — Sample design rendered with Playwright/Chromium (2026-09-12)
+## ADR-007 — Sample design rendered with Playwright/Chromium (2026-09-12) — retired
 
 Pillow cannot shape Arabic without libraqm and sharp's SVG text depends on system fonts. The
-`scripts/generate-sample-design.ts` script renders «تصميمك هنا» in ITF Rayat Round Bold through
+`scripts/generate-sample-design.ts` script rendered «تصميمك هنا» in ITF Rayat Round Bold through
 headless Chromium (already a dev dependency for e2e) to a transparent 1200 × 600 PNG, committed
-to `public/designs/sample-tasmeemak.png`.
+to `public/designs/sample-tasmeemak.png`. Retired 2026-09-13 with the sample link (ADR-036
+amendment): script, PNG and `assets:sample-design` removed.
 
 ## ADR-008 — CranL deploy deferred; Docker image verified locally (2026-09-12)
 
@@ -497,6 +498,12 @@ canvas starts empty with the prompt (Dhia can flip it to the pre-placed sample i
 `initialState.design`); «جرّب تصميماً جاهزاً» places the sample. Uploads stay in memory;
 the island revokes a replaced object URL. The two new strings are Appendix G rows and are
 listed for the 2b `home` seed. BRD §6.4.3 amended.
+
+Amended 2026-09-13 (Dhia's quick edits): the sample design is gone — no «جرّب تصميماً
+جاهزاً» link, no `designer.sample` CMS field, no `designer_sample` event, no
+`public/designs/sample-tasmeemak.png` (ADR-007 retired). The canvas starts empty and only an
+upload fills it; every design is an object URL. The pricing legend «التسعير» and the
+«تقدير لا يشمل الشحن والضريبة» footnote are gone from the calculator too.
 
 ## ADR-037 — The video is a muted background loop (2026-09-13)
 

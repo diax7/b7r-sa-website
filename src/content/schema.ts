@@ -93,13 +93,7 @@ export const HomeSchema = z.object({
     button: nonEmpty,
     order: z.array(slug).length(5),
   }),
-  designer: z.object({
-    eyebrow: nonEmpty,
-    title: nonEmpty,
-    lead: nonEmpty,
-    sample: nonEmpty,
-    cta: nonEmpty,
-  }),
+  designer: z.object({ eyebrow: nonEmpty, title: nonEmpty, lead: nonEmpty, cta: nonEmpty }),
   steps: z.object({
     enabled: z.boolean(),
     eyebrow: nonEmpty,

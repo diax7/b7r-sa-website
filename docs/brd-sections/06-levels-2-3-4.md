@@ -19,9 +19,9 @@ Give Dhia and an editor a WordPress-like, Arabic, right-to-left admin at `https:
 - Users collection with roles `admin` and `editor`:
   - **admin**: everything, including users, settings, redirects, deleting.
   - **editor**: create/edit/publish content collections (pages, products, FAQ, testimonials, blog); no users, no site settings, no redirects, no deletes of published items.
-- Auth hardening: email + password (min 12 chars, checked against a breached-password list where feasible), login lockout after 5 failures for 15 minutes, Turnstile on the login form, session cookie `SameSite=Lax; Secure; HttpOnly`, admin routes `noindex` and excluded from the sitemap, `X-Robots-Tag: noindex` header on `/admin*`. 2FA is a later block (§12.6). Delivered in Phase 2a (ADR-027, ADR-028): the 12-character minimum and the Have I Been Pwned range check on every password write (fail-open with a warning when the service is down), the lockout, 8-hour sessions, and an admin header set on `/admin*` and `/api/payload/*` (`X-Robots-Tag: noindex, nofollow`, `Cache-Control: private, no-store`, a CSP without analytics origins). The Gravatar avatar is off. The login Turnstile ships in Phase 2b.
+- Auth hardening: email + password (min 12 chars, checked against a breached-password list where feasible), login lockout after 5 failures for 15 minutes, Turnstile on the login form, session cookie `SameSite=Lax; Secure; HttpOnly`, admin routes `noindex` and excluded from the sitemap, `X-Robots-Tag: noindex` header on `/admin*`. 2FA is a later block (§12.6). Delivered in Phase 2a (ADR-027, ADR-028): the 12-character minimum and the Have I Been Pwned range check on every password write (fail-open with a warning when the service is down), the lockout, 8-hour sessions, and an admin header set on `/admin*` and `/api/payload/*` (`X-Robots-Tag: noindex, nofollow`, `Cache-Control: private, no-store`, a CSP without analytics origins). The Gravatar avatar is off. The login Turnstile ships in Phase 2b (delivered 2026-09-13 as a verified gate cookie, ADR-034; the password-reset e-mail goes through Resend when configured).
 - Localisation: field-level `localized: true` on all text fields with locales `['ar', 'en']`, default `ar`, English left empty until the English phase.
-- Drafts and versions on Pages, Products, Posts; autosave; scheduled publish via Payload's jobs queue; live preview for Pages and Posts pointing at the public route. Phase 2a delivers drafts, versions (25 per document) and autosave on Products; scheduled publish and live preview come with Pages in 2b.
+- Drafts and versions on Pages, Products, Posts; autosave; scheduled publish via Payload's jobs queue; live preview for Pages and Posts pointing at the public route. Phase 2a delivers drafts, versions (25 per document) and autosave on Products; scheduled publish and live preview come with Pages in 2b. Amended 2026-09-13 (ADR-031): 2b phase 2 delivers drafts, versions and autosave on Pages and the `home` global; scheduled publish lands with the jobs in 2b phase 3; live preview is deferred (docs/IDEAS.md) because it needs draft rendering on the public routes, which the ISR + `revalidatePath` pipeline does not offer.
 
 ### 9.4 Collections and Globals (1:1 with the content contract in §8.4)
 
@@ -30,18 +30,20 @@ Give Dhia and an editor a WordPress-like, Arabic, right-to-left admin at `https:
 | `site-settings` | Global | brand, contact, social, offer.welcomeCredit, delivery.maxDays, delivery.origin, bookingUrl, appUrls, badges (media[]), consent text | `content/site.ts` |
 | `navigation` | Global | header items[], footer columns[], ctaLabel | `content/navigation.ts` |
 | `home` | Global | heroSlides[] (media desktop/mobile, headline, subline), productStripOrder[], designerDefaults, steps[], video (media, poster, heading, lead), whyUs[], integrationsIntro, faqSelection (5 relationship), ribbon | `content/home.ts` |
+| | | Amended 2026-09-13 (ADR-031, as shipped): groups `hero` (4 slides: headline, subline, desktop and mobile media; CTAs, microcopy, 3 chips), `productStrip` (copy + 5 product relationships), `designer` (eyebrow, title, lead, sample, cta), `steps` (copy, link, 3 items with media icons), `video` (copy; the file ships with the site), `whyUs` (3 items, icon select), `testimonials`, `integrations`, `faq` (copy + link; the entries are the `faqs` rows flagged `showOnHome`), `ribbon`; `enabled` on every group but hero, productStrip, designer and ribbon; drafts + autosave; interface strings (aria, hints, input labels, validation) stay in `src/messages/ar.json`. | `content/seed/home.ts` (seed) |
 | `seo-defaults` | Global | titleTemplate, defaultDescription, defaultOgImage, verification tokens (admin-only) | `content/seo.ts` |
 | `products` | Collection | slug, name, shortDescription, description (rich text), baseCost, suggestedPrice, colors[] (name, hex, front media, back media), sizes[], material, weightGrams, printArea (fixed 28×38 + canvas fractions), printMethodLabel, sortOrder, seo (plugin) | `content/products.ts` |
 | `pages` | Collection | slug (how-it-works, about, contact, faq, terms, shipping, privacy), title, lead, blocks[] (richText, steps, cards, miskCredential, contactCards, bookingCard, legalBody with updatedAt), seo | `content/pages/*`, `content/legal/*` |
-| `faqs` | Collection | group, question, answer, order, showOnHome | `content/faq.ts` |
+| | | Amended 2026-09-13 (ADR-031, as shipped): blocks `richText`, `story` (heading, text, line, photo, facts-band switch), `cards` (icon, title, text, art), `steps`, `profitEquation`, `faqList` (all groups or a slice of the home entries, link, closing line), `miskCredential`, `contact` (the cards' titles and the booking card; the form is interface copy in code), `legalBody` (Markdown + date), `mediaBanner`; `seo` group (title ≤ 70, description ≤ 160, share image) instead of `plugin-seo`; the seven slugs are reserved (route folders in code, no rename, no delete) and other published pages are served by `/[slug]`; unknown top-level URLs get the global 404 through the proxy (ADR-032). | `content/seed/pages.ts`, `content/seed/legal/*.md` (seed) |
+| `faqs` | Collection | group, question, answer, order, showOnHome, homeOrder (1–5; a sixth `showOnHome` is refused, ADR-031) | `content/seed/faq.ts` (seed) |
 | `testimonials` | Collection | quote, name, store, avatar, placeholder (default false), order | `content/testimonials.ts` |
-| `integrations` | Collection | slug, name, logo, status (available), order | `content/integrations.ts` |
+| `integrations` | Collection | platform (salla \| zid \| shopify — selects the brand SVG that ships with the code, ADR-031), name, nameLatin, order | `content/seed/integrations.ts` (seed) |
 | `media` | Collection | upload with alt (required, Arabic), focal point, credit | `public/images/*` |
 | `redirects` | Collection (plugin) | from, to, type 301/308/410 | `lib/redirects.ts` |
 | `users` | Collection | email, role, name | — |
 | `posts`, `categories`, `authors` | Collections | Level 3 (§10) | `content/blog/*` |
 
-Official plugins: `@payloadcms/plugin-seo` (title/description/OG fields with Arabic length hints and a preview), `@payloadcms/plugin-redirects`, `@payloadcms/plugin-form-builder` (Level 4), `@payloadcms/plugin-search` (Level 3), `@payloadcms/storage-s3`.
+Official plugins: `@payloadcms/plugin-seo` (title/description/OG fields with Arabic length hints and a preview), `@payloadcms/plugin-redirects`, `@payloadcms/plugin-form-builder` (Level 4), `@payloadcms/plugin-search` (Level 3), `@payloadcms/storage-s3`. Amended 2026-09-13 (ADR-031): `plugin-seo` is not used; each page carries a `seo` group with the same limits.
 
 Field rules: every text field shows its §4 default as the initial value after migration; numeric fields for money are integers in SAR; `suggestedPrice` must be ≥ `baseCost` (validation); `delivery.maxDays` is an integer; `offer.welcomeCredit` is an integer displayed everywhere from this single value.
 
@@ -49,7 +51,7 @@ Field rules: every text field shows its §4 default as the initial value after m
 
 - The home page is a Global with fixed sections (order not editable; Dhia wanted a designed page, not a page builder). Each section's fields are editable; each section has an `enabled` toggle except hero, product strip, designer, and ribbon.
 - Other pages use a small block set (rich text, cards, steps, media banner) so new pages can be assembled in Level 2 without code (for example a future `/creators` landing).
-- Rich text is Lexical with headings H2/H3, lists, links, images, and a "CTA block" custom node; RTL editing verified.
+- Rich text is Lexical with headings H2/H3, lists, links, images, and a "CTA block" custom node; RTL editing verified. Amended 2026-09-13 (ADR-031): shipped without the CTA node — no seeded page needs one; docs/IDEAS.md holds it.
 - Product prices, the welcome credit, and the delivery days each carry a help text reminding the editor that they must match the app (no API sync, decision D-41).
 - Media library requires Arabic alt text on upload.
 
@@ -58,6 +60,8 @@ Field rules: every text field shows its §4 default as the initial value after m
 On publish or update of any content: Payload `afterChange` hook → `revalidateTag('content')` and `revalidatePath` for affected routes → regenerate `sitemap.xml` (dynamic route reading from Payload with a 1-hour cache) → enqueue an IndexNow ping for the changed URLs (job) → clear the CDN zone for those paths if CranL exposes a purge API. Static pages stay static: the site reads content at build and via ISR (`revalidate` tags), never per-request from the database.
 
 Amended 2026-09-13 (Phase 2a, ADR-030): tag-based revalidation is not used. Every public page and the metadata routes carry `revalidate = 60` (ISR), the data layer reads Payload directly with per-render deduplication (published documents only), and the `afterChange` / `afterDelete` hooks call `revalidatePath` on the product's page and the routes that list it (home, listing, sitemap), and on every static route for a global. `/products/[slug]` accepts unknown params so a product published in the admin gets its page on first request. A publish is live at once; draft autosaves change nothing. The IndexNow ping and the CDN purge stay planned for 2b.
+
+Amended 2026-09-13 (Phase 2b, ADR-033): the jobs queue runs in-process on a one-minute cron (never during the build; the run endpoint answers nobody); scheduled publish is on for the home page, pages, products and testimonials, and a publish from a job falls back to the 60 s timer for regeneration; the IndexNow ping is a queued job with three retries, sent only on the production runtime (`B7R_RUNTIME=production`) with a key; admin-added redirects resolve in the `/[slug]` route (308/307) and join the proxy allowlist (ADR-032).
 
 ### 9.7 Migration from Level 1 content files
 
@@ -73,6 +77,8 @@ Amended 2026-09-13 (Phase 2a, ADR-026, ADR-029): the migrated files move to `src
 4. Migration script runs clean on an empty database and is idempotent on a second run.
 5. IndexNow and revalidation hooks fire on publish (visible in job logs).
 6. Backups exist and a restore has been rehearsed once (documented in `RUNBOOK.md`).
+
+Amended 2026-09-13 (Phase 2b, ADR-034): (1) proven by `e2e/admin.spec.ts` (a home publish is on `/` at once); (2) proven for users, settings, redirects, published products/pages/testimonials and live FAQ entries; (4) `scripts/ci/seed-check.sh` every CI run; (5) IndexNow is a queued job on the production runtime, revalidation runs from every publish hook; (6) the weekly `Backup` workflow writes to a private bucket and CI rehearses a restore on every run (`scripts/ci/restore-check.sh`) — the once-off rehearsal from a CranL snapshot remains a launch step. The login Turnstile is a verified gate cookie rather than a token per attempt (ADR-034).
 
 ---
 

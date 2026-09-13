@@ -51,7 +51,7 @@ Every user-visible string in Level 1 is here. Copy it exactly, including punctua
 
 **Hero primary CTA:** ابدأ براندك مجانًا → register URL with `utm_campaign=hero`
 **Hero secondary CTA (text link with mirrored arrow):** استكشف المنتجات → `/products`
-**Hero microcopy under the buttons:** رصيد ترحيبي 30 ريالاً، بدون بطاقة
+**Hero microcopy under the buttons:** رصيد ترحيبي 30 ريالاً، بدون بطاقة *(2026-09-13, Dhia: not shown in the hero any more; the line stays in the CMS for the About facts band)*
 **Hero proof chips (3, with check icons):** مجاني 100% · بدون حد أدنى للطلبات · توصيل لكل المملكة خلال 5 أيام
 **Slide indicator aria:** الشريحة {n} من 4 · **Pause aria:** إيقاف التبديل التلقائي / استئناف التبديل التلقائي
 
@@ -66,10 +66,10 @@ Every user-visible string in Level 1 is here. Copy it exactly, including punctua
 - Eyebrow: جرّب بنفسك
 - H2: شاهد تصميمك واحسب ربحك
 - Lead: ارفع تصميمك، حرّكه على المنتج، وحدّد سعرك.
-- Group labels: المنتج · اللون · التصميم · التسعير
+- Group labels: المنتج · اللون · التصميم · التسعير *(2026-09-13: «التسعير» no longer shown)*
 - Upload button: ارفع تصميمك
 - Upload helper: PNG أو JPG أو SVG، حتى 10 ميجابايت
-- Sample design button: جرّب تصميماً جاهزاً
+- Sample design button: جرّب تصميماً جاهزاً *(removed 2026-09-13)*
 - Replace design: غيّر التصميم
 - Reset: إعادة الضبط
 - Canvas hint (shown once, dismisses on first drag): اسحب التصميم لتحريكه، واستخدم الزوايا لتغيير الحجم.
@@ -79,7 +79,7 @@ Every user-visible string in Level 1 is here. Copy it exactly, including punctua
 - Daily sales label: مبيعات يومية
 - Result labels: ربحك لكل قطعة · ربحك الشهري التقديري
 - Negative-profit warning: سعر البيع أقل من التكلفة. ارفع السعر لتربح.
-- Footnote: تقدير لا يشمل الشحن والضريبة.
+- Footnote: تقدير لا يشمل الشحن والضريبة. *(removed 2026-09-13)*
 - Section CTA: ابدأ بيع هذا المنتج → register URL with `utm_campaign=designer&product={slug}`
 - File error: الملف غير مدعوم أو أكبر من 10 ميجابايت.
 
@@ -141,9 +141,9 @@ Every user-visible string in Level 1 is here. Copy it exactly, including punctua
 - Column 2 title: السياسات — items: الشروط والأحكام · الشحن والتوصيل · سياسة الخصوصية · الأسئلة الشائعة
 - Column 3 title: النشرة البريدية — label: اشترك ليصلك الجديد — placeholder: name@example.com — button: اشترك — success: اشتركت. سنرسل لك الجديد فقط. — error: أدخل بريداً إلكترونياً صحيحاً.
 - Contact line: contact@b7r.sa · 0501699572 (both LTR inside `<bdi>`; the number links to `tel:+966501699572`)
-- Social aria labels: بحر برنت على X · بحر برنت على إنستغرام · بحر برنت على تيك توك
+- Social aria labels: بحر برنت على X · بحر برنت على إنستغرام · بحر برنت على تيك توك · بحر برنت على واتساب
 - Badges row caption (visually hidden, aria): وسائل الدفع وجهات التوثيق
-- Misk line next to the Misk logo: خريجو برنامج Misk Launchpad، الدفعة 9، 2026
+- Misk line next to the Misk logo: خريجو برنامج Misk Launchpad، الدفعة 9، 2026 *(removed 2026-09-13; the logo stays)*
 - Copyright: © {year} بحر برنت. جميع الحقوق محفوظة.
 
 ### 4.6 WhatsApp widget
@@ -172,10 +172,10 @@ Every user-visible string in Level 1 is here. Copy it exactly, including punctua
 - Breadcrumb: الرئيسية › المنتجات › `{name}`
 - H1: `{name}`
 - Price block: التكلفة تبدأ من `{SarAmount base}` · سعر بيع مقترح `{SarAmount suggested}` · ربحك التقديري `{SarAmount suggested − base}` لكل قطعة
-- Price footnote: تقدير لا يشمل الشحن والضريبة. أنت تحدّد سعر البيع.
+- Price footnote: تقدير لا يشمل الشحن والضريبة. أنت تحدّد سعر البيع. *(removed 2026-09-13)*
 - Primary CTA: ابدأ بيع هذا المنتج → register URL with `utm_campaign=product&utm_content={slug}`
 - Secondary link: جرّب تصميمك عليه → `/#designer?product={slug}`
-- Section titles: الوصف · المواصفات · جدول المقاسات · منتجات أخرى
+- Section titles: الوصف · المواصفات · جدول المقاسات · منتجات أخرى *(2026-09-13: «الوصف» has no section of its own — the full description sits under the product name)*
 - Spec labels: الخامة · الوزن · المقاسات · الألوان · منطقة الطباعة · طريقة الطباعة
 - Print method value (all products): طباعة رقمية عالية الجودة
 - Print area value: الواجهة الأمامية، 28 × 38 سم

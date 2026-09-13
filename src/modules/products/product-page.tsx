@@ -86,7 +86,7 @@ export async function ProductPage({ product }: { product: Product }) {
               <h1 id="product-title" className="text-h1 text-text">
                 {product.name}
               </h1>
-              <p className="lead text-text-muted">{product.shortDescription}</p>
+              <p className="text-body measure text-text-muted">{product.description}</p>
               <dl className="grid gap-3 rounded-base border border-border bg-ground p-5">
                 <div className="flex items-baseline justify-between gap-4">
                   <dt className="text-body text-text-muted">{copy.priceBlock.cost}</dt>
@@ -108,7 +108,6 @@ export async function ProductPage({ product }: { product: Product }) {
                   </dd>
                 </div>
               </dl>
-              <p className="text-small text-text-muted">{copy.priceFootnote}</p>
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                 <Button asChild size="lg" id={PRIMARY_CTA_ID}>
                   <a href={registerHref} data-track="cta_click" data-location="product">
@@ -124,11 +123,11 @@ export async function ProductPage({ product }: { product: Product }) {
         </Container>
       </Section>
 
-      {/* Description + specs beside the size chart (Dhia, 2026-09-13): one section, not two. */}
+      {/* Specs beside the size chart (Dhia, 2026-09-13): the description sits under the name. */}
       <Section
         tone="ground"
         className="py-12 md:py-16"
-        aria-labelledby="product-description-title"
+        aria-labelledby="product-specs-title"
         data-product-details=""
       >
         <Container
@@ -139,17 +138,11 @@ export async function ProductPage({ product }: { product: Product }) {
               : 'lg:grid-cols-2 lg:gap-16',
           )}
         >
-          <div className="flex flex-col gap-8">
-            <div className="flex flex-col gap-4">
-              <h2 id="product-description-title" className="text-h3 text-text">
-                {copy.sections.description}
-              </h2>
-              <p className="text-body measure text-text">{product.description}</p>
-            </div>
-            <div className="flex flex-col gap-4">
-              <h2 className="text-h3 text-text">{copy.sections.specs}</h2>
-              <SpecList product={product} />
-            </div>
+          <div className="flex flex-col gap-4">
+            <h2 id="product-specs-title" className="text-h3 text-text">
+              {copy.sections.specs}
+            </h2>
+            <SpecList product={product} />
           </div>
           {hasSizeChart && (
             <div className="flex flex-col gap-4">

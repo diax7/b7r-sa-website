@@ -88,7 +88,10 @@ export const Home: GlobalConfig = {
             text('secondaryCta', { ar: 'الرابط الثانوي', en: 'Secondary link' }),
           ],
         },
-        text('microcopy', { ar: 'السطر تحت الزر', en: 'Microcopy' }),
+        text('microcopy', {
+          ar: 'سطر الرصيد الترحيبي (شريط الحقائق في «من نحن»)',
+          en: 'Welcome-credit line (the About facts band)',
+        }),
         {
           name: 'chips',
           type: 'array',
@@ -146,16 +149,7 @@ export const Home: GlobalConfig = {
       name: 'designer',
       type: 'group',
       label: { ar: 'المصمّم والحاسبة', en: 'Designer and calculator' },
-      fields: [
-        ...header(),
-        {
-          type: 'row',
-          fields: [
-            text('sample', { ar: 'رابط التصميم الجاهز', en: 'Sample design link' }),
-            text('cta', { ar: 'الزر', en: 'CTA' }),
-          ],
-        },
-      ],
+      fields: [...header(), text('cta', { ar: 'الزر', en: 'CTA' })],
     },
     {
       name: 'steps',

@@ -25,7 +25,6 @@
     "designThumbnail": "التصميم الحالي",
     "dropzoneLabel": "ارفع ملف التصميم",
     "productGroup": "المنتج",
-    "pricingGroup": "التسعير",
     "uploadPrompt": "اضغط لرفع شعارك أو صورتك",
     "uploadHelper": "PNG أو JPG أو SVG، حتى 10 ميجابايت",
     "remove": "إزالة التصميم",
@@ -37,7 +36,6 @@
     "perPiece": "ربحك لكل قطعة",
     "monthly": "ربحك الشهري التقديري",
     "negativeWarning": "سعر البيع أقل من التكلفة. ارفع السعر لتربح.",
-    "footnote": "تقدير لا يشمل الشحن والضريبة.",
     "fileError": "الملف غير مدعوم أو أكبر من 10 ميجابايت."
   },
   "strip": {

@@ -59,7 +59,6 @@ export function DesignerStatic({ products, product, copy, ctaHref }: DesignerSta
             <span className="text-caption text-text-muted">{designer.uploadHelper}</span>
           </div>
         </div>
-        <p className="mt-3 text-center text-small font-medium text-primary">{designer.sample}</p>
       </div>
 
       <div className="flex flex-col gap-6 lg:w-[46%]">
@@ -97,7 +96,6 @@ export function DesignerStatic({ products, product, copy, ctaHref }: DesignerSta
         </fieldset>
 
         <div className="flex flex-col gap-5">
-          <p className="text-small font-medium text-text">{designer.groups.pricing}</p>
           <div className="flex items-center justify-between rounded-base bg-ground px-4 py-3">
             <span className="text-small text-text-muted">{designer.baseCostLabel}</span>
             <SarAmount value={product.baseCost} className="text-h4 text-text" />
@@ -145,7 +143,6 @@ export function DesignerStatic({ products, product, copy, ctaHref }: DesignerSta
             </div>
           </dl>
           <div className="min-h-6" />
-          <p className="text-caption text-text-muted">{designer.footnote}</p>
           <Button asChild size="lg" fullWidth>
             <a href={ctaHref} data-track="cta_click" data-location="designer">
               {designer.cta}

@@ -71,7 +71,6 @@ const sources: Record<string, unknown> = {
   'messages/ar.json': {
     designer: [
       messages.designer.productGroup,
-      messages.designer.pricingGroup,
       messages.designer.uploadPrompt,
       messages.designer.uploadHelper,
       messages.designer.remove,
@@ -83,7 +82,6 @@ const sources: Record<string, unknown> = {
       messages.designer.perPiece,
       messages.designer.monthly,
       messages.designer.negativeWarning,
-      messages.designer.footnote,
       messages.designer.fileError,
     ],
     strip: messages.strip.swipeHint,
