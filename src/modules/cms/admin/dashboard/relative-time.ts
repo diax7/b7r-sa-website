@@ -31,7 +31,7 @@ export function relativeTime(iso: string | Date, now: Date = new Date()): string
   const date = typeof iso === 'string' ? new Date(iso) : iso;
   if (Number.isNaN(date.getTime())) return '';
   const diff = now.getTime() - date.getTime();
-  if (diff < MINUTE) return 'الآن';
+  if (diff < MINUTE) return 'قبل قليل';
   if (diff < HOUR) return ago(Math.floor(diff / MINUTE), FORMS.minute);
   if (diff < DAY) return ago(Math.floor(diff / HOUR), FORMS.hour);
   if (diff < 7 * DAY) return ago(Math.floor(diff / DAY), FORMS.day);
