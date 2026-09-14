@@ -4,6 +4,7 @@ import { isAdmin, isEditorOrAdmin } from '@/modules/cms/access';
 import { Refused } from '@/modules/cms/refused';
 import { PATHS_FOR_FAQS, revalidateRoutes } from '@/modules/cms/hooks/revalidate';
 import { savedByField, stampSavedBy } from '@/modules/cms/fields/saved-by';
+import { collectionLocaleNote } from '@/modules/cms/admin/locale/config';
 
 /** The home accordion shows exactly this many entries (BRD 4.4, 6.4.9). */
 export const HOME_FAQ_LIMIT = 5;
@@ -53,6 +54,7 @@ export const Faqs: CollectionConfig = {
     plural: { ar: 'الأسئلة الشائعة', en: 'FAQ' },
   },
   admin: {
+    components: collectionLocaleNote(),
     useAsTitle: 'question',
     defaultColumns: ['question', 'group', 'order', 'showOnHome'],
     listSearchableFields: ['question'],

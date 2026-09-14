@@ -8,7 +8,14 @@ import { z } from 'zod';
 const nonEmpty = z.string().trim().min(1);
 const slug = z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'slug must be lowercase-hyphenated');
 const publicPath = z.string().regex(/^\/[\w\-./]+$/, 'must be a public path starting with /');
-const hex = z.string().regex(/^#[0-9A-Fa-f]{6}$/);
+/** A colour as `#rrggbb`; the admin's colour widget and the hero overlay write this shape. */
+export const HEX_COLOR = /^#[0-9A-Fa-f]{6}$/;
+const hex = z.string().regex(HEX_COLOR);
+
+/** At most this many proof chips under the hero copy (ADR-044); none hides the row. */
+export const HERO_CHIPS_MAX = 6;
+/** The hero overlay's colour when nobody set one (ADR-044). */
+export const HERO_OVERLAY_DEFAULT = '#ffffff';
 const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 
 export const SiteSettingsSchema = z.object({
@@ -20,7 +27,6 @@ export const SiteSettingsSchema = z.object({
   offer: z.object({ welcomeCredit: z.int().positive() }),
   delivery: z.object({ maxDays: z.int().positive(), origin: nonEmpty, region: nonEmpty }),
   bookingUrl: z.url().optional(),
-  appUrls: z.object({ register: z.url(), login: z.url() }),
   legalEntity: nonEmpty,
 });
 export type SiteSettings = z.infer<typeof SiteSettingsSchema>;
@@ -36,11 +42,9 @@ export const NavigationSchema = z.object({
   primary: z.array(NavItemSchema).length(6),
   policies: z.array(NavItemSchema).length(4),
   ctaLabel: nonEmpty,
-  loginLabel: nonEmpty,
   skipLinkLabel: nonEmpty,
   menuOpenLabel: nonEmpty,
   menuCloseLabel: nonEmpty,
-  menuWhatsappLine: nonEmpty,
 });
 export type Navigation = z.infer<typeof NavigationSchema>;
 
@@ -83,7 +87,10 @@ export const HomeSchema = z.object({
     primaryCta: nonEmpty,
     secondaryCta: nonEmpty,
     microcopy: nonEmpty,
-    chips: z.array(nonEmpty).length(3),
+    /** Zero to six proof chips; none hides the row (ADR-044). */
+    chips: z.array(nonEmpty).max(HERO_CHIPS_MAX),
+    /** The legibility fade over the photo: off, or its colour (ADR-044). */
+    overlay: z.object({ enabled: z.boolean(), color: hex }),
   }),
   productStrip: z.object({
     eyebrow: nonEmpty,

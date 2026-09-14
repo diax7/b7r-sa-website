@@ -953,3 +953,53 @@ regenerated with the listings on every publish, never pinged (IndexNow gets page
 evidence that answer engines read it is thin; it costs one route per language and nothing on
 the page. **Owed Dhia's read**: the English style guide, system prompt, banned phrases and
 claims, the fifteen English topics, and the English `llms.txt` wording.
+
+## ADR-044: Dhia's review of the English site and the shell (2026-09-14)
+
+Dhia's first read of the English site and the shell after Level 5, applied in one PR. **The
+hero mirrors.** ADR-043 kept the English copy at the inline end, over the calm right area of
+the same photo; Dhia wants the English hero to read left to right like the Arabic reads right
+to left: the copy, the dots and the overlay at the start edge of each document, so the hero
+photos are now per language (`hero.slides[].imageDesktop`/`imageMobile` localized). The site
+reads without locale fallback (ADR-043), so the migration copied the shared photo into every
+existing language row and the English tab is required like the headline; until Dhia's English
+photographs exist, the English placeholders are the Arabic shots flipped by
+`scripts/hero-crops.ts` (`public/images/hero-en/`), which mirrors the printed wordmark too.
+Dhia chose that in the interview knowing it, so the layout can be judged now; the RUNBOOK
+says to replace them. The English display is the `display` utility's own LTR variant (56 px,
+1.12 leading, -0.02 em tracking, nested like `mirror-rtl`, nothing in the shared tokens):
+measured at 1280 px with a 600 px column, every English headline is two rows and every
+subline one, after three English strings were shortened (slide 3's headline, slide 4's
+subline, the delivery chip). **Chips 0 to 6** (`minRows: 0`): the rows are shared by both
+languages and the text is per language, so the mapper hides a row whose text is empty in the
+requested language instead of throwing. **The overlay** is `hero.overlay` in the admin: an
+`enabled` switch and a `#rrggbb` colour (a `ColorField` widget: the browser's picker beside
+the text), drawn through `color-mix()` on `--hero-overlay`, direction-aware (`to left` in
+RTL, `to right` in LTR). **The switch keeps the page.** The link computed its href once in an
+effect keyed on the target only, so after a client-side navigation it still pointed at the
+first page's twin (the home, for a reader who entered on `/`). It now derives the href from
+`usePathname()` on every render and, per pathname, reads the page's `hreflang` link; a page
+without a twin falls back to `fallbackPath()`: the section's listing in the other language
+(`/blog/*`, `/author/*` → the blog, `/products/*` → the products), no longer the home. **The
+switch is an icon**: the translate glyph in a 44 px ring, `aria-label` from the copy bank and
+a CSS-only tooltip with the target language's name (`data-tooltip`, the `tooltip` utility;
+no Radix Tooltip in the root layout, BRD 7.8's first-paint budget). Desktop: between the nav
+and the CTA; phones: in the menu's top bar. **No login.** `navigation.loginLabel`,
+`site-settings.appUrls` (its `register` was read by nothing either: the app URL is
+`NEXT_PUBLIC_APP_URL`) and `lib/utm.ts`'s `loginUrl` are gone, with their columns.
+**The menu.** The sheet fades in from above (was: from the start edge); its top bar mirrors
+the header (logo, switch, X); the burger morphs into the X and back (keyframes on the
+`translate`/`rotate` properties Tailwind's utilities set, the X as the resting state, the in
+and out tokens matching the sheet's own so Radix's exit wait never cuts the morph); WhatsApp
+is an icon among the socials, named `socialAria.whatsapp` from the bank, so
+`navigation.menuWhatsappLine` leaves the CMS (ADR-031: interface strings live in code; the
+error pages keep the sentence in `error-page.ts`). **The header** rests at 88 px (72 on
+phones) and still shrinks to 60 when scrolled. **The footer** logo is 48 px; below `lg` the
+brand block spans the row and centres, the links and the policies share one row in two
+columns, the newsletter spans, the badges centre. **The admin says which language is open.**
+Payload's localized label suffix, hidden since ADR-039, is now one neutral pill with the code
+of the open locale (`AR`/`EN`, drawn by `admin.css` from `html[data-content-locale]`, which the
+header sets; no pill before hydration), so a field with a pill changes per language and a
+field without one is shared; a `LocaleNote` line before the document controls of every
+document with localized fields says the same in words (`tests/admin-config.test.ts` checks
+the registration on every such config).

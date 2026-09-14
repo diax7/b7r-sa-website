@@ -2,6 +2,7 @@ import type { GlobalConfig } from 'payload';
 import { hiddenUnlessAdmin, isAdmin } from '@/modules/cms/access';
 import { revalidateGlobal } from '@/modules/cms/hooks/revalidate';
 import { savedByField, stampSavedByGlobal } from '@/modules/cms/fields/saved-by';
+import { globalLocaleNote } from '@/modules/cms/admin/locale/config';
 
 const APP_HELP = {
   ar: 'يجب أن يطابق التطبيق (لا مزامنة آلية).',
@@ -13,6 +14,7 @@ export const SiteSettings: GlobalConfig = {
   slug: 'site-settings',
   label: { ar: 'إعدادات الموقع', en: 'Site settings' },
   admin: {
+    components: globalLocaleNote(),
     group: { ar: 'الإعدادات', en: 'Settings' },
     hidden: hiddenUnlessAdmin,
     description: {
@@ -141,30 +143,6 @@ export const SiteSettings: GlobalConfig = {
       admin: {
         description: { ar: 'اتركه فارغاً لاستخدام واتساب', en: 'Leave empty to use WhatsApp' },
       },
-    },
-    {
-      name: 'appUrls',
-      type: 'group',
-      label: { ar: 'روابط التطبيق', en: 'App URLs' },
-      fields: [
-        {
-          type: 'row',
-          fields: [
-            {
-              name: 'register',
-              type: 'text',
-              required: true,
-              label: { ar: 'التسجيل', en: 'Register' },
-            },
-            {
-              name: 'login',
-              type: 'text',
-              required: true,
-              label: { ar: 'تسجيل الدخول', en: 'Login' },
-            },
-          ],
-        },
-      ],
     },
     {
       name: 'legalEntity',

@@ -1,6 +1,8 @@
 'use client';
 
+import { useLocale } from '@payloadcms/ui';
 import { Search } from 'lucide-react';
+import { useEffect } from 'react';
 import { Icon } from '@/components/shared/icon';
 import { Kbd } from '@/components/ui/kbd';
 import { ACTION_ICONS } from '@/modules/cms/admin/icons';
@@ -19,6 +21,12 @@ const control =
  * still answers Ctrl/⌘ K everywhere.
  */
 export function HeaderActionsClient(props: PaletteProps) {
+  // The content locale on the document root (ADR-044): `admin.css` draws the AR/EN pill on
+  // localized field labels from it; the header is on every view, so drawers inherit it.
+  const { code } = useLocale();
+  useEffect(() => {
+    document.documentElement.dataset['contentLocale'] = code;
+  }, [code]);
   return (
     <>
       <div className="flex items-center gap-2" data-admin-ui="" data-admin-actions="">

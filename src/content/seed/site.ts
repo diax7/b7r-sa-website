@@ -18,9 +18,5 @@ export const site: SiteSettings = {
   },
   offer: { welcomeCredit: 30 },
   delivery: { maxDays: 5, origin: 'جدة', region: 'منطقة مكة المكرمة' },
-  appUrls: {
-    register: 'https://b7r.app/register',
-    login: 'https://b7r.app/login',
-  },
   legalEntity: 'B7R Print Company',
 };

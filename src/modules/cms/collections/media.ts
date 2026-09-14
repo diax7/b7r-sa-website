@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload';
 import { isAdmin, isEditorOrAdmin } from '@/modules/cms/access';
 import { savedByField, stampSavedBy } from '@/modules/cms/fields/saved-by';
+import { collectionLocaleNote } from '@/modules/cms/admin/locale/config';
 
 const ARABIC = /[؀-ۿ]/;
 
@@ -14,6 +15,7 @@ export const Media: CollectionConfig = {
   slug: 'media',
   labels: { singular: { ar: 'ملف وسائط', en: 'Media' }, plural: { ar: 'الوسائط', en: 'Media' } },
   admin: {
+    components: collectionLocaleNote(),
     group: { ar: 'المحتوى', en: 'Content' },
     description: {
       ar: 'الصور والملفات المستخدمة في الصفحات والمنتجات. اكتب نصاً بديلاً لكل صورة.',

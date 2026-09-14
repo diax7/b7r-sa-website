@@ -14,6 +14,15 @@ const LISTED: Record<string, string> = {
     'A young man in a white hoodie printed with "your design here", with a tote bag, a cap and a T-shirt beside him',
   'hero-set-b-mobile.jpg':
     'A young man in a white hoodie printed with "your design here", with a tote bag, a cap and a T-shirt beside him',
+  // The English placeholders: the same shots mirrored (ADR-044), until the English photographs.
+  'hero-en-set-a-desktop.jpg':
+    'A young man in a black T-shirt printed with the B7R Print logo, with a hoodie, a cap and a tote bag beside him',
+  'hero-en-set-a-mobile.jpg':
+    'A young man in a black T-shirt printed with the B7R Print logo, with a hoodie, a cap and a tote bag beside him',
+  'hero-en-set-b-desktop.jpg':
+    'A young man in a white hoodie printed with "your design here", with a T-shirt, a cap and a tote bag beside him',
+  'hero-en-set-b-mobile.jpg':
+    'A young man in a white hoodie printed with "your design here", with a T-shirt, a cap and a tote bag beside him',
   'icons-3d-bag-and-parcel-order.jpg': '3D icon: connect your store',
   'icons-3d-box-of-products.jpg': '3D icon: our vision',
   'icons-3d-laptop-link-connect-store.jpg': '3D icon: connect your store',

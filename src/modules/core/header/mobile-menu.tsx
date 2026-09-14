@@ -1,9 +1,11 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState, type CSSProperties } from 'react';
 import { InstagramIcon, TikTokIcon, WhatsAppIcon, XIcon } from '@/components/shared/brand-icons';
 import { Button } from '@/components/shared/button';
+import { Container } from '@/components/shared/container';
 import {
   Dialog,
   DialogClose,
@@ -14,18 +16,23 @@ import {
 import type { ShellCopy } from '@/content/copy';
 import type { Navigation, SiteSettings } from '@/content/schema';
 import { cn } from '@/lib/cn';
-import type { Locale } from '@/lib/i18n';
-import { LanguageSwitch } from '@/modules/core/header/language-switch';
-import { Burger, burgerButtonClass } from '@/modules/core/header/burger';
 import { env } from '@/lib/env';
+import { type Locale, localePath } from '@/lib/i18n';
 import { isActive } from '@/lib/nav';
-import { loginUrl, registerUrl, whatsappUrl } from '@/lib/utm';
+import { registerUrl, whatsappUrl } from '@/lib/utm';
+import { Burger, burgerButtonClass } from '@/modules/core/header/burger';
+import { LanguageSwitch } from '@/modules/core/header/language-switch';
+
+const social =
+  'grid size-11 place-items-center rounded-pill border border-border text-text-muted transition-colors duration-(--duration-fast) hover:border-primary hover:text-primary';
 
 /**
- * Mobile navigation (BRD 6.2). A Radix Dialog sheet: focus trap, Escape, scroll lock and
- * focus restore come from Radix. The header burger becomes invisible while open and a
- * `DialogClose` renders at the same spot inside the sheet, so the eye reads one morphing
- * control and the close control lives inside the focus trap.
+ * Mobile navigation (BRD 6.2, ADR-044). A Radix Dialog sheet: focus trap, Escape, scroll lock
+ * and focus restore come from Radix. The sheet fades in from above; its top bar mirrors the
+ * header (the logo at the start, the language switch and the X at the end) and the header
+ * burger becomes invisible while open, with a `DialogClose` at the same spot morphing from
+ * the burger into the X, so the eye reads one control and the close control lives inside
+ * the focus trap. Below: the links, the CTA, then WhatsApp and the socials as icons.
  */
 export function MobileMenu({
   pathname,
@@ -69,18 +76,36 @@ export function MobileMenu({
       <DialogContent
         variant="sheet"
         aria-describedby={undefined}
-        className="data-[state=open]:animate-menu-in data-[state=closed]:animate-menu-out lg:hidden"
+        className="group data-[state=open]:animate-menu-in data-[state=closed]:animate-menu-out lg:hidden"
       >
         <DialogTitle className="sr-only">{navigation.menuOpenLabel}</DialogTitle>
-        <div className="flex h-(--header-h-mobile) items-center justify-end px-4 sm:px-6">
-          <DialogClose
-            className={burgerButtonClass}
-            aria-label={navigation.menuCloseLabel}
-            data-testid="menu-close"
+        <Container className="flex h-(--header-h-mobile) items-center justify-between gap-4">
+          <Link
+            href={localePath(locale, '/')}
+            className="shrink-0 rounded-inner"
+            aria-label={site.brandName}
+            onClick={() => setOpen(false)}
           >
-            <Burger open />
-          </DialogClose>
-        </div>
+            <Image
+              src="/images/logo/logo-header.png"
+              alt=""
+              width={198}
+              height={72}
+              sizes="198px"
+              className="h-8 w-auto"
+            />
+          </Link>
+          <div className="flex items-center gap-2">
+            {switchable && <LanguageSwitch locale={locale} ariaLabel={copy.a11y.switchLanguage} />}
+            <DialogClose
+              className={burgerButtonClass}
+              aria-label={navigation.menuCloseLabel}
+              data-testid="menu-close"
+            >
+              <Burger open morph />
+            </DialogClose>
+          </div>
+        </Container>
         <nav aria-label={copy.a11y.mainNavigation} className="px-4 pt-6 sm:px-6">
           <ul className="flex flex-col gap-1">
             {navigation.primary.map((item, i) => (
@@ -104,7 +129,7 @@ export function MobileMenu({
             ))}
           </ul>
         </nav>
-        <div className="mt-8 flex flex-col gap-3 border-t border-border px-4 pt-8 sm:px-6">
+        <div className="mt-8 flex flex-col gap-6 border-t border-border px-4 pt-8 sm:px-6">
           <Button asChild size="lg" fullWidth>
             <a
               href={registerUrl(env.appUrl, { campaign: 'menu' })}
@@ -114,39 +139,23 @@ export function MobileMenu({
               {navigation.ctaLabel}
             </a>
           </Button>
-          <Button asChild variant="secondary" size="lg" fullWidth>
-            <a href={loginUrl(env.appUrl)}>{navigation.loginLabel}</a>
-          </Button>
-          {switchable && (
-            <LanguageSwitch
-              locale={locale}
-              ariaLabel={copy.a11y.switchLanguage}
-              className="self-start px-0 py-2 text-body"
-            />
-          )}
-          <a
-            href={whatsappUrl(site.contact.whatsapp)}
-            target="_blank"
-            rel="noopener"
-            className="mt-4 inline-flex items-center gap-3 self-start py-2 text-body font-medium text-text hover:text-primary"
-            data-track="whatsapp_click"
-            data-location="menu"
-          >
-            <span className="grid size-9 place-items-center rounded-pill bg-whatsapp/10 text-whatsapp">
-              <WhatsAppIcon size={18} />
-            </span>
-            {navigation.menuWhatsappLine}
-          </a>
-          <ul className="mt-2 flex items-center gap-2">
+          <ul className="flex items-center gap-2">
+            <li>
+              <a
+                href={whatsappUrl(site.contact.whatsapp)}
+                target="_blank"
+                rel="noopener"
+                aria-label={copy.socialAria.whatsapp}
+                className={cn(social, 'border-whatsapp/30 bg-whatsapp/10 text-whatsapp')}
+                data-track="whatsapp_click"
+                data-location="menu"
+              >
+                <WhatsAppIcon size={20} />
+              </a>
+            </li>
             {socials.map(({ href, label, Icon }) => (
               <li key={href}>
-                <a
-                  href={href}
-                  target="_blank"
-                  rel="noopener"
-                  aria-label={label}
-                  className="grid size-11 place-items-center rounded-pill border border-border text-text-muted transition-colors duration-(--duration-fast) hover:border-primary hover:text-primary"
-                >
+                <a href={href} target="_blank" rel="noopener" aria-label={label} className={social}>
                   <Icon size={18} />
                 </a>
               </li>

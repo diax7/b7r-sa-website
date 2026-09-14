@@ -236,9 +236,41 @@
   }
 
   /* Payload suffixes every localized field label with the locale (a dash and its name).
-     The header's locale switcher already says which locale is open, nearly every content
-     field is localized, and the suffix is an em dash (.claude/rules/writing.md); hidden. */
+     The suffix becomes one neutral pill with the code of the open locale (ADR-044): a field
+     with a pill changes per language, a field without one is shared. The span's own text
+     (an em dash and the name) is hidden from sight and from readers; the pill is drawn by
+     ::after from `html[data-content-locale]`, set by the header, so before hydration there
+     is no pill rather than a wrong one. */
   .field-label .localized {
+    display: inline-grid;
+    vertical-align: 2px;
+    margin-inline-start: 8px;
+    font-size: 0;
+    visibility: hidden;
+  }
+  .field-label .localized::after {
+    visibility: visible;
+    grid-area: 1 / 1;
+    display: inline-grid;
+    place-items: center;
+    min-inline-size: 26px;
+    block-size: 18px;
+    padding-inline: 5px;
+    border-radius: 6px;
+    background: var(--theme-elevation-150);
+    color: var(--theme-elevation-800);
+    font-size: 10px;
+    line-height: 1;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+  }
+  html[data-content-locale='ar'] .field-label .localized::after {
+    content: 'AR';
+  }
+  html[data-content-locale='en'] .field-label .localized::after {
+    content: 'EN';
+  }
+  html:not([data-content-locale]) .field-label .localized {
     display: none;
   }
 

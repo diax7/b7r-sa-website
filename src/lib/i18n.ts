@@ -32,6 +32,18 @@ export function stripLocale(pathname: string): { locale: Locale; path: string } 
   return { locale: 'ar', path: pathname };
 }
 
+/**
+ * Where the switch sends a reader whose page has no twin in the other language (ADR-044): the
+ * section's listing in that language (`/blog/<slug>` → `/blog`, `/products/<slug>` →
+ * `/products`, `/author/<slug>` → `/blog`), else that language's home.
+ */
+export function fallbackPath(target: Locale, path: string): string {
+  const section = path.split('/')[1] ?? '';
+  if (section === 'blog' || section === 'author') return localePath(target, '/blog');
+  if (section === 'products') return localePath(target, '/products');
+  return localePath(target, '/');
+}
+
 export function otherLocale(locale: Locale): Locale {
   return locale === 'ar' ? 'en' : 'ar';
 }

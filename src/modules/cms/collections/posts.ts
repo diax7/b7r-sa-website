@@ -31,6 +31,7 @@ import {
 } from '@/modules/cms/fields/editorial';
 import { savedByField, stampSavedBy } from '@/modules/cms/fields/saved-by';
 import { isDraftSave, revalidatePosts } from '@/modules/cms/hooks/revalidate';
+import { collectionLocaleNote } from '@/modules/cms/admin/locale/config';
 
 /**
  * The post body's editor: exactly the features the Markdown transformers cover, so the
@@ -101,6 +102,7 @@ export const Posts: CollectionConfig = {
   slug: 'posts',
   labels: { singular: { ar: 'مقال', en: 'Post' }, plural: { ar: 'المقالات', en: 'Posts' } },
   admin: {
+    components: collectionLocaleNote(),
     useAsTitle: 'title',
     preview: (doc, { req, locale }) =>
       typeof doc['slug'] === 'string' && doc['slug']

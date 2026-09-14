@@ -1,7 +1,10 @@
 import { expect, test } from '@playwright/test';
 
 test.describe('header and navigation (BRD 6.2)', () => {
-  test('desktop shows six links, login, and the header CTA', async ({ page, isMobile }) => {
+  test('desktop shows six links, the switch icon and the header CTA, and no login', async ({
+    page,
+    isMobile,
+  }) => {
     test.skip(isMobile, 'desktop layout');
     await page.goto('/');
     const nav = page.locator('header nav');
@@ -10,13 +13,20 @@ test.describe('header and navigation (BRD 6.2)', () => {
       'aria-current',
       'page',
     );
-    await expect(
-      page.locator('header').getByRole('link', { name: 'تسجيل الدخول' }),
-    ).toHaveAttribute('href', 'https://b7r.app/login');
+    // No login anywhere (ADR-044).
+    await expect(page.locator('header a[href*="/login"]')).toHaveCount(0);
+    expect(await page.content()).not.toContain('تسجيل الدخول');
+    // The switch is an icon: no visible text, the copy-bank name, a tooltip in the target's name.
+    const toEnglish = page.locator('header [data-language-switch="en"]');
+    await expect(toEnglish).toHaveText('');
+    await expect(toEnglish).toHaveAttribute('aria-label', 'انتقل إلى النسخة الإنجليزية');
+    await expect(toEnglish).toHaveAttribute('data-tooltip', 'English');
     await expect(page.locator('header a[data-location="header"]')).toHaveAttribute(
       'href',
       /utm_campaign=header/,
     );
+    // The resting header is 88 px; scrolled it shrinks to 60 (BRD 6.2 as amended).
+    expect((await page.locator('header').boundingBox())!.height).toBe(88);
   });
 
   test('mobile menu opens, traps focus, closes on Escape and restores focus', async ({
@@ -27,15 +37,25 @@ test.describe('header and navigation (BRD 6.2)', () => {
     test.skip(!isMobile, 'mobile layout');
     await page.goto('/');
     const open = page.getByTestId('menu-open');
+    // The phone header shows the logo and the burger only; the switch lives in the sheet.
+    await expect(page.locator('header [data-language-switch]')).toBeHidden();
     await open.click();
     const dialog = page.getByRole('dialog');
     await expect(dialog).toBeVisible();
+    // The sheet's top bar mirrors the header: the logo, the switch, the X (ADR-044).
+    await expect(dialog.getByRole('link', { name: 'بحر برنت' }).first()).toHaveAttribute(
+      'href',
+      '/',
+    );
+    await expect(dialog.locator('[data-language-switch="en"]')).toHaveAttribute('href', '/en');
     await expect(dialog.getByRole('link', { name: 'المنتجات' })).toBeVisible();
     await expect(dialog.getByRole('link', { name: 'ابدأ براندك مجانًا' })).toHaveAttribute(
       'href',
       /utm_campaign=menu/,
     );
-    await expect(dialog.getByRole('link', { name: 'تواصل معنا عبر واتساب' })).toHaveAttribute(
+    // No login; WhatsApp is an icon among the socials, named from the copy bank.
+    await expect(dialog.locator('a[href*="/login"]')).toHaveCount(0);
+    await expect(dialog.getByRole('link', { name: 'بحر برنت على واتساب' })).toHaveAttribute(
       'href',
       /wa\.me\/966501699572/,
     );

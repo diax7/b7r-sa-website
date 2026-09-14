@@ -384,7 +384,18 @@ the Arabic tab). Internal links typed as URLs go under `/en/` (`/en/products/hoo
 to a document resolves under `/en/` on its own. The sidebar's warnings and reading time are
 the English version's. The post is on `/en/blog/<slug>`, in `/en/feed.xml` and paired with
 its Arabic twin once its English title is not empty. Hubs (`categories`) and authors work the
-same way (`name` decides). An Arabic-only post's switch sends the reader to `/en/blog`.
+same way (`name` decides). An Arabic-only post's switch sends the reader to `/en/blog`, an
+Arabic-only product's to `/en/products` (ADR-044).
+
+The English hero photos (ADR-044): each slide's two photos are per language, like its
+headline. The seed ships mirrored copies of the Arabic placeholders (`public/images/hero-en/`,
+made by `pnpm assets`), on which the printed wordmark reads backwards; replace them from the
+home page's English tab (locale control on English, "Image (desktop 16:9)" and "Image (mobile
+4:5)" on each slide) with photographs composed for the left-aligned copy: the product cluster
+on the right, the calm area on the left. The overlay over the photo is "Fade over the photo"
+under the slides: a switch and a colour, one setting for both languages. The proof chips are
+zero to six; a chip's rows are shared by both languages and its text is per language, so a
+chip added on the Arabic tab shows in English once its English text is written.
 
 The engine in English (5c): a topic's `language` decides the post's language; the English
 backlog is seeded beside the Arabic one, and a CSV import takes `language` as its seventh

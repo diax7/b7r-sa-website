@@ -2,7 +2,14 @@
 
 import { ArrowRight, Pause, Play } from 'lucide-react';
 import Link from 'next/link';
-import { useCallback, useEffect, useRef, useState, type PointerEvent } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type PointerEvent,
+} from 'react';
 import { Button } from '@/components/shared/button';
 import { Chip } from '@/components/shared/chip';
 import { Container } from '@/components/shared/container';
@@ -21,6 +28,8 @@ export interface HeroImageSet {
 export interface HeroCarouselProps {
   slides: HeroSlide[];
   images: HeroImageSet[];
+  /** The legibility fade over the photo, from the admin (ADR-044): off, or its colour. */
+  overlay: { enabled: boolean; color: string };
   copy: {
     primaryCta: string;
     primaryHref: string;
@@ -42,9 +51,11 @@ const IDLE_MS = 3000;
  * Hero carousel (BRD 6.4.1). All four slides' text is server-rendered; slide 1 owns the only
  * H1. Images crossfade 700 ms while the copy fades and rises 100 ms later; buttons and chips
  * never move. Auto-advance pauses on hover, focus and touch, and is off under reduced motion.
- * In RTL, swiping toward the start edge (right) goes forward.
+ * In RTL, swiping toward the start edge (right) goes forward. The copy, the dots and the
+ * overlay sit at the start edge of the document (ADR-044): each language has its own photos.
+ * The chips row (0 to 6) is omitted when the language has none.
  */
-export function HeroCarousel({ slides, images, copy }: HeroCarouselProps) {
+export function HeroCarousel({ slides, images, overlay, copy }: HeroCarouselProps) {
   const reduced = useReducedMotion();
   const [index, setIndex] = useState(0);
   const [hovering, setHovering] = useState(false);
@@ -143,11 +154,17 @@ export function HeroCarousel({ slides, images, copy }: HeroCarouselProps) {
             </picture>
           );
         })}
-        <div className="hero-overlay absolute inset-0" />
+        {overlay.enabled && (
+          <div
+            className="hero-overlay absolute inset-0"
+            style={{ '--hero-overlay': overlay.color } as CSSProperties}
+            data-hero-overlay={overlay.color}
+          />
+        )}
       </div>
 
       <Container className="flex flex-1 flex-col justify-start pt-[6svh] pb-24 md:pb-28 lg:justify-center lg:pt-0 lg:pb-32">
-        <div className="hero-copy flex max-w-[560px] flex-col items-start gap-8 lg:mb-[6vh]">
+        <div className="hero-copy flex max-w-[560px] flex-col items-start gap-8 lg:mb-[6vh] ltr:max-w-[600px]">
           {/* Stack all four copies in one grid cell so the tallest fixes the height. */}
           <div className="grid w-full">
             {slides.map((slide, i) => {
@@ -204,19 +221,21 @@ export function HeroCarousel({ slides, images, copy }: HeroCarouselProps) {
             </Link>
           </div>
 
-          <ul
-            className="no-scrollbar -mx-4 flex w-[calc(100%+32px)] snap-x snap-mandatory gap-2 overflow-x-auto px-4 sm:mx-0 sm:w-auto sm:flex-wrap sm:px-0"
-            // The row scrolls horizontally on phones; axe (scrollable-region-focusable) requires a
-            // keyboard-reachable scroller, which jsx-a11y cannot see.
-            // oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex
-            tabIndex={0}
-          >
-            {copy.chips.map((chip) => (
-              <li key={chip} className="shrink-0 snap-start whitespace-nowrap">
-                <Chip check>{chip}</Chip>
-              </li>
-            ))}
-          </ul>
+          {copy.chips.length > 0 && (
+            <ul
+              className="no-scrollbar -mx-4 flex w-[calc(100%+32px)] snap-x snap-mandatory gap-2 overflow-x-auto px-4 sm:mx-0 sm:w-auto sm:flex-wrap sm:px-0"
+              // The row scrolls horizontally on phones; axe (scrollable-region-focusable) requires a
+              // keyboard-reachable scroller, which jsx-a11y cannot see.
+              // oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex
+              tabIndex={0}
+            >
+              {copy.chips.map((chip) => (
+                <li key={chip} className="shrink-0 snap-start whitespace-nowrap">
+                  <Chip check>{chip}</Chip>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </Container>
 

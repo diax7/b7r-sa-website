@@ -1,4 +1,4 @@
-import type { Home } from '@/content/schema';
+import { HERO_OVERLAY_DEFAULT, type Home } from '@/content/schema';
 
 /**
  * BRD 4.4 homepage copy, verbatim: the seed for the `home` global (ADR-026) and the shape
@@ -46,6 +46,7 @@ export const home: Home = {
     secondaryCta: 'استكشف المنتجات',
     microcopy: 'رصيد ترحيبي 30 ريالاً، بدون بطاقة',
     chips: ['مجاني 100%', 'بدون حد أدنى للطلبات', 'توصيل لكل المملكة خلال 5 أيام'],
+    overlay: { enabled: true, color: HERO_OVERLAY_DEFAULT },
   },
   productStrip: {
     eyebrow: 'المنتجات',

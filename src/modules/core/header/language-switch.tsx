@@ -1,9 +1,12 @@
 'use client';
 
+import { Languages } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { Icon } from '@/components/shared/icon';
 import { cn } from '@/lib/cn';
 import {
+  fallbackPath,
   LANGUAGE_NAMES,
   languageTag,
   type Locale,
@@ -13,12 +16,13 @@ import {
 } from '@/lib/i18n';
 
 /**
- * The language switch (ADR-043): a real link to the other language, never a redirect. The
- * server renders the current path under the other locale, right for every page with a twin
- * (also before hydration and without JavaScript); once mounted, a page that emits no
- * `<link rel="alternate" hreflang>` for the other language (the metadata builders write it
- * only when the twin exists) sends the reader to that language's home instead of a 404.
- * Labelled in the target language, with `lang` and `hreflang` set.
+ * The language switch (ADR-043, ADR-044): a real link to the other language, never a
+ * redirect, drawn as the translate glyph in a 44 px ring with the target language's name in
+ * a CSS tooltip. The href is the current path under the other locale, derived on every
+ * render, so it follows client-side navigation (also before hydration and without
+ * JavaScript). Once mounted, a page that emits no `<link rel="alternate" hreflang>` for the
+ * other language (the metadata builders write it only when the twin exists) sends the reader
+ * to that section's listing in the other language instead of a 404.
  */
 export function LanguageSwitch({
   locale,
@@ -33,14 +37,20 @@ export function LanguageSwitch({
   const target = otherLocale(locale);
   const tag = languageTag(target);
   const pathname = usePathname();
-  const [href, setHref] = useState(localePath(target, stripLocale(pathname).path));
+  // The fallback remembers the pathname it was read for, so the frame between a navigation
+  // and the effect never shows the previous page's fallback.
+  const [fallback, setFallback] = useState<{ pathname: string; href: string } | null>(null);
   useEffect(() => {
     const twin = document.head.querySelector<HTMLLinkElement>(
       `link[rel="alternate"][hreflang="${tag}"]`,
     );
     // oxlint-disable-next-line react/set-state-in-effect -- reading the document once it exists is the intent
-    setHref(twin?.href ? new URL(twin.href).pathname : localePath(target, '/'));
-  }, [tag, target]);
+    setFallback(twin ? null : { pathname, href: fallbackPath(target, stripLocale(pathname).path) });
+  }, [pathname, tag, target]);
+  const href =
+    fallback?.pathname === pathname
+      ? fallback.href
+      : localePath(target, stripLocale(pathname).path);
   return (
     <a
       href={href}
@@ -48,12 +58,13 @@ export function LanguageSwitch({
       hrefLang={tag}
       aria-label={ariaLabel}
       data-language-switch={target}
+      data-tooltip={LANGUAGE_NAMES[target]}
       className={cn(
-        'inline-flex items-center rounded-inner px-2 py-1 text-small font-medium text-text-muted transition-colors duration-(--duration-fast) hover:text-primary',
+        'tooltip grid size-11 place-items-center rounded-pill border border-border text-text transition-colors duration-(--duration-fast) hover:border-primary hover:bg-accent-tint hover:text-primary',
         className,
       )}
     >
-      {LANGUAGE_NAMES[target]}
+      <Icon icon={Languages} size={20} />
     </a>
   );
 }

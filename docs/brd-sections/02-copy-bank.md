@@ -29,16 +29,15 @@ Every user-visible string in Level 1 is here. Copy it exactly, including punctua
 | Brand | براندك (CTA only, per Dhia) · علامتك التجارية (prose) | ماركتك |
 | Register | أنشئ حسابك / ابدأ براندك مجانًا | سجّل الآن (allowed only in the ribbon lead) |
 | Delivery | التوصيل, نوصّل | الشحن as the customer-facing verb (use شحن for the act B7R does) |
-| Sign in | تسجيل الدخول | |
 
 ### 4.3 Global elements
 
 **Navigation (in order, RTL start to end):** الرئيسية · المنتجات · كيف نعمل · من نحن · المدونة · تواصل معنا
 **Header CTA:** ابدأ براندك مجانًا → `https://b7r.app/register?utm_source=b7r.sa&utm_medium=website&utm_campaign=header`
-**Header secondary (desktop only, text link before the CTA):** تسجيل الدخول → `https://b7r.app/login`
+**Header secondary:** none. *Amended 2026-09-14 (Dhia, ADR-044): the login link is gone from the header, the menu and the CMS; the language switch (an icon, §6.2) sits before the CTA.*
 **Skip link:** تخطَّ إلى المحتوى
 **Menu button labels (aria):** فتح القائمة / إغلاق القائمة
-**Mobile menu footer line:** تواصل معنا عبر واتساب
+**WhatsApp line (the error pages; the menu shows the icon, §6.2):** تواصل معنا عبر واتساب
 
 ### 4.4 Homepage
 
@@ -54,7 +53,7 @@ Every user-visible string in Level 1 is here. Copy it exactly, including punctua
 **Hero primary CTA:** ابدأ براندك مجانًا → register URL with `utm_campaign=hero`
 **Hero secondary CTA (text link with mirrored arrow):** استكشف المنتجات → `/products`
 **Hero microcopy under the buttons:** رصيد ترحيبي 30 ريالاً، بدون بطاقة *(2026-09-13, Dhia: not shown in the hero any more; the line stays in the CMS for the About facts band)*
-**Hero proof chips (3, with check icons):** مجاني 100% · بدون حد أدنى للطلبات · توصيل لكل المملكة خلال 5 أيام
+**Hero proof chips (0 to 6, with check icons; the seed ships 3):** مجاني 100% · بدون حد أدنى للطلبات · توصيل لكل المملكة خلال 5 أيام
 **Slide indicator aria:** الشريحة {n} من 4 · **Pause aria:** إيقاف التبديل التلقائي / استئناف التبديل التلقائي
 
 **Product strip section**

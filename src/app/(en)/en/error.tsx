@@ -3,7 +3,6 @@
 import { useEffect } from 'react';
 import { ERROR_PAGE } from '@/content/copy/error-page';
 // Error pages must render without the database: the seed is the static fallback (ADR-026).
-import { navigationEn } from '@/content/seed/en/navigation';
 import { site } from '@/content/seed/site';
 import { StatusPage } from '@/modules/core';
 
@@ -20,7 +19,7 @@ export default function ErrorBoundary({ error }: { error: Error & { digest?: str
       text={copy.text}
       button={copy.button}
       home="/en"
-      whatsapp={{ number: site.contact.whatsapp, label: navigationEn.menuWhatsappLine }}
+      whatsapp={{ number: site.contact.whatsapp, label: copy.whatsapp }}
     />
   );
 }

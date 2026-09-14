@@ -15,9 +15,7 @@ export const navigationEn = {
     '/faq': 'FAQ',
   } as Record<string, string>,
   ctaLabel: 'Start your brand for free',
-  loginLabel: 'Log in',
   skipLinkLabel: 'Skip to content',
   menuOpenLabel: 'Open the menu',
   menuCloseLabel: 'Close the menu',
-  menuWhatsappLine: 'Chat with us on WhatsApp',
 };
