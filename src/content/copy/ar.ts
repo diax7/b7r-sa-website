@@ -36,7 +36,6 @@ export const ar = {
     dropzoneLabel: 'ارفع ملف التصميم',
     productGroup: 'المنتج',
     uploadPrompt: 'اضغط لرفع شعارك أو صورتك',
-    uploadHelper: 'PNG أو JPG أو SVG، حتى 10 ميجابايت',
     remove: 'إزالة التصميم',
     canvasHint: 'اسحب التصميم لتحريكه، واستخدم الزوايا لتغيير الحجم.',
     baseCost: 'التكلفة من بحر',

@@ -35,7 +35,6 @@ export const en: SiteCopy = {
     dropzoneLabel: 'Upload your design file',
     productGroup: 'Product',
     uploadPrompt: 'Tap to upload your logo or image',
-    uploadHelper: 'PNG, JPG or SVG, up to 10 MB',
     remove: 'Remove the design',
     canvasHint: 'Drag the design to move it; use the corners to resize.',
     baseCost: 'Cost from B7R',

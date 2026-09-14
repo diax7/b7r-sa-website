@@ -27,7 +27,6 @@ Every interface string of the English site, key for key with the Arabic bank of 
 | `designer.dropzoneLabel` | Upload your design file |
 | `designer.productGroup` | Product |
 | `designer.uploadPrompt` | Tap to upload your logo or image |
-| `designer.uploadHelper` | PNG, JPG or SVG, up to 10 MB |
 | `designer.remove` | Remove the design |
 | `designer.canvasHint` | Drag the design to move it; use the corners to resize. |
 | `designer.baseCost` | Cost from B7R |

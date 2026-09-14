@@ -6,16 +6,18 @@ import { cn } from '@/lib/cn';
 
 type SliderProps = ComponentPropsWithoutRef<typeof SliderPrimitive.Root> & {
   thumbLabel: string;
+  /** The document's direction: the slider advances from its start edge (BRD 3.12.4). */
+  dir: 'rtl' | 'ltr';
 };
 
 /**
- * Radix Slider restyled to the tokens (BRD 3.10). `dir="rtl"` makes it advance from the
- * start edge (right) as BRD 3.12.4 requires; Radix handles keyboard and touch.
+ * Radix Slider restyled to the tokens (BRD 3.10). `dir` makes it advance from the start
+ * edge of the document (right in Arabic, left in English); Radix handles keyboard and touch.
  */
-export function Slider({ className, thumbLabel, ...rest }: SliderProps) {
+export function Slider({ className, thumbLabel, dir, ...rest }: SliderProps) {
   return (
     <SliderPrimitive.Root
-      dir="rtl"
+      dir={dir}
       className={cn('relative flex h-11 w-full touch-none items-center select-none', className)}
       {...rest}
     >

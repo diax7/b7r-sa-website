@@ -392,7 +392,7 @@ Every user-visible string in Level 1 is here. Copy it exactly, including punctua
 - Lead: ارفع تصميمك، حرّكه على المنتج، وحدّد سعرك.
 - Group labels: المنتج · اللون · التصميم · التسعير *(2026-09-13: «التسعير» no longer shown)*
 - Upload button: ارفع تصميمك
-- Upload helper: PNG أو JPG أو SVG، حتى 10 ميجابايت
+- Upload helper: none (Dhia, 2026-09-14: the accepted types are not listed; a wrong file gets the error line)
 - Sample design button: جرّب تصميماً جاهزاً *(removed 2026-09-13)*
 - Replace design: غيّر التصميم
 - Reset: إعادة الضبط
@@ -1866,7 +1866,6 @@ Every interface string of the English site, key for key with the Arabic bank of 
 | `designer.dropzoneLabel` | Upload your design file |
 | `designer.productGroup` | Product |
 | `designer.uploadPrompt` | Tap to upload your logo or image |
-| `designer.uploadHelper` | PNG, JPG or SVG, up to 10 MB |
 | `designer.remove` | Remove the design |
 | `designer.canvasHint` | Drag the design to move it; use the corners to resize. |
 | `designer.baseCost` | Cost from B7R |

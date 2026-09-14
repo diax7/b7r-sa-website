@@ -8,6 +8,8 @@ import { Slider } from '@/components/ui/slider';
 import { DAILY_MAX, DAILY_MIN, sellMax } from '@/modules/designer/profit';
 
 interface PricingControlsProps {
+  /** The document's direction, for the slider. */
+  dir: 'rtl' | 'ltr';
   baseCost: number;
   suggestedPrice: number;
   sellPrice: number;
@@ -27,8 +29,12 @@ interface PricingControlsProps {
   };
 }
 
-/** Pricing group (BRD 6.4.3): read-only base cost, price input bound to a slider, stepper. */
+/**
+ * Pricing group (BRD 6.4.3): read-only base cost, price input bound to a slider with the
+ * suggested price under the label, stepper.
+ */
 export function PricingControls({
+  dir,
   baseCost,
   suggestedPrice,
   sellPrice,
@@ -53,9 +59,14 @@ export function PricingControls({
 
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between gap-4">
-          <label htmlFor={sellId} className="text-small text-text">
-            {copy.sellPriceLabel}
-          </label>
+          <span className="flex flex-col gap-0.5">
+            <label htmlFor={sellId} className="text-small text-text">
+              {copy.sellPriceLabel}
+            </label>
+            <span className="text-caption text-text-muted">
+              {copy.suggestedPriceHelper} <SarAmount value={suggestedPrice} />
+            </span>
+          </span>
           <span className="inline-flex h-11 items-center gap-1 rounded-base border border-border bg-surface px-3 focus-within:border-primary focus-within:ring-2 focus-within:ring-accent/40">
             <SarSymbol className="text-text-muted" />
             <input
@@ -87,6 +98,7 @@ export function PricingControls({
           </span>
         </div>
         <Slider
+          dir={dir}
           min={baseCost}
           max={max}
           step={1}
@@ -95,9 +107,6 @@ export function PricingControls({
           onValueCommit={([v]) => v !== undefined && onSellCommit(v)}
           thumbLabel={copy.sellSliderAria}
         />
-        <p className="text-caption text-text-muted">
-          {copy.suggestedPriceHelper} <SarAmount value={suggestedPrice} />
-        </p>
       </div>
 
       <div className="flex items-center justify-between gap-4">
