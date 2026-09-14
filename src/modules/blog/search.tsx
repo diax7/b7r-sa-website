@@ -7,6 +7,8 @@ import type { PostIndexEntry } from '@/lib/cms/blog';
 
 interface SearchProps {
   index: PostIndexEntry[];
+  /** The blog's path under the locale's prefix (`/en/blog`). */
+  basePath: string;
   copy: { label: string; placeholder: string; results: string; empty: string; clear: string };
   /** The grid to hide while results show. */
   grid: string;
@@ -41,7 +43,7 @@ const noop = () => () => {};
 const readInitialQuery = () => new URLSearchParams(window.location.search).get('q') ?? '';
 const serverQuery = () => '';
 
-export function BlogSearch({ index, copy, grid }: SearchProps) {
+export function BlogSearch({ index, basePath, copy, grid }: SearchProps) {
   const id = useId();
   // The URL's `q` on the client, nothing on the server, so hydration never mismatches and a
   // linked search opens with its results; typing takes over from there.
@@ -103,7 +105,7 @@ export function BlogSearch({ index, copy, grid }: SearchProps) {
               {results.map((entry) => (
                 <li key={entry.slug}>
                   <Link
-                    href={`/blog/${entry.slug}`}
+                    href={`${basePath}/${entry.slug}`}
                     className="flex flex-col gap-1 px-5 py-4 hover:bg-ground"
                   >
                     <span className="text-h4 text-text">{entry.title}</span>

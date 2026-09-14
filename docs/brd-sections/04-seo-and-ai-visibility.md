@@ -6,9 +6,9 @@ Principle (from `docs/research/04`): there is no separate "AI SEO". Answer engin
 
 1. Every indexable route is statically rendered at build (Next.js App Router, no `dynamic = 'force-dynamic'`), with all text, links, images (with `alt`), and JSON-LD in the initial HTML. Client components only for the designer, carousels, accordions, forms, widgets.
 2. No content behind client-side fetches. No infinite scroll.
-3. `Content-Language: ar` response header on every page (set in `next.config.ts` `headers()`), plus `<meta http-equiv="content-language" content="ar">`.
+3. `Content-Language` response header on every page (set in `next.config.ts` `headers()`): `ar` on the Arabic document, `en` on `/en` and `/en/*`; plus `<meta http-equiv="content-language">` with the same value (amended in Level 5, ADR-043).
 4. Canonical URL on every page: `https://b7r.sa{path}` without trailing slash and without query strings (the designer deep-link query is ignored by canonical).
-5. hreflang: none in Level 1 (a single language). When `/en` ships: `ar`, `en`, and `x-default → ar`, self-referencing, emitted from `sitemap.ts` alternates and `<link rel="alternate">`.
+5. hreflang (Level 5, ADR-043): `ar`, `en`, and `x-default → ar`, self-referencing, emitted from `sitemap.ts` alternates and `<link rel="alternate">`, only on a page that exists in both languages (the presence gate: the document's title has a value in the locale). A page with one language carries no pair.
 6. Trailing slashes: `trailingSlash: false`; `www` and `http` redirect at the host.
 
 ### 7.2 robots.txt (`app/robots.ts`)
@@ -45,11 +45,11 @@ Training crawlers (`GPTBot`, `ClaudeBot`, `Google-Extended`, `CCBot`, `Meta-Exte
 
 - `title` from §4.16 with the template `%s | بحر برنت`; the home page uses the full title without the template.
 - `description` from §4.16 (≤ 155 characters).
-- `alternates.canonical`.
-- Open Graph: `type` (`website` everywhere except `article` on posts; `product` is not an `og:type` the previews read and Next's typed metadata does not emit it, so product pages use `website` and the `Product` JSON-LD carries the commerce data, amended in Phase 1c), `locale: ar_SA`, `siteName: بحر برنت`, `title`, `description`, `images` (1200 × 630). Default OG image: designed once (`public/og/default.png`): white background, the colour logo, the tagline منصة الطباعة عند الطلب في السعودية, and a row of the five product photos; product pages use `public/og/products/{slug}.png` with the product photo and "يبدأ من {price}"; posts use the cover. All OG images are static PNGs rendered once by `scripts/build-og.ts` (`pnpm og`) with Playwright and the self-hosted ITF Rayat Round files, because Satori (`next/og`) does not shape Arabic (ADR-020, amended in Phase 1c).
+- `alternates.canonical` under the locale's prefix (`/products/hoodie`, `/en/products/hoodie`); `alternates.languages` `{ ar, en, x-default }` when the twin exists (Level 5, ADR-043).
+- Open Graph: `type` (`website` everywhere except `article` on posts; `product` is not an `og:type` the previews read and Next's typed metadata does not emit it, so product pages use `website` and the `Product` JSON-LD carries the commerce data, amended in Phase 1c), `locale: ar_SA` (`en_US` on `/en`, with `og:locale:alternate` for the twin), `siteName: بحر برنت` (`B7R Print` on `/en`), `title`, `description`, `images` (1200 × 630). Default OG image: designed once (`public/og/default.png`): white background, the colour logo, the tagline منصة الطباعة عند الطلب في السعودية, and a row of the five product photos; product pages use `public/og/products/{slug}.png` with the product photo and "يبدأ من {price}"; posts use the cover. All OG images are static PNGs rendered once by `scripts/build-og.ts` (`pnpm og`) with Playwright and the self-hosted ITF Rayat Round files, because Satori (`next/og`) does not shape Arabic (ADR-020, amended in Phase 1c).
 - Twitter card `summary_large_image`, `site: @b7rprint`.
 - `robots: { index, follow, 'max-image-preview': 'large' }`; `noindex` on 404 and on any non-production host.
-- Icons: `favicon.ico` (32), `icon.svg` if available else PNG 192/512, `apple-touch-icon` 180, `manifest.webmanifest` (name "بحر برنت", `lang: ar`, `dir: rtl`, `theme_color: #0058B0`, `background_color: #FFFFFF`, display `browser`).
+- Icons: `favicon.ico` (32), `icon.svg` if available else PNG 192/512, `apple-touch-icon` 180, `manifest.webmanifest` (name "بحر برنت", `lang: ar`, `dir: rtl`, `theme_color: #0058B0`, `background_color: #FFFFFF`, display `browser`; one manifest per origin, in the default language, ADR-043).
 - Verification meta tags from env: `GOOGLE_SITE_VERIFICATION`, `BING_SITE_VERIFICATION`.
 
 ### 7.4 Structured data (JSON-LD, rendered in the page component, one `<script type="application/ld+json">` per page)
@@ -62,11 +62,11 @@ Training crawlers (`GPTBot`, `ClaudeBot`, `Google-Extended`, `CCBot`, `Meta-Exte
 | How it works, About, Contact, FAQ, Legal | `WebPage` + `BreadcrumbList` (no FAQPage, no HowTo: rich results discontinued) |
 | Blog post | `BlogPosting` (headline, description, image, datePublished, dateModified, inLanguage ar, author `Person` {name ضياء, url /about}, publisher `Organization`) + `BreadcrumbList` |
 
-Validate with Google's Rich Results Test and the Schema.org validator in CI where possible (at least a JSON parse + required-fields unit test).
+`inLanguage` follows the document's locale, `contactPoint.availableLanguage` and `WebSite.inLanguage` list both languages (Level 5, ADR-043). Validate with Google's Rich Results Test and the Schema.org validator in CI where possible (at least a JSON parse + required-fields unit test).
 
 ### 7.5 Sitemap (`app/sitemap.ts`)
 
-All indexable routes with `lastModified` (ISO 8601 with time; from the content file's `updatedAt` field, updated only on real content changes), `changeFrequency` omitted (ignored by engines), image entries for product pages (`images: [...]`). Excludes 404, API, and query-string variants. Submitted to Google Search Console and Bing Webmaster Tools at launch (§12.4).
+All indexable routes of both languages with `lastModified` (ISO 8601 with time; from the content file's `updatedAt` field, updated only on real content changes), `changeFrequency` omitted (ignored by engines), image entries for product pages (`images: [...]`), and `alternates.languages` on every URL whose twin exists (`ar`, `en`, `x-default`; Level 5, ADR-043). Excludes 404, API, query-string variants and a language a document does not have. Submitted to Google Search Console and Bing Webmaster Tools at launch (§12.4).
 
 ### 7.6 IndexNow
 

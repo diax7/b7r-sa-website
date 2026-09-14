@@ -6,3 +6,21 @@ export { HubPage } from '@/modules/blog/hub-page';
 export { pageHref } from '@/modules/blog/pagination';
 export { PostCard, postMeta } from '@/modules/blog/post-card';
 export { searchIndex } from '@/modules/blog/search';
+export {
+  authorPageParams,
+  authorParams,
+  authorRouteMetadata,
+  blogIndexMetadata,
+  blogPageParams,
+  blogPageRouteMetadata,
+  hubPageParams,
+  hubParams,
+  hubRouteMetadata,
+  postParams,
+  postRouteMetadata,
+  renderAuthor,
+  renderBlogIndex,
+  renderBlogPage,
+  renderHub,
+  renderPost,
+} from '@/modules/blog/routes';

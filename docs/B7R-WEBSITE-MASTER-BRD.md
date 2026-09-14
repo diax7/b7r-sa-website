@@ -198,7 +198,7 @@ All three brand blues are sampled from `logo.png`. Two darker shades are derived
 | `--color-text` | `#14181F` | Body and headings |
 | `--color-text-muted` | `#5B6470` | Secondary text, captions, placeholders (4.6:1 on white) |
 | `--color-border` | `#E5E9EF` | Hairlines, card borders, input borders |
-| `--color-success` | `#16A34A` | Form success, positive profit |
+| `--color-success` | `#15803D` | Form success, positive profit; 4.7:1 on `ground`, 5:1 on `surface` (AA for the profit line) |
 | `--color-warning` | `#F59E0B` | Non-blocking warnings |
 | `--color-error` | `#D90000` | Validation errors, negative profit |
 | `--color-whatsapp` | `#25D366` | The WhatsApp widget button only |
@@ -589,6 +589,8 @@ Every user-visible string in Level 1 is here. Copy it exactly, including punctua
 
 ### 4.16 SEO titles and descriptions (Arabic; the brand suffix is added by the template as « | بحر برنت»)
 
+The English titles and descriptions (suffix ` | B7R Print`) are the `seo` rows of Appendix H and the English `seo-defaults` values the seed writes (Level 5, ADR-043).
+
 | Page | `<title>` (without suffix) | Meta description |
 |---|---|---|
 | Home | بحر برنت: منصة الطباعة عند الطلب في السعودية | ابدأ براندك بدون رأس مال أو مخزون. صمّم منتجاتك، اربط متجرك في سلة أو زد أو شوبيفاي، ونحن نطبع في جدة ونشحن باسمك خلال 5 أيام. |
@@ -614,7 +616,7 @@ Every user-visible string in Level 1 is here. Copy it exactly, including punctua
 
 ### 5.1 Route map (Level 1)
 
-Arabic lives at the root. `/en/*` is reserved for the English phase and must not 404 confusingly: until English exists, `/en` and `/en/*` redirect 302 to the Arabic equivalent. Slugs are lowercase Latin with hyphens (shareable on WhatsApp without percent-encoding). No trailing slashes; `/path/` redirects 308 to `/path`.
+Arabic lives at the root; English lives under `/en/` (Level 5, ADR-043): the same route map with the prefix, `<html lang="en" dir="ltr">`, English copy and English CMS content, no browser-language detection (a reader chooses with the switch in the header). A page that has no English twin is absent from `/en` (404, no hreflang); `/en/blog` waits for 5b. Slugs are lowercase Latin with hyphens (shareable on WhatsApp without percent-encoding). No trailing slashes; `/path/` redirects 308 to `/path`.
 
 | Route | Page | Indexable | Notes |
 |---|---|---|---|
@@ -913,9 +915,9 @@ Principle (from `docs/research/04`): there is no separate "AI SEO". Answer engin
 
 1. Every indexable route is statically rendered at build (Next.js App Router, no `dynamic = 'force-dynamic'`), with all text, links, images (with `alt`), and JSON-LD in the initial HTML. Client components only for the designer, carousels, accordions, forms, widgets.
 2. No content behind client-side fetches. No infinite scroll.
-3. `Content-Language: ar` response header on every page (set in `next.config.ts` `headers()`), plus `<meta http-equiv="content-language" content="ar">`.
+3. `Content-Language` response header on every page (set in `next.config.ts` `headers()`): `ar` on the Arabic document, `en` on `/en` and `/en/*`; plus `<meta http-equiv="content-language">` with the same value (amended in Level 5, ADR-043).
 4. Canonical URL on every page: `https://b7r.sa{path}` without trailing slash and without query strings (the designer deep-link query is ignored by canonical).
-5. hreflang: none in Level 1 (a single language). When `/en` ships: `ar`, `en`, and `x-default → ar`, self-referencing, emitted from `sitemap.ts` alternates and `<link rel="alternate">`.
+5. hreflang (Level 5, ADR-043): `ar`, `en`, and `x-default → ar`, self-referencing, emitted from `sitemap.ts` alternates and `<link rel="alternate">`, only on a page that exists in both languages (the presence gate: the document's title has a value in the locale). A page with one language carries no pair.
 6. Trailing slashes: `trailingSlash: false`; `www` and `http` redirect at the host.
 
 ### 7.2 robots.txt (`app/robots.ts`)
@@ -952,11 +954,11 @@ Training crawlers (`GPTBot`, `ClaudeBot`, `Google-Extended`, `CCBot`, `Meta-Exte
 
 - `title` from §4.16 with the template `%s | بحر برنت`; the home page uses the full title without the template.
 - `description` from §4.16 (≤ 155 characters).
-- `alternates.canonical`.
-- Open Graph: `type` (`website` everywhere except `article` on posts; `product` is not an `og:type` the previews read and Next's typed metadata does not emit it, so product pages use `website` and the `Product` JSON-LD carries the commerce data, amended in Phase 1c), `locale: ar_SA`, `siteName: بحر برنت`, `title`, `description`, `images` (1200 × 630). Default OG image: designed once (`public/og/default.png`): white background, the colour logo, the tagline منصة الطباعة عند الطلب في السعودية, and a row of the five product photos; product pages use `public/og/products/{slug}.png` with the product photo and "يبدأ من {price}"; posts use the cover. All OG images are static PNGs rendered once by `scripts/build-og.ts` (`pnpm og`) with Playwright and the self-hosted ITF Rayat Round files, because Satori (`next/og`) does not shape Arabic (ADR-020, amended in Phase 1c).
+- `alternates.canonical` under the locale's prefix (`/products/hoodie`, `/en/products/hoodie`); `alternates.languages` `{ ar, en, x-default }` when the twin exists (Level 5, ADR-043).
+- Open Graph: `type` (`website` everywhere except `article` on posts; `product` is not an `og:type` the previews read and Next's typed metadata does not emit it, so product pages use `website` and the `Product` JSON-LD carries the commerce data, amended in Phase 1c), `locale: ar_SA` (`en_US` on `/en`, with `og:locale:alternate` for the twin), `siteName: بحر برنت` (`B7R Print` on `/en`), `title`, `description`, `images` (1200 × 630). Default OG image: designed once (`public/og/default.png`): white background, the colour logo, the tagline منصة الطباعة عند الطلب في السعودية, and a row of the five product photos; product pages use `public/og/products/{slug}.png` with the product photo and "يبدأ من {price}"; posts use the cover. All OG images are static PNGs rendered once by `scripts/build-og.ts` (`pnpm og`) with Playwright and the self-hosted ITF Rayat Round files, because Satori (`next/og`) does not shape Arabic (ADR-020, amended in Phase 1c).
 - Twitter card `summary_large_image`, `site: @b7rprint`.
 - `robots: { index, follow, 'max-image-preview': 'large' }`; `noindex` on 404 and on any non-production host.
-- Icons: `favicon.ico` (32), `icon.svg` if available else PNG 192/512, `apple-touch-icon` 180, `manifest.webmanifest` (name "بحر برنت", `lang: ar`, `dir: rtl`, `theme_color: #0058B0`, `background_color: #FFFFFF`, display `browser`).
+- Icons: `favicon.ico` (32), `icon.svg` if available else PNG 192/512, `apple-touch-icon` 180, `manifest.webmanifest` (name "بحر برنت", `lang: ar`, `dir: rtl`, `theme_color: #0058B0`, `background_color: #FFFFFF`, display `browser`; one manifest per origin, in the default language, ADR-043).
 - Verification meta tags from env: `GOOGLE_SITE_VERIFICATION`, `BING_SITE_VERIFICATION`.
 
 ### 7.4 Structured data (JSON-LD, rendered in the page component, one `<script type="application/ld+json">` per page)
@@ -969,11 +971,11 @@ Training crawlers (`GPTBot`, `ClaudeBot`, `Google-Extended`, `CCBot`, `Meta-Exte
 | How it works, About, Contact, FAQ, Legal | `WebPage` + `BreadcrumbList` (no FAQPage, no HowTo: rich results discontinued) |
 | Blog post | `BlogPosting` (headline, description, image, datePublished, dateModified, inLanguage ar, author `Person` {name ضياء, url /about}, publisher `Organization`) + `BreadcrumbList` |
 
-Validate with Google's Rich Results Test and the Schema.org validator in CI where possible (at least a JSON parse + required-fields unit test).
+`inLanguage` follows the document's locale, `contactPoint.availableLanguage` and `WebSite.inLanguage` list both languages (Level 5, ADR-043). Validate with Google's Rich Results Test and the Schema.org validator in CI where possible (at least a JSON parse + required-fields unit test).
 
 ### 7.5 Sitemap (`app/sitemap.ts`)
 
-All indexable routes with `lastModified` (ISO 8601 with time; from the content file's `updatedAt` field, updated only on real content changes), `changeFrequency` omitted (ignored by engines), image entries for product pages (`images: [...]`). Excludes 404, API, and query-string variants. Submitted to Google Search Console and Bing Webmaster Tools at launch (§12.4).
+All indexable routes of both languages with `lastModified` (ISO 8601 with time; from the content file's `updatedAt` field, updated only on real content changes), `changeFrequency` omitted (ignored by engines), image entries for product pages (`images: [...]`), and `alternates.languages` on every URL whose twin exists (`ar`, `en`, `x-default`; Level 5, ADR-043). Excludes 404, API, query-string variants and a language a document does not have. Submitted to Google Search Console and Bing Webmaster Tools at launch (§12.4).
 
 ### 7.6 IndexNow
 
@@ -1192,7 +1194,7 @@ Zero warnings policy: any warning from any step is fixed or suppressed inline wi
 
 ### 9.1 Goal
 
-Give Dhia and an editor a WordPress-like, Arabic, right-to-left admin at `https://b7r.sa/admin` to change every piece of site content and configuration without a deploy, while the public site stays static and fast. Payload CMS 3 runs inside the same Next.js app (decision from `docs/research/05`: MIT licence, Arabic RTL admin, built-in drafts, scheduled publishing, jobs queue, custom admin views).
+Give Dhia and an editor a WordPress-like, Arabic, right-to-left admin at `https://b7r.sa/admin` to change every piece of site content and configuration without a deploy, while the public site stays static and fast. Since Level 5 (ADR-043) every localised field carries an Arabic and an English value (the panel's locale switch); a document is on the English site once its title has an English value, and the English site exists once the site settings and navigation have theirs. Payload CMS 3 runs inside the same Next.js app (decision from `docs/research/05`: MIT licence, Arabic RTL admin, built-in drafts, scheduled publishing, jobs queue, custom admin views).
 
 ### 9.2 Infrastructure additions
 
@@ -1441,6 +1443,9 @@ DoD: all of §6.18; Search Console and Bing verification tokens in place; launch
 | 4a | Inbox collections and dashboard, subscribers sync | §11.5 items 1 (contact part), 3 |
 | 4b | Cal.com embed, `/book`, webhook, bookings | §11.5 items 1 (booking part), 2 |
 | 4c | Metrics job, analytics view, Search Console topic suggestions | §11.5 item 4 |
+| 5a | The English site at `/en/` (`specs/009-level-5-english/`, ADR-043): second root layout, per-locale copy banks, locale reads with the presence gate, hreflang and sitemap alternates, the switch, English forms and e-mails, English CMS content and legal drafts in the seed | Every public page except the blog answers in English with the same static behaviour, budgets and accessibility; the Arabic site unchanged |
+| 5b | The blog in English: `/en/blog`, hubs, authors, pagination, search, feed, translation pairs; the three Level 1 posts in English | `/en/blog/*` per locale; `BLOG_ENGLISH_PENDING` removed |
+| 5c | The engine in English: `ai-topics.language`, prompts and checks per locale, a 15-topic English backlog; `llms.txt` | English posts from the backlog under the same guardrails |
 
 ### 12.4 Launch checklist (Level 1 go-live on b7r.sa)
 
@@ -1470,11 +1475,11 @@ After cutover (same day):
 
 ### 12.5 Documentation upkeep rule
 
-This BRD is a living document. When a feature changes, the agent updates the relevant section in `docs/brd-sections/`, rebuilds the master file, and records an ADR. When a phase completes, its DoD evidence is linked from `docs/DECISIONS.md`. The BRD never lags the code by more than one merged PR.
+This BRD is a living document. When a feature changes, the agent updates the relevant section in `docs/brd-sections/`, rebuilds the master file, and records an ADR. Appendix H (the English copy bank) is generated from `src/content/copy/en.ts` by `pnpm copy:appendix` before the rebuild; it is never edited by hand. When a phase completes, its DoD evidence is linked from `docs/DECISIONS.md`. The BRD never lags the code by more than one merged PR.
 
 ### 12.6 Future blocks (reserved, not built until Dhia schedules them)
 
-English locale (`/en`, native copy, hreflang) · Salla and Zid landing pages (`/salla`, `/zid`) with app-store deep links · Comparison page "بحر مقابل Printful وPrintify" · Seasonal calendar hub · Creators landing (`/creators`) · Business landing (`/business`) · `llms.txt` · 2FA for admin · GlitchTip error tracking · Product-level Merchant Center feed · Newsletter campaigns · Case studies collection · Live order ticker on product pages (once volume exists) · WebMCP readiness.
+Salla and Zid landing pages (`/salla`, `/zid`) with app-store deep links · Comparison page "بحر مقابل Printful وPrintify" · Seasonal calendar hub · Creators landing (`/creators`) · Business landing (`/business`) · `llms.txt` · 2FA for admin · GlitchTip error tracking · Product-level Merchant Center feed · Newsletter campaigns · Case studies collection · Live order ticker on product pages (once volume exists) · WebMCP readiness.
 
 ---
 
@@ -1802,3 +1807,198 @@ Decision history: `docs/00-decisions-log.md` (rounds 1–4 with Dhia, 2026-09-12
 ---
 
 *End of document. Build the single master file with `docs/build-brd.py`; the sections in `docs/brd-sections/` are the editable source.*
+
+---
+
+## 14. Appendix H: The English copy bank (Level 5, ADR-043)
+
+Every interface string of the English site, key for key with the Arabic bank of §4 (`src/content/copy/en.ts`, written to this table by `pnpm copy:appendix`); `tests/content-verbatim.test.ts` checks the code against this table. Brand in English: "B7R Print". The CMS content in English (products, pages, FAQ, home, settings) is seeded content owed Dhia's read (Appendix G pattern). Placeholders in braces are filled by the code.
+
+| Key | English |
+|---|---|
+| `a11y.skipToContent` | Skip to content |
+| `a11y.mainNavigation` | Main navigation |
+| `a11y.footerNavigation` | Footer links |
+| `a11y.homeLink` | B7R Print, home |
+| `a11y.close` | Close |
+| `a11y.loading` | Loading |
+| `a11y.switchLanguage` | Switch to the Arabic site |
+| `hero.carouselLabel` | Featured slides |
+| `hero.slideIndicator` | Slide {n} of {total} |
+| `hero.pause` | Pause the slideshow |
+| `hero.resume` | Resume the slideshow |
+| `designer.canvasLabel` | Design preview on the product |
+| `designer.productGroupLabel` | Choose a product |
+| `designer.colorGroupLabel` | Choose a colour |
+| `designer.colorOption` | Colour {color} |
+| `designer.sellPriceInput` | Selling price in SAR |
+| `designer.sellPriceSlider` | Selling price |
+| `designer.dailySalesDecrement` | Fewer daily sales |
+| `designer.dailySalesIncrement` | More daily sales |
+| `designer.designThumbnail` | Current design |
+| `designer.dropzoneLabel` | Upload your design file |
+| `designer.productGroup` | Product |
+| `designer.uploadPrompt` | Tap to upload your logo or image |
+| `designer.uploadHelper` | PNG, JPG or SVG, up to 10 MB |
+| `designer.remove` | Remove the design |
+| `designer.canvasHint` | Drag the design to move it; use the corners to resize. |
+| `designer.baseCost` | Cost from B7R |
+| `designer.sellPrice` | Selling price in your store |
+| `designer.suggestedPrice` | Suggested price |
+| `designer.dailySales` | Daily sales |
+| `designer.perPiece` | Your profit per piece |
+| `designer.monthly` | Your estimated monthly profit |
+| `designer.negativeWarning` | The selling price is below the cost. Raise it to make a profit. |
+| `designer.fileError` | The file is not supported or is larger than 10 MB. |
+| `designer.mockupAlt` | {product} {color}, front view |
+| `strip.label` | Available products |
+| `strip.swipeHint` | Swipe |
+| `gallery.label` | Product photos |
+| `gallery.flip` | Flip the photo |
+| `gallery.front` | Front view |
+| `gallery.back` | Back view |
+| `breadcrumbs.label` | Page path |
+| `faq.groupsNav` | Question groups |
+| `faq.groups.البداية` | Getting started |
+| `faq.groups.الأسعار والربح` | Prices and profit |
+| `faq.groups.الطلبات والتوصيل` | Orders and delivery |
+| `faq.groups.المتاجر والربط` | Stores and connections |
+| `faq.groups.الجودة والدعم` | Quality and support |
+| `legal.onThisPage` | On this page |
+| `legal.updatedPrefix` | Last updated: |
+| `share.whatsapp` | Share on WhatsApp |
+| `share.x` | Share on X |
+| `share.copy` | Copy the link |
+| `testimonials.placeholderTag` | Sample |
+| `integrations.availableTag` | Available now |
+| `integrations.tileAria` | Connect a {platform} store |
+| `productsPage.title` | Products |
+| `productsPage.lead` | Quality products, printed on demand and shipped under your store name. |
+| `productsPage.pricePrefix` | From |
+| `productsPage.breadcrumbHome` | Home |
+| `productsPage.priceBlock.cost` | Cost from |
+| `productsPage.priceBlock.suggested` | Suggested selling price |
+| `productsPage.priceBlock.profit` | Your estimated profit |
+| `productsPage.priceBlock.perPiece` | per piece |
+| `productsPage.primaryCta` | Start selling this product |
+| `productsPage.secondaryLink` | Try your design on it |
+| `productsPage.sections.specs` | Specifications |
+| `productsPage.sections.sizeChart` | Size chart |
+| `productsPage.sections.related` | Other products |
+| `productsPage.specLabels.material` | Material |
+| `productsPage.specLabels.weight` | Weight |
+| `productsPage.specLabels.sizes` | Sizes |
+| `productsPage.specLabels.colors` | Colours |
+| `productsPage.specLabels.printArea` | Print area |
+| `productsPage.specLabels.printMethod` | Print method |
+| `productsPage.weightUnit` | g |
+| `productsPage.listSeparator` | `, ` |
+| `productsPage.sizeChartHeaders.size` | Size |
+| `productsPage.sizeChartHeaders.length` | Length |
+| `productsPage.sizeChartHeaders.chest` | Chest width |
+| `productsPage.sizeChartHeaders.sleeve` | Sleeve |
+| `productsPage.colorSwitchAria` | Colour {colour} |
+| `contactForm.labels.name` | Name |
+| `contactForm.labels.phone` | Mobile number |
+| `contactForm.labels.email` | Email |
+| `contactForm.labels.inquiry` | Inquiry type |
+| `contactForm.labels.message` | Your message |
+| `contactForm.placeholders.name` | Your full name |
+| `contactForm.placeholders.phone` | 05XXXXXXXX |
+| `contactForm.placeholders.email` | name@example.com |
+| `contactForm.placeholders.message` | Write your message here |
+| `contactForm.inquiryOptions` | Merchant · Partnership · Investment · Other |
+| `contactForm.submit` | Send the message |
+| `contactForm.sending` | Sending |
+| `contactForm.success` | We received your message. We will reply soon. |
+| `contactForm.successWhatsapp` | Message us on WhatsApp |
+| `contactForm.failure` | The message could not be sent. Try again or message us on WhatsApp. |
+| `contactForm.validation.name` | Enter your name |
+| `contactForm.validation.phone` | Enter a valid mobile number |
+| `contactForm.validation.email` | Enter a valid email address |
+| `contactForm.validation.message` | Write your message |
+| `contactEmail.subject` | New message from the website: {inquiryType} |
+| `contactEmail.replyOnWhatsapp` | Reply on WhatsApp |
+| `notFoundPage.title` | Page not found |
+| `notFoundPage.text` | The link seems to have changed or been removed. |
+| `notFoundPage.button` | Back to the home page |
+| `footer.linksTitle` | Links |
+| `footer.policiesTitle` | Policies |
+| `footer.newsletterTitle` | Newsletter |
+| `footer.newsletterLabel` | Subscribe for what is new |
+| `footer.newsletterPlaceholder` | name@example.com |
+| `footer.newsletterButton` | Subscribe |
+| `footer.newsletterSuccess` | Subscribed. We will only send you what is new. |
+| `footer.newsletterError` | Enter a valid email address. |
+| `footer.newsletterUnavailable` | Subscriptions are unavailable right now; try again later. |
+| `footer.socialAria.x` | B7R Print on X |
+| `footer.socialAria.instagram` | B7R Print on Instagram |
+| `footer.socialAria.tiktok` | B7R Print on TikTok |
+| `footer.socialAria.whatsapp` | B7R Print on WhatsApp |
+| `footer.badgesCaption` | Payment methods and verification bodies |
+| `footer.copyright` | © {year} B7R Print. All rights reserved. |
+| `draftBar.label` | Draft preview: what you see here is not published yet. |
+| `draftBar.exit` | Exit the preview |
+| `whatsappWidget.buttonAria` | Chat with us on WhatsApp |
+| `whatsappWidget.title` | B7R Print |
+| `whatsappWidget.subtitle` | Support team |
+| `whatsappWidget.greeting` | Hi 👋 How can we help? |
+| `whatsappWidget.action` | Start a chat |
+| `whatsappWidget.prefilled` | Hello, I would like to know more about B7R Print. |
+| `whatsappWidget.closeAria` | Close |
+| `consent.text` | We use cookies to improve your experience and measure how the site performs. |
+| `consent.accept` | Accept |
+| `consent.reject` | Decline |
+| `consent.link` | Privacy policy |
+| `errorPage.title` | Something went wrong |
+| `errorPage.text` | Try refreshing the page, or message us on WhatsApp. |
+| `errorPage.button` | Back to the home page |
+| `gonePage.title` | This page was removed |
+| `gonePage.text` | The link seems to have changed or been removed. |
+| `gonePage.button` | Back to the home page |
+| `blog.title` | The B7R blog |
+| `blog.lead` | Practical guides to starting your brand and selling printed products in Saudi Arabia. |
+| `blog.metaTemplate` | By Dhia · {date} · {n} min read |
+| `blog.takeawaysTitle` | Key takeaways |
+| `blog.relatedTitle` | Related articles |
+| `blog.share` | Share |
+| `blog.inPostCta.title` | Start your brand today |
+| `blog.inPostCta.text` | No capital, no stock. |
+| `blog.inPostCta.button` | Start your brand for free |
+| `blog.author.name` | Dhia |
+| `blog.author.role` | Founder of B7R Print |
+| `blog.allHubs` | All |
+| `blog.emptyHub` | No articles in this section yet. |
+| `blog.copied` | Link copied |
+| `blog.toc` | In this article |
+| `blog.updatedPrefix` | Updated |
+| `blog.previousPost` | Previous article |
+| `blog.nextPost` | Next article |
+| `blog.featured` | Latest article |
+| `blog.latest` | Latest articles |
+| `blog.search.label` | Search the blog |
+| `blog.search.placeholder` | Type a word from a title |
+| `blog.search.results` | Search results |
+| `blog.search.empty` | No results. Try another word. |
+| `blog.search.clear` | Clear |
+| `blog.pagination.label` | Blog pages |
+| `blog.pagination.page` | Page {n} |
+| `blog.pagination.previous` | Newer |
+| `blog.pagination.next` | Older |
+| `blog.hubIntro` | Every article in {hub} |
+| `blog.authorIntro` | Everything written by {name} |
+| `blog.authorPosts` | Articles |
+| `seo.titleTemplate` | %s \| B7R Print |
+| `seo.product.title` | {name} for print on demand |
+| `seo.product.description` | {short description}. Cost from SAR {base}, no minimum order, shipped under your store name. |
+| `seo.merchantCostNote` | Merchant cost |
+| `readingTime.one` | 1 min read |
+| `readingTime.two` | 2 min read |
+| `readingTime.few` | {n} min read |
+| `readingTime.many` | {n} min read |
+| `media.videoPosterAlt` | A digital printer printing a design on a black T-shirt |
+| `media.trustBadges.saudiBusinessCenter` | Saudi Business Center |
+| `media.trustBadges.ministryOfCommerce` | Ministry of Commerce |
+| `media.trustBadges.misk` | Misk Foundation |
+| `media.sarAria` | Saudi riyal |
+| `dateLocale` | en-GB |

@@ -1,8 +1,6 @@
 import Link from 'next/link';
-import { blogCopy } from '@/content/blog';
+import type { SiteCopy } from '@/content/copy';
 import { cn } from '@/lib/cn';
-
-const s = blogCopy.pagination;
 
 /**
  * Static pagination (ADR-041): every page is a route of its own (`{base}/page/{n}`, page 1 is
@@ -16,10 +14,13 @@ export function Pagination({
   base,
   page,
   totalPages,
+  copy: s,
 }: {
+  /** The listing's path under the locale's prefix (`/en/blog`). */
   base: string;
   page: number;
   totalPages: number;
+  copy: SiteCopy['blog']['pagination'];
 }) {
   if (totalPages <= 1) return null;
   const pages = Array.from({ length: totalPages }, (_, i) => i + 1);

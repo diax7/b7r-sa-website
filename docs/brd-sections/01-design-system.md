@@ -26,7 +26,7 @@ All three brand blues are sampled from `logo.png`. Two darker shades are derived
 | `--color-text` | `#14181F` | Body and headings |
 | `--color-text-muted` | `#5B6470` | Secondary text, captions, placeholders (4.6:1 on white) |
 | `--color-border` | `#E5E9EF` | Hairlines, card borders, input borders |
-| `--color-success` | `#16A34A` | Form success, positive profit |
+| `--color-success` | `#15803D` | Form success, positive profit; 4.7:1 on `ground`, 5:1 on `surface` (AA for the profit line) |
 | `--color-warning` | `#F59E0B` | Non-blocking warnings |
 | `--color-error` | `#D90000` | Validation errors, negative profit |
 | `--color-whatsapp` | `#25D366` | The WhatsApp widget button only |

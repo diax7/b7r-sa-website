@@ -15,6 +15,8 @@ export interface GalleryCopy {
   colorLabel: string;
   /** "اللون {colour}" */
   colorOptionAria: string;
+  /** Between the product, the colour and the side in the alt text: «، » or ", ". */
+  separator: string;
 }
 
 interface GalleryProps {
@@ -66,7 +68,7 @@ export function Gallery({ productName, colors, copy }: GalleryProps) {
       >
         <Image
           src={color.images.front}
-          alt={`${productName}، ${color.name}، ${copy.front}`}
+          alt={`${productName}${copy.separator}${color.name}${copy.separator}${copy.front}`}
           fill
           sizes="(min-width: 1024px) 560px, 100vw"
           priority
@@ -78,7 +80,7 @@ export function Gallery({ productName, colors, copy }: GalleryProps) {
         {color.images.back && (
           <Image
             src={color.images.back}
-            alt={`${productName}، ${color.name}، ${copy.back}`}
+            alt={`${productName}${copy.separator}${color.name}${copy.separator}${copy.back}`}
             fill
             sizes="(min-width: 1024px) 560px, 100vw"
             className={cn(
@@ -90,7 +92,9 @@ export function Gallery({ productName, colors, copy }: GalleryProps) {
         )}
       </button>
       <p id={`${id}-state`} aria-live="polite" className="sr-only">
-        {color.name}، {side}
+        {color.name}
+        {copy.separator}
+        {side}
       </p>
       {hasBack && (
         <div className="flex gap-2" role="group" aria-label={copy.flip}>

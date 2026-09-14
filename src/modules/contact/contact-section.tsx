@@ -7,11 +7,12 @@ import { Container } from '@/components/shared/container';
 import { Icon } from '@/components/shared/icon';
 import { Section, type SectionTone } from '@/components/shared/section';
 import { SectionHeader } from '@/components/shared/section-header';
-import { contactForm, footerCopy } from '@/content/pages';
+import { copyFor } from '@/content/copy';
 import type { BlockOf } from '@/content/schema';
 import { getSiteSettings } from '@/lib/cms';
 import { env } from '@/lib/env';
 import { bookingUrl } from '@/lib/env-server';
+import type { Locale } from '@/lib/i18n';
 import { whatsappUrl } from '@/lib/utm';
 import { ContactForm } from '@/modules/contact/contact-form';
 
@@ -47,6 +48,7 @@ function ContactCard({
 
 interface ContactSectionProps {
   block: BlockOf<'contact'>;
+  locale: Locale;
   tone: Extract<SectionTone, 'surface' | 'ground'>;
   /** Unique per page (`contact`, `contact-2`); element ids derive from it. */
   anchor: string;
@@ -58,8 +60,15 @@ interface ContactSectionProps {
  * are interface copy in code, ADR-031), the contact cards and the booking card at the end;
  * on phones the cards come first (WhatsApp is the fastest path), then booking, then the form.
  */
-export async function ContactSection({ block, tone, anchor, heading }: ContactSectionProps) {
-  const site = await getSiteSettings();
+export async function ContactSection({
+  block,
+  locale,
+  tone,
+  anchor,
+  heading,
+}: ContactSectionProps) {
+  const site = await getSiteSettings(locale);
+  const { contactForm, footer: footerCopy } = copyFor(locale);
   const whatsapp = whatsappUrl(site.contact.whatsapp);
   const booking = site.bookingUrl ?? bookingUrl();
   const bookingHref = booking ?? whatsappUrl(site.contact.whatsapp, block.booking.whatsappMessage);
@@ -90,15 +99,8 @@ export async function ContactSection({ block, tone, anchor, heading }: ContactSe
         <div className="grid gap-8 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:gap-12">
           <Card className="order-last p-6 md:p-8 lg:order-first" radius="lg">
             <ContactForm
-              copy={{
-                labels: contactForm.labels,
-                placeholders: contactForm.placeholders,
-                submit: contactForm.submit,
-                sending: contactForm.sending,
-                success: contactForm.success,
-                successWhatsapp: contactForm.successWhatsapp,
-                failure: contactForm.failure,
-              }}
+              locale={locale}
+              copy={contactForm}
               whatsappHref={whatsapp}
               turnstileSiteKey={env.turnstileSiteKey}
             />

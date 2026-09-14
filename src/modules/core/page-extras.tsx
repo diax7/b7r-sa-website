@@ -1,6 +1,8 @@
 'use client';
 
 import dynamic from 'next/dynamic';
+import type { ShellCopy } from '@/content/copy';
+import type { Locale } from '@/lib/i18n';
 import { AnalyticsBridge } from '@/modules/core/analytics/analytics-bridge';
 import { AfterDelay } from '@/modules/core/lazy-mount';
 
@@ -18,6 +20,8 @@ interface PageExtrasProps {
   gaId: string | undefined;
   /** WhatsApp number from site settings. */
   whatsapp: string;
+  locale: Locale;
+  copy: ShellCopy;
 }
 
 /**
@@ -25,17 +29,17 @@ interface PageExtrasProps {
  * bridge is tiny and immediate; the WhatsApp widget mounts after 1.5 s and the consent card
  * after 0.8 s (only when there is a GA id to consent to).
  */
-export function PageExtras({ gaId, whatsapp }: PageExtrasProps) {
+export function PageExtras({ gaId, whatsapp, locale, copy }: PageExtrasProps) {
   return (
     <>
       <AnalyticsBridge gaId={gaId} />
       {gaId && (
         <AfterDelay ms={800}>
-          <ConsentBar />
+          <ConsentBar locale={locale} copy={copy.consent} />
         </AfterDelay>
       )}
       <AfterDelay ms={1500}>
-        <WhatsAppWidget number={whatsapp} />
+        <WhatsAppWidget number={whatsapp} copy={copy.whatsappWidget} />
       </AfterDelay>
     </>
   );

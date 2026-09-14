@@ -6,12 +6,14 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/shared/button';
 import { Container } from '@/components/shared/container';
+import type { ShellCopy } from '@/content/copy';
 import type { Navigation, SiteSettings } from '@/content/schema';
-import messages from '@/messages/ar.json';
 import { cn } from '@/lib/cn';
 import { env } from '@/lib/env';
+import { type Locale, localePath } from '@/lib/i18n';
 import { isActive } from '@/lib/nav';
 import { loginUrl, registerUrl } from '@/lib/utm';
+import { LanguageSwitch } from '@/modules/core/header/language-switch';
 import { MobileMenuTrigger } from '@/modules/core/header/mobile-menu-trigger';
 
 /**
@@ -22,9 +24,11 @@ import { MobileMenuTrigger } from '@/modules/core/header/mobile-menu-trigger';
 export interface ShellData {
   navigation: Navigation;
   site: SiteSettings;
+  locale: Locale;
+  copy: ShellCopy;
 }
 
-export function Header({ navigation, site }: ShellData) {
+export function Header({ navigation, site, locale, copy }: ShellData) {
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const sentinel = useRef<HTMLDivElement>(null);
@@ -42,7 +46,8 @@ export function Header({ navigation, site }: ShellData) {
     return () => io.disconnect();
   }, []);
 
-  const transparent = pathname === '/' && !scrolled;
+  const home = localePath(locale, '/');
+  const transparent = pathname === home && !scrolled;
 
   return (
     <>
@@ -63,7 +68,7 @@ export function Header({ navigation, site }: ShellData) {
           )}
         >
           <Container className="flex items-center justify-between gap-6">
-            <Link href="/" className="shrink-0 rounded-inner" aria-label={site.brandName}>
+            <Link href={home} className="shrink-0 rounded-inner" aria-label={site.brandName}>
               <Image
                 src="/images/logo/logo-header.png"
                 alt=""
@@ -78,7 +83,7 @@ export function Header({ navigation, site }: ShellData) {
               />
             </Link>
 
-            <nav aria-label={messages.a11y.mainNavigation} className="hidden lg:block">
+            <nav aria-label={copy.a11y.mainNavigation} className="hidden lg:block">
               <ul className="flex items-center gap-8">
                 {navigation.primary.map((item) => {
                   const active = isActive(pathname, item);
@@ -101,6 +106,7 @@ export function Header({ navigation, site }: ShellData) {
             </nav>
 
             <div className="hidden items-center gap-6 lg:flex">
+              <LanguageSwitch locale={locale} ariaLabel={copy.a11y.switchLanguage} />
               <a
                 href={loginUrl(env.appUrl)}
                 className="text-body font-medium text-text transition-colors duration-(--duration-fast) hover:text-primary"
@@ -118,7 +124,13 @@ export function Header({ navigation, site }: ShellData) {
               </Button>
             </div>
 
-            <MobileMenuTrigger pathname={pathname} navigation={navigation} site={site} />
+            <MobileMenuTrigger
+              pathname={pathname}
+              navigation={navigation}
+              site={site}
+              locale={locale}
+              copy={copy}
+            />
           </Container>
         </header>
       </div>

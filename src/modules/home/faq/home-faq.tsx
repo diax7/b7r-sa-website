@@ -5,6 +5,7 @@ import { Icon } from '@/components/shared/icon';
 import { Section, type SectionTone } from '@/components/shared/section';
 import { SectionHeader } from '@/components/shared/section-header';
 import { getHome, getHomeFaqs } from '@/lib/cms';
+import { type Locale, localePath } from '@/lib/i18n';
 import { FaqAccordionLoader, FaqStaticList } from '@/modules/core';
 
 /**
@@ -12,8 +13,8 @@ import { FaqAccordionLoader, FaqStaticList } from '@/modules/core';
  * answers are server-rendered as a plain list (crawlers, no-JS) until the Radix accordion
  * mounts near the viewport.
  */
-export async function HomeFaq({ tone = 'ground' }: { tone?: SectionTone }) {
-  const [{ faq }, homeFaq] = await Promise.all([getHome(), getHomeFaqs()]);
+export async function HomeFaq({ locale, tone = 'ground' }: { locale: Locale; tone?: SectionTone }) {
+  const [{ faq }, homeFaq] = await Promise.all([getHome(locale), getHomeFaqs(locale)]);
   if (!faq.enabled) return null;
   const items = homeFaq.map((f) => ({ question: f.question, answer: f.answer }));
 
@@ -23,7 +24,7 @@ export async function HomeFaq({ tone = 'ground' }: { tone?: SectionTone }) {
         <div className="flex flex-col items-start gap-6">
           <SectionHeader id="faq-title" title={faq.title} />
           <Link
-            href="/faq"
+            href={localePath(locale, '/faq')}
             className="inline-flex items-center gap-2 py-2 font-medium text-primary hover:text-primary-hover"
           >
             {faq.link}

@@ -2,6 +2,13 @@ import type { SVGProps } from 'react';
 import { cn } from '@/lib/cn';
 
 /**
+ * The symbol's accessible name lives once per document, in the site's language
+ * (`SiteDocument` renders `<span id="sar-name" hidden>`); every symbol points at it, so no
+ * price component needs the locale (ADR-043).
+ */
+export const SAR_NAME_ID = 'sar-name';
+
+/**
  * The official Saudi Central Bank riyal symbol as an inline SVG (BRD 0.4.5, 3.11).
  * `fill="currentColor"` so it takes the ambient text colour; `height="0.85em"` so it scales with
  * the type size while sitting a touch smaller than the digits (Dhia, 2026-09-13). Never a Unicode character, an image, or a font glyph.
@@ -15,7 +22,7 @@ export function SarSymbol({ className, ...rest }: SVGProps<SVGSVGElement>) {
       width="0.76em"
       fill="currentColor"
       role="img"
-      aria-label="ريال سعودي"
+      aria-labelledby={SAR_NAME_ID}
       className={cn('inline-block shrink-0 align-[-0.05em]', className)}
       data-sar-symbol=""
       {...rest}

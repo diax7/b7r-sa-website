@@ -8,9 +8,10 @@ import { Input } from '@/components/shared/input';
 import { Textarea } from '@/components/shared/textarea';
 import { Select } from '@/components/ui/select';
 import { cn } from '@/lib/cn';
+import type { Locale } from '@/lib/i18n';
 import { track } from '@/modules/core';
 import {
-  INQUIRY_OPTIONS,
+  type ContactCopy,
   validateContact,
   type ContactErrors,
   type ContactField,
@@ -18,18 +19,9 @@ import {
 } from '@/modules/contact/validate';
 import { useTurnstile } from '@/components/shared/use-turnstile';
 
-export interface ContactFormCopy {
-  labels: { name: string; phone: string; email: string; inquiry: string; message: string };
-  placeholders: { name: string; phone: string; email: string; message: string };
-  submit: string;
-  sending: string;
-  success: string;
-  successWhatsapp: string;
-  failure: string;
-}
-
 interface ContactFormProps {
-  copy: ContactFormCopy;
+  locale: Locale;
+  copy: ContactCopy;
   whatsappHref: string;
   turnstileSiteKey: string | undefined;
 }
@@ -46,7 +38,7 @@ const EMPTY: Values = { name: '', phone: '', email: '', inquiry: '', message: ''
  * honeypot, Turnstile executed at submit, «جارٍ الإرسال» while pending, a success card on
  * 2xx, and the failure line above the button with values kept otherwise.
  */
-export function ContactForm({ copy, whatsappHref, turnstileSiteKey }: ContactFormProps) {
+export function ContactForm({ locale, copy, whatsappHref, turnstileSiteKey }: ContactFormProps) {
   const id = useId();
   const [values, setValues] = useState<Values>(EMPTY);
   const [errors, setErrors] = useState<Errors>({});
@@ -63,7 +55,7 @@ export function ContactForm({ copy, whatsappHref, turnstileSiteKey }: ContactFor
     e.preventDefault();
     const form = e.currentTarget;
     const website = (form.elements.namedItem('website') as HTMLInputElement | null)?.value ?? '';
-    const found = validateContact(values);
+    const found = validateContact(values, copy);
     if (Object.keys(found).length > 0) {
       setErrors(found);
       const first = Object.keys(found)[0] as Field | undefined;
@@ -76,7 +68,7 @@ export function ContactForm({ copy, whatsappHref, turnstileSiteKey }: ContactFor
       const res = await fetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...values, website, turnstileToken }),
+        body: JSON.stringify({ ...values, locale, website, turnstileToken }),
       });
       if (res.ok) {
         setStatus('success');
@@ -204,7 +196,7 @@ export function ContactForm({ copy, whatsappHref, turnstileSiteKey }: ContactFor
           name="inquiry"
           value={values.inquiry}
           onValueChange={set('inquiry')}
-          options={INQUIRY_OPTIONS}
+          options={copy.inquiryOptions}
           placeholder={copy.labels.inquiry}
           invalid={Boolean(errors.inquiry)}
           aria-labelledby={`${id}-inquiry-label`}

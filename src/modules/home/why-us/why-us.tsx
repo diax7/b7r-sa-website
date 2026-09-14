@@ -7,12 +7,13 @@ import { Section, type SectionTone } from '@/components/shared/section';
 import { SectionHeader } from '@/components/shared/section-header';
 import type { WhyUsItem } from '@/content/schema';
 import { getHome } from '@/lib/cms';
+import type { Locale } from '@/lib/i18n';
 
 const ICONS: Record<WhyUsItem['icon'], LucideIcon> = { ShieldCheck, Workflow, Zap };
 
 /** Why us (BRD 6.4.6): three hairline cards, icon circle, H3, one line. */
-export async function WhyUs({ tone = 'surface' }: { tone?: SectionTone }) {
-  const { whyUs } = await getHome();
+export async function WhyUs({ locale, tone = 'surface' }: { locale: Locale; tone?: SectionTone }) {
+  const { whyUs } = await getHome(locale);
   if (!whyUs.enabled) return null;
   return (
     <Section id="why-us" tone={tone} aria-labelledby="why-us-title">

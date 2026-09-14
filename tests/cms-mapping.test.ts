@@ -153,8 +153,13 @@ describe('globals', () => {
       menuCloseLabel: navigation.menuCloseLabel,
       menuWhatsappLine: navigation.menuWhatsappLine,
     };
-    expect(toNavigation(doc)).toEqual(navigation);
-    expect(() => toNavigation({ ...doc, primary: doc.primary?.slice(1) })).toThrow();
+    expect(toNavigation(doc, 'ar')).toEqual(navigation);
+    expect(() => toNavigation({ ...doc, primary: doc.primary?.slice(1) }, 'ar')).toThrow();
+    // English: the same rows under the prefix (ADR-043).
+    const english = toNavigation(doc, 'en');
+    expect(english.primary.map((i) => i.href)).toEqual(
+      navigation.primary.map((i) => (i.href === '/' ? '/en' : `/en${i.href}`)),
+    );
   });
 
   it('SEO rows carry route, copy and the date of last change', () => {

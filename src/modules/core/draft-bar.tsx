@@ -1,14 +1,16 @@
 import { draftMode } from 'next/headers';
 import { Eye } from 'lucide-react';
 import { Icon } from '@/components/shared/icon';
-import { draftBarCopy } from '@/content/pages';
+import { copyFor } from '@/content/copy';
+import type { Locale } from '@/lib/i18n';
 
 /**
  * A thin bar at the top of every page while an editor previews drafts (ADR-039): what they
  * see is not what visitors see, and one click leaves. Renders nothing outside draft mode,
  * which is the case for every static render.
  */
-export async function DraftBar() {
+export async function DraftBar({ locale }: { locale: Locale }) {
+  const draftBarCopy = copyFor(locale).draftBar;
   let enabled = false;
   try {
     enabled = (await draftMode()).isEnabled;

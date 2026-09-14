@@ -3,7 +3,7 @@ import { hasDraftCookie } from '@/lib/cookies';
 import { goneHtml } from '@/lib/gone-page';
 import { createSlugCache, SLUG_SHAPE } from '@/lib/page-slugs';
 import { isGone } from '@/lib/redirects';
-import { NOT_FOUND_PREFIX, topLevelSlug } from '@/lib/site-routes';
+import { isEnglishPath, localeSlug, NOT_FOUND_PREFIX } from '@/lib/site-routes';
 
 /**
  * Two jobs (BRD 5.2, ADR-017, ADR-032). Retired WordPress URLs answer 410 Gone (`next.config`
@@ -19,17 +19,26 @@ import { NOT_FOUND_PREFIX, topLevelSlug } from '@/lib/site-routes';
  */
 const SLUGS_TTL_MS = 20_000;
 
-const slugs = createSlugCache({
-  ttlMs: SLUGS_TTL_MS,
-  fetchSlugs: async () => {
-    const port = process.env['PORT'] ?? '3004';
-    const res = await fetch(`http://127.0.0.1:${port}/api/pages/slugs`, { cache: 'no-store' });
-    if (!res.ok) throw new Error(`pages/slugs answered ${res.status}`);
-    const body = (await res.json()) as { slugs?: unknown };
-    if (!Array.isArray(body.slugs)) throw new Error('pages/slugs: malformed body');
-    return body.slugs.filter((s): s is string => typeof s === 'string');
-  },
-});
+/** `enabled` marks whether the site is in English at all (the English list is empty then). */
+const ENGLISH_OFF = '__english_off__';
+
+function allowlist(path: string) {
+  return createSlugCache({
+    ttlMs: SLUGS_TTL_MS,
+    fetchSlugs: async () => {
+      const port = process.env['PORT'] ?? '3004';
+      const res = await fetch(`http://127.0.0.1:${port}${path}`, { cache: 'no-store' });
+      if (!res.ok) throw new Error(`${path} answered ${res.status}`);
+      const body = (await res.json()) as { slugs?: unknown; enabled?: unknown };
+      if (!Array.isArray(body.slugs)) throw new Error(`${path}: malformed body`);
+      const list = body.slugs.filter((s): s is string => typeof s === 'string');
+      return body.enabled === false ? [ENGLISH_OFF, ...list] : list;
+    },
+  });
+}
+
+/** The Arabic pages, and the English ones with the "is the site in English" flag (ADR-043). */
+const slugs = { ar: allowlist('/api/pages/slugs'), en: allowlist('/api/pages/slugs/en') };
 
 export async function proxy(request: Request) {
   const url = new URL(request.url);
@@ -42,12 +51,17 @@ export async function proxy(request: Request) {
       },
     });
   }
-  const slug = topLevelSlug(url.pathname);
-  if (slug === null) return undefined;
+  const notFound = () =>
+    NextResponse.rewrite(new URL(`${NOT_FOUND_PREFIX}${url.pathname.slice(1)}`, url));
+  // Every `/en` URL answers 404 while the site is not in English (a half-seeded environment).
+  if (isEnglishPath(url.pathname) && (await slugs.en.knows(ENGLISH_OFF)) === true) {
+    return notFound();
+  }
+  const candidate = localeSlug(url.pathname);
+  if (candidate === null) return undefined;
   if (hasDraftCookie(request.headers.get('cookie'))) return undefined;
-  const notFound = () => NextResponse.rewrite(new URL(`${NOT_FOUND_PREFIX}${slug}`, url));
-  if (!SLUG_SHAPE.test(slug)) return notFound();
-  const known = await slugs.knows(slug);
+  if (!SLUG_SHAPE.test(candidate.slug)) return notFound();
+  const known = await slugs[candidate.locale].knows(candidate.slug);
   if (known === false) return notFound();
   return undefined;
 }
@@ -82,6 +96,9 @@ export const config = {
     '/wp-content/:path*',
     '/wp-admin/:path*',
     '/wp-json/:path*',
+    // The English document and its code-owned routes: gated on the site being in English.
+    '/en',
+    '/en/:path*',
     // Top-level slug candidates: one segment, none of the code-owned names, no dot (files).
     '/((?!(?:about|how-it-works|contact|faq|terms|shipping|privacy|products|blog|author|admin|api|_next|og|images|fonts|media|video|__404|en)$)(?!.*\\.)[^/]+)',
   ],

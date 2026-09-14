@@ -1,6 +1,7 @@
 import type { ComponentType } from 'react';
 import type { SectionTone } from '@/components/shared/section';
 import type { Block, BlockOf, Page } from '@/content/schema';
+import type { Locale } from '@/lib/i18n';
 
 export type BlockTone = Extract<SectionTone, 'surface' | 'ground'>;
 
@@ -13,6 +14,7 @@ export interface PageHeading {
 export interface BlockProps<T extends Block['blockType']> {
   block: BlockOf<T>;
   page: Page;
+  locale: Locale;
   tone: BlockTone;
   /**
    * Unique per page and readable in a URL: the block's short name, numbered from the second

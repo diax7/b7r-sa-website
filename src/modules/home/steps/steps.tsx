@@ -6,6 +6,7 @@ import { Icon } from '@/components/shared/icon';
 import { Section, type SectionTone } from '@/components/shared/section';
 import { SectionHeader } from '@/components/shared/section-header';
 import { getHome } from '@/lib/cms';
+import { type Locale, localePath } from '@/lib/i18n';
 import { StepsProgress } from '@/modules/home/steps/steps-progress';
 
 /**
@@ -13,8 +14,8 @@ import { StepsProgress } from '@/modules/home/steps/steps-progress';
  * motion); under `html.js` at `lg` the section becomes 300 vh with a pinned inner grid and
  * `StepsProgress` maps scroll position to the active step. Native scroll only.
  */
-export async function Steps({ tone = 'surface' }: { tone?: SectionTone }) {
-  const { steps } = await getHome();
+export async function Steps({ locale, tone = 'surface' }: { locale: Locale; tone?: SectionTone }) {
+  const { steps } = await getHome(locale);
   if (!steps.enabled) return null;
   const homeSteps = steps.items;
   return (
@@ -65,7 +66,7 @@ export async function Steps({ tone = 'surface' }: { tone?: SectionTone }) {
             </div>
           </div>
           <Link
-            href="/how-it-works"
+            href={localePath(locale, '/how-it-works')}
             className="steps-link inline-flex items-center gap-2 self-start py-2 font-medium text-primary hover:text-primary-hover"
           >
             {steps.link}

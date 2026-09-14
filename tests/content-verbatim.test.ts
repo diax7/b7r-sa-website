@@ -9,23 +9,25 @@ import { describe, expect, it } from 'vitest';
 import { faq } from '@/content/seed/faq';
 import { home } from '@/content/seed/home';
 import { navigation } from '@/content/seed/navigation';
-import { blogCopy } from '@/content/blog';
+import { ar } from '@/content/copy/ar';
+import { en } from '@/content/copy/en';
 import { blogAuthor, blogHubs, blogPosts } from '@/content/seed/blog';
 import { seo } from '@/content/seed/seo';
-import { MERCHANT_COST_NOTE, productSeo } from '@/content/seo-copy';
-import {
+import { pages } from '@/content/seed/pages';
+import { products } from '@/content/seed/products';
+import { site } from '@/content/seed/site';
+
+const {
+  blog: blogCopy,
   contactEmail,
   contactForm,
   errorPage,
   gonePage,
   productsPage,
-  footerCopy,
+  footer: footerCopy,
   notFoundPage,
-} from '@/content/pages';
-import { pages } from '@/content/seed/pages';
-import { products } from '@/content/seed/products';
-import { site } from '@/content/seed/site';
-import messages from '@/messages/ar.json';
+} = ar;
+const messages = ar;
 
 const TODO_COPY = new Set<string>([
   // Designer upload target and its remove control (design review 2026-09-13, Appendix G).
@@ -84,7 +86,7 @@ const sources: Record<string, unknown> = {
     hero: { ...home.hero, slides: home.hero.slides.map(({ alt: _alt, ...s }) => s) },
   },
   // Interface strings that left the content files (ADR-031); aria labels stay agent-written.
-  'messages/ar.json': {
+  'copy/ar.ts (microcopy)': {
     designer: [
       messages.designer.productGroup,
       messages.designer.uploadPrompt,
@@ -110,7 +112,7 @@ const sources: Record<string, unknown> = {
     colorNames: colors.map((c) => c.name),
   })),
   'seed/faq.ts': faq,
-  'pages.ts': [
+  'copy/ar.ts (pages)': [
     productsPage,
     contactForm,
     contactEmail,
@@ -125,10 +127,10 @@ const sources: Record<string, unknown> = {
     ...p,
     blocks: p.blocks.filter((b) => b.blockType !== 'legalBody'),
   })),
-  'seo.ts': [seo, productSeo, MERCHANT_COST_NOTE],
+  'seo.ts': [seo, ar.seo.product, ar.seo.merchantCostNote],
   // Post titles and hub names are BRD 4.13; excerpts, takeaways and bodies are agent-written
   // samples listed for Dhia (ADR-018), so only the BRD fields are checked here.
-  'blog/index.ts': [blogCopy],
+  'copy/ar.ts (blog)': [blogCopy],
   // Hub names, the author line and post titles are BRD 4.13 / Appendix E; hub copy, the bio,
   // excerpts, takeaways and bodies are agent-written and listed for Dhia (ADR-018, ADR-041).
   'seed/blog.ts': [
@@ -153,5 +155,37 @@ describe('copy is verbatim from the BRD', () => {
 
   it('hero alt text is descriptive Arabic (BRD 3.9)', () => {
     for (const slide of home.hero.slides) expect(slide.alt.length).toBeGreaterThan(20);
+  });
+});
+
+/** Every string of the English bank, leaves only. */
+function leaves(value: unknown, out: string[] = []): string[] {
+  if (typeof value === 'string') out.push(value);
+  else if (Array.isArray(value)) for (const v of value) leaves(v, out);
+  else if (value && typeof value === 'object') for (const v of Object.values(value)) leaves(v, out);
+  return out;
+}
+
+describe('the English copy bank (Appendix H, ADR-043)', () => {
+  const appendixStart = brd.indexOf('Appendix H: The English copy bank');
+
+  it('is verbatim in the BRD appendix', () => {
+    // A pipe is escaped inside the appendix table.
+    const missing = leaves(en)
+      .map((s) =>
+        s
+          .replace(/\s+/g, ' ')
+          .trim()
+          .replaceAll('|', String.raw`\|`),
+      )
+      .filter((s) => brd.indexOf(s, appendixStart) === -1);
+    expect(missing).toEqual([]);
+  });
+
+  it('carries no Arabic and no em dash', () => {
+    for (const s of leaves(en)) {
+      expect(s, s).not.toMatch(ARABIC);
+      expect(s, s).not.toContain(String.fromCharCode(0x2014));
+    }
   });
 });

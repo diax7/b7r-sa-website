@@ -35,7 +35,7 @@ export function DesignerStatic({ products, product, copy, ctaHref }: DesignerSta
           {color && (
             <Image
               src={color.images.front}
-              alt={`${product.name} ${color.name}، الواجهة الأمامية`}
+              alt={copy.mockupAlt.replace('{product}', product.name).replace('{color}', color.name)}
               fill
               sizes="(min-width: 1024px) 600px, 100vw"
               className="object-contain"

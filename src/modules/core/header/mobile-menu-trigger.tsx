@@ -2,8 +2,9 @@
 
 import dynamic from 'next/dynamic';
 import { useState } from 'react';
+import type { ShellCopy } from '@/content/copy';
 import type { Navigation, SiteSettings } from '@/content/schema';
-import messages from '@/messages/ar.json';
+import type { Locale } from '@/lib/i18n';
 import { Burger, burgerButtonClass } from '@/modules/core/header/burger';
 
 const MobileMenu = dynamic(
@@ -12,12 +13,7 @@ const MobileMenu = dynamic(
     ssr: false,
     // Keeps the control in place (and the X state visible) while the sheet chunk downloads.
     loading: () => (
-      <button
-        type="button"
-        className={burgerButtonClass}
-        aria-label={messages.a11y.loading}
-        disabled
-      >
+      <button type="button" className={burgerButtonClass} disabled>
         <Burger open />
       </button>
     ),
@@ -35,15 +31,28 @@ export function MobileMenuTrigger({
   pathname,
   navigation,
   site,
+  locale,
+  copy,
 }: {
   pathname: string;
   navigation: Navigation;
   site: SiteSettings;
+  locale: Locale;
+  copy: ShellCopy;
 }) {
   const [wanted, setWanted] = useState(false);
 
   if (wanted)
-    return <MobileMenu pathname={pathname} navigation={navigation} site={site} autoOpen />;
+    return (
+      <MobileMenu
+        pathname={pathname}
+        navigation={navigation}
+        site={site}
+        locale={locale}
+        copy={copy}
+        autoOpen
+      />
+    );
 
   return (
     <button

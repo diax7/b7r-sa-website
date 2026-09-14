@@ -1,9 +1,11 @@
 import type { Metadata } from 'next';
-import { notFoundPage } from '@/content/pages';
+import { copyFor } from '@/content/copy';
 import { StatusPage } from '@/modules/core';
 
+const copy = copyFor('ar');
+
 export const metadata: Metadata = {
-  title: notFoundPage.title,
+  title: copy.notFoundPage.title,
   robots: { index: false, follow: false },
 };
 
@@ -14,6 +16,11 @@ export const metadata: Metadata = {
  */
 export default function NotFound() {
   return (
-    <StatusPage title={notFoundPage.title} text={notFoundPage.text} button={notFoundPage.button} />
+    <StatusPage
+      title={copy.notFoundPage.title}
+      text={copy.notFoundPage.text}
+      button={copy.notFoundPage.button}
+      home="/"
+    />
   );
 }

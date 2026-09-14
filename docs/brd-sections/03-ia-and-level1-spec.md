@@ -2,7 +2,7 @@
 
 ### 5.1 Route map (Level 1)
 
-Arabic lives at the root. `/en/*` is reserved for the English phase and must not 404 confusingly: until English exists, `/en` and `/en/*` redirect 302 to the Arabic equivalent. Slugs are lowercase Latin with hyphens (shareable on WhatsApp without percent-encoding). No trailing slashes; `/path/` redirects 308 to `/path`.
+Arabic lives at the root; English lives under `/en/` (Level 5, ADR-043): the same route map with the prefix, `<html lang="en" dir="ltr">`, English copy and English CMS content, no browser-language detection (a reader chooses with the switch in the header). A page that has no English twin is absent from `/en` (404, no hreflang); `/en/blog` waits for 5b. Slugs are lowercase Latin with hyphens (shareable on WhatsApp without percent-encoding). No trailing slashes; `/path/` redirects 308 to `/path`.
 
 | Route | Page | Indexable | Notes |
 |---|---|---|---|

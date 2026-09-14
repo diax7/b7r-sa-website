@@ -4,12 +4,23 @@ import { Container } from '@/components/shared/container';
 import { Reveal } from '@/components/shared/reveal';
 import { Section, type SectionTone } from '@/components/shared/section';
 import { SectionHeader } from '@/components/shared/section-header';
+import { copyFor } from '@/content/copy';
 import { getHome, getIntegrations } from '@/lib/cms';
-import messages from '@/messages/ar.json';
+import type { Locale } from '@/lib/i18n';
 
 /** Integrations (BRD 6.4.8): logo tiles with the «متاح الآن» badge; not links in L1. */
-export async function Integrations({ tone = 'surface' }: { tone?: SectionTone }) {
-  const [{ integrations: copy }, integrations] = await Promise.all([getHome(), getIntegrations()]);
+export async function Integrations({
+  locale,
+  tone = 'surface',
+}: {
+  locale: Locale;
+  tone?: SectionTone;
+}) {
+  const [{ integrations: copy }, integrations] = await Promise.all([
+    getHome(locale),
+    getIntegrations(locale),
+  ]);
+  const messages = copyFor(locale);
   if (!copy.enabled) return null;
   return (
     <Section id="integrations" tone={tone} aria-labelledby="integrations-title">

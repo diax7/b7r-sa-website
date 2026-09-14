@@ -9,12 +9,14 @@ interface StatusPageProps {
   title: string;
   text: string;
   button: string;
+  /** Where the button goes: the locale's home (`/` or `/en`). */
+  home: string;
   /** WhatsApp line (runtime errors, BRD 8.11): the number and the link text. */
   whatsapp?: { number: string; label: string };
 }
 
 /** Centred status layout shared by 404 and the error boundaries (BRD 6.13). No ribbon. */
-export function StatusPage({ title, text, button, whatsapp }: StatusPageProps) {
+export function StatusPage({ title, text, button, home, whatsapp }: StatusPageProps) {
   return (
     <Container className="flex min-h-[70svh] flex-col items-center justify-center gap-6 py-24 text-center">
       <Image
@@ -28,7 +30,7 @@ export function StatusPage({ title, text, button, whatsapp }: StatusPageProps) {
       <p className="lead text-text-muted">{text}</p>
       <div className="mt-2 flex flex-col items-center gap-4 sm:flex-row">
         <Button asChild size="lg">
-          <Link href="/">{button}</Link>
+          <Link href={home}>{button}</Link>
         </Button>
         {whatsapp && (
           <a

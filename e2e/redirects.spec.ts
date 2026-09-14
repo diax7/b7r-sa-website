@@ -47,17 +47,6 @@ test.describe('redirects and 410s (BRD 5.2)', () => {
     });
   }
 
-  test('/en and /en/* answer 302 to the Arabic route until English exists', async ({ request }) => {
-    const root = await request.get('/en', { maxRedirects: 0 });
-    expect(root.status()).toBe(302);
-    expect(new URL(root.headers()['location'] ?? '', 'http://localhost:3004').pathname).toBe('/');
-    const nested = await request.get('/en/products', { maxRedirects: 0 });
-    expect(nested.status()).toBe(302);
-    expect(new URL(nested.headers()['location'] ?? '', 'http://localhost:3004').pathname).toBe(
-      '/products',
-    );
-  });
-
   for (const path of GONE) {
     test(`${path} is 410 Gone`, async ({ request }) => {
       const res = await request.get(path);

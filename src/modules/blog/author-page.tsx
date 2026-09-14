@@ -1,9 +1,9 @@
 import Image from 'next/image';
 import { Container } from '@/components/shared/container';
 import { Section } from '@/components/shared/section';
-import { blogCopy } from '@/content/blog';
-import { productsPage } from '@/content/pages';
+import { copyFor } from '@/content/copy';
 import { type Author, getPostPage } from '@/lib/cms/blog';
+import { type Locale, localePath } from '@/lib/i18n';
 import { siteBase } from '@/lib/env';
 import { JsonLd, jsonLd } from '@/modules/core';
 import { CtaRibbon } from '@/modules/core/cta-ribbon';
@@ -11,18 +11,27 @@ import { Pagination } from '@/modules/blog/pagination';
 import { PostCard } from '@/modules/blog/post-card';
 
 /** The author page (BRD 10.1): who they are, their links, their posts; `ProfilePage` schema. */
-export async function AuthorPage({ author, page }: { author: Author; page: number }) {
+export async function AuthorPage({
+  author,
+  locale,
+  page,
+}: {
+  author: Author;
+  locale: Locale;
+  page: number;
+}) {
+  const { blog: blogCopy, productsPage } = copyFor(locale);
   const base = siteBase();
   const route = `/author/${author.slug}`;
-  const listing = await getPostPage(page, { author: author.slug });
+  const listing = await getPostPage(locale, page, { author: author.slug });
   return (
     <>
       <JsonLd
         nodes={[
-          jsonLd.profilePage(base, author),
+          jsonLd.profilePage(base, locale, author),
           jsonLd.breadcrumbs(base, [
-            { name: productsPage.breadcrumbHome, path: '/' },
-            { name: blogCopy.title, path: '/blog' },
+            { name: productsPage.breadcrumbHome, path: localePath(locale, '/') },
+            { name: blogCopy.title, path: localePath(locale, '/blog') },
             { name: author.name, path: route },
           ]),
         ]}
@@ -76,17 +85,22 @@ export async function AuthorPage({ author, page }: { author: Author; page: numbe
             <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3" data-post-grid="">
               {listing.posts.map((post) => (
                 <li key={post.slug}>
-                  <PostCard post={post} headingLevel="h3" />
+                  <PostCard post={post} locale={locale} headingLevel="h3" />
                 </li>
               ))}
             </ul>
           ) : (
             <p className="text-body text-text-muted">{blogCopy.emptyHub}</p>
           )}
-          <Pagination base={route} page={page} totalPages={listing.totalPages} />
+          <Pagination
+            base={localePath(locale, route)}
+            page={page}
+            totalPages={listing.totalPages}
+            copy={blogCopy.pagination}
+          />
         </Container>
       </Section>
-      <CtaRibbon topTone="surface" page={`author-${author.slug}`} />
+      <CtaRibbon locale={locale} topTone="surface" page={`author-${author.slug}`} />
     </>
   );
 }

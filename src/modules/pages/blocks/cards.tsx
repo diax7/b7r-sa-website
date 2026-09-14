@@ -7,6 +7,7 @@ import { Reveal } from '@/components/shared/reveal';
 import { Section } from '@/components/shared/section';
 import { SectionHeader } from '@/components/shared/section-header';
 import type { Block } from '@/content/schema';
+import { copyFor } from '@/content/copy';
 import type { BlockProps } from '@/modules/pages/blocks/types';
 
 type CardIcon = Extract<Block, { blockType: 'cards' }>['items'][number]['icon'];
@@ -23,8 +24,9 @@ const COLUMNS: Record<number, string> = {
  * Value cards (BRD 6.8): a staggered grid, each with an icon circle and optional 3D art on
  * top. Labelled by the card titles when the block has no title of its own.
  */
-export function CardsBlock({ block, tone, anchor, heading }: BlockProps<'cards'>) {
+export function CardsBlock({ block, locale, tone, anchor, heading }: BlockProps<'cards'>) {
   const cols = Math.min(block.items.length, 3);
+  const separator = copyFor(locale).productsPage.listSeparator;
   const title = heading?.title ?? block.title;
   return (
     <Section
@@ -32,7 +34,7 @@ export function CardsBlock({ block, tone, anchor, heading }: BlockProps<'cards'>
       className={heading ? 'pt-10 md:pt-16' : undefined}
       {...(title
         ? { 'aria-labelledby': `${anchor}-title` }
-        : { 'aria-label': block.items.map((c) => c.title).join('، ') })}
+        : { 'aria-label': block.items.map((c) => c.title).join(separator) })}
       data-block="cards"
     >
       <Container className="flex flex-col gap-10">

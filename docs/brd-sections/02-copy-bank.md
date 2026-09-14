@@ -267,6 +267,8 @@ Every user-visible string in Level 1 is here. Copy it exactly, including punctua
 
 ### 4.16 SEO titles and descriptions (Arabic; the brand suffix is added by the template as « | بحر برنت»)
 
+The English titles and descriptions (suffix ` | B7R Print`) are the `seo` rows of Appendix H and the English `seo-defaults` values the seed writes (Level 5, ADR-043).
+
 | Page | `<title>` (without suffix) | Meta description |
 |---|---|---|
 | Home | بحر برنت: منصة الطباعة عند الطلب في السعودية | ابدأ براندك بدون رأس مال أو مخزون. صمّم منتجاتك، اربط متجرك في سلة أو زد أو شوبيفاي، ونحن نطبع في جدة ونشحن باسمك خلال 5 أيام. |

@@ -46,8 +46,15 @@ export async function POST(req: Request) {
     }
   }
 
-  const { name, phone, email, inquiry, message } = parsed.data;
-  const result = await getContactTransport().send({ name, phone, email, inquiry, message });
+  const { name, phone, email, inquiry, message, locale } = parsed.data;
+  const result = await getContactTransport().send({
+    name,
+    phone,
+    email,
+    inquiry,
+    message,
+    locale,
+  });
   if (!result.ok) {
     return NextResponse.json(
       { ok: false, error: result.status === 503 ? 'not_configured' : 'failed' },

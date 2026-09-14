@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import {
-  english,
   GONE_MATCHER,
   goneExact,
   gonePrefixes,
@@ -63,14 +62,9 @@ describe('redirect map (BRD 5.2)', () => {
     for (const r of redirectRules()) expect(r.source.endsWith('/')).toBe(false);
   });
 
-  it('marks renames 301 and the English placeholder 302, exact before glob', () => {
+  it('marks renames 301 and never redirects /en, which is a live site (ADR-043)', () => {
     for (const r of renamed) expect(r.statusCode).toBe(301);
-    expect(english.map((r) => [r.source, r.destination, r.statusCode])).toEqual([
-      ['/en', '/', 302],
-      ['/en/:path*', '/:path*', 302],
-    ]);
-    const rules = redirectRules();
-    expect(rules.indexOf(english[0]!)).toBeLessThan(rules.indexOf(english[1]!));
+    expect(redirectRules().some((r) => r.source.startsWith('/en'))).toBe(false);
   });
 });
 

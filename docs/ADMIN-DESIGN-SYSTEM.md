@@ -115,6 +115,10 @@ The admin's strings are interface copy (ADR-031): written by us, under the ux-ar
   `dd/MM/yyyy`. Brand and product names stay Latin: Salla, Zid, Shopify, Turnstile, Resend.
 - Punctuation: Arabic comma «،», «أو» not «/», no «!». **No em dash anywhere** (ADR-040,
   `.claude/rules/writing.md`, `pnpm check:dash`): a colon or two sentences instead.
+- Localised fields (ADR-043): the panel's locale control switches every localised field
+  between Arabic and English; a document reaches the English site when its title-like field
+  has an English value. Media alt text is per language; the Arabic value must be Arabic
+  script, the English one is free text.
 
 ## 6. Components
 

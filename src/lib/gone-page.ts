@@ -1,4 +1,4 @@
-import { gonePage } from '@/content/pages';
+import { ar } from '@/content/copy/ar';
 // The proxy answers before any database call; the seed brand name is the static fallback.
 import { site } from '@/content/seed/site';
 import { TOKEN_HEX } from '@/lib/tokens';
@@ -15,7 +15,7 @@ export function goneHtml(): string {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
-<title>${gonePage.title} | ${site.brandName}</title>
+<title>${ar.gonePage.title} | ${site.brandName}</title>
 <style>
 body{margin:0;min-height:100vh;display:grid;place-items:center;background:${TOKEN_HEX.surface};color:${TOKEN_HEX.text};font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;text-align:center;padding:24px}
 h1{font-size:28px;margin:0 0 12px}
@@ -25,9 +25,9 @@ a{display:inline-block;background:${TOKEN_HEX.primary};color:${TOKEN_HEX.surface
 </head>
 <body>
 <main>
-<h1>${gonePage.title}</h1>
-<p>${gonePage.text}</p>
-<a href="/">${gonePage.button}</a>
+<h1>${ar.gonePage.title}</h1>
+<p>${ar.gonePage.text}</p>
+<a href="/">${ar.gonePage.button}</a>
 </main>
 </body>
 </html>

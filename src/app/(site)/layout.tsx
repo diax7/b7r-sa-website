@@ -11,7 +11,7 @@ import { rootMetadata } from '@/modules/core/seo/metadata';
 export async function generateMetadata(): Promise<Metadata> {
   const tokens = verificationTokens();
   return {
-    ...(await rootMetadata()),
+    ...(await rootMetadata('ar')),
     verification: {
       ...(tokens.google ? { google: tokens.google } : {}),
       ...(tokens.bing ? { other: { 'msvalidate.01': tokens.bing } } : {}),
@@ -31,11 +31,11 @@ export const viewport: Viewport = {
   themeColor: BRAND_PRIMARY_HEX,
 };
 
-/** Root layout of every public page: the shared document around the page content. */
+/** Root layout of every Arabic page: the shared document around the page content. */
 export default async function RootLayout({ children }: { children: ReactNode }) {
-  const [site, navigation] = await Promise.all([getSiteSettings(), getNavigation()]);
+  const [site, navigation] = await Promise.all([getSiteSettings('ar'), getNavigation('ar')]);
   return (
-    <SiteDocument site={site} navigation={navigation} banner={<DraftBar />}>
+    <SiteDocument locale="ar" site={site} navigation={navigation} banner={<DraftBar locale="ar" />}>
       {children}
     </SiteDocument>
   );

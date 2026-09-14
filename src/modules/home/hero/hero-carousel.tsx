@@ -147,7 +147,7 @@ export function HeroCarousel({ slides, images, copy }: HeroCarouselProps) {
       </div>
 
       <Container className="flex flex-1 flex-col justify-start pt-[6svh] pb-24 md:pb-28 lg:justify-center lg:pt-0 lg:pb-32">
-        <div className="flex max-w-[560px] flex-col items-start gap-8 lg:mb-[6vh]">
+        <div className="hero-copy flex max-w-[560px] flex-col items-start gap-8 lg:mb-[6vh]">
           {/* Stack all four copies in one grid cell so the tallest fixes the height. */}
           <div className="grid w-full">
             {slides.map((slide, i) => {
@@ -220,7 +220,7 @@ export function HeroCarousel({ slides, images, copy }: HeroCarouselProps) {
         </div>
       </Container>
 
-      <div className="absolute inset-x-0 bottom-6 flex items-center justify-center gap-3 md:justify-start md:ps-6">
+      <div className="hero-dots absolute inset-x-0 bottom-6 flex items-center justify-center gap-3 md:justify-start md:ps-6">
         <ul className="flex items-center gap-2" aria-label={copy.carouselLabel}>
           {slides.map((slide, i) => {
             const active = i === index;

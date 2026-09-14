@@ -1,6 +1,7 @@
+import { copyFor } from '@/content/copy';
 import type { Product, SiteSettings } from '@/content/schema';
-import { MERCHANT_COST_NOTE } from '@/content/seo-copy';
 import { absoluteUrl } from '@/lib/absolute-url';
+import { type Locale, languageTag, localePath } from '@/lib/i18n';
 
 /** What the blog nodes need of a post, an author and a hub (`lib/cms/blog.ts` shapes). */
 export interface PostForSchema {
@@ -63,7 +64,7 @@ export function onlineStore(base: string, site: SiteSettings): JsonLdNode {
       '@type': 'ContactPoint',
       telephone: site.contact.phoneIntl,
       contactType: 'customer support',
-      availableLanguage: 'ar',
+      availableLanguage: ['ar', 'en'],
     },
     hasMerchantReturnPolicy: {
       '@type': 'MerchantReturnPolicy',
@@ -96,7 +97,7 @@ export function webSite(base: string, site: SiteSettings): JsonLdNode {
     name: site.brandName,
     alternateName: site.brandNameLatin,
     url: base,
-    inLanguage: 'ar',
+    inLanguage: ['ar', 'en'],
     publisher: { '@id': `${base}/#store` },
   };
 }
@@ -124,8 +125,13 @@ export function itemList(base: string, paths: string[]): JsonLdNode {
   };
 }
 
-export function product(base: string, item: Product, site: SiteSettings): JsonLdNode {
-  const url = `${base}/products/${item.slug}`;
+export function product(
+  base: string,
+  locale: Locale,
+  item: Product,
+  site: SiteSettings,
+): JsonLdNode {
+  const url = `${base}${localePath(locale, `/products/${item.slug}`)}`;
   return {
     '@type': 'Product',
     '@id': `${url}#product`,
@@ -146,7 +152,7 @@ export function product(base: string, item: Product, site: SiteSettings): JsonLd
         '@type': 'PriceSpecification',
         price: item.baseCost,
         priceCurrency: 'SAR',
-        description: MERCHANT_COST_NOTE,
+        description: copyFor(locale).seo.merchantCostNote,
       },
     },
   };
@@ -154,38 +160,46 @@ export function product(base: string, item: Product, site: SiteSettings): JsonLd
 
 export function webPage(
   base: string,
+  locale: Locale,
   route: string,
   name: string,
   description: string,
   dateModified?: string,
 ): JsonLdNode {
+  const path = localePath(locale, route);
   return {
     '@type': 'WebPage',
-    '@id': `${absoluteUrl(base, route)}#webpage`,
-    url: absoluteUrl(base, route),
+    '@id': `${absoluteUrl(base, path)}#webpage`,
+    url: absoluteUrl(base, path),
     name,
     description,
-    inLanguage: 'ar',
+    inLanguage: languageTag(locale),
     isPartOf: { '@id': `${base}/#website` },
     ...(dateModified ? { dateModified } : {}),
   };
 }
 
-export function person(base: string, author: AuthorForSchema): JsonLdNode {
+export function person(base: string, locale: Locale, author: AuthorForSchema): JsonLdNode {
+  const url = `${base}${localePath(locale, `/author/${author.slug}`)}`;
   return {
     '@type': 'Person',
     '@id': `${base}/author/${author.slug}#person`,
     name: author.name,
     jobTitle: author.role,
-    url: `${base}/author/${author.slug}`,
+    url,
     ...(author.bio ? { description: author.bio } : {}),
     ...(author.photo ? { image: absoluteUrl(base, author.photo) } : {}),
     ...(author.sameAs && author.sameAs.length > 0 ? { sameAs: author.sameAs } : {}),
   };
 }
 
-export function blogPosting(base: string, post: PostForSchema, site: SiteSettings): JsonLdNode {
-  const url = `${base}/blog/${post.slug}`;
+export function blogPosting(
+  base: string,
+  locale: Locale,
+  post: PostForSchema,
+  site: SiteSettings,
+): JsonLdNode {
+  const url = `${base}${localePath(locale, `/blog/${post.slug}`)}`;
   return {
     '@type': 'BlogPosting',
     '@id': `${url}#article`,
@@ -195,8 +209,8 @@ export function blogPosting(base: string, post: PostForSchema, site: SiteSetting
     image: [absoluteUrl(base, post.cover.src)],
     datePublished: post.publishedAt,
     dateModified: post.contentUpdatedAt ?? post.publishedAt,
-    inLanguage: 'ar',
-    author: person(base, post.author),
+    inLanguage: languageTag(locale),
+    author: person(base, locale, post.author),
     publisher: {
       '@type': 'Organization',
       name: site.brandName,
@@ -206,35 +220,38 @@ export function blogPosting(base: string, post: PostForSchema, site: SiteSetting
 }
 
 /** The author page (BRD 10.1): a `ProfilePage` whose main entity is the person. */
-export function profilePage(base: string, author: AuthorForSchema): JsonLdNode {
-  const url = `${base}/author/${author.slug}`;
+export function profilePage(base: string, locale: Locale, author: AuthorForSchema): JsonLdNode {
+  const url = `${base}${localePath(locale, `/author/${author.slug}`)}`;
   return {
     '@type': 'ProfilePage',
     '@id': `${url}#profile`,
     url,
     name: author.name,
-    inLanguage: 'ar',
+    inLanguage: languageTag(locale),
     isPartOf: { '@id': `${base}/#website` },
-    mainEntity: person(base, author),
+    mainEntity: person(base, locale, author),
   };
 }
 
 /** A hub page: a `CollectionPage` listing its posts. */
 export function collectionPage(
   base: string,
+  locale: Locale,
   hub: HubForSchema,
   posts: Array<Pick<PostForSchema, 'slug'>>,
 ): JsonLdNode {
-  const url = `${base}/blog/category/${hub.slug}`;
+  const url = `${base}${localePath(locale, `/blog/category/${hub.slug}`)}`;
   return {
     '@type': 'CollectionPage',
     '@id': `${url}#collection`,
     url,
     name: hub.name,
     description: hub.description,
-    inLanguage: 'ar',
+    inLanguage: languageTag(locale),
     isPartOf: { '@id': `${base}/#website` },
-    hasPart: posts.map((post) => ({ '@id': `${base}/blog/${post.slug}#article` })),
+    hasPart: posts.map((post) => ({
+      '@id': `${base}${localePath(locale, `/blog/${post.slug}`)}#article`,
+    })),
   };
 }
 

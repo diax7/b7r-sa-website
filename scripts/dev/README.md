@@ -8,3 +8,4 @@
 - `designer-shot.mjs <url> <out.png> [desktop|mobile]`, screenshot the designer after it hydrates.
 - `menu.mjs <url> <out.png>`, screenshot the open mobile menu.
 - `engine-demo.mjs run [n]`, n mock posts (five a day at most, the cap) from the seeded backlog on the review server; `engine-demo.mjs clean` removes every engine post and run (the public e2e assumes the seed).
+- `golden.mjs snap|diff`, HTML snapshots of the five Lighthouse URLs before a refactor and the first differing line after it (Level 5's copy refactor guard).

@@ -811,3 +811,60 @@ mock posts written from the backlog by `scripts/dev/engine-demo.mjs` (five a day
 own maximum; the ten of the plan take two days) with a `clean` that restores the seed the
 public e2e assumes. The live run per provider (§10.3 item 2) is Dhia's:
 a key, the provider, "Generate now".
+
+## ADR-043: The English site: a subdirectory, a second root layout, per-locale banks (2026-09-14)
+
+Level 5a (`specs/009-level-5-english/`, BRD §5.1, §7.1, §7.3, §7.5) ships the English site at
+`b7r.sa/en/`. **A subdirectory, not a subdomain**: one host, one domain authority, one
+deployment, one sitemap; `en.b7r.sa` would split the signals and the certificate for no
+gain. **Two root layouts** on route groups: `app/(site)` renders `<html lang="ar" dir="rtl">`,
+`app/(en)/en` renders `<html lang="en" dir="ltr">` on the same `SiteDocument`; every English
+route file is a thin wrapper that calls the shared route helper with `locale: 'en'`, so a
+page is written once. `experimental.globalNotFound` makes the 404 one static bilingual
+document (`global-not-found.tsx`); a `notFound()` under a route-group root layout renders the
+bare shell, so the proxy rewrites an unknown `/en/*` URL to the global 404 the same way it does
+at the root (ADR-032). `Content-Language` follows the document (`ar` on pages, `en` on `/en`
+and `/en/*`, a later header route for the same key). **Copy per locale.** next-intl is removed
+(ADR-003 retired): the site's interface strings are two typed banks, `content/copy/ar.ts`
+(defines the shape) and `content/copy/en.ts` (`SiteCopy`), read by `copyFor(locale)` on the
+server and passed to islands as small slices (`shellCopy`). A client component never imports
+a bank: the error boundaries read `content/copy/error-page.ts`, which both banks reference,
+because a bank import in a client file ships both languages to every page (16 KB gzipped,
+found by the blog's JS budget). Appendix H of the BRD is generated from the English bank by
+`pnpm copy:appendix`; `tests/content-verbatim` checks both banks. **Content per locale.**
+Payload's localisation already carried `en`; every public read now passes
+`publicRead(locale)` = `{ locale, fallbackLocale: false, draft: false, overrideAccess: true }`
+and the presence gate `inLocale(field)` (title-like field exists and is not empty in the
+request locale) in both directions, so an English page never shows Arabic prose as a
+stand-in and an Arabic-only page is absent from `/en` (404, no hreflang). A document's
+twins come from one read at `locale: 'all'` of its title field (`documentLocales`); the
+code-owned routes exist in English once `site-settings.brandName` and `navigation.ctaLabel`
+have English values (`localeEnabled('en')`), which the proxy checks through
+`/api/pages/slugs/en` (`enabled: false` answers 404 for every `/en` URL on a half-seeded
+database, and the English root layout throws rather than render empty labels). The blog stays
+Arabic-only until 5b (`BLOG_ENGLISH_PENDING`: `/en/blog` 404, no pair on `/blog`). **SEO.**
+Canonical under the locale's prefix; `alternates.languages` `{ ar, en, x-default → ar }` and
+`og:locale:alternate` only when both twins exist; sitemap alternates from the same pairing;
+JSON-LD `inLanguage` per locale, `availableLanguage: ['ar', 'en']`; English titles use
+`| B7R Print`. The manifest stays Arabic (one manifest per origin, the default language).
+**The switch** is a link, not a redirect: the header (and the phone menu) links the twin in
+the other language by its own name, rendered as the other home on the server and upgraded to
+the twin from the page's own `<link rel="alternate" hreflang>` on mount, so a page without a
+twin sends the reader to the English home, never to a 404. No browser-language detection
+(BRD §5.1; a Saudi reader on an English phone must land on Arabic). **The seed** writes the
+English values of every localised field (`scripts/migrate-content-en.ts`, `ensureEnglish`)
+after the Arabic documents exist, idempotent per document; `content:migrate --force` fills a
+missing language on a database that has content, the one exception to ADR-026's
+"adds nothing" (it adds values to existing rows, never rows). Media alt text is localised;
+the Arabic-script validator applies to the Arabic value only. `products.sizes.label` and
+`sizesSummary` are localised by a data-carrying migration. **Details settled on the way.**
+The riyal symbol's accessible name is one hidden `<span id="sar-name">` per document
+(`aria-labelledby`), so the price does not repeat «ريال سعودي» in the English reading order;
+list separators («، » / ", ") come from the bank; the hero copy sits at the inline end in LTR
+so it never covers the photo's subject; the pinned steps dim inactive items by colour, not
+opacity, so they meet AA; `--color-success` darkens to `#15803D` (the profit line was 3.1:1
+on `ground`; §3.2 amended) and the navy footer's newsletter messages read in white. The
+Arabic site is byte-for-byte unchanged in body HTML for the five audited pages
+(`scripts/dev/golden.mjs diff`, one class added to the hero). **Owed Dhia's read**: the
+English bank (Appendix H), the English CMS content and the English legal drafts, which the
+agent wrote.

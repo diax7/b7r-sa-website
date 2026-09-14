@@ -1,4 +1,5 @@
 import { RESERVED_PAGE_SLUGS } from '@/content/schema';
+import type { Locale } from '@/lib/i18n';
 
 /**
  * Top-level path segments the code owns (B0, ADR-032): the `(site)` route folders, the CMS,
@@ -37,4 +38,23 @@ export function topLevelSlug(pathname: string): string | null {
   const slug = match[1] ?? '';
   if (slug.includes('.')) return null;
   return (CODE_TOP_LEVEL as readonly string[]).includes(slug) ? null : slug;
+}
+
+/**
+ * A slug candidate in either locale: `/creators` → `{ ar, creators }`, `/en/creators` →
+ * `{ en, creators }`; null for the code-owned segments, files and deeper paths.
+ */
+export function localeSlug(pathname: string): { locale: Locale; slug: string } | null {
+  if (pathname === '/en' || pathname.startsWith('/en/')) {
+    const rest = pathname === '/en' ? '/' : pathname.slice(3);
+    const slug = topLevelSlug(rest);
+    return slug === null ? null : { locale: 'en', slug };
+  }
+  const slug = topLevelSlug(pathname);
+  return slug === null ? null : { locale: 'ar', slug };
+}
+
+/** Whether a path is under the English prefix (`/en`, `/en/anything`). */
+export function isEnglishPath(pathname: string): boolean {
+  return pathname === '/en' || pathname.startsWith('/en/');
 }

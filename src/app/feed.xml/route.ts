@@ -23,7 +23,7 @@ const converters = {
 /** RSS 2.0, the latest 20 posts with their full text (BRD 10.1). */
 export async function GET(): Promise<Response> {
   const base = siteBase();
-  const [seo, posts] = await Promise.all([getSeo('/blog'), getFeedPosts()]);
+  const [seo, posts] = await Promise.all([getSeo('ar', '/blog'), getFeedPosts('ar')]);
   const xml = buildFeed(
     { title: seo.title, description: seo.description, base },
     posts.map((post) => ({

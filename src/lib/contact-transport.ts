@@ -1,6 +1,7 @@
 import 'server-only';
 import { Resend } from 'resend';
-import { contactEmail, contactForm } from '@/content/pages';
+import { copyFor } from '@/content/copy';
+import { htmlDir, type Locale } from '@/lib/i18n';
 import { contactEnv } from '@/lib/env-server';
 import { formatSaudiPhone, isSaudiMobile } from '@/lib/phone';
 import { whatsappUrl } from '@/lib/utm';
@@ -12,6 +13,8 @@ export interface ContactMessage {
   email: string;
   inquiry: string;
   message: string;
+  /** The language of the form the sender used (default Arabic). */
+  locale?: Locale;
 }
 
 export type SendResult = { ok: true } | { ok: false; status: 500 | 503 };
@@ -35,6 +38,8 @@ export function buildContactEmail(message: ContactMessage): {
   html: string;
   text: string;
 } {
+  const locale: Locale = message.locale ?? 'ar';
+  const { contactForm, contactEmail } = copyFor(locale);
   const { labels } = contactForm;
   const subject = contactEmail.subject.replace('{inquiryType}', message.inquiry);
   const phone = formatSaudiPhone(message.phone);
@@ -45,13 +50,13 @@ export function buildContactEmail(message: ContactMessage): {
     [labels.email, message.email, true],
     [labels.inquiry, message.inquiry, false],
   ];
-  const html = `<!doctype html><html lang="ar" dir="rtl"><body style="font-family:system-ui,sans-serif;line-height:1.7">
+  const html = `<!doctype html><html lang="${locale}" dir="${htmlDir(locale)}"><body style="font-family:system-ui,sans-serif;line-height:1.7">
 <h2 style="margin:0 0 16px">${escapeHtml(subject)}</h2>
 <table cellpadding="6" style="border-collapse:collapse">
 ${rows
   .map(
     ([label, value, ltr]) =>
-      `<tr><th align="right" style="color:#5b6470;font-weight:500">${escapeHtml(label)}</th><td>${
+      `<tr><th align="${locale === 'ar' ? 'right' : 'left'}" style="color:#5b6470;font-weight:500">${escapeHtml(label)}</th><td>${
         ltr ? `<bdi dir="ltr">${escapeHtml(value)}</bdi>` : escapeHtml(value)
       }</td></tr>`,
   )

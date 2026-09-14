@@ -351,3 +351,22 @@ ignore when 2.0.2 ships.
 - **Going live.** Add the vendor key in Engine settings, pick the provider, keep
   `reviewFirstRuns` at 3: the first three posts land as drafts for a read, then the engine
   publishes on its own. Watch the first digest.
+
+## The English site (Level 5, ADR-043)
+
+The site is in English once `site-settings.brandName` and `navigation.ctaLabel` have English
+values; `pnpm content:migrate` writes every English value after the Arabic documents (on a
+database that already has content: `pnpm content:migrate --force`, which fills the missing
+language and overwrites nothing). Without them every `/en` URL is a 404 and the build fails
+with "The site is not in English yet".
+
+Publishing a page in English: open the document, switch the locale to English in the panel's
+locale control, fill the title and the rest, save. The page is on `/en/<slug>` and carries
+hreflang to its Arabic twin once its English title is not empty; leave the title empty and
+the page stays Arabic-only (no `/en` route, no pair). The same rule holds for products
+(`name`), posts (`title`, from 5b), categories and authors (`name`). Media alt text has a
+value per language; the Arabic one must be Arabic script.
+
+Interface strings (labels, buttons, validation, SEO templates) live in the code:
+`src/content/copy/ar.ts` and `en.ts`. After editing the English bank run `pnpm copy:appendix`
+(regenerates BRD Appendix H), then rebuild the BRD.

@@ -49,16 +49,17 @@ export const Media: CollectionConfig = {
       type: 'text',
       required: true,
       localized: true,
-      label: { ar: 'النص البديل (بالعربية)', en: 'Alt text (Arabic)' },
+      label: { ar: 'النص البديل', en: 'Alt text' },
       admin: {
         description: {
-          ar: 'وصف الصورة كما يقرؤه قارئ الشاشة، بالعربية. مطلوب.',
-          en: 'Describe the image in Arabic; required.',
+          ar: 'وصف الصورة كما يقرؤه قارئ الشاشة، بلغة التبويب المفتوح. مطلوب.',
+          en: 'Describe the image in the language of the open locale tab; required.',
         },
       },
-      validate: (value: unknown) => {
+      // Arabic in the Arabic locale, any script in English (ADR-043).
+      validate: (value: unknown, { req }: { req: { locale?: string } }) => {
         if (typeof value !== 'string' || value.trim().length < 3) return 'اكتب نصاً بديلاً';
-        if (!ARABIC.test(value)) return 'النص البديل يجب أن يكون بالعربية';
+        if (req.locale !== 'en' && !ARABIC.test(value)) return 'النص البديل يجب أن يكون بالعربية';
         return true;
       },
     },

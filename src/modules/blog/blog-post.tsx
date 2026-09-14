@@ -4,8 +4,7 @@ import { Breadcrumbs } from '@/components/shared/breadcrumbs';
 import { Button } from '@/components/shared/button';
 import { Container } from '@/components/shared/container';
 import { Section } from '@/components/shared/section';
-import { blogCopy } from '@/content/blog';
-import { productsPage } from '@/content/pages';
+import { copyFor } from '@/content/copy';
 import { getSiteSettings } from '@/lib/cms';
 import {
   adjacentPosts,
@@ -15,11 +14,11 @@ import {
   relatedPosts,
 } from '@/lib/cms/blog';
 import { cn } from '@/lib/cn';
-import { formatArabicDate, isoDay } from '@/lib/dates';
+import { formatDate, isoDay } from '@/lib/dates';
 import { env, siteBase } from '@/lib/env';
+import { type Locale, localePath } from '@/lib/i18n';
 import { headingIds, headings, splitAfterSecondHeading } from '@/lib/lexical';
 import { registerUrl } from '@/lib/utm';
-import messages from '@/messages/ar.json';
 import { JsonLd, jsonLd } from '@/modules/core';
 import { CtaRibbon } from '@/modules/core/cta-ribbon';
 import { LexicalProse } from '@/modules/core/rich-text/lexical-prose';
@@ -37,10 +36,12 @@ export function showsUpdated(post: Pick<Post, 'publishedAt' | 'contentUpdatedAt'
  * date, cover, the takeaways box, the table of contents, the body split after the second H2
  * with the CTA between, share, the author card, related posts, previous/next in the hub.
  */
-export async function BlogPostPage({ post }: { post: Post }) {
-  const [site, all] = await Promise.all([getSiteSettings(), getAllPosts()]);
+export async function BlogPostPage({ post, locale }: { post: Post; locale: Locale }) {
+  const [site, all] = await Promise.all([getSiteSettings(locale), getAllPosts(locale)]);
+  const messages = copyFor(locale);
+  const { blog: blogCopy, productsPage } = messages;
   const base = siteBase();
-  const route = `/blog/${post.slug}`;
+  const route = localePath(locale, `/blog/${post.slug}`);
   const url = `${base}${route}`;
   const ids = headingIds(post.body);
   const toc = headings(post.body);
@@ -48,9 +49,9 @@ export async function BlogPostPage({ post }: { post: Post }) {
   const related = relatedPosts(post, all);
   const { previous, next } = adjacentPosts(post, all);
   const crumbs = [
-    { name: productsPage.breadcrumbHome, href: '/' },
-    { name: blogCopy.title, href: '/blog' },
-    { name: post.hub.name, href: `/blog/category/${post.hub.slug}` },
+    { name: productsPage.breadcrumbHome, href: localePath(locale, '/') },
+    { name: blogCopy.title, href: localePath(locale, '/blog') },
+    { name: post.hub.name, href: localePath(locale, `/blog/category/${post.hub.slug}`) },
     { name: post.title, href: route },
   ];
   const cta = (
@@ -78,7 +79,7 @@ export async function BlogPostPage({ post }: { post: Post }) {
     <>
       <JsonLd
         nodes={[
-          jsonLd.blogPosting(base, post, site),
+          jsonLd.blogPosting(base, locale, post, site),
           jsonLd.breadcrumbs(
             base,
             crumbs.map((c) => ({ name: c.name, path: c.href })),
@@ -90,11 +91,11 @@ export async function BlogPostPage({ post }: { post: Post }) {
         <Container className="flex flex-col gap-8 lg:flex-row lg:justify-center lg:gap-12">
           <TableOfContents headings={toc} title={blogCopy.toc} variant="rail" />
           <div className="flex w-full max-w-(--container-prose) flex-col gap-8">
-            <Breadcrumbs items={crumbs} />
+            <Breadcrumbs items={crumbs} label={messages.breadcrumbs.label} />
             <article className="flex flex-col gap-8">
               <header className="flex flex-col gap-4">
                 <Link
-                  href={`/blog/category/${post.hub.slug}`}
+                  href={localePath(locale, `/blog/category/${post.hub.slug}`)}
                   className="eyebrow hover:text-primary"
                 >
                   {post.hub.name}
@@ -103,13 +104,13 @@ export async function BlogPostPage({ post }: { post: Post }) {
                   {post.title}
                 </h1>
                 <p className="text-small text-text-muted" data-post-meta="">
-                  {postMeta(post)}
+                  {postMeta(messages, locale, post)}
                   {showsUpdated(post) && post.contentUpdatedAt && (
                     <>
                       {' · '}
                       {blogCopy.updatedPrefix}{' '}
                       <time dateTime={isoDay(post.contentUpdatedAt)}>
-                        {formatArabicDate(post.contentUpdatedAt)}
+                        {formatDate(locale, post.contentUpdatedAt)}
                       </time>
                     </>
                   )}
@@ -152,8 +153,8 @@ export async function BlogPostPage({ post }: { post: Post }) {
                   whatsappAria={messages.share.whatsapp}
                   xAria={messages.share.x}
                 />
-                <AuthorCard author={post.author} />
-                <AdjacentLinks previous={previous} next={next} />
+                <AuthorCard author={post.author} locale={locale} />
+                <AdjacentLinks previous={previous} next={next} locale={locale} copy={blogCopy} />
               </footer>
             </article>
           </div>
@@ -169,7 +170,7 @@ export async function BlogPostPage({ post }: { post: Post }) {
             <ul className="grid gap-6 md:grid-cols-2" data-related="">
               {related.map((item) => (
                 <li key={item.slug}>
-                  <PostCard post={item} headingLevel="h3" />
+                  <PostCard post={item} locale={locale} headingLevel="h3" />
                 </li>
               ))}
             </ul>
@@ -177,12 +178,16 @@ export async function BlogPostPage({ post }: { post: Post }) {
         </Section>
       )}
 
-      <CtaRibbon topTone={related.length > 0 ? 'ground' : 'surface'} page={`post-${post.slug}`} />
+      <CtaRibbon
+        locale={locale}
+        topTone={related.length > 0 ? 'ground' : 'surface'}
+        page={`post-${post.slug}`}
+      />
     </>
   );
 }
 
-function AuthorCard({ author }: { author: Post['author'] }) {
+function AuthorCard({ author, locale }: { author: Post['author']; locale: Locale }) {
   return (
     <div className="flex items-center gap-4" data-author="">
       {author.photo ? (
@@ -199,7 +204,10 @@ function AuthorCard({ author }: { author: Post['author'] }) {
         </span>
       )}
       <div className="flex flex-col">
-        <Link href={`/author/${author.slug}`} className="font-medium text-text hover:text-primary">
+        <Link
+          href={localePath(locale, `/author/${author.slug}`)}
+          className="font-medium text-text hover:text-primary"
+        >
           {author.name}
         </Link>
         <span className="text-small text-text-muted">{author.role}</span>
@@ -210,16 +218,18 @@ function AuthorCard({ author }: { author: Post['author'] }) {
 
 function AdjacentLink({
   post,
+  locale,
   label,
   align,
 }: {
   post: PostCardData;
+  locale: Locale;
   label: string;
   align: 'start' | 'end';
 }) {
   return (
     <Link
-      href={`/blog/${post.slug}`}
+      href={localePath(locale, `/blog/${post.slug}`)}
       className={cn(
         'flex flex-col gap-1 rounded-base border border-border bg-surface p-4 hover:border-primary',
         align === 'end' && 'text-end',
@@ -234,17 +244,25 @@ function AdjacentLink({
 function AdjacentLinks({
   previous,
   next,
+  locale,
+  copy,
 }: {
   previous: PostCardData | null;
   next: PostCardData | null;
+  locale: Locale;
+  copy: { previousPost: string; nextPost: string };
 }) {
   if (!previous && !next) return null;
   return (
-    <nav aria-label={blogCopy.previousPost} className="grid gap-4 md:grid-cols-2" data-adjacent="">
+    <nav aria-label={copy.previousPost} className="grid gap-4 md:grid-cols-2" data-adjacent="">
       <div>
-        {previous && <AdjacentLink post={previous} label={blogCopy.previousPost} align="start" />}
+        {previous && (
+          <AdjacentLink post={previous} locale={locale} label={copy.previousPost} align="start" />
+        )}
       </div>
-      <div>{next && <AdjacentLink post={next} label={blogCopy.nextPost} align="end" />}</div>
+      <div>
+        {next && <AdjacentLink post={next} locale={locale} label={copy.nextPost} align="end" />}
+      </div>
     </nav>
   );
 }

@@ -1,6 +1,6 @@
 import 'server-only';
 import { cache } from 'react';
-import { cms, PUBLIC_READ } from '@/lib/cms/payload';
+import { cms, publicRead } from '@/lib/cms/payload';
 import type { SiteRedirect } from '@/lib/resolve-slug';
 
 export { resolveSlug, type SiteRedirect, type SlugResolution } from '@/lib/resolve-slug';
@@ -10,7 +10,7 @@ export const getRedirects = cache(async (): Promise<SiteRedirect[]> => {
   const payload = await cms();
   const { docs } = await payload.find({
     collection: 'redirects',
-    ...PUBLIC_READ,
+    ...publicRead('ar'),
     depth: 1,
     limit: 500,
     pagination: false,

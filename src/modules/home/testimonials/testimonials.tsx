@@ -3,9 +3,10 @@ import { Card } from '@/components/shared/card';
 import { Container } from '@/components/shared/container';
 import { Section, type SectionTone } from '@/components/shared/section';
 import { SectionHeader } from '@/components/shared/section-header';
+import { copyFor } from '@/content/copy';
 import { getHome, getTestimonials } from '@/lib/cms';
+import type { Locale } from '@/lib/i18n';
 import { env } from '@/lib/env';
-import messages from '@/messages/ar.json';
 import { shouldRenderTestimonials } from '@/modules/home/testimonials/rule';
 
 /**
@@ -13,8 +14,18 @@ import { shouldRenderTestimonials } from '@/modules/home/testimonials/rule';
  * `data-placeholder`; on the production host the section is omitted until a real entry
  * exists (ADR-013). Mobile: snap carousel.
  */
-export async function Testimonials({ tone = 'ground' }: { tone?: SectionTone }) {
-  const [{ testimonials: copy }, testimonials] = await Promise.all([getHome(), getTestimonials()]);
+export async function Testimonials({
+  locale,
+  tone = 'ground',
+}: {
+  locale: Locale;
+  tone?: SectionTone;
+}) {
+  const [{ testimonials: copy }, testimonials] = await Promise.all([
+    getHome(locale),
+    getTestimonials(locale),
+  ]);
+  const messages = copyFor(locale);
   if (!copy.enabled || !shouldRenderTestimonials(testimonials, env.isProductionSite)) return null;
 
   return (

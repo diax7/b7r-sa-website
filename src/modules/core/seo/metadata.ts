@@ -1,18 +1,24 @@
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import type { Metadata } from 'next';
+import { copyFor } from '@/content/copy';
 import type { Product } from '@/content/schema';
 import type { Author, Hub, Post } from '@/lib/cms/blog';
-import { productSeo, SEO_TITLE_TEMPLATE } from '@/content/seo-copy';
 import { getPage, getSeo, getSeoDefaults, getSiteSettings } from '@/lib/cms';
+import { documentLocales, routeLocales } from '@/lib/cms/locales';
 import { env, siteBase } from '@/lib/env';
+import { type Locale, languageTag, localePath, ogLocale, otherLocale } from '@/lib/i18n';
 
 const FEED_PATH = '/feed.xml';
 
 export const DEFAULT_OG_IMAGE = '/og/default.png';
 
 export interface PageMeta {
+  locale: Locale;
+  /** The locale-free route (`/products/tee-essential`); the canonical adds the prefix. */
   route: string;
+  /** The locales the page exists in; hreflang pairs are emitted only when both do. */
+  locales: readonly Locale[];
   /** Brand name for `og:site_name`. */
   siteName: string;
   title: string;
@@ -27,43 +33,56 @@ export interface PageMeta {
 }
 
 /**
- * Metadata for one route (BRD 7.3): canonical without query, Open Graph with the page's own
- * image or the default, Twitter card, and `noindex` on any host other than https://b7r.sa
- * (BRD 7.2) so previews never rank. Product pages use `og:type website` with product tags
- * (`product` is not a valid `og:type` for Next's typed metadata; the Product JSON-LD carries
- * the commerce data).
+ * Metadata for one route (BRD 7.3, ADR-043): canonical without query under the locale's
+ * prefix, hreflang pairs with `x-default → ar` when the twin exists, Open Graph with the
+ * page's own image or the default, Twitter card, and `noindex` on any host other than
+ * https://b7r.sa (BRD 7.2) so previews never rank. Product pages use `og:type website` with
+ * product tags (`product` is not a valid `og:type` for Next's typed metadata; the Product
+ * JSON-LD carries the commerce data).
  */
 export function pageMetadata(meta: PageMeta): Metadata {
   const ogImage = meta.ogImage ?? DEFAULT_OG_IMAGE;
+  const canonical = localePath(meta.locale, meta.route);
+  const twin = otherLocale(meta.locale);
+  const paired = meta.locales.includes('ar') && meta.locales.includes('en');
+  const common = {
+    locale: ogLocale(meta.locale),
+    ...(paired ? { alternateLocale: [ogLocale(twin)] } : {}),
+    siteName: meta.siteName,
+    title: meta.title,
+    description: meta.description,
+    url: canonical,
+    images: [{ url: ogImage, width: 1200, height: 630 }],
+  };
   const openGraph: NonNullable<Metadata['openGraph']> =
     meta.ogType === 'article'
       ? {
           type: 'article',
-          locale: 'ar_SA',
-          siteName: meta.siteName,
-          title: meta.title,
-          description: meta.description,
-          url: meta.route,
-          images: [{ url: ogImage, width: 1200, height: 630 }],
+          ...common,
           ...(meta.publishedTime ? { publishedTime: meta.publishedTime } : {}),
           ...(meta.modifiedTime ? { modifiedTime: meta.modifiedTime } : {}),
-          authors: [`${siteBase()}/about`],
+          authors: [`${siteBase()}${localePath(meta.locale, '/about')}`],
         }
-      : {
-          type: 'website',
-          locale: 'ar_SA',
-          siteName: meta.siteName,
-          title: meta.title,
-          description: meta.description,
-          url: meta.route,
-          images: [{ url: ogImage, width: 1200, height: 630 }],
-        };
+      : { type: 'website', ...common };
   return {
     metadataBase: new URL(siteBase()),
     title: meta.absoluteTitle ? { absolute: meta.title } : meta.title,
     description: meta.description,
-    // The feed is announced on every page so a reader finds it from anywhere (BRD 10.1).
-    alternates: { canonical: meta.route, types: { 'application/rss+xml': FEED_PATH } },
+    alternates: {
+      canonical,
+      // The pair, each language canonical to itself, `x-default` on the Arabic (BRD 7.3).
+      ...(paired
+        ? {
+            languages: {
+              [languageTag('ar')]: localePath('ar', meta.route),
+              [languageTag('en')]: localePath('en', meta.route),
+              'x-default': localePath('ar', meta.route),
+            },
+          }
+        : {}),
+      // The feed is announced on every page so a reader finds it from anywhere (BRD 10.1).
+      types: { 'application/rss+xml': FEED_PATH },
+    },
     openGraph,
     twitter: { card: 'summary_large_image', site: '@b7rprint' },
     robots: env.isProductionSite
@@ -73,10 +92,16 @@ export function pageMetadata(meta: PageMeta): Metadata {
 }
 
 /** Static routes: title/description from the `seo-defaults` global (BRD 4.16). */
-export async function buildMetadata(route: string): Promise<Metadata> {
-  const [page, site] = await Promise.all([getSeo(route), getSiteSettings()]);
+export async function buildMetadata(locale: Locale, route: string): Promise<Metadata> {
+  const [page, site, locales] = await Promise.all([
+    getSeo(locale, route),
+    getSiteSettings(locale),
+    routeLocales(route),
+  ]);
   return pageMetadata({
+    locale,
     route,
+    locales,
     siteName: site.brandName,
     title: page.title,
     description: page.description,
@@ -86,11 +111,17 @@ export async function buildMetadata(route: string): Promise<Metadata> {
 }
 
 /** A `pages` document: its own `seo` group (BRD 4.16); nothing for a slug that is not published. */
-export async function cmsPageMetadata(slug: string): Promise<Metadata> {
-  const [page, site] = await Promise.all([getPage(slug), getSiteSettings()]);
+export async function cmsPageMetadata(locale: Locale, slug: string): Promise<Metadata> {
+  const [page, site, locales] = await Promise.all([
+    getPage(locale, slug),
+    getSiteSettings(locale),
+    documentLocales('pages', slug, 'title'),
+  ]);
   if (!page) return {};
   return pageMetadata({
+    locale,
     route: `/${slug}`,
+    locales,
     siteName: site.brandName,
     title: page.seo.title,
     description: page.seo.description,
@@ -103,12 +134,18 @@ export async function cmsPageMetadata(slug: string): Promise<Metadata> {
  * `pnpm og` has rendered one; a product added in the admin falls back to the default until
  * then (docs/RUNBOOK.md, "Open Graph images").
  */
-export async function productMetadata(product: Product): Promise<Metadata> {
-  const site = await getSiteSettings();
+export async function productMetadata(locale: Locale, product: Product): Promise<Metadata> {
+  const [site, locales] = await Promise.all([
+    getSiteSettings(locale),
+    documentLocales('products', product.slug, 'name'),
+  ]);
+  const productSeo = copyFor(locale).seo.product;
   const ogPath = `/og/products/${product.slug}.png`;
   const hasOwnImage = existsSync(join(process.cwd(), 'public', ogPath));
   return pageMetadata({
+    locale,
     route: `/products/${product.slug}`,
+    locales,
     siteName: site.brandName,
     title: productSeo.title.replace('{name}', product.name),
     description: productSeo.description
@@ -119,10 +156,15 @@ export async function productMetadata(product: Product): Promise<Metadata> {
 }
 
 /** Blog post: its `seo` group (the title and excerpt when empty), `article` type with dates. */
-export async function postMetadata(post: Post): Promise<Metadata> {
-  const site = await getSiteSettings();
+export async function postMetadata(locale: Locale, post: Post): Promise<Metadata> {
+  const [site, locales] = await Promise.all([
+    getSiteSettings(locale),
+    documentLocales('posts', post.slug, 'title'),
+  ]);
   return pageMetadata({
+    locale,
     route: `/blog/${post.slug}`,
+    locales,
     siteName: site.brandName,
     title: post.seo.title,
     description: post.seo.description,
@@ -134,11 +176,16 @@ export async function postMetadata(post: Post): Promise<Metadata> {
 }
 
 /** A hub page; page 2 and up carry the page number and a canonical of their own. */
-export async function hubMetadata(hub: Hub, page = 1): Promise<Metadata> {
-  const site = await getSiteSettings();
+export async function hubMetadata(locale: Locale, hub: Hub, page = 1): Promise<Metadata> {
+  const [site, locales] = await Promise.all([
+    getSiteSettings(locale),
+    documentLocales('categories', hub.slug, 'name'),
+  ]);
   const route = `/blog/category/${hub.slug}${page > 1 ? `/page/${page}` : ''}`;
   return pageMetadata({
+    locale,
     route,
+    locales,
     siteName: site.brandName,
     title: page > 1 ? `${hub.name} (${page})` : hub.name,
     description: hub.description,
@@ -147,10 +194,16 @@ export async function hubMetadata(hub: Hub, page = 1): Promise<Metadata> {
 }
 
 /** The blog index beyond page 1: the `seo-defaults` title with the page number. */
-export async function blogPageMetadata(page: number): Promise<Metadata> {
-  const [seo, site] = await Promise.all([getSeo('/blog'), getSiteSettings()]);
+export async function blogPageMetadata(locale: Locale, page: number): Promise<Metadata> {
+  const [seo, site, locales] = await Promise.all([
+    getSeo(locale, '/blog'),
+    getSiteSettings(locale),
+    routeLocales('/blog'),
+  ]);
   return pageMetadata({
+    locale,
     route: `/blog/page/${page}`,
+    locales,
     siteName: site.brandName,
     title: `${seo.title} (${page})`,
     description: seo.description,
@@ -159,10 +212,15 @@ export async function blogPageMetadata(page: number): Promise<Metadata> {
 }
 
 /** The author page. */
-export async function authorMetadata(author: Author): Promise<Metadata> {
-  const site = await getSiteSettings();
+export async function authorMetadata(locale: Locale, author: Author): Promise<Metadata> {
+  const [site, locales] = await Promise.all([
+    getSiteSettings(locale),
+    documentLocales('authors', author.slug, 'name'),
+  ]);
   return pageMetadata({
+    locale,
     route: `/author/${author.slug}`,
+    locales,
     siteName: site.brandName,
     title: author.name,
     description: author.bio ?? author.role,
@@ -170,13 +228,13 @@ export async function authorMetadata(author: Author): Promise<Metadata> {
   });
 }
 
-export async function rootMetadata(): Promise<Metadata> {
-  const [seo, site] = await Promise.all([getSeoDefaults(), getSiteSettings()]);
+export async function rootMetadata(locale: Locale): Promise<Metadata> {
+  const [seo, site] = await Promise.all([getSeoDefaults(locale), getSiteSettings(locale)]);
   const home = seo.routes.find((r) => r.route === '/');
   return {
     title: {
       default: home?.title ?? site.brandName,
-      template: seo.titleTemplate || SEO_TITLE_TEMPLATE,
+      template: seo.titleTemplate || copyFor(locale).seo.titleTemplate,
     },
     applicationName: site.brandName,
   };

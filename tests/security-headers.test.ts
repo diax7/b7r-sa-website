@@ -92,6 +92,15 @@ describe('security headers', () => {
       source: PAGE_ROUTE_SOURCE,
       headers: [{ key: 'Content-Language', value: 'ar' }],
     });
+    // The English routes come after, so their `en` wins over the page-wide `ar` (ADR-043).
+    expect(routes[2]).toEqual({
+      source: '/en',
+      headers: [{ key: 'Content-Language', value: 'en' }],
+    });
+    expect(routes[3]).toEqual({
+      source: '/en/:path*',
+      headers: [{ key: 'Content-Language', value: 'en' }],
+    });
     const pageOnly = new RegExp(`^${PAGE_ROUTE_SOURCE.replace(/^\//, '/')}$`);
     for (const page of ['/', '/products', '/products/hoodie', '/blog/a-post']) {
       expect(pageOnly.test(page), page).toBe(true);

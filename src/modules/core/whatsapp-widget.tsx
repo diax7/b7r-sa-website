@@ -5,7 +5,7 @@ import { X } from 'lucide-react';
 import { useEffect, useId, useRef, useState } from 'react';
 import { WhatsAppIcon } from '@/components/shared/brand-icons';
 import { Icon } from '@/components/shared/icon';
-import { whatsappWidgetCopy as copy } from '@/content/pages';
+import type { SiteCopy } from '@/content/copy';
 import { cn } from '@/lib/cn';
 import { whatsappUrl } from '@/lib/utm';
 
@@ -21,7 +21,13 @@ const dockClass =
  * of this RTL site, so a logical class does it). Mounted 1.5 s after load by the layout; a
  * dot pulses once 6 s after load, once per session.
  */
-export function WhatsAppWidget({ number }: { number: string }) {
+export function WhatsAppWidget({
+  number,
+  copy,
+}: {
+  number: string;
+  copy: SiteCopy['whatsappWidget'];
+}) {
   const [open, setOpen] = useState(false);
   const [shown, setShown] = useState(false);
   const [pulse, setPulse] = useState(false);

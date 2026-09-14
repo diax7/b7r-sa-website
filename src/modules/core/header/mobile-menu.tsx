@@ -11,10 +11,11 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { footerCopy } from '@/content/pages';
+import type { ShellCopy } from '@/content/copy';
 import type { Navigation, SiteSettings } from '@/content/schema';
-import messages from '@/messages/ar.json';
 import { cn } from '@/lib/cn';
+import type { Locale } from '@/lib/i18n';
+import { LanguageSwitch } from '@/modules/core/header/language-switch';
 import { Burger, burgerButtonClass } from '@/modules/core/header/burger';
 import { env } from '@/lib/env';
 import { isActive } from '@/lib/nav';
@@ -30,11 +31,15 @@ export function MobileMenu({
   pathname,
   navigation,
   site,
+  locale,
+  copy,
   autoOpen = false,
 }: {
   pathname: string;
   navigation: Navigation;
   site: SiteSettings;
+  locale: Locale;
+  copy: ShellCopy;
   autoOpen?: boolean;
 }) {
   const [open, setOpen] = useState(false);
@@ -44,9 +49,9 @@ export function MobileMenu({
     if (autoOpen) setOpen(true);
   }, [autoOpen]);
   const socials = [
-    { href: site.social.x, label: footerCopy.socialAria.x, Icon: XIcon },
-    { href: site.social.instagram, label: footerCopy.socialAria.instagram, Icon: InstagramIcon },
-    { href: site.social.tiktok, label: footerCopy.socialAria.tiktok, Icon: TikTokIcon },
+    { href: site.social.x, label: copy.socialAria.x, Icon: XIcon },
+    { href: site.social.instagram, label: copy.socialAria.instagram, Icon: InstagramIcon },
+    { href: site.social.tiktok, label: copy.socialAria.tiktok, Icon: TikTokIcon },
   ];
 
   return (
@@ -73,7 +78,7 @@ export function MobileMenu({
             <Burger open />
           </DialogClose>
         </div>
-        <nav aria-label={messages.a11y.mainNavigation} className="px-4 pt-6 sm:px-6">
+        <nav aria-label={copy.a11y.mainNavigation} className="px-4 pt-6 sm:px-6">
           <ul className="flex flex-col gap-1">
             {navigation.primary.map((item, i) => (
               <li
@@ -109,6 +114,11 @@ export function MobileMenu({
           <Button asChild variant="secondary" size="lg" fullWidth>
             <a href={loginUrl(env.appUrl)}>{navigation.loginLabel}</a>
           </Button>
+          <LanguageSwitch
+            locale={locale}
+            ariaLabel={copy.a11y.switchLanguage}
+            className="self-start px-0 py-2 text-body"
+          />
           <a
             href={whatsappUrl(site.contact.whatsapp)}
             target="_blank"

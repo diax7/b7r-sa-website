@@ -3,8 +3,9 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { Button } from '@/components/shared/button';
-import { consentCopy as copy } from '@/content/pages';
+import type { SiteCopy } from '@/content/copy';
 import { readConsent, writeConsent, type Consent } from '@/lib/consent';
+import { type Locale, localePath } from '@/lib/i18n';
 import { announceConsent } from '@/modules/core/analytics/analytics-bridge';
 
 /**
@@ -12,7 +13,7 @@ import { announceConsent } from '@/modules/core/analytics/analytics-bridge';
  * never blocks scrolling, appears only while no decision cookie exists. On phones it is
  * full-width and sits above the WhatsApp button (88 px) plus any sticky dock.
  */
-export function ConsentBar() {
+export function ConsentBar({ locale, copy }: { locale: Locale; copy: SiteCopy['consent'] }) {
   // Mounted after a delay by the layout, so the cookie is readable in the initialiser.
   const [visible, setVisible] = useState(() => readConsent() === null);
   if (!visible) return null;
@@ -44,7 +45,7 @@ export function ConsentBar() {
           {copy.reject}
         </Button>
         <Link
-          href="/privacy"
+          href={localePath(locale, '/privacy')}
           className="ms-auto text-small font-medium text-primary hover:underline"
         >
           {copy.link}
