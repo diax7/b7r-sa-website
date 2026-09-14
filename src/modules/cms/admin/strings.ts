@@ -46,6 +46,46 @@ export const adminStrings = {
   warnings: {
     none: 'Nothing to flag.',
   },
+  engine: {
+    generateNow: 'Generate now',
+    queueing: 'Queueing…',
+    queued: 'Queued: the run starts within a minute. Watch the runs list.',
+    postTitle: 'Content engine',
+    regenerate: 'Regenerate',
+    regenerateHint: 'A new run from the topic replaces the text under the same address and cover.',
+    importTitle: 'Bulk add from CSV',
+    importHint:
+      'Columns: title, hub (slug), primaryKeyword, secondaryKeywords (separated by ;), intent, priority. A header row is fine.',
+    importPlaceholder: 'title,hub,primaryKeyword,secondaryKeywords,intent,priority',
+    importButton: 'Import',
+    importing: 'Importing…',
+    importResult: '{created} added, {skipped} already there.',
+    factsTitle: 'What the engine may say',
+    factsHint:
+      'Built live from the site settings, the products and the integrations; every number a draft states is checked against this list.',
+    factsNumbers: '{n} numbers on the sheet.',
+    card: {
+      title: 'Content engine',
+      off: 'Off',
+      on: 'On',
+      mock: 'Mock provider',
+      postsThisMonth: 'Posts this month',
+      averageScore: 'Average score',
+      failures: 'Failed runs',
+      cost: 'Cost this month (estimate)',
+      nextSlot: 'Next slot',
+      nextSlotOff: 'No run while the engine is off',
+      nextSlotToday: 'Today at {hour}:00 Riyadh',
+      nextSlotTomorrow: 'Tomorrow at {hour}:00 Riyadh',
+      nextSlotDone: 'Done for today; tomorrow at {hour}:00 Riyadh',
+      nextSlotSoon: 'Within the hour',
+      recent: 'Latest runs',
+      empty: 'No run yet. Add topics and switch the engine on, or press "Generate now" on a topic.',
+      settings: 'Settings',
+      topics: 'Topics',
+      runs: 'Runs',
+    },
+  },
   dashboard: {
     greeting: 'Welcome, {name}',
     intro: 'Everything on the site starts here.',
@@ -60,6 +100,11 @@ export const adminStrings = {
     },
     health: {
       title: 'System status',
+      engine: {
+        on: 'Content engine on',
+        off: 'Content engine off',
+        mock: 'Content engine on (mock provider)',
+      },
       check: 'Full report',
       version: 'Version',
       rows: {

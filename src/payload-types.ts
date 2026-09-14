@@ -78,6 +78,8 @@ export interface Config {
     categories: Category;
     authors: Author;
     tags: Tag;
+    'ai-topics': AiTopic;
+    'ai-runs': AiRun;
     redirects: Redirect;
     'payload-kv': PayloadKv;
     'payload-jobs': PayloadJob;
@@ -98,6 +100,8 @@ export interface Config {
     categories: CategoriesSelect<false> | CategoriesSelect<true>;
     authors: AuthorsSelect<false> | AuthorsSelect<true>;
     tags: TagsSelect<false> | TagsSelect<true>;
+    'ai-topics': AiTopicsSelect<false> | AiTopicsSelect<true>;
+    'ai-runs': AiRunsSelect<false> | AiRunsSelect<true>;
     redirects: RedirectsSelect<false> | RedirectsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-jobs': PayloadJobsSelect<false> | PayloadJobsSelect<true>;
@@ -114,12 +118,14 @@ export interface Config {
     'site-settings': SiteSetting;
     navigation: Navigation;
     'seo-defaults': SeoDefault;
+    'ai-settings': AiSetting;
   };
   globalsSelect: {
     home: HomeSelect<false> | HomeSelect<true>;
     'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
     navigation: NavigationSelect<false> | NavigationSelect<true>;
     'seo-defaults': SeoDefaultsSelect<false> | SeoDefaultsSelect<true>;
+    'ai-settings': AiSettingsSelect<false> | AiSettingsSelect<true>;
   };
   locale: 'ar' | 'en';
   widgets: {
@@ -135,7 +141,9 @@ export interface Config {
         output: unknown;
       };
     };
-    workflows: unknown;
+    workflows: {
+      generatePost: WorkflowGeneratePost;
+    };
   };
 }
 export interface UserAuthOperations {
@@ -744,6 +752,103 @@ export interface Author {
   createdAt: string;
 }
 /**
+ * What the engine writes about, by priority. Seasonal topics carry a publish window.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ai-topics".
+ */
+export interface AiTopic {
+  id: number;
+  title: string;
+  hub: number | Category;
+  intent: 'informational' | 'commercial' | 'seasonal';
+  priority: number;
+  primaryKeyword: string;
+  secondaryKeywords?:
+    | {
+        keyword: string;
+        id?: string | null;
+      }[]
+    | null;
+  windowStart?: string | null;
+  /**
+   * Seasonal topics publish inside the window only. Leave both empty for an evergreen topic.
+   */
+  windowEnd?: string | null;
+  status: 'backlog' | 'scheduled' | 'generating' | 'published' | 'failed' | 'rejected';
+  source: 'seed' | 'manual' | 'searchConsole';
+  notes?: string | null;
+  post?: (number | null) | Post;
+  lastRun?: (number | null) | AiRun;
+  lastError?: string | null;
+  /**
+   * Who saved the current version and when. Drafts do not change it.
+   */
+  lastSavedBy?: {
+    name?: string | null;
+    at?: string | null;
+  };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Every run of the engine: its steps, score, estimated cost and the resulting post. Read-only.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ai-runs".
+ */
+export interface AiRun {
+  id: number;
+  label: string;
+  kind: 'generate' | 'freshness';
+  status: 'running' | 'done' | 'failed' | 'skipped';
+  provider?: string | null;
+  model?: string | null;
+  score?: number | null;
+  tokensIn?: number | null;
+  tokensOut?: number | null;
+  costUsd?: number | null;
+  durationMs?: number | null;
+  rubric?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  steps?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * The freshness job regenerates from it.
+   */
+  outline?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  systemPromptVersion?: number | null;
+  topic?: (number | null) | AiTopic;
+  post?: (number | null) | Post;
+  error?: string | null;
+  startedAt?: string | null;
+  finishedAt?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * Send an old URL to a page or a new URL. Live as soon as it is saved.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -866,6 +971,7 @@ export interface PayloadJob {
         id?: string | null;
       }[]
     | null;
+  workflowSlug?: 'generatePost' | null;
   taskSlug?: ('inline' | 'indexnow-ping' | 'schedulePublish') | null;
   queue?: string | null;
   waitUntil?: string | null;
@@ -923,6 +1029,14 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'tags';
         value: number | Tag;
+      } | null)
+    | ({
+        relationTo: 'ai-topics';
+        value: number | AiTopic;
+      } | null)
+    | ({
+        relationTo: 'ai-runs';
+        value: number | AiRun;
       } | null)
     | ({
         relationTo: 'redirects';
@@ -1438,6 +1552,66 @@ export interface TagsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ai-topics_select".
+ */
+export interface AiTopicsSelect<T extends boolean = true> {
+  title?: T;
+  hub?: T;
+  intent?: T;
+  priority?: T;
+  primaryKeyword?: T;
+  secondaryKeywords?:
+    | T
+    | {
+        keyword?: T;
+        id?: T;
+      };
+  windowStart?: T;
+  windowEnd?: T;
+  status?: T;
+  source?: T;
+  notes?: T;
+  post?: T;
+  lastRun?: T;
+  lastError?: T;
+  lastSavedBy?:
+    | T
+    | {
+        name?: T;
+        at?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ai-runs_select".
+ */
+export interface AiRunsSelect<T extends boolean = true> {
+  label?: T;
+  kind?: T;
+  status?: T;
+  provider?: T;
+  model?: T;
+  score?: T;
+  tokensIn?: T;
+  tokensOut?: T;
+  costUsd?: T;
+  durationMs?: T;
+  rubric?: T;
+  steps?: T;
+  outline?: T;
+  systemPromptVersion?: T;
+  topic?: T;
+  post?: T;
+  error?: T;
+  startedAt?: T;
+  finishedAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "redirects_select".
  */
 export interface RedirectsSelect<T extends boolean = true> {
@@ -1485,6 +1659,7 @@ export interface PayloadJobsSelect<T extends boolean = true> {
         error?: T;
         id?: T;
       };
+  workflowSlug?: T;
   taskSlug?: T;
   queue?: T;
   waitUntil?: T;
@@ -1795,6 +1970,125 @@ export interface SeoDefault {
   createdAt?: string | null;
 }
 /**
+ * The engine publishes without a human step (D-44). Unreviewed high-volume AI publishing risks the scaled-content policy of Google: keep the cadence moderate and the quality gates strict.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ai-settings".
+ */
+export interface AiSetting {
+  id: number;
+  /**
+   * The mock only runs when AI_CONTENT_MOCK=1 is set in the environment.
+   */
+  activeProvider: 'openai' | 'deepseek' | 'anthropic' | 'google' | 'mock';
+  providers: {
+    openai: {
+      /**
+       * As in the vendor docs.
+       */
+      model: string;
+      /**
+       * Stored encrypted and never shown again; leave the mask to keep it, clear it to remove it.
+       */
+      apiKey?: string | null;
+      inputPerMillionUsd: number;
+      outputPerMillionUsd: number;
+    };
+    deepseek: {
+      /**
+       * As in the vendor docs.
+       */
+      model: string;
+      /**
+       * Stored encrypted and never shown again; leave the mask to keep it, clear it to remove it.
+       */
+      apiKey?: string | null;
+      inputPerMillionUsd: number;
+      outputPerMillionUsd: number;
+    };
+    anthropic: {
+      /**
+       * As in the vendor docs.
+       */
+      model: string;
+      /**
+       * Stored encrypted and never shown again; leave the mask to keep it, clear it to remove it.
+       */
+      apiKey?: string | null;
+      inputPerMillionUsd: number;
+      outputPerMillionUsd: number;
+    };
+    google: {
+      /**
+       * As in the vendor docs.
+       */
+      model: string;
+      /**
+       * Stored encrypted and never shown again; leave the mask to keep it, clear it to remove it.
+       */
+      apiKey?: string | null;
+      inputPerMillionUsd: number;
+      outputPerMillionUsd: number;
+    };
+  };
+  /**
+   * The kill switch. Off, no new run starts within the hour.
+   */
+  enabled?: boolean | null;
+  /**
+   * The research-backed range: 8 to 16 posts a month; quality before quantity.
+   */
+  postsPerDay: number;
+  publishHourRiyadh: number;
+  maxPostsPerMonth: number;
+  dailyCostCapUsd: number;
+  /**
+   * While above zero the posts of a live provider land as drafts for your read; set it to 0 once they read well.
+   */
+  reviewFirstRuns: number;
+  style: {
+    styleGuide: string;
+    systemPrompt: string;
+    systemPromptVersion?: number | null;
+    bannedPhrases: string;
+    bannedClaims: string;
+  };
+  images: {
+    /**
+     * Generation is refused until an image provider is wired; Pexels needs a key.
+     */
+    imageMode: 'hubDefault' | 'stock' | 'generate';
+    imageStyle?: string | null;
+    /**
+     * Stored encrypted and never shown again; leave the mask to keep it, clear it to remove it.
+     */
+    pexelsKey?: string | null;
+  };
+  quality: {
+    qualityThreshold: number;
+    maxRevisionPasses: number;
+    minWords: number;
+    maxWords: number;
+  };
+  notifications?: {
+    /**
+     * Gets failure alerts and the weekly digest.
+     */
+    notifyEmail?: string | null;
+    weeklyDigest?: boolean | null;
+    failureAlerts?: boolean | null;
+  };
+  /**
+   * Who saved the current version and when. Drafts do not change it.
+   */
+  lastSavedBy?: {
+    name?: string | null;
+    at?: string | null;
+  };
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "home_select".
  */
@@ -2033,6 +2327,95 @@ export interface SeoDefaultsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ai-settings_select".
+ */
+export interface AiSettingsSelect<T extends boolean = true> {
+  activeProvider?: T;
+  providers?:
+    | T
+    | {
+        openai?:
+          | T
+          | {
+              model?: T;
+              apiKey?: T;
+              inputPerMillionUsd?: T;
+              outputPerMillionUsd?: T;
+            };
+        deepseek?:
+          | T
+          | {
+              model?: T;
+              apiKey?: T;
+              inputPerMillionUsd?: T;
+              outputPerMillionUsd?: T;
+            };
+        anthropic?:
+          | T
+          | {
+              model?: T;
+              apiKey?: T;
+              inputPerMillionUsd?: T;
+              outputPerMillionUsd?: T;
+            };
+        google?:
+          | T
+          | {
+              model?: T;
+              apiKey?: T;
+              inputPerMillionUsd?: T;
+              outputPerMillionUsd?: T;
+            };
+      };
+  enabled?: T;
+  postsPerDay?: T;
+  publishHourRiyadh?: T;
+  maxPostsPerMonth?: T;
+  dailyCostCapUsd?: T;
+  reviewFirstRuns?: T;
+  style?:
+    | T
+    | {
+        styleGuide?: T;
+        systemPrompt?: T;
+        systemPromptVersion?: T;
+        bannedPhrases?: T;
+        bannedClaims?: T;
+      };
+  images?:
+    | T
+    | {
+        imageMode?: T;
+        imageStyle?: T;
+        pexelsKey?: T;
+      };
+  quality?:
+    | T
+    | {
+        qualityThreshold?: T;
+        maxRevisionPasses?: T;
+        minWords?: T;
+        maxWords?: T;
+      };
+  notifications?:
+    | T
+    | {
+        notifyEmail?: T;
+        weeklyDigest?: T;
+        failureAlerts?: T;
+      };
+  lastSavedBy?:
+    | T
+    | {
+        name?: T;
+        at?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "collections_widget".
  */
 export interface CollectionsWidget {
@@ -2090,6 +2473,18 @@ export interface TaskSchedulePublish {
     user?: (number | null) | User;
   };
   output?: unknown;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "WorkflowGeneratePost".
+ */
+export interface WorkflowGeneratePost {
+  input: {
+    topicId?: number | null;
+    manual?: boolean | null;
+    replacePostId?: number | null;
+    kind?: string | null;
+  };
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

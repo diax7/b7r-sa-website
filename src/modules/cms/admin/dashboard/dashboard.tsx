@@ -1,6 +1,7 @@
 import { Gutter } from '@payloadcms/ui';
 import type { AdminViewServerProps } from 'payload';
 import { healthReport } from '@/lib/cms/health';
+import { EngineCard, engineSummary } from '@/modules/ai-content/admin/engine-card';
 import { quickActions, recentActivity } from '@/modules/cms/admin/dashboard/data';
 import { HealthCard } from '@/modules/cms/admin/dashboard/health-card';
 import { QuickActions } from '@/modules/cms/admin/dashboard/quick-actions';
@@ -18,9 +19,12 @@ export async function Dashboard(props: AdminViewServerProps) {
   const { payload, i18n, initPageResult, user } = props;
   const { permissions, req } = initPageResult;
   const adminRoute = payload.config.routes.admin;
-  const [health, recent] = await Promise.all([
+  // The engine card is for admins (the settings global is theirs alone).
+  const engineAllowed = permissions?.globals?.['ai-settings']?.read === true;
+  const [health, recent, engine] = await Promise.all([
     healthReport(),
     recentActivity({ payload, req, user, permissions, i18n }),
+    engineAllowed ? engineSummary(payload) : Promise.resolve(null),
   ]);
   const name = String(user?.['name'] ?? user?.email ?? '');
   const [before, after] = s.greeting.split('{name}');
@@ -40,6 +44,7 @@ export async function Dashboard(props: AdminViewServerProps) {
           <RecentActivity items={recent} />
           <HealthCard report={health} />
         </div>
+        {engine && <EngineCard summary={engine} adminRoute={adminRoute} />}
       </div>
     </Gutter>
   );

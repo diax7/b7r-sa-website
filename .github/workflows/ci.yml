@@ -27,6 +27,8 @@ env:
   # In-memory newsletter and contact transports for the e2e success paths (no Resend key).
   NEWSLETTER_TRANSPORT: mock
   CONTACT_TRANSPORT: mock
+  # The content engine's mock provider for the e2e run (ADR-042); refused in production.
+  AI_CONTENT_MOCK: '1'
   # Cloudflare's public always-pass test site key so the Turnstile island renders; the e2e
   # serves a stub for the widget script and no secret is set, so nothing reaches Cloudflare.
   NEXT_PUBLIC_TURNSTILE_SITE_KEY: 1x00000000000000000000AA

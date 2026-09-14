@@ -1,5 +1,6 @@
 import {
   ArrowRightLeft,
+  Bot,
   CircleHelp,
   Compass,
   Eye,
@@ -9,10 +10,12 @@ import {
   House,
   Image,
   LayoutGrid,
+  ListChecks,
   type LucideIcon,
   MessageSquareQuote,
   Newspaper,
   Plug,
+  ScrollText,
   Search,
   Settings2,
   Shield,
@@ -49,6 +52,8 @@ export const COLLECTION_ICONS: Record<CollectionSlug, LucideIcon> = {
   categories: FolderTree,
   authors: UserPen,
   tags: Tag,
+  'ai-topics': ListChecks,
+  'ai-runs': ScrollText,
 };
 
 export const GLOBAL_ICONS: Record<GlobalSlug, LucideIcon> = {
@@ -56,6 +61,7 @@ export const GLOBAL_ICONS: Record<GlobalSlug, LucideIcon> = {
   'site-settings': Settings2,
   navigation: Compass,
   'seo-defaults': Search,
+  'ai-settings': Bot,
 };
 
 /**
@@ -65,17 +71,19 @@ export const GLOBAL_ICONS: Record<GlobalSlug, LucideIcon> = {
 export const ADMIN_GROUPS = {
   content: { ar: 'المحتوى', en: 'Content' },
   blog: { ar: 'المدونة', en: 'Blog' },
+  ai: { ar: 'المحتوى الآلي', en: 'AI content' },
   settings: { ar: 'الإعدادات', en: 'Settings' },
   administration: { ar: 'الإدارة', en: 'Administration' },
 } as const;
 
 export type AdminGroupKey = keyof typeof ADMIN_GROUPS;
 
-export const GROUP_ORDER: AdminGroupKey[] = ['content', 'blog', 'settings', 'administration'];
+export const GROUP_ORDER: AdminGroupKey[] = ['content', 'blog', 'ai', 'settings', 'administration'];
 
 export const GROUP_ICONS: Record<AdminGroupKey, LucideIcon> = {
   content: LayoutGrid,
   blog: Newspaper,
+  ai: Bot,
   settings: SlidersHorizontal,
   administration: Shield,
 };
@@ -113,6 +121,8 @@ export const COLLECTION_HUES: Record<CollectionSlug, Hue> = {
   categories: 'blue',
   authors: 'pink',
   tags: 'blue',
+  'ai-topics': 'orange',
+  'ai-runs': 'blue',
 };
 
 export const GLOBAL_HUES: Record<GlobalSlug, Hue> = {
@@ -120,6 +130,7 @@ export const GLOBAL_HUES: Record<GlobalSlug, Hue> = {
   'site-settings': 'blue',
   navigation: 'blue',
   'seo-defaults': 'blue',
+  'ai-settings': 'orange',
 };
 
 export function entityHue(type: 'collections' | 'globals', slug: string): Hue {
