@@ -46,6 +46,11 @@ public download; add `IMAGES_ALLOW_LOCAL_IP=1` so the image optimiser accepts th
 localhost endpoint, never in production). `bash scripts/ci/seed-check.sh` runs the seed and admin scripts through
 their three outcomes against a fresh database, the way CI does.
 
+The designer's print areas (`printArea.canvas` on each product) are content: the seed writes
+them once, and `--force` fills only what is empty, so a database seeded before 2026-09-14
+keeps the older, smaller areas until the five products' canvas values are re-entered from
+`src/content/seed/products.ts` (the admin's product form, "Print area").
+
 Admin components (a new field type such as rich text, a custom view): run
 `pnpm payload generate:importmap` and commit `src/app/(payload)/admin/importMap.js`, or the
 admin logs `PayloadComponent not found in importMap` and the field renders empty.
