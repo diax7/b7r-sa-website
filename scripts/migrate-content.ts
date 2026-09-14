@@ -377,7 +377,6 @@ async function ensureGlobals(payload: Payload): Promise<void> {
       slug: 'seo-defaults',
       data: {
         titleTemplate: ar.seo.titleTemplate,
-        defaultOgImage: '/og/default.png',
         routes: seo
           .filter((row) => CODE_ROUTES.has(row.route))
           .map((row) => ({

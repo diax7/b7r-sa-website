@@ -27,18 +27,6 @@ export const SeoDefaults: GlobalConfig = {
       admin: { description: { ar: '%s يُستبدل بعنوان الصفحة', en: '%s is the page title' } },
     },
     {
-      name: 'defaultOgImage',
-      type: 'text',
-      required: true,
-      label: { ar: 'صورة المشاركة الافتراضية', en: 'Default OG image' },
-      admin: {
-        description: {
-          ar: 'مسار داخل الموقع، مثال /og/default.png',
-          en: 'Site path, e.g. /og/default.png',
-        },
-      },
-    },
-    {
       name: 'routes',
       type: 'array',
       required: true,

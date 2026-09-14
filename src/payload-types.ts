@@ -1959,10 +1959,6 @@ export interface SeoDefault {
    */
   titleTemplate: string;
   /**
-   * Site path, e.g. /og/default.png
-   */
-  defaultOgImage: string;
-  /**
    * Title and description per static route
    */
   routes: {
@@ -2343,7 +2339,6 @@ export interface NavigationSelect<T extends boolean = true> {
  */
 export interface SeoDefaultsSelect<T extends boolean = true> {
   titleTemplate?: T;
-  defaultOgImage?: T;
   routes?:
     | T
     | {

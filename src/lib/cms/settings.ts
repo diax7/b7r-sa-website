@@ -37,7 +37,6 @@ export const localeEnabled = cache(async (locale: Locale): Promise<boolean> => {
 
 export interface SeoDefaults {
   titleTemplate: string;
-  defaultOgImage: string;
   routes: PageSeo[];
   verification: { google?: string; bing?: string };
 }
@@ -47,7 +46,6 @@ export const getSeoDefaults = cache(async (locale: Locale): Promise<SeoDefaults>
   const doc = await payload.findGlobal({ slug: 'seo-defaults', ...publicRead(locale) });
   return {
     titleTemplate: doc.titleTemplate,
-    defaultOgImage: doc.defaultOgImage,
     routes: toSeoRows(doc),
     verification: {
       ...(doc.verification?.google ? { google: doc.verification.google } : {}),
