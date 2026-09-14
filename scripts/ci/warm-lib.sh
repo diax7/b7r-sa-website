@@ -49,12 +49,12 @@ warm_pages() {
       # would warm a JPEG nobody requests. The second round counts the transforms still cold.
       misses=0
       total=0
-      for img in $(echo "$html" | grep -o '/_next/image[^" ]*' | sort -u || true); do
+      while read -r img; do
         total=$((total + 1))
         cache=$(curl -s -o /dev/null -D - -H 'Accept: image/avif,image/webp,*/*;q=0.8' \
           "http://localhost:3004${img//&amp;/&}" | grep -i x-nextjs-cache | tr -d '\r' || true)
         case "$cache" in *MISS*) misses=$((misses + 1)) ;; esac
-      done
+      done < <(echo "$html" | grep -o '/_next/image[^" ]*' | sort -u || true)
       if [ "$round" = 2 ]; then echo "warm $path images: $total, $misses miss"; fi
     done
   done
