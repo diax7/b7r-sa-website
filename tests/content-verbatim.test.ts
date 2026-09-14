@@ -92,7 +92,6 @@ const sources: Record<string, unknown> = {
     designer: [
       messages.designer.productGroup,
       messages.designer.uploadPrompt,
-      messages.designer.uploadHelper,
       messages.designer.remove,
       messages.designer.canvasHint,
       messages.designer.baseCost,

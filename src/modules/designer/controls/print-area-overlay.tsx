@@ -10,8 +10,6 @@ import { ACCEPTED_TYPES } from '@/modules/designer/use-designer-state';
 export interface PrintAreaOverlayCopy {
   /** «اضغط لرفع شعارك أو صورتك» */
   prompt: string;
-  /** «PNG أو JPG أو SVG، حتى 10 ميجابايت» */
-  helper: string;
   /** Accessible name of the file input. */
   inputAria: string;
   /** «إزالة التصميم» */
@@ -36,7 +34,8 @@ interface PrintAreaOverlayProps {
  * 2026-09-13, ADR-036). Empty: the area itself is the upload target, a visually hidden but
  * focusable file input with the prompt as its label, so a click, Enter or Space opens the
  * picker and the focus ring lands on the area. With a design: one «×» at the top-end corner
- * of the area, shown only while the edit chrome is visible.
+ * of the area, a small red disc on a 44 px target, shown only while the edit chrome is
+ * visible.
  */
 export function PrintAreaOverlay({
   area,
@@ -60,9 +59,10 @@ export function PrintAreaOverlay({
   }
 
   if (!hasDesign) {
-    // The area is ~100 × 140 px on a phone stage and ~130–200 px wide on desktop: the icon,
-    // the small text and the helper line appear as the area grows (container queries on the
-    // area's width; the areas are all about 3:4), so the prompt never overflows the box.
+    // The area is ~100 × 140 px on a phone stage and ~130–200 px wide on desktop: the icon
+    // and the small text appear as the area grows (container queries on the area's width;
+    // the areas are all about 3:4), so the prompt never overflows the box. The accepted
+    // types are not listed (Dhia, 2026-09-14): a wrong file gets the error line instead.
     return (
       <div className="@container absolute" style={style} data-print-area-prompt="">
         <input
@@ -104,9 +104,6 @@ export function PrintAreaOverlay({
           >
             {copy.prompt}
           </span>
-          <span className="hidden text-caption text-text-muted @min-[11rem]:block">
-            {copy.helper}
-          </span>
           {fileError && (
             <span id={errorId} role="alert" className="text-caption leading-snug text-error">
               {copy.fileError}
@@ -124,13 +121,16 @@ export function PrintAreaOverlay({
         onClick={onRemove}
         aria-label={copy.removeAria}
         data-design-remove=""
-        // 44 px target; invisible AND inert while the chrome is hidden, except for keyboard focus.
+        // 44 px target around a 28 px disc; invisible AND inert while the chrome is hidden,
+        // except for keyboard focus.
         className={cn(
-          'absolute end-0 top-0 grid size-11 -translate-y-1/2 translate-x-1/2 place-items-center rounded-pill border border-border bg-surface text-text shadow-popover transition-opacity duration-(--duration-fast) hover:text-error focus-visible:pointer-events-auto focus-visible:opacity-100 rtl:-translate-x-1/2',
+          'group absolute end-0 top-0 grid size-11 -translate-y-1/2 translate-x-1/2 place-items-center rounded-pill transition-opacity duration-(--duration-fast) focus-visible:pointer-events-auto focus-visible:opacity-100 rtl:-translate-x-1/2',
           chrome ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0',
         )}
       >
-        <Icon icon={X} size={18} />
+        <span className="grid size-7 place-items-center rounded-pill bg-error text-white shadow-popover transition-transform duration-(--duration-fast) group-hover:scale-110 group-focus-visible:ring-2 group-focus-visible:ring-error/40">
+          <Icon icon={X} size={14} />
+        </span>
       </button>
     </div>
   );

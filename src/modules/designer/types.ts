@@ -5,7 +5,6 @@ export interface DesignerCopy {
   groups: { product: string };
   /** «اضغط لرفع شعارك أو صورتك»، the prompt over the empty print area. */
   uploadPrompt: string;
-  uploadHelper: string;
   /** «إزالة التصميم» */
   removeAria: string;
   canvasHint: string;
@@ -35,7 +34,6 @@ export function designerCopy(copy: SiteCopy, cta: string): DesignerCopy {
   return {
     groups: { product: d.productGroup },
     uploadPrompt: d.uploadPrompt,
-    uploadHelper: d.uploadHelper,
     removeAria: d.remove,
     canvasHint: d.canvasHint,
     baseCostLabel: d.baseCost,

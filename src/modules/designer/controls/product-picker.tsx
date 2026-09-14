@@ -2,8 +2,8 @@
 
 import Image from 'next/image';
 import type { Product } from '@/content/schema';
-import { stripColorFor } from '@/lib/product-helpers';
 import { cn } from '@/lib/cn';
+import { designerColorFor } from '@/lib/product-helpers';
 
 interface ProductPickerProps {
   products: Product[];
@@ -14,8 +14,9 @@ interface ProductPickerProps {
 }
 
 /**
- * Product chips with 32 px thumbnails (BRD 6.4.3). Native radios inside labels give the
- * group arrow-key navigation and screen-reader semantics for free.
+ * Product chips with 32 px thumbnails (BRD 6.4.3), in the colour the mockup shows (white, or
+ * the product's only colour) so the chip and the preview agree. Native radios inside labels
+ * give the group arrow-key navigation and screen-reader semantics for free.
  */
 export function ProductPicker({
   products,
@@ -31,7 +32,7 @@ export function ProductPicker({
       <div className="flex flex-wrap gap-2">
         {products.map((product) => {
           const checked = product.slug === value;
-          const thumbColor = stripColorFor(product);
+          const thumbColor = designerColorFor(product);
           const thumb =
             product.colors.find((c) => c.slug === thumbColor)?.images.front ??
             product.colors[0]?.images.front ??

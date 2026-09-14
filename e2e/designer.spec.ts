@@ -7,6 +7,7 @@ declare global {
         findOne: (sel: string) => {
           getAbsolutePosition: () => { x: number; y: number };
           getClientRect: () => { x: number; y: number; width: number; height: number };
+          scaleX: () => number;
           position: (p?: { x: number; y: number }) => { x: number; y: number };
           fire: (evt: string, e?: unknown, bubbles?: boolean) => void;
           getStage: () => { container: () => HTMLElement };
@@ -144,7 +145,7 @@ test.describe('designer and profit calculator (BRD 6.4.3)', () => {
     await expect(alert).toBeInViewport({ ratio: 1 });
   });
 
-  test('edit chrome shows only while the pointer is inside or the design is selected', async ({
+  test('edit chrome shows only while the pointer is inside the print area, and hides on its own', async ({
     page,
     isMobile,
   }) => {
@@ -166,15 +167,40 @@ test.describe('designer and profit calculator (BRD 6.4.3)', () => {
       );
       await page.touchscreen.tap(box.x + pos.x, box.y + pos.y);
       await expect(host).toHaveAttribute('data-chrome', 'true');
-      // A tap on the mockup outside the design (the print area is centred) clears the selection.
+      // A finger lifted inside the area keeps the chrome for a moment (long enough for the «×»),
+      // then it hides on its own; nothing else has to be tapped.
+      await expect(host).toHaveAttribute('data-chrome', 'false', { timeout: 6_000 });
+      // A tap on the mockup outside the area shows nothing.
       await page.touchscreen.tap(box.x + 12, box.y + box.height / 2);
+      await page.waitForTimeout(300);
       await expect(host).toHaveAttribute('data-chrome', 'false');
     } else {
       await canvas.hover();
       await expect(host).toHaveAttribute('data-chrome', 'true');
+      // The stage's corner is outside the area: the chrome hides without a click anywhere.
+      const box = (await canvas.boundingBox())!;
+      await page.mouse.move(box.x + 12, box.y + box.height - 12);
+      await expect(host).toHaveAttribute('data-chrome', 'false');
       await page.mouse.move(0, 0);
       await expect(host).toHaveAttribute('data-chrome', 'false');
     }
+  });
+
+  test('the wheel scrolls the page and never scales the design', async ({ page, isMobile }) => {
+    test.skip(isMobile, 'a mouse wheel');
+    await openDesigner(page);
+    await placeSample(page);
+    const canvas = page.locator('[data-designer-island] canvas').last();
+    await canvas.evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }));
+    await page.waitForTimeout(300);
+    const scale = () => page.evaluate(() => window.Konva!.stages[0]!.findOne('#design')!.scaleX());
+    const before = await scale();
+    const y0 = await page.evaluate(() => window.scrollY);
+    await canvas.hover();
+    await page.mouse.wheel(0, 240);
+    await page.waitForTimeout(300);
+    expect(await scale()).toBe(before);
+    expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(y0);
   });
 
   test('drag moves the design and it snaps back when dragged mostly outside the area', async ({

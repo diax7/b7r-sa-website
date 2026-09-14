@@ -1,6 +1,7 @@
 'use client';
 
 import { useReducer } from 'react';
+import { designerColorFor } from '@/lib/product-helpers';
 import type { Product } from '@/content/schema';
 import { clampDaily, clampSell } from '@/modules/designer/profit';
 
@@ -38,18 +39,10 @@ export type DesignerAction =
   | { type: 'commitSell'; value: number }
   | { type: 'setDaily'; value: number };
 
-/**
- * The designer shows every product in one colour (BRD 6.4.3, amended 2026-09-13): white,
- * or the product's only colour (the tote's beige).
- */
-export function defaultColor(product: Product): string {
-  return product.colors.find((c) => c.slug === 'white')?.slug ?? product.colors[0]?.slug ?? 'white';
-}
-
 export function initialState(product: Product): DesignerState {
   return {
     product,
-    colorSlug: defaultColor(product),
+    colorSlug: designerColorFor(product),
     design: null,
     sellPrice: product.suggestedPrice,
     dailySales: 10,
@@ -69,7 +62,7 @@ export function reducer(state: DesignerState, action: DesignerAction): DesignerS
       return {
         ...state,
         product: action.product,
-        colorSlug: defaultColor(action.product),
+        colorSlug: designerColorFor(action.product),
         sellPrice: action.product.suggestedPrice,
         belowCost: false,
         commit: state.commit + 1,
