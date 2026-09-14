@@ -7,7 +7,7 @@
  * their ids and non-localised fields.
  */
 import { convertMarkdownToLexical, editorConfigFactory } from '@payloadcms/richtext-lexical';
-import { basename, dirname } from 'node:path';
+import { basename, dirname, extname } from 'node:path';
 import type { Payload } from 'payload';
 import { blogAuthorEn, blogHubsEn, blogPostBodyEn, blogPostsEn } from '../src/content/seed/en/blog';
 import { faqEn } from '../src/content/seed/en/faq';
@@ -45,16 +45,28 @@ export interface EnglishSummary {
   skipped: string[];
 }
 
-/** The media document the Arabic seed uploaded for a `public/` path (`<folder>-<file>`). */
+/**
+ * The media document the Arabic seed uploaded for a `public/` path (`<folder>-<file>`).
+ * Payload numbers a filename that already exists in the media store (`name-1.jpg`), so the
+ * numbered form counts too (the alt pass, `mediaAltEn`, reads it the same way).
+ */
 async function mediaIdByPath(payload: Payload, publicPath: string): Promise<number> {
   const filename = `${basename(dirname(publicPath))}-${basename(publicPath)}`;
+  const ext = extname(filename);
+  const stem = filename.slice(0, -ext.length);
+  const stored = (name: string) =>
+    name === filename ||
+    (name.startsWith(`${stem}-`) &&
+      /^\d+$/.test(name.slice(stem.length + 1, -ext.length)) &&
+      name.endsWith(ext));
   const { docs } = await payload.find({
     collection: 'media',
-    where: { filename: { equals: filename } },
-    limit: 1,
+    where: { filename: { like: stem } },
+    sort: 'id',
+    limit: 20,
     depth: 0,
   });
-  const doc = docs[0];
+  const doc = docs.find((d) => d.filename && stored(d.filename));
   if (!doc) throw new Error(`seed en: media ${filename} is not in the CMS (run the Arabic seed)`);
   return doc.id;
 }
