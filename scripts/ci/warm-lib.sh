@@ -9,7 +9,10 @@ WARM_URLS="/ /products /products/tee-essential /contact /blog/how-to-price-print
 start_server() {
   pnpm start >/tmp/ci-server.log 2>&1 &
   SERVER_PID=$!
-  for _ in $(seq 1 60); do curl -sf -o /dev/null http://localhost:3004/api/health && break; sleep 1; done
+  for _ in $(seq 1 60); do
+    curl -sf -o /dev/null http://localhost:3004/api/health && break
+    sleep 1
+  done
 }
 
 # `pnpm start` wraps `next start`, which keeps the port after its parent dies: kill the
@@ -42,8 +45,11 @@ warm_pages() {
       if [ "$round" = 2 ]; then
         echo "warm $path: $(curl -s -o /dev/null -D - "http://localhost:3004$path" | grep -i x-nextjs-cache | tr -d '\r' || echo 'no cache header')"
       fi
+      # The format follows the Accept header: Lighthouse's Chrome asks for AVIF, curl's `*/*`
+      # would warm a JPEG nobody requests.
       (echo "$html" | grep -o '/_next/image[^" ]*' | sort -u || true) | while read -r img; do
-        curl -s -o /dev/null "http://localhost:3004${img//&amp;/&}" || true
+        curl -s -o /dev/null -H 'Accept: image/avif,image/webp,*/*;q=0.8' \
+          "http://localhost:3004${img//&amp;/&}" || true
       done
     done
   done

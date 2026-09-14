@@ -1,9 +1,11 @@
 name: CI
 
+# Runs on the pull request only (ADR-045): a squash merge of a branch that contains `main`
+# lands the tree the PR run tested, so a run on `main` would repeat it. `scripts/merge-pr.sh`
+# checks that before merging; `workflow_dispatch` runs `main` by hand when wanted.
 on:
   pull_request:
-  push:
-    branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: read

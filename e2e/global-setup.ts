@@ -8,6 +8,10 @@ const PAGES = [
   '/blog/how-to-price-printed-tshirt-saudi',
 ];
 
+/** The optimizer encodes the format the request accepts: the browsers ask for AVIF; a request
+ *  with fetch's default Accept (any type) gets a JPEG instead, warming nothing a test uses. */
+const IMAGE_ACCEPT = 'image/avif,image/webp,*/*;q=0.8';
+
 /**
  * Warms the running server before any test (CI only, see playwright.config.ts): every audited
  * page twice (the second request confirms the ISR entry is a HIT) and every image transform
@@ -22,7 +26,9 @@ export default async function globalSetup(): Promise<void> {
         console.log(`warm ${path}: ${res.headers.get('x-nextjs-cache') ?? 'no cache header'}`);
       const images = [...new Set(html.match(/\/_next\/image[^" ]*/g) ?? [])];
       for (const img of images) {
-        await fetch(`${BASE_URL}${img.replaceAll('&amp;', '&')}`).catch(() => undefined);
+        await fetch(`${BASE_URL}${img.replaceAll('&amp;', '&')}`, {
+          headers: { accept: IMAGE_ACCEPT },
+        }).catch(() => undefined);
       }
     }
   }
