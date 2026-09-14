@@ -1274,15 +1274,10 @@ test.describe('CMS admin', () => {
         expect(
           (engineRun['steps'] as Array<{ name: string; ok: boolean }>).map((s) => s.name),
         ).toEqual(['pickTopic', 'brief', 'outline', 'draft', 'review', 'seo', 'image', 'publish']);
-        // The run keeps the outline and the facts of the day: the freshness job's baseline.
+        // The run keeps the outline a freshness pass rewrites from.
         expect((engineRun['outline'] as { headings: unknown[] }).headings.length).toBeGreaterThan(
           3,
         );
-        expect(
-          (engineRun['facts'] as Array<{ unit: string; value: number }>).some(
-            (n) => n.unit === 'days',
-          ),
-        ).toBe(true);
         // The seeded backlog (BRD Appendix E): thirty topics, the three Level 1 posts linked.
         const seeded = (await (
           await request.get(`${API}/ai-topics?limit=0&where[source][equals]=seed`, {
@@ -1308,6 +1303,12 @@ test.describe('CMS admin', () => {
         expect(post['origin']).toBe('ai');
         expect(post['takeaways']).toHaveLength(3);
         expect(post['warnings']).toEqual([]);
+        // The facts of the day travel with the post: the freshness job's baseline.
+        expect(
+          (post['factsBaseline'] as Array<{ unit: string; value: number }>).some(
+            (n) => n.unit === 'days',
+          ),
+        ).toBe(true);
         const slug = post['slug'] as string;
         await expect
           .poll(async () => (await request.get(`/blog/${slug}`)).status(), POLL)

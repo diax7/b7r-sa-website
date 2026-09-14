@@ -91,8 +91,6 @@ export interface RunPatch {
   status?: 'running' | 'done' | 'failed' | 'skipped';
   steps?: StepRecord[];
   outline?: Outline;
-  /** The facts sheet's numbers at generation time: the freshness job's baseline. */
-  facts?: FactNumber[];
   score?: number;
   rubric?: Rubric & { deductions: Array<{ rule: string; points: number; detail: string }> };
   tokensIn?: number;
@@ -117,6 +115,8 @@ export interface NewPost {
   seo: { title: string; description: string };
   publishedAt: string;
   status: 'draft' | 'published';
+  /** The facts sheet's numbers at writing time: the freshness job's baseline. */
+  factsBaseline: FactNumber[];
 }
 
 export interface MediaUpload {

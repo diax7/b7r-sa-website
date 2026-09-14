@@ -27,6 +27,11 @@ export function tickDecision(args: {
   return { queue: decision.allowed, reason: decision.reason };
 }
 
+/**
+ * A quiet tick writes nothing; the run it queues judges the same guards again and, if they
+ * fail by then (a manual run slipped in first), records a `skipped` row. The asymmetry is
+ * deliberate: the log holds runs, not hours.
+ */
 export async function tick(payload: Payload, now = new Date()): Promise<TickDecision> {
   const store = payloadStore(payload);
   const [settings, counts] = await Promise.all([store.settings(), store.counts(now)]);

@@ -259,7 +259,6 @@ export async function runPipeline(
       async () => buildBrief(topic, hub, facts),
       (b) => `${b.linkTargets.length} link targets`,
     );
-    await store.updateRun(runId, { facts: facts.numbers });
     const system = systemPrompt(settings);
 
     // 3. outline: a freshness run keeps the structure its post has and rewrites the prose.
@@ -409,6 +408,7 @@ export async function runPipeline(
           body,
           seo: { title: seo.title.slice(0, 70), description: seo.description.slice(0, 160) },
           publishedAt: ctx.now().toISOString(),
+          factsBaseline: facts.numbers,
         };
         if (regen && input.replacePostId) return store.replacePost(input.replacePostId, base);
         const slug = await freeSlug(store, slugFor(seo.slug, topic.primaryKeyword));

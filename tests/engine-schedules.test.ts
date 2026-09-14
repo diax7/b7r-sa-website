@@ -101,8 +101,8 @@ describe('the weekly freshness pass (BRD 10.2.4 amendment, ADR-042)', () => {
     expect(written.status).toBe('done');
     const post = state.posts[0]!;
     expect(plainText(post.body)).toContain('5 أيام');
+    expect(post.factsBaseline).toEqual(FACTS.numbers);
     const run = state.runs.get(written.runId!)!;
-    expect(run['facts']).toEqual(FACTS.numbers);
     expect(state.topicStatus.get(state.topics[0]!.id)).toBe('published');
 
     // The delivery promise changes; a day with its run already started.
@@ -118,12 +118,26 @@ describe('the weekly freshness pass (BRD 10.2.4 amendment, ADR-042)', () => {
     expect(state.posts[0]!.slug).toBe(post.slug);
     expect(state.posts[0]!.cover).toBe(post.cover);
     expect(plainText(state.posts[0]!.body)).toContain('7 أيام');
+    // The rewritten post carries today's sheet as its new baseline.
+    expect(state.posts[0]!.factsBaseline).toEqual(sevenDays);
     // The outline came from the first run: the second provider never drew one.
     expect(second.calls.filter((c) => c.step === 'outline')).toHaveLength(0);
     const again = state.runs.get(refreshed.runId!)!;
     expect(again['kind']).toBe('freshness');
     expect(again['outline']).toEqual(run['outline']);
     expect(state.topicStatus.get(state.topics[0]!.id)).toBe('published');
+  });
+
+  it('a migrated post carries the seed-time baseline, so a later change to the sheet is drift', () => {
+    // The seed writes the facts as it knows them; the site later promises 7 days.
+    const migrated = {
+      id: 1,
+      text: 'يصل الطلب خلال 5 أيام كحد أقصى، والرصيد الترحيبي 30 ريالاً.',
+      baseline: factsSheet({ site: SITE, products: PRODUCTS, integrations: INTEGRATIONS }).numbers,
+    };
+    expect(driftedPosts([migrated], sevenDays)).toEqual([{ id: 1, drift: ['5 أيام'] }]);
+    // A post without a baseline (an editor's own) is never a candidate: the query asks for one.
+    expect(driftedPosts([{ ...migrated, baseline: [] }], sevenDays)).toEqual([]);
   });
 
   it('a manual run on a published topic writes nothing; a regeneration may pick it', async () => {

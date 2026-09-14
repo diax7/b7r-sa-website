@@ -789,14 +789,17 @@ checks them again when the job runs); `content-freshness` Monday 06:00 Riyadh an
 UTC+3 without daylight saving). Payload queues a scheduled job ahead with `waitUntil` at the
 next cron time, so the guards are judged in the task handler, never in a schedule hook. **Drift**
 is a number the facts sheet carried when the post was written and does not carry now: every
-run keeps the sheet's numbers of the day (`ai-runs.facts`), and the freshness pass reads the
-ten oldest published `ai` posts against that baseline; an illustrative figure that was never on
-the sheet is not drift (the review already charged for it). A drifted post is regenerated under
+engine post keeps the sheet's numbers of the day (`posts.factsBaseline`, hidden from the form;
+the seed writes it for the migrated three, the runs log is swept yearly and the post is not),
+and the freshness pass reads the ten oldest published `ai` posts against that baseline; an
+illustrative figure that was never on the sheet is not drift (the review already charged for
+it). A drifted post is regenerated under
 its slug and cover from the outline stored on its last successful run, with the current facts;
 a `freshness` run skips the posts-per-day and per-month caps and the hour (it rewrites, it does
 not add) and respects the switch, the env and the cost cap, which now counts every run's cost.
-`ai-edited` posts and posts without a run to compare against (the three migrated Level 1 posts
-until they are regenerated) stay outside the pass. A failed regeneration leaves the post and
+`ai-edited` posts and posts without a baseline (an editor's own) stay outside the pass. The
+`ai` queue is serial: a Monday freshness batch delays that day's post by the batch's duration,
+chosen over a second runner. A failed regeneration leaves the post and
 its topic `published` with the error on the topic. The digest e-mail lists the week's posts
 with score and cost, the failures with their reason and the next slot, when "Weekly digest" is
 on and an address is set; the twelve-month sweep of the runs log runs with it (a topic's

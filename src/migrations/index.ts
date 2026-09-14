@@ -6,7 +6,7 @@ import * as migration_20260913_160614_designer_sample from './20260913_160614_de
 import * as migration_20260913_180113_saved_by from './20260913_180113_saved_by';
 import * as migration_20260913_235455_blog from './20260913_235455_blog';
 import * as migration_20260914_014437_engine from './20260914_014437_engine';
-import * as migration_20260914_023710_run_facts from './20260914_023710_run_facts';
+import * as migration_20260914_032706_schedules_baseline from './20260914_032706_schedules_baseline';
 
 export const migrations = [
   {
@@ -50,8 +50,8 @@ export const migrations = [
     name: '20260914_014437_engine',
   },
   {
-    up: migration_20260914_023710_run_facts.up,
-    down: migration_20260914_023710_run_facts.down,
-    name: '20260914_023710_run_facts'
+    up: migration_20260914_032706_schedules_baseline.up,
+    down: migration_20260914_032706_schedules_baseline.down,
+    name: '20260914_032706_schedules_baseline'
   },
 ];

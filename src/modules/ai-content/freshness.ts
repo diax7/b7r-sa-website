@@ -11,9 +11,9 @@ import type { Post } from '@/payload-types';
 /**
  * The weekly freshness job (BRD 10.2.4 amendment, ADR-042): the oldest published engine
  * posts are read against the facts sheet; a post whose numbers were on the sheet when it
- * was written and are not any more is regenerated from its stored outline with the current
- * facts, under the same slug and cover. `ai-edited` posts are never touched (human prose),
- * nor is a post without a run to compare against (the migrated three until regenerated).
+ * was written (`factsBaseline`, set by the engine or the seed) and are not any more is
+ * regenerated from its stored outline with the current facts, under the same slug and
+ * cover. `ai-edited` posts are never touched (human prose).
  */
 export const FRESHNESS_TASK = 'content-freshness' as const;
 export const FRESHNESS_BATCH = 10;
@@ -21,7 +21,7 @@ export const FRESHNESS_BATCH = 10;
 export interface FreshnessCandidate {
   id: number;
   text: string;
-  /** The facts sheet's numbers when the post was written (the run row keeps them). */
+  /** The facts sheet's numbers when the post was written (`posts.factsBaseline`). */
   baseline: FactNumber[];
 }
 
@@ -58,28 +58,12 @@ export function driftedPosts(
     .filter((c) => c.drift.length > 0);
 }
 
-/** The oldest published `ai` posts that have a run with a facts baseline. */
+/** The oldest published `ai` posts that carry a facts baseline. */
 async function freshnessCandidates(payload: Payload): Promise<FreshnessCandidate[]> {
-  const runs = await payload.find({
-    collection: 'ai-runs',
-    where: { and: [{ status: { equals: 'done' } }, { post: { exists: true } }] },
-    depth: 0,
-    limit: 1000,
-    pagination: false,
-    sort: '-startedAt',
-    overrideAccess: true,
-  });
-  const baselineByPost = new Map<number, FactNumber[]>();
-  for (const run of runs.docs) {
-    const id = typeof run.post === 'object' && run.post ? run.post.id : run.post;
-    if (typeof id !== 'number' || baselineByPost.has(id) || !Array.isArray(run.facts)) continue;
-    baselineByPost.set(id, run.facts as FactNumber[]);
-  }
-  if (baselineByPost.size === 0) return [];
   const posts = await payload.find({
     collection: 'posts',
     where: {
-      and: [PUBLISHED, { origin: { equals: 'ai' } }, { id: { in: [...baselineByPost.keys()] } }],
+      and: [PUBLISHED, { origin: { equals: 'ai' } }, { factsBaseline: { exists: true } }],
     },
     depth: 0,
     limit: FRESHNESS_BATCH,
@@ -87,11 +71,13 @@ async function freshnessCandidates(payload: Payload): Promise<FreshnessCandidate
     locale: 'ar',
     overrideAccess: true,
   });
-  return posts.docs.map((post: Post) => ({
-    id: post.id,
-    text: plainText(post.body as never),
-    baseline: baselineByPost.get(post.id) ?? [],
-  }));
+  return posts.docs
+    .filter((post: Post) => Array.isArray(post.factsBaseline))
+    .map((post: Post) => ({
+      id: post.id,
+      text: plainText(post.body as never),
+      baseline: post.factsBaseline as FactNumber[],
+    }));
 }
 
 export async function freshness(payload: Payload): Promise<FreshnessResult> {

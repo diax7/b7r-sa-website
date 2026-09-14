@@ -131,18 +131,6 @@ export const AiRuns: CollectionConfig = {
       },
     },
     {
-      name: 'facts',
-      type: 'json',
-      label: { ar: 'الحقائق وقت الكتابة', en: 'Facts at writing time' },
-      admin: {
-        readOnly: true,
-        description: {
-          ar: 'أرقام صحيفة الحقائق يوم الكتابة؛ يقارنها فحص التحديث بالأرقام الحالية.',
-          en: 'The facts sheet numbers on the day; the freshness job compares them with today.',
-        },
-      },
-    },
-    {
       name: 'systemPromptVersion',
       type: 'number',
       label: { ar: 'نسخة التعليمات', en: 'Prompt version' },

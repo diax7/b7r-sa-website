@@ -24,6 +24,7 @@ import { seo } from '../src/content/seed/seo';
 import { site } from '../src/content/seed/site';
 import { testimonials } from '../src/content/seed/testimonials';
 import { nextWindow, seedTopics } from '../src/content/seed/topics';
+import { factsSheet } from '../src/modules/ai-content/facts';
 import { SEO_TITLE_TEMPLATE } from '../src/content/seo-copy';
 import {
   RESERVED_PAGE_SLUGS,
@@ -599,6 +600,8 @@ async function ensurePost(
       body: body as never,
       publishedAt: `${post.publishedAt}T09:00:00.000Z`,
       origin: 'ai',
+      // The freshness job's baseline: the facts as the seed knows them today (ADR-042).
+      factsBaseline: factsSheet({ site, products, integrations }).numbers,
       _status: 'published',
     },
     context: CONTEXT,

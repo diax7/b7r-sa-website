@@ -637,6 +637,15 @@ export interface Post {
    * A change by an editor to an engine post marks it "engine, then edited" and exempts it from the freshness job.
    */
   origin: 'manual' | 'ai' | 'ai-edited';
+  factsBaseline?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   warnings?:
     | {
         text?: string | null;
@@ -836,18 +845,6 @@ export interface AiRun {
    * The freshness job regenerates from it.
    */
   outline?:
-    | {
-        [k: string]: unknown;
-      }
-    | unknown[]
-    | string
-    | number
-    | boolean
-    | null;
-  /**
-   * The facts sheet numbers on the day; the freshness job compares them with today.
-   */
-  facts?:
     | {
         [k: string]: unknown;
       }
@@ -1494,6 +1491,7 @@ export interface PostsSelect<T extends boolean = true> {
   contentUpdatedAt?: T;
   readingMinutes?: T;
   origin?: T;
+  factsBaseline?: T;
   warnings?:
     | T
     | {
@@ -1629,7 +1627,6 @@ export interface AiRunsSelect<T extends boolean = true> {
   rubric?: T;
   steps?: T;
   outline?: T;
-  facts?: T;
   systemPromptVersion?: T;
   topic?: T;
   post?: T;

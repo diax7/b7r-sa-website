@@ -16,3 +16,4 @@ test-results
 /*.md
 # Local uploads (dev only; production media lives on S3)
 public/media
+scripts/dev

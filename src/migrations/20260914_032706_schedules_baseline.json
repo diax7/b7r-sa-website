@@ -8666,6 +8666,12 @@
           "notNull": false,
           "default": "'manual'"
         },
+        "facts_baseline": {
+          "name": "facts_baseline",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
         "seo_og_image_id": {
           "name": "seo_og_image_id",
           "type": "integer",
@@ -9381,6 +9387,12 @@
           "primaryKey": false,
           "notNull": false,
           "default": "'manual'"
+        },
+        "version_facts_baseline": {
+          "name": "version_facts_baseline",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
         },
         "version_seo_og_image_id": {
           "name": "version_seo_og_image_id",
@@ -11101,12 +11113,6 @@
         },
         "outline": {
           "name": "outline",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "facts": {
-          "name": "facts",
           "type": "jsonb",
           "primaryKey": false,
           "notNull": false
@@ -17149,6 +17155,6 @@
     "tables": {},
     "columns": {}
   },
-  "id": "2ec3a91d-20b2-4c4a-b68c-2c190fea045c",
+  "id": "6df44dd7-0bf3-4ac3-a606-c35cb827d6d2",
   "prevId": "00000000-0000-0000-0000-000000000000"
 }
