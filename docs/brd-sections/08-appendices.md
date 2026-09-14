@@ -257,6 +257,23 @@ See §5.2. Keep the machine-readable version in `src/lib/redirects.ts` and a tes
 29. حفلات التخرج: تيشيرتات وأكواب بالاسم (مايو ويونيو)
 30. الجمعة البيضاء ويوم العلم (11 مارس): تقويم مواسم البيع للمتاجر المطبوعة
 
+**English seed topics (15, Level 5c, ADR-043; aimed at the English prompts of §7.7; the first, second and eleventh are covered by the Level 1 posts in English and seed as published)**
+1. How to start a clothing brand in Saudi Arabia with no factory and no stock
+2. Print on demand in Saudi Arabia: how it works, what it costs, who it suits
+3. Print on demand vs dropshipping in the Gulf: which one fits your store?
+4. Local print on demand vs Printful and Printify for Saudi customers: delivery, customs, cost
+5. How long does delivery take? Local printing in Jeddah vs shipping from abroad
+6. Connect a Shopify store to print on demand in Saudi Arabia
+7. What are Salla and Zid? A guide for founders selling into Saudi Arabia
+8. Print file requirements for on-demand apparel: size, resolution, transparent background
+9. Designs that sell in Saudi Arabia: Arabic calligraphy, coffee, falcons and city pride
+10. Intellectual property for merch sellers in Saudi Arabia: what you cannot print
+11. How to price a printed t-shirt in Saudi Arabia: cost, shipping, VAT and margin
+12. VAT and e-invoicing for a print-on-demand store in Saudi Arabia
+13. Creator merch in Saudi Arabia: launch a line for your audience with no inventory
+14. Saudi National Day merch: prepare your store six weeks before 23 September (window 15 June to 10 August)
+15. Ramadan and Eid gifts on demand: timing and the designs that sell (window 1 December 2026 to 9 January 2027)
+
 Seasonal windows: National Day topics publish by 10 August; Founding Day by 5 January; Ramadan by 30 days before Ramadan; back-to-school by 1 August; graduation by 15 April; Riyadh Season by 1 September; White Friday by 1 November.
 
 **Manual prompt set for AI-engine visibility checks (run quarterly):** كيف أبدأ مشروع طباعة عند الطلب في السعودية · أفضل منصة طباعة عند الطلب في السعودية · بديل Printful في السعودية · كيف أربط متجر سلة بالطباعة عند الطلب · كم تكلفة طباعة تيشيرت في السعودية · مشروع بدون رأس مال ولا مخزون في السعودية · print on demand Saudi Arabia · Printful alternative Saudi Arabia · custom t-shirt printing Jeddah · طباعة تيشيرت جدة.

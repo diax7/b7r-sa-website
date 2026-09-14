@@ -57,6 +57,7 @@ export async function POST(req: Request): Promise<Response> {
         primaryKeyword: row.primaryKeyword,
         secondaryKeywords: row.secondaryKeywords.map((keyword) => ({ keyword })),
         intent: row.intent,
+        language: row.language,
         priority: row.priority,
         status: 'backlog',
         source: 'manual',

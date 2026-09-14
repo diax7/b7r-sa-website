@@ -1012,7 +1012,9 @@ The key is served at `/indexnow/{INDEXNOW_KEY}.txt` by `app/indexnow/[key]/route
 
 ### 7.10 Explicitly not done
 
-`llms.txt` (no measured effect; optional later), `FAQPage`/`HowTo`/`SearchAction` schema, `Speakable`, Google Business Profile (no customer-facing premises), `LocalBusiness` schema (use `OnlineStore`).
+`FAQPage`/`HowTo`/`SearchAction` schema, `Speakable`, Google Business Profile (no customer-facing premises), `LocalBusiness` schema (use `OnlineStore`).
+
+*Amended 2026-09-14 (Level 5c, ADR-043): `llms.txt` is done after all, one per language (`/llms.txt`, `/en/llms.txt`), generated from the CMS (site settings, the SEO defaults' titles and descriptions, the pages, the catalogue with cost and suggested price, the published posts with excerpts) and regenerated with the listings on publish. The measured effect is still thin; the cost is one route per language.*
 
 ---
 
@@ -1310,9 +1312,11 @@ Dhia's decision (D-44): **fully automatic publishing with no human approval step
 
 *Amended 2026-09-14 (ADR-042, as shipped): providers are `openai · deepseek · anthropic · google` plus a `mock` for tests only (`AI_CONTENT_MOCK=1`, refused in production); keys are encrypted with Payload's `encrypt` and read back masked; the settings carry per-provider cost rates (an estimate) and `reviewFirstRuns` (the first posts of a live provider land as drafts). `imageMode: generate` is refused until an image provider is wired; `hubDefault` and `stock` (Pexels) ship. The facts sheet is a read-only tab built live from the site settings, the products and the integrations.*
 
+*Amended 2026-09-14 (Level 5c, ADR-043): the "Language and style" group is localised. `language` is no longer a setting: each topic names its language (§10.2.2), and the admin edits the style guide, system prompt, banned phrases and banned claims of each language under the panel's locale control (English pre-filled from the code defaults). The facts sheet renders in both languages.*
+
 #### 10.2.2 `ai-topics` Collection
 
-Fields: title, hub, primaryKeyword, secondaryKeywords[], intent (informational · commercial · seasonal), priority (1–5), preferredPublishWindow (for seasonal topics, e.g. National Day: publish six weeks before 23 September), status (backlog · scheduled · generating · published · failed · rejected), source (seed · manual · searchConsole), notes, resulting post relationship, lastError. The backlog is seeded from Appendix E on migration. Dhia can add topics manually; Level 4 adds Search Console-driven suggestions.
+Fields: title, `language` (ar · en, default ar; the post is written and published in it, Level 5c), hub, primaryKeyword, secondaryKeywords[], intent (informational · commercial · seasonal), priority (1–5), preferredPublishWindow (for seasonal topics, e.g. National Day: publish six weeks before 23 September), status (backlog · scheduled · generating · published · failed · rejected), source (seed · manual · searchConsole), notes, resulting post relationship, lastError. The backlog is seeded from Appendix E on migration. Dhia can add topics manually; Level 4 adds Search Console-driven suggestions.
 
 *Amended 2026-09-14 (ADR-042): `preferredPublishWindow` is a pair of dates (`windowStart`, `windowEnd`); a topic outside its window is not picked. Bulk add from CSV above the list; "Generate now" in the edit view.*
 
@@ -1483,7 +1487,7 @@ This BRD is a living document. When a feature changes, the agent updates the rel
 
 ### 12.6 Future blocks (reserved, not built until Dhia schedules them)
 
-Salla and Zid landing pages (`/salla`, `/zid`) with app-store deep links · Comparison page "بحر مقابل Printful وPrintify" · Seasonal calendar hub · Creators landing (`/creators`) · Business landing (`/business`) · `llms.txt` · 2FA for admin · GlitchTip error tracking · Product-level Merchant Center feed · Newsletter campaigns · Case studies collection · Live order ticker on product pages (once volume exists) · WebMCP readiness.
+Salla and Zid landing pages (`/salla`, `/zid`) with app-store deep links · Comparison page "بحر مقابل Printful وPrintify" · Seasonal calendar hub · Creators landing (`/creators`) · Business landing (`/business`) · 2FA for admin · GlitchTip error tracking · Product-level Merchant Center feed · Newsletter campaigns · Case studies collection · Live order ticker on product pages (once volume exists) · WebMCP readiness.
 
 ---
 
@@ -1745,6 +1749,23 @@ See §5.2. Keep the machine-readable version in `src/lib/redirects.ts` and a tes
 28. موسم الرياض: كيف تبيع ميرش الفعاليات بدون مخالفة الحقوق
 29. حفلات التخرج: تيشيرتات وأكواب بالاسم (مايو ويونيو)
 30. الجمعة البيضاء ويوم العلم (11 مارس): تقويم مواسم البيع للمتاجر المطبوعة
+
+**English seed topics (15, Level 5c, ADR-043; aimed at the English prompts of §7.7; the first, second and eleventh are covered by the Level 1 posts in English and seed as published)**
+1. How to start a clothing brand in Saudi Arabia with no factory and no stock
+2. Print on demand in Saudi Arabia: how it works, what it costs, who it suits
+3. Print on demand vs dropshipping in the Gulf: which one fits your store?
+4. Local print on demand vs Printful and Printify for Saudi customers: delivery, customs, cost
+5. How long does delivery take? Local printing in Jeddah vs shipping from abroad
+6. Connect a Shopify store to print on demand in Saudi Arabia
+7. What are Salla and Zid? A guide for founders selling into Saudi Arabia
+8. Print file requirements for on-demand apparel: size, resolution, transparent background
+9. Designs that sell in Saudi Arabia: Arabic calligraphy, coffee, falcons and city pride
+10. Intellectual property for merch sellers in Saudi Arabia: what you cannot print
+11. How to price a printed t-shirt in Saudi Arabia: cost, shipping, VAT and margin
+12. VAT and e-invoicing for a print-on-demand store in Saudi Arabia
+13. Creator merch in Saudi Arabia: launch a line for your audience with no inventory
+14. Saudi National Day merch: prepare your store six weeks before 23 September (window 15 June to 10 August)
+15. Ramadan and Eid gifts on demand: timing and the designs that sell (window 1 December 2026 to 9 January 2027)
 
 Seasonal windows: National Day topics publish by 10 August; Founding Day by 5 January; Ramadan by 30 days before Ramadan; back-to-school by 1 August; graduation by 15 April; Riyadh Season by 1 September; White Friday by 1 November.
 

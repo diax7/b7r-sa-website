@@ -220,8 +220,9 @@ export async function runPipeline(
       });
     }
     topicId = topic.id;
+    const locale = topic.language;
     runId = await store.createRun({
-      label: `${input.kind ?? 'generate'}: ${topic.title}`,
+      label: `${input.kind ?? 'generate'}${locale === 'ar' ? '' : ` [${locale}]`}: ${topic.title}`,
       kind: input.kind ?? 'generate',
       topic: topic.id,
       provider: provider.name,
@@ -231,7 +232,7 @@ export async function runPipeline(
     });
     await store.updateTopic(topic.id, { lastRun: runId });
     if (!regen) {
-      const published = await store.publishedPosts();
+      const published = await store.publishedPosts(locale);
       const duplicate = duplicateReason(topic, published, startedAt);
       if (duplicate) {
         await store.updateTopic(topic.id, { status: 'rejected', lastError: duplicate });
@@ -250,16 +251,19 @@ export async function runPipeline(
       }
     }
 
-    // 2. brief.
-    const facts = await store.facts();
-    const hub = await store.hub(topic.hubId);
+    // 2. brief, in the topic's language (ADR-043).
+    const [facts, hub, style] = await Promise.all([
+      store.facts(locale),
+      store.hub(topic.hubId, locale),
+      store.style(locale),
+    ]);
     const brief = await step(
       'brief',
-      { topic: topic.id, hub: hub.id },
-      async () => buildBrief(topic, hub, facts),
+      { topic: topic.id, hub: hub.id, locale },
+      async () => buildBrief(topic, hub, facts, style),
       (b) => `${b.linkTargets.length} link targets`,
     );
-    const system = systemPrompt(settings);
+    const system = systemPrompt(style, locale);
 
     // 3. outline: a freshness run keeps the structure its post has and rewrites the prose.
     const stored = input.kind === 'freshness' ? (regen?.outline ?? null) : null;
@@ -410,9 +414,11 @@ export async function runPipeline(
           publishedAt: ctx.now().toISOString(),
           factsBaseline: facts.numbers,
         };
-        if (regen && input.replacePostId) return store.replacePost(input.replacePostId, base);
+        if (regen && input.replacePostId) {
+          return store.replacePost(input.replacePostId, base, locale);
+        }
         const slug = await freeSlug(store, slugFor(seo.slug, topic.primaryKeyword));
-        return store.createPost({ ...base, slug, cover, status });
+        return store.createPost({ ...base, slug, cover, status }, locale);
       },
       (p) => `post ${p.id} (${status})`,
     );
@@ -455,16 +461,17 @@ async function reviewDraft(
 ): Promise<ReviewOutcome> {
   const t0 = Date.now();
   const checks = checkDraft(draft, brief.facts.numbers, {
-    bannedPhrases: settings.bannedPhrases,
+    bannedPhrases: brief.style.bannedPhrases,
     minWords: settings.minWords,
     maxWords: settings.maxWords,
+    locale: brief.locale,
   });
   const res = await ctx.run(
     'review',
     () =>
       ctx.provider.object({
         step: 'review',
-        system: systemPrompt(settings),
+        system: systemPrompt(brief.style, brief.locale),
         prompt: reviewPrompt(brief, draft, revision),
         schema: RubricSchema,
         name: 'review',

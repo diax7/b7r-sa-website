@@ -11,6 +11,8 @@ export type SeedWindow = { start: string; end: string };
 
 export interface SeedTopic {
   title: string;
+  /** The post's language (ADR-043); Arabic when absent. */
+  language?: 'ar' | 'en';
   hub: string;
   primaryKeyword: string;
   secondaryKeywords: string[];

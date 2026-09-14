@@ -1,4 +1,5 @@
 import type { FactsSheet } from '@/modules/ai-content/facts';
+import { draftForEn, outlineForEn, seoForEn } from '@/modules/ai-content/provider/mock-en';
 import type {
   ObjectRequest,
   ObjectResult,
@@ -8,8 +9,9 @@ import type {
 } from '@/modules/ai-content/provider/types';
 
 /**
- * The mock provider (ADR-042): deterministic Arabic fixtures built from the topic and the
- * facts sheet, so the pipeline is tested end to end without a network and every generated
+ * The mock provider (ADR-042): deterministic fixtures built from the topic and the facts
+ * sheet, in the language the prompt's `LANGUAGE:` line names (ADR-043; the English ones in
+ * `mock-en.ts`), so the pipeline is tested end to end without a network and every generated
  * post differs. Allowed only when `AI_CONTENT_MOCK=1` (tests, CI, the review server); the
  * production assert refuses the flag. Records every call so a test can assert the order and
  * the prompts.
@@ -29,6 +31,11 @@ export interface MockOptions {
 }
 
 const USAGE = { inputTokens: 1200, outputTokens: 900 };
+
+/** The language the brief names; Arabic unless the line says `en`. */
+function english(prompt: string): boolean {
+  return /^LANGUAGE:\s*en$/m.test(prompt);
+}
 
 /** The topic title the prompt carries (the brief puts it on a `TOPIC:` line). */
 function topicOf(prompt: string): string {
@@ -263,23 +270,37 @@ export function mockProvider(options: MockOptions): Provider & { calls: MockCall
     calls,
     async text(req: TextRequest): Promise<TextResult> {
       calls.push({ step: req.step, kind: 'text', prompt: req.prompt });
+      const en = english(req.prompt);
       if (req.step === 'draft' || req.step === 'revise') {
-        return { text: draftFor(req.prompt, options.facts), usage: USAGE };
+        const text = en
+          ? draftForEn(topicOf(req.prompt), keywordOf(req.prompt), hubOf(req.prompt), options.facts)
+          : draftFor(req.prompt, options.facts);
+        return { text, usage: USAGE };
       }
-      if (req.step === 'alt') return { text: seoFor(req.prompt).alt, usage: USAGE };
+      if (req.step === 'alt') {
+        const alt = en
+          ? seoForEn(topicOf(req.prompt), keywordOf(req.prompt)).alt
+          : seoFor(req.prompt).alt;
+        return { text: alt, usage: USAGE };
+      }
       return { text: '', usage: USAGE };
     },
     async object<T>(req: ObjectRequest<T>): Promise<ObjectResult<T>> {
       calls.push({ step: req.step, kind: 'object', prompt: req.prompt });
       let value: unknown;
+      const en = english(req.prompt);
       if (req.step === 'outline') {
-        value = outlineFor(topicOf(req.prompt), keywordOf(req.prompt), hubOf(req.prompt));
+        value = (en ? outlineForEn : outlineFor)(
+          topicOf(req.prompt),
+          keywordOf(req.prompt),
+          hubOf(req.prompt),
+        );
       } else if (req.step === 'review') {
         const revised = /REVISION PASS/.test(req.prompt);
         const total = revised ? revisedScore : reviewScore;
         value = {
           facts: Math.round(total * 0.3),
-          arabic: Math.round(total * 0.25),
+          language: Math.round(total * 0.25),
           structure: Math.round(total * 0.2),
           usefulness: Math.round(total * 0.15),
           formatting:
@@ -288,12 +309,16 @@ export function mockProvider(options: MockOptions): Provider & { calls: MockCall
             Math.round(total * 0.25) -
             Math.round(total * 0.2) -
             Math.round(total * 0.15),
-          critique: revised
-            ? 'المسودة الثانية أوضح وأقرب إلى الأرقام.'
-            : 'اجعل المثال الرقمي أقرب إلى بداية المقال.',
+          critique: en
+            ? revised
+              ? 'The second draft is clearer and closer to the numbers.'
+              : 'Move the numeric example closer to the start of the article.'
+            : revised
+              ? 'المسودة الثانية أوضح وأقرب إلى الأرقام.'
+              : 'اجعل المثال الرقمي أقرب إلى بداية المقال.',
         };
       } else if (req.step === 'seo') {
-        value = seoFor(req.prompt);
+        value = en ? seoForEn(topicOf(req.prompt), keywordOf(req.prompt)) : seoFor(req.prompt);
       } else {
         throw new Error(`mock provider: no fixture for step ${req.step}`);
       }

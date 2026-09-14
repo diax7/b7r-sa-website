@@ -116,9 +116,11 @@ Dhia's decision (D-44): **fully automatic publishing with no human approval step
 
 *Amended 2026-09-14 (ADR-042, as shipped): providers are `openai · deepseek · anthropic · google` plus a `mock` for tests only (`AI_CONTENT_MOCK=1`, refused in production); keys are encrypted with Payload's `encrypt` and read back masked; the settings carry per-provider cost rates (an estimate) and `reviewFirstRuns` (the first posts of a live provider land as drafts). `imageMode: generate` is refused until an image provider is wired; `hubDefault` and `stock` (Pexels) ship. The facts sheet is a read-only tab built live from the site settings, the products and the integrations.*
 
+*Amended 2026-09-14 (Level 5c, ADR-043): the "Language and style" group is localised. `language` is no longer a setting: each topic names its language (§10.2.2), and the admin edits the style guide, system prompt, banned phrases and banned claims of each language under the panel's locale control (English pre-filled from the code defaults). The facts sheet renders in both languages.*
+
 #### 10.2.2 `ai-topics` Collection
 
-Fields: title, hub, primaryKeyword, secondaryKeywords[], intent (informational · commercial · seasonal), priority (1–5), preferredPublishWindow (for seasonal topics, e.g. National Day: publish six weeks before 23 September), status (backlog · scheduled · generating · published · failed · rejected), source (seed · manual · searchConsole), notes, resulting post relationship, lastError. The backlog is seeded from Appendix E on migration. Dhia can add topics manually; Level 4 adds Search Console-driven suggestions.
+Fields: title, `language` (ar · en, default ar; the post is written and published in it, Level 5c), hub, primaryKeyword, secondaryKeywords[], intent (informational · commercial · seasonal), priority (1–5), preferredPublishWindow (for seasonal topics, e.g. National Day: publish six weeks before 23 September), status (backlog · scheduled · generating · published · failed · rejected), source (seed · manual · searchConsole), notes, resulting post relationship, lastError. The backlog is seeded from Appendix E on migration. Dhia can add topics manually; Level 4 adds Search Console-driven suggestions.
 
 *Amended 2026-09-14 (ADR-042): `preferredPublishWindow` is a pair of dates (`windowStart`, `windowEnd`); a topic outside its window is not picked. Bulk add from CSV above the list; "Generate now" in the edit view.*
 

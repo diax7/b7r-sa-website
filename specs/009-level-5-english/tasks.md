@@ -31,9 +31,9 @@ Branches `level-5/site`, `level-5/blog`, `level-5/engine`. CTO: plan 88 → 93 G
 - [x] T513 Tests and docs (ADR-043 amendment, BRD §6.11/§10.1 notes, IDEAS closed).
 
 ## Phase 5c: the engine in English
-- [ ] T521 `ai-topics.language`, settings per language, the pipeline per locale (facts,
+- [x] T521 `ai-topics.language`, settings per language, the pipeline per locale (facts,
   prompts, checks, slug, dedupe, publish, links), the mock's English fixtures, dashboard and
   digest labels.
-- [ ] T522 The English backlog (15 topics) in the seed; `llms.txt` per locale.
-- [ ] T523 Tests (unit + e2e English run) and docs (ADR-043 amendment, BRD §10.2.1 and
+- [x] T522 The English backlog (15 topics) in the seed; `llms.txt` per locale.
+- [x] T523 Tests (unit + e2e English run) and docs (ADR-043 amendment, BRD §10.2.1 and
   Appendix E, RUNBOOK).

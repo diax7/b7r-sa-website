@@ -25,6 +25,7 @@ import { site } from '../src/content/seed/site';
 import { testimonials } from '../src/content/seed/testimonials';
 import { nextWindow, seedTopics } from '../src/content/seed/topics';
 import { ensureEnglish } from './migrate-content-en';
+import { seedTopicsEn } from '../src/content/seed/en/topics';
 import { factsSheet } from '../src/modules/ai-content/facts';
 import { ar } from '../src/content/copy/ar';
 import {
@@ -645,6 +646,7 @@ async function ensureTopic(
     collection: 'ai-topics',
     data: {
       title: topic.title,
+      language: topic.language ?? 'ar',
       hub,
       primaryKeyword: topic.primaryKeyword,
       secondaryKeywords: topic.secondaryKeywords.map((keyword) => ({ keyword })),
@@ -669,7 +671,8 @@ async function ensureBlog(payload: Payload): Promise<void> {
   const author = await ensureAuthor(payload, blogAuthor);
   for (const post of blogPosts) await ensurePost(payload, post, hubs, author);
   const now = new Date();
-  for (const topic of seedTopics) await ensureTopic(payload, topic, hubs, now);
+  for (const topic of [...seedTopics, ...seedTopicsEn])
+    await ensureTopic(payload, topic, hubs, now);
 }
 
 async function main(): Promise<number> {

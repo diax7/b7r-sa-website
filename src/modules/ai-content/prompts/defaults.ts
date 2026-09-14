@@ -40,6 +40,55 @@ export const DEFAULT_BANNED_CLAIMS = `- أي مدة توصيل غير المدة
 - أي ضمان للدخل أو للمبيعات أو وعد بربح محدد.
 - أي ذكر لجهة حكومية أو رقم نظامي دون مصدر رسمي.`;
 
+export const DEFAULT_STYLE_GUIDE_EN = `Language: plain, direct English with a warm Saudi voice, from one founder to another.
+- Verbs first in instructions (Upload your design), noun phrases in headings.
+- Banned: leverage, unlock, seamless, game-changing, cutting-edge, in today's world, it's important to note, "as an AI", filler openers ("In this article we will").
+- The reader is a merchant, addressed as "you".
+- Western numerals. Money as "SAR 45". Durations as "5 days". Measurements as "28 × 38 cm".
+- Short paragraphs (three or four sentences), lists where they help, at least one example with real numbers from the facts sheet.
+- H2 headings phrased as questions; each opens with a direct one-sentence answer.
+- Terms: print on demand, B7R Print, your store, Salla, Zid, Shopify; essential T-shirt, oversized T-shirt, hoodie, baby onesie, tote bag; cost, selling price, your profit, wallet, welcome credit; "your brand".
+- No paragraphs in Arabic script; brand names stay as they are.
+- No mention of AI or of how the article was written, anywhere.`;
+
+export const DEFAULT_SYSTEM_PROMPT_EN = `You write content for B7R Print, the print-on-demand platform in Saudi Arabia: practical guides for merchants starting a clothing brand with no stock. Follow the style guide to the letter, state no number or promise that is not on the facts sheet, and mention no product or price outside it. Write in English only, in Markdown: second-level headings (##) phrased as questions, short paragraphs, lists where needed, and internal links written as [text](/en/path) to the allowed paths only. No tables, no first-level heading, no em dash, no reference to AI.`;
+
+export const DEFAULT_BANNED_PHRASES_EN = [
+  'leverage',
+  'unlock',
+  'seamless',
+  'game-changing',
+  'cutting-edge',
+  "in today's world",
+  "it's important to note",
+  'as an AI',
+  'in this article we will',
+];
+
+export const DEFAULT_BANNED_CLAIMS_EN = `- Any delivery time other than the one on the facts sheet.
+- Any product, size or colour not in the catalogue.
+- Any price, cost or profit other than the numbers on the facts sheet.
+- Any claim about Printful, Printify or Gelato beyond what their own sites state.
+- Absolute superlatives such as "the best in Saudi Arabia" or "the cheapest".
+- Any guarantee of income or sales, or a promise of a specific profit.
+- Any mention of a government body or a regulation without an official source.`;
+
+/** The style tab's defaults per language (ADR-043): what the store uses when a language is empty. */
+export const DEFAULT_STYLE = {
+  ar: {
+    styleGuide: DEFAULT_STYLE_GUIDE,
+    systemPrompt: DEFAULT_SYSTEM_PROMPT,
+    bannedPhrases: DEFAULT_BANNED_PHRASES,
+    bannedClaims: DEFAULT_BANNED_CLAIMS,
+  },
+  en: {
+    styleGuide: DEFAULT_STYLE_GUIDE_EN,
+    systemPrompt: DEFAULT_SYSTEM_PROMPT_EN,
+    bannedPhrases: DEFAULT_BANNED_PHRASES_EN,
+    bannedClaims: DEFAULT_BANNED_CLAIMS_EN,
+  },
+} as const;
+
 export const DEFAULT_IMAGE_STYLE =
   'no text, no letters, no logos, flat studio light, brand blue accents, clean background';
 

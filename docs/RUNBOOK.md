@@ -381,6 +381,15 @@ the English version's. The post is on `/en/blog/<slug>`, in `/en/feed.xml` and p
 its Arabic twin once its English title is not empty. Hubs (`categories`) and authors work the
 same way (`name` decides). An Arabic-only post's switch sends the reader to `/en/blog`.
 
+The engine in English (5c): a topic's `language` decides the post's language; the English
+backlog is seeded beside the Arabic one, and a CSV import takes `language` as its seventh
+column (`ar` by default). Engine settings, "Language and style": switch the panel's locale
+to edit the English style guide, system prompt, banned phrases and banned claims (pre-filled
+from the code defaults). The facts sheet tab shows both languages. On the review server
+`node scripts/dev/engine-demo.mjs run 1 en` writes one English post with the mock;
+`... clean` removes it. `/llms.txt` and `/en/llms.txt` are generated from the CMS and
+regenerate with the listings on publish; nothing to maintain by hand.
+
 Interface strings (labels, buttons, validation, SEO templates) live in the code:
 `src/content/copy/ar.ts` and `en.ts`. After editing the English bank run `pnpm copy:appendix`
 (regenerates BRD Appendix H), then rebuild the BRD.

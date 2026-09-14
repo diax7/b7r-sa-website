@@ -1,14 +1,17 @@
 import { Buffer } from 'node:buffer';
 import { convertMarkdownToLexical, editorConfigFactory } from '@payloadcms/richtext-lexical';
 import type { Payload } from 'payload';
+import { type Locale, requestLocale } from '@/lib/i18n';
+import { DEFAULT_STYLE } from '@/modules/ai-content/prompts/defaults';
 import type { LexicalState } from '@/lib/lexical';
 import { toIntegration, toProduct, toSiteSettings } from '@/lib/cms/mappers';
-import { PUBLISHED } from '@/lib/cms/read';
+import { inLocale, PUBLISHED } from '@/lib/cms/read';
 import { riyadhDayStart, riyadhMonthStart } from '@/modules/ai-content/caps';
 import type { PublishedPost } from '@/modules/ai-content/dedupe';
 import { type FactsSheet, factsSheet } from '@/modules/ai-content/facts';
 import type {
   EngineSettings,
+  EngineStyle,
   HubInfo,
   MediaUpload,
   NewPost,
@@ -62,11 +65,7 @@ export function toEngineSettings(doc: AiSetting): EngineSettings {
     maxPostsPerMonth: doc.maxPostsPerMonth ?? 31,
     dailyCostCapUsd: doc.dailyCostCapUsd ?? 5,
     reviewFirstRuns: doc.reviewFirstRuns ?? 3,
-    styleGuide: doc.style?.styleGuide ?? '',
-    systemPrompt: doc.style?.systemPrompt ?? '',
     systemPromptVersion: doc.style?.systemPromptVersion ?? 1,
-    bannedPhrases: lines(doc.style?.bannedPhrases),
-    bannedClaims: doc.style?.bannedClaims ?? '',
     imageMode: (doc.images?.imageMode ?? 'hubDefault') as EngineSettings['imageMode'],
     imageStyle: doc.images?.imageStyle ?? '',
     pexelsKey: doc.images?.pexelsKey ?? null,
@@ -80,10 +79,28 @@ export function toEngineSettings(doc: AiSetting): EngineSettings {
   };
 }
 
+/**
+ * The style tab in one language (ADR-043): the localised fields as saved, the code defaults
+ * for a language whose fields were never filled (the English tab of a settings global saved
+ * in Arabic only).
+ */
+export function toEngineStyle(doc: AiSetting, locale: Locale): EngineStyle {
+  const defaults = DEFAULT_STYLE[locale];
+  return {
+    styleGuide: doc.style?.styleGuide || defaults.styleGuide,
+    systemPrompt: doc.style?.systemPrompt || defaults.systemPrompt,
+    bannedPhrases: doc.style?.bannedPhrases
+      ? lines(doc.style.bannedPhrases)
+      : defaults.bannedPhrases,
+    bannedClaims: doc.style?.bannedClaims || defaults.bannedClaims,
+  };
+}
+
 function toTopic(doc: AiTopic): Topic {
   return {
     id: doc.id,
     title: doc.title,
+    language: requestLocale(doc.language),
     hubId: typeof doc.hub === 'object' ? doc.hub.id : doc.hub,
     primaryKeyword: doc.primaryKeyword,
     secondaryKeywords: (doc.secondaryKeywords ?? []).map((k) => k.keyword),
@@ -109,15 +126,26 @@ export function payloadStore(payload: Payload): Store {
       return toEngineSettings(doc);
     },
 
-    async facts(): Promise<FactsSheet> {
+    async style(locale) {
+      const doc = await payload.findGlobal({
+        slug: 'ai-settings',
+        depth: 0,
+        locale,
+        fallbackLocale: false,
+        overrideAccess: true,
+      });
+      return toEngineStyle(doc, locale);
+    },
+
+    async facts(locale): Promise<FactsSheet> {
       const [site, products, integrations] = await Promise.all([
-        payload.findGlobal({ slug: 'site-settings', depth: 0, locale: 'ar', overrideAccess: true }),
+        payload.findGlobal({ slug: 'site-settings', depth: 0, locale, overrideAccess: true }),
         payload.find({
           collection: 'products',
           depth: 1,
           limit: 50,
           pagination: false,
-          locale: 'ar',
+          locale,
           where: PUBLISHED,
           overrideAccess: true,
         }),
@@ -126,15 +154,18 @@ export function payloadStore(payload: Payload): Store {
           depth: 0,
           limit: 20,
           pagination: false,
-          locale: 'ar',
+          locale,
           overrideAccess: true,
         }),
       ]);
-      return factsSheet({
-        site: toSiteSettings(site),
-        products: products.docs.map(toProduct),
-        integrations: integrations.docs.map(toIntegration),
-      });
+      return factsSheet(
+        {
+          site: toSiteSettings(site),
+          products: products.docs.map(toProduct),
+          integrations: integrations.docs.map(toIntegration),
+        },
+        locale,
+      );
     },
 
     async pickTopic(now, topicId, regenerate = false) {
@@ -178,15 +209,17 @@ export function payloadStore(payload: Payload): Store {
       return null;
     },
 
-    async publishedPosts(): Promise<PublishedPost[]> {
+    async publishedPosts(locale): Promise<PublishedPost[]> {
+      // The posts of that language only: a title in the other language is no duplicate.
       const [posts, topics] = await Promise.all([
         payload.find({
           collection: 'posts',
-          where: PUBLISHED,
+          where: { and: [PUBLISHED, inLocale('title')] },
           depth: 0,
           limit: 1000,
           pagination: false,
-          locale: 'ar',
+          locale,
+          fallbackLocale: false,
           overrideAccess: true,
         }),
         payload.find({
@@ -210,21 +243,23 @@ export function payloadStore(payload: Payload): Store {
       }));
     },
 
-    async hub(id): Promise<HubInfo> {
+    async hub(id, locale): Promise<HubInfo> {
       const doc = (await payload.findByID({
         collection: 'categories',
         id,
         depth: 0,
-        locale: 'ar',
+        locale,
         overrideAccess: true,
       })) as Category;
+      // Link targets: the hub's posts that exist in the language (the brief prefixes them).
       const posts = await payload.find({
         collection: 'posts',
-        where: { and: [PUBLISHED, { hub: { equals: id } }] },
+        where: { and: [PUBLISHED, { hub: { equals: id } }, inLocale('title')] },
         depth: 0,
         limit: 50,
         sort: '-publishedAt',
-        locale: 'ar',
+        locale,
+        fallbackLocale: false,
         overrideAccess: true,
       });
       return {
@@ -335,7 +370,7 @@ export function payloadStore(payload: Payload): Store {
       });
     },
 
-    async createPost(post: NewPost) {
+    async createPost(post: NewPost, locale) {
       const doc = await payload.create({
         collection: 'posts',
         data: {
@@ -355,13 +390,13 @@ export function payloadStore(payload: Payload): Store {
         },
         draft: post.status === 'draft',
         depth: 0,
-        locale: 'ar',
+        locale,
         overrideAccess: true,
       });
       return { id: doc.id, slug: doc.slug };
     },
 
-    async replacePost(id, post) {
+    async replacePost(id, post, locale) {
       const doc = await payload.update({
         collection: 'posts',
         id,
@@ -377,7 +412,7 @@ export function payloadStore(payload: Payload): Store {
           _status: 'published',
         },
         depth: 0,
-        locale: 'ar',
+        locale,
         overrideAccess: true,
       });
       return { id: doc.id, slug: doc.slug };

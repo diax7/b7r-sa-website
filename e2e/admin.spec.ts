@@ -1301,6 +1301,8 @@ test.describe('CMS admin', () => {
       expect(topic.status()).toBe(201);
       const topicId = ((await topic.json()) as { doc: { id: number } }).doc.id;
       let postId: number | null = null;
+      let englishTopicId: number | null = null;
+      let englishPostId: number | null = null;
       try {
         // Editors and outsiders cannot start a run or read the log.
         const editor = await createEditor(request, auth);
@@ -1355,20 +1357,28 @@ test.describe('CMS admin', () => {
         expect((engineRun['outline'] as { headings: unknown[] }).headings.length).toBeGreaterThan(
           3,
         );
-        // The seeded backlog (BRD Appendix E): thirty topics, the three Level 1 posts linked.
+        // The seeded backlog (BRD Appendix E): thirty Arabic and fifteen English topics, the
+        // three Level 1 posts linked in each language (ADR-043).
         const seeded = (await (
           await request.get(`${API}/ai-topics?limit=0&where[source][equals]=seed`, {
             headers: auth,
           })
         ).json()) as { totalDocs: number };
-        expect(seeded.totalDocs).toBe(30);
+        expect(seeded.totalDocs).toBe(45);
         const linked = (await (
           await request.get(
             `${API}/ai-topics?limit=0&where[source][equals]=seed&where[status][equals]=published&where[post][exists]=true`,
             { headers: auth },
           )
         ).json()) as { totalDocs: number };
-        expect(linked.totalDocs).toBe(3);
+        expect(linked.totalDocs).toBe(6);
+        const englishSeeded = (await (
+          await request.get(
+            `${API}/ai-topics?limit=0&where[source][equals]=seed&where[language][equals]=en`,
+            { headers: auth },
+          )
+        ).json()) as { totalDocs: number };
+        expect(englishSeeded.totalDocs).toBe(15);
         postId =
           typeof engineRun['post'] === 'object' && engineRun['post']
             ? (engineRun['post'] as { id: number }).id
@@ -1415,6 +1425,70 @@ test.describe('CMS admin', () => {
         await expect(page.locator('[data-admin-action="generate-now"]')).toBeVisible();
         await page.goto(`/admin/collections/posts/${postId}`);
         await expect(page.locator('[data-admin-action="regenerate"]')).toBeVisible();
+        // An English topic (ADR-043): English prompts, facts and rules; the post lands on the
+        // English blog only, in the English feed, with no Arabic in its body.
+        const englishTopic = await request.post(`${API}/ai-topics`, {
+          headers: auth,
+          data: {
+            title: `Choosing the right T-shirt fabric for printing ${stamp}`,
+            language: 'en',
+            hub: hubs.docs[0]!.id,
+            primaryKeyword: `t-shirt fabric for printing ${stamp}`,
+            intent: 'informational',
+            priority: 5,
+            status: 'backlog',
+            source: 'manual',
+          },
+        });
+        expect(englishTopic.status()).toBe(201);
+        englishTopicId = ((await englishTopic.json()) as { doc: { id: number } }).doc.id;
+        const englishQueued = await request.post('/api/ai/generate', {
+          headers: json,
+          data: { topicId: englishTopicId },
+        });
+        expect(englishQueued.status()).toBe(202);
+        const latestEnglishRun = async () => {
+          const res = await request.get(
+            `${API}/ai-runs?sort=-createdAt&limit=1&where[topic][equals]=${englishTopicId}`,
+            { headers: auth },
+          );
+          return ((await res.json()) as { docs: Array<Record<string, unknown>> }).docs[0];
+        };
+        await expect
+          .poll(async () => (await latestEnglishRun())?.['status'] ?? 'none', {
+            intervals: [2_000, 5_000],
+            timeout: 150_000,
+          })
+          .not.toMatch(/running|none/);
+        const englishRun = (await latestEnglishRun())!;
+        expect(englishRun['status'], JSON.stringify(englishRun['steps'])).toBe('done');
+        expect(englishRun['label']).toMatch(/^generate \[en\]: /);
+        englishPostId =
+          typeof englishRun['post'] === 'object' && englishRun['post']
+            ? (englishRun['post'] as { id: number }).id
+            : (englishRun['post'] as number);
+        const englishPost = (await (
+          await request.get(`${API}/posts/${englishPostId}?depth=0&locale=en`, { headers: auth })
+        ).json()) as Record<string, unknown>;
+        expect(englishPost['warnings'] ?? []).toEqual([]);
+        expect(englishPost['readingMinutes'] as number).toBeGreaterThanOrEqual(3);
+        const englishSlug = englishPost['slug'] as string;
+        expect(englishSlug).toMatch(/^[a-z0-9-]+$/);
+        await expect
+          .poll(async () => (await request.get(`/en/blog/${englishSlug}`)).status(), POLL)
+          .toBe(200);
+        const englishHtml = await (await request.get(`/en/blog/${englishSlug}`)).text();
+        const englishMain = englishHtml
+          .slice(englishHtml.indexOf('<main'), englishHtml.indexOf('</main>'))
+          .replace(/<script[\s\S]*?<\/script>/g, '');
+        expect(englishMain.replace(/العربية|ريال سعودي/g, '')).not.toMatch(/[؀-ۿ]/);
+        expect(englishHtml).toContain('href="/en/how-it-works"');
+        expect(englishHtml).not.toContain('<link rel="alternate" hrefLang="ar"');
+        expect((await request.get(`/blog/${englishSlug}`)).status()).toBe(404);
+        await expect
+          .poll(async () => (await request.get('/en/feed.xml')).text(), POLL)
+          .toContain(`/en/blog/${englishSlug}`);
+        expect(await (await request.get('/feed.xml')).text()).not.toContain(englishSlug);
         // With the daily cap back at one, a manual run is refused and says so in a skipped row.
         await request.post(`${API}/globals/ai-settings`, {
           headers: auth,
@@ -1435,14 +1509,18 @@ test.describe('CMS admin', () => {
           data: { enabled: false, postsPerDay: 1 },
         });
         if (postId) await request.delete(`${API}/posts/${postId}`, { headers: auth });
-        const runs = (await (
-          await request.get(`${API}/ai-runs?limit=50&where[topic][equals]=${topicId}`, {
-            headers: auth,
-          })
-        ).json()) as { docs: Array<{ id: number }> };
-        for (const r of runs.docs)
-          await request.delete(`${API}/ai-runs/${r.id}`, { headers: auth });
-        await request.delete(`${API}/ai-topics/${topicId}`, { headers: auth });
+        if (englishPostId) await request.delete(`${API}/posts/${englishPostId}`, { headers: auth });
+        for (const id of [topicId, englishTopicId]) {
+          if (id === null) continue;
+          const runs = (await (
+            await request.get(`${API}/ai-runs?limit=50&where[topic][equals]=${id}`, {
+              headers: auth,
+            })
+          ).json()) as { docs: Array<{ id: number }> };
+          for (const r of runs.docs)
+            await request.delete(`${API}/ai-runs/${r.id}`, { headers: auth });
+          await request.delete(`${API}/ai-topics/${id}`, { headers: auth });
+        }
       }
       await expect
         .poll(

@@ -774,6 +774,10 @@ export interface Author {
 export interface AiTopic {
   id: number;
   title: string;
+  /**
+   * The language the post is written in: it lands on the Arabic or the English blog.
+   */
+  language: 'ar' | 'en';
   hub: number | Category;
   intent: 'informational' | 'commercial' | 'seasonal';
   priority: number;
@@ -1582,6 +1586,7 @@ export interface TagsSelect<T extends boolean = true> {
  */
 export interface AiTopicsSelect<T extends boolean = true> {
   title?: T;
+  language?: T;
   hub?: T;
   intent?: T;
   priority?: T;

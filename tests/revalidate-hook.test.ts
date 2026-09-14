@@ -73,7 +73,15 @@ describe('publish hooks (BRD 9.6, ADR-030): the affected routes regenerate at on
     expect(paths()).toEqual(pathsForProduct('hoodie').toSorted());
     expect(paths()).toContain('/products/hoodie');
     // Both documents regenerate (ADR-043); the sitemap serves both.
-    expect(PATHS_FOR_PRODUCTS).toEqual(['/', '/en', '/products', '/en/products', '/sitemap.xml']);
+    expect(PATHS_FOR_PRODUCTS).toEqual([
+      '/',
+      '/en',
+      '/products',
+      '/en/products',
+      '/llms.txt',
+      '/en/llms.txt',
+      '/sitemap.xml',
+    ]);
     expect(paths()).toContain('/en/products/hoodie');
   });
 
@@ -93,7 +101,7 @@ describe('publish hooks (BRD 9.6, ADR-030): the affected routes regenerate at on
     expect(paths()).toContain('/products/hoodie');
     expect(paths()).toContain('/products/hoodie-2');
     expect(paths()).toContain('/en/products/hoodie-2');
-    expect(revalidatePath).toHaveBeenCalledTimes(9);
+    expect(revalidatePath).toHaveBeenCalledTimes(11);
   });
 
   it('a delete always regenerates, the page included so it turns 404', () => {

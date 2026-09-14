@@ -29,7 +29,8 @@ export async function generatePost(
   run: StepRunner = async (_name, fn) => fn(),
 ): Promise<PipelineResult> {
   const store = payloadStore(payload);
-  const [settings, facts] = await Promise.all([store.settings(), store.facts()]);
+  // The provider is built before the topic is known; the mock reads the sheet by unit, not by language.
+  const [settings, facts] = await Promise.all([store.settings(), store.facts('ar')]);
   const provider = providerFor(settings, facts);
   return runPipeline({ store, provider, now: () => new Date(), run }, input);
 }

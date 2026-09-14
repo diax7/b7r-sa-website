@@ -4,7 +4,7 @@ import { wordCount } from '@/modules/ai-content/checks';
 import { runPipeline } from '@/modules/ai-content/pipeline/run';
 import type { PipelineContext } from '@/modules/ai-content/pipeline/types';
 import { mockProvider } from '@/modules/ai-content/provider/mock';
-import { FACTS, memoryStore, settings } from './helpers/engine-store';
+import { FACTS, memoryStore, settings, topic } from './helpers/engine-store';
 
 const LATE = () => new Date('2026-09-14T07:30:00Z'); // 10:30 in Riyadh, after the 9:00 slot
 const runDirect: PipelineContext['run'] = async (_name, fn) => fn();
@@ -63,6 +63,43 @@ describe('generatePost with the mock provider (BRD 10.2.4, 10.3 item 2)', () => 
     expect(state.topicStatus.get(10)).toBe('published');
     expect(state.topicPatches.at(-1)?.patch).toMatchObject({ status: 'published', post: post.id });
     expect(state.emails).toEqual([]);
+  });
+
+  it('writes an English topic on the English blog: English prompts, facts, links and rules (ADR-043)', async () => {
+    const english = topic({
+      id: 11,
+      language: 'en',
+      title: 'How to start a clothing brand in Saudi Arabia with no factory and no stock',
+      primaryKeyword: 'start a clothing brand in Saudi Arabia',
+      secondaryKeywords: ['print on demand Saudi Arabia'],
+    });
+    const { ctx, state, provider } = context({ topics: [english] });
+    const result = await runPipeline(ctx);
+    expect(result.status).toBe('done');
+    // Every prompt names the language and carries the English facts sheet and link targets.
+    for (const call of provider.calls) {
+      expect(call.prompt).toMatch(/^LANGUAGE: en$/m);
+    }
+    const draftPrompt = provider.calls.find((c) => c.step === 'draft')!.prompt;
+    expect(draftPrompt).toContain('Facts sheet:');
+    expect(draftPrompt).toContain('Company: ');
+    expect(draftPrompt).toContain('/en/products/tee-essential');
+    expect(draftPrompt).toContain('/en/blog/start-clothing-brand-saudi-no-factory-no-stock');
+    expect(draftPrompt).not.toContain('/blog/start-clothing-brand-saudi-no-factory-no-stock,');
+    // The post lands in the English locale with an English slug and English links.
+    const post = state.posts[0]!;
+    expect(state.postLocales.get(post.id)).toBe('en');
+    expect(post.slug).toMatch(/^[a-z0-9-]+$/);
+    expect(post.slug).toContain('start-a-clothing-brand');
+    const text = plainText(post.body);
+    expect(text).not.toMatch(/[؀-ۿ]/);
+    expect(
+      linkTargets(post.body).filter((l) => l.href.startsWith('/en/')).length,
+    ).toBeGreaterThanOrEqual(2);
+    expect(wordCount(text)).toBeGreaterThanOrEqual(300);
+    // The run says so in its label.
+    const run = state.runs.get(result.runId!)!;
+    expect(run['label']).toBe(`generate [en]: ${english.title}`);
   });
 
   it('holds a live provider’s first posts as drafts and counts them down', async () => {

@@ -86,7 +86,8 @@ export async function freshness(payload: Payload): Promise<FreshnessResult> {
   if (!settings.enabled || !envAllows()) {
     return { checked: 0, queued: [], reason: 'the engine is switched off' };
   }
-  const [facts, posts] = await Promise.all([store.facts(), freshnessCandidates(payload)]);
+  // The numbers are the same in both languages (one catalogue): the Arabic sheet serves the drift.
+  const [facts, posts] = await Promise.all([store.facts('ar'), freshnessCandidates(payload)]);
   const drifted = driftedPosts(posts, facts.numbers);
   for (const { id } of drifted) {
     // One job per post, queued in order; the `ai` queue serves them one at a time.

@@ -1,7 +1,10 @@
+import { isLocale, type Locale } from '@/lib/i18n';
+
 /**
- * Bulk add from CSV (BRD 10.2.7): `title,hub,primaryKeyword,secondaryKeywords,intent,priority`
- * with a header row; secondary keywords separated by `;`. Pure parsing; the route resolves
- * hubs by slug and creates the rows.
+ * Bulk add from CSV (BRD 10.2.7):
+ * `title,hub,primaryKeyword,secondaryKeywords,intent,priority,language` with a header row;
+ * secondary keywords separated by `;`; `language` is `ar` (the default) or `en` (ADR-043).
+ * Pure parsing; the route resolves hubs by slug and creates the rows.
  */
 export interface TopicRow {
   title: string;
@@ -10,6 +13,7 @@ export interface TopicRow {
   secondaryKeywords: string[];
   intent: 'informational' | 'commercial' | 'seasonal';
   priority: number;
+  language: Locale;
 }
 
 export interface ParsedCsv {
@@ -63,6 +67,7 @@ export function parseTopicsCsv(text: string): ParsedCsv {
     secondary: col('secondaryKeywords', 3),
     intent: col('intent', 4),
     priority: col('priority', 5),
+    language: col('language', 6),
   };
   body.forEach((line, index) => {
     const n = index + (hasHeader ? 2 : 1);
@@ -80,6 +85,11 @@ export function parseTopicsCsv(text: string): ParsedCsv {
       return;
     }
     const priority = Number(f[at.priority] ?? '3') || 3;
+    const languageRaw = (f[at.language] ?? 'ar').toLowerCase() || 'ar';
+    if (!isLocale(languageRaw)) {
+      errors.push(`line ${n}: language must be ar or en`);
+      return;
+    }
     rows.push({
       title,
       hub,
@@ -90,6 +100,7 @@ export function parseTopicsCsv(text: string): ParsedCsv {
         .filter(Boolean),
       intent: intentRaw as TopicRow['intent'],
       priority: Math.min(5, Math.max(1, Math.round(priority))),
+      language: languageRaw,
     });
   });
   return { rows, errors };
