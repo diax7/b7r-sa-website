@@ -1,19 +1,25 @@
-import type { CollectionConfig, GlobalConfig } from 'payload';
+import type { CollectionConfig, Field, GlobalConfig } from 'payload';
 import { describe, expect, it } from 'vitest';
 import { isAbandonedDraft, titleOf } from '@/modules/cms/admin/dashboard/data';
 import { COLLECTION_ICONS, GLOBAL_ICONS, groupIcon } from '@/modules/cms/admin/icons';
+import { Authors } from '@/modules/cms/collections/authors';
+import { Categories } from '@/modules/cms/collections/categories';
 import { Faqs } from '@/modules/cms/collections/faqs';
 import { Integrations } from '@/modules/cms/collections/integrations';
 import { Media } from '@/modules/cms/collections/media';
 import { Pages } from '@/modules/cms/collections/pages';
+import { Posts } from '@/modules/cms/collections/posts';
 import { Products } from '@/modules/cms/collections/products';
 import { REDIRECT_OVERRIDES } from '@/modules/cms/collections/redirects';
+import { Tags } from '@/modules/cms/collections/tags';
 import { Testimonials } from '@/modules/cms/collections/testimonials';
 import { Users } from '@/modules/cms/collections/users';
 import { Home } from '@/modules/cms/globals/home';
 import { Navigation } from '@/modules/cms/globals/navigation';
 import { SeoDefaults } from '@/modules/cms/globals/seo-defaults';
 import { SiteSettings } from '@/modules/cms/globals/site-settings';
+import { AiSettings } from '@/modules/ai-content/settings';
+import { AiTopics } from '@/modules/ai-content/topics';
 
 /**
  * The admin design system's "future things" guarantee (ADR-039, `.claude/rules/admin-ui.md`):
@@ -66,6 +72,41 @@ describe('admin config shape (ADR-039)', () => {
       expect(isIcon(groupIcon(groupOf(g.admin))), 'group icon').toBe(true);
       expect(arabic(g.label), 'label').toBe(true);
       expect(arabic(g.admin?.description), 'admin.description').toBe(true);
+    });
+  }
+});
+
+/** Whether any field, at any depth, is per language. */
+function hasLocalized(fields: Field[]): boolean {
+  return fields.some((f) => {
+    if ('localized' in f && f.localized) return true;
+    if ('fields' in f && Array.isArray(f.fields)) return hasLocalized(f.fields);
+    if ('tabs' in f) return f.tabs.some((t) => hasLocalized(t.fields));
+    if ('blocks' in f) return f.blocks.some((b) => hasLocalized(b.fields));
+    return false;
+  });
+}
+const NOTE = '@/modules/cms/admin/locale/locale-note#LocaleNote';
+
+describe('the locale note (ADR-044): every document with per-language fields carries it', () => {
+  const allCollections = [
+    ...collections.filter((c) => c.slug !== 'redirects'),
+    Authors,
+    Categories,
+    Posts,
+    Tags,
+    AiTopics,
+  ];
+  for (const c of allCollections) {
+    it(`collection ${c.slug}`, () => {
+      const registered = c.admin?.components?.edit?.beforeDocumentControls ?? [];
+      expect(registered.includes(NOTE)).toBe(hasLocalized(c.fields));
+    });
+  }
+  for (const g of [...globals, AiSettings]) {
+    it(`global ${g.slug}`, () => {
+      const registered = g.admin?.components?.elements?.beforeDocumentControls ?? [];
+      expect(registered.includes(NOTE)).toBe(hasLocalized(g.fields));
     });
   }
 });

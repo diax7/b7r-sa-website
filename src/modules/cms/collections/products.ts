@@ -4,6 +4,7 @@ import { revalidateProducts } from '@/modules/cms/hooks/revalidate';
 import { savedByField, stampSavedBy } from '@/modules/cms/fields/saved-by';
 import { localePath, requestLocale } from '@/lib/i18n';
 import { previewUrl } from '@/lib/preview-token';
+import { collectionLocaleNote } from '@/modules/cms/admin/locale/config';
 
 const PRICE_HELP = {
   ar: 'يجب أن يطابق السعر في التطبيق (لا مزامنة آلية).',
@@ -18,6 +19,7 @@ export const Products: CollectionConfig = {
   slug: 'products',
   labels: { singular: { ar: 'منتج', en: 'Product' }, plural: { ar: 'المنتجات', en: 'Products' } },
   admin: {
+    components: collectionLocaleNote,
     useAsTitle: 'name',
     preview: (doc, { req, locale }) =>
       typeof doc['slug'] === 'string' && doc['slug']

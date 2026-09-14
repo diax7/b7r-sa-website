@@ -4,6 +4,7 @@ import { Refused } from '@/modules/cms/refused';
 import { SLUG_PATTERN } from '@/modules/cms/collections/pages';
 import { revalidateBlogListings } from '@/modules/cms/hooks/revalidate';
 import { savedByField, stampSavedBy } from '@/modules/cms/fields/saved-by';
+import { collectionLocaleNote } from '@/modules/cms/admin/locale/config';
 
 /**
  * The blog's hubs (BRD 10.1, Appendix E): six seeded categories, each with its own page at
@@ -14,6 +15,7 @@ export const Categories: CollectionConfig = {
   slug: 'categories',
   labels: { singular: { ar: 'قسم', en: 'Hub' }, plural: { ar: 'أقسام المدونة', en: 'Hubs' } },
   admin: {
+    components: collectionLocaleNote,
     useAsTitle: 'name',
     defaultColumns: ['name', 'slug', 'order', 'updatedAt'],
     listSearchableFields: ['name', 'slug'],

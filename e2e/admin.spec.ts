@@ -365,9 +365,14 @@ test.describe('CMS admin', () => {
     // to be gone before the audit.
     await expect(page.getByRole('menuitem', { name: /Log out/ })).toHaveCount(0);
     await expect(page.locator('body > [aria-hidden="true"]')).toHaveCount(0);
-    expect(await serious('[data-admin-nav]', '.app-header'), 'axe: shell on an edit view').toEqual(
-      [],
-    );
+    // The locale note (ADR-044) sits in the document controls of this localized page.
+    await expect(page.locator('[data-admin-locale-note]')).toContainText('Editing the Arabic');
+    await expect(page.locator('label[for="field-title"] .localized')).toHaveCount(1);
+    await expect(page.locator('label[for="field-slug"] .localized')).toHaveCount(0);
+    expect(
+      await serious('[data-admin-nav]', '.app-header', '[data-admin-locale-note]'),
+      'axe: shell on an edit view',
+    ).toEqual([]);
     // An editor never sees the settings entries.
     const editor = await createEditor(request, adminAuth);
     const editorContext = await browser.newContext({ viewport: { width: 1600, height: 900 } });

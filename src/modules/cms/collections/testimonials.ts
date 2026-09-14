@@ -2,6 +2,7 @@ import type { CollectionConfig } from 'payload';
 import { canDeleteVersioned, isEditorOrAdmin, publishedOrStaff } from '@/modules/cms/access';
 import { revalidateRoutes } from '@/modules/cms/hooks/revalidate';
 import { savedByField, stampSavedBy } from '@/modules/cms/fields/saved-by';
+import { collectionLocaleNote } from '@/modules/cms/admin/locale/config';
 
 /**
  * Merchant testimonials (BRD 4.4, 6.4.7). Drafts so a quote can be prepared before it goes
@@ -15,6 +16,7 @@ export const Testimonials: CollectionConfig = {
     plural: { ar: 'آراء التجار', en: 'Testimonials' },
   },
   admin: {
+    components: collectionLocaleNote,
     useAsTitle: 'name',
     defaultColumns: ['name', 'store', 'placeholder', 'order', '_status'],
     listSearchableFields: ['name', 'store'],

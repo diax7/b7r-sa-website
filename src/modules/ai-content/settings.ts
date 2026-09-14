@@ -4,6 +4,7 @@ import { savedByField, stampSavedByGlobal } from '@/modules/cms/fields/saved-by'
 import { requestLocale } from '@/lib/i18n';
 import { DEFAULT_IMAGE_STYLE, DEFAULT_STYLE } from '@/modules/ai-content/prompts/defaults';
 import { secretField } from '@/modules/ai-content/secret-field';
+import { globalLocaleNote } from '@/modules/cms/admin/locale/config';
 
 export const AI_GROUP = { ar: 'المحتوى الآلي', en: 'AI content' };
 
@@ -108,6 +109,7 @@ export const AiSettings: GlobalConfig = {
   slug: 'ai-settings',
   label: { ar: 'إعدادات المحرّك', en: 'Engine settings' },
   admin: {
+    components: globalLocaleNote,
     group: AI_GROUP,
     hidden: hiddenUnlessAdmin,
     description: {

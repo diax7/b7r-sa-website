@@ -2,12 +2,14 @@ import type { GlobalConfig } from 'payload';
 import { adminField, hiddenUnlessAdmin, isAdmin } from '@/modules/cms/access';
 import { revalidateGlobal } from '@/modules/cms/hooks/revalidate';
 import { savedByField, stampSavedByGlobal } from '@/modules/cms/fields/saved-by';
+import { globalLocaleNote } from '@/modules/cms/admin/locale/config';
 
 /** BRD 9.4 `seo-defaults` ⇄ `content/seo.ts` (per-route titles/descriptions, BRD 4.16). */
 export const SeoDefaults: GlobalConfig = {
   slug: 'seo-defaults',
   label: { ar: 'إعدادات SEO', en: 'SEO defaults' },
   admin: {
+    components: globalLocaleNote,
     group: { ar: 'الإعدادات', en: 'Settings' },
     hidden: hiddenUnlessAdmin,
     description: {

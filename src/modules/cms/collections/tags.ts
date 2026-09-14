@@ -3,6 +3,7 @@ import { isEditorOrAdmin } from '@/modules/cms/access';
 import { Refused } from '@/modules/cms/refused';
 import { SLUG_PATTERN } from '@/modules/cms/collections/pages';
 import { savedByField, stampSavedBy } from '@/modules/cms/fields/saved-by';
+import { collectionLocaleNote } from '@/modules/cms/admin/locale/config';
 
 /**
  * Post tags (BRD 10.1): optional, free, used by related posts after the hub. No public tag
@@ -12,6 +13,7 @@ export const Tags: CollectionConfig = {
   slug: 'tags',
   labels: { singular: { ar: 'وسم', en: 'Tag' }, plural: { ar: 'الوسوم', en: 'Tags' } },
   admin: {
+    components: collectionLocaleNote,
     useAsTitle: 'name',
     defaultColumns: ['name', 'slug', 'updatedAt'],
     listSearchableFields: ['name', 'slug'],

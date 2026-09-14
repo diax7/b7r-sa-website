@@ -3,6 +3,7 @@ import { INTEGRATION_PLATFORMS } from '@/content/schema';
 import { isAdmin, isEditorOrAdmin } from '@/modules/cms/access';
 import { revalidateRoutes } from '@/modules/cms/hooks/revalidate';
 import { savedByField, stampSavedBy } from '@/modules/cms/fields/saved-by';
+import { collectionLocaleNote } from '@/modules/cms/admin/locale/config';
 
 /**
  * Integration tiles (BRD 4.4, 6.4.8): one document per platform. The logo is a brand SVG
@@ -16,6 +17,7 @@ export const Integrations: CollectionConfig = {
     plural: { ar: 'المتاجر المتصلة', en: 'Integrations' },
   },
   admin: {
+    components: collectionLocaleNote,
     useAsTitle: 'name',
     defaultColumns: ['name', 'platform', 'order'],
     listSearchableFields: ['name'],

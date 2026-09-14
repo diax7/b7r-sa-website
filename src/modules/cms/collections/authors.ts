@@ -4,6 +4,7 @@ import { Refused } from '@/modules/cms/refused';
 import { SLUG_PATTERN } from '@/modules/cms/collections/pages';
 import { revalidateBlogListings } from '@/modules/cms/hooks/revalidate';
 import { savedByField, stampSavedBy } from '@/modules/cms/fields/saved-by';
+import { collectionLocaleNote } from '@/modules/cms/admin/locale/config';
 
 /**
  * Blog authors (BRD 10.1): one seeded author (ضياء, مؤسس بحر برنت) with a page at
@@ -14,6 +15,7 @@ export const Authors: CollectionConfig = {
   slug: 'authors',
   labels: { singular: { ar: 'كاتب', en: 'Author' }, plural: { ar: 'الكتّاب', en: 'Authors' } },
   admin: {
+    components: collectionLocaleNote,
     useAsTitle: 'name',
     defaultColumns: ['name', 'role', 'slug', 'updatedAt'],
     listSearchableFields: ['name', 'slug'],
