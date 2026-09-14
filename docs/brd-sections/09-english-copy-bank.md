@@ -140,6 +140,7 @@ Every interface string of the English site, key for key with the Arabic bank of 
 | `errorPage.title` | Something went wrong |
 | `errorPage.text` | Try refreshing the page, or message us on WhatsApp. |
 | `errorPage.button` | Back to the home page |
+| `errorPage.whatsapp` | Chat with us on WhatsApp |
 | `gonePage.title` | This page was removed |
 | `gonePage.text` | The link seems to have changed or been removed. |
 | `gonePage.button` | Back to the home page |
