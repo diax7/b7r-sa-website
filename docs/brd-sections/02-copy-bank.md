@@ -267,7 +267,7 @@ Every user-visible string in Level 1 is here. Copy it exactly, including punctua
 
 ### 4.16 SEO titles and descriptions (Arabic; the brand suffix is added by the template as « | بحر برنت»)
 
-The English titles and descriptions (suffix ` | B7R Print`) are the `seo` rows of Appendix H and the English `seo-defaults` values the seed writes (Level 5, ADR-043).
+The English titles and descriptions (suffix ` | B7R Print`) are the `seo` rows of Appendix I and the English `seo-defaults` values the seed writes (Level 5, ADR-043).
 
 | Page | `<title>` (without suffix) | Meta description |
 |---|---|---|

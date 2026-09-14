@@ -1,5 +1,5 @@
 /**
- * Writes BRD Appendix H (docs/brd-sections/09-english-copy-bank.md) from the English copy
+ * Writes BRD Appendix I (docs/brd-sections/09-english-copy-bank.md) from the English copy
  * bank (ADR-043): `pnpm copy:appendix`, then `python docs/build-brd.py` and copy the root
  * BRD to docs/. `tests/content-verbatim.test.ts` fails until the two agree, so a change to
  * `content/copy/en.ts` always lands in the BRD.
@@ -27,7 +27,7 @@ function cell(value: string): string {
 }
 
 const lines = [
-  '## 14. Appendix H: The English copy bank (Level 5, ADR-043)',
+  '## 14. Appendix I: The English copy bank (Level 5, ADR-043)',
   '',
   'Every interface string of the English site, key for key with the Arabic bank of §4 (`src/content/copy/en.ts`, written to this table by `pnpm copy:appendix`); `tests/content-verbatim.test.ts` checks the code against this table. Brand in English: "B7R Print". The CMS content in English (products, pages, FAQ, home, settings) is seeded content owed Dhia\'s read (Appendix G pattern). Placeholders in braces are filled by the code.',
   '',

@@ -1,4 +1,5 @@
 import type { Integration, Product, SiteSettings } from '@/content/schema';
+import type { Locale } from '@/lib/i18n';
 import type { LexicalNode, LexicalState } from '@/lib/lexical';
 import { type FactsSheet, factsSheet } from '@/modules/ai-content/facts';
 import type {
@@ -10,12 +11,7 @@ import type {
   Store,
   Topic,
 } from '@/modules/ai-content/pipeline/types';
-import {
-  DEFAULT_BANNED_CLAIMS,
-  DEFAULT_BANNED_PHRASES,
-  DEFAULT_STYLE_GUIDE,
-  DEFAULT_SYSTEM_PROMPT,
-} from '@/modules/ai-content/prompts/defaults';
+import { DEFAULT_STYLE } from '@/modules/ai-content/prompts/defaults';
 
 /** The site as the facts sheet sees it, from the seed numbers (BRD 1.1, Appendix A). */
 export const SITE: SiteSettings = {
@@ -103,6 +99,12 @@ export const FACTS: FactsSheet = factsSheet({
   integrations: INTEGRATIONS,
 });
 
+/** The same catalogue read for an English topic: English wording, links under `/en/`. */
+export const FACTS_EN: FactsSheet = factsSheet(
+  { site: SITE, products: PRODUCTS, integrations: INTEGRATIONS },
+  'en',
+);
+
 export function settings(overrides: Partial<EngineSettings> = {}): EngineSettings {
   return {
     activeProvider: 'mock',
@@ -134,11 +136,7 @@ export function settings(overrides: Partial<EngineSettings> = {}): EngineSetting
     maxPostsPerMonth: 31,
     dailyCostCapUsd: 5,
     reviewFirstRuns: 3,
-    styleGuide: DEFAULT_STYLE_GUIDE,
-    systemPrompt: DEFAULT_SYSTEM_PROMPT,
     systemPromptVersion: 1,
-    bannedPhrases: DEFAULT_BANNED_PHRASES,
-    bannedClaims: DEFAULT_BANNED_CLAIMS,
     imageMode: 'hubDefault',
     imageStyle: '',
     pexelsKey: null,
@@ -162,10 +160,24 @@ export const HUB: HubInfo = {
   posts: [{ slug: 'start-clothing-brand-saudi-no-factory-no-stock', title: 'كيف تبدأ براند ملابس' }],
 };
 
+/** The hub as an English topic reads it (ADR-043). */
+export const HUB_EN: HubInfo = {
+  ...HUB,
+  name: 'Getting started',
+  description: 'The first step towards your brand.',
+  posts: [
+    {
+      slug: 'start-clothing-brand-saudi-no-factory-no-stock',
+      title: 'Start a clothing brand in Saudi Arabia with no factory and no stock',
+    },
+  ],
+};
+
 export function topic(overrides: Partial<Topic> = {}): Topic {
   return {
     id: 10,
     title: 'بيع تيشيرتات بدون رأس مال: الخطوات من التصميم لأول طلب',
+    language: 'ar',
     hubId: 1,
     primaryKeyword: 'بيع تيشيرتات بدون رأس مال',
     secondaryKeywords: ['مشروع بدون مخزون'],
@@ -181,6 +193,8 @@ export interface MemoryState {
   settings: EngineSettings;
   /** Swapped by the freshness tests: the sheet the engine reads today. */
   facts: FactsSheet;
+  /** What `createPost`/`replacePost` were asked to write in, per post id. */
+  postLocales: Map<number, Locale>;
   topics: Topic[];
   topicStatus: Map<number, string>;
   topicPatches: Array<{ id: number; patch: Record<string, unknown> }>;
@@ -198,6 +212,7 @@ export function memoryStore(init: Partial<MemoryState> = {}): { store: Store; st
   const state: MemoryState = {
     settings: settings(),
     facts: FACTS,
+    postLocales: new Map(),
     topics: [topic()],
     topicStatus: new Map(),
     topicPatches: [],
@@ -215,8 +230,11 @@ export function memoryStore(init: Partial<MemoryState> = {}): { store: Store; st
     async settings() {
       return state.settings;
     },
-    async facts() {
-      return state.facts;
+    async style(locale) {
+      return DEFAULT_STYLE[locale];
+    },
+    async facts(locale) {
+      return locale === 'en' ? FACTS_EN : state.facts;
     },
     async pickTopic(_now, topicId, regenerate = false) {
       const pickable = regenerate
@@ -233,8 +251,8 @@ export function memoryStore(init: Partial<MemoryState> = {}): { store: Store; st
     async publishedPosts() {
       return state.published;
     },
-    async hub() {
-      return HUB;
+    async hub(_id, locale) {
+      return locale === 'en' ? HUB_EN : HUB;
     },
     async authorId() {
       return 1;
@@ -257,15 +275,17 @@ export function memoryStore(init: Partial<MemoryState> = {}): { store: Store; st
       state.topicPatches.push({ id, patch });
       if (patch.status) state.topicStatus.set(id, patch.status);
     },
-    async createPost(post) {
+    async createPost(post, locale) {
       const id = nextId++;
       state.posts.push({ ...post, id });
+      state.postLocales.set(id, locale);
       return { id, slug: post.slug };
     },
-    async replacePost(id, post) {
+    async replacePost(id, post, locale) {
       const existing = state.posts.find((p) => p.id === id);
       if (!existing) throw new Error('no post');
       Object.assign(existing, post);
+      state.postLocales.set(id, locale);
       return { id, slug: existing.slug };
     },
     async postForRegeneration(id) {

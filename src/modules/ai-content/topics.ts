@@ -26,7 +26,7 @@ export const AiTopics: CollectionConfig = {
   labels: { singular: { ar: 'موضوع', en: 'Topic' }, plural: { ar: 'المواضيع', en: 'Topics' } },
   admin: {
     useAsTitle: 'title',
-    defaultColumns: ['title', 'hub', 'status', 'priority', 'windowStart', 'post'],
+    defaultColumns: ['title', 'language', 'hub', 'status', 'priority', 'windowStart', 'post'],
     listSearchableFields: ['title', 'primaryKeyword'],
     group: AI_GROUP,
     hidden: hiddenUnlessAdmin,
@@ -51,6 +51,23 @@ export const AiTopics: CollectionConfig = {
     {
       type: 'row',
       fields: [
+        {
+          name: 'language',
+          type: 'select',
+          required: true,
+          defaultValue: 'ar',
+          options: [
+            { value: 'ar', label: { ar: 'العربية', en: 'Arabic' } },
+            { value: 'en', label: { ar: 'الإنجليزية', en: 'English' } },
+          ],
+          label: { ar: 'اللغة', en: 'Language' },
+          admin: {
+            description: {
+              ar: 'لغة المقال الذي سيُكتب: يُنشر على المدونة العربية أو الإنجليزية.',
+              en: 'The language the post is written in: it lands on the Arabic or the English blog.',
+            },
+          },
+        },
         {
           name: 'hub',
           type: 'relationship',

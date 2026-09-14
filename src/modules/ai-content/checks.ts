@@ -1,13 +1,15 @@
+import type { Locale } from '@/lib/i18n';
 import type { FactNumber, FactUnit } from '@/modules/ai-content/facts';
 
 /**
  * Deterministic checks on a draft (BRD 10.2.4 step 5, 10.2.5): the numbers a draft states
- * must exist on the facts sheet, banned phrases and Latin paragraphs cost points, em dashes
- * and AI mentions are refusals, and the length must fit. Pure; the model's rubric is added
- * on top by the review step.
+ * must exist on the facts sheet, banned phrases and paragraphs in the other script cost
+ * points, em dashes and AI mentions are refusals, and the length must fit. Pure; the model's
+ * rubric is added on top by the review step. The unit words, the script rule and the
+ * first-person promises follow the draft's language (ADR-043).
  */
 export interface Deduction {
-  rule: 'numbers' | 'bannedPhrase' | 'latin' | 'length' | 'emDash' | 'aiMention' | 'firstPerson';
+  rule: 'numbers' | 'bannedPhrase' | 'script' | 'length' | 'emDash' | 'aiMention' | 'firstPerson';
   points: number;
   detail: string;
 }
@@ -23,14 +25,20 @@ export interface CheckOptions {
   bannedPhrases: string[];
   minWords: number;
   maxWords: number;
+  /** The draft's language: the unit words, the script rule and the promises follow it. */
+  locale?: Locale;
 }
 
 const EM_DASH = String.fromCharCode(0x2014);
 const AI_MENTION = /ذكاء اصطناعي|الذكاء الاصطناعي|نموذج لغوي|\bAI\b|ChatGPT|GPT-|LLM/i;
 
 /** A number followed by a unit word: ريال, يوم, سم, غرام, منتج (with the Arabic suffixes). */
-const NUMBER_WITH_UNIT =
+const NUMBER_WITH_UNIT_AR =
   /(\d+(?:[.,]\d+)?)\s*(ريالاً|ريالات|ريال|يوماً|أيام|يوم|سم|غراماً|غرام|جم|منتجات|منتج)/g;
+
+/** The English forms: `SAR 45` or `45 SAR`/`45 riyals`, `5 days`, `28 cm`, `180 g`, `5 products`. */
+const NUMBER_WITH_UNIT_EN =
+  /(?:\b(SAR)\s*(\d+(?:[.,]\d+)?)|(\d+(?:[.,]\d+)?)\s*(SAR|riyals?|days?|cm|grams?|g|products?)\b)/g;
 
 const UNIT_OF: Record<string, FactUnit> = {
   ريال: 'sar',
@@ -45,18 +53,36 @@ const UNIT_OF: Record<string, FactUnit> = {
   جم: 'g',
   منتج: 'count',
   منتجات: 'count',
+  SAR: 'sar',
+  riyal: 'sar',
+  riyals: 'sar',
+  day: 'days',
+  days: 'days',
+  cm: 'cm',
+  g: 'g',
+  gram: 'g',
+  grams: 'g',
+  product: 'count',
+  products: 'count',
 };
 
 export function wordCount(text: string): number {
   return text.split(/\s+/).filter((w) => /[\p{L}\p{N}]/u.test(w)).length;
 }
 
-/** Every number-with-unit the draft states. */
-export function statedNumbers(text: string): Array<{ value: number; unit: FactUnit; raw: string }> {
+/** Every number-with-unit the draft states, in the draft's language. */
+export function statedNumbers(
+  text: string,
+  locale: Locale = 'ar',
+): Array<{ value: number; unit: FactUnit; raw: string }> {
   const out: Array<{ value: number; unit: FactUnit; raw: string }> = [];
-  for (const match of text.matchAll(NUMBER_WITH_UNIT)) {
-    const value = Number(match[1]!.replace(',', '.'));
-    const unit = UNIT_OF[match[2]!];
+  const pattern = locale === 'ar' ? NUMBER_WITH_UNIT_AR : NUMBER_WITH_UNIT_EN;
+  for (const match of text.matchAll(pattern)) {
+    const [, a, b, c, d] = match;
+    const rawValue = locale === 'ar' ? a : (b ?? c);
+    const rawUnit = locale === 'ar' ? b : (a ?? d);
+    const value = Number((rawValue ?? '').replace(',', '.'));
+    const unit = UNIT_OF[rawUnit ?? ''];
     if (unit && Number.isFinite(value)) out.push({ value, unit, raw: match[0] });
   }
   return out;
@@ -66,9 +92,10 @@ export function statedNumbers(text: string): Array<{ value: number; unit: FactUn
 export function unknownNumbers(
   text: string,
   facts: FactNumber[],
+  locale: Locale = 'ar',
 ): Array<{ value: number; unit: FactUnit; raw: string }> {
   const known = new Set(facts.map((f) => `${f.unit}:${f.value}`));
-  return statedNumbers(text).filter((n) => !known.has(`${n.unit}:${n.value}`));
+  return statedNumbers(text, locale).filter((n) => !known.has(`${n.unit}:${n.value}`));
 }
 
 /** Paragraphs (blank-line separated) with more Latin than Arabic letters and four Latin words. */
@@ -81,6 +108,19 @@ export function latinParagraphs(text: string): string[] {
       const latin = p.match(/[A-Za-z]/g)?.length ?? 0;
       const arabic = p.match(/[؀-ۿ]/g)?.length ?? 0;
       return words >= 4 && latin > arabic;
+    });
+}
+
+/** The mirror for an English draft: paragraphs with more Arabic letters and four Arabic words. */
+export function arabicParagraphs(text: string): string[] {
+  return text
+    .split(/\n\s*\n/)
+    .map((p) => p.trim())
+    .filter((p) => {
+      const words = p.match(/[؀-ۿ]{2,}/g)?.length ?? 0;
+      const latin = p.match(/[A-Za-z]/g)?.length ?? 0;
+      const arabic = p.match(/[؀-ۿ]/g)?.length ?? 0;
+      return words >= 4 && arabic > latin;
     });
 }
 
@@ -111,13 +151,17 @@ export function bannedPhrasesIn(text: string, phrases: string[]): string[] {
 }
 
 /** «نحن» claims outside the facts: a soft deduction, the review reads them against the sheet. */
-const FIRST_PERSON = /\b(نضمن|نعدك|نعدكم|نوعد)\b/g;
+const FIRST_PERSON: Record<Locale, RegExp> = {
+  ar: /\b(نضمن|نعدك|نعدكم|نوعد)\b/g,
+  en: /\b(we guarantee|we promise|guaranteed income|guaranteed sales)\b/gi,
+};
 
 export function checkDraft(text: string, facts: FactNumber[], options: CheckOptions): CheckResult {
+  const locale = options.locale ?? 'ar';
   const deductions: Deduction[] = [];
   const refused: string[] = [];
   const words = wordCount(text);
-  const unknown = unknownNumbers(text, facts);
+  const unknown = unknownNumbers(text, facts, locale);
   if (unknown.length > 0) {
     deductions.push({
       rule: 'numbers',
@@ -133,12 +177,12 @@ export function checkDraft(text: string, facts: FactNumber[], options: CheckOpti
       detail: `Banned phrases: ${banned.join(', ')}`,
     });
   }
-  const latin = latinParagraphs(text);
-  if (latin.length > 0) {
+  const foreign = locale === 'ar' ? latinParagraphs(text) : arabicParagraphs(text);
+  if (foreign.length > 0) {
     deductions.push({
-      rule: 'latin',
-      points: Math.min(25, latin.length * 10),
-      detail: `${latin.length} paragraph(s) in Latin script`,
+      rule: 'script',
+      points: Math.min(25, foreign.length * 10),
+      detail: `${foreign.length} paragraph(s) in ${locale === 'ar' ? 'Latin' : 'Arabic'} script`,
     });
   }
   if (words < options.minWords || words > options.maxWords) {
@@ -148,7 +192,7 @@ export function checkDraft(text: string, facts: FactNumber[], options: CheckOpti
       detail: `${words} words; ${options.minWords} to ${options.maxWords} expected`,
     });
   }
-  const promises = text.match(FIRST_PERSON) ?? [];
+  const promises = text.match(FIRST_PERSON[locale]) ?? [];
   if (promises.length > 0) {
     deductions.push({
       rule: 'firstPerson',

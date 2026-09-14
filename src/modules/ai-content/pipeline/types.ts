@@ -1,3 +1,4 @@
+import type { Locale } from '@/lib/i18n';
 import type { LexicalState } from '@/lib/lexical';
 import type { CapCounts } from '@/modules/ai-content/caps';
 import type { Rates, Usage } from '@/modules/ai-content/cost';
@@ -18,11 +19,7 @@ export interface EngineSettings {
   maxPostsPerMonth: number;
   dailyCostCapUsd: number;
   reviewFirstRuns: number;
-  styleGuide: string;
-  systemPrompt: string;
   systemPromptVersion: number;
-  bannedPhrases: string[];
-  bannedClaims: string;
   imageMode: 'hubDefault' | 'stock' | 'generate';
   imageStyle: string;
   pexelsKey: string | null;
@@ -35,9 +32,19 @@ export interface EngineSettings {
   failureAlerts: boolean;
 }
 
+/** The style of one language (ADR-043): the localised fields of the settings' style tab. */
+export interface EngineStyle {
+  styleGuide: string;
+  systemPrompt: string;
+  bannedPhrases: string[];
+  bannedClaims: string;
+}
+
 export interface Topic {
   id: number;
   title: string;
+  /** The language the post is written in; every read and write of the run follows it. */
+  language: Locale;
   hubId: number;
   primaryKeyword: string;
   secondaryKeywords: string[];
@@ -65,7 +72,8 @@ export interface Outline {
 
 export interface Rubric {
   facts: number;
-  arabic: number;
+  /** Clear, natural prose in the topic's language with no banned phrases (was `arabic`). */
+  language: number;
   structure: number;
   usefulness: number;
   formatting: number;
@@ -132,14 +140,16 @@ export interface MediaUpload {
  */
 export interface Store {
   settings(): Promise<EngineSettings>;
-  facts(): Promise<FactsSheet>;
+  /** The style tab in one language; the code defaults when the language was never filled. */
+  style(locale: Locale): Promise<EngineStyle>;
+  facts(locale: Locale): Promise<FactsSheet>;
   /**
    * Compare-and-set: the topic (given or the best backlog one) moves to `generating`, or
    * null. A `published` topic is only picked to regenerate its post.
    */
   pickTopic(now: Date, topicId?: number, regenerate?: boolean): Promise<Topic | null>;
-  publishedPosts(): Promise<PublishedPost[]>;
-  hub(id: number): Promise<HubInfo>;
+  publishedPosts(locale: Locale): Promise<PublishedPost[]>;
+  hub(id: number, locale: Locale): Promise<HubInfo>;
   authorId(): Promise<number>;
   slugTaken(slug: string): Promise<boolean>;
   counts(now: Date): Promise<CapCounts>;
@@ -157,11 +167,12 @@ export interface Store {
     id: number,
     patch: { status?: string; post?: number; lastRun?: number; lastError?: string | null },
   ): Promise<void>;
-  createPost(post: NewPost): Promise<{ id: number; slug: string }>;
+  createPost(post: NewPost, locale: Locale): Promise<{ id: number; slug: string }>;
   /** A regeneration: the same slug and cover, new content, keeps the id. */
   replacePost(
     id: number,
     post: Omit<NewPost, 'slug' | 'cover' | 'status'>,
+    locale: Locale,
   ): Promise<{ id: number; slug: string }>;
   /** The post's topic, slug, cover and the outline of its last successful run. */
   postForRegeneration(id: number): Promise<{

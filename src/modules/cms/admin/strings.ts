@@ -62,7 +62,7 @@ export const adminStrings = {
     importResult: '{created} added, {skipped} already there.',
     factsTitle: 'What the engine may say',
     factsHint:
-      'Built live from the site settings, the products and the integrations; every number a draft states is checked against this list.',
+      'Built live from the site settings, the products and the integrations, in Arabic and in English; every number a draft states is checked against this list.',
     factsNumbers: '{n} numbers on the sheet.',
     card: {
       title: 'Content engine',

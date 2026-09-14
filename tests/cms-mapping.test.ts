@@ -166,7 +166,6 @@ describe('globals', () => {
     const doc: SeoDefault = {
       id: 1,
       titleTemplate: '%s | بحر برنت',
-      defaultOgImage: '/og/default.png',
       routes: seo.map((r) => ({
         route: r.route,
         title: r.title,

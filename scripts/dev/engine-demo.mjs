@@ -7,7 +7,7 @@ import fs from 'node:fs';
 
 const BASE = process.env.BASE_URL ?? 'http://localhost:3004';
 const API = `${BASE}/api/payload`;
-const [, , command = 'run', countArg = '5'] = process.argv;
+const [, , command = 'run', countArg = '5', languageArg] = process.argv;
 /** `postsPerDay` tops out at 5 in the settings (BRD 10.2.1). */
 const DAY_MAX = 5;
 
@@ -43,7 +43,8 @@ const post = (path, data) =>
 const del = (path) => fetch(`${API}${path}`, { method: 'DELETE', headers: H });
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-async function run(count) {
+/** `run [n] [en]`: with a language, each run takes the best backlog topic of that language. */
+async function run(count, language) {
   if (count > DAY_MAX) {
     console.log(`${count} asked; the daily cap allows ${DAY_MAX}: running ${DAY_MAX}`);
     count = DAY_MAX;
@@ -58,10 +59,18 @@ async function run(count) {
   try {
     let lastSeen = (await get('/ai-runs?sort=-createdAt&limit=1')).docs[0]?.id ?? 0;
     for (let i = 0; i < count; i++) {
+      let body = {};
+      if (language) {
+        const topics = await get(
+          `/ai-topics?where[language][equals]=${language}&where[status][equals]=backlog&sort=-priority&limit=1`,
+        );
+        if (!topics.docs[0]) throw new Error(`no ${language} topic in the backlog`);
+        body = { topicId: topics.docs[0].id };
+      }
       const res = await fetch(`${BASE}/api/ai/generate`, {
         method: 'POST',
         headers: H,
-        body: JSON.stringify({}),
+        body: JSON.stringify(body),
       });
       if (res.status !== 202)
         throw new Error(`generate answered ${res.status}: ${await res.text()}`);
@@ -81,7 +90,7 @@ async function run(count) {
           )
         : null;
       console.log(
-        `${i + 1}/${count}: run ${latest?.id} ${latest?.status} score ${latest?.score ?? '-'} ${postDoc ? `/blog/${postDoc.slug}` : (latest?.error ?? '')}`,
+        `${i + 1}/${count}: run ${latest?.id} ${latest?.status} score ${latest?.score ?? '-'} ${postDoc ? `${language === 'en' ? '/en' : ''}/blog/${postDoc.slug}` : (latest?.error ?? '')}`,
       );
       if (latest?.status === 'skipped') break;
     }
@@ -118,4 +127,4 @@ async function clean() {
 }
 
 if (command === 'clean') await clean();
-else await run(Number(countArg));
+else await run(Number(countArg), languageArg === 'en' ? 'en' : undefined);

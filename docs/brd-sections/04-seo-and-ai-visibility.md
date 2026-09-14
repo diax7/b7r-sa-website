@@ -101,4 +101,6 @@ The key is served at `/indexnow/{INDEXNOW_KEY}.txt` by `app/indexnow/[key]/route
 
 ### 7.10 Explicitly not done
 
-`llms.txt` (no measured effect; optional later), `FAQPage`/`HowTo`/`SearchAction` schema, `Speakable`, Google Business Profile (no customer-facing premises), `LocalBusiness` schema (use `OnlineStore`).
+`FAQPage`/`HowTo`/`SearchAction` schema, `Speakable`, Google Business Profile (no customer-facing premises), `LocalBusiness` schema (use `OnlineStore`).
+
+*Amended 2026-09-14 (Level 5c, ADR-043): `llms.txt` is done after all, one per language (`/llms.txt`, `/en/llms.txt`), generated from the CMS (site settings, the SEO defaults' titles and descriptions, the pages, the catalogue with cost and suggested price, the published posts with excerpts) and regenerated with the listings on publish. The measured effect is still thin; the cost is one route per language.*

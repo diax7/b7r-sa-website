@@ -63,9 +63,44 @@ describe('deterministic checks (BRD 10.2.4 step 5)', () => {
       `عبارة ${dash} بشرطة. كتبه الذكاء الاصطناعي.`,
     ].join('\n\n');
     const result = checkDraft(text, FACTS.numbers, options);
-    expect(result.deductions.map((d) => d.rule)).toEqual(['numbers', 'bannedPhrase', 'latin']);
+    expect(result.deductions.map((d) => d.rule)).toEqual(['numbers', 'bannedPhrase', 'script']);
     expect(result.refused).toEqual(['An em dash in the text', 'A mention of AI in the text']);
     expect(deterministicScore(result)).toBe(100 - 10 - 5 - 10);
+  });
+
+  it('reads English units, the English banned phrases and Arabic paragraphs for an English draft (ADR-043)', () => {
+    expect(statedNumbers('It costs SAR 45, ships in 5 days and weighs 180 g.', 'en')).toEqual([
+      { value: 45, unit: 'sar', raw: 'SAR 45' },
+      { value: 5, unit: 'days', raw: '5 days' },
+      { value: 180, unit: 'g', raw: '180 g' },
+    ]);
+    expect(statedNumbers('A profit of 44 riyals on 5 products.', 'en').map((n) => n.unit)).toEqual([
+      'sar',
+      'count',
+    ]);
+    expect(unknownNumbers('Delivery in 3 days.', FACTS.numbers, 'en').map((n) => n.raw)).toEqual([
+      '3 days',
+    ]);
+    const text = [
+      'The cost is SAR 45 and the price is SAR 120.',
+      'Leverage this to unlock growth; we guarantee sales.',
+      'هذه فقرة كاملة مكتوبة بالعربية داخل مقال إنجليزي للاختبار.',
+    ].join('\n\n');
+    const result = checkDraft(text, FACTS.numbers, {
+      ...options,
+      locale: 'en',
+      bannedPhrases: ['leverage', 'unlock'],
+    });
+    expect(result.deductions.map((d) => d.rule)).toEqual([
+      'numbers',
+      'bannedPhrase',
+      'script',
+      'firstPerson',
+    ]);
+    expect(result.deductions.find((d) => d.rule === 'script')?.detail).toBe(
+      '1 paragraph(s) in Arabic script',
+    );
+    expect(result.deductions.find((d) => d.rule === 'numbers')?.detail).toContain('SAR 120');
   });
 
   it('matches banned phrases as whole words, and «هناك» at a sentence start only', () => {
@@ -273,11 +308,20 @@ describe('topics CSV', () => {
         secondaryKeywords: ['أ', 'ب'],
         intent: 'commercial',
         priority: 4,
+        language: 'ar',
       },
     ]);
     expect(errors).toEqual([
       'line 3: title, hub and primaryKeyword are required',
       'line 4: intent must be informational, commercial or seasonal',
     ]);
+  });
+
+  it('takes the language from a `language` column, Arabic by default, and refuses others (ADR-043)', () => {
+    const { rows, errors } = parseTopicsCsv(
+      'title,hub,primaryKeyword,secondaryKeywords,intent,priority,language\nEnglish topic,design,keyword,,informational,3,en\nعربي,design,كلمة,,informational,3\nOdd,design,k,,informational,3,fr',
+    );
+    expect(rows.map((r) => r.language)).toEqual(['en', 'ar']);
+    expect(errors).toEqual(['line 4: language must be ar or en']);
   });
 });

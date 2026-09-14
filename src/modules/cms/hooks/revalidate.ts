@@ -56,7 +56,7 @@ export async function pingPaths(
 export const PRODUCT_LISTINGS = ['/', '/products'] as const;
 
 /** Routes that render the products: home strip and designer, the listing, the sitemap. */
-export const PATHS_FOR_PRODUCTS = withEnglish([...PRODUCT_LISTINGS, '/sitemap.xml']);
+export const PATHS_FOR_PRODUCTS = withEnglish([...PRODUCT_LISTINGS, '/llms.txt', '/sitemap.xml']);
 
 /**
  * Every static route of the site: the globals feed the shell (header, footer, meta, the CTA
@@ -75,7 +75,12 @@ export const SITE_ROUTES = [
   '/shipping',
   '/privacy',
 ] as const;
-export const STATIC_ROUTES = withEnglish([...SITE_ROUTES, '/sitemap.xml', '/manifest.webmanifest']);
+export const STATIC_ROUTES = withEnglish([
+  ...SITE_ROUTES,
+  '/llms.txt',
+  '/sitemap.xml',
+  '/manifest.webmanifest',
+]);
 
 /** Routes that list the FAQ entries: the home accordion, the FAQ page, the mini FAQ. */
 export const PATHS_FOR_FAQS = ['/', '/faq', '/how-it-works'] as const;
@@ -191,7 +196,12 @@ export const EN_SLUGS_ENDPOINT = '/api/pages/slugs/en';
 
 /** A page's own route in both languages plus the sitemap and the proxy allowlists. */
 export function pathsForPage(slug: string): string[] {
-  return [...withEnglish([`/${slug}`]), '/sitemap.xml', SLUGS_ENDPOINT, EN_SLUGS_ENDPOINT];
+  return [
+    ...withEnglish([`/${slug}`, '/llms.txt']),
+    '/sitemap.xml',
+    SLUGS_ENDPOINT,
+    EN_SLUGS_ENDPOINT,
+  ];
 }
 
 /**
@@ -237,7 +247,7 @@ export const revalidateRedirects: CollectionAfterChangeHook & CollectionAfterDel
 };
 
 /** The blog's listing routes: the index, every paginated page, every hub page, the feed. */
-export const BLOG_LISTINGS = withEnglish(['/blog', '/feed.xml', '/sitemap.xml']);
+export const BLOG_LISTINGS = withEnglish(['/blog', '/feed.xml', '/llms.txt', '/sitemap.xml']);
 
 /** Dynamic listing routes revalidated as a whole (`revalidatePath(route, 'page')`). */
 export const BLOG_LISTING_PATTERNS = withEnglish([

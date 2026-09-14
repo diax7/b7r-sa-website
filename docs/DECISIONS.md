@@ -830,7 +830,7 @@ and `/en/*`, a later header route for the same key). **Copy per locale.** next-i
 server and passed to islands as small slices (`shellCopy`). A client component never imports
 a bank: the error boundaries read `content/copy/error-page.ts`, which both banks reference,
 because a bank import in a client file ships both languages to every page (16 KB gzipped,
-found by the blog's JS budget). Appendix H of the BRD is generated from the English bank by
+found by the blog's JS budget). Appendix I of the BRD is generated from the English bank by
 `pnpm copy:appendix`; `tests/content-verbatim` checks both banks. **Content per locale.**
 Payload's localisation already carried `en`; every public read now passes
 `publicRead(locale)` = `{ locale, fallbackLocale: false, draft: false, overrideAccess: true }`
@@ -877,7 +877,7 @@ Arabic site is byte-for-byte unchanged in body HTML for the five audited pages
 (`scripts/dev/golden.mjs diff`, one class added to the hero). **Known state**: the English
 pages share the Arabic-rendered Open Graph images (`public/og/**`, whose text is Arabic);
 English renders (`pnpm og --locale en`, `public/og/en/`) are the first task of 5b. **Owed
-Dhia's read**: the English bank (Appendix H), the English CMS content and the English legal
+Dhia's read**: the English bank (Appendix I), the English CMS content and the English legal
 drafts, which the agent wrote.
 
 **Amended 2026-09-14 (Phase 5b, the blog in English).** The blog routes exist under `/en`
@@ -914,3 +914,41 @@ editorial gate refused the first draft of one title at 73 characters, as it shou
 English search runs on the same fold (`fold` lower-cases and normalises Latin too). The
 engine's own checks stay Arabic until 5c. **Owed Dhia's read**: the English hub names and
 descriptions, the author's role and bio, and the three English posts.
+
+**Amended 2026-09-14 (Phase 5c, the engine in English, and `llms.txt`).** A topic carries its
+language (`ai-topics.language`, `ar` by default, in the CSV import as a seventh column), and
+every read and write of a run follows it: the facts sheet is built from the settings and the
+catalogue in that locale with its own wording and link targets under `/en/`; the hub and the
+published posts (for links and the dedupe) are read in that locale with the presence gate,
+so an Arabic title is no duplicate of an English topic; the post is written with
+`locale: 'en'` and lands on the English blog only. **The style tab is localised**
+(`styleGuide`, `systemPrompt`, `bannedPhrases`, `bannedClaims`, a data-carrying migration
+moved the Arabic values; `systemPromptVersion` stays shared): the admin edits each language
+under the panel's locale control, the code defaults per language (`DEFAULT_STYLE`) fill an
+empty language, and the seed writes the English defaults so they are visible. **Prompts**
+have an English set (`pipeline/prompts.ts`, a text table per locale; the header gains a
+`LANGUAGE:` line the mock switches its fixtures on); the rubric's `arabic` dimension is now
+`language` in both. **Checks** follow the language: English unit words (`SAR 45`, `45
+riyals`, `5 days`, `28 cm`, `180 g`, `5 products`), the banned phrases of that language's
+tab, first-person promises in English (`we guarantee`), and the script rule mirrored (the
+deduction is `script`: Latin paragraphs in Arabic, Arabic paragraphs in English); the em dash
+and the AI mention refuse in both. The slug comes from the model's proposal or the
+transliteration of the keyword, which passes Latin through. The run's label carries `[en]`,
+which the dashboard card and the digest show. **The English backlog** (Appendix E, fifteen
+topics aimed at BRD §7.7's English prompts) seeds beside the Arabic thirty; the three the
+Level 1 posts already cover in English seed `published` and linked, as the Arabic do. The
+review server wrote one English post from it with the mock at score 90; the cms e2e runs an
+English topic and proves the post is on `/en/blog` and in `/en/feed.xml` only, with no Arabic
+in its body. The freshness pass reads the Arabic sheet for drift (one catalogue, the same
+numbers in both languages) and regenerates a post in its topic's language. **Which language gets written** is
+the backlog's call, not the engine's: the hourly tick picks by priority then age across both
+backlogs, so at one post a day the Arabic thirty go first unless an English topic carries a
+higher priority; raise a topic's priority to write it sooner. No alternation rule until Dhia
+asks for one. **`llms.txt`**
+(BRD §7.10 reopened): one per language (`/llms.txt`, `/en/llms.txt`), built from the CMS the
+way the sitemap is (the site settings, the SEO defaults' titles and descriptions, the pages,
+the catalogue with cost and suggested price, the published posts with their excerpts),
+regenerated with the listings on every publish, never pinged (IndexNow gets pages only). The
+evidence that answer engines read it is thin; it costs one route per language and nothing on
+the page. **Owed Dhia's read**: the English style guide, system prompt, banned phrases and
+claims, the fifteen English topics, and the English `llms.txt` wording.

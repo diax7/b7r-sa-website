@@ -1,13 +1,8 @@
 import type { Field, GlobalConfig } from 'payload';
 import { hiddenUnlessAdmin, isAdmin } from '@/modules/cms/access';
 import { savedByField, stampSavedByGlobal } from '@/modules/cms/fields/saved-by';
-import {
-  DEFAULT_BANNED_CLAIMS,
-  DEFAULT_BANNED_PHRASES,
-  DEFAULT_IMAGE_STYLE,
-  DEFAULT_STYLE_GUIDE,
-  DEFAULT_SYSTEM_PROMPT,
-} from '@/modules/ai-content/prompts/defaults';
+import { requestLocale } from '@/lib/i18n';
+import { DEFAULT_IMAGE_STYLE, DEFAULT_STYLE } from '@/modules/ai-content/prompts/defaults';
 import { secretField } from '@/modules/ai-content/secret-field';
 
 export const AI_GROUP = { ar: 'المحتوى الآلي', en: 'AI content' };
@@ -233,12 +228,17 @@ export const AiSettings: GlobalConfig = {
         {
           label: { ar: 'اللغة والأسلوب', en: 'Language and style' },
           name: 'style',
+          description: {
+            ar: 'لكل لغة دليلها وتعليماتها وعباراتها الممنوعة: بدّل اللغة في أعلى الصفحة.',
+            en: 'Each language has its own guide, instructions and banned phrases: switch the locale at the top of the page.',
+          },
           fields: [
             {
               name: 'styleGuide',
               type: 'textarea',
               required: true,
-              defaultValue: DEFAULT_STYLE_GUIDE,
+              localized: true,
+              defaultValue: ({ locale }) => DEFAULT_STYLE[requestLocale(locale)].styleGuide,
               label: { ar: 'دليل الأسلوب', en: 'Style guide' },
               admin: { rows: 14 },
             },
@@ -249,7 +249,8 @@ export const AiSettings: GlobalConfig = {
                   name: 'systemPrompt',
                   type: 'textarea',
                   required: true,
-                  defaultValue: DEFAULT_SYSTEM_PROMPT,
+                  localized: true,
+                  defaultValue: ({ locale }) => DEFAULT_STYLE[requestLocale(locale)].systemPrompt,
                   label: { ar: 'التعليمات الأساسية', en: 'System prompt' },
                   admin: { rows: 8, width: '80%' },
                 },
@@ -266,7 +267,9 @@ export const AiSettings: GlobalConfig = {
               name: 'bannedPhrases',
               type: 'textarea',
               required: true,
-              defaultValue: DEFAULT_BANNED_PHRASES.join('\n'),
+              localized: true,
+              defaultValue: ({ locale }) =>
+                DEFAULT_STYLE[requestLocale(locale)].bannedPhrases.join('\n'),
               label: { ar: 'عبارات ممنوعة (سطر لكل عبارة)', en: 'Banned phrases (one per line)' },
               admin: { rows: 6 },
             },
@@ -274,7 +277,8 @@ export const AiSettings: GlobalConfig = {
               name: 'bannedClaims',
               type: 'textarea',
               required: true,
-              defaultValue: DEFAULT_BANNED_CLAIMS,
+              localized: true,
+              defaultValue: ({ locale }) => DEFAULT_STYLE[requestLocale(locale)].bannedClaims,
               label: { ar: 'ادعاءات ممنوعة', en: 'Banned claims' },
               admin: { rows: 8 },
             },

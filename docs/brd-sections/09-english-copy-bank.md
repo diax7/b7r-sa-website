@@ -1,4 +1,4 @@
-## 14. Appendix H: The English copy bank (Level 5, ADR-043)
+## 14. Appendix I: The English copy bank (Level 5, ADR-043)
 
 Every interface string of the English site, key for key with the Arabic bank of §4 (`src/content/copy/en.ts`, written to this table by `pnpm copy:appendix`); `tests/content-verbatim.test.ts` checks the code against this table. Brand in English: "B7R Print". The CMS content in English (products, pages, FAQ, home, settings) is seeded content owed Dhia's read (Appendix G pattern). Placeholders in braces are filled by the code.
 
@@ -189,4 +189,11 @@ Every interface string of the English site, key for key with the Arabic bank of 
 | `media.trustBadges.ministryOfCommerce` | Ministry of Commerce |
 | `media.trustBadges.misk` | Misk Foundation |
 | `media.sarAria` | Saudi riyal |
+| `llms.intro` | {brand} is a print-on-demand platform in Saudi Arabia: a merchant sells their design in their Salla, Zid or Shopify store, and we print the piece in {origin} and ship it under the store's name within {days} days at most inside the Kingdom. No stock and no minimum; the account is free with SAR {credit} of welcome credit. |
+| `llms.pages` | Pages |
+| `llms.products` | Products (merchant cost and suggested price in Saudi riyals) |
+| `llms.productLine` | {description} Cost SAR {cost}, suggested price SAR {price}. |
+| `llms.blog` | Blog |
+| `llms.otherLanguages` | Other languages |
+| `llms.otherLanguage` | Arabic version |
 | `dateLocale` | en-GB |

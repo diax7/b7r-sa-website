@@ -265,6 +265,17 @@ export const ar = {
     },
     sarAria: 'ريال سعودي',
   },
+  /** `/llms.txt` (BRD 7.10, ADR-043): the map of the site for answer engines. */
+  llms: {
+    intro:
+      '{brand} منصة طباعة عند الطلب في السعودية: التاجر يبيع تصميمه في متجره على سلة أو زد أو شوبيفاي، ونحن نطبع القطعة في {origin} ونشحنها باسم متجره خلال {days} أيام كحد أقصى داخل المملكة. لا مخزون ولا حد أدنى، والحساب مجاني برصيد ترحيبي {credit} ريالاً.',
+    pages: 'الصفحات',
+    products: 'المنتجات (التكلفة للتاجر والسعر المقترح بالريال السعودي)',
+    productLine: '{description} التكلفة {cost} ريالاً، السعر المقترح {price} ريالاً.',
+    blog: 'المدونة',
+    otherLanguages: 'لغات أخرى',
+    otherLanguage: 'النسخة الإنجليزية',
+  },
   /** The `Intl` tag for dates: Gregorian, Western digits (BRD 3.9). */
   dateLocale: 'ar-u-nu-latn-ca-gregory',
 };
