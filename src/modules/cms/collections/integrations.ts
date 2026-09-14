@@ -17,7 +17,7 @@ export const Integrations: CollectionConfig = {
     plural: { ar: 'المتاجر المتصلة', en: 'Integrations' },
   },
   admin: {
-    components: collectionLocaleNote,
+    components: collectionLocaleNote(),
     useAsTitle: 'name',
     defaultColumns: ['name', 'platform', 'order'],
     listSearchableFields: ['name'],

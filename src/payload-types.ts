@@ -1744,11 +1744,11 @@ export interface Home {
       headline: string;
       subline: string;
       /**
-       * Per language and required: the English site reads without fallback. The English photo is the mirrored composition (calm area on the left, under the copy).
+       * Per language (the English site has no fallback). English: the mirrored composition, calm area under the copy.
        */
       imageDesktop: number | Media;
       /**
-       * Per language and required: the English site reads without fallback. The English photo is the mirrored composition (calm area on the left, under the copy).
+       * Per language (the English site has no fallback). English: the mirrored composition, calm area under the copy.
        */
       imageMobile: number | Media;
       id?: string | null;

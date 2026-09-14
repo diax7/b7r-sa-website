@@ -15,7 +15,7 @@ export const Categories: CollectionConfig = {
   slug: 'categories',
   labels: { singular: { ar: 'قسم', en: 'Hub' }, plural: { ar: 'أقسام المدونة', en: 'Hubs' } },
   admin: {
-    components: collectionLocaleNote,
+    components: collectionLocaleNote(),
     useAsTitle: 'name',
     defaultColumns: ['name', 'slug', 'order', 'updatedAt'],
     listSearchableFields: ['name', 'slug'],

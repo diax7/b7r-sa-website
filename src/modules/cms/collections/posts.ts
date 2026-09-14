@@ -102,7 +102,7 @@ export const Posts: CollectionConfig = {
   slug: 'posts',
   labels: { singular: { ar: 'مقال', en: 'Post' }, plural: { ar: 'المقالات', en: 'Posts' } },
   admin: {
-    components: collectionLocaleNote,
+    components: collectionLocaleNote(),
     useAsTitle: 'title',
     preview: (doc, { req, locale }) =>
       typeof doc['slug'] === 'string' && doc['slug']

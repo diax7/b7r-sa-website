@@ -19,7 +19,7 @@ export const Products: CollectionConfig = {
   slug: 'products',
   labels: { singular: { ar: 'منتج', en: 'Product' }, plural: { ar: 'المنتجات', en: 'Products' } },
   admin: {
-    components: collectionLocaleNote,
+    components: collectionLocaleNote(),
     useAsTitle: 'name',
     preview: (doc, { req, locale }) =>
       typeof doc['slug'] === 'string' && doc['slug']

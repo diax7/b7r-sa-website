@@ -37,17 +37,23 @@ export function LanguageSwitch({
   const target = otherLocale(locale);
   const tag = languageTag(target);
   const pathname = usePathname();
-  const [fallback, setFallback] = useState<string | null>(null);
+  // The fallback remembers the pathname it was read for, so the frame between a navigation
+  // and the effect never shows the previous page's fallback.
+  const [fallback, setFallback] = useState<{ pathname: string; href: string } | null>(null);
   useEffect(() => {
     const twin = document.head.querySelector<HTMLLinkElement>(
       `link[rel="alternate"][hreflang="${tag}"]`,
     );
     // oxlint-disable-next-line react/set-state-in-effect -- reading the document once it exists is the intent
-    setFallback(twin ? null : fallbackPath(target, stripLocale(pathname).path));
+    setFallback(twin ? null : { pathname, href: fallbackPath(target, stripLocale(pathname).path) });
   }, [pathname, tag, target]);
+  const href =
+    fallback?.pathname === pathname
+      ? fallback.href
+      : localePath(target, stripLocale(pathname).path);
   return (
     <a
-      href={fallback ?? localePath(target, stripLocale(pathname).path)}
+      href={href}
       lang={tag}
       hrefLang={tag}
       aria-label={ariaLabel}

@@ -15,7 +15,7 @@ export const Authors: CollectionConfig = {
   slug: 'authors',
   labels: { singular: { ar: 'كاتب', en: 'Author' }, plural: { ar: 'الكتّاب', en: 'Authors' } },
   admin: {
-    components: collectionLocaleNote,
+    components: collectionLocaleNote(),
     useAsTitle: 'name',
     defaultColumns: ['name', 'role', 'slug', 'updatedAt'],
     listSearchableFields: ['name', 'slug'],

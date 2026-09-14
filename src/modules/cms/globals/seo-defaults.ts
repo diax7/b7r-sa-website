@@ -9,7 +9,7 @@ export const SeoDefaults: GlobalConfig = {
   slug: 'seo-defaults',
   label: { ar: 'إعدادات SEO', en: 'SEO defaults' },
   admin: {
-    components: globalLocaleNote,
+    components: globalLocaleNote(),
     group: { ar: 'الإعدادات', en: 'Settings' },
     hidden: hiddenUnlessAdmin,
     description: {

@@ -15,7 +15,7 @@ export const Media: CollectionConfig = {
   slug: 'media',
   labels: { singular: { ar: 'ملف وسائط', en: 'Media' }, plural: { ar: 'الوسائط', en: 'Media' } },
   admin: {
-    components: collectionLocaleNote,
+    components: collectionLocaleNote(),
     group: { ar: 'المحتوى', en: 'Content' },
     description: {
       ar: 'الصور والملفات المستخدمة في الصفحات والمنتجات. اكتب نصاً بديلاً لكل صورة.',

@@ -109,7 +109,7 @@ export const AiSettings: GlobalConfig = {
   slug: 'ai-settings',
   label: { ar: 'إعدادات المحرّك', en: 'Engine settings' },
   admin: {
-    components: globalLocaleNote,
+    components: globalLocaleNote(),
     group: AI_GROUP,
     hidden: hiddenUnlessAdmin,
     description: {

@@ -54,7 +54,7 @@ export const Faqs: CollectionConfig = {
     plural: { ar: 'الأسئلة الشائعة', en: 'FAQ' },
   },
   admin: {
-    components: collectionLocaleNote,
+    components: collectionLocaleNote(),
     useAsTitle: 'question',
     defaultColumns: ['question', 'group', 'order', 'showOnHome'],
     listSearchableFields: ['question'],

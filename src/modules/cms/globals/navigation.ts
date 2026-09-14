@@ -38,7 +38,7 @@ export const Navigation: GlobalConfig = {
   slug: 'navigation',
   label: { ar: 'التنقل', en: 'Navigation' },
   admin: {
-    components: globalLocaleNote,
+    components: globalLocaleNote(),
     group: { ar: 'الإعدادات', en: 'Settings' },
     hidden: hiddenUnlessAdmin,
     description: {

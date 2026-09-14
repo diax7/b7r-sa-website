@@ -14,7 +14,7 @@ export const SiteSettings: GlobalConfig = {
   slug: 'site-settings',
   label: { ar: 'إعدادات الموقع', en: 'Site settings' },
   admin: {
-    components: globalLocaleNote,
+    components: globalLocaleNote(),
     group: { ar: 'الإعدادات', en: 'Settings' },
     hidden: hiddenUnlessAdmin,
     description: {

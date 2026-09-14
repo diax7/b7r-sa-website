@@ -16,7 +16,7 @@ export const Testimonials: CollectionConfig = {
     plural: { ar: 'آراء التجار', en: 'Testimonials' },
   },
   admin: {
-    components: collectionLocaleNote,
+    components: collectionLocaleNote(),
     useAsTitle: 'name',
     defaultColumns: ['name', 'store', 'placeholder', 'order', '_status'],
     listSearchableFields: ['name', 'store'],

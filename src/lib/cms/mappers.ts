@@ -203,7 +203,7 @@ export function toHome(doc: HomeDoc, options: MapOptions = {}): Home {
       microcopy: doc.hero.microcopy,
       // The rows are shared by both languages, the text is per language: a row written on the
       // Arabic tab has no English text until an editor adds one, and hides until then.
-      chips: (doc.hero.chips ?? []).map((c) => c.text).filter((t) => t?.trim()),
+      chips: (doc.hero.chips ?? []).map((c) => c.text).filter((t): t is string => !!t?.trim()),
       overlay: {
         enabled: doc.hero.overlay?.enabled ?? true,
         color: doc.hero.overlay?.color ?? HERO_OVERLAY_DEFAULT,

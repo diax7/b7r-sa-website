@@ -52,7 +52,7 @@ export const Home: GlobalConfig = {
   slug: 'home',
   label: { ar: 'الصفحة الرئيسية', en: 'Home page' },
   admin: {
-    components: globalLocaleNote,
+    components: globalLocaleNote(),
     group: { ar: 'المحتوى', en: 'Content' },
     preview: (_doc, { req }) => previewUrl(req.payload.config.serverURL, '/', req.payload.secret),
     description: {
