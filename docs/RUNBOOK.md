@@ -31,6 +31,7 @@ production reaches after the first visitor), then runs `lhci autorun` with three
 ```bash
 docker compose up -d        # Postgres 16 on :5435 (db/user/password b7r) + MinIO on :9000/:9001
 pnpm migrate                # apply src/migrations to the database in DATABASE_URL
+                            # (content:migrate also seeds the blog: six hubs, the author, three posts)
 pnpm content:migrate        # seed products, media, the globals (home included), faqs, testimonials, integrations (create-only, ADR-026)
 pnpm admin:create           # first admin from ADMIN_EMAIL / ADMIN_PASSWORD (12+ chars, not breached)
 pnpm dev                    # admin at http://localhost:3004/admin (Arabic, RTL)

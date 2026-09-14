@@ -165,36 +165,71 @@ test.describe('legal pages (BRD 6.12)', () => {
   });
 });
 
-test.describe('blog (BRD 6.11)', () => {
-  test('index lists the three sample posts and filters by hub without a reload', async ({
+test.describe('blog (BRD 6.11, 10.1)', () => {
+  test('index: the newest post featured, the hub pages, the search island, the newsletter', async ({
     page,
   }) => {
     await page.goto('/blog');
-    const cards = page.locator('[data-post-grid] li:not([hidden])');
+    const cards = page.locator('[data-post-listing] [data-post-card]');
     await expect(cards).toHaveCount(3);
-    await page.locator('[data-hub-filter] a[href="?hub=pricing-profit"]').click();
-    await expect(page).toHaveURL(/\?hub=pricing-profit$/);
-    await expect(cards).toHaveCount(1);
-    await expect(cards.first()).toContainText('كيف تسعّر تيشيرت');
-    await page.locator('[data-hub-filter] a[href="?hub=seasons"]').click();
-    await expect(cards).toHaveCount(0);
+    await expect(page.locator('[data-post-card="featured"]')).toHaveCount(1);
+    // Hub chips are links to the hub pages (ADR-041): no query string, every page static.
+    await page.locator('[data-hub-chips] a[href="/blog/category/pricing-profit"]').click();
+    await expect(page).toHaveURL(/\/blog\/category\/pricing-profit$/);
+    await expect(page.locator('h1')).toHaveText('التسعير والربح');
+    await expect(page.locator('[data-post-grid] li')).toHaveCount(1);
+    await expect(page.locator('[data-post-grid] li').first()).toContainText('كيف تسعّر تيشيرت');
+    await page.locator('[data-hub-chips] a[href="/blog/category/seasons"]').click();
     await expect(page.locator('[data-hub-empty]')).toBeVisible();
-    await page.locator('[data-hub-filter] a[href="/blog"]').click();
+    await page.locator('[data-hub-chips] a[href="/blog"]').click();
     await expect(cards).toHaveCount(3);
-    // Deep link keeps the filter, and the full list is still in the HTML for crawlers.
-    await page.goto('/blog?hub=getting-started');
-    await expect(cards).toHaveCount(1);
-    expect(await page.locator('[data-post-grid] li').count()).toBe(3);
+    // The search island: results in place of the listing, the URL carries `q`, a deep link works.
+    const search = page.locator('[data-blog-search] input');
+    await search.fill('تسعير');
+    await expect(page.locator('[data-blog-results] a')).toHaveCount(1);
+    await expect(page.locator('[data-post-listing]')).toBeHidden();
+    await expect(page).toHaveURL(/\?q=/);
+    await search.fill('xyzxyz');
+    await expect(page.locator('[data-blog-results]')).toContainText('لا نتائج');
+    await page.goto('/blog?q=الطباعة');
+    await expect(page.locator('[data-blog-results] a')).toHaveCount(1);
     await expect(
       page.locator('[aria-labelledby="blog-newsletter-title"] [data-testid="newsletter-form"]'),
     ).toBeAttached();
+    // Pagination is static: page 1 is `/blog`, an out-of-range page is a 404.
+    expect((await page.request.get('/blog/page/1')).status()).toBe(404);
+    expect((await page.request.get('/blog/page/99')).status()).toBe(404);
+    expect((await page.request.get('/blog/category/nope')).status()).toBe(404);
   });
 
-  test('post template: takeaways, in-post CTA after the second H2, share, author, related', async ({
+  test('author page and feed', async ({ page, request }) => {
+    await page.goto('/author/dhia');
+    await expect(page.locator('h1')).toHaveText('ضياء');
+    await expect(page.locator('[data-post-grid] li')).toHaveCount(3);
+    const feed = await request.get('/feed.xml');
+    expect(feed.status()).toBe(200);
+    expect(feed.headers()['content-type']).toContain('application/rss+xml');
+    const xml = await feed.text();
+    expect(xml).toContain('<rss version="2.0"');
+    expect((xml.match(/<item>/g) ?? []).length).toBe(3);
+    expect(xml).toContain('<content:encoded><![CDATA[<p>');
+    // Every link inside the feed is absolute (a reader shows the post off-site).
+    expect(xml).not.toMatch(/href="\//);
+    expect(xml).toContain('href="https://b7r.sa/products/tee-essential"');
+  });
+
+  test('post template: takeaways, table of contents, in-post CTA after the second H2, share, author, related', async ({
     page,
     browserName,
+    isMobile,
   }) => {
     await page.goto('/blog/what-is-print-on-demand-saudi-examples');
+    // The table of contents: a rail beside the body on a desktop, a folded list on a phone,
+    // both pointing at the `section-n` ids the renderer gives the H2s.
+    const toc = page.locator(isMobile ? '[data-toc="folded"]' : '[data-toc="rail"]');
+    await expect(toc.locator('a')).toHaveCount(4);
+    await expect(toc.locator('a').first()).toHaveAttribute('href', '#section-1');
+    await expect(page.locator('article h2#section-1')).toBeAttached();
     await expect(page.locator('h1')).toHaveText(
       'ما هي الطباعة عند الطلب؟ شرح مبسط بالأمثلة السعودية',
     );
@@ -226,7 +261,7 @@ test.describe('blog (BRD 6.11)', () => {
         'https://b7r.sa/blog/what-is-print-on-demand-saudi-examples',
       );
     }
-    await expect(page.locator('[data-author] a[href="/about"]')).toHaveText('ضياء');
+    await expect(page.locator('[data-author] a[href="/author/dhia"]')).toHaveText('ضياء');
     await expect(page.locator('[aria-labelledby="related-title"] a[href^="/blog/"]')).toHaveCount(
       2,
     );

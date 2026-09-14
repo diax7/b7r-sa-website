@@ -1,7 +1,8 @@
+import { fold } from '@/lib/arabic-fold';
+
 /**
- * Ranking for the command palette (ADR-039): pure, unit-tested. Arabic is folded before
- * matching, diacritics dropped, hamza forms and alef maqsura unified, taa marbuta kept,
- * so «الاسئلة» finds «الأسئلة» and «سياسه» does not silently miss «سياسة».
+ * Ranking for the command palette (ADR-039): pure, unit-tested. Text is folded before
+ * matching (`lib/arabic-fold.ts`).
  */
 export interface Rankable {
   label: string;
@@ -10,19 +11,6 @@ export interface Rankable {
 }
 
 export const MIN_QUERY = 2;
-
-export function fold(text: string): string {
-  return text
-    .normalize('NFKC')
-    .toLowerCase()
-    .replace(/[ً-ْٰـ]/g, '')
-    .replace(/[أإآٱ]/g, 'ا')
-    .replace(/ى/g, 'ي')
-    .replace(/ؤ/g, 'و')
-    .replace(/ئ/g, 'ي')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
 
 /** 0 = no match; higher is better: prefix of the label > word start > substring > keywords. */
 export function score(query: string, item: Rankable): number {

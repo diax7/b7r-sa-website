@@ -5,7 +5,7 @@ import { Hamburger, Link, useNav, usePreferences, useWindowInfo } from '@payload
 import { ChevronDown, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { PREFERENCE_KEYS } from 'payload/shared';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Icon } from '@/components/shared/icon';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -59,10 +59,25 @@ export function NavClient({ groups, prefs, account, adminRoute }: NavClientProps
   // extras wait for a real measurement (the CSS rail does not).
   const drawer = breakpoints['l'] !== false;
   const rail = !navOpen && !drawer && hydrated;
-  // Payload's own toggler stores the state under the `nav` preference; so do we.
+  // The `nav` preference (Payload's own key) is written whole on every change, from one copy
+  // of the state: Payload's merge path batches and caches across writes, and two quick
+  // changes (a group, then the sidebar) could lose one.
+  const state = useRef<{ open: boolean; groups: Record<string, { open: boolean }> }>({
+    open: navOpen,
+    groups: Object.fromEntries(
+      Object.entries(prefs?.groups ?? {}).map(([label, g]) => [label, { open: g.open !== false }]),
+    ),
+  });
+  function persist(patch: Partial<typeof state.current>) {
+    state.current = { ...state.current, ...patch };
+    void setPreference(PREFERENCE_KEYS.NAV, state.current, false);
+  }
   function setOpen(next: boolean) {
     setNavOpen(next);
-    void setPreference(PREFERENCE_KEYS.NAV, { open: next }, true);
+    persist({ open: next });
+  }
+  function setGroupOpen(label: string, next: boolean) {
+    persist({ groups: { ...state.current.groups, [label]: { open: next } } });
   }
 
   return (
@@ -105,6 +120,7 @@ export function NavClient({ groups, prefs, account, adminRoute }: NavClientProps
                   key={group.label}
                   group={group}
                   open={prefs?.groups?.[group.label]?.open !== false}
+                  onToggle={(next) => setGroupOpen(group.label, next)}
                   pathname={pathname}
                   rail={rail}
                 />
@@ -199,21 +215,22 @@ function RailButton({
 function Group({
   group,
   open,
+  onToggle,
   pathname,
   rail,
 }: {
   group: NavGroup;
   open: boolean;
+  onToggle: (next: boolean) => void;
   pathname: string;
   rail: boolean;
 }) {
   const [isOpen, setIsOpen] = useState(open);
-  const { setPreference } = usePreferences();
   const GroupIcon = groupIcon(group.label);
 
   function toggle(next: boolean) {
     setIsOpen(next);
-    void setPreference(PREFERENCE_KEYS.NAV, { groups: { [group.label]: { open: next } } }, true);
+    onToggle(next);
   }
 
   return (

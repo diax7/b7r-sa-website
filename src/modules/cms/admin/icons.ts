@@ -4,12 +4,14 @@ import {
   Compass,
   Eye,
   FileText,
+  FolderTree,
   Heart,
   House,
   Image,
   LayoutGrid,
   type LucideIcon,
   MessageSquareQuote,
+  Newspaper,
   Plug,
   Search,
   Settings2,
@@ -17,7 +19,9 @@ import {
   ShieldCheck,
   Shirt,
   SlidersHorizontal,
+  Tag,
   Target,
+  UserPen,
   Users,
   Workflow,
   Zap,
@@ -41,6 +45,10 @@ export const COLLECTION_ICONS: Record<CollectionSlug, LucideIcon> = {
   media: Image,
   redirects: ArrowRightLeft,
   users: Users,
+  posts: Newspaper,
+  categories: FolderTree,
+  authors: UserPen,
+  tags: Tag,
 };
 
 export const GLOBAL_ICONS: Record<GlobalSlug, LucideIcon> = {
@@ -56,16 +64,18 @@ export const GLOBAL_ICONS: Record<GlobalSlug, LucideIcon> = {
  */
 export const ADMIN_GROUPS = {
   content: { ar: 'المحتوى', en: 'Content' },
+  blog: { ar: 'المدونة', en: 'Blog' },
   settings: { ar: 'الإعدادات', en: 'Settings' },
   administration: { ar: 'الإدارة', en: 'Administration' },
 } as const;
 
 export type AdminGroupKey = keyof typeof ADMIN_GROUPS;
 
-export const GROUP_ORDER: AdminGroupKey[] = ['content', 'settings', 'administration'];
+export const GROUP_ORDER: AdminGroupKey[] = ['content', 'blog', 'settings', 'administration'];
 
 export const GROUP_ICONS: Record<AdminGroupKey, LucideIcon> = {
   content: LayoutGrid,
+  blog: Newspaper,
   settings: SlidersHorizontal,
   administration: Shield,
 };
@@ -99,6 +109,10 @@ export const COLLECTION_HUES: Record<CollectionSlug, Hue> = {
   media: 'pink',
   redirects: 'blue',
   users: 'blue',
+  posts: 'violet',
+  categories: 'blue',
+  authors: 'pink',
+  tags: 'blue',
 };
 
 export const GLOBAL_HUES: Record<GlobalSlug, Hue> = {

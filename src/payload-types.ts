@@ -74,6 +74,10 @@ export interface Config {
     faqs: Faq;
     testimonials: Testimonial;
     integrations: Integration;
+    posts: Post;
+    categories: Category;
+    authors: Author;
+    tags: Tag;
     redirects: Redirect;
     'payload-kv': PayloadKv;
     'payload-jobs': PayloadJob;
@@ -90,6 +94,10 @@ export interface Config {
     faqs: FaqsSelect<false> | FaqsSelect<true>;
     testimonials: TestimonialsSelect<false> | TestimonialsSelect<true>;
     integrations: IntegrationsSelect<false> | IntegrationsSelect<true>;
+    posts: PostsSelect<false> | PostsSelect<true>;
+    categories: CategoriesSelect<false> | CategoriesSelect<true>;
+    authors: AuthorsSelect<false> | AuthorsSelect<true>;
+    tags: TagsSelect<false> | TagsSelect<true>;
     redirects: RedirectsSelect<false> | RedirectsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-jobs': PayloadJobsSelect<false> | PayloadJobsSelect<true>;
@@ -541,12 +549,190 @@ export interface Testimonial {
 export interface Integration {
   id: number;
   /**
-   * Selects the logo
+   * Selects the logo shown on the site
    */
   platform: 'salla' | 'zid' | 'shopify';
   order: number;
   name: string;
   nameLatin: string;
+  /**
+   * Who saved the current version and when. Drafts do not change it.
+   */
+  lastSavedBy?: {
+    name?: string | null;
+    at?: string | null;
+  };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Blog posts. Drafts stay private; publishing needs a cover, three takeaways and two internal links.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "posts".
+ */
+export interface Post {
+  id: number;
+  title: string;
+  /**
+   * lowercase-hyphenated; served at /blog/slug
+   */
+  slug: string;
+  /**
+   * One or two sentences on the post card and in search results.
+   */
+  excerpt: string;
+  hub: number | Category;
+  tags?: (number | Tag)[] | null;
+  /**
+   * The cover with its Arabic alt text in the library.
+   */
+  cover: number | Media;
+  takeaways: {
+    text: string;
+    id?: string | null;
+  }[];
+  /**
+   * H2s as questions, short paragraphs, at least two links to pages of this site.
+   */
+  body: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  };
+  author: number | Author;
+  /**
+   * Filled on the first publish when left empty.
+   */
+  publishedAt?: string | null;
+  /**
+   * Shown on the post when its content really changed.
+   */
+  contentUpdatedAt?: string | null;
+  readingMinutes?: number | null;
+  /**
+   * A change by an editor to an engine post marks it "engine, then edited" and exempts it from the freshness job.
+   */
+  origin: 'manual' | 'ai' | 'ai-edited';
+  warnings?:
+    | {
+        text?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Optional: the title and the excerpt are used when left empty.
+   */
+  seo?: {
+    title?: string | null;
+    description?: string | null;
+    ogImage?: (number | null) | Media;
+  };
+  /**
+   * Who saved the current version and when. Drafts do not change it.
+   */
+  lastSavedBy?: {
+    name?: string | null;
+    at?: string | null;
+  };
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * The six blog hubs. Each has its own page, description and default cover.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "categories".
+ */
+export interface Category {
+  id: number;
+  name: string;
+  /**
+   * lowercase-hyphenated; served at /blog/category/slug
+   */
+  slug: string;
+  /**
+   * One sentence under the hub title and on the blog cards.
+   */
+  description: string;
+  lead?: string | null;
+  /**
+   * Used when a post has no cover of its own.
+   */
+  defaultCover?: (number | null) | Media;
+  order: number;
+  /**
+   * Who saved the current version and when. Drafts do not change it.
+   */
+  lastSavedBy?: {
+    name?: string | null;
+    at?: string | null;
+  };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Optional tags that connect related posts.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "tags".
+ */
+export interface Tag {
+  id: number;
+  name: string;
+  /**
+   * lowercase-hyphenated
+   */
+  slug: string;
+  /**
+   * Who saved the current version and when. Drafts do not change it.
+   */
+  lastSavedBy?: {
+    name?: string | null;
+    at?: string | null;
+  };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Who signs the blog posts. Each author has a page on the site.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "authors".
+ */
+export interface Author {
+  id: number;
+  name: string;
+  /**
+   * lowercase-hyphenated; served at /author/slug
+   */
+  slug: string;
+  /**
+   * For example: founder of B7R Print
+   */
+  role: string;
+  bio?: string | null;
+  photo?: (number | null) | Media;
+  /**
+   * Public profiles (X, LinkedIn…) for the structured data of the page.
+   */
+  sameAs?:
+    | {
+        url: string;
+        id?: string | null;
+      }[]
+    | null;
   /**
    * Who saved the current version and when. Drafts do not change it.
    */
@@ -721,6 +907,22 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'integrations';
         value: number | Integration;
+      } | null)
+    | ({
+        relationTo: 'posts';
+        value: number | Post;
+      } | null)
+    | ({
+        relationTo: 'categories';
+        value: number | Category;
+      } | null)
+    | ({
+        relationTo: 'authors';
+        value: number | Author;
+      } | null)
+    | ({
+        relationTo: 'tags';
+        value: number | Tag;
       } | null)
     | ({
         relationTo: 'redirects';
@@ -1129,6 +1331,113 @@ export interface IntegrationsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "posts_select".
+ */
+export interface PostsSelect<T extends boolean = true> {
+  title?: T;
+  slug?: T;
+  excerpt?: T;
+  hub?: T;
+  tags?: T;
+  cover?: T;
+  takeaways?:
+    | T
+    | {
+        text?: T;
+        id?: T;
+      };
+  body?: T;
+  author?: T;
+  publishedAt?: T;
+  contentUpdatedAt?: T;
+  readingMinutes?: T;
+  origin?: T;
+  warnings?:
+    | T
+    | {
+        text?: T;
+        id?: T;
+      };
+  seo?:
+    | T
+    | {
+        title?: T;
+        description?: T;
+        ogImage?: T;
+      };
+  lastSavedBy?:
+    | T
+    | {
+        name?: T;
+        at?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "categories_select".
+ */
+export interface CategoriesSelect<T extends boolean = true> {
+  name?: T;
+  slug?: T;
+  description?: T;
+  lead?: T;
+  defaultCover?: T;
+  order?: T;
+  lastSavedBy?:
+    | T
+    | {
+        name?: T;
+        at?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "authors_select".
+ */
+export interface AuthorsSelect<T extends boolean = true> {
+  name?: T;
+  slug?: T;
+  role?: T;
+  bio?: T;
+  photo?: T;
+  sameAs?:
+    | T
+    | {
+        url?: T;
+        id?: T;
+      };
+  lastSavedBy?:
+    | T
+    | {
+        name?: T;
+        at?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "tags_select".
+ */
+export interface TagsSelect<T extends boolean = true> {
+  name?: T;
+  slug?: T;
+  lastSavedBy?:
+    | T
+    | {
+        name?: T;
+        at?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "redirects_select".
  */
 export interface RedirectsSelect<T extends boolean = true> {
@@ -1257,6 +1566,9 @@ export interface Home {
     cta: string;
   };
   steps: {
+    /**
+     * Off hides the “Three steps” section from the home page.
+     */
     enabled?: boolean | null;
     eyebrow: string;
     title: string;
@@ -1272,11 +1584,17 @@ export interface Home {
    * The loop itself ships with the site; only the copy lives here.
    */
   video: {
+    /**
+     * Off hides the “Video” section from the home page.
+     */
     enabled?: boolean | null;
     title: string;
     lead: string;
   };
   whyUs: {
+    /**
+     * Off hides the “Why us” section from the home page.
+     */
     enabled?: boolean | null;
     eyebrow: string;
     title: string;
@@ -1291,11 +1609,17 @@ export interface Home {
    * The entries live in Testimonials; the section title lives here.
    */
   testimonials: {
+    /**
+     * Off hides the “Testimonials” section from the home page.
+     */
     enabled?: boolean | null;
     eyebrow: string;
     title: string;
   };
   integrations: {
+    /**
+     * Off hides the “Integrations” section from the home page.
+     */
     enabled?: boolean | null;
     title: string;
     lead: string;
@@ -1304,6 +1628,9 @@ export interface Home {
    * The entries flagged «show on home» in the FAQ collection.
    */
   faq: {
+    /**
+     * Off hides the “FAQ” section from the home page.
+     */
     enabled?: boolean | null;
     title: string;
     link: string;
@@ -1754,6 +2081,10 @@ export interface TaskSchedulePublish {
       | ({
           relationTo: 'testimonials';
           value: number | Testimonial;
+        } | null)
+      | ({
+          relationTo: 'posts';
+          value: number | Post;
         } | null);
     global?: 'home' | null;
     user?: (number | null) | User;

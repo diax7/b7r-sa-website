@@ -77,6 +77,56 @@ const paragraph = (text: string) => ({
   },
 });
 
+/** A Lexical inline run: text, or a link around text. */
+const run = (t: string) => ({
+  type: 'text',
+  text: t,
+  format: 0,
+  detail: 0,
+  mode: 'normal',
+  style: '',
+  version: 1,
+});
+const link = (url: string, t: string) => ({
+  type: 'link',
+  version: 3,
+  format: '',
+  indent: 0,
+  direction: 'rtl',
+  fields: { linkType: 'custom', url, newTab: false },
+  children: [run(t)],
+});
+const block = (type: 'paragraph' | 'heading', children: unknown[], tag?: 'h2') => ({
+  type,
+  ...(tag ? { tag } : {}),
+  format: '',
+  indent: 0,
+  version: 1,
+  direction: 'rtl',
+  ...(type === 'paragraph' ? { textFormat: 0, textStyle: '' } : {}),
+  children,
+});
+/** A post body with three H2s and the internal links the editorial rules ask for. */
+const postBody = (extra: unknown[] = []) => ({
+  root: {
+    type: 'root',
+    format: '',
+    indent: 0,
+    version: 1,
+    direction: 'rtl',
+    children: [
+      block('paragraph', [run('مقدمة قصيرة عن الموضوع.')]),
+      block('heading', [run('ما الفكرة؟')], 'h2'),
+      block('paragraph', [run('اقرأ '), link('/how-it-works', 'كيف تعمل الخدمة'), run('.')]),
+      block('heading', [run('كيف أبدأ؟')], 'h2'),
+      block('paragraph', [run('ابدأ من '), link('/products', 'المنتجات'), run('.')]),
+      block('heading', [run('ماذا بعد؟')], 'h2'),
+      block('paragraph', [run('جرّب ثم عدّل.')]),
+      ...extra,
+    ],
+  },
+});
+
 test.describe('CMS admin', () => {
   // One admin account: parallel logins race on its sessions list (a later login can drop an
   // earlier session's id), and the publish test mutates shared content.
@@ -212,7 +262,7 @@ test.describe('CMS admin', () => {
     // Every entity link carries its icon; the current section is marked.
     const links = nav.locator('a[id^="nav-"]');
     expect(await links.count()).toBeGreaterThanOrEqual(12);
-    for (const link of await links.all()) await expect(link.locator('svg')).toHaveCount(1);
+    for (const entry of await links.all()) await expect(entry.locator('svg')).toHaveCount(1);
     await expect(nav.locator('a[aria-current="page"]')).toHaveText(/Pages/);
     // A sidebar click navigates inside the app: the page is not reloaded.
     await page.evaluate(() => {
@@ -245,6 +295,13 @@ test.describe('CMS admin', () => {
     await expect(nav.locator('#nav-pages')).toBeVisible();
     await expect(nav.locator('#nav-pages')).toHaveAttribute('aria-label', /Pages/);
     expect((await nav.boundingBox())!.width).toBeLessThan(100);
+    // The collapse writes the `nav` preference; wait for it before the reload reads it.
+    await expect
+      .poll(async () => {
+        const res = await request.get(`${API}/payload-preferences/nav`, { headers: adminAuth });
+        return ((await res.json()) as { value?: { open?: boolean } }).value?.open;
+      })
+      .toBe(false);
     await page.reload();
     await expect(page.locator('[data-admin-nav]')).toHaveAttribute('data-admin-rail', '');
     await page.locator('[data-admin-expand]').click();
@@ -339,7 +396,7 @@ test.describe('CMS admin', () => {
     await page.goto('/admin');
     const dashboard = page.locator('[data-admin-dashboard]');
     await expect(dashboard).toBeVisible();
-    for (const key of ['home', 'add-page', 'add-product', 'add-faq', 'media', 'site']) {
+    for (const key of ['home', 'add-page', 'add-product', 'add-faq', 'add-post', 'site']) {
       await expect(dashboard.locator(`[data-admin-action="${key}"]`)).toBeVisible();
     }
     await expect(dashboard.locator('[data-health-row="db"]')).toHaveAttribute(
@@ -1038,6 +1095,90 @@ test.describe('CMS admin', () => {
       await expect
         .poll(status('/old-e2e'), { intervals: [1_000, 2_000, 5_000], timeout: 45_000 })
         .toBe(404);
+    });
+
+    test('a post written in the admin: refused until it meets the rules, then live on every blog route; deleted, gone (BRD 10.1, ADR-041)', async ({
+      request,
+    }) => {
+      test.setTimeout(120_000);
+      const auth = await login(request, ADMIN);
+      const stamp = Date.now();
+      const slug = `post-e2e-${stamp}`;
+      const title = `مقال اختبار ${stamp}`;
+      const hubs = (await (
+        await request.get(`${API}/categories?limit=1`, { headers: auth })
+      ).json()) as {
+        docs: Array<{ id: number; slug: string }>;
+      };
+      const hub = hubs.docs[0]!;
+      const media = (await (
+        await request.get(`${API}/media?limit=1`, { headers: auth })
+      ).json()) as {
+        docs: Array<{ id: number }>;
+      };
+      const cover = media.docs[0]!.id;
+      const base = {
+        title,
+        slug,
+        excerpt: 'مقتطف قصير للاختبار.',
+        hub: hub.id,
+        cover,
+        takeaways: [{ text: 'أولاً' }, { text: 'ثانياً' }, { text: 'ثالثاً' }],
+      };
+      // A draft with no links saves; publishing it is refused with the reason.
+      const created = await request.post(`${API}/posts?draft=true`, {
+        headers: auth,
+        data: { ...base, _status: 'draft', body: paragraph('لا روابط هنا.') },
+      });
+      expect(created.status()).toBe(201);
+      const id = ((await created.json()) as { doc: { id: number } }).doc.id;
+      try {
+        const refused = await request.patch(`${API}/posts/${id}`, {
+          headers: auth,
+          data: { _status: 'published' },
+        });
+        expect(refused.status()).toBe(400);
+        expect(await refused.text()).toContain('at least 2 links');
+        // A competitor link is a warning, not a refusal; the warning is written on save.
+        const warned = await request.patch(`${API}/posts/${id}?draft=true`, {
+          headers: auth,
+          data: {
+            body: postBody([block('paragraph', [link('https://www.printful.com/x', 'Printful')])]),
+          },
+        });
+        expect(warned.status()).toBe(200);
+        const warnings = ((await warned.json()) as { doc: { warnings: Array<{ text: string }> } })
+          .doc.warnings;
+        expect(warnings.map((w) => w.text)).toEqual(['A link to a competitor: printful.com']);
+        // With the links, the publish goes through and every route shows the post.
+        const published = await request.patch(`${API}/posts/${id}`, {
+          headers: auth,
+          data: { body: postBody(), _status: 'published' },
+        });
+        expect(published.status()).toBe(200);
+        const doc = ((await published.json()) as { doc: Record<string, unknown> }).doc;
+        expect(doc['readingMinutes']).toBe(1);
+        expect(doc['publishedAt']).toBeTruthy();
+        expect(doc['warnings']).toEqual([]);
+        const status = async () => (await request.get(`/blog/${slug}`)).status();
+        await expect.poll(status, POLL).toBe(200);
+        const html = await (await request.get(`/blog/${slug}`)).text();
+        expect(html).toContain(title);
+        expect(html).toContain('id="section-1"');
+        for (const route of ['/blog', `/blog/category/${hub.slug}`, '/author/dhia', '/feed.xml']) {
+          await expect.poll(async () => (await request.get(route)).text(), POLL).toContain(title);
+        }
+        await expect
+          .poll(async () => (await request.get('/sitemap.xml')).text(), POLL)
+          .toContain(`/blog/${slug}`);
+        // Nothing public says a machine was involved (D-47), on the page or in the feed.
+        for (const surface of [html, await (await request.get('/feed.xml')).text()]) {
+          expect(surface).not.toMatch(/ذكاء اصطناعي|generated by|\bAI\b/);
+        }
+      } finally {
+        expect((await request.delete(`${API}/posts/${id}`, { headers: auth })).status()).toBe(200);
+      }
+      await expect.poll(async () => (await request.get(`/blog/${slug}`)).status(), POLL).toBe(404);
     });
 
     test('the jobs run endpoint answers nobody; health reports the cron', async ({ request }) => {

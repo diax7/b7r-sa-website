@@ -43,6 +43,9 @@ export const adminStrings = {
     by: 'by',
     never: 'No save recorded yet.',
   },
+  warnings: {
+    none: 'Nothing to flag.',
+  },
   dashboard: {
     greeting: 'Welcome, {name}',
     intro: 'Everything on the site starts here.',
@@ -52,7 +55,7 @@ export const adminStrings = {
       addPage: { title: 'Add a page', text: 'A new page with its own URL' },
       addProduct: { title: 'Add a product', text: 'Prices, photos and sizes' },
       addFaq: { title: 'Add a question', text: 'A new entry in the FAQ' },
-      media: { title: 'Upload a file', text: 'An image or a file for the pages' },
+      addPost: { title: 'Write a post', text: 'A new article on the blog' },
       site: { title: 'View website', text: 'As a visitor sees it' },
     },
     health: {

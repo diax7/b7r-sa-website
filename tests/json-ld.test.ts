@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { blogPosts } from '@/content/blog';
 import { products } from '@/content/seed/products';
 import { site } from '@/content/seed/site';
 import {
   blogPosting,
+  collectionPage,
+  profilePage,
   breadcrumbs,
   graph,
   itemList,
@@ -116,12 +117,44 @@ describe('JSON-LD builders (BRD 7.4)', () => {
     const page = webPage(BASE, '/faq', 'الأسئلة الشائعة', 'وصف', '2026-09-12');
     expectRequired(page);
     expect(page['dateModified']).toBe('2026-09-12');
-    for (const post of blogPosts) {
-      const node = blogPosting(BASE, post, 'ضياء', site);
-      expectRequired(node);
-      expect(node['author']).toEqual({ '@type': 'Person', name: 'ضياء', url: `${BASE}/about` });
-      expect(node['datePublished']).toMatch(/^\d{4}-\d{2}-\d{2}$/);
-    }
+    const author = {
+      slug: 'dhia',
+      name: 'ضياء',
+      role: 'مؤسس بحر برنت',
+      sameAs: ['https://x.com/b7rprint'],
+    };
+    const post = {
+      slug: 'how-to-price-printed-tshirt-saudi',
+      title: 'كيف تسعّر تيشيرت مطبوع في السعودية؟',
+      excerpt: 'ابدأ من التكلفة الأساسية.',
+      cover: { src: '/media/cover-pricing.jpg' },
+      publishedAt: '2026-09-13T09:00:00.000Z',
+      contentUpdatedAt: '2026-10-01T09:00:00.000Z',
+      author,
+    };
+    const node = blogPosting(BASE, post, site);
+    expectRequired(node);
+    expect(node['author']).toMatchObject({
+      '@type': 'Person',
+      name: 'ضياء',
+      url: `${BASE}/author/dhia`,
+      sameAs: ['https://x.com/b7rprint'],
+    });
+    expect(node['image']).toEqual([`${BASE}/media/cover-pricing.jpg`]);
+    expect(node['dateModified']).toBe('2026-10-01T09:00:00.000Z');
+    expect(blogPosting(BASE, { ...post, contentUpdatedAt: null }, site)['dateModified']).toBe(
+      post.publishedAt,
+    );
+    const profile = profilePage(BASE, author);
+    expect(profile['@type']).toBe('ProfilePage');
+    expect(profile['mainEntity']).toMatchObject({ '@type': 'Person', name: 'ضياء' });
+    const hub = collectionPage(
+      BASE,
+      { slug: 'pricing-profit', name: 'التسعير والربح', description: 'وصف' },
+      [post],
+    );
+    expect(hub['@type']).toBe('CollectionPage');
+    expect(hub['hasPart']).toEqual([{ '@id': `${BASE}/blog/${post.slug}#article` }]);
   });
 
   it('serialises one graph per page and escapes < so content cannot close the script', () => {

@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-import { blogPosts } from '@/content/blog';
 import { pages } from '@/content/seed/pages';
 import { products } from '@/content/seed/products';
 import { seo } from '@/content/seed/seo';
@@ -13,22 +12,41 @@ const BASE = 'https://b7r.sa';
 describe('sitemap (BRD 7.5)', () => {
   // The code-owned routes stay in seo-defaults; the seven designed pages are `pages` rows.
   const codeRoutes = seo.filter((s) => ['/', '/products', '/blog'].includes(s.route));
-  const entries = sitemapEntries(BASE, codeRoutes, pages, products);
+  const blog = {
+    posts: [
+      { slug: 'first-post', publishedAt: '2026-09-13T09:00:00.000Z', contentUpdatedAt: null },
+      {
+        slug: 'second-post',
+        publishedAt: '2026-09-14T09:00:00.000Z',
+        contentUpdatedAt: '2026-10-01T09:00:00.000Z',
+      },
+    ],
+    hubs: [{ slug: 'pricing-profit' }],
+    authors: [{ slug: 'dhia' }],
+  };
+  const entries = sitemapEntries(BASE, codeRoutes, pages, products, blog);
   const urls = entries.map((e) => e.url);
 
-  it('lists every static page, every product and every published post, nothing else', () => {
+  it('lists every static page, product, post, hub and author, nothing else', () => {
     for (const page of codeRoutes) {
       expect(urls).toContain(page.route === '/' ? BASE : `${BASE}${page.route}`);
     }
     for (const page of pages) expect(urls).toContain(`${BASE}/${page.slug}`);
     for (const p of products) expect(urls).toContain(`${BASE}/products/${p.slug}`);
-    expect(urls.filter((u) => u.includes('/blog/'))).toHaveLength(blogPosts.length);
+    expect(urls).toContain(`${BASE}/blog/first-post`);
+    expect(urls).toContain(`${BASE}/blog/category/pricing-profit`);
+    expect(urls).toContain(`${BASE}/author/dhia`);
+    expect(urls.some((u) => u.includes('/page/'))).toBe(false);
+    const second = entries.find((e) => e.url.endsWith('/blog/second-post'));
+    expect(second?.lastModified).toEqual(new Date('2026-10-01T09:00:00.000Z'));
     expect(urls.some((u) => u.includes('/api') || u.includes('?') || u.endsWith('/'))).toBe(false);
     expect(new Set(urls).size).toBe(urls.length);
   });
 
-  it('carries a full ISO timestamp per entry and product photos as image entries', () => {
-    for (const e of entries) expect(e.lastModified).toBeInstanceOf(Date);
+  it('carries a full ISO timestamp per dated entry and product photos as image entries', () => {
+    for (const e of entries) {
+      if (e.lastModified !== undefined) expect(e.lastModified).toBeInstanceOf(Date);
+    }
     expect(contentDate('2026-09-13').toISOString()).toBe('2026-09-13T00:00:00.000Z');
     const hoodie = entries.find((e) => e.url.endsWith('/products/hoodie'));
     expect(hoodie?.images).toEqual(
@@ -50,13 +68,13 @@ describe('robots (BRD 7.2)', () => {
     expect(robotsRules(false, BASE)).toEqual({ rules: { userAgent: '*', disallow: '/' } });
   });
 
-  it('allows the site, blocks the API, admin, hub filter and UTM variants, names the bots', () => {
+  it('allows the site, blocks the API, admin, the search query and UTM variants, names the bots', () => {
     const rules = robotsRules(true, BASE);
     const list = Array.isArray(rules.rules) ? rules.rules : [rules.rules];
     expect(list[0]).toEqual({
       userAgent: '*',
       allow: '/',
-      disallow: ['/api/', '/admin/', '/*?hub=', '/*&utm_'],
+      disallow: ['/api/', '/admin/', '/*?q=', '/*&utm_'],
     });
     for (const bot of ANSWER_ENGINE_BOTS) {
       expect(list.find((r) => r.userAgent === bot)?.allow).toBe('/');

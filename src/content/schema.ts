@@ -334,7 +334,22 @@ export const PageSchema = z.object({
 });
 export type Page = z.infer<typeof PageSchema>;
 
-export const BlogHubSchema = z.object({ slug: slug, name: nonEmpty });
+export const BlogHubSchema = z.object({
+  slug: slug,
+  name: nonEmpty,
+  description: nonEmpty,
+  lead: nonEmpty,
+  cover: publicPath,
+});
+export type BlogHub = z.infer<typeof BlogHubSchema>;
+
+export const BlogAuthorSchema = z.object({
+  slug: slug,
+  name: nonEmpty,
+  role: nonEmpty,
+  bio: nonEmpty,
+});
+export type BlogAuthor = z.infer<typeof BlogAuthorSchema>;
 
 export const BlogPostSchema = z.object({
   slug: slug,

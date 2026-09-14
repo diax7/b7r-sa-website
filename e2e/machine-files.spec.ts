@@ -43,7 +43,7 @@ test.describe('machine files (BRD 7.2, 7.3, 7.5, 7.6)', () => {
     const production = text.includes('Sitemap: https://b7r.sa/sitemap.xml');
     if (production) {
       expect(text).toContain('Disallow: /api/');
-      expect(text).toContain('Disallow: /*?hub=');
+      expect(text).toContain('Disallow: /*?q=');
       expect(text).toContain('User-Agent: OAI-SearchBot');
       expect(text).toContain('User-Agent: PerplexityBot');
     } else {
@@ -102,6 +102,7 @@ test.describe('machine files (BRD 7.2, 7.3, 7.5, 7.6)', () => {
     expect(home).toContain('<title>بحر برنت: منصة الطباعة عند الطلب في السعودية</title>');
     const post = await (await request.get('/blog/how-to-price-printed-tshirt-saudi')).text();
     expect(post).toContain('<meta property="og:type" content="article"');
-    expect(post).toContain('<meta property="article:published_time" content="2026-09-13"');
+    expect(post).toMatch(/<meta property="article:published_time" content="2026-09-13/);
+    expect(post).toContain('<link rel="alternate" type="application/rss+xml"');
   });
 });

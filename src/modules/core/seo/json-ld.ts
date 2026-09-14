@@ -1,6 +1,32 @@
-import type { BlogPost, Product, SiteSettings } from '@/content/schema';
+import type { Product, SiteSettings } from '@/content/schema';
 import { MERCHANT_COST_NOTE } from '@/content/seo-copy';
 import { absoluteUrl } from '@/lib/absolute-url';
+
+/** What the blog nodes need of a post, an author and a hub (`lib/cms/blog.ts` shapes). */
+export interface PostForSchema {
+  slug: string;
+  title: string;
+  excerpt: string;
+  cover: { src: string };
+  publishedAt: string;
+  contentUpdatedAt: string | null;
+  author: AuthorForSchema;
+}
+
+export interface AuthorForSchema {
+  slug: string;
+  name: string;
+  role: string;
+  bio?: string | null;
+  photo?: string | null;
+  sameAs?: string[];
+}
+
+export interface HubForSchema {
+  slug: string;
+  name: string;
+  description: string;
+}
 
 /**
  * JSON-LD builders (BRD 7.4). Each page renders exactly one `<script type="application/ld+json">`
@@ -145,12 +171,20 @@ export function webPage(
   };
 }
 
-export function blogPosting(
-  base: string,
-  post: BlogPost,
-  authorName: string,
-  site: SiteSettings,
-): JsonLdNode {
+export function person(base: string, author: AuthorForSchema): JsonLdNode {
+  return {
+    '@type': 'Person',
+    '@id': `${base}/author/${author.slug}#person`,
+    name: author.name,
+    jobTitle: author.role,
+    url: `${base}/author/${author.slug}`,
+    ...(author.bio ? { description: author.bio } : {}),
+    ...(author.photo ? { image: absoluteUrl(base, author.photo) } : {}),
+    ...(author.sameAs && author.sameAs.length > 0 ? { sameAs: author.sameAs } : {}),
+  };
+}
+
+export function blogPosting(base: string, post: PostForSchema, site: SiteSettings): JsonLdNode {
   const url = `${base}/blog/${post.slug}`;
   return {
     '@type': 'BlogPosting',
@@ -158,16 +192,49 @@ export function blogPosting(
     mainEntityOfPage: url,
     headline: post.title,
     description: post.excerpt,
-    image: [absoluteUrl(base, post.cover)],
+    image: [absoluteUrl(base, post.cover.src)],
     datePublished: post.publishedAt,
-    dateModified: post.updatedAt,
+    dateModified: post.contentUpdatedAt ?? post.publishedAt,
     inLanguage: 'ar',
-    author: { '@type': 'Person', name: authorName, url: `${base}/about` },
+    author: person(base, post.author),
     publisher: {
       '@type': 'Organization',
       name: site.brandName,
       logo: { '@type': 'ImageObject', url: `${base}${LOGO_PATH}` },
     },
+  };
+}
+
+/** The author page (BRD 10.1): a `ProfilePage` whose main entity is the person. */
+export function profilePage(base: string, author: AuthorForSchema): JsonLdNode {
+  const url = `${base}/author/${author.slug}`;
+  return {
+    '@type': 'ProfilePage',
+    '@id': `${url}#profile`,
+    url,
+    name: author.name,
+    inLanguage: 'ar',
+    isPartOf: { '@id': `${base}/#website` },
+    mainEntity: person(base, author),
+  };
+}
+
+/** A hub page: a `CollectionPage` listing its posts. */
+export function collectionPage(
+  base: string,
+  hub: HubForSchema,
+  posts: Array<Pick<PostForSchema, 'slug'>>,
+): JsonLdNode {
+  const url = `${base}/blog/category/${hub.slug}`;
+  return {
+    '@type': 'CollectionPage',
+    '@id': `${url}#collection`,
+    url,
+    name: hub.name,
+    description: hub.description,
+    inLanguage: 'ar',
+    isPartOf: { '@id': `${base}/#website` },
+    hasPart: posts.map((post) => ({ '@id': `${base}/blog/${post.slug}#article` })),
   };
 }
 

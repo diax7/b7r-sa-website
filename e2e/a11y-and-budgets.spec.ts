@@ -133,6 +133,34 @@ test.describe('budgets (BRD 7.8, constitution IV)', () => {
     });
   });
 
+  test('the blog index prerenders and its search island stays small (ADR-041)', async ({
+    page,
+  }) => {
+    const res = await page.request.get('/blog');
+    expect(res.headers()['x-nextjs-cache']).toMatch(/HIT|STALE/);
+    const js: Array<{ url: string; bytes: number }> = [];
+    await page.route('**/*', (route) => {
+      const headers = route.request().headers();
+      if (headers['next-router-prefetch'] || headers['rsc']) return route.abort();
+      return route.continue();
+    });
+    page.on('response', async (r) => {
+      if (r.request().resourceType() !== 'script') return;
+      try {
+        js.push({ url: r.url(), bytes: (await r.request().sizes()).responseBodySize });
+      } catch {
+        // Cached or aborted responses have no sizes; ignore.
+      }
+    });
+    await page.goto('/blog');
+    await page.waitForLoadState('load');
+    await page.waitForTimeout(1500);
+    const jsTotal = js.reduce((n, r) => n + r.bytes, 0);
+    expect(jsTotal, js.map((r) => `${r.bytes}\t${r.url}`).join('\n')).toBeLessThanOrEqual(
+      180 * 1024,
+    );
+  });
+
   test('CMS pages ship no editor or rich-text JS: their blocks render on the server', async ({
     page,
   }) => {
@@ -140,7 +168,7 @@ test.describe('budgets (BRD 7.8, constitution IV)', () => {
     page.on('request', (r) => {
       if (r.resourceType() === 'script') scripts.push(r.url());
     });
-    for (const path of ['/how-it-works', '/terms']) {
+    for (const path of ['/how-it-works', '/terms', '/blog/how-to-price-printed-tshirt-saudi']) {
       await page.goto(path);
       await page.waitForLoadState('load');
     }

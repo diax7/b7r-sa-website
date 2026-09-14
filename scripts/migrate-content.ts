@@ -11,7 +11,9 @@
 import { readFileSync } from 'node:fs';
 import { basename, dirname, extname, join } from 'node:path';
 import nextEnv from '@next/env';
+import { convertMarkdownToLexical, editorConfigFactory } from '@payloadcms/richtext-lexical';
 import { getPayload, type Payload } from 'payload';
+import { blogAuthor, blogHubs, blogPostBody, blogPosts } from '../src/content/seed/blog';
 import { faq } from '../src/content/seed/faq';
 import { home } from '../src/content/seed/home';
 import { integrations } from '../src/content/seed/integrations';
@@ -25,6 +27,9 @@ import { SEO_TITLE_TEMPLATE } from '../src/content/seo-copy';
 import {
   RESERVED_PAGE_SLUGS,
   type Block,
+  type BlogAuthor,
+  type BlogHub,
+  type BlogPost,
   type FaqItem,
   type Integration,
   type Page,
@@ -491,12 +496,129 @@ async function ensurePage(payload: Payload, page: Page): Promise<void> {
   summary.created.push(`page ${page.slug}`);
 }
 
+/** Alt text for a hub or post cover (agent-written, Appendix G): the photo, not the topic. */
+const COVER_ALT: Record<string, string> = {
+  '/images/lifestyle/cover-start-brand.jpg': 'تيشيرت مطبوع معلّق على شمّاعة خشبية',
+  '/images/lifestyle/cover-print-on-demand.jpg': 'طابعة رقمية تطبع تصميماً على تيشيرت أبيض',
+  '/images/lifestyle/cover-pricing.jpg': 'آلة حاسبة وتيشيرت مطبوع على طاولة',
+  '/images/lifestyle/hanging-tshirt-mockup.jpg': 'تيشيرت أسود معلّق مطبوع عليه تصميم جدة',
+};
+
+function coverAlt(path: string): string {
+  return COVER_ALT[path] ?? 'غلاف المقال';
+}
+
+async function ensureHub(payload: Payload, hub: BlogHub, order: number): Promise<number> {
+  const existing = await payload.find({
+    collection: 'categories',
+    where: { slug: { equals: hub.slug } },
+    limit: 1,
+    depth: 0,
+  });
+  if (existing.docs[0]) {
+    summary.skipped.push(`hub ${hub.slug}`);
+    return existing.docs[0].id;
+  }
+  const doc = await payload.create({
+    collection: 'categories',
+    data: {
+      slug: hub.slug,
+      name: hub.name,
+      description: hub.description,
+      lead: hub.lead,
+      defaultCover: await ensureMedia(payload, hub.cover, coverAlt(hub.cover)),
+      order,
+    },
+    context: CONTEXT,
+  });
+  summary.created.push(`hub ${hub.slug}`);
+  return doc.id;
+}
+
+async function ensureAuthor(payload: Payload, author: BlogAuthor): Promise<number> {
+  const existing = await payload.find({
+    collection: 'authors',
+    where: { slug: { equals: author.slug } },
+    limit: 1,
+    depth: 0,
+  });
+  if (existing.docs[0]) {
+    summary.skipped.push(`author ${author.slug}`);
+    return existing.docs[0].id;
+  }
+  const doc = await payload.create({
+    collection: 'authors',
+    data: { slug: author.slug, name: author.name, role: author.role, bio: author.bio },
+    context: CONTEXT,
+  });
+  summary.created.push(`author ${author.slug}`);
+  return doc.id;
+}
+
+/**
+ * A Level 1 post into the CMS: Markdown → Lexical through the posts editor's own config, so
+ * the seed produces the tree an editor would; published because it is live today; `origin:
+ * ai` because it was machine-written (ADR-018, ADR-041), still owed Dhia's read.
+ */
+async function ensurePost(
+  payload: Payload,
+  post: BlogPost,
+  hubs: Map<string, number>,
+  author: number,
+): Promise<void> {
+  const existing = await payload.find({
+    collection: 'posts',
+    where: { slug: { equals: post.slug } },
+    limit: 1,
+    depth: 0,
+    draft: true,
+  });
+  if (existing.docs[0]) {
+    summary.skipped.push(`post ${post.slug}`);
+    return;
+  }
+  const hub = hubs.get(post.hub);
+  if (!hub) throw new Error(`seed posts: ${post.slug} names an unknown hub ${post.hub}`);
+  const field = payload.collections['posts']?.config.fields.find(
+    (f) => 'name' in f && f.name === 'body',
+  );
+  if (!field || field.type !== 'richText') throw new Error('seed posts: no body field');
+  const editorConfig = editorConfigFactory.fromField({ field });
+  const body = convertMarkdownToLexical({ editorConfig, markdown: blogPostBody(post.slug) });
+  await payload.create({
+    collection: 'posts',
+    data: {
+      slug: post.slug,
+      title: post.title,
+      excerpt: post.excerpt,
+      hub,
+      author,
+      cover: await ensureMedia(payload, post.cover, coverAlt(post.cover)),
+      takeaways: post.takeaways.map((text) => ({ text })),
+      body: body as never,
+      publishedAt: `${post.publishedAt}T09:00:00.000Z`,
+      origin: 'ai',
+      _status: 'published',
+    },
+    context: CONTEXT,
+  });
+  summary.created.push(`post ${post.slug}`);
+}
+
+async function ensureBlog(payload: Payload): Promise<void> {
+  const hubs = new Map<string, number>();
+  for (const [i, hub] of blogHubs.entries())
+    hubs.set(hub.slug, await ensureHub(payload, hub, i + 1));
+  const author = await ensureAuthor(payload, blogAuthor);
+  for (const post of blogPosts) await ensurePost(payload, post, hubs, author);
+}
+
 async function main(): Promise<number> {
   // Imported after the env files are loaded: the config reads DATABASE_URL and the secret at import.
   const { default: config } = await import('../src/payload.config');
   const payload = await getPayload({ config });
   const counts = await Promise.all(
-    (['products', 'pages', 'faqs', 'testimonials', 'integrations'] as const).map((c) =>
+    (['products', 'pages', 'faqs', 'testimonials', 'integrations', 'posts'] as const).map((c) =>
       payload.count({ collection: c }).then((r) => r.totalDocs),
     ),
   );
@@ -524,6 +646,7 @@ async function main(): Promise<number> {
   for (const item of faq) await ensureFaq(payload, item);
   for (const [i, item] of testimonials.entries()) await ensureTestimonial(payload, item, i + 1);
   for (const [i, item] of integrations.entries()) await ensureIntegration(payload, item, i + 1);
+  await ensureBlog(payload);
   console.warn(
     `content:migrate: created ${summary.created.length}, skipped ${summary.skipped.length}.` +
       (summary.created.length ? `\n  created: ${summary.created.join(', ')}` : '') +

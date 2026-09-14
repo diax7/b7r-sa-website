@@ -83,6 +83,6 @@ export const config = {
     '/wp-admin/:path*',
     '/wp-json/:path*',
     // Top-level slug candidates: one segment, none of the code-owned names, no dot (files).
-    '/((?!(?:about|how-it-works|contact|faq|terms|shipping|privacy|products|blog|admin|api|_next|og|images|fonts|media|video|__404|en)$)(?!.*\\.)[^/]+)',
+    '/((?!(?:about|how-it-works|contact|faq|terms|shipping|privacy|products|blog|author|admin|api|_next|og|images|fonts|media|video|__404|en)$)(?!.*\\.)[^/]+)',
   ],
 };

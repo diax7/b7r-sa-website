@@ -3,24 +3,24 @@
 Branches `level-3/blog`, `level-3/engine`, `level-3/live`. CTO: plan 87 → amended.
 
 ## Phase 3a: the blog in the CMS
-- [ ] T101 Collections `categories`, `authors`, `tags`, `posts` (fields, access, preview,
+- [x] T101 Collections `categories`, `authors`, `tags`, `posts` (fields, access, preview,
   hooks); `fields/editorial.ts` (hard rules + warnings, unit-tested); `revalidatePosts`;
   icons, hues, the Blog group; one migration; `generate:types`, `generate:importmap`.
-- [ ] T102 `src/lib/lexical/*` (headings, split, plaintext) and `modules/core/rich-text`
+- [x] T102 `src/lib/lexical/*` (headings, split, plaintext) and `modules/core/rich-text`
   (the shared Lexical renderer with heading ids); the pages block uses it.
-- [ ] T103 `lib/cms/blog.ts` (posts with pagination, hub, tag, search; categories; author;
+- [x] T103 `lib/cms/blog.ts` (posts with pagination, hub, tag, search; categories; author;
   related; adjacent) and the view types.
-- [ ] T104 Routes and templates: `/blog` (chips, featured, grid, the search island),
+- [x] T104 Routes and templates: `/blog` (chips, featured, grid, the search island),
   `/blog/page/[n]`, `/blog/category/[hub]` (+ `/page/[n]`), `/blog/[slug]` (TOC, reading
   time, updated date, CTA after the second H2, related, previous/next), `/author/[slug]`,
   `/feed.xml` (absolute URLs); sitemap; JSON-LD; `author` in `CODE_TOP_LEVEL` and the proxy;
   the build lists every blog route static.
-- [ ] T105 Seed: hubs (copy written and listed for Dhia), the author, the three posts
+- [x] T105 Seed: hubs (copy written and listed for Dhia), the author, the three posts
   (Markdown → Lexical, covers into media); `src/content/blog/posts` and `load.ts` removed;
   seed-check green.
-- [ ] T106 Admin: "Write a post" quick action, palette fields; e2e (publish flow, five routes,
+- [x] T106 Admin: "Write a post" quick action, palette fields; e2e (publish flow, five routes,
   the feed, refusals, the no-AI grep); unit tests.
-- [ ] T107 Docs: ADR-041, BRD §6.11/§10.1 amendments (sections, rebuild, copy), design system,
+- [x] T107 Docs: ADR-041, BRD §6.11/§10.1 amendments (sections, rebuild, copy), design system,
   RUNBOOK, IDEAS.
 
 ## Phase 3b: the engine, mocked
