@@ -40,8 +40,10 @@ export function newsletterCopy(locale: Locale) {
 }
 
 /**
- * Site footer (BRD 6.3.2, copy 4.5). Navy, four columns, badges strip, contact line. The
- * newsletter form is passed in by the layout so `core` never imports a feature module.
+ * Site footer (BRD 6.3.2, copy 4.5, ADR-044). Navy; four columns from `lg`. Below that the
+ * brand block spans the row and centres, the links and the policies share one row in two
+ * columns, the newsletter spans, the badges centre. The newsletter form is passed in by the
+ * layout so `core` never imports a feature module.
  */
 export function Footer({
   newsletter,
@@ -72,8 +74,8 @@ export function Footer({
   return (
     <footer className="bg-navy text-white/90">
       <Container className="pt-16 pb-10 md:pt-20">
-        <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1.4fr] lg:gap-8">
-          <div className="flex flex-col items-start gap-5">
+        <div className="grid grid-cols-2 gap-x-6 gap-y-12 lg:grid-cols-[1.4fr_1fr_1fr_1.4fr] lg:gap-8">
+          <div className="col-span-2 flex flex-col items-center gap-5 text-center lg:col-span-1 lg:items-start lg:text-start">
             <Link
               href={localePath(locale, '/')}
               className="inline-block rounded-inner"
@@ -84,7 +86,7 @@ export function Footer({
                 alt=""
                 width={220}
                 height={80}
-                className="h-10 w-auto"
+                className="h-12 w-auto"
               />
             </Link>
             <p className="max-w-xs text-small text-white/75">{site.tagline}</p>
@@ -103,7 +105,7 @@ export function Footer({
                 </li>
               ))}
             </ul>
-            <p className="flex flex-wrap items-center gap-x-3 text-small text-white/75">
+            <p className="flex flex-wrap items-center justify-center gap-x-3 text-small text-white/75 lg:justify-start">
               <a href={`mailto:${site.contact.email}`} className={cn(linkCls, 'py-0')}>
                 <bdi dir="ltr">{site.contact.email}</bdi>
               </a>
@@ -134,7 +136,7 @@ export function Footer({
             ))}
           </FooterColumn>
 
-          <div>
+          <div className="col-span-2 lg:col-span-1">
             <h2 className="mb-4 text-h4 text-white">{footerCopy.newsletterTitle}</h2>
             {newsletter}
           </div>
@@ -145,10 +147,10 @@ export function Footer({
             {footerCopy.badgesCaption}
           </h2>
           <div
-            className="flex flex-wrap items-center gap-x-8 gap-y-5"
+            className="flex flex-wrap items-center justify-center gap-x-8 gap-y-5 lg:justify-start"
             aria-labelledby="footer-badges"
           >
-            <ul className="flex flex-wrap items-center gap-2">
+            <ul className="flex flex-wrap items-center justify-center gap-2">
               {PAYMENT_BADGES.map((b) => (
                 <li
                   key={b.file}

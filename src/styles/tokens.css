@@ -57,8 +57,12 @@
   --animate-fade-out: fade-out var(--duration-base) var(--ease-exit) both;
   --animate-rise-in: rise-in var(--duration-slow) var(--ease-standard) both;
   --animate-rise-out: rise-out var(--duration-base) var(--ease-exit) both;
-  --animate-menu-in: menu-in var(--duration-slow) var(--ease-standard) both;
+  --animate-menu-in: menu-in var(--duration-slow) var(--ease-expand) both;
   --animate-menu-out: menu-out var(--duration-base) var(--ease-exit) both;
+  --animate-burger-top-in: burger-top-in var(--duration-slow) var(--ease-standard) both;
+  --animate-burger-top-out: burger-top-out var(--duration-base) var(--ease-exit) both;
+  --animate-burger-bottom-in: burger-bottom-in var(--duration-slow) var(--ease-standard) both;
+  --animate-burger-bottom-out: burger-bottom-out var(--duration-base) var(--ease-exit) both;
   --animate-accordion-down: accordion-down var(--duration-base) var(--ease-standard);
   --animate-accordion-up: accordion-up var(--duration-base) var(--ease-exit);
   --animate-dot-pulse: dot-pulse 1.2s var(--ease-standard) 1;
@@ -101,11 +105,11 @@
       transform: translateY(8px);
     }
   }
-  /* The sheet slides in from the start edge (BRD 6.2); in RTL the start edge is the right. */
+  /* The sheet fades in from above (BRD 6.2 as amended by ADR-044). */
   @keyframes menu-in {
     from {
       opacity: 0;
-      transform: translateX(16px);
+      transform: translateY(-12px);
     }
     to {
       opacity: 1;
@@ -119,7 +123,50 @@
     }
     to {
       opacity: 0;
-      transform: translateX(16px);
+      transform: translateY(-8px);
+    }
+  }
+  /* The burger's outer lines morph into the X and back (ADR-044). They animate the
+     `translate` and `rotate` properties, the ones Tailwind's utilities set, so the X drawn by
+     the classes is the resting state the keyframes land on. */
+  @keyframes burger-top-in {
+    from {
+      translate: 0 0;
+      rotate: 0deg;
+    }
+    to {
+      translate: 0 6px;
+      rotate: 45deg;
+    }
+  }
+  @keyframes burger-top-out {
+    from {
+      translate: 0 6px;
+      rotate: 45deg;
+    }
+    to {
+      translate: 0 0;
+      rotate: 0deg;
+    }
+  }
+  @keyframes burger-bottom-in {
+    from {
+      translate: 0 0;
+      rotate: 0deg;
+    }
+    to {
+      translate: 0 -6px;
+      rotate: -45deg;
+    }
+  }
+  @keyframes burger-bottom-out {
+    from {
+      translate: 0 -6px;
+      rotate: -45deg;
+    }
+    to {
+      translate: 0 0;
+      rotate: 0deg;
     }
   }
   @keyframes accordion-down {

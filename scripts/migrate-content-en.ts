@@ -7,6 +7,7 @@
  * their ids and non-localised fields.
  */
 import { convertMarkdownToLexical, editorConfigFactory } from '@payloadcms/richtext-lexical';
+import { basename, dirname } from 'node:path';
 import type { Payload } from 'payload';
 import { blogAuthorEn, blogHubsEn, blogPostBodyEn, blogPostsEn } from '../src/content/seed/en/blog';
 import { faqEn } from '../src/content/seed/en/faq';
@@ -42,6 +43,20 @@ function merged<T extends Row>(
 export interface EnglishSummary {
   written: string[];
   skipped: string[];
+}
+
+/** The media document the Arabic seed uploaded for a `public/` path (`<folder>-<file>`). */
+async function mediaIdByPath(payload: Payload, publicPath: string): Promise<number> {
+  const filename = `${basename(dirname(publicPath))}-${basename(publicPath)}`;
+  const { docs } = await payload.find({
+    collection: 'media',
+    where: { filename: { equals: filename } },
+    limit: 1,
+    depth: 0,
+  });
+  const doc = docs[0];
+  if (!doc) throw new Error(`seed en: media ${filename} is not in the CMS (run the Arabic seed)`);
+  return doc.id;
 }
 
 export async function ensureEnglish(payload: Payload): Promise<EnglishSummary> {
@@ -80,11 +95,9 @@ export async function ensureEnglish(payload: Payload): Promise<EnglishSummary> {
           primary: merged(ar.primary, (ar.primary ?? []).map(label(navigationEn.primary))),
           policies: merged(ar.policies, (ar.policies ?? []).map(label(navigationEn.policies))),
           ctaLabel: navigationEn.ctaLabel,
-          loginLabel: navigationEn.loginLabel,
           skipLinkLabel: navigationEn.skipLinkLabel,
           menuOpenLabel: navigationEn.menuOpenLabel,
           menuCloseLabel: navigationEn.menuCloseLabel,
-          menuWhatsappLine: navigationEn.menuWhatsappLine,
         },
         context: CONTEXT,
       });
@@ -113,22 +126,28 @@ export async function ensureEnglish(payload: Payload): Promise<EnglishSummary> {
     }
   }
 
-  // home
+  // home: the copy, and the English hero photos (ADR-044; uploaded by the Arabic seed).
   {
     const en = await payload.findGlobal({ slug: 'home', ...EN, draft: false });
     if (en.hero?.primaryCta) skip('en home');
     else {
       const ar = await payload.findGlobal({ slug: 'home', ...AR, draft: false });
+      const slides = [];
+      for (const s of homeEn.hero.slides) {
+        slides.push({
+          headline: s.headline,
+          subline: s.subline,
+          imageDesktop: await mediaIdByPath(payload, s.imageDesktop),
+          imageMobile: await mediaIdByPath(payload, s.imageMobile),
+        });
+      }
       await payload.updateGlobal({
         slug: 'home',
         locale: 'en',
         data: {
           hero: {
             ...ar.hero,
-            slides: merged(
-              ar.hero?.slides,
-              homeEn.hero.slides.map((s) => ({ headline: s.headline, subline: s.subline })),
-            ),
+            slides: merged(ar.hero?.slides, slides),
             primaryCta: homeEn.hero.primaryCta,
             secondaryCta: homeEn.hero.secondaryCta,
             microcopy: homeEn.hero.microcopy,

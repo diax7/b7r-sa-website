@@ -17,9 +17,7 @@ export const navigation: Navigation = {
     { label: 'الأسئلة الشائعة', href: '/faq' },
   ],
   ctaLabel: 'ابدأ براندك مجانًا',
-  loginLabel: 'تسجيل الدخول',
   skipLinkLabel: 'تخطَّ إلى المحتوى',
   menuOpenLabel: 'فتح القائمة',
   menuCloseLabel: 'إغلاق القائمة',
-  menuWhatsappLine: 'تواصل معنا عبر واتساب',
 };

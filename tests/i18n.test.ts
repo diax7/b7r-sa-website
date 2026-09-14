@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { inLocale, publicRead } from '@/lib/cms/read';
 import {
+  fallbackPath,
   htmlDir,
   isLocale,
   languageTag,
@@ -28,6 +29,16 @@ describe('locales (ADR-043)', () => {
     expect(stripLocale('/en/faq')).toEqual({ locale: 'en', path: '/faq' });
     expect(stripLocale('/english')).toEqual({ locale: 'ar', path: '/english' });
     expect(stripLocale('/')).toEqual({ locale: 'ar', path: '/' });
+  });
+
+  it('sends a page without a twin to its section in the other language (ADR-044)', () => {
+    expect(fallbackPath('en', '/blog/arabic-only-post')).toBe('/en/blog');
+    expect(fallbackPath('ar', '/blog/english-only-post')).toBe('/blog');
+    expect(fallbackPath('en', '/blog/category/pricing-profit/page/2')).toBe('/en/blog');
+    expect(fallbackPath('en', '/author/dhia')).toBe('/en/blog');
+    expect(fallbackPath('en', '/products/arabic-only')).toBe('/en/products');
+    expect(fallbackPath('en', '/some-page')).toBe('/en');
+    expect(fallbackPath('ar', '/')).toBe('/');
   });
 
   it('knows the other locale, the direction and the language tags', () => {

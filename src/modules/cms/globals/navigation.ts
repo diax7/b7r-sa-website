@@ -2,6 +2,7 @@ import type { Field, GlobalConfig } from 'payload';
 import { hiddenUnlessAdmin, isAdmin } from '@/modules/cms/access';
 import { revalidateGlobal } from '@/modules/cms/hooks/revalidate';
 import { savedByField, stampSavedByGlobal } from '@/modules/cms/fields/saved-by';
+import { globalLocaleNote } from '@/modules/cms/admin/locale/config';
 
 const navItem: Field[] = [
   {
@@ -37,6 +38,7 @@ export const Navigation: GlobalConfig = {
   slug: 'navigation',
   label: { ar: 'التنقل', en: 'Navigation' },
   admin: {
+    components: globalLocaleNote,
     group: { ar: 'الإعدادات', en: 'Settings' },
     hidden: hiddenUnlessAdmin,
     description: {
@@ -66,23 +68,11 @@ export const Navigation: GlobalConfig = {
       fields: navItem,
     },
     {
-      type: 'row',
-      fields: [
-        {
-          name: 'ctaLabel',
-          type: 'text',
-          required: true,
-          localized: true,
-          label: { ar: 'زر الدعوة', en: 'CTA label' },
-        },
-        {
-          name: 'loginLabel',
-          type: 'text',
-          required: true,
-          localized: true,
-          label: { ar: 'تسجيل الدخول', en: 'Login label' },
-        },
-      ],
+      name: 'ctaLabel',
+      type: 'text',
+      required: true,
+      localized: true,
+      label: { ar: 'زر الدعوة', en: 'CTA label' },
     },
     {
       type: 'row',
@@ -109,13 +99,6 @@ export const Navigation: GlobalConfig = {
           label: { ar: 'إغلاق القائمة', en: 'Menu close' },
         },
       ],
-    },
-    {
-      name: 'menuWhatsappLine',
-      type: 'text',
-      required: true,
-      localized: true,
-      label: { ar: 'سطر واتساب في القائمة', en: 'Menu WhatsApp line' },
     },
     savedByField,
   ],

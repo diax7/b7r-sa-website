@@ -16,6 +16,7 @@ import { getPayload, type Payload } from 'payload';
 import { blogAuthor, blogHubs, blogPostBody, blogPosts } from '../src/content/seed/blog';
 import { faq } from '../src/content/seed/faq';
 import { home } from '../src/content/seed/home';
+import { homeEn } from '../src/content/seed/en/home';
 import { integrations } from '../src/content/seed/integrations';
 import { navigation } from '../src/content/seed/navigation';
 import { pages } from '../src/content/seed/pages';
@@ -188,7 +189,12 @@ async function productIdsBySlug(payload: Payload): Promise<Map<string, number>> 
   return new Map(docs.map((d) => [d.slug, d.id]));
 }
 
-/** The `home` global (BRD 4.4): hero photos and step icons become media, the strip links products. */
+/**
+ * The `home` global (BRD 4.4): hero photos and step icons become media, the strip links
+ * products. The English hero placeholders (ADR-044) are uploaded here too, with the Arabic
+ * alt the media collection requires in `ar`; the English pass assigns them to the slides
+ * and writes their English alt.
+ */
 async function ensureHome(payload: Payload): Promise<void> {
   if (await globalIsFilled(payload, 'home')) {
     summary.skipped.push('global home');
@@ -201,13 +207,18 @@ async function ensureHome(payload: Payload): Promise<void> {
     return id;
   });
   const slides = [];
-  for (const slide of home.hero.slides) {
+  for (const [i, slide] of home.hero.slides.entries()) {
     slides.push({
       headline: slide.headline,
       subline: slide.subline,
       imageDesktop: await ensureMedia(payload, slide.imageDesktop, slide.alt),
       imageMobile: await ensureMedia(payload, slide.imageMobile, slide.alt),
     });
+    const english = homeEn.hero.slides[i];
+    if (english) {
+      await ensureMedia(payload, english.imageDesktop, slide.alt);
+      await ensureMedia(payload, english.imageMobile, slide.alt);
+    }
   }
   const steps = [];
   for (const step of home.steps.items) {
@@ -227,6 +238,7 @@ async function ensureHome(payload: Payload): Promise<void> {
         secondaryCta: home.hero.secondaryCta,
         microcopy: home.hero.microcopy,
         chips: home.hero.chips.map((text) => ({ text })),
+        overlay: home.hero.overlay,
       },
       productStrip: {
         eyebrow: home.productStrip.eyebrow,
@@ -339,7 +351,6 @@ async function ensureGlobals(payload: Payload): Promise<void> {
         deliveryOrigin: site.delivery.origin,
         deliveryRegion: site.delivery.region,
         ...(site.bookingUrl ? { bookingUrl: site.bookingUrl } : {}),
-        appUrls: site.appUrls,
         legalEntity: site.legalEntity,
       },
       context: CONTEXT,
@@ -362,11 +373,9 @@ async function ensureGlobals(payload: Payload): Promise<void> {
           ...(i.matchPrefix ? { matchPrefix: i.matchPrefix } : {}),
         })),
         ctaLabel: navigation.ctaLabel,
-        loginLabel: navigation.loginLabel,
         skipLinkLabel: navigation.skipLinkLabel,
         menuOpenLabel: navigation.menuOpenLabel,
         menuCloseLabel: navigation.menuCloseLabel,
-        menuWhatsappLine: navigation.menuWhatsappLine,
       },
       context: CONTEXT,
     });

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { loginUrl, registerUrl, whatsappUrl } from '@/lib/utm';
+import { registerUrl, whatsappUrl } from '@/lib/utm';
 
 describe('utm', () => {
   it('builds the header register URL exactly as §4.3', () => {
@@ -15,8 +15,7 @@ describe('utm', () => {
       'utm_campaign=ribbon&utm_content=home',
     );
   });
-  it('builds login and WhatsApp links', () => {
-    expect(loginUrl('https://b7r.app')).toBe('https://b7r.app/login');
+  it('builds WhatsApp links', () => {
     expect(whatsappUrl('966501699572', 'مرحباً')).toBe(
       'https://wa.me/966501699572?text=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7%D9%8B',
     );

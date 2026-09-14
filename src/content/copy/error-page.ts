@@ -4,6 +4,8 @@ export interface ErrorPageCopy {
   title: string;
   text: string;
   button: string;
+  /** The WhatsApp link under the button (BRD 6.2's menu line; the menu shows an icon now). */
+  whatsapp: string;
 }
 
 /**
@@ -16,10 +18,12 @@ export const ERROR_PAGE: Record<Locale, ErrorPageCopy> = {
     title: 'حدث خطأ غير متوقع',
     text: 'حاول تحديث الصفحة، أو راسلنا على واتساب.',
     button: 'العودة للرئيسية',
+    whatsapp: 'تواصل معنا عبر واتساب',
   },
   en: {
     title: 'Something went wrong',
     text: 'Try refreshing the page, or message us on WhatsApp.',
     button: 'Back to the home page',
+    whatsapp: 'Chat with us on WhatsApp',
   },
 };

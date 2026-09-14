@@ -46,6 +46,7 @@ export const home: Home = {
     secondaryCta: 'استكشف المنتجات',
     microcopy: 'رصيد ترحيبي 30 ريالاً، بدون بطاقة',
     chips: ['مجاني 100%', 'بدون حد أدنى للطلبات', 'توصيل لكل المملكة خلال 5 أيام'],
+    overlay: { enabled: true, color: '#ffffff' },
   },
   productStrip: {
     eyebrow: 'المنتجات',

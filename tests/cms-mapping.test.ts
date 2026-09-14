@@ -130,7 +130,6 @@ describe('globals', () => {
       deliveryOrigin: site.delivery.origin,
       deliveryRegion: site.delivery.region,
       bookingUrl: null,
-      appUrls: site.appUrls,
       legalEntity: site.legalEntity,
     };
     const { bookingUrl: _unused, ...expected } = site;
@@ -147,11 +146,9 @@ describe('globals', () => {
       primary: navigation.primary.map((i) => ({ ...i, matchPrefix: i.matchPrefix ?? null })),
       policies: navigation.policies.map((i) => ({ ...i, matchPrefix: null })),
       ctaLabel: navigation.ctaLabel,
-      loginLabel: navigation.loginLabel,
       skipLinkLabel: navigation.skipLinkLabel,
       menuOpenLabel: navigation.menuOpenLabel,
       menuCloseLabel: navigation.menuCloseLabel,
-      menuWhatsappLine: navigation.menuWhatsappLine,
     };
     expect(toNavigation(doc, 'ar')).toEqual(navigation);
     expect(() => toNavigation({ ...doc, primary: doc.primary?.slice(1) }, 'ar')).toThrow();

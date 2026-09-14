@@ -46,6 +46,20 @@ export const adminStrings = {
   warnings: {
     none: 'Nothing to flag.',
   },
+  fields: {
+    pickColor: 'Pick a colour',
+  },
+  locale: {
+    /** One line before the document controls of anything with per-language fields (ADR-044). */
+    editing: { ar: 'Editing the Arabic content.', en: 'Editing the English content.' } as Record<
+      string,
+      string
+    >,
+    legend: {
+      ar: 'Fields marked AR are per language; the rest is shared with English.',
+      en: 'Fields marked EN are per language; the rest is shared with Arabic.',
+    } as Record<string, string>,
+  },
   engine: {
     generateNow: 'Generate now',
     queueing: 'Queueing…',

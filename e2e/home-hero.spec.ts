@@ -86,6 +86,16 @@ test.describe('hero (BRD 6.4.1)', () => {
     await expect(page.locator('[data-slide="1"]')).toHaveAttribute('data-active', 'true');
   });
 
+  test('the overlay and the chips come from the admin (ADR-044)', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.locator('[data-hero-overlay]')).toHaveAttribute(
+      'data-hero-overlay',
+      '#ffffff',
+    );
+    // Three chips in the seed; the row is one list of chips under the copy.
+    await expect(page.locator('section.hero .hero-copy ul li')).toHaveCount(3);
+  });
+
   test('CTA links carry the hero utm campaign', async ({ page }) => {
     await page.goto('/');
     const cta = page.locator('section.hero a[data-location="hero"]');
