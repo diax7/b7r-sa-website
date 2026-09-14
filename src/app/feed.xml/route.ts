@@ -34,7 +34,10 @@ export async function GET(): Promise<Response> {
       contentUpdatedAt: post.contentUpdatedAt,
       authorName: post.author.name,
       hubName: post.hub.name,
-      cover: post.cover.src,
+      cover:
+        post.cover.bytes && post.cover.mime
+          ? { src: post.cover.src, bytes: post.cover.bytes, mime: post.cover.mime }
+          : undefined,
       html: convertLexicalToHTML({
         data: post.body as unknown as SerializedEditorState,
         converters,

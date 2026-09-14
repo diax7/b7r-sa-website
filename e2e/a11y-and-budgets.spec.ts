@@ -135,29 +135,43 @@ test.describe('budgets (BRD 7.8, constitution IV)', () => {
 
   test('the blog index prerenders and its search island stays small (ADR-041)', async ({
     page,
+    context,
   }) => {
     const res = await page.request.get('/blog');
     expect(res.headers()['x-nextjs-cache']).toMatch(/HIT|STALE/);
-    const js: Array<{ url: string; bytes: number }> = [];
-    await page.route('**/*', (route) => {
-      const headers = route.request().headers();
-      if (headers['next-router-prefetch'] || headers['rsc']) return route.abort();
-      return route.continue();
-    });
-    page.on('response', async (r) => {
-      if (r.request().resourceType() !== 'script') return;
-      try {
-        js.push({ url: r.url(), bytes: (await r.request().sizes()).responseBodySize });
-      } catch {
-        // Cached or aborted responses have no sizes; ignore.
-      }
-    });
-    await page.goto('/blog');
-    await page.waitForLoadState('load');
-    await page.waitForTimeout(1500);
-    const jsTotal = js.reduce((n, r) => n + r.bytes, 0);
-    expect(jsTotal, js.map((r) => `${r.bytes}\t${r.url}`).join('\n')).toBeLessThanOrEqual(
-      180 * 1024,
+    // The scripts a route loads, by URL, without the prefetches of the next navigation.
+    const scripts = async (path: string) => {
+      const tab = await context.newPage();
+      const js = new Map<string, number>();
+      await tab.route('**/*', (route) => {
+        const headers = route.request().headers();
+        if (headers['next-router-prefetch'] || headers['rsc']) return route.abort();
+        return route.continue();
+      });
+      tab.on('response', async (r) => {
+        if (r.request().resourceType() !== 'script') return;
+        try {
+          js.set(r.url(), (await r.request().sizes()).responseBodySize);
+        } catch {
+          // Cached or aborted responses have no sizes; ignore.
+        }
+      });
+      await tab.goto(path);
+      await tab.waitForLoadState('load');
+      await tab.waitForTimeout(1500);
+      await tab.close();
+      return js;
+    };
+    const home = await scripts('/');
+    const blog = await scripts('/blog');
+    const total = [...blog.values()].reduce((n, b) => n + b, 0);
+    expect(total).toBeLessThanOrEqual(180 * 1024);
+    // What the blog loads beyond the shared chunks the home already needs: the route and the
+    // search island (measured at 1.9 KB on 2026-09-14). The island must stay a small thing.
+    const own = [...blog].filter(([url]) => !home.has(url));
+    const ownBytes = own.reduce((n, [, b]) => n + b, 0);
+    expect(ownBytes, own.map(([url, b]) => `${b}\t${url}`).join('\n')).toBeLessThanOrEqual(
+      8 * 1024,
     );
   });
 

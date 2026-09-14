@@ -38,12 +38,20 @@ export interface Author {
   sameAs: string[];
 }
 
+export interface Cover {
+  src: string;
+  alt: string;
+  /** From the media document, for the feed's enclosure; absent for a hub's fallback cover. */
+  bytes?: number;
+  mime?: string;
+}
+
 export interface PostCard {
   slug: string;
   title: string;
   excerpt: string;
   hub: Hub;
-  cover: { src: string; alt: string };
+  cover: Cover;
   publishedAt: string;
   contentUpdatedAt: string | null;
   readingMinutes: number;
@@ -98,10 +106,16 @@ function populated<T extends object>(value: number | T | null | undefined): T | 
   return value && typeof value === 'object' ? value : null;
 }
 
-function cover(post: PostDoc, hub: Hub): { src: string; alt: string } {
+function cover(post: PostDoc, hub: Hub): Cover {
   const media = populated<Media>(post.cover);
-  const src = mediaUrl(media) ?? hub.cover ?? '';
-  return { src, alt: media?.alt ?? '' };
+  const src = mediaUrl(media);
+  if (!media || !src) return { src: hub.cover ?? '', alt: '' };
+  return {
+    src,
+    alt: media.alt,
+    ...(typeof media.filesize === 'number' ? { bytes: media.filesize } : {}),
+    ...(media.mimeType ? { mime: media.mimeType } : {}),
+  };
 }
 
 /** A card from a post read at `depth: 1`; a post whose hub is missing is skipped by the caller. */

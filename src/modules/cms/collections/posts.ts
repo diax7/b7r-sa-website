@@ -66,16 +66,26 @@ function isPublish(data: Record<string, unknown> | undefined, req: PayloadReques
   return data?.['_status'] === 'published' && !isDraftSave(req);
 }
 
-/** The first author (the seeded one) as the default byline. */
+/** The seeded author (`dhia`) as the default byline; the first created one otherwise. */
+export const DEFAULT_AUTHOR_SLUG = 'dhia';
+
 async function defaultAuthor({ req }: { req: PayloadRequest }): Promise<number | undefined> {
-  const { docs } = await req.payload.find({
+  const seeded = await req.payload.find({
+    collection: 'authors',
+    where: { slug: { equals: DEFAULT_AUTHOR_SLUG } },
+    limit: 1,
+    depth: 0,
+    req,
+  });
+  if (seeded.docs[0]) return seeded.docs[0].id;
+  const first = await req.payload.find({
     collection: 'authors',
     limit: 1,
     depth: 0,
     sort: 'createdAt',
     req,
   });
-  return docs[0]?.id;
+  return first.docs[0]?.id;
 }
 
 const EDITED_FIELDS = ['title', 'excerpt', 'body', 'takeaways'] as const;

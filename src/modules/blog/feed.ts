@@ -21,7 +21,8 @@ export interface FeedItem {
   authorName: string;
   hubName: string;
   html: string;
-  cover: string;
+  /** The cover as an enclosure when its size and type are known (RSS 2.0 needs both). */
+  cover?: { src: string; bytes: number; mime: string } | undefined;
 }
 
 function escape(text: string): string {
@@ -49,6 +50,9 @@ export function buildFeed(channel: FeedChannel, items: FeedItem[]): string {
     .map((item) => {
       const url = `${channel.base}/blog/${item.slug}`;
       const html = absolutizeHtml(channel.base, item.html);
+      const enclosure = item.cover
+        ? `\n      <enclosure url="${escape(absoluteUrl(channel.base, item.cover.src))}" type="${escape(item.cover.mime)}" length="${item.cover.bytes}" />`
+        : '';
       return `    <item>
       <title>${escape(item.title)}</title>
       <link>${url}</link>
@@ -56,8 +60,7 @@ export function buildFeed(channel: FeedChannel, items: FeedItem[]): string {
       <pubDate>${rfc822(item.publishedAt)}</pubDate>
       <dc:creator>${escape(item.authorName)}</dc:creator>
       <category>${escape(item.hubName)}</category>
-      <description>${escape(item.excerpt)}</description>
-      <enclosure url="${escape(absoluteUrl(channel.base, item.cover))}" type="image/jpeg" length="0" />
+      <description>${escape(item.excerpt)}</description>${enclosure}
       <content:encoded><![CDATA[${html.replaceAll(']]>', ']]]]><![CDATA[>')}]]></content:encoded>
     </item>`;
     })

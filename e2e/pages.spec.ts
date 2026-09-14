@@ -216,6 +216,10 @@ test.describe('blog (BRD 6.11, 10.1)', () => {
     // Every link inside the feed is absolute (a reader shows the post off-site).
     expect(xml).not.toMatch(/href="\//);
     expect(xml).toContain('href="https://b7r.sa/products/tee-essential"');
+    // The cover is an enclosure with its real size (RSS 2.0), never a zero length.
+    expect(xml).toMatch(
+      /<enclosure url="https:\/\/b7r\.sa\/[^"]+" type="image\/jpeg" length="[1-9]\d+" \/>/,
+    );
   });
 
   test('post template: takeaways, table of contents, in-post CTA after the second H2, share, author, related', async ({
