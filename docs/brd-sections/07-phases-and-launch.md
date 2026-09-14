@@ -69,7 +69,7 @@ After cutover (same day):
 
 ### 12.5 Documentation upkeep rule
 
-This BRD is a living document. When a feature changes, the agent updates the relevant section in `docs/brd-sections/`, rebuilds the master file, and records an ADR. Appendix H (the English copy bank) is generated from `src/content/copy/en.ts` by `pnpm copy:appendix` before the rebuild; it is never edited by hand. When a phase completes, its DoD evidence is linked from `docs/DECISIONS.md`. The BRD never lags the code by more than one merged PR.
+This BRD is a living document. When a feature changes, the agent updates the relevant section in `docs/brd-sections/`, rebuilds the master file, and records an ADR. Appendix I (the English copy bank) is generated from `src/content/copy/en.ts` by `pnpm copy:appendix` before the rebuild; it is never edited by hand. When a phase completes, its DoD evidence is linked from `docs/DECISIONS.md`. The BRD never lags the code by more than one merged PR.
 
 ### 12.6 Future blocks (reserved, not built until Dhia schedules them)
 

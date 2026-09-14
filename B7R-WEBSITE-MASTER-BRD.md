@@ -589,7 +589,7 @@ Every user-visible string in Level 1 is here. Copy it exactly, including punctua
 
 ### 4.16 SEO titles and descriptions (Arabic; the brand suffix is added by the template as « | بحر برنت»)
 
-The English titles and descriptions (suffix ` | B7R Print`) are the `seo` rows of Appendix H and the English `seo-defaults` values the seed writes (Level 5, ADR-043).
+The English titles and descriptions (suffix ` | B7R Print`) are the `seo` rows of Appendix I and the English `seo-defaults` values the seed writes (Level 5, ADR-043).
 
 | Page | `<title>` (without suffix) | Meta description |
 |---|---|---|
@@ -1483,7 +1483,7 @@ After cutover (same day):
 
 ### 12.5 Documentation upkeep rule
 
-This BRD is a living document. When a feature changes, the agent updates the relevant section in `docs/brd-sections/`, rebuilds the master file, and records an ADR. Appendix H (the English copy bank) is generated from `src/content/copy/en.ts` by `pnpm copy:appendix` before the rebuild; it is never edited by hand. When a phase completes, its DoD evidence is linked from `docs/DECISIONS.md`. The BRD never lags the code by more than one merged PR.
+This BRD is a living document. When a feature changes, the agent updates the relevant section in `docs/brd-sections/`, rebuilds the master file, and records an ADR. Appendix I (the English copy bank) is generated from `src/content/copy/en.ts` by `pnpm copy:appendix` before the rebuild; it is never edited by hand. When a phase completes, its DoD evidence is linked from `docs/DECISIONS.md`. The BRD never lags the code by more than one merged PR.
 
 ### 12.6 Future blocks (reserved, not built until Dhia schedules them)
 
@@ -1805,6 +1805,8 @@ Decision history: `docs/00-decisions-log.md` (rounds 1–4 with Dhia, 2026-09-12
 
 18. Level 3 blog copy (2026-09-14, ADR-041, `TODO(copy)`): the six hub descriptions and leads and the author bio in `src/content/seed/blog.ts` (editable in the admin after the seed), the cover alt texts in `scripts/migrate-content.ts`, and the template strings in `src/content/blog/index.ts` («في هذا المقال», «حُدّث», «المقال السابق», «المقال التالي», «أحدث مقال», «أحدث المقالات», the search box and pagination labels, «كل ما كتبه {name}»).
 
+19. Level 5c (2026-09-14, ADR-043): the `llms.txt` sentences in both copy banks (`llms` in `src/content/copy/ar.ts` and `en.ts`: the intro paragraph, the section headings, the product line), the English style guide, system prompt, banned phrases and banned claims of the engine (`src/modules/ai-content/prompts/defaults.ts`, editable in Engine settings under the English locale), and the fifteen English topics of Appendix E.
+
 17. Design edits 2026-09-13 (`src/content/home.ts`, `TODO(copy)`): the designer's upload prompt «اضغط لرفع شعارك أو صورتك» and the remove control «إزالة التصميم» (ADR-036), and the product gallery's toggle name «اقلب الصورة» (`src/messages/ar.json`, ADR-035). These three also belong to the 2b `home` global seed. The designer now starts with an empty print area; the pre-placed sample of the earlier build is a one-line switch (`initialState.design`) if Dhia prefers it.
 
 ### Appendix H: Glossary of Arabic UI terms used in code comments and admin labels
@@ -1835,7 +1837,7 @@ Decision history: `docs/00-decisions-log.md` (rounds 1–4 with Dhia, 2026-09-12
 
 ---
 
-## 14. Appendix H: The English copy bank (Level 5, ADR-043)
+## 14. Appendix I: The English copy bank (Level 5, ADR-043)
 
 Every interface string of the English site, key for key with the Arabic bank of §4 (`src/content/copy/en.ts`, written to this table by `pnpm copy:appendix`); `tests/content-verbatim.test.ts` checks the code against this table. Brand in English: "B7R Print". The CMS content in English (products, pages, FAQ, home, settings) is seeded content owed Dhia's read (Appendix G pattern). Placeholders in braces are filled by the code.
 
@@ -2026,4 +2028,11 @@ Every interface string of the English site, key for key with the Arabic bank of 
 | `media.trustBadges.ministryOfCommerce` | Ministry of Commerce |
 | `media.trustBadges.misk` | Misk Foundation |
 | `media.sarAria` | Saudi riyal |
+| `llms.intro` | {brand} is a print-on-demand platform in Saudi Arabia: a merchant sells their design in their Salla, Zid or Shopify store, and we print the piece in {origin} and ship it under the store's name within {days} days at most inside the Kingdom. No stock and no minimum; the account is free with SAR {credit} of welcome credit. |
+| `llms.pages` | Pages |
+| `llms.products` | Products (merchant cost and suggested price in Saudi riyals) |
+| `llms.productLine` | {description} Cost SAR {cost}, suggested price SAR {price}. |
+| `llms.blog` | Blog |
+| `llms.otherLanguages` | Other languages |
+| `llms.otherLanguage` | Arabic version |
 | `dateLocale` | en-GB |

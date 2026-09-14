@@ -312,6 +312,8 @@ Decision history: `docs/00-decisions-log.md` (rounds 1–4 with Dhia, 2026-09-12
 
 18. Level 3 blog copy (2026-09-14, ADR-041, `TODO(copy)`): the six hub descriptions and leads and the author bio in `src/content/seed/blog.ts` (editable in the admin after the seed), the cover alt texts in `scripts/migrate-content.ts`, and the template strings in `src/content/blog/index.ts` («في هذا المقال», «حُدّث», «المقال السابق», «المقال التالي», «أحدث مقال», «أحدث المقالات», the search box and pagination labels, «كل ما كتبه {name}»).
 
+19. Level 5c (2026-09-14, ADR-043): the `llms.txt` sentences in both copy banks (`llms` in `src/content/copy/ar.ts` and `en.ts`: the intro paragraph, the section headings, the product line), the English style guide, system prompt, banned phrases and banned claims of the engine (`src/modules/ai-content/prompts/defaults.ts`, editable in Engine settings under the English locale), and the fifteen English topics of Appendix E.
+
 17. Design edits 2026-09-13 (`src/content/home.ts`, `TODO(copy)`): the designer's upload prompt «اضغط لرفع شعارك أو صورتك» and the remove control «إزالة التصميم» (ADR-036), and the product gallery's toggle name «اقلب الصورة» (`src/messages/ar.json`, ADR-035). These three also belong to the 2b `home` global seed. The designer now starts with an empty print area; the pre-placed sample of the earlier build is a one-line switch (`initialState.design`) if Dhia prefers it.
 
 ### Appendix H: Glossary of Arabic UI terms used in code comments and admin labels

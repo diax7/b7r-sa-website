@@ -1,6 +1,7 @@
 import type { Page, PageSeo, Product, SiteSettings } from '@/content/schema';
 import { absoluteUrl } from '@/lib/absolute-url';
 import type { PostCard } from '@/lib/cms/blog';
+import { copyFor } from '@/content/copy';
 import { type Locale, localePath, otherLocale } from '@/lib/i18n';
 
 /**
@@ -8,7 +9,8 @@ import { type Locale, localePath, otherLocale } from '@/lib/i18n';
  * language, built from the CMS the way the sitemap is (titles and descriptions from the SEO
  * defaults and the pages, the catalogue with its cost and suggested price, the published
  * posts with their excerpts). Pure: the route reads and hands the rows here. Facts come from
- * the same records the pages render, never from a literal.
+ * the same records the pages render, never from a literal; the sentences come from the copy
+ * banks (`llms` section), reviewed like every other string.
  */
 export interface LlmsInput {
   locale: Locale;
@@ -20,16 +22,6 @@ export interface LlmsInput {
   posts: PostCard[];
 }
 
-interface LlmsText {
-  intro(site: SiteSettings): string;
-  pages: string;
-  products: string;
-  productLine(p: Product): string;
-  blog: string;
-  other: string;
-  otherLanguage: string;
-}
-
 /** «بحر برنت (B7R Print)» in Arabic; the English name stands alone when the two are the same. */
 function brandWithLatin(site: SiteSettings): string {
   return site.brandName === site.brandNameLatin
@@ -37,36 +29,15 @@ function brandWithLatin(site: SiteSettings): string {
     : `${site.brandName} (${site.brandNameLatin})`;
 }
 
-const TEXT: Record<Locale, LlmsText> = {
-  ar: {
-    intro: (site) =>
-      `${brandWithLatin(site)} منصة طباعة عند الطلب في السعودية: التاجر يبيع تصميمه في متجره على سلة أو زد أو شوبيفاي، ونحن نطبع القطعة في ${site.delivery.origin} ونشحنها باسم متجره خلال ${site.delivery.maxDays} أيام كحد أقصى داخل المملكة. لا مخزون ولا حد أدنى، والحساب مجاني برصيد ترحيبي ${site.offer.welcomeCredit} ريالاً.`,
-    pages: 'الصفحات',
-    products: 'المنتجات (التكلفة للتاجر والسعر المقترح بالريال السعودي)',
-    productLine: (p) =>
-      `${p.shortDescription} التكلفة ${p.baseCost} ريالاً، السعر المقترح ${p.suggestedPrice} ريالاً.`,
-    blog: 'المدونة',
-    other: 'لغات أخرى',
-    otherLanguage: 'النسخة الإنجليزية',
-  },
-  en: {
-    intro: (site) =>
-      `${brandWithLatin(site)} is a print-on-demand platform in Saudi Arabia: a merchant sells their design in their Salla, Zid or Shopify store, and we print the piece in ${site.delivery.origin} and ship it under the store's name within ${site.delivery.maxDays} days at most inside the Kingdom. No stock and no minimum; the account is free with SAR ${site.offer.welcomeCredit} of welcome credit.`,
-    pages: 'Pages',
-    products: 'Products (merchant cost and suggested price in Saudi riyals)',
-    productLine: (p) =>
-      `${p.shortDescription} Cost SAR ${p.baseCost}, suggested price SAR ${p.suggestedPrice}.`,
-    blog: 'Blog',
-    other: 'Other languages',
-    otherLanguage: 'Arabic version',
-  },
-};
+function fill(template: string, values: Record<string, string | number>): string {
+  return template.replace(/\{(\w+)\}/g, (_, k: string) => String(values[k] ?? ''));
+}
 
 const line = (label: string, href: string, detail: string) => `- [${label}](${href}): ${detail}`;
 
 export function llmsText(input: LlmsInput): string {
   const { locale, base, site } = input;
-  const t = TEXT[locale];
+  const t = copyFor(locale).llms;
   const url = (route: string) => absoluteUrl(base, localePath(locale, route));
   const pageRows = [
     ...input.seo
@@ -76,7 +47,17 @@ export function llmsText(input: LlmsInput): string {
   ];
   const productRows = input.products
     .toSorted((a, b) => a.sortOrder - b.sortOrder)
-    .map((p) => line(p.name, url(`/products/${p.slug}`), t.productLine(p)));
+    .map((p) =>
+      line(
+        p.name,
+        url(`/products/${p.slug}`),
+        fill(t.productLine, {
+          description: p.shortDescription,
+          cost: p.baseCost,
+          price: p.suggestedPrice,
+        }),
+      ),
+    );
   const postRows = input.posts.map((post) =>
     line(post.title, url(`/blog/${post.slug}`), post.excerpt),
   );
@@ -85,7 +66,12 @@ export function llmsText(input: LlmsInput): string {
     '',
     `> ${site.tagline}`,
     '',
-    t.intro(site),
+    fill(t.intro, {
+      brand: brandWithLatin(site),
+      origin: site.delivery.origin,
+      days: site.delivery.maxDays,
+      credit: site.offer.welcomeCredit,
+    }),
     '',
     `## ${t.pages}`,
     '',
@@ -99,7 +85,7 @@ export function llmsText(input: LlmsInput): string {
   if (postRows.length > 0) sections.push('', `## ${t.blog}`, '', ...postRows);
   sections.push(
     '',
-    `## ${t.other}`,
+    `## ${t.otherLanguages}`,
     '',
     `- [${t.otherLanguage}](${absoluteUrl(base, localePath(otherLocale(locale), '/llms.txt'))})`,
     '',

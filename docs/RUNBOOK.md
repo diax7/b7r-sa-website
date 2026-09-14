@@ -383,7 +383,8 @@ same way (`name` decides). An Arabic-only post's switch sends the reader to `/en
 
 The engine in English (5c): a topic's `language` decides the post's language; the English
 backlog is seeded beside the Arabic one, and a CSV import takes `language` as its seventh
-column (`ar` by default). Engine settings, "Language and style": switch the panel's locale
+column (`ar` by default): `title,hub,primaryKeyword,secondaryKeywords,intent,priority,language`,
+for example `Connect a Shopify store,salla-zid-shopify,Shopify print on demand,,commercial,4,en`. Engine settings, "Language and style": switch the panel's locale
 to edit the English style guide, system prompt, banned phrases and banned claims (pre-filled
 from the code defaults). The facts sheet tab shows both languages. On the review server
 `node scripts/dev/engine-demo.mjs run 1 en` writes one English post with the mock;
@@ -392,4 +393,4 @@ regenerate with the listings on publish; nothing to maintain by hand.
 
 Interface strings (labels, buttons, validation, SEO templates) live in the code:
 `src/content/copy/ar.ts` and `en.ts`. After editing the English bank run `pnpm copy:appendix`
-(regenerates BRD Appendix H), then rebuild the BRD.
+(regenerates BRD Appendix I), then rebuild the BRD.

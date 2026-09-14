@@ -1,6 +1,8 @@
 import type { Payload, TaskConfig } from 'payload';
+import { enabledLocales } from '@/lib/cms/locale-enabled';
+import { inLocale, PUBLISHED, publicRead } from '@/lib/cms/read';
+import type { Locale } from '@/lib/i18n';
 import { plainText } from '@/lib/lexical';
-import { PUBLISHED } from '@/lib/cms/read';
 import { envAllows } from '@/modules/ai-content/caps';
 import { statedNumbers } from '@/modules/ai-content/checks';
 import type { FactNumber } from '@/modules/ai-content/facts';
@@ -13,13 +15,18 @@ import type { Post } from '@/payload-types';
  * posts are read against the facts sheet; a post whose numbers were on the sheet when it
  * was written (`factsBaseline`, set by the engine or the seed) and are not any more is
  * regenerated from its stored outline with the current facts, under the same slug and
- * cover. `ai-edited` posts are never touched (human prose).
+ * cover. `ai-edited` posts are never touched (human prose). Each language the site is in
+ * is read on its own (ADR-043): the post's text in that language against that language's
+ * unit words; the numbers are the same catalogue either way, and the regeneration runs in
+ * the post's topic language.
  */
 export const FRESHNESS_TASK = 'content-freshness' as const;
 export const FRESHNESS_BATCH = 10;
 
 export interface FreshnessCandidate {
   id: number;
+  /** The language the text was read in; the unit words follow it. */
+  locale: Locale;
   text: string;
   /** The facts sheet's numbers when the post was written (`posts.factsBaseline`). */
   baseline: FactNumber[];
@@ -41,10 +48,15 @@ function key(n: { unit: string; value: number }): string {
  * now. An illustrative figure that was never on the sheet is not drift (the review already
  * charged for it); a changed delivery promise or price is.
  */
-export function driftedNumbers(text: string, baseline: FactNumber[], current: FactNumber[]) {
+export function driftedNumbers(
+  text: string,
+  baseline: FactNumber[],
+  current: FactNumber[],
+  locale: Locale = 'ar',
+) {
   const was = new Set(baseline.map(key));
   const is = new Set(current.map(key));
-  return statedNumbers(text)
+  return statedNumbers(text, locale)
     .filter((n) => was.has(key(n)) && !is.has(key(n)))
     .map((n) => n.raw);
 }
@@ -53,28 +65,44 @@ export function driftedPosts(
   candidates: FreshnessCandidate[],
   current: FactNumber[],
 ): Array<{ id: number; drift: string[] }> {
-  return candidates
-    .map((c) => ({ id: c.id, drift: [...new Set(driftedNumbers(c.text, c.baseline, current))] }))
-    .filter((c) => c.drift.length > 0);
+  const seen = new Set<number>();
+  return (
+    candidates
+      .map((c) => ({
+        id: c.id,
+        drift: [...new Set(driftedNumbers(c.text, c.baseline, current, c.locale))],
+      }))
+      .filter((c) => c.drift.length > 0)
+      // A bilingual post drifted in both languages is one regeneration.
+      .filter((c) => !seen.has(c.id) && seen.add(c.id))
+  );
 }
 
-/** The oldest published `ai` posts that carry a facts baseline. */
-async function freshnessCandidates(payload: Payload): Promise<FreshnessCandidate[]> {
+/** The oldest published `ai` posts of one language that carry a facts baseline. */
+async function freshnessCandidates(
+  payload: Payload,
+  locale: Locale,
+): Promise<FreshnessCandidate[]> {
   const posts = await payload.find({
     collection: 'posts',
+    ...publicRead(locale),
     where: {
-      and: [PUBLISHED, { origin: { equals: 'ai' } }, { factsBaseline: { exists: true } }],
+      and: [
+        PUBLISHED,
+        inLocale('title'),
+        { origin: { equals: 'ai' } },
+        { factsBaseline: { exists: true } },
+      ],
     },
     depth: 0,
     limit: FRESHNESS_BATCH,
     sort: 'publishedAt',
-    locale: 'ar',
-    overrideAccess: true,
   });
   return posts.docs
     .filter((post: Post) => Array.isArray(post.factsBaseline))
     .map((post: Post) => ({
       id: post.id,
+      locale,
       text: plainText(post.body as never),
       baseline: post.factsBaseline as FactNumber[],
     }));
@@ -86,8 +114,13 @@ export async function freshness(payload: Payload): Promise<FreshnessResult> {
   if (!settings.enabled || !envAllows()) {
     return { checked: 0, queued: [], reason: 'the engine is switched off' };
   }
-  // The numbers are the same in both languages (one catalogue): the Arabic sheet serves the drift.
-  const [facts, posts] = await Promise.all([store.facts('ar'), freshnessCandidates(payload)]);
+  // One catalogue, so one set of numbers (the Arabic sheet); the texts are read per language.
+  const locales = await enabledLocales(payload);
+  const [facts, ...perLocale] = await Promise.all([
+    store.facts('ar'),
+    ...locales.map((locale) => freshnessCandidates(payload, locale)),
+  ]);
+  const posts = perLocale.flat();
   const drifted = driftedPosts(posts, facts.numbers);
   for (const { id } of drifted) {
     // One job per post, queued in order; the `ai` queue serves them one at a time.

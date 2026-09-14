@@ -830,7 +830,7 @@ and `/en/*`, a later header route for the same key). **Copy per locale.** next-i
 server and passed to islands as small slices (`shellCopy`). A client component never imports
 a bank: the error boundaries read `content/copy/error-page.ts`, which both banks reference,
 because a bank import in a client file ships both languages to every page (16 KB gzipped,
-found by the blog's JS budget). Appendix H of the BRD is generated from the English bank by
+found by the blog's JS budget). Appendix I of the BRD is generated from the English bank by
 `pnpm copy:appendix`; `tests/content-verbatim` checks both banks. **Content per locale.**
 Payload's localisation already carried `en`; every public read now passes
 `publicRead(locale)` = `{ locale, fallbackLocale: false, draft: false, overrideAccess: true }`
@@ -877,7 +877,7 @@ Arabic site is byte-for-byte unchanged in body HTML for the five audited pages
 (`scripts/dev/golden.mjs diff`, one class added to the hero). **Known state**: the English
 pages share the Arabic-rendered Open Graph images (`public/og/**`, whose text is Arabic);
 English renders (`pnpm og --locale en`, `public/og/en/`) are the first task of 5b. **Owed
-Dhia's read**: the English bank (Appendix H), the English CMS content and the English legal
+Dhia's read**: the English bank (Appendix I), the English CMS content and the English legal
 drafts, which the agent wrote.
 
 **Amended 2026-09-14 (Phase 5b, the blog in English).** The blog routes exist under `/en`
@@ -940,7 +940,11 @@ Level 1 posts already cover in English seed `published` and linked, as the Arabi
 review server wrote one English post from it with the mock at score 90; the cms e2e runs an
 English topic and proves the post is on `/en/blog` and in `/en/feed.xml` only, with no Arabic
 in its body. The freshness pass reads the Arabic sheet for drift (one catalogue, the same
-numbers in both languages) and regenerates a post in its topic's language. **`llms.txt`**
+numbers in both languages) and regenerates a post in its topic's language. **Which language gets written** is
+the backlog's call, not the engine's: the hourly tick picks by priority then age across both
+backlogs, so at one post a day the Arabic thirty go first unless an English topic carries a
+higher priority; raise a topic's priority to write it sooner. No alternation rule until Dhia
+asks for one. **`llms.txt`**
 (BRD §7.10 reopened): one per language (`/llms.txt`, `/en/llms.txt`), built from the CMS the
 way the sitemap is (the site settings, the SEO defaults' titles and descriptions, the pages,
 the catalogue with cost and suggested price, the published posts with their excerpts),

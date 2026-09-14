@@ -55,6 +55,8 @@ const TODO_COPY = new Set<string>([
   blogCopy.authorPosts,
   ...blogHubs.flatMap((h) => [h.description, h.lead]),
   blogAuthor.bio,
+  // The llms.txt sentences (Level 5c, ADR-043), listed for Dhia in Appendix G.
+  ...Object.values(messages.llms),
 ]);
 
 const brd = readFileSync(join(process.cwd(), 'B7R-WEBSITE-MASTER-BRD.md'), 'utf8').replace(
@@ -166,8 +168,8 @@ function leaves(value: unknown, out: string[] = []): string[] {
   return out;
 }
 
-describe('the English copy bank (Appendix H, ADR-043)', () => {
-  const appendixStart = brd.indexOf('Appendix H: The English copy bank');
+describe('the English copy bank (Appendix I, ADR-043)', () => {
+  const appendixStart = brd.indexOf('Appendix I: The English copy bank');
 
   it('is verbatim in the BRD appendix', () => {
     // A pipe is escaped inside the appendix table.

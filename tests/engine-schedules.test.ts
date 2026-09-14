@@ -81,10 +81,28 @@ describe('the weekly freshness pass (BRD 10.2.4 amendment, ADR-042)', () => {
     const text = 'يصل الطلب خلال 5 أيام كحد أقصى، والرصيد الترحيبي 30 ريالاً، ومثال سعر 99 ريالاً.';
     expect(driftedNumbers(text, baseline, sevenDays)).toEqual(['5 أيام']);
     expect(driftedNumbers(text, baseline, baseline)).toEqual([]);
-    expect(driftedPosts([{ id: 1, text, baseline }], sevenDays)).toEqual([
+    expect(driftedPosts([{ id: 1, locale: 'ar', text, baseline }], sevenDays)).toEqual([
       { id: 1, drift: ['5 أيام'] },
     ]);
-    expect(driftedPosts([{ id: 1, text, baseline }], baseline)).toEqual([]);
+    expect(driftedPosts([{ id: 1, locale: 'ar', text, baseline }], baseline)).toEqual([]);
+    // An English post states its promise in English units (ADR-043): read with them, it
+    // drifts the same way; a bilingual post drifted in both languages is one regeneration.
+    const english = 'We ship within 5 days at most, and the essential T-shirt costs SAR 45.';
+    expect(driftedNumbers(english, baseline, sevenDays, 'en')).toEqual(['5 days']);
+    expect(driftedNumbers(english, baseline, sevenDays, 'ar')).toEqual([]);
+    expect(
+      driftedPosts(
+        [
+          { id: 1, locale: 'ar', text, baseline },
+          { id: 1, locale: 'en', text: english, baseline },
+          { id: 2, locale: 'en', text: english, baseline },
+        ],
+        sevenDays,
+      ),
+    ).toEqual([
+      { id: 1, drift: ['5 أيام'] },
+      { id: 2, drift: ['5 days'] },
+    ]);
   });
 
   it('a changed maxDays regenerates the post under its slug from the stored outline, past the daily cap', async () => {
@@ -132,6 +150,7 @@ describe('the weekly freshness pass (BRD 10.2.4 amendment, ADR-042)', () => {
     // The seed writes the facts as it knows them; the site later promises 7 days.
     const migrated = {
       id: 1,
+      locale: 'ar' as const,
       text: 'يصل الطلب خلال 5 أيام كحد أقصى، والرصيد الترحيبي 30 ريالاً.',
       baseline: factsSheet({ site: SITE, products: PRODUCTS, integrations: INTEGRATIONS }).numbers,
     };

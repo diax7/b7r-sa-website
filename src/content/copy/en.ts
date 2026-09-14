@@ -265,5 +265,15 @@ export const en: SiteCopy = {
     sarAria: 'Saudi riyal',
   },
   /** The `Intl` tag for dates: `14 September 2026`. */
+  llms: {
+    intro:
+      "{brand} is a print-on-demand platform in Saudi Arabia: a merchant sells their design in their Salla, Zid or Shopify store, and we print the piece in {origin} and ship it under the store's name within {days} days at most inside the Kingdom. No stock and no minimum; the account is free with SAR {credit} of welcome credit.",
+    pages: 'Pages',
+    products: 'Products (merchant cost and suggested price in Saudi riyals)',
+    productLine: '{description} Cost SAR {cost}, suggested price SAR {price}.',
+    blog: 'Blog',
+    otherLanguages: 'Other languages',
+    otherLanguage: 'Arabic version',
+  },
   dateLocale: 'en-GB',
 };
