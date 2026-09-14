@@ -53,6 +53,7 @@ function homeDoc(overrides: Partial<HomeDoc> = {}): HomeDoc {
       secondaryCta: home.hero.secondaryCta,
       microcopy: home.hero.microcopy,
       chips: home.hero.chips.map((text) => ({ text })),
+      overlay: home.hero.overlay,
     },
     productStrip: {
       eyebrow: home.productStrip.eyebrow,
@@ -94,6 +95,42 @@ describe('toHome', () => {
     expect(mapped.whyUs).toEqual(home.whyUs);
     expect(mapped.ribbon).toEqual(home.ribbon);
     expect(mapped.video.enabled).toBe(true);
+  });
+
+  it('renders zero to six chips and hides a row with no text in this language (ADR-044)', () => {
+    const doc = homeDoc();
+    expect(toHome({ ...doc, hero: { ...doc.hero, chips: [] } }).hero.chips).toEqual([]);
+    expect(toHome({ ...doc, hero: { ...doc.hero, chips: null } }).hero.chips).toEqual([]);
+    // The rows are shared by both languages; a row written on the Arabic tab has no English
+    // text yet and must not throw for the English document.
+    const chips = [
+      { text: 'a' },
+      { text: '' },
+      { text: null },
+      { text: 'b' },
+    ] as unknown as NonNullable<HomeDoc['hero']['chips']>;
+    expect(toHome({ ...doc, hero: { ...doc.hero, chips } }).hero.chips).toEqual(['a', 'b']);
+    const seven = Array.from({ length: 7 }, (_, i) => ({ text: `c${i}` }));
+    expect(() => toHome({ ...doc, hero: { ...doc.hero, chips: seven } })).toThrow();
+  });
+
+  it('reads the overlay with the defaults a row seeded before it carries (ADR-044)', () => {
+    const doc = homeDoc();
+    expect(toHome(doc).hero.overlay).toEqual({ enabled: true, color: '#ffffff' });
+    // A row seeded before the field: the columns read back with their defaults, or absent
+    // on a document a test hands in directly.
+    const { overlay: _seeded, ...hero } = doc.hero;
+    expect(toHome({ ...doc, hero: hero as HomeDoc['hero'] }).hero.overlay).toEqual({
+      enabled: true,
+      color: '#ffffff',
+    });
+    expect(
+      toHome({ ...doc, hero: { ...doc.hero, overlay: { enabled: false, color: '#0A2F5E' } } }).hero
+        .overlay,
+    ).toEqual({ enabled: false, color: '#0A2F5E' });
+    expect(() =>
+      toHome({ ...doc, hero: { ...doc.hero, overlay: { enabled: true, color: 'white' } } }),
+    ).toThrow();
   });
 
   it('treats a missing «enabled» as on (the checkbox default)', () => {

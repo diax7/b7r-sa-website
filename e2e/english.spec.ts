@@ -183,19 +183,71 @@ test.describe('the English site (Level 5a, ADR-043)', () => {
     };
     await page.goto('/en/products/hoodie');
     const toArabic = (await openSwitch()).and(page.locator('[data-language-switch="ar"]'));
-    await expect(toArabic).toHaveText('العربية');
+    // An icon (ADR-044): the target language's name is the tooltip, the copy bank the label.
+    await expect(toArabic).toHaveText('');
+    await expect(toArabic).toHaveAttribute('data-tooltip', 'العربية');
+    await expect(toArabic).toHaveAttribute('aria-label', 'Switch to the Arabic site');
     await expect(toArabic).toHaveAttribute('hreflang', 'ar');
     await expect(toArabic).toHaveAttribute('href', '/products/hoodie');
     await toArabic.click();
     await expect(page).toHaveURL('/products/hoodie');
     await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
     const toEnglish = (await openSwitch()).and(page.locator('[data-language-switch="en"]'));
-    await expect(toEnglish).toHaveText('English');
+    await expect(toEnglish).toHaveAttribute('data-tooltip', 'English');
     await expect(toEnglish).toHaveAttribute('href', '/en/products/hoodie');
     // The blog has its twin too (5b).
     await page.goto('/blog/how-to-price-printed-tshirt-saudi');
     const fromPost = (await openSwitch()).and(page.locator('[data-language-switch="en"]'));
     await expect(fromPost).toHaveAttribute('href', '/en/blog/how-to-price-printed-tshirt-saudi');
+  });
+
+  test('the switch follows client-side navigation instead of pointing at the first page (ADR-044)', async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(isMobile, 'the desktop header keeps the switch mounted across navigations');
+    await page.goto('/');
+    const toEnglish = page.locator('header [data-language-switch="en"]');
+    await expect(toEnglish).toHaveAttribute('href', '/en');
+    await page.locator('header nav').getByRole('link', { name: 'المنتجات' }).click();
+    await expect(page).toHaveURL('/products');
+    await expect(toEnglish).toHaveAttribute('href', '/en/products');
+    await page.locator('header nav').getByRole('link', { name: 'المدونة' }).click();
+    await expect(page).toHaveURL('/blog');
+    await expect(toEnglish).toHaveAttribute('href', '/en/blog');
+    await toEnglish.click();
+    await expect(page).toHaveURL('/en/blog');
+    const toArabic = page.locator('header [data-language-switch="ar"]');
+    await page.locator('header nav').getByRole('link', { name: 'Products' }).click();
+    await expect(page).toHaveURL('/en/products');
+    await expect(toArabic).toHaveAttribute('href', '/products');
+  });
+
+  test('the English hero mirrors the layout with its own photos (ADR-044)', async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(isMobile, 'desktop composition');
+    await page.goto('/en');
+    const width = page.viewportSize()!.width;
+    const h1 = (await page.locator('h1').boundingBox())!;
+    expect(h1.x).toBeLessThan(width / 4);
+    // The English photos are the `hero-en-*` media, not the Arabic set.
+    const img = page.locator('[data-hero-image="0"]');
+    await expect(img).toHaveAttribute('src', /hero-en-set-a-mobile/);
+    // The overlay carries the admin's colour and sits at the start edge.
+    await expect(page.locator('[data-hero-overlay]')).toHaveAttribute(
+      'data-hero-overlay',
+      '#ffffff',
+    );
+    // Two rows of headline, one of subline at 1280 (the strings and the size are set for it).
+    const lineHeight = await page
+      .locator('h1')
+      .evaluate((el) => parseFloat(getComputedStyle(el).lineHeight));
+    expect(Math.round(h1.height / lineHeight)).toBe(2);
+    // The dots row is full width; its list sits at the start edge (the left in English).
+    const dots = (await page.locator('.hero-dots ul').boundingBox())!;
+    expect(dots.x + dots.width / 2).toBeLessThan(width / 4);
   });
 
   test('the layout mirrors: the logo sits at the start of the header in both documents', async ({

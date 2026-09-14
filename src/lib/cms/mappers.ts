@@ -1,6 +1,7 @@
 import {
   type Block,
   FaqItemSchema,
+  HERO_OVERLAY_DEFAULT,
   HomeSchema,
   PageSchema,
   IntegrationSchema,
@@ -117,7 +118,6 @@ export function toSiteSettings(doc: SiteSetting): SiteSettings {
       region: doc.deliveryRegion,
     },
     ...(doc.bookingUrl ? { bookingUrl: doc.bookingUrl } : {}),
-    appUrls: { register: doc.appUrls.register, login: doc.appUrls.login },
     legalEntity: doc.legalEntity,
   });
 }
@@ -136,11 +136,9 @@ export function toNavigation(doc: NavigationDoc, locale: Locale): Navigation {
     primary: (doc.primary ?? []).map(navItem(locale)),
     policies: (doc.policies ?? []).map(navItem(locale)),
     ctaLabel: doc.ctaLabel,
-    loginLabel: doc.loginLabel,
     skipLinkLabel: doc.skipLinkLabel,
     menuOpenLabel: doc.menuOpenLabel,
     menuCloseLabel: doc.menuCloseLabel,
-    menuWhatsappLine: doc.menuWhatsappLine,
   });
 }
 
@@ -203,7 +201,13 @@ export function toHome(doc: HomeDoc, options: MapOptions = {}): Home {
       primaryCta: doc.hero.primaryCta,
       secondaryCta: doc.hero.secondaryCta,
       microcopy: doc.hero.microcopy,
-      chips: doc.hero.chips.map((c) => c.text),
+      // The rows are shared by both languages, the text is per language: a row written on the
+      // Arabic tab has no English text until an editor adds one, and hides until then.
+      chips: (doc.hero.chips ?? []).map((c) => c.text).filter((t): t is string => !!t?.trim()),
+      overlay: {
+        enabled: doc.hero.overlay?.enabled ?? true,
+        color: doc.hero.overlay?.color ?? HERO_OVERLAY_DEFAULT,
+      },
     },
     productStrip: {
       eyebrow: doc.productStrip.eyebrow,

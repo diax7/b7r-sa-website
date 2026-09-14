@@ -11,10 +11,11 @@ const MobileMenu = dynamic(
   () => import('@/modules/core/header/mobile-menu').then((m) => m.MobileMenu),
   {
     ssr: false,
-    // Keeps the control in place (and the X state visible) while the sheet chunk downloads.
+    // Keeps the control in place while the sheet chunk downloads; the burger stays a burger
+    // so the morph into the X plays once, when the sheet mounts (ADR-044).
     loading: () => (
       <button type="button" className={burgerButtonClass} disabled>
-        <Burger open />
+        <Burger open={false} />
       </button>
     ),
   },

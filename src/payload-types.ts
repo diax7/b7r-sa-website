@@ -1743,17 +1743,41 @@ export interface Home {
     slides: {
       headline: string;
       subline: string;
+      /**
+       * Per language (the English site has no fallback). English: the mirrored composition, calm area under the copy.
+       */
       imageDesktop: number | Media;
+      /**
+       * Per language (the English site has no fallback). English: the mirrored composition, calm area under the copy.
+       */
       imageMobile: number | Media;
       id?: string | null;
     }[];
+    /**
+     * A one-colour fade from the copy side over the photo, so the headline reads on any photo.
+     */
+    overlay: {
+      /**
+       * Off shows the photo as it is behind the copy, with no fade.
+       */
+      enabled?: boolean | null;
+      /**
+       * The fade colour; white is the default. Written as #rrggbb.
+       */
+      color: string;
+    };
     primaryCta: string;
     secondaryCta: string;
     microcopy: string;
-    chips: {
-      text: string;
-      id?: string | null;
-    }[];
+    /**
+     * Zero to 6; none hides the row. The rows are shared by both languages, the text is per language: a row without an English text does not show on the English site.
+     */
+    chips?:
+      | {
+          text: string;
+          id?: string | null;
+        }[]
+      | null;
   };
   productStrip: {
     eyebrow: string;
@@ -1894,10 +1918,6 @@ export interface SiteSetting {
    * Leave empty to use WhatsApp
    */
   bookingUrl?: string | null;
-  appUrls: {
-    register: string;
-    login: string;
-  };
   legalEntity: string;
   /**
    * Who saved the current version and when. Drafts do not change it.
@@ -1936,11 +1956,9 @@ export interface Navigation {
     id?: string | null;
   }[];
   ctaLabel: string;
-  loginLabel: string;
   skipLinkLabel: string;
   menuOpenLabel: string;
   menuCloseLabel: string;
-  menuWhatsappLine: string;
   /**
    * Who saved the current version and when. Drafts do not change it.
    */
@@ -2151,6 +2169,12 @@ export interface HomeSelect<T extends boolean = true> {
               imageMobile?: T;
               id?: T;
             };
+        overlay?:
+          | T
+          | {
+              enabled?: T;
+              color?: T;
+            };
         primaryCta?: T;
         secondaryCta?: T;
         microcopy?: T;
@@ -2284,12 +2308,6 @@ export interface SiteSettingsSelect<T extends boolean = true> {
   deliveryOrigin?: T;
   deliveryRegion?: T;
   bookingUrl?: T;
-  appUrls?:
-    | T
-    | {
-        register?: T;
-        login?: T;
-      };
   legalEntity?: T;
   lastSavedBy?:
     | T
@@ -2323,11 +2341,9 @@ export interface NavigationSelect<T extends boolean = true> {
         id?: T;
       };
   ctaLabel?: T;
-  loginLabel?: T;
   skipLinkLabel?: T;
   menuOpenLabel?: T;
   menuCloseLabel?: T;
-  menuWhatsappLine?: T;
   lastSavedBy?:
     | T
     | {

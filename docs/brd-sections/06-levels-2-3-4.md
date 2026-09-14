@@ -27,7 +27,7 @@ Give Dhia and an editor a WordPress-like, Arabic, right-to-left admin at `https:
 
 | Payload | Kind | Fields (summary) | Replaces |
 |---|---|---|---|
-| `site-settings` | Global | brand, contact, social, offer.welcomeCredit, delivery.maxDays, delivery.origin, bookingUrl, appUrls, badges (media[]), consent text | `content/site.ts` |
+| `site-settings` | Global | brand, contact, social, offer.welcomeCredit, delivery.maxDays, delivery.origin, bookingUrl, badges (media[]), consent text | `content/site.ts` |
 | `navigation` | Global | header items[], footer columns[], ctaLabel | `content/navigation.ts` |
 | `home` | Global | heroSlides[] (media desktop/mobile, headline, subline), productStripOrder[], designerDefaults, steps[], video (media, poster, heading, lead), whyUs[], integrationsIntro, faqSelection (5 relationship), ribbon | `content/home.ts` |
 | | | Amended 2026-09-13 (ADR-031, as shipped): groups `hero` (4 slides: headline, subline, desktop and mobile media; CTAs, microcopy, 3 chips), `productStrip` (copy + 5 product relationships), `designer` (eyebrow, title, lead, sample, cta), `steps` (copy, link, 3 items with media icons), `video` (copy; the file ships with the site), `whyUs` (3 items, icon select), `testimonials`, `integrations`, `faq` (copy + link; the entries are the `faqs` rows flagged `showOnHome`), `ribbon`; `enabled` on every group but hero, productStrip, designer and ribbon; drafts + autosave; interface strings (aria, hints, input labels, validation) stay in `src/messages/ar.json`. | `content/seed/home.ts` (seed) |

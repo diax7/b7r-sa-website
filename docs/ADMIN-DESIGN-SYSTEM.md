@@ -118,7 +118,12 @@ The admin's strings are interface copy (ADR-031): written by us, under the ux-ar
 - Localised fields (ADR-043): the panel's locale control switches every localised field
   between Arabic and English; a document reaches the English site when its title-like field
   has an English value. Media alt text is per language; the Arabic value must be Arabic
-  script, the English one is free text.
+  script, the English one is free text. Every localised field label carries a neutral pill
+  with the open locale's code (`AR`/`EN`, ADR-044): a field with a pill changes per language,
+  a field without one is shared. A document with per-language fields shows the `LocaleNote`
+  line before its controls ("Editing the English content. Fields marked EN are per language;
+  the rest is shared with Arabic."); register it through `admin/locale/config.ts` on every
+  new collection or global with a localised field (`tests/admin-config.test.ts` checks).
 
 ## 6. Components
 
@@ -157,8 +162,10 @@ the route-transition bar, no reload. A plain `<a>` is for the site (new tab) and
 
 Payload puts the sidebar in a drawer at widths ≤ 1440 px (its `l` breakpoint), the header
 hamburger opens it; that is Payload's behaviour, kept. Every view gets 24 px under the header. Payload's locale suffix on localized
-labels (`.field-label .localized`) is hidden: the header's locale switcher names the locale,
-and the suffix is an em dash.
+labels (`.field-label .localized`, an em dash and the locale's name) is drawn as the locale
+pill (ADR-044): the span's own text is hidden, a `::after` shows the code from
+`html[data-content-locale]`, which the header actions set from `useLocale()`; before
+hydration there is no pill rather than a wrong one.
 
 ## 7. States
 

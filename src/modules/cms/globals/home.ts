@@ -3,12 +3,19 @@ import { isEditorOrAdmin } from '@/modules/cms/access';
 import { revalidateGlobal } from '@/modules/cms/hooks/revalidate';
 import { savedByField, stampSavedByGlobal } from '@/modules/cms/fields/saved-by';
 import { previewUrl } from '@/lib/preview-token';
+import { HERO_CHIPS_MAX, HERO_OVERLAY_DEFAULT, HEX_COLOR } from '@/content/schema';
+import { globalLocaleNote } from '@/modules/cms/admin/locale/config';
 
 /** The three why-us icons the section knows how to draw (BRD 6.4.6). */
 export const WHY_US_ICONS = ['ShieldCheck', 'Workflow', 'Zap'] as const;
 
 /** Exactly this many products sit in the strip (BRD 6.4.2). */
 export const STRIP_SIZE = 5;
+
+const PHOTO_PER_LANGUAGE = {
+  ar: 'لكل لغة صورتها (الموقع الإنجليزي لا يعود إلى العربية). الإنجليزية: تركيب معكوس، المساحة الهادئة تحت النص.',
+  en: 'Per language (the English site has no fallback). English: the mirrored composition, calm area under the copy.',
+};
 
 const text = (name: string, label: { ar: string; en: string }, extra: Partial<Field> = {}): Field =>
   ({ name, type: 'text', required: true, localized: true, label, ...extra }) as Field;
@@ -45,6 +52,7 @@ export const Home: GlobalConfig = {
   slug: 'home',
   label: { ar: 'الصفحة الرئيسية', en: 'Home page' },
   admin: {
+    components: globalLocaleNote(),
     group: { ar: 'المحتوى', en: 'Content' },
     preview: (_doc, { req }) => previewUrl(req.payload.config.serverURL, '/', req.payload.secret),
     description: {
@@ -79,22 +87,73 @@ export const Home: GlobalConfig = {
             text('subline', { ar: 'السطر الثاني', en: 'Subline' }),
             {
               type: 'row',
+              // Per language (ADR-044): the English document mirrors the layout, so its photo
+              // is a mirrored composition; the site reads without locale fallback, so both
+              // languages need their own.
               fields: [
                 {
                   name: 'imageDesktop',
                   type: 'upload',
                   relationTo: 'media',
                   required: true,
+                  localized: true,
                   label: { ar: 'الصورة (سطح المكتب 16:9)', en: 'Image (desktop 16:9)' },
+                  admin: { description: PHOTO_PER_LANGUAGE },
                 },
                 {
                   name: 'imageMobile',
                   type: 'upload',
                   relationTo: 'media',
                   required: true,
+                  localized: true,
                   label: { ar: 'الصورة (الجوال 4:5)', en: 'Image (mobile 4:5)' },
+                  admin: { description: PHOTO_PER_LANGUAGE },
                 },
               ],
+            },
+          ],
+        },
+        {
+          name: 'overlay',
+          type: 'group',
+          label: { ar: 'التدرّج فوق الصورة', en: 'Fade over the photo' },
+          admin: {
+            description: {
+              ar: 'طبقة شفافة من لون واحد تبدأ من جهة النص وتتلاشى فوق الصورة؛ تُقرأ العناوين فوق أي صورة.',
+              en: 'A one-colour fade from the copy side over the photo, so the headline reads on any photo.',
+            },
+          },
+          fields: [
+            {
+              name: 'enabled',
+              type: 'checkbox',
+              defaultValue: true,
+              label: { ar: 'يظهر فوق الصورة', en: 'Shown over the photo' },
+              admin: {
+                description: {
+                  ar: 'عند الإيقاف تظهر الصورة كما هي خلف النص، بلا تدرّج.',
+                  en: 'Off shows the photo as it is behind the copy, with no fade.',
+                },
+                components: { Field: '@/modules/cms/admin/fields/enabled-switch#EnabledSwitch' },
+              },
+            },
+            {
+              name: 'color',
+              type: 'text',
+              required: true,
+              defaultValue: HERO_OVERLAY_DEFAULT,
+              label: { ar: 'اللون', en: 'Colour' },
+              admin: {
+                description: {
+                  ar: 'لون التدرّج؛ الأبيض هو الأصل. يُكتب بصيغة #rrggbb.',
+                  en: 'The fade colour; white is the default. Written as #rrggbb.',
+                },
+                components: { Field: '@/modules/cms/admin/fields/color-field#ColorField' },
+              },
+              validate: (value: unknown) =>
+                typeof value === 'string' && HEX_COLOR.test(value)
+                  ? true
+                  : 'اكتب لوناً بصيغة #rrggbb',
             },
           ],
         },
@@ -112,11 +171,16 @@ export const Home: GlobalConfig = {
         {
           name: 'chips',
           type: 'array',
-          required: true,
-          minRows: 3,
-          maxRows: 3,
+          minRows: 0,
+          maxRows: HERO_CHIPS_MAX,
           label: { ar: 'شارات الإثبات', en: 'Proof chips' },
           labels: { singular: { ar: 'شارة', en: 'Chip' }, plural: { ar: 'الشارات', en: 'Chips' } },
+          admin: {
+            description: {
+              ar: `من صفر إلى ${HERO_CHIPS_MAX}؛ بلا شارات يختفي الصف. الصفوف مشتركة بين اللغتين والنص لكل لغة: صف بلا نص إنجليزي لا يظهر في الموقع الإنجليزي.`,
+              en: `Zero to ${HERO_CHIPS_MAX}; none hides the row. The rows are shared by both languages, the text is per language: a row without an English text does not show on the English site.`,
+            },
+          },
           fields: [text('text', { ar: 'النص', en: 'Text' })],
         },
       ],

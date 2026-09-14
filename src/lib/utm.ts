@@ -1,6 +1,7 @@
 /**
- * Register / login links to the app (BRD §4.3, §4.4). Every CTA carries
- * `utm_source=b7r.sa&utm_medium=website&utm_campaign=<campaign>` plus optional content.
+ * Register links to the app (BRD §4.3, §4.4; there is no login link on the site, ADR-044).
+ * Every CTA carries `utm_source=b7r.sa&utm_medium=website&utm_campaign=<campaign>` plus
+ * optional content.
  */
 export interface RegisterUrlOptions {
   campaign: 'header' | 'hero' | 'designer' | 'video' | 'ribbon' | 'product' | 'menu';
@@ -19,10 +20,6 @@ export function registerUrl(
   if (content) url.searchParams.set('utm_content', content);
   if (product) url.searchParams.set('product', product);
   return url.toString();
-}
-
-export function loginUrl(appUrl: string): string {
-  return new URL('/login', appUrl).toString();
 }
 
 /** wa.me link; the text is percent-encoded (WhatsApp expects %20, not +, for spaces). */

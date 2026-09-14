@@ -1,6 +1,9 @@
 /**
  * The `home` global in English (BRD 4.4 in translation): the localised fields only, arrays
- * in the Arabic seed's order. Facts are BRD 1.1's (SAR 30 credit, 5 days, Jeddah).
+ * in the Arabic seed's order. Facts are BRD 1.1's (SAR 30 credit, 5 days, Jeddah). The hero
+ * photos are per language (ADR-044): the English placeholders are the Arabic shots mirrored
+ * (`scripts/hero-crops.ts`), so the calm area sits under the start-aligned copy; Dhia's
+ * English photographs replace them in the admin (RUNBOOK).
  */
 export const homeEn = {
   hero: {
@@ -8,28 +11,36 @@ export const homeEn = {
       {
         headline: 'Your brand starts with a single piece',
         subline: 'Design it and sell it; we print and ship under your name.',
+        imageDesktop: '/images/hero-en/set-a-desktop.jpg',
+        imageMobile: '/images/hero-en/set-a-mobile.jpg',
         alt: 'A young man in a black T-shirt printed with the B7R Print logo, with a tote bag, a cap and a hoodie beside him',
       },
       {
         headline: 'No capital, no stock',
         subline: 'We print only when an order arrives, and you profit from the first piece.',
+        imageDesktop: '/images/hero-en/set-b-desktop.jpg',
+        imageMobile: '/images/hero-en/set-b-mobile.jpg',
         alt: 'A young man in a white hoodie printed with "your design here", with a tote bag, a cap and a T-shirt beside him',
       },
       {
-        headline: 'From Jeddah to the whole Kingdom within 5 days',
+        headline: 'Jeddah to the whole Kingdom in 5 days',
         subline: 'Local production and fast shipping, with no customs and no waiting.',
+        imageDesktop: '/images/hero-en/set-a-desktop.jpg',
+        imageMobile: '/images/hero-en/set-a-mobile.jpg',
         alt: 'A young man in a black T-shirt printed with the B7R Print logo, with a tote bag, a cap and a hoodie beside him',
       },
       {
         headline: 'A store on Salla or Zid? Connect it in one click',
-        subline: 'Orders reach us automatically and arrive at your customer under your store name.',
+        subline: 'Orders reach us automatically and ship under your store name.',
+        imageDesktop: '/images/hero-en/set-b-desktop.jpg',
+        imageMobile: '/images/hero-en/set-b-mobile.jpg',
         alt: 'A young man in a white hoodie printed with "your design here", with a tote bag, a cap and a T-shirt beside him',
       },
     ],
     primaryCta: 'Start your brand for free',
     secondaryCta: 'Explore the products',
     microcopy: 'SAR 30 welcome credit, no card needed',
-    chips: ['100% free', 'No minimum order', 'Delivery across the Kingdom within 5 days'],
+    chips: ['100% free', 'No minimum order', 'Kingdom-wide delivery in 5 days'],
   },
   productStrip: {
     eyebrow: 'Products',

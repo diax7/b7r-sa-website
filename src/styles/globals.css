@@ -36,8 +36,9 @@
   --shadow-popover: 0 8px 24px rgb(20 24 31 / 0.12);
   --shadow-header: 0 1px 0 rgb(20 24 31 / 0.06);
 
-  --header-h: 72px;
-  --header-h-mobile: 60px;
+  /* Resting heights (Dhia, 2026-09-14: the bar sits lower); scrolled shrinks to 60. */
+  --header-h: 88px;
+  --header-h-mobile: 72px;
   --header-h-scrolled: 60px;
 
   --container-page: 1280px;
@@ -122,6 +123,13 @@
   line-height: var(--text-display--line-height);
   font-weight: 900;
   letter-spacing: 0;
+  /* The English document (ADR-044): Latin Black wants a tighter leading and tracking, and a
+     size that matches the Arabic presence (measured: two rows per headline at 1280). */
+  &:where([dir='ltr'], [dir='ltr'] *) {
+    font-size: clamp(34px, 4.6vw, 56px);
+    line-height: 1.12;
+    letter-spacing: -0.02em;
+  }
 }
 @utility lead {
   font-size: var(--text-lead);
@@ -153,6 +161,38 @@
     padding-block: 96px;
   }
 }
+/* A CSS tooltip for an icon-only control (ADR-044): the text of `data-tooltip` under the
+   control on hover and keyboard focus; the control keeps its `aria-label`. */
+@utility tooltip {
+  position: relative;
+  &::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    inset-inline-start: 50%;
+    inset-block-start: calc(100% + 6px);
+    transform: translateX(-50%);
+    padding: 4px 10px;
+    border-radius: var(--radius-inner);
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    color: var(--color-text);
+    box-shadow: var(--shadow-popover);
+    font-size: var(--text-caption);
+    line-height: var(--text-caption--line-height);
+    font-weight: 500;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--duration-fast) var(--ease-standard);
+  }
+  &:where([dir='rtl'], [dir='rtl'] *)::after {
+    transform: translateX(50%);
+  }
+  &:is(:hover, :focus-visible)::after {
+    opacity: 1;
+  }
+}
+
 /* Directional icons flip in RTL (§3.8); the wrapper applies this only for arrows/chevrons. */
 @utility mirror-rtl {
   &:where([dir='rtl'], [dir='rtl'] *) {
@@ -180,8 +220,9 @@
 }
 
 /* Hero (BRD 6.4.1). Pulled under the transparent header; the legibility overlay is the one
-   permitted gradient (white to transparent). The gradient direction is physical on purpose:
-   the photo composition is fixed (cluster on the left, calm area on the right). */
+   permitted gradient (the admin's colour to transparent, `--hero-overlay`, ADR-044). It
+   starts at the start edge, where the copy sits: the right in Arabic, the left in English,
+   each document with its own photos (calm area under the copy). */
 .hero {
   margin-block-start: calc(-1 * var(--header-h-mobile));
   padding-block-start: var(--header-h-mobile);
@@ -194,15 +235,28 @@
   }
 }
 .hero-overlay {
-  background: linear-gradient(to bottom, rgb(255 255 255 / 0.96) 55%, rgb(255 255 255 / 0) 75%);
+  --hero-overlay: #ffffff;
+  background: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--hero-overlay) 96%, transparent) 55%,
+    transparent 75%
+  );
 }
 @media (min-width: 768px) {
   .hero-overlay {
     background: linear-gradient(
       to left,
-      rgb(255 255 255 / 0.92) 0%,
-      rgb(255 255 255 / 0.85) 30%,
-      rgb(255 255 255 / 0) 55%
+      color-mix(in srgb, var(--hero-overlay) 92%, transparent) 0%,
+      color-mix(in srgb, var(--hero-overlay) 85%, transparent) 30%,
+      transparent 55%
+    );
+  }
+  [dir='ltr'] .hero-overlay {
+    background: linear-gradient(
+      to right,
+      color-mix(in srgb, var(--hero-overlay) 92%, transparent) 0%,
+      color-mix(in srgb, var(--hero-overlay) 85%, transparent) 30%,
+      transparent 55%
     );
   }
 }
@@ -214,14 +268,8 @@
   .hero-image {
     object-position: 20% 60%;
   }
-  /* The English document (ADR-043) keeps the copy over the calm right area of the same
-     photo: inline-start is the left there, so the copy and the dots move to the end. */
-  [dir='ltr'] .hero-copy {
-    margin-inline-start: auto;
-  }
-  [dir='ltr'] .hero-dots {
-    justify-content: flex-end;
-    padding-inline: 0 1.5rem;
+  [dir='ltr'] .hero-image {
+    object-position: 80% 60%;
   }
 }
 

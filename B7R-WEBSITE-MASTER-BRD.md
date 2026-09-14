@@ -351,16 +351,15 @@ Every user-visible string in Level 1 is here. Copy it exactly, including punctua
 | Brand | براندك (CTA only, per Dhia) · علامتك التجارية (prose) | ماركتك |
 | Register | أنشئ حسابك / ابدأ براندك مجانًا | سجّل الآن (allowed only in the ribbon lead) |
 | Delivery | التوصيل, نوصّل | الشحن as the customer-facing verb (use شحن for the act B7R does) |
-| Sign in | تسجيل الدخول | |
 
 ### 4.3 Global elements
 
 **Navigation (in order, RTL start to end):** الرئيسية · المنتجات · كيف نعمل · من نحن · المدونة · تواصل معنا
 **Header CTA:** ابدأ براندك مجانًا → `https://b7r.app/register?utm_source=b7r.sa&utm_medium=website&utm_campaign=header`
-**Header secondary (desktop only, text link before the CTA):** تسجيل الدخول → `https://b7r.app/login`
+**Header secondary:** none. *Amended 2026-09-14 (Dhia, ADR-044): the login link is gone from the header, the menu and the CMS; the language switch (an icon, §6.2) sits before the CTA.*
 **Skip link:** تخطَّ إلى المحتوى
 **Menu button labels (aria):** فتح القائمة / إغلاق القائمة
-**Mobile menu footer line:** تواصل معنا عبر واتساب
+**WhatsApp line (the error pages; the menu shows the icon, §6.2):** تواصل معنا عبر واتساب
 
 ### 4.4 Homepage
 
@@ -376,7 +375,7 @@ Every user-visible string in Level 1 is here. Copy it exactly, including punctua
 **Hero primary CTA:** ابدأ براندك مجانًا → register URL with `utm_campaign=hero`
 **Hero secondary CTA (text link with mirrored arrow):** استكشف المنتجات → `/products`
 **Hero microcopy under the buttons:** رصيد ترحيبي 30 ريالاً، بدون بطاقة *(2026-09-13, Dhia: not shown in the hero any more; the line stays in the CMS for the About facts band)*
-**Hero proof chips (3, with check icons):** مجاني 100% · بدون حد أدنى للطلبات · توصيل لكل المملكة خلال 5 أيام
+**Hero proof chips (0 to 6, with check icons; the seed ships 3):** مجاني 100% · بدون حد أدنى للطلبات · توصيل لكل المملكة خلال 5 أيام
 **Slide indicator aria:** الشريحة {n} من 4 · **Pause aria:** إيقاف التبديل التلقائي / استئناف التبديل التلقائي
 
 **Product strip section**
@@ -679,13 +678,13 @@ Each section below states purpose, layout (desktop ≥ 1024 px and mobile < 768 
 
 **Purpose:** orientation and one clear action.
 
-**Desktop layout:** height 72 px; container; three zones in a flex row: start = colour logo (height 36 px, links to `/`), centre = nav links (17 px Medium, gap 32 px), end = "تسجيل الدخول" text link then the primary `Button` "ابدأ براندك مجانًا" (md size). Background transparent over the hero's top edge on `/` only; elsewhere white.
+**Desktop layout:** height 88 px at rest (*amended 2026-09-14, Dhia: "a little bit more down"; was 72*); container; three zones in a flex row: start = colour logo (height 36 px, links to `/`), centre = nav links (17 px Medium, gap 32 px), end = the language switch then the primary `Button` "ابدأ براندك مجانًا" (md size). *Amended 2026-09-14 (Dhia, ADR-044): no login link anywhere. The switch is an icon: the translate glyph in a 44 px ring, its accessible name from the copy bank, a CSS tooltip naming the target language in that language; it links the current page in the other language and follows client-side navigation; a page without a twin goes to its section's listing in the other language.* Background transparent over the hero's top edge on `/` only; elsewhere white.
 
 **Sticky behaviour:** `position: sticky; top: 0; z-index: 50`. After the page scrolls more than 24 px, the header transitions over 200 ms to: height 60 px, background `rgba(255,255,255,.85)` with `backdrop-filter: blur(12px)`, bottom hairline `--shadow-header`, logo scales to 30 px. It never hides on scroll.
 
 **Active link:** 2 px `--color-accent` underline offset 10 px, animated width 0 → 100% over 200 ms from the start edge.
 
-**Mobile (< 1024 px):** height 60 px; start = logo 28 px; end = burger button (44 × 44 target, three 2 px lines, 18 px wide). No CTA in the bar. Tapping the burger morphs the lines into an X over 300 ms (top and bottom lines rotate ±45° and meet in the middle, middle line fades) and opens a full-screen overlay: white background, the 6 links at 28 px Bold stacked with a 40 ms staggered fade-and-rise, then a divider, then the primary CTA (lg, full width), then "تسجيل الدخول" as a secondary button, then a WhatsApp line "تواصل معنا عبر واتساب" with icon, then the three social icons. Body scroll is locked while open; Escape and the X close it; focus is trapped inside; focus returns to the burger on close. The overlay slides in from the start edge over 300 ms (opacity + 16 px translate); reduced motion = opacity only.
+**Mobile (< 1024 px):** height 72 px at rest (*amended 2026-09-14; was 60*); start = logo 28 px; end = burger button (44 × 44 target, three 2 px lines, 18 px wide). No CTA and no switch in the bar. Tapping the burger morphs the lines into an X over 300 ms (top and bottom lines rotate ±45° and meet in the middle, middle line fades; the X morphs back into the burger over 200 ms as the sheet closes) and opens a full-screen overlay: white background; a top bar mirroring the header (the logo at the start, the language switch and the X at the end); the 6 links at 28 px Bold stacked with a 40 ms staggered fade-and-rise, then a divider, then the primary CTA (lg, full width), then one row of icons: WhatsApp (green tint) and the three socials. *Amended 2026-09-14 (Dhia, ADR-044): no login button and no WhatsApp text line; the overlay fades in from above (opacity + 12 px translate down, 300 ms) instead of sliding from the start edge.* Body scroll is locked while open; Escape and the X close it; focus is trapped inside; focus returns to the burger on close. Reduced motion = opacity only, the X drawn at once.
 
 **Acceptance:** keyboard reachable; header never overlaps the hero text; no layout shift when it shrinks (reserve height with a wrapper); Lighthouse tap targets pass.
 
@@ -693,7 +692,7 @@ Each section below states purpose, layout (desktop ≥ 1024 px and mobile < 768 
 
 **6.3.1 CTA ribbon (component `CtaRibbon`, on every page before the footer):** full-bleed band, background `--color-primary`, white text, padding 72 px vertical (48 px mobile). Content centred: H2 (§4.4 ribbon), lead, then a white `Button` (primary text colour) "ابدأ براندك مجانًا". Top and bottom edges are `WaveDivider`s (§6.3.4) in the adjacent section's background colour so the band appears to sit between two gentle waves.
 
-**6.3.2 Footer:** background `--color-navy`, text white at 90% opacity, links white, hover `--color-accent`. Top edge: a `WaveDivider` in the ribbon's primary blue so the ribbon flows into the footer. Layout desktop: 4 columns (logo + tagline + social icons 3 | روابط | السياسات | النشرة البريدية form). Second row: badges strip (payment logos at 28 px height in white rounded tiles, then SBC, Ministry of Commerce, then the Misk logo with its line), separated by a 1 px white/10% hairline. Third row: contact line and copyright. *Amended 2026-09-13 (Dhia): four social icons (X, Instagram, TikTok, WhatsApp) with the contact line (e-mail · phone) under them in the first column; the Misk logo without its line; the third row is the copyright alone, centred.* Mobile: single column in the same order, badges wrap.
+**6.3.2 Footer:** background `--color-navy`, text white at 90% opacity, links white, hover `--color-accent`. Top edge: a `WaveDivider` in the ribbon's primary blue so the ribbon flows into the footer. Layout desktop: 4 columns (logo + tagline + social icons 3 | روابط | السياسات | النشرة البريدية form). Second row: badges strip (payment logos at 28 px height in white rounded tiles, then SBC, Ministry of Commerce, then the Misk logo with its line), separated by a 1 px white/10% hairline. Third row: contact line and copyright. *Amended 2026-09-13 (Dhia): four social icons (X, Instagram, TikTok, WhatsApp) with the contact line (e-mail · phone) under them in the first column; the Misk logo without its line; the third row is the copyright alone, centred.* *Amended 2026-09-14 (Dhia, ADR-044): the white logo is 48 px (was 40). Below 1024 px: the brand block (logo, tagline, socials, contact line) spans the row and centres; روابط and السياسات share one row in two start-aligned columns; the newsletter spans the row; the badges wrap centred.*
 
 **6.3.3 Newsletter form (footer):** email input (LTR) + button; POST `/api/newsletter`; inline success or error message (§4.5) with `aria-live`; honeypot field; disabled while submitting.
 
@@ -707,11 +706,11 @@ Section order: Hero → Product strip → Interactive designer and profit → Th
 
 **Purpose:** the promise in one glance, one action.
 
-**Layout desktop:** section `min-height: calc(100svh - 72px)`, full-bleed. Background: the slide image, `object-fit: cover`, `object-position: 20% 60%` (keeps the product cluster in view). A legibility overlay on the start (right) 45% of the width: linear gradient from `rgba(255,255,255,.92)` at the start edge to transparent, only if the photo is light; keep it for all placeholders. Text column: inside the container, start-aligned, max-width 560 px, vertically centred at 45% of the section height. Stack: Display headline (§4.4 slide table, `--color-text`), 16 px gap, subline (lead size, `--color-text-muted`), 32 px gap, button row (primary lg button + secondary text link with a mirrored arrow, gap 24 px), 12 px gap, microcopy (small, muted), 32 px gap, proof chips row (3 `Chip`s with `Check` icons in accent tint). Slide dots sit at the bottom-start of the section, 24 px from the edges: 4 dots, active dot elongated to 24 px in `--color-primary`, inactive 8 px at 40% opacity. A pause/play control (icon button) sits next to the dots.
+**Layout desktop:** section `min-height: calc(100svh - header)`, full-bleed. Background: the slide image, `object-fit: cover`, `object-position: 20% 60%` in Arabic and `80% 60%` in English (keeps the product cluster in view; each language has its own photos, see Slides). A legibility overlay on the start 45% of the width (the right in Arabic, the left in English): linear gradient from the overlay colour at 92% opacity at the start edge to transparent. *Amended 2026-09-14 (Dhia, ADR-044): the overlay is an admin setting, `hero.overlay`: a switch (off shows the photo as it is) and a `#rrggbb` colour (white by default), one setting for both languages.* Text column: inside the container, start-aligned, max-width 560 px (600 px in English), vertically centred at 45% of the section height. Stack: Display headline (§4.4 slide table, `--color-text`; in English 56 px, leading 1.12, tracking -0.02 em, so every headline is two rows and every subline one at 1280 px), 16 px gap, subline (lead size, `--color-text-muted`), 32 px gap, button row (primary lg button + secondary text link with a mirrored arrow, gap 24 px), 12 px gap, microcopy (small, muted), 32 px gap, proof chips row (0 to 6 `Chip`s with `Check` icons in accent tint; the row is omitted when the language has none; the rows are shared by both languages, the text is per language). Slide dots sit at the bottom-start of the section, 24 px from the edges: 4 dots, active dot elongated to 24 px in `--color-primary`, inactive 8 px at 40% opacity. A pause/play control (icon button) sits next to the dots.
 
 **Layout mobile:** `min-height: 100svh`. Image uses the mobile 4:5 asset, `object-position: 50% 70%`, and a stronger overlay from the top: `rgba(255,255,255,.96)` for the top 55% fading to transparent at 75%. Text sits in the top half: Display at its minimum size, subline, primary button full width, secondary link centred below, microcopy, chips as a horizontally scrolling row with snap and no visible scrollbar. Dots centred at the bottom.
 
-**Slides:** 4 entries `{ id, headline, subline, imageDesktop, imageMobile, alt }` from `content/home.ts`. Placeholders: slides 1 and 3 use `hero-set-A-black-b7r-merch.png`, slides 2 and 4 use `hero-set-B-blue-tasmeemak.png`; mobile variants are centre-crops generated at build (`scripts/hero-crops.ts`) until Dhia supplies final photos. The final photos must follow §3.9.
+**Slides:** 4 entries `{ id, headline, subline, imageDesktop, imageMobile, alt }` from `content/home.ts`; the photos are per language (ADR-044): the English document mirrors the layout, so its photos are mirrored compositions (calm area at the left, under the copy). Placeholders: slides 1 and 3 use `hero-set-A-black-b7r-merch.png`, slides 2 and 4 use `hero-set-B-blue-tasmeemak.png`; mobile variants are centre-crops generated at build (`scripts/hero-crops.ts`), and the English placeholders are the same crops flipped (`public/images/hero-en/`, the printed wordmark reads backwards on them) until Dhia supplies final photos in both compositions. The final photos must follow §3.9.
 
 **Behaviour:** auto-advance every 6 s; crossfade 700 ms (image opacity) while the headline and subline fade-and-rise (12 px, 400 ms) 100 ms after the image starts; buttons and chips do not move. Pauses on hover, focus within, and touch; resumes on leave. Swipe left/right on touch changes the slide (in RTL, swiping toward the start edge goes forward). Dots are buttons. The first slide's headline is the page's only `<h1>`; other slides' headlines are `<p class="display">` so the document keeps one H1. Reduced motion: no auto-advance, instant slide switch, dots still work.
 
@@ -1105,7 +1104,7 @@ Module rules: `modules/x` imports from `components/*`, `content/*`, `lib/*`, and
 
 `content/schema.ts` defines, with zod, exactly the shapes Level 2 will store in Payload collections of the same names:
 
-- `SiteSettings` { brandName, tagline, contact { phone, whatsapp, email }, social { x, instagram, tiktok }, offer { welcomeCredit: 30 }, delivery { maxDays: 5, origin: "جدة" }, bookingUrl?: string, appUrls { register, login } }
+- `SiteSettings` { brandName, tagline, contact { phone, whatsapp, email }, social { x, instagram, tiktok }, offer { welcomeCredit: 30 }, delivery { maxDays: 5, origin: "جدة" }, bookingUrl?: string }
 - `NavItem` { label, href, matchPrefix? }
 - `HeroSlide` { id, headline, subline, imageDesktop, imageMobile, alt }
 - `Product` { slug, name, shortDescription, description, baseCost, suggestedPrice, colors[{ slug, name, hex, images{front, back?} }], sizes[{ label, measurements? }], material, weightGrams, printArea { label, widthCm: 28, heightCm: 38, canvas { x, y, w, h } }, printMethodLabel, sortOrder }
@@ -1223,7 +1222,7 @@ Give Dhia and an editor a WordPress-like, Arabic, right-to-left admin at `https:
 
 | Payload | Kind | Fields (summary) | Replaces |
 |---|---|---|---|
-| `site-settings` | Global | brand, contact, social, offer.welcomeCredit, delivery.maxDays, delivery.origin, bookingUrl, appUrls, badges (media[]), consent text | `content/site.ts` |
+| `site-settings` | Global | brand, contact, social, offer.welcomeCredit, delivery.maxDays, delivery.origin, bookingUrl, badges (media[]), consent text | `content/site.ts` |
 | `navigation` | Global | header items[], footer columns[], ctaLabel | `content/navigation.ts` |
 | `home` | Global | heroSlides[] (media desktop/mobile, headline, subline), productStripOrder[], designerDefaults, steps[], video (media, poster, heading, lead), whyUs[], integrationsIntro, faqSelection (5 relationship), ribbon | `content/home.ts` |
 | | | Amended 2026-09-13 (ADR-031, as shipped): groups `hero` (4 slides: headline, subline, desktop and mobile media; CTAs, microcopy, 3 chips), `productStrip` (copy + 5 product relationships), `designer` (eyebrow, title, lead, sample, cta), `steps` (copy, link, 3 items with media icons), `video` (copy; the file ships with the site), `whyUs` (3 items, icon select), `testimonials`, `integrations`, `faq` (copy + link; the entries are the `faqs` rows flagged `showOnHome`), `ribbon`; `enabled` on every group but hero, productStrip, designer and ribbon; drafts + autosave; interface strings (aria, hints, input labels, validation) stay in `src/messages/ar.json`. | `content/seed/home.ts` (seed) |
@@ -1979,6 +1978,7 @@ Every interface string of the English site, key for key with the Arabic bank of 
 | `errorPage.title` | Something went wrong |
 | `errorPage.text` | Try refreshing the page, or message us on WhatsApp. |
 | `errorPage.button` | Back to the home page |
+| `errorPage.whatsapp` | Chat with us on WhatsApp |
 | `gonePage.title` | This page was removed |
 | `gonePage.text` | The link seems to have changed or been removed. |
 | `gonePage.button` | Back to the home page |

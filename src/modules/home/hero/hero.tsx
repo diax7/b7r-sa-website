@@ -68,6 +68,7 @@ export async function Hero({ locale }: { locale: Locale }) {
       <HeroCarousel
         slides={hero.slides}
         images={images}
+        overlay={hero.overlay}
         copy={{
           primaryCta: hero.primaryCta,
           primaryHref: registerUrl(env.appUrl, { campaign: 'hero' }),

@@ -12,14 +12,15 @@ import { cn } from '@/lib/cn';
 import { env } from '@/lib/env';
 import { type Locale, localePath, otherLocale } from '@/lib/i18n';
 import { isActive } from '@/lib/nav';
-import { loginUrl, registerUrl } from '@/lib/utm';
+import { registerUrl } from '@/lib/utm';
 import { LanguageSwitch } from '@/modules/core/header/language-switch';
 import { MobileMenuTrigger } from '@/modules/core/header/mobile-menu-trigger';
 
 /**
- * Sticky header (BRD 6.2). A 24 px sentinel at the top of the document drives the scrolled
- * state; the outer wrapper reserves `--header-h` so the inner shrink never shifts layout.
- * Transparent over the hero at the top of `/` only.
+ * Sticky header (BRD 6.2, ADR-044). A 24 px sentinel at the top of the document drives the
+ * scrolled state; the outer wrapper reserves `--header-h` so the inner shrink never shifts
+ * layout. Transparent over the hero at the top of `/` only. Desktop: logo, nav, the language
+ * switch, the CTA; phones: logo and burger (the switch sits in the menu's top bar).
  */
 export interface ShellData {
   navigation: Navigation;
@@ -108,16 +109,10 @@ export function Header({ navigation, site, locale, locales, copy }: ShellData) {
               </ul>
             </nav>
 
-            <div className="hidden items-center gap-6 lg:flex">
+            <div className="hidden items-center gap-5 lg:flex">
               {switchable && (
                 <LanguageSwitch locale={locale} ariaLabel={copy.a11y.switchLanguage} />
               )}
-              <a
-                href={loginUrl(env.appUrl)}
-                className="text-body font-medium text-text transition-colors duration-(--duration-fast) hover:text-primary"
-              >
-                {navigation.loginLabel}
-              </a>
               <Button asChild>
                 <a
                   href={registerUrl(env.appUrl, { campaign: 'header' })}

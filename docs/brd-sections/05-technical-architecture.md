@@ -85,7 +85,7 @@ Module rules: `modules/x` imports from `components/*`, `content/*`, `lib/*`, and
 
 `content/schema.ts` defines, with zod, exactly the shapes Level 2 will store in Payload collections of the same names:
 
-- `SiteSettings` { brandName, tagline, contact { phone, whatsapp, email }, social { x, instagram, tiktok }, offer { welcomeCredit: 30 }, delivery { maxDays: 5, origin: "جدة" }, bookingUrl?: string, appUrls { register, login } }
+- `SiteSettings` { brandName, tagline, contact { phone, whatsapp, email }, social { x, instagram, tiktok }, offer { welcomeCredit: 30 }, delivery { maxDays: 5, origin: "جدة" }, bookingUrl?: string }
 - `NavItem` { label, href, matchPrefix? }
 - `HeroSlide` { id, headline, subline, imageDesktop, imageMobile, alt }
 - `Product` { slug, name, shortDescription, description, baseCost, suggestedPrice, colors[{ slug, name, hex, images{front, back?} }], sizes[{ label, measurements? }], material, weightGrams, printArea { label, widthCm: 28, heightCm: 38, canvas { x, y, w, h } }, printMethodLabel, sortOrder }
