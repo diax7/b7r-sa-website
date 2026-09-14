@@ -1,4 +1,5 @@
 import { absoluteUrl } from '@/lib/absolute-url';
+import { type Locale, localePath } from '@/lib/i18n';
 
 /**
  * RSS 2.0 for `/feed.xml` (BRD 10.1): the latest posts with their full HTML in
@@ -9,6 +10,8 @@ export interface FeedChannel {
   title: string;
   description: string;
   base: string;
+  /** The feed's language (ADR-043): the blog and the posts live under its prefix. */
+  locale?: Locale;
   language?: string;
 }
 
@@ -45,10 +48,11 @@ function rfc822(iso: string): string {
 }
 
 export function buildFeed(channel: FeedChannel, items: FeedItem[]): string {
+  const locale = channel.locale ?? 'ar';
   const latest = items[0]?.publishedAt ?? new Date().toISOString();
   const entries = items
     .map((item) => {
-      const url = `${channel.base}/blog/${item.slug}`;
+      const url = `${channel.base}${localePath(locale, `/blog/${item.slug}`)}`;
       const html = absolutizeHtml(channel.base, item.html);
       const enclosure = item.cover
         ? `\n      <enclosure url="${escape(absoluteUrl(channel.base, item.cover.src))}" type="${escape(item.cover.mime)}" length="${item.cover.bytes}" />`
@@ -69,8 +73,8 @@ export function buildFeed(channel: FeedChannel, items: FeedItem[]): string {
 <rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>${escape(channel.title)}</title>
-    <link>${channel.base}/blog</link>
-    <atom:link href="${channel.base}/feed.xml" rel="self" type="application/rss+xml" />
+    <link>${channel.base}${localePath(locale, '/blog')}</link>
+    <atom:link href="${channel.base}${localePath(locale, '/feed.xml')}" rel="self" type="application/rss+xml" />
     <description>${escape(channel.description)}</description>
     <language>${channel.language ?? 'ar'}</language>
     <lastBuildDate>${rfc822(latest)}</lastBuildDate>

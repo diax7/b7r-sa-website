@@ -38,16 +38,10 @@ function isVersioned(collection: LocalisedCollection): boolean {
   return collection === 'products' || collection === 'pages' || collection === 'posts';
 }
 
-/** The locales the code-owned routes exist in: Arabic, and English once the site is in it. */
+/**
+ * The locales the code-owned routes (the designed pages, the listings, the blog index) exist
+ * in: Arabic, and English once the site is in it.
+ */
 export const siteLocales = cache(async (): Promise<Locale[]> => {
   return (await localeEnabled('en')) ? ['ar', 'en'] : ['ar'];
 });
-
-/** The blog routes exist in Arabic only until Level 5b ships `/en/blog`. */
-export const BLOG_ENGLISH_PENDING = true;
-
-/** The locales a code-owned route exists in: the blog stays Arabic-only until 5b. */
-export async function routeLocales(route: string): Promise<Locale[]> {
-  if (BLOG_ENGLISH_PENDING && (route === '/blog' || route.startsWith('/blog/'))) return ['ar'];
-  return siteLocales();
-}

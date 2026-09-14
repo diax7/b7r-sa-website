@@ -11,6 +11,7 @@ import {
   UploadFeature,
 } from '@payloadcms/richtext-lexical';
 import type { CollectionConfig, PayloadRequest } from 'payload';
+import { localePath, requestLocale } from '@/lib/i18n';
 import { previewUrl } from '@/lib/preview-token';
 import {
   adminField,
@@ -101,9 +102,13 @@ export const Posts: CollectionConfig = {
   labels: { singular: { ar: 'مقال', en: 'Post' }, plural: { ar: 'المقالات', en: 'Posts' } },
   admin: {
     useAsTitle: 'title',
-    preview: (doc, { req }) =>
+    preview: (doc, { req, locale }) =>
       typeof doc['slug'] === 'string' && doc['slug']
-        ? previewUrl(req.payload.config.serverURL, `/blog/${doc['slug']}`, req.payload.secret)
+        ? previewUrl(
+            req.payload.config.serverURL,
+            localePath(requestLocale(locale), `/blog/${doc['slug']}`),
+            req.payload.secret,
+          )
         : null,
     defaultColumns: ['title', 'hub', 'publishedAt', 'origin', '_status'],
     listSearchableFields: ['title', 'slug', 'excerpt'],
@@ -138,9 +143,11 @@ export const Posts: CollectionConfig = {
     beforeChange: [
       stampSavedBy,
       ({ data, originalDoc, req }) => {
+        // Both computed in the language being saved (the fields are localised, ADR-043).
         const merged = { ...originalDoc, ...data };
-        data['readingMinutes'] = bodyReadingMinutes(merged['body']);
-        data['warnings'] = editorialWarnings(merged).map((text) => ({ text }));
+        const locale = requestLocale(req.locale);
+        data['readingMinutes'] = bodyReadingMinutes(merged['body'], locale);
+        data['warnings'] = editorialWarnings(merged, locale).map((text) => ({ text }));
         if (isPublish(data, req) && !merged['publishedAt']) {
           data['publishedAt'] = new Date().toISOString();
         }
@@ -302,6 +309,7 @@ export const Posts: CollectionConfig = {
     {
       name: 'readingMinutes',
       type: 'number',
+      localized: true,
       label: { ar: 'دقائق القراءة', en: 'Reading minutes' },
       admin: { position: 'sidebar', readOnly: true },
     },
@@ -345,6 +353,7 @@ export const Posts: CollectionConfig = {
     {
       name: 'warnings',
       type: 'array',
+      localized: true,
       label: { ar: 'تنبيهات التحرير', en: 'Editorial warnings' },
       admin: {
         position: 'sidebar',

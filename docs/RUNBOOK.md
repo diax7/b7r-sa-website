@@ -276,10 +276,11 @@ only, refused with a key) keeps messages in memory. Message bodies are never log
 ## Open Graph images
 
 `pnpm og` re-renders `public/og/default.png` and `public/og/products/*.png` with Playwright
-(ADR-020). It reads the CMS when `DATABASE_URL` is set (the live catalogue and tagline),
-else the seed fixtures. Run it after a product or tagline change and commit the PNGs;
+(ADR-020); `pnpm og --locale en` renders the English set into `public/og/en/` (ADR-043).
+Both read the CMS when `DATABASE_URL` is set (the live catalogue and tagline), else the
+seed fixtures. Run both after a product or tagline change and commit the PNGs;
 `tests/og-images.test.ts` fails when a product has no image. A product added in the admin
-has no OG image until this runs: the page falls back to the default image.
+has no OG image until this runs: the page falls back to the language's default image.
 
 ## Lighthouse
 
@@ -370,6 +371,15 @@ hreflang to its Arabic twin once its English title is not empty; leave the title
 the page stays Arabic-only (no `/en` route, no pair). The same rule holds for products
 (`name`), posts (`title`, from 5b), categories and authors (`name`). Media alt text has a
 value per language; the Arabic one must be Arabic script.
+
+Publishing a post in English (5b): the same document, the locale control on English; title,
+excerpt, three takeaways and a body with two internal links (the same rules as Arabic, judged
+on the English version when you publish from the English tab; publish the Arabic version from
+the Arabic tab). Internal links typed as URLs go under `/en/` (`/en/products/hoodie`); a link
+to a document resolves under `/en/` on its own. The sidebar's warnings and reading time are
+the English version's. The post is on `/en/blog/<slug>`, in `/en/feed.xml` and paired with
+its Arabic twin once its English title is not empty. Hubs (`categories`) and authors work the
+same way (`name` decides). An Arabic-only post's switch sends the reader to `/en/blog`.
 
 Interface strings (labels, buttons, validation, SEO templates) live in the code:
 `src/content/copy/ar.ts` and `en.ts`. After editing the English bank run `pnpm copy:appendix`

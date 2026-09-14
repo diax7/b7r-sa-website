@@ -129,8 +129,10 @@ test.describe('product detail (BRD 6.6)', () => {
     }
     await expect(photo).toHaveAttribute('data-gallery-side', 'back');
     await expect(state).toHaveText('أبيض، الواجهة الخلفية');
-    // Swatch: that colour's front.
-    await gallery.getByLabel('اللون أسود').check({ force: true });
+    // Swatch: that colour's front. The visible 44 px label is the tap target (the radio is
+    // visually hidden; a forced click on it lands nowhere under load on mobile WebKit).
+    await gallery.locator('label[title="أسود"]').click();
+    await expect(gallery.getByLabel('اللون أسود')).toBeChecked();
     await expect(photo).toHaveAttribute('data-gallery-photo', 'black');
     await expect(photo).toHaveAttribute('data-gallery-side', 'front');
   });

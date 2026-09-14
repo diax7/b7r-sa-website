@@ -231,6 +231,8 @@ H1 + lead. Groups as H2s (Appendix D) each with an `Accordion`. A sticky in-page
 
 ### 6.11 Blog `/blog` and `/blog/{slug}` (placeholder in Level 1)
 
+*Since Level 5b (ADR-043) the same templates render the English blog under `/en/blog` from the documents' English values; see §10.1.*
+
 **Index:** H1 + lead; a row of hub `Chip`s (6, filter only, `?hub=` query, no separate pages yet); a grid of post cards (cover 16:9, hub chip, title, excerpt, meta). Three sample posts from `content/blog/*.ts` marked `sample: true`; their body is short (200–300 words each, written in Arabic by the agent following §4.1, on the three §4.13 topics, factual, no claims beyond §1.1). Newsletter block at the end (same component as the footer).
 
 **Post template:** breadcrumbs; H1; meta line; cover; "أهم النقاط" box (3 bullets); body with H2 questions, short paragraphs, lists; the in-post CTA block after the second H2; related posts (2); share buttons (WhatsApp, X, copy link); author card (ضياء, one line: مؤسس بحر برنت). JSON-LD `BlogPosting` (§7.4). Content max-width 760 px.

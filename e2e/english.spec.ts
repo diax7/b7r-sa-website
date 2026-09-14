@@ -1,7 +1,7 @@
 import { AxeBuilder } from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 
-/** Every English route of 5a (the blog follows in 5b). */
+/** Every English route: the designed pages (5a) and the blog (5b). */
 const ROUTES = [
   '/en',
   '/en/products',
@@ -14,6 +14,10 @@ const ROUTES = [
   '/en/terms',
   '/en/shipping',
   '/en/privacy',
+  '/en/blog',
+  '/en/blog/how-to-price-printed-tshirt-saudi',
+  '/en/blog/category/pricing-profit',
+  '/en/author/dhia',
 ];
 
 const ARABIC = /[؀-ۿ]/;
@@ -62,6 +66,10 @@ test.describe('the English site (Level 5a, ADR-043)', () => {
       ['/products', '/en/products'],
       ['/products/hoodie', '/en/products/hoodie'],
       ['/faq', '/en/faq'],
+      ['/blog', '/en/blog'],
+      ['/blog/how-to-price-printed-tshirt-saudi', '/en/blog/how-to-price-printed-tshirt-saudi'],
+      ['/blog/category/design', '/en/blog/category/design'],
+      ['/author/dhia', '/en/author/dhia'],
     ]) {
       const arHtml = await (await request.get(ar!)).text();
       const enHtml = await (await request.get(en!)).text();
@@ -79,9 +87,11 @@ test.describe('the English site (Level 5a, ADR-043)', () => {
       expect(enHtml).toContain('<meta property="og:locale" content="en_US"/>');
       expect(enHtml).toContain('<meta property="og:locale:alternate" content="ar_SA"/>');
     }
-    // The blog exists in Arabic only in 5a: no pair, no English link.
-    const blog = await (await request.get('/blog')).text();
-    expect(blog).not.toContain('<link rel="alternate" hrefLang="en"');
+    // Each document announces its own language's feed.
+    const arHome = await (await request.get('/')).text();
+    const enHome = await (await request.get('/en')).text();
+    expect(arHome).toContain('type="application/rss+xml" href="https://b7r.sa/feed.xml"');
+    expect(enHome).toContain('type="application/rss+xml" href="https://b7r.sa/en/feed.xml"');
   });
 
   test('the sitemap lists both languages with alternates on the pairs', async ({ request }) => {
@@ -90,7 +100,58 @@ test.describe('the English site (Level 5a, ADR-043)', () => {
     expect(xml).toContain('<loc>https://b7r.sa/en/products/tee-essential</loc>');
     expect(xml).toContain('hreflang="x-default" href="https://b7r.sa"');
     expect(xml).toContain('hreflang="en" href="https://b7r.sa/en/products/tee-essential"');
-    expect(xml).not.toContain('<loc>https://b7r.sa/en/blog');
+    expect(xml).toContain('<loc>https://b7r.sa/en/blog</loc>');
+    expect(xml).toContain(
+      'hreflang="en" href="https://b7r.sa/en/blog/how-to-price-printed-tshirt-saudi"',
+    );
+    expect(xml).toContain('<loc>https://b7r.sa/en/blog/category/seasons</loc>');
+    expect(xml).toContain('<loc>https://b7r.sa/en/author/dhia</loc>');
+  });
+
+  test('the English feed lists the English posts under the English prefix (5b)', async ({
+    request,
+  }) => {
+    const res = await request.get('/en/feed.xml');
+    expect(res.status()).toBe(200);
+    expect(res.headers()['content-type']).toContain('application/rss+xml');
+    const xml = await res.text();
+    expect(xml).toContain('<language>en</language>');
+    expect(xml).toContain('<link>https://b7r.sa/en/blog</link>');
+    expect(xml).toContain('<atom:link href="https://b7r.sa/en/feed.xml" rel="self"');
+    expect(xml).toContain('<link>https://b7r.sa/en/blog/how-to-price-printed-tshirt-saudi</link>');
+    expect(xml).toContain('<title>How to price a printed T-shirt in Saudi Arabia</title>');
+    expect(xml).toContain('href="https://b7r.sa/en/products/tee-essential"');
+    expect(xml).not.toMatch(/[؀-ۿ]/);
+    // The Arabic feed is untouched by the English one.
+    const ar = await (await request.get('/feed.xml')).text();
+    expect(ar).toContain('<link>https://b7r.sa/blog</link>');
+    expect(ar).not.toContain('/en/');
+  });
+
+  test('the English post: English body, links and meta line; the pair links both ways (5b)', async ({
+    request,
+  }) => {
+    const html = await (await request.get('/en/blog/how-to-price-printed-tshirt-saudi')).text();
+    expect(html).toContain(
+      '<title>How to price a printed T-shirt in Saudi Arabia | B7R Print</title>',
+    );
+    expect(html).toContain('"@type":"BlogPosting"');
+    expect(html).toContain('"inLanguage":"en"');
+    expect(html).toContain('href="/en/products/tee-essential"');
+    expect(html).toContain('href="/en/how-it-works"');
+    expect(html).toContain('min read');
+    expect(html).toContain('<meta property="og:type" content="article"/>');
+    // The English index and hub pages carry the English titles and hub names.
+    const index = await (await request.get('/en/blog')).text();
+    expect(index).toContain('Pricing and profit');
+    expect(index).toContain('Start a clothing brand in Saudi Arabia with no factory and no stock');
+    const hub = await (await request.get('/en/blog/category/pricing-profit')).text();
+    expect(hub).toContain('<h1');
+    expect(hub).toContain('How to price a printed T-shirt in Saudi Arabia');
+    // Beyond the last page and an unknown post: 404 as on the Arabic side.
+    expect((await request.get('/en/blog/page/2')).status()).toBe(404);
+    expect((await request.get('/en/blog/no-such-post')).status()).toBe(404);
+    expect((await request.get('/en/blog/category/no-such-hub')).status()).toBe(404);
   });
 
   test('English metadata and JSON-LD carry the English titles, template and language', async ({
@@ -131,10 +192,10 @@ test.describe('the English site (Level 5a, ADR-043)', () => {
     const toEnglish = (await openSwitch()).and(page.locator('[data-language-switch="en"]'));
     await expect(toEnglish).toHaveText('English');
     await expect(toEnglish).toHaveAttribute('href', '/en/products/hoodie');
-    // A page without an English twin sends the switch to the English home.
-    await page.goto('/blog');
-    const fromBlog = (await openSwitch()).and(page.locator('[data-language-switch="en"]'));
-    await expect(fromBlog).toHaveAttribute('href', '/en');
+    // The blog has its twin too (5b).
+    await page.goto('/blog/how-to-price-printed-tshirt-saudi');
+    const fromPost = (await openSwitch()).and(page.locator('[data-language-switch="en"]'));
+    await expect(fromPost).toHaveAttribute('href', '/en/blog/how-to-price-printed-tshirt-saudi');
   });
 
   test('the layout mirrors: the logo sits at the start of the header in both documents', async ({
@@ -167,8 +228,6 @@ test.describe('the English site (Level 5a, ADR-043)', () => {
     }
     // An unknown product under /en behaves like its Arabic twin (ADR-030).
     expect((await request.get('/en/products/no-such-product')).status()).toBe(404);
-    // /en/blog waits for 5b.
-    expect((await request.get('/en/blog')).status()).toBe(404);
   });
 
   test('the contact form works in English and posts its locale', async ({ page }) => {
@@ -194,10 +253,15 @@ test.describe('the English site (Level 5a, ADR-043)', () => {
     await expect(page.getByTestId('contact-success')).toContainText('We received your message.');
   });
 
-  test('axe reports no serious or critical violations on the English home and a product', async ({
+  test('axe reports no serious or critical violations on the English home, a product, the blog and a post', async ({
     page,
   }) => {
-    for (const path of ['/en', '/en/products/tee-essential']) {
+    for (const path of [
+      '/en',
+      '/en/products/tee-essential',
+      '/en/blog',
+      '/en/blog/how-to-price-printed-tshirt-saudi',
+    ]) {
       await page.goto(path);
       await page.waitForLoadState('load');
       if (path === '/en') {

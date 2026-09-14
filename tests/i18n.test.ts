@@ -8,9 +8,10 @@ import {
   LOCALES,
   ogLocale,
   otherLocale,
+  requestLocale,
   stripLocale,
 } from '@/lib/i18n';
-import { pageMetadata } from '@/modules/core/seo/metadata';
+import { defaultOgImage, pageMetadata } from '@/modules/core/seo/metadata';
 
 // `pageMetadata` is pure; the module's other exports read the CMS, which stays out of here.
 vi.mock('@/lib/cms', () => ({}));
@@ -41,6 +42,9 @@ describe('locales (ADR-043)', () => {
     expect(isLocale('en')).toBe(true);
     expect(isLocale('fr')).toBe(false);
     expect(isLocale(undefined)).toBe(false);
+    expect(requestLocale('en')).toBe('en');
+    expect(requestLocale(['ar', 'en'])).toBe('ar');
+    expect(requestLocale(undefined)).toBe('ar');
   });
 });
 
@@ -61,6 +65,9 @@ describe('public reads (BRD 9.6, ADR-043)', () => {
     });
   });
 });
+
+const ogImage = (m: ReturnType<typeof pageMetadata>) =>
+  (m.openGraph as { images: Array<{ url: string }> }).images[0]?.url;
 
 describe('page metadata (BRD 7.3, ADR-043)', () => {
   const base = {
@@ -93,8 +100,10 @@ describe('page metadata (BRD 7.3, ADR-043)', () => {
     expect(single.alternates?.canonical).toBe('/products/hoodie');
     expect(single.alternates?.languages).toBeUndefined();
     expect((single.openGraph as { alternateLocale?: unknown }).alternateLocale).toBeUndefined();
-    // The feed is still announced from every page.
+    // The language's feed is announced from every page.
     expect(single.alternates?.types).toEqual({ 'application/rss+xml': '/feed.xml' });
+    const english = pageMetadata({ ...base, locale: 'en', locales: ['ar', 'en'] });
+    expect(english.alternates?.types).toEqual({ 'application/rss+xml': '/en/feed.xml' });
   });
 
   it('keeps the article dates and the author link under the page locale', () => {
@@ -117,5 +126,15 @@ describe('page metadata (BRD 7.3, ADR-043)', () => {
     expect(og.publishedTime).toBe('2026-09-01');
     expect(og.modifiedTime).toBe('2026-09-10');
     expect(og.authors[0]).toMatch(/\/en\/about$/);
+  });
+
+  it('takes the default Open Graph image of the language (ADR-043)', () => {
+    expect(ogImage(pageMetadata({ ...base, locale: 'ar', locales: ['ar'] }))).toBe(
+      '/og/default.png',
+    );
+    expect(ogImage(pageMetadata({ ...base, locale: 'en', locales: ['ar', 'en'] }))).toBe(
+      '/og/en/default.png',
+    );
+    expect(defaultOgImage('en')).toBe('/og/en/default.png');
   });
 });

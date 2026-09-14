@@ -14,6 +14,9 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env['CI'],
   retries: process.env['CI'] ? 1 : 0,
+  // Eight workers on a developer machine starve the emulated WebKit projects (taps land late,
+  // a stepper click is lost): four keep the interaction tests honest. CI keeps its default.
+  ...(process.env['CI'] ? {} : { workers: 4 }),
   reporter: process.env['CI'] ? [['html', { open: 'never' }], ['github']] : 'list',
   use: {
     baseURL: BASE_URL,

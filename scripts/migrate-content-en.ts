@@ -6,7 +6,9 @@
  * document, recorded in ADR-043). Array rows and blocks are matched by position and keep
  * their ids and non-localised fields.
  */
+import { convertMarkdownToLexical, editorConfigFactory } from '@payloadcms/richtext-lexical';
 import type { Payload } from 'payload';
+import { blogAuthorEn, blogHubsEn, blogPostBodyEn, blogPostsEn } from '../src/content/seed/en/blog';
 import { faqEn } from '../src/content/seed/en/faq';
 import { homeEn } from '../src/content/seed/en/home';
 import { integrationsEn } from '../src/content/seed/en/integrations';
@@ -355,6 +357,79 @@ export async function ensureEnglish(payload: Payload): Promise<EnglishSummary> {
         context: CONTEXT,
       });
       done(`en page ${ar.slug}`);
+    }
+  }
+
+  // The blog (5b): hubs, the author, the three Level 1 posts.
+  {
+    const { docs } = await payload.find({ collection: 'categories', ...AR, limit: 50 });
+    for (const ar of docs) {
+      const english = blogHubsEn[ar.slug];
+      if (!english) throw new Error(`seed en: no English hub for ${ar.slug}`);
+      const en = await payload.findByID({ collection: 'categories', id: ar.id, ...EN });
+      if (en.name) {
+        skip(`en hub ${ar.slug}`);
+        continue;
+      }
+      await payload.update({
+        collection: 'categories',
+        id: ar.id,
+        locale: 'en',
+        data: english,
+        context: CONTEXT,
+      });
+      done(`en hub ${ar.slug}`);
+    }
+  }
+  {
+    const { docs } = await payload.find({ collection: 'authors', ...AR, limit: 50 });
+    for (const ar of docs) {
+      const en = await payload.findByID({ collection: 'authors', id: ar.id, ...EN });
+      if (en.name) {
+        skip(`en author ${ar.slug}`);
+        continue;
+      }
+      await payload.update({
+        collection: 'authors',
+        id: ar.id,
+        locale: 'en',
+        data: blogAuthorEn,
+        context: CONTEXT,
+      });
+      done(`en author ${ar.slug}`);
+    }
+  }
+  {
+    const { docs } = await payload.find({ collection: 'posts', ...AR, limit: 100, draft: true });
+    const field = payload.collections['posts']?.config.fields.find(
+      (f) => 'name' in f && f.name === 'body',
+    );
+    if (!field || field.type !== 'richText') throw new Error('seed en: no posts body field');
+    const editorConfig = editorConfigFactory.fromField({ field });
+    for (const ar of docs) {
+      const english = blogPostsEn[ar.slug];
+      // Engine posts and an editor's own posts have no English seed; they stay Arabic-only.
+      if (!english) continue;
+      const en = await payload.findByID({ collection: 'posts', id: ar.id, ...EN, draft: true });
+      if (en.title) {
+        skip(`en post ${ar.slug}`);
+        continue;
+      }
+      const body = convertMarkdownToLexical({ editorConfig, markdown: blogPostBodyEn(ar.slug) });
+      await payload.update({
+        collection: 'posts',
+        id: ar.id,
+        locale: 'en',
+        data: {
+          title: english.title,
+          excerpt: english.excerpt,
+          // A localised array keeps rows per language: new rows, never the Arabic ids.
+          takeaways: english.takeaways.map((text) => ({ text })),
+          body: body as never,
+        },
+        context: CONTEXT,
+      });
+      done(`en post ${ar.slug}`);
     }
   }
 

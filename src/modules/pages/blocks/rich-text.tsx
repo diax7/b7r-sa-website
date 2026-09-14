@@ -6,7 +6,7 @@ import { LexicalProse } from '@/modules/core/rich-text/lexical-prose';
 import type { BlockProps } from '@/modules/pages/blocks/types';
 
 /** A rich-text section: the shared Lexical renderer (`modules/core/rich-text`) inside a section. */
-export function RichTextBlock({ block, tone, anchor, heading }: BlockProps<'richText'>) {
+export function RichTextBlock({ block, tone, anchor, heading, locale }: BlockProps<'richText'>) {
   const title = heading?.title ?? block.title;
   return (
     <Section
@@ -24,7 +24,7 @@ export function RichTextBlock({ block, tone, anchor, heading }: BlockProps<'rich
             {...(heading?.lead ? { lead: heading.lead } : {})}
           />
         )}
-        <LexicalProse data={block.content as unknown as LexicalState} />
+        <LexicalProse data={block.content as unknown as LexicalState} locale={locale} />
       </Container>
     </Section>
   );

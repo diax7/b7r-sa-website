@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import {
   headingIds,
   headings,
+  arabicParagraphs,
+  docHref,
   latinParagraphs,
   type LexicalNode,
   type LexicalState,
@@ -86,5 +88,24 @@ describe('lib/lexical: one reading of a post body', () => {
 
   it('flags a Latin paragraph, not a brand name inside Arabic or on its own', () => {
     expect(latinParagraphs(body)).toEqual(['This paragraph is written in English only.']);
+  });
+
+  it('flags an Arabic paragraph in an English body the same way (ADR-043)', () => {
+    expect(arabicParagraphs(body)).toEqual(
+      expect.arrayContaining(['لا تُطبع القطعة إلا بعد البيع.', 'اسم المنصة Shopify يمر بلا مشكلة.']),
+    );
+    expect(arabicParagraphs(body)).not.toContain('This paragraph is written in English only.');
+    expect(arabicParagraphs(undefined)).toEqual([]);
+  });
+
+  it('resolves an internal document link under the locale (ADR-043)', () => {
+    const doc = { relationTo: 'posts', value: { slug: 'first' } };
+    expect(docHref(doc)).toBe('/blog/first');
+    expect(docHref(doc, 'en')).toBe('/en/blog/first');
+    expect(docHref({ relationTo: 'pages', value: { slug: 'about' } }, 'en')).toBe('/en/about');
+    expect(docHref({ relationTo: 'products', value: { slug: 'hoodie' } }, 'en')).toBe(
+      '/en/products/hoodie',
+    );
+    expect(docHref({ relationTo: 'posts', value: 3 }, 'en')).toBeNull();
   });
 });

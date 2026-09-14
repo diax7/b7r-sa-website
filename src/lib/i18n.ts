@@ -14,6 +14,11 @@ export function isLocale(value: unknown): value is Locale {
   return typeof value === 'string' && (LOCALES as readonly string[]).includes(value);
 }
 
+/** The locale of a CMS request (`req.locale`, a preview's `locale`): a known code, else Arabic. */
+export function requestLocale(value: unknown): Locale {
+  return isLocale(value) ? value : DEFAULT_LOCALE;
+}
+
 /** `/products` → `/products` (ar) or `/en/products` (en); `/` → `/en`. */
 export function localePath(locale: Locale, path: string): string {
   if (locale === DEFAULT_LOCALE) return path;

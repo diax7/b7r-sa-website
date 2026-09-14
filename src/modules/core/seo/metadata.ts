@@ -5,13 +5,20 @@ import { copyFor } from '@/content/copy';
 import type { Product } from '@/content/schema';
 import type { Author, Hub, Post } from '@/lib/cms/blog';
 import { getPage, getSeo, getSeoDefaults, getSiteSettings } from '@/lib/cms';
-import { documentLocales, routeLocales } from '@/lib/cms/locales';
+import { documentLocales, siteLocales } from '@/lib/cms/locales';
 import { env, siteBase } from '@/lib/env';
 import { type Locale, languageTag, localePath, ogLocale, otherLocale } from '@/lib/i18n';
 
 const FEED_PATH = '/feed.xml';
 
-export const DEFAULT_OG_IMAGE = '/og/default.png';
+/** The default Open Graph image of a language: `pnpm og` renders both sets (ADR-043). */
+export function defaultOgImage(locale: Locale): string {
+  return localeOgPath(locale, '/default.png');
+}
+
+function localeOgPath(locale: Locale, file: string): string {
+  return locale === 'ar' ? `/og${file}` : `/og/en${file}`;
+}
 
 export interface PageMeta {
   locale: Locale;
@@ -41,7 +48,7 @@ export interface PageMeta {
  * JSON-LD carries the commerce data).
  */
 export function pageMetadata(meta: PageMeta): Metadata {
-  const ogImage = meta.ogImage ?? DEFAULT_OG_IMAGE;
+  const ogImage = meta.ogImage ?? defaultOgImage(meta.locale);
   const canonical = localePath(meta.locale, meta.route);
   const twin = otherLocale(meta.locale);
   const paired = meta.locales.includes('ar') && meta.locales.includes('en');
@@ -80,8 +87,8 @@ export function pageMetadata(meta: PageMeta): Metadata {
             },
           }
         : {}),
-      // The feed is announced on every page so a reader finds it from anywhere (BRD 10.1).
-      types: { 'application/rss+xml': FEED_PATH },
+      // The language's feed is announced on every page so a reader finds it from anywhere (BRD 10.1).
+      types: { 'application/rss+xml': localePath(meta.locale, FEED_PATH) },
     },
     openGraph,
     twitter: { card: 'summary_large_image', site: '@b7rprint' },
@@ -96,7 +103,7 @@ export async function buildMetadata(locale: Locale, route: string): Promise<Meta
   const [page, site, locales] = await Promise.all([
     getSeo(locale, route),
     getSiteSettings(locale),
-    routeLocales(route),
+    siteLocales(),
   ]);
   return pageMetadata({
     locale,
@@ -130,9 +137,10 @@ export async function cmsPageMetadata(locale: Locale, slug: string): Promise<Met
 }
 
 /**
- * Product detail (BRD 4.16 templates): its own OG image from `public/og/products/` when
- * `pnpm og` has rendered one; a product added in the admin falls back to the default until
- * then (docs/RUNBOOK.md, "Open Graph images").
+ * Product detail (BRD 4.16 templates): its own OG image from `public/og/products/` (or
+ * `public/og/en/products/` for the English document) when `pnpm og` has rendered one; a
+ * product added in the admin falls back to the default until then (docs/RUNBOOK.md, "Open
+ * Graph images").
  */
 export async function productMetadata(locale: Locale, product: Product): Promise<Metadata> {
   const [site, locales] = await Promise.all([
@@ -140,7 +148,7 @@ export async function productMetadata(locale: Locale, product: Product): Promise
     documentLocales('products', product.slug, 'name'),
   ]);
   const productSeo = copyFor(locale).seo.product;
-  const ogPath = `/og/products/${product.slug}.png`;
+  const ogPath = localeOgPath(locale, `/products/${product.slug}.png`);
   const hasOwnImage = existsSync(join(process.cwd(), 'public', ogPath));
   return pageMetadata({
     locale,
@@ -198,7 +206,7 @@ export async function blogPageMetadata(locale: Locale, page: number): Promise<Me
   const [seo, site, locales] = await Promise.all([
     getSeo(locale, '/blog'),
     getSiteSettings(locale),
-    routeLocales('/blog'),
+    siteLocales(),
   ]);
   return pageMetadata({
     locale,

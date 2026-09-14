@@ -1,4 +1,11 @@
-import { latinParagraphs, type LexicalState, linkTargets, plainText } from '@/lib/lexical';
+import type { Locale } from '@/lib/i18n';
+import {
+  arabicParagraphs,
+  latinParagraphs,
+  type LexicalState,
+  linkTargets,
+  plainText,
+} from '@/lib/lexical';
 import { readingMinutes } from '@/lib/reading-time';
 
 /**
@@ -71,7 +78,7 @@ export function publishProblems(post: PostDraft): string[] {
 }
 
 /** What an editor should look at before publishing; never blocks a save. */
-export function editorialWarnings(post: PostDraft): string[] {
+export function editorialWarnings(post: PostDraft, locale: Locale = 'ar'): string[] {
   const warnings: string[] = [];
   const body = bodyOf(post.body);
   for (const link of linkTargets(body)) {
@@ -81,18 +88,22 @@ export function editorialWarnings(post: PostDraft): string[] {
       warnings.push(`A link to a competitor: ${host}`);
     }
   }
-  const latin = latinParagraphs(body);
-  if (latin.length > 0) {
-    warnings.push(`${latin.length} paragraph${latin.length === 1 ? '' : 's'} in Latin script`);
+  // The other script's prose is a soft rule in each language (ADR-043).
+  const foreign = locale === 'ar' ? latinParagraphs(body) : arabicParagraphs(body);
+  if (foreign.length > 0) {
+    const script = locale === 'ar' ? 'Latin' : 'Arabic';
+    warnings.push(
+      `${foreign.length} paragraph${foreign.length === 1 ? '' : 's'} in ${script} script`,
+    );
   }
   const text = [str(post.title), str(post.excerpt), plainText(body)].join('\n');
   if (text.includes(EM_DASH)) warnings.push('An em dash in the text (use a colon or a comma)');
   return warnings;
 }
 
-/** Reading time of the body, for the meta line; 1 for an empty body. */
-export function bodyReadingMinutes(body: unknown): number {
-  return readingMinutes(plainText(bodyOf(body)));
+/** Reading time of the body at the language's pace, for the meta line; 1 for an empty body. */
+export function bodyReadingMinutes(body: unknown, locale: Locale = 'ar'): number {
+  return readingMinutes(plainText(bodyOf(body)), locale);
 }
 
 function hostOf(href: string): string | null {

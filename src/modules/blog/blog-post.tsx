@@ -140,9 +140,9 @@ export async function BlogPostPage({ post, locale }: { post: Post; locale: Local
                 </ul>
               </aside>
               <TableOfContents headings={toc} title={blogCopy.toc} variant="folded" />
-              <LexicalProse data={before} ids={ids} />
+              <LexicalProse data={before} locale={locale} ids={ids} />
               {cta}
-              {after && <LexicalProse data={after} ids={ids} />}
+              {after && <LexicalProse data={after} locale={locale} ids={ids} />}
               <footer className="flex flex-col gap-6 border-t border-border pt-6">
                 <ShareButtons
                   url={url}

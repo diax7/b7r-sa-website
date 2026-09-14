@@ -210,7 +210,7 @@ export interface User {
 export interface Media {
   id: number;
   /**
-   * Describe the image in Arabic; required.
+   * Describe the image in the language of the open locale tab; required.
    */
   alt: string;
   credit?: string | null;

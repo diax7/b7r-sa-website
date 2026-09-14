@@ -879,3 +879,38 @@ pages share the Arabic-rendered Open Graph images (`public/og/**`, whose text is
 English renders (`pnpm og --locale en`, `public/og/en/`) are the first task of 5b. **Owed
 Dhia's read**: the English bank (Appendix H), the English CMS content and the English legal
 drafts, which the agent wrote.
+
+**Amended 2026-09-14 (Phase 5b, the blog in English).** The blog routes exist under `/en`
+(`(en)/en/blog/**`, `(en)/en/author/**`, `/en/feed.xml`) as thin wrappers over the same
+route helpers; `BLOG_ENGLISH_PENDING` is gone and the sitemap lists the English blog with
+its pairs. **A translation pair is one document**: a post, a hub or an author with values in
+both languages is the same row with the same slug, so the pair's hreflang and the switch
+need no second field; a post with one language is on that language's site only (the
+presence gate), and an Arabic-only post's switch goes to the English blog's home.
+`readingMinutes` and `warnings` are localised (a data-carrying migration moved the Arabic
+values): both are computed in the language being saved (`req.locale`), the reading time at
+that language's pace (`WORDS_PER_MINUTE`) and the warnings by that language's rules, so the
+Arabic "paragraphs in Latin script" soft rule has an English mirror, "paragraphs in Arabic
+script" (`arabicParagraphs`); the hard rules (title 70, excerpt 160, three takeaways, two
+internal links) hold in both, judged on the version being published. Internal document links
+in a body resolve under the locale (`docHref(doc, locale)`, the prose renderer and the feed),
+and the panel's preview opens the document in the locale being edited. A localised array
+with no rows reads back as `null` (Payload), which the admin field and the tests accept.
+**Revalidation** (a 5a gap): every publish regenerates both documents (`withEnglish` in the
+hooks; the sitemap and the manifest once), including the English allowlist
+`/api/pages/slugs/en`; a regenerated 404 costs nothing. **IndexNow** hears less
+(`pingPaths`): the document's own route in the language that was saved (the other
+language's page did not change), the listings in every language the site is in, and never
+a `/en` URL while the site is not in English, because repeated 404 submissions count
+against the key; the hooks ask the globals through `lib/cms/locale-enabled` (no
+`server-only`, so the seed scripts load the config too). **Open Graph** renders per language:
+`pnpm og --locale en` writes `public/og/en/{default,products/*}.png` left-to-right from the
+English values (`fromSeed` lays the English seed over the Arabic products when the CMS is
+absent); `defaultOgImage(locale)` and the product lookup pick the set. **The seed** writes
+the six hubs, the author and the three Level 1 posts in English (`content/seed/en/blog.ts`,
+bodies in `content/seed/blog/en/*.md` with links under `/en/`), new rows for the localised
+takeaways (never the Arabic rows' ids: a localised array keeps rows per language), and the
+editorial gate refused the first draft of one title at 73 characters, as it should. The
+English search runs on the same fold (`fold` lower-cases and normalises Latin too). The
+engine's own checks stay Arabic until 5c. **Owed Dhia's read**: the English hub names and
+descriptions, the author's role and bio, and the three English posts.
