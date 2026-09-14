@@ -896,10 +896,14 @@ internal links) hold in both, judged on the version being published. Internal do
 in a body resolve under the locale (`docHref(doc, locale)`, the prose renderer and the feed),
 and the panel's preview opens the document in the locale being edited. A localised array
 with no rows reads back as `null` (Payload), which the admin field and the tests accept.
-**Revalidation** (a 5a gap): every publish regenerates both documents and IndexNow hears
-both URLs (`withEnglish` in the hooks; the sitemap and the manifest once), including the
-English allowlist `/api/pages/slugs/en`; an English URL pinged for a document that has no
-English yet answers 404, which is the truthful answer. **Open Graph** renders per language:
+**Revalidation** (a 5a gap): every publish regenerates both documents (`withEnglish` in the
+hooks; the sitemap and the manifest once), including the English allowlist
+`/api/pages/slugs/en`; a regenerated 404 costs nothing. **IndexNow** hears less
+(`pingPaths`): the document's own route in the language that was saved (the other
+language's page did not change), the listings in every language the site is in, and never
+a `/en` URL while the site is not in English, because repeated 404 submissions count
+against the key; the hooks ask the globals through `lib/cms/locale-enabled` (no
+`server-only`, so the seed scripts load the config too). **Open Graph** renders per language:
 `pnpm og --locale en` writes `public/og/en/{default,products/*}.png` left-to-right from the
 English values (`fromSeed` lays the English seed over the Arabic products when the CMS is
 absent); `defaultOgImage(locale)` and the product lookup pick the set. **The seed** writes

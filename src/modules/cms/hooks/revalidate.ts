@@ -1,5 +1,6 @@
 import { revalidatePath } from 'next/cache';
-import { localePath } from '@/lib/i18n';
+import { enabledLocales } from '@/lib/cms/locale-enabled';
+import { localePath, requestLocale } from '@/lib/i18n';
 import { queueIndexNow } from '@/modules/cms/jobs/indexnow';
 import type {
   CollectionAfterChangeHook,
@@ -31,15 +32,38 @@ export function withEnglish(paths: readonly string[]): string[] {
   );
 }
 
+/**
+ * What IndexNow is told (ADR-043): the document's own routes in the language that was saved
+ * (the other language's page did not change), the listings in every language the site is
+ * in, never a `/en` URL while the site is not in English (repeated 404 submissions count
+ * against the key). Revalidation is broader (`withEnglish`); a regenerated 404 costs nothing.
+ */
+export async function pingPaths(
+  req: PayloadRequest,
+  own: readonly string[],
+  listings: readonly string[],
+): Promise<string[]> {
+  const locales = await enabledLocales(req.payload);
+  const saved = requestLocale(req.locale);
+  const ownLocale = locales.includes(saved) ? saved : 'ar';
+  return [
+    ...own.map((path) => localePath(ownLocale, path)),
+    ...listings.flatMap((path) => locales.map((locale) => localePath(locale, path))),
+  ];
+}
+
+/** Routes that list the products: home strip and designer, the listing. */
+export const PRODUCT_LISTINGS = ['/', '/products'] as const;
+
 /** Routes that render the products: home strip and designer, the listing, the sitemap. */
-export const PATHS_FOR_PRODUCTS = withEnglish(['/', '/products', '/sitemap.xml']);
+export const PATHS_FOR_PRODUCTS = withEnglish([...PRODUCT_LISTINGS, '/sitemap.xml']);
 
 /**
  * Every static route of the site: the globals feed the shell (header, footer, meta, the CTA
  * ribbon) of all of them, so any global change regenerates all at once; product pages
  * follow the timer.
  */
-export const STATIC_ROUTES = withEnglish([
+export const SITE_ROUTES = [
   '/',
   '/products',
   '/how-it-works',
@@ -50,12 +74,11 @@ export const STATIC_ROUTES = withEnglish([
   '/terms',
   '/shipping',
   '/privacy',
-  '/sitemap.xml',
-  '/manifest.webmanifest',
-]);
+] as const;
+export const STATIC_ROUTES = withEnglish([...SITE_ROUTES, '/sitemap.xml', '/manifest.webmanifest']);
 
 /** Routes that list the FAQ entries: the home accordion, the FAQ page, the mini FAQ. */
-export const PATHS_FOR_FAQS = withEnglish(['/', '/faq', '/how-it-works']);
+export const PATHS_FOR_FAQS = ['/', '/faq', '/how-it-works'] as const;
 
 /** The product's own page plus the routes that list it. */
 export function pathsForProduct(slug: string): string[] {
@@ -154,7 +177,10 @@ export const revalidateProducts: CollectionAfterChangeHook & CollectionAfterDele
   if (typeof previous?.slug === 'string') slugs.add(previous.slug);
   const paths = new Set([...slugs].flatMap((slug) => pathsForProduct(slug)));
   for (const path of paths) safeRevalidatePath(path);
-  if (pingWorthy(req, { doc, ...rest })) await queueIndexNow(req, paths);
+  if (pingWorthy(req, { doc, ...rest })) {
+    const own = [...slugs].map((slug) => `/products/${slug}`);
+    await queueIndexNow(req, await pingPaths(req, own, PRODUCT_LISTINGS));
+  }
   return doc;
 };
 
@@ -185,7 +211,10 @@ export const revalidatePages: CollectionAfterChangeHook & CollectionAfterDeleteH
   if (typeof previous?.slug === 'string') slugs.add(previous.slug);
   const paths = new Set([...slugs].flatMap((slug) => pathsForPage(slug)));
   for (const path of paths) safeRevalidatePath(path);
-  if (pingWorthy(req, { doc, ...rest })) await queueIndexNow(req, paths);
+  if (pingWorthy(req, { doc, ...rest })) {
+    const own = [...slugs].map((slug) => `/${slug}`);
+    await queueIndexNow(req, await pingPaths(req, own, []));
+  }
   return doc;
 };
 
@@ -243,15 +272,24 @@ async function relatedSlug(
   }
 }
 
-/** The concrete pages a post change touches (IndexNow gets these; the listings regenerate too). */
-export async function pathsForPost(req: PayloadRequest, post: PostRef): Promise<string[]> {
-  const paths = new Set<string>(['/blog']);
-  if (typeof post.slug === 'string' && post.slug) paths.add(`/blog/${post.slug}`);
+/** A post's own route and the listings that show it, locale-free. */
+export async function postRoutes(
+  req: PayloadRequest,
+  post: PostRef,
+): Promise<{ own: string[]; listings: string[] }> {
+  const own = typeof post.slug === 'string' && post.slug ? [`/blog/${post.slug}`] : [];
+  const listings = ['/blog'];
   const hub = await relatedSlug(req, 'categories', post.hub);
-  if (hub) paths.add(`/blog/category/${hub}`);
+  if (hub) listings.push(`/blog/category/${hub}`);
   const author = await relatedSlug(req, 'authors', post.author);
-  if (author) paths.add(`/author/${author}`);
-  return withEnglish([...paths]);
+  if (author) listings.push(`/author/${author}`);
+  return { own, listings };
+}
+
+/** The concrete pages a post change touches, in both languages (they all regenerate). */
+export async function pathsForPost(req: PayloadRequest, post: PostRef): Promise<string[]> {
+  const { own, listings } = await postRoutes(req, post);
+  return withEnglish([...new Set([...own, ...listings])]);
 }
 
 /**
@@ -274,7 +312,14 @@ export const revalidatePosts: CollectionAfterChangeHook & CollectionAfterDeleteH
   ]);
   for (const path of paths) safeRevalidatePath(path);
   for (const pattern of BLOG_LISTING_PATTERNS) safeRevalidatePath(pattern, console, 'page');
-  if (pingWorthy(req, { doc, ...rest })) await queueIndexNow(req, paths);
+  if (pingWorthy(req, { doc, ...rest })) {
+    const now = await postRoutes(req, doc as PostRef);
+    const before = previous ? await postRoutes(req, previous) : { own: [], listings: [] };
+    await queueIndexNow(
+      req,
+      await pingPaths(req, [...now.own, ...before.own], [...now.listings, ...before.listings]),
+    );
+  }
   return doc;
 };
 
@@ -291,13 +336,16 @@ export const revalidateBlogListings: CollectionAfterChangeHook & CollectionAfter
 
 /** A collection hook that regenerates fixed routes on every visible change or delete. */
 export function revalidateRoutes(
-  paths: readonly string[],
+  routes: readonly string[],
 ): CollectionAfterChangeHook & CollectionAfterDeleteHook {
+  const paths = withEnglish(routes);
   return async ({ doc, req, ...rest }) => {
     if (!shouldRevalidate(req)) return doc;
     if (!isVisibleChange({ doc, ...rest })) return doc;
     for (const path of paths) safeRevalidatePath(path);
-    if (pingWorthy(req, { doc, ...rest })) await queueIndexNow(req, paths);
+    if (pingWorthy(req, { doc, ...rest })) {
+      await queueIndexNow(req, await pingPaths(req, [], routes));
+    }
     return doc;
   };
 }
@@ -307,6 +355,8 @@ export const revalidateGlobal: GlobalAfterChangeHook = async ({ doc, previousDoc
   if (!shouldRevalidate(req)) return doc;
   if (!isVisibleChange({ doc, previousDoc })) return doc;
   for (const path of STATIC_ROUTES) safeRevalidatePath(path);
-  if (pingWorthy(req, { doc, previousDoc })) await queueIndexNow(req, STATIC_ROUTES);
+  if (pingWorthy(req, { doc, previousDoc })) {
+    await queueIndexNow(req, await pingPaths(req, [], SITE_ROUTES));
+  }
   return doc;
 };

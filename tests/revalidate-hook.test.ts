@@ -20,13 +20,21 @@ const {
   safeRevalidatePath,
   shouldRevalidate,
   STATIC_ROUTES,
+  withEnglish,
 } = await import('@/modules/cms/hooks/revalidate');
 
 type Hook = (args: unknown) => unknown;
 type Doc = Record<string, unknown>;
 
-const req = (context: Record<string, unknown> = {}) =>
-  ({ context, payload: {} }) as unknown as PayloadRequest;
+/** The site is in English unless a test says otherwise (the hooks ask the globals). */
+let english = true;
+const findGlobal = async ({ slug }: { slug: string }) =>
+  slug === 'site-settings'
+    ? { brandName: english ? 'B7R Print' : '' }
+    : { ctaLabel: english ? 'Start' : '' };
+
+const req = (context: Record<string, unknown> = {}, locale?: string) =>
+  ({ context, locale, payload: { findGlobal } }) as unknown as PayloadRequest;
 
 const paths = () => revalidatePath.mock.calls.map((c) => c[0] as string).toSorted();
 
@@ -52,6 +60,7 @@ function deleted(doc: Doc) {
 }
 
 beforeEach(() => {
+  english = true;
   revalidatePath.mockClear();
   revalidatePath.mockImplementation(() => undefined);
   resetRevalidateWarning();
@@ -121,7 +130,8 @@ describe('publish hooks (BRD 9.6, ADR-030): the affected routes regenerate at on
   it('collections with fixed routes (faqs, testimonials, integrations) regenerate those', () => {
     const hook = revalidateRoutes(PATHS_FOR_FAQS) as Hook;
     hook({ doc: { question: 'q' }, req: req(), collection: { slug: 'faqs' }, context: {} });
-    expect(paths()).toEqual([...PATHS_FOR_FAQS].toSorted());
+    // The fixed routes regenerate in both languages (ADR-043).
+    expect(paths()).toEqual(withEnglish(PATHS_FOR_FAQS).toSorted());
     revalidatePath.mockClear();
     // A versioned collection: a never-published draft is invisible, a delete of a published one is not.
     const versioned = revalidateRoutes(['/']) as Hook;
@@ -133,7 +143,7 @@ describe('publish hooks (BRD 9.6, ADR-030): the affected routes regenerate at on
     });
     expect(revalidatePath).not.toHaveBeenCalled();
     versioned({ doc: { _status: 'published' }, id: 1, req: req(), context: {} });
-    expect(paths()).toEqual(['/']);
+    expect(paths()).toEqual(['/', '/en']);
   });
 
   it('isVisibleChange: unversioned always; versioned when published now or before', () => {
@@ -172,7 +182,7 @@ describe('IndexNow gating (ADR-033): a publish pings, a draft save never does', 
     const withQueue = (r: PayloadRequest) =>
       ({
         ...r,
-        payload: { jobs: { queue }, logger: { warn: vi.fn() } },
+        payload: { findGlobal, jobs: { queue }, logger: { warn: vi.fn() } },
       }) as unknown as PayloadRequest;
     const hook = revalidatePages as (args: unknown) => Promise<unknown>;
     const published = { slug: 'creators', _status: 'published' };
@@ -194,9 +204,10 @@ describe('IndexNow gating (ADR-033): a publish pings, a draft save never does', 
       context: {},
     });
     expect(queue).toHaveBeenCalledTimes(1);
+    // Saved in Arabic: the Arabic page is what changed (ADR-043); the English twin is not pinged.
     expect(
       (queue.mock.calls[0] as unknown as [{ input: { urls: string[] } }])[0].input.urls,
-    ).toEqual(['https://b7r.sa/creators', 'https://b7r.sa/en/creators']);
+    ).toEqual(['https://b7r.sa/creators']);
     // An unpublish (no draft flag) still tells the engines to recrawl.
     await hook({
       doc: { ...published, _status: 'draft' },
@@ -206,6 +217,85 @@ describe('IndexNow gating (ADR-033): a publish pings, a draft save never does', 
       context: {},
     });
     expect(queue).toHaveBeenCalledTimes(2);
+  });
+});
+
+const urls = (queue: ReturnType<typeof vi.fn>) =>
+  (queue.mock.calls[0] as unknown as [{ input: { urls: string[] } }])[0].input.urls;
+
+describe('what IndexNow hears about a publish (ADR-043)', () => {
+  const pinging = (locale?: string) => {
+    const queue = vi.fn(async () => ({}));
+    const r = {
+      ...req({}, locale),
+      payload: { findGlobal, jobs: { queue }, logger: { warn: vi.fn() } },
+    } as unknown as PayloadRequest;
+    return { queue, req: r };
+  };
+  beforeEach(() => {
+    vi.stubEnv('B7R_RUNTIME', 'production');
+    vi.stubEnv('INDEXNOW_KEY', 'a1b2c3d4e5f6g7h8');
+    vi.stubEnv('NEXT_PUBLIC_SITE_URL', 'https://b7r.sa');
+  });
+
+  it('an Arabic product publish pings its Arabic page and the listings of both languages', async () => {
+    const { queue, req: r } = pinging();
+    await (revalidateProducts as Hook)({
+      doc: { slug: 'hoodie', _status: 'published' },
+      previousDoc: { slug: 'hoodie', _status: 'draft' },
+      operation: 'update',
+      req: r,
+      collection: { slug: 'products' },
+      context: {},
+    });
+    expect(urls(queue).toSorted()).toEqual([
+      'https://b7r.sa',
+      'https://b7r.sa/en',
+      'https://b7r.sa/en/products',
+      'https://b7r.sa/products',
+      'https://b7r.sa/products/hoodie',
+    ]);
+    // Both documents regenerate all the same.
+    expect(paths()).toContain('/en/products/hoodie');
+  });
+
+  it('a save from the English tab pings the English page instead', async () => {
+    const { queue, req: r } = pinging('en');
+    await (revalidateProducts as Hook)({
+      doc: { slug: 'hoodie', _status: 'published' },
+      previousDoc: { slug: 'hoodie', _status: 'published' },
+      operation: 'update',
+      req: r,
+      collection: { slug: 'products' },
+      context: {},
+    });
+    expect(urls(queue)).toContain('https://b7r.sa/en/products/hoodie');
+    expect(urls(queue)).not.toContain('https://b7r.sa/products/hoodie');
+  });
+
+  it('never pings an English URL while the site is not in English (a 404 submission)', async () => {
+    english = false;
+    const { queue, req: r } = pinging('en');
+    await (revalidateProducts as Hook)({
+      doc: { slug: 'hoodie', _status: 'published' },
+      previousDoc: { slug: 'hoodie', _status: 'draft' },
+      operation: 'update',
+      req: r,
+      collection: { slug: 'products' },
+      context: {},
+    });
+    expect(urls(queue).some((u) => u.includes('/en'))).toBe(false);
+    expect(urls(queue)).toContain('https://b7r.sa/products/hoodie');
+    // Revalidation still covers the English routes: a regenerated 404 costs nothing.
+    expect(paths()).toContain('/en/products/hoodie');
+  });
+
+  it('a global change pings every static route of both languages, never the sitemap', async () => {
+    const { queue, req: r } = pinging();
+    await (revalidateGlobal as Hook)({ doc: {}, req: r, global: {}, context: {} });
+    expect(urls(queue)).toContain('https://b7r.sa/en/faq');
+    expect(urls(queue)).toContain('https://b7r.sa/faq');
+    expect(urls(queue).some((u) => u.includes('sitemap') || u.includes('manifest'))).toBe(false);
   });
 });
 
