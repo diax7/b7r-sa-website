@@ -6,6 +6,7 @@ import { getContactTransport } from '@/lib/contact-transport';
 import { contactEnv } from '@/lib/env-server';
 import { indexNowKey } from '@/lib/indexnow';
 import { getNewsletterTransport } from '@/lib/newsletter-transport';
+import { envAllows, mockAllowed } from '@/modules/ai-content';
 
 const DB_TIMEOUT_MS = 2000;
 
@@ -57,6 +58,19 @@ export async function failedJobs(): Promise<number | null> {
   }
 }
 
+/** The content engine's switch (ADR-042): `mock` when the mock provider is selected and allowed. */
+export async function engineStatus(): Promise<'on' | 'off' | 'mock'> {
+  try {
+    const payload = await cms();
+    const doc = await payload.findGlobal({ slug: 'ai-settings', depth: 0, overrideAccess: true });
+    if (!doc.enabled || !envAllows()) return 'off';
+    return doc.activeProvider === 'mock' && mockAllowed() ? 'mock' : 'on';
+  } catch (error) {
+    console.error('health: engine check failed:', error);
+    return 'off';
+  }
+}
+
 /** Where uploads live: S3 when the bucket is configured, else the container's disk. */
 export function mediaStorage(): 's3' | 'local' {
   return cmsEnv().s3 ? 's3' : 'local';
@@ -75,6 +89,7 @@ export interface HealthReport {
   email: 'resend' | 'console';
   jobs: 'on' | 'off';
   jobsFailed: number | null;
+  engine: 'on' | 'off' | 'mock';
 }
 
 /**
@@ -95,5 +110,6 @@ export async function healthReport(): Promise<HealthReport> {
     email: cmsEnv().email ? 'resend' : 'console',
     jobs: await jobsStatus(),
     jobsFailed: await failedJobs(),
+    engine: await engineStatus(),
   };
 }

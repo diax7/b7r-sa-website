@@ -7,6 +7,10 @@ import { lexicalEditor } from '@payloadcms/richtext-lexical';
 import { s3Storage } from '@payloadcms/storage-s3';
 import { en } from '@payloadcms/translations/languages/en';
 import { buildConfig } from 'payload';
+import { AiRuns } from '@/modules/ai-content/runs';
+import { AiSettings } from '@/modules/ai-content/settings';
+import { AiTopics } from '@/modules/ai-content/topics';
+import { AI_QUEUE, generatePostWorkflow } from '@/modules/ai-content/workflow';
 import { Authors } from '@/modules/cms/collections/authors';
 import { Categories } from '@/modules/cms/collections/categories';
 import { Faqs } from '@/modules/cms/collections/faqs';
@@ -110,8 +114,10 @@ export default buildConfig({
     Categories,
     Authors,
     Tags,
+    AiTopics,
+    AiRuns,
   ],
-  globals: [Home, SiteSettings, Navigation, SeoDefaults],
+  globals: [Home, SiteSettings, Navigation, SeoDefaults, AiSettings],
   db: postgresAdapter({
     pool: { connectionString: env.databaseUrl },
     push: false,
@@ -126,7 +132,13 @@ export default buildConfig({
    */
   jobs: {
     tasks: [indexNowTask],
-    autoRun: [{ cron: '* * * * *', limit: 10 }],
+    workflows: [generatePostWorkflow],
+    // The default queue serves IndexNow and scheduled publishes; the `ai` queue runs one
+    // content-engine job at a time (ADR-042).
+    autoRun: [
+      { cron: '* * * * *', limit: 10 },
+      { cron: '* * * * *', queue: AI_QUEUE, limit: 1 },
+    ],
     shouldAutoRun: () => !isBuildPhase(),
     deleteJobOnComplete: true,
     access: { run: () => false },

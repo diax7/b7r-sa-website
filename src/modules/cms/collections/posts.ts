@@ -326,6 +326,14 @@ export const Posts: CollectionConfig = {
       },
     },
     {
+      name: 'engineActions',
+      type: 'ui',
+      admin: {
+        position: 'sidebar',
+        components: { Field: '@/modules/ai-content/admin/post-engine-actions#PostEngineActions' },
+      },
+    },
+    {
       name: 'warnings',
       type: 'array',
       label: { ar: 'تنبيهات التحرير', en: 'Editorial warnings' },

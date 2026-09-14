@@ -24,21 +24,21 @@ Branches `level-3/blog`, `level-3/engine`, `level-3/live`. CTO: plan 87 → amen
   RUNBOOK, IDEAS.
 
 ## Phase 3b: the engine, mocked
-- [ ] T201 `ai-settings` (tabs, `fields/secret.ts` with the four-transition test, prefilled
+- [x] T201 `ai-settings` (tabs, `fields/secret.ts` with the four-transition test, prefilled
   style guide, banned lists, facts-sheet view, `reviewFirstRuns`, cost rates), `ai-topics`,
   `ai-runs` (read: admin); the AI group (admin only); `AI_CONTENT_MOCK` in
   `assertProductionEnv`; migration.
-- [ ] T202 Provider layer: interface, SDK registry (openai, deepseek, anthropic, google, pinned),
+- [x] T202 Provider layer: interface, SDK registry (openai, deepseek, anthropic, google, pinned),
   mock provider with fixtures and a call log; `AI_CONTENT_MOCK` gate.
-- [ ] T203 `facts.ts`, `checks.ts`, `dedupe.ts`, `caps.ts`, `cost.ts`, `transliterate.ts`,
+- [x] T203 `facts.ts`, `checks.ts`, `dedupe.ts`, `caps.ts`, `cost.ts`, `transliterate.ts`,
   `markdown.ts`; unit tests for each.
-- [ ] T204 The nine tasks and `generatePost`; run rows; failure alerts; `/api/ai/generate`,
+- [x] T204 The nine tasks and `generatePost`; run rows; failure alerts; `/api/ai/generate`,
   `/api/ai/regenerate`, `/api/ai/topics/import` (admin only).
-- [ ] T205 Admin: "Generate now", bulk add, the dashboard "Content engine" card, post
+- [x] T205 Admin: "Generate now", bulk add, the dashboard "Content engine" card, post
   actions, the health row.
-- [ ] T206 Tests: mock pipeline end to end (vitest); cms e2e with the mock provider (a generated
+- [x] T206 Tests: mock pipeline end to end (vitest); cms e2e with the mock provider (a generated
   post, its checks, the refusals for an editor and an outsider, no AI mention).
-- [ ] T207 Docs: ADR-042, BRD §10.2 amendments, RUNBOOK, design system.
+- [x] T207 Docs: ADR-042, BRD §10.2 amendments, RUNBOOK, design system.
 
 ## Phase 3c: the engine live
 - [ ] T301 `content-tick` schedule with the guards; `freshness` and `digest` schedules; the

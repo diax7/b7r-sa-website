@@ -1181,6 +1181,176 @@ test.describe('CMS admin', () => {
       await expect.poll(async () => (await request.get(`/blog/${slug}`)).status(), POLL).toBe(404);
     });
 
+    test('the content engine (BRD 10.2, ADR-042): a run with the mock provider publishes a post that meets the rules; editors and outsiders are refused', async ({
+      page,
+      request,
+    }) => {
+      test.setTimeout(240_000);
+      const auth = await login(request, ADMIN);
+      const json = { ...auth, 'Content-Type': 'application/json' };
+      // The mock provider is only accepted with AI_CONTENT_MOCK=1 (CI and the review server set it).
+      const settings = await request.post(`${API}/globals/ai-settings`, {
+        headers: auth,
+        data: { activeProvider: 'mock', enabled: true, reviewFirstRuns: 3, postsPerDay: 5 },
+      });
+      expect(settings.status()).toBe(200);
+      const masked = (await settings.json()) as {
+        result: { providers: { openai: { apiKey: string | null } } };
+      };
+      // A key is never echoed back: the field reads as a mask (or nothing when unset).
+      expect(
+        masked.result.providers.openai.apiKey === null ||
+          masked.result.providers.openai.apiKey.startsWith('••••'),
+      ).toBe(true);
+      const hubs = (await (
+        await request.get(`${API}/categories?limit=1&where[slug][equals]=design`, { headers: auth })
+      ).json()) as {
+        docs: Array<{ id: number }>;
+      };
+      const stamp = Date.now();
+      const topic = await request.post(`${API}/ai-topics`, {
+        headers: auth,
+        data: {
+          title: `20 فكرة تصميم تيشيرت بالخط العربي ${stamp}`,
+          hub: hubs.docs[0]!.id,
+          primaryKeyword: `تصميم تيشيرت بالخط العربي ${stamp}`,
+          intent: 'informational',
+          priority: 5,
+          status: 'backlog',
+          source: 'manual',
+        },
+      });
+      expect(topic.status()).toBe(201);
+      const topicId = ((await topic.json()) as { doc: { id: number } }).doc.id;
+      let postId: number | null = null;
+      try {
+        // Editors and outsiders cannot start a run or read the log.
+        const editor = await createEditor(request, auth);
+        try {
+          const editorAuth = await login(request, editor);
+          expect(
+            (
+              await request.post('/api/ai/generate', {
+                headers: { ...editorAuth, 'Content-Type': 'application/json' },
+                data: { topicId },
+              })
+            ).status(),
+          ).toBe(403);
+          expect((await request.get(`${API}/ai-runs`, { headers: editorAuth })).status()).toBe(403);
+          expect(
+            (await request.get(`${API}/globals/ai-settings`, { headers: editorAuth })).status(),
+          ).toBe(403);
+        } finally {
+          await request.delete(`${API}/users/${editor.id}`, { headers: auth });
+        }
+        expect(
+          (
+            await request.post('/api/ai/generate', {
+              headers: { 'Content-Type': 'application/json' },
+              data: { topicId },
+            })
+          ).status(),
+        ).toBe(403);
+        // "Generate now": the run is queued and served by the `ai` queue within a minute.
+        const queued = await request.post('/api/ai/generate', { headers: json, data: { topicId } });
+        expect(queued.status()).toBe(202);
+        const latestRun = async () => {
+          const res = await request.get(
+            `${API}/ai-runs?sort=-createdAt&limit=1&where[topic][equals]=${topicId}`,
+            { headers: auth },
+          );
+          return ((await res.json()) as { docs: Array<Record<string, unknown>> }).docs[0];
+        };
+        await expect
+          .poll(async () => (await latestRun())?.['status'] ?? 'none', {
+            intervals: [2_000, 5_000],
+            timeout: 150_000,
+          })
+          .not.toMatch(/running|none/);
+        const engineRun = (await latestRun())!;
+        expect(engineRun['status'], JSON.stringify(engineRun['steps'])).toBe('done');
+        expect(engineRun['score'] as number).toBeGreaterThanOrEqual(80);
+        expect(
+          (engineRun['steps'] as Array<{ name: string; ok: boolean }>).map((s) => s.name),
+        ).toEqual(['pickTopic', 'brief', 'outline', 'draft', 'review', 'seo', 'image', 'publish']);
+        postId =
+          typeof engineRun['post'] === 'object' && engineRun['post']
+            ? (engineRun['post'] as { id: number }).id
+            : (engineRun['post'] as number);
+        const post = (await (
+          await request.get(`${API}/posts/${postId}?depth=0`, { headers: auth })
+        ).json()) as Record<string, unknown>;
+        expect(post['_status']).toBe('published');
+        expect(post['origin']).toBe('ai');
+        expect(post['takeaways']).toHaveLength(3);
+        expect(post['warnings']).toEqual([]);
+        const slug = post['slug'] as string;
+        await expect
+          .poll(async () => (await request.get(`/blog/${slug}`)).status(), POLL)
+          .toBe(200);
+        const html = await (await request.get(`/blog/${slug}`)).text();
+        expect(html).not.toMatch(/ذكاء اصطناعي|generated by|\bAI\b/);
+        expect(html).toContain('id="section-1"');
+        // The topic points at its post; the dashboard card and the health row show the engine.
+        const topicDoc = (await (
+          await request.get(`${API}/ai-topics/${topicId}?depth=0`, { headers: auth })
+        ).json()) as Record<string, unknown>;
+        expect(topicDoc['status']).toBe('published');
+        expect((await page.request.post(`${API}/users/login`, { data: ADMIN })).status()).toBe(200);
+        await page.setViewportSize({ width: 1600, height: 1200 });
+        await page.goto('/admin');
+        await expect(page.locator('[data-admin-engine]')).toHaveAttribute(
+          'data-admin-engine-state',
+          'mock',
+        );
+        await expect(page.locator('[data-admin-engine-recent] li').first()).toContainText(/done/);
+        await expect(page.locator('[data-health-row="engine"]')).toHaveAttribute(
+          'data-tone',
+          'warning',
+        );
+        // The topic's edit view carries "Generate now"; the post's sidebar carries "Regenerate".
+        await page.goto(`/admin/collections/ai-topics/${topicId}`);
+        await expect(page.locator('[data-admin-action="generate-now"]')).toBeVisible();
+        await page.goto(`/admin/collections/posts/${postId}`);
+        await expect(page.locator('[data-admin-action="regenerate"]')).toBeVisible();
+        // With the daily cap back at one, a manual run is refused and says so in a skipped row.
+        await request.post(`${API}/globals/ai-settings`, {
+          headers: auth,
+          data: { postsPerDay: 1 },
+        });
+        const again = await request.post('/api/ai/generate', { headers: json, data: { topicId } });
+        expect(again.status()).toBe(202);
+        await expect
+          .poll(async () => (await latestRun())?.['status'] ?? 'none', {
+            intervals: [2_000, 5_000],
+            timeout: 150_000,
+          })
+          .toBe('skipped');
+        expect((await latestRun())?.['error']).toMatch(/today/);
+      } finally {
+        await request.post(`${API}/globals/ai-settings`, {
+          headers: auth,
+          data: { enabled: false, postsPerDay: 1 },
+        });
+        if (postId) await request.delete(`${API}/posts/${postId}`, { headers: auth });
+        const runs = (await (
+          await request.get(`${API}/ai-runs?limit=50&where[topic][equals]=${topicId}`, {
+            headers: auth,
+          })
+        ).json()) as { docs: Array<{ id: number }> };
+        for (const r of runs.docs)
+          await request.delete(`${API}/ai-runs/${r.id}`, { headers: auth });
+        await request.delete(`${API}/ai-topics/${topicId}`, { headers: auth });
+      }
+      await expect
+        .poll(
+          async () =>
+            (await request.get(`${API}/ai-topics/${topicId}`, { headers: auth })).status(),
+          POLL,
+        )
+        .toBe(404);
+    });
+
     test('the jobs run endpoint answers nobody; health reports the cron', async ({ request }) => {
       const adminAuth = await login(request, ADMIN);
       for (const headers of [undefined, adminAuth]) {

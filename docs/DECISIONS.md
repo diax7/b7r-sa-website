@@ -733,3 +733,49 @@ away in the sidebar and every upload field); the rich-text editor uses the brand
 (`--font-serif` pointed at it: Payload's Georgia had no Arabic). The nav preference is now
 written whole from one copy of the state on every change (Payload's merge path batches across
 writes and two quick changes could lose one). Robots disallows `/*?q=` instead of `/*?hub=`.
+
+
+## ADR-042: The content engine: Markdown in, Lexical out, a mock behind a gate (2026-09-14)
+
+Phase 3b (`specs/008-level-3-content/`, BRD §10.2) builds the automated content engine as a
+server-only module, `src/modules/ai-content/`, that nothing under the site's routes imports.
+**Shape.** `ai-settings` (a global, admin only), `ai-topics` (the backlog) and `ai-runs` (the
+audit log, read-only in the panel, written through the Local API) carry the fields of
+§10.2.1 to §10.2.3. The pipeline is nine pure steps over a `Store` interface and a
+`Provider` interface (`pipeline/run.ts`): pickTopic, brief, outline, draft, review (with one
+revision pass), image, seo, publish, notify. Payload's `generatePost` workflow wraps each step
+in an inline task with its own retries on the `ai` queue, which the in-process autorun
+(ADR-033) serves one job at a time; the workflow itself never retries, a failed run is a row.
+**Markdown in, Lexical out.** The model writes Markdown; `convertMarkdownToLexical` with the
+posts editor's own config turns it into the tree an editor would produce, so one renderer
+serves both (ADR-041). **The provider layer** is the Vercel AI SDK (`ai`, `@ai-sdk/openai`,
+`@ai-sdk/deepseek`, `@ai-sdk/anthropic`, `@ai-sdk/google`, exact pins); model ids are
+settings strings; every call carries a 120 s timeout. **The mock provider** answers with
+deterministic Arabic fixtures built from the topic and the facts sheet (every post differs)
+and records its calls; the settings may select it only when `AI_CONTENT_MOCK=1`, which the
+production assert refuses, so the pipeline is unit-tested end to end (eight scenarios) and the
+cms e2e runs it once against the production build. **Keys** are text fields encrypted with
+`payload.encrypt` (derived from `PAYLOAD_SECRET`: rotating the secret invalidates every stored
+key), read back as a mask unless the request carries `context.decryptKeys`, which only the
+pipeline's Local API reads set; the admin form posting the mask back keeps the ciphertext, an
+empty value clears it. **Review** merges the model's 100-point rubric with deterministic checks
+(numbers with a unit compared against the facts sheet, banned phrases as whole words with
+«هناك» at a sentence start only, Latin paragraphs, length, first-person promises); an em dash
+or an AI mention refuses the draft whatever the score. **Guards** (`caps.ts`): the switch and
+`AI_CONTENT_ENABLED`; daily and monthly caps counted on runs started in the period (never on
+published posts, so a second runner cannot publish twice); the cost cap; the publish hour in
+Riyadh; `pickTopic` is a compare-and-set on the topic's status. `reviewFirstRuns` (default 3)
+lands a live provider's first posts as drafts; the mock never counts it down. Links in a draft
+are filtered to the brief's internal targets, `b7r.app`, `b7r.sa` and `.gov.sa` hosts. A
+duplicate topic (keyword published within twelve months, or a title sharing 60 % of its
+tokens) is rejected before any model call. **Cuts and departures** (BRD amendments): no
+monitoring view, a "Content engine" card on the dashboard for admins instead (§10.2.7);
+`imageMode: generate` stays in the select but the run refuses it until an image provider is
+wired behind `Provider.image?`, `hubDefault` and `stock` (Pexels) ship (§10.2.1, §10.2.4);
+schedules on the in-process runner instead of an external hourly call (§10.2.4, ADR-033);
+cost is an estimate from tokens and per-provider rates in the settings (§10.2.3). A manual
+"Generate now" that the guards refuse writes a skipped run with the reason (a person asked);
+the hourly tick (3c) stays quiet. **Routes**: `/api/ai/generate`, `/api/ai/regenerate`,
+`/api/ai/topics/import` accept JSON from the site's origin and an admin only (`payload.auth`),
+403 otherwise; `ai-*` entities are admin-only on the REST API. The `ai` group, icons and hues
+follow the design system; "Regenerate" sits in an engine post's sidebar for admins.

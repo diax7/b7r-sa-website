@@ -1302,13 +1302,19 @@ Dhia's decision (D-44): **fully automatic publishing with no human approval step
 | Quality | `qualityThreshold` (0–100, default 80), `maxRevisionPasses` (default 1), `minWords` 800, `maxWords` 1600 |
 | Notifications | `notifyEmail` (Dhia), `weeklyDigest` on, `failureAlerts` on |
 
+*Amended 2026-09-14 (ADR-042, as shipped): providers are `openai · deepseek · anthropic · google` plus a `mock` for tests only (`AI_CONTENT_MOCK=1`, refused in production); keys are encrypted with Payload's `encrypt` and read back masked; the settings carry per-provider cost rates (an estimate) and `reviewFirstRuns` (the first posts of a live provider land as drafts). `imageMode: generate` is refused until an image provider is wired; `hubDefault` and `stock` (Pexels) ship. The facts sheet is a read-only tab built live from the site settings, the products and the integrations.*
+
 #### 10.2.2 `ai-topics` Collection
 
 Fields: title, hub, primaryKeyword, secondaryKeywords[], intent (informational · commercial · seasonal), priority (1–5), preferredPublishWindow (for seasonal topics, e.g. National Day: publish six weeks before 23 September), status (backlog · scheduled · generating · published · failed · rejected), source (seed · manual · searchConsole), notes, resulting post relationship, lastError. The backlog is seeded from Appendix E on migration. Dhia can add topics manually; Level 4 adds Search Console-driven suggestions.
 
+*Amended 2026-09-14 (ADR-042): `preferredPublishWindow` is a pair of dates (`windowStart`, `windowEnd`); a topic outside its window is not picked. Bulk add from CSV above the list; "Generate now" in the edit view.*
+
 #### 10.2.3 `ai-runs` Collection (audit log)
 
 One document per pipeline execution: topic, provider/model, each step's input hash, output summary, review score and rubric breakdown, tokens and estimated cost, duration, final status, post id, error. Retained 12 months.
+
+*Amended 2026-09-14 (ADR-042): each run row also keeps the outline (the freshness job regenerates from it), the step log with an input hash over the brief and the outline, and `kind` (`generate | freshness`); cost is an estimate from tokens and the settings' rates.*
 
 #### 10.2.4 Pipeline (Payload Jobs workflow `generatePost`, tasks are retryable, each ≤ 120 s)
 
@@ -1324,6 +1330,8 @@ One document per pipeline execution: topic, provider/model, each step's input ha
 
 Scheduling: `GET /api/jobs/run?token=…` (constant-time token check) is called hourly by CranL's scheduler or by cron-job.org as the B7R app does; the handler runs due jobs, respecting `postsPerDay`, `maxPostsPerMonth`, `dailyCostCapUsd`, and the kill switch. A **freshness job** runs weekly: for the ten posts with the most Search Console clicks (Level 4) or, before that, the ten oldest published, re-run `selfReview` against the current facts sheet; if prices or promises changed, regenerate the affected paragraphs, set a real `updatedAt`, and revalidate.
 
+*Amended 2026-09-14 (ADR-042, as shipped): the nine tasks are inline tasks of one workflow on the `ai` queue, each retried on its own; the model writes Markdown that is converted to the post editor's Lexical tree; the review merges the rubric with deterministic checks and refuses an em dash or an AI mention outright; the CTA is placed by the template (§6.11), not by the outline; step 6 uses the hub's default cover or a stock photo (generation deferred); scheduling runs on Payload's in-process job schedules (ADR-033) rather than an external hourly call, in 3c.*
+
 #### 10.2.5 Guardrails (all mandatory)
 
 - Kill switch in settings and a `AI_CONTENT_ENABLED` env override.
@@ -1334,13 +1342,19 @@ Scheduling: `GET /api/jobs/run?token=…` (constant-time token check) is called 
 - Every post carries the human byline (ضياء) and no AI disclosure (decision D-47). The `ai-runs` log is the internal audit trail.
 - Research caveat recorded in the admin help text: unreviewed high-volume AI publishing risks Google's scaled-content policy; keep cadence moderate and quality gates strict (`docs/research/04` §5).
 
+*Amended 2026-09-14 (ADR-042): the daily and monthly caps count runs started in the period, so a second runner or a restart cannot publish twice; `pickTopic` is a compare-and-set; `reviewFirstRuns` holds a live provider's first posts as drafts; external links are filtered to b7r.app, b7r.sa and `.gov.sa` hosts.*
+
 #### 10.2.6 Provider layer
 
 Vercel AI SDK provider registry: `openai`, `deepseek`, optional `anthropic` and `google`. Model ids are settings strings. Image generation through the same SDK where the provider supports it, otherwise a thin REST client. All calls server-side in jobs; nothing in the browser.
 
+*Amended 2026-09-14 (ADR-042): the Vercel AI SDK with `openai`, `deepseek`, `anthropic` and `google`; image generation waits behind the provider interface.*
+
 #### 10.2.7 Admin screens
 
 "المحتوى الآلي" group: الإعدادات (the Global), المواضيع (backlog table with bulk add from CSV and a "توليد الآن" action), السجل (runs with scores and costs), لوحة المتابعة (posts this month, average score, failures, cost to date, next scheduled slot).
+
+*Amended 2026-09-14 (ADR-042): the group is "AI content" with Engine settings, Topics and Runs; the monitoring numbers (posts this month, average score, failures, cost, next slot, latest runs) are a card on the dashboard for admins rather than a separate view.*
 
 ### 10.3 Acceptance (Level 3)
 

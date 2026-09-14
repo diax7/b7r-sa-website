@@ -1,0 +1,203 @@
+import type { LexicalState } from '@/lib/lexical';
+import type { CapCounts } from '@/modules/ai-content/caps';
+import type { Rates, Usage } from '@/modules/ai-content/cost';
+import type { PublishedPost } from '@/modules/ai-content/dedupe';
+import type { FactsSheet } from '@/modules/ai-content/facts';
+import type { Provider, ProviderName } from '@/modules/ai-content/provider/types';
+
+/** The settings the pipeline reads, keys revealed (the Local API read carries `decryptKeys`). */
+export interface EngineSettings {
+  activeProvider: ProviderName;
+  providers: Record<
+    Exclude<ProviderName, 'mock'>,
+    { model: string; apiKey: string | null; rates: Rates }
+  >;
+  enabled: boolean;
+  postsPerDay: number;
+  publishHourRiyadh: number;
+  maxPostsPerMonth: number;
+  dailyCostCapUsd: number;
+  reviewFirstRuns: number;
+  styleGuide: string;
+  systemPrompt: string;
+  systemPromptVersion: number;
+  bannedPhrases: string[];
+  bannedClaims: string;
+  imageMode: 'hubDefault' | 'stock' | 'generate';
+  imageStyle: string;
+  pexelsKey: string | null;
+  qualityThreshold: number;
+  maxRevisionPasses: number;
+  minWords: number;
+  maxWords: number;
+  notifyEmail: string | null;
+  weeklyDigest: boolean;
+  failureAlerts: boolean;
+}
+
+export interface Topic {
+  id: number;
+  title: string;
+  hubId: number;
+  primaryKeyword: string;
+  secondaryKeywords: string[];
+  intent: 'informational' | 'commercial' | 'seasonal';
+  priority: number;
+  windowStart: string | null;
+  windowEnd: string | null;
+}
+
+export interface HubInfo {
+  id: number;
+  slug: string;
+  name: string;
+  description: string;
+  defaultCoverId: number | null;
+  /** Published posts in the hub, for internal links and dedupe. */
+  posts: Array<{ slug: string; title: string }>;
+}
+
+export interface Outline {
+  headings: Array<{ question: string; answer: string }>;
+  takeaways: string[];
+  imageKeyword: string;
+}
+
+export interface Rubric {
+  facts: number;
+  arabic: number;
+  structure: number;
+  usefulness: number;
+  formatting: number;
+  critique: string;
+}
+
+export interface SeoResult {
+  title: string;
+  description: string;
+  slug: string;
+  alt: string;
+}
+
+export interface StepRecord {
+  name: string;
+  inputHash: string;
+  summary: string;
+  ms: number;
+  ok: boolean;
+}
+
+export interface RunPatch {
+  status?: 'running' | 'done' | 'failed' | 'skipped';
+  steps?: StepRecord[];
+  outline?: Outline;
+  score?: number;
+  rubric?: Rubric & { deductions: Array<{ rule: string; points: number; detail: string }> };
+  tokensIn?: number;
+  tokensOut?: number;
+  costUsd?: number;
+  durationMs?: number;
+  post?: number;
+  error?: string;
+  finishedAt?: string;
+  label?: string;
+}
+
+export interface NewPost {
+  title: string;
+  slug: string;
+  excerpt: string;
+  hub: number;
+  author: number;
+  cover: number;
+  takeaways: string[];
+  body: LexicalState;
+  seo: { title: string; description: string };
+  publishedAt: string;
+  status: 'draft' | 'published';
+}
+
+export interface MediaUpload {
+  bytes: Uint8Array;
+  mime: string;
+  filename: string;
+  alt: string;
+}
+
+/**
+ * Everything the pipeline touches outside itself. `payloadStore` implements it on the Local
+ * API; the unit tests use an in-memory one, so the nine steps run without a database.
+ */
+export interface Store {
+  settings(): Promise<EngineSettings>;
+  facts(): Promise<FactsSheet>;
+  /** Compare-and-set: the topic (given or the best backlog one) moves to `generating`, or null. */
+  pickTopic(now: Date, topicId?: number): Promise<Topic | null>;
+  publishedPosts(): Promise<PublishedPost[]>;
+  hub(id: number): Promise<HubInfo>;
+  authorId(): Promise<number>;
+  slugTaken(slug: string): Promise<boolean>;
+  counts(now: Date): Promise<CapCounts>;
+  createRun(data: {
+    label: string;
+    kind: 'generate' | 'freshness';
+    topic?: number;
+    provider: string;
+    model: string;
+    systemPromptVersion: number;
+    startedAt: string;
+  }): Promise<number>;
+  updateRun(id: number, patch: RunPatch): Promise<void>;
+  updateTopic(
+    id: number,
+    patch: { status?: string; post?: number; lastRun?: number; lastError?: string | null },
+  ): Promise<void>;
+  createPost(post: NewPost): Promise<{ id: number; slug: string }>;
+  /** A regeneration: the same slug and cover, new content, keeps the id. */
+  replacePost(
+    id: number,
+    post: Omit<NewPost, 'slug' | 'cover' | 'status'>,
+  ): Promise<{ id: number; slug: string }>;
+  postForRegeneration(
+    id: number,
+  ): Promise<{ topicId: number | null; slug: string; cover: number } | null>;
+  uploadImage(upload: MediaUpload): Promise<number>;
+  markdownToLexical(markdown: string): Promise<LexicalState>;
+  decrementReviewFirstRuns(): Promise<void>;
+  sendEmail(mail: { to: string; subject: string; text: string }): Promise<void>;
+  fetchStockPhoto?(keyword: string, apiKey: string): Promise<MediaUpload | null>;
+}
+
+export interface PipelineInput {
+  /** A given topic (Generate now) or the best of the backlog. */
+  topicId?: number;
+  /** Skip the publish hour (a person pressed the button); never the switch or the caps. */
+  manual?: boolean;
+  /** Regenerate this post from the topic it came from (same slug and cover). */
+  replacePostId?: number;
+  kind?: 'generate' | 'freshness';
+}
+
+/** Runs a step; the workflow wraps this in Payload's inline task for retries and the job log. */
+export type StepRunner = <T>(
+  name: string,
+  fn: () => Promise<T>,
+  options?: { retries?: number },
+) => Promise<T>;
+
+export interface PipelineContext {
+  store: Store;
+  provider: Provider;
+  now: () => Date;
+  run: StepRunner;
+  env?: Record<string, string | undefined>;
+}
+
+export interface PipelineResult {
+  status: 'done' | 'failed' | 'skipped';
+  runId: number | null;
+  postId: number | null;
+  score: number | null;
+  reason: string | null;
+  usage: Usage;
+}

@@ -57,6 +57,11 @@ export function healthRows(r: HealthReport): HealthRow[] {
     { key: 'media', tone: r.media === 's3' ? 'success' : 'warning', text: s.rows.media[r.media] },
     kindRow('contact', s.rows.contact, r.contact),
     kindRow('newsletter', s.rows.newsletter, r.newsletter),
+    {
+      key: 'engine',
+      tone: r.engine === 'off' ? 'muted' : r.engine === 'mock' ? 'warning' : 'success',
+      text: s.engine[r.engine],
+    },
   ];
 }
 

@@ -31,6 +31,8 @@ production reaches after the first visitor), then runs `lhci autorun` with three
 ```bash
 docker compose up -d        # Postgres 16 on :5435 (db/user/password b7r) + MinIO on :9000/:9001
 pnpm migrate                # apply src/migrations to the database in DATABASE_URL
+                            # rotating PAYLOAD_SECRET signs everyone out AND makes every
+                            # provider key in Engine settings unreadable: re-enter them
                             # (content:migrate also seeds the blog: six hubs, the author, three posts)
 pnpm content:migrate        # seed products, media, the globals (home included), faqs, testimonials, integrations (create-only, ADR-026)
 pnpm admin:create           # first admin from ADMIN_EMAIL / ADMIN_PASSWORD (12+ chars, not breached)
@@ -314,3 +316,23 @@ retry copy; `NEWSLETTER_TRANSPORT=mock` (tests only) keeps subscriptions in memo
 `@lhci/cli > lighthouse > puppeteer-core`. Dev-only, never in the image; the advisory names
 `>= 2.0.2` as patched but it is not published. Ignored in `pnpm-workspace.yaml`; remove the
 ignore when 2.0.2 ships.
+
+
+## The content engine (BRD 10.2, ADR-042)
+
+- **Keys.** Admin → AI content → Engine settings → Providers: paste the vendor's key and the
+  model id, choose the active provider, save. The key is stored encrypted and reads back as
+  a mask; leave the mask to keep it, clear the field to remove it.
+- **Switching on.** Cadence → "Engine on". `AI_CONTENT_ENABLED=false` in the environment stops
+  every run whatever the panel says (the kill switch outside the panel). While
+  `reviewFirstRuns` is above zero, a live provider's posts land as drafts for a read.
+- **Trying it.** Add a topic (or bulk-add from CSV), open it and press "Generate now": the
+  run starts within a minute on the `ai` queue and shows in Runs with its steps, score and
+  cost; the post appears under Blog → Posts. A refused manual run (switch off, a cap, no
+  key) writes a skipped run with the reason.
+- **When a run fails.** Runs → the row's error and step log say which step and why; the topic
+  reads `failed` with the same reason and can be retried with "Generate now". A failure
+  e-mail goes to the notification address when "Failure alerts" is on.
+- **The mock.** `AI_CONTENT_MOCK=1` (never in production; the boot assert refuses it) lets the
+  settings select "Mock (tests only)": deterministic Arabic posts built from the facts sheet,
+  no network. CI and the review server use it.
