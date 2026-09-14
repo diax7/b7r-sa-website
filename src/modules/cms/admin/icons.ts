@@ -37,7 +37,7 @@ import type { Config } from '@/payload-types';
  * entry here is a type error, and `tests/admin-icons.test.ts` walks the runtime config too.
  */
 export type CollectionSlug = Exclude<keyof Config['collections'], `payload-${string}`>;
-export type GlobalSlug = keyof Config['globals'];
+export type GlobalSlug = Exclude<keyof Config['globals'], `payload-${string}`>;
 
 export const COLLECTION_ICONS: Record<CollectionSlug, LucideIcon> = {
   products: Shirt,

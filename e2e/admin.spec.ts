@@ -1211,9 +1211,10 @@ test.describe('CMS admin', () => {
       const topic = await request.post(`${API}/ai-topics`, {
         headers: auth,
         data: {
-          title: `20 فكرة تصميم تيشيرت بالخط العربي ${stamp}`,
+          // A title no seed topic shares (the dedupe refuses a 60 % overlap with a published post).
+          title: `اختيار خامة التيشيرت المناسبة للطباعة ${stamp}`,
           hub: hubs.docs[0]!.id,
-          primaryKeyword: `تصميم تيشيرت بالخط العربي ${stamp}`,
+          primaryKeyword: `خامة التيشيرت للطباعة ${stamp}`,
           intent: 'informational',
           priority: 5,
           status: 'backlog',
@@ -1273,6 +1274,24 @@ test.describe('CMS admin', () => {
         expect(
           (engineRun['steps'] as Array<{ name: string; ok: boolean }>).map((s) => s.name),
         ).toEqual(['pickTopic', 'brief', 'outline', 'draft', 'review', 'seo', 'image', 'publish']);
+        // The run keeps the outline a freshness pass rewrites from.
+        expect((engineRun['outline'] as { headings: unknown[] }).headings.length).toBeGreaterThan(
+          3,
+        );
+        // The seeded backlog (BRD Appendix E): thirty topics, the three Level 1 posts linked.
+        const seeded = (await (
+          await request.get(`${API}/ai-topics?limit=0&where[source][equals]=seed`, {
+            headers: auth,
+          })
+        ).json()) as { totalDocs: number };
+        expect(seeded.totalDocs).toBe(30);
+        const linked = (await (
+          await request.get(
+            `${API}/ai-topics?limit=0&where[source][equals]=seed&where[status][equals]=published&where[post][exists]=true`,
+            { headers: auth },
+          )
+        ).json()) as { totalDocs: number };
+        expect(linked.totalDocs).toBe(3);
         postId =
           typeof engineRun['post'] === 'object' && engineRun['post']
             ? (engineRun['post'] as { id: number }).id
@@ -1284,6 +1303,12 @@ test.describe('CMS admin', () => {
         expect(post['origin']).toBe('ai');
         expect(post['takeaways']).toHaveLength(3);
         expect(post['warnings']).toEqual([]);
+        // The facts of the day travel with the post: the freshness job's baseline.
+        expect(
+          (post['factsBaseline'] as Array<{ unit: string; value: number }>).some(
+            (n) => n.unit === 'days',
+          ),
+        ).toBe(true);
         const slug = post['slug'] as string;
         await expect
           .poll(async () => (await request.get(`/blog/${slug}`)).status(), POLL)

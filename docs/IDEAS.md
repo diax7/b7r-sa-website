@@ -35,7 +35,7 @@ Constitution VIII: features outside the current phase are written here, not buil
 - Server-side search with Arabic stemming if the corpus outgrows the embedded index (a few
   hundred posts); until then the island folds hamza forms and diacritics only.
 - A post's `contentUpdatedAt` could be set automatically when the body changes on a
-  published post; today an editor sets it (the freshness job will, in 3c).
+  published post; today an editor sets it and the freshness job sets it on a regeneration.
 - A lenient preview for a half-filled block: today a draft whose block fails the content
   contract renders the error page under preview (the public site must never render it); a
   preview could skip the broken block with a notice instead.
@@ -43,3 +43,9 @@ Constitution VIII: features outside the current phase are written here, not buil
   not to), the last backup date (the weekly workflow could post a status the dashboard reads).
 - Live preview (a side panel that updates as you type) stays deferred; the preview button is
   what Dhia asked for.
+- Search Console topic suggestions (Level 4c): queries the site ranks for on page two become
+  `ai-topics` with `source: searchConsole`; the backlog and the pipeline are ready for them.
+- Image generation behind `Provider.image?` once a vendor is chosen; `imageMode: generate` is
+  refused until then.
+- The freshness pass could also re-run the review on unchanged posts and flag a score drop
+  after a rules change; today it reacts to the facts sheet only.

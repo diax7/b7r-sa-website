@@ -130,8 +130,9 @@ export async function runPipeline(
           lastError: null,
         });
       } else if (result.status === 'failed') {
+        // A failed regeneration leaves the post standing, so its topic stays `published`.
         await store.updateTopic(topicId, {
-          status: 'failed',
+          status: input.replacePostId ? 'published' : 'failed',
           ...(runId !== null ? { lastRun: runId } : {}),
           lastError: error ?? result.reason,
         });
@@ -157,6 +158,7 @@ export async function runPipeline(
       counts,
       now: startedAt,
       manual: input.manual ?? false,
+      kind: input.kind ?? 'generate',
       ...(ctx.env ? { env: ctx.env } : {}),
     });
     if (!decision.allowed) {
@@ -200,16 +202,20 @@ export async function runPipeline(
     const topic = await step(
       'pickTopic',
       { topicId: input.topicId ?? regen?.topicId ?? null },
-      () => store.pickTopic(startedAt, input.topicId ?? regen?.topicId ?? undefined),
+      () =>
+        store.pickTopic(startedAt, input.topicId ?? regen?.topicId ?? undefined, regen !== null),
       (t) => (t ? `topic ${t.id}: ${t.title}` : 'nothing to write'),
     );
     if (!topic) {
+      const asked = input.topicId ?? regen?.topicId;
       return finish({
         status: 'skipped',
         runId: null,
         postId: null,
         score: null,
-        reason: 'no topic in the backlog with an open window',
+        reason: asked
+          ? `topic ${asked} cannot be picked (deleted, generating or already written)`
+          : 'no topic in the backlog with an open window',
         usage,
       });
     }
@@ -255,11 +261,13 @@ export async function runPipeline(
     );
     const system = systemPrompt(settings);
 
-    // 3. outline.
+    // 3. outline: a freshness run keeps the structure its post has and rewrites the prose.
+    const stored = input.kind === 'freshness' ? (regen?.outline ?? null) : null;
     const outline = await step(
       'outline',
-      { brief: brief.topic.id, hub: hub.slug },
+      { brief: brief.topic.id, hub: hub.slug, stored: stored !== null },
       async () => {
+        if (stored) return stored;
         const res = await provider.object({
           step: 'outline',
           system,
@@ -270,7 +278,7 @@ export async function runPipeline(
         usage = addUsage(usage, res.usage);
         return res.value as Outline;
       },
-      (o) => `${o.headings.length} H2s`,
+      (o) => `${o.headings.length} H2s${stored ? ' (stored)' : ''}`,
     );
     await store.updateRun(runId, { outline });
 
@@ -384,6 +392,8 @@ export async function runPipeline(
 
     // 8. publish.
     const body = await store.markdownToLexical(draft);
+    // The first posts of a live provider land as drafts for a read; the mock never counts
+    // `reviewFirstRuns` down (tests and the review server publish straight away).
     const status = provider.name !== 'mock' && settings.reviewFirstRuns > 0 ? 'draft' : 'published';
     const post = await step(
       'publish',
@@ -398,6 +408,7 @@ export async function runPipeline(
           body,
           seo: { title: seo.title.slice(0, 70), description: seo.description.slice(0, 160) },
           publishedAt: ctx.now().toISOString(),
+          factsBaseline: facts.numbers,
         };
         if (regen && input.replacePostId) return store.replacePost(input.replacePostId, base);
         const slug = await freeSlug(store, slugFor(seo.slug, topic.primaryKeyword));

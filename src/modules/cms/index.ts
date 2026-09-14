@@ -10,6 +10,9 @@ import { buildConfig } from 'payload';
 import { AiRuns } from '@/modules/ai-content/runs';
 import { AiSettings } from '@/modules/ai-content/settings';
 import { AiTopics } from '@/modules/ai-content/topics';
+import { digestTask } from '@/modules/ai-content/digest';
+import { freshnessTask } from '@/modules/ai-content/freshness';
+import { contentTickTask } from '@/modules/ai-content/tick';
 import { AI_QUEUE, generatePostWorkflow } from '@/modules/ai-content/workflow';
 import { Authors } from '@/modules/cms/collections/authors';
 import { Categories } from '@/modules/cms/collections/categories';
@@ -131,10 +134,11 @@ export default buildConfig({
    * is the only runner. Completed jobs are deleted.
    */
   jobs: {
-    tasks: [indexNowTask],
+    tasks: [indexNowTask, contentTickTask, freshnessTask, digestTask],
     workflows: [generatePostWorkflow],
     // The default queue serves IndexNow and scheduled publishes; the `ai` queue runs one
-    // content-engine job at a time (ADR-042).
+    // content-engine job at a time and carries the engine's schedules: the hourly tick, the
+    // weekly freshness pass and the weekly digest (ADR-042).
     autoRun: [
       { cron: '* * * * *', limit: 10 },
       { cron: '* * * * *', queue: AI_QUEUE, limit: 1 },

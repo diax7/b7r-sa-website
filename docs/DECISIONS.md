@@ -779,3 +779,35 @@ the hourly tick (3c) stays quiet. **Routes**: `/api/ai/generate`, `/api/ai/regen
 `/api/ai/topics/import` accept JSON from the site's origin and an admin only (`payload.auth`),
 403 otherwise; `ai-*` entities are admin-only on the REST API. The `ai` group, icons and hues
 follow the design system; "Regenerate" sits in an engine post's sidebar for admins.
+
+**Amended 2026-09-14 (Phase 3c, the engine live).** The schedules are Payload job schedules on
+the `ai` queue, served by the same in-process autorun (ADR-033), each a task with the default
+`beforeSchedule` (one queued at a time): `content-tick` hourly (`0 * * * *`), which reads the
+settings and the day's counts and queues one `generatePost` when the guards pass (the pipeline
+checks them again when the job runs); `content-freshness` Monday 06:00 Riyadh and
+`content-digest` Sunday 08:00 Riyadh, both as crons on the runtime's UTC clock (Riyadh is
+UTC+3 without daylight saving). Payload queues a scheduled job ahead with `waitUntil` at the
+next cron time, so the guards are judged in the task handler, never in a schedule hook. **Drift**
+is a number the facts sheet carried when the post was written and does not carry now: every
+engine post keeps the sheet's numbers of the day (`posts.factsBaseline`, hidden from the form;
+the seed writes it for the migrated three, the runs log is swept yearly and the post is not),
+and the freshness pass reads the ten oldest published `ai` posts against that baseline; an
+illustrative figure that was never on the sheet is not drift (the review already charged for
+it). A drifted post is regenerated under
+its slug and cover from the outline stored on its last successful run, with the current facts;
+a `freshness` run skips the posts-per-day and per-month caps and the hour (it rewrites, it does
+not add) and respects the switch, the env and the cost cap, which now counts every run's cost.
+`ai-edited` posts and posts without a baseline (an editor's own) stay outside the pass. The
+`ai` queue is serial: a Monday freshness batch delays that day's post by the batch's duration,
+chosen over a second runner. A failed regeneration leaves the post and
+its topic `published` with the error on the topic. The digest e-mail lists the week's posts
+with score and cost, the failures with their reason and the next slot, when "Weekly digest" is
+on and an address is set; the twelve-month sweep of the runs log runs with it (a topic's
+`lastRun` link is nulled by the database). The backlog seeds the thirty Appendix E topics with
+their hub, keywords, intent and priority; seasonal windows are computed for their next
+occurrence at seed time (Ramadan as fixed dates); the three topics the Level 1 posts cover are
+seeded `published` and linked, so the engine never writes them twice. The review server carries
+mock posts written from the backlog by `scripts/dev/engine-demo.mjs` (five a day, the cap's
+own maximum; the ten of the plan take two days) with a `clean` that restores the seed the
+public e2e assumes. The live run per provider (§10.3 item 2) is Dhia's:
+a key, the provider, "Generate now".

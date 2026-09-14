@@ -326,6 +326,15 @@ export const Posts: CollectionConfig = {
       },
     },
     {
+      // The facts sheet's numbers when the engine (or the seed) wrote the post: the freshness
+      // job's baseline (ADR-042). Hidden from the form; the runs log is swept yearly, the post
+      // is not.
+      name: 'factsBaseline',
+      type: 'json',
+      access: { update: adminField },
+      admin: { hidden: true },
+    },
+    {
       name: 'engineActions',
       type: 'ui',
       admin: {

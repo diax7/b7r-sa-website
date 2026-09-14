@@ -50,8 +50,10 @@ export interface CapSettings {
 }
 
 export interface CapCounts {
+  /** `generate` runs started today and this month (a freshness run rewrites, it does not add). */
   runsToday: number;
   runsThisMonth: number;
+  /** Every run's cost today, whatever its kind. */
   costTodayUsd: number;
 }
 
@@ -67,19 +69,29 @@ export function envAllows(raw: Record<string, string | undefined> = process.env)
 }
 
 /**
- * Whether a scheduled run may start now. `manual` skips the hour (a person pressed the
- * button) but never the switch, the env or the caps.
+ * Whether a run may start now. `manual` skips the hour (a person pressed the button) but
+ * never the switch, the env or the caps. A `freshness` run rewrites a post that exists, so
+ * the posts-per-day and per-month caps and the hour do not apply to it; the switch, the env
+ * and the cost cap do.
  */
 export function capDecision(args: {
   settings: CapSettings;
   counts: CapCounts;
   now: Date;
   manual?: boolean;
+  kind?: 'generate' | 'freshness';
   env?: Record<string, string | undefined>;
 }): CapDecision {
-  const { settings, counts, now, manual = false } = args;
+  const { settings, counts, now, manual = false, kind = 'generate' } = args;
   if (!envAllows(args.env)) return { allowed: false, reason: 'AI_CONTENT_ENABLED is off' };
   if (!settings.enabled) return { allowed: false, reason: 'the engine is switched off' };
+  if (counts.costTodayUsd >= settings.dailyCostCapUsd) {
+    return {
+      allowed: false,
+      reason: `today's cost ${counts.costTodayUsd.toFixed(2)} USD reached the cap ${settings.dailyCostCapUsd} USD`,
+    };
+  }
+  if (kind === 'freshness') return { allowed: true, reason: null };
   if (counts.runsToday >= settings.postsPerDay) {
     return {
       allowed: false,
@@ -90,12 +102,6 @@ export function capDecision(args: {
     return {
       allowed: false,
       reason: `${counts.runsThisMonth} run(s) this month already (cap ${settings.maxPostsPerMonth})`,
-    };
-  }
-  if (counts.costTodayUsd >= settings.dailyCostCapUsd) {
-    return {
-      allowed: false,
-      reason: `today's cost ${counts.costTodayUsd.toFixed(2)} USD reached the cap ${settings.dailyCostCapUsd} USD`,
     };
   }
   if (!manual && riyadh(now).hour < settings.publishHourRiyadh) {

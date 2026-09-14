@@ -124,7 +124,7 @@ Fields: title, hub, primaryKeyword, secondaryKeywords[], intent (informational Â
 
 One document per pipeline execution: topic, provider/model, each step's input hash, output summary, review score and rubric breakdown, tokens and estimated cost, duration, final status, post id, error. Retained 12 months.
 
-*Amended 2026-09-14 (ADR-042): each run row also keeps the outline (the freshness job regenerates from it), the step log with an input hash over the brief and the outline, and `kind` (`generate | freshness`); cost is an estimate from tokens and the settings' rates.*
+*Amended 2026-09-14 (ADR-042): each run row also keeps the outline (the freshness job regenerates from it), the step log with an input hash over the brief and the outline, and `kind` (`generate | freshness`); each engine post keeps the facts sheet's numbers of the day (`factsBaseline`; drift is a number that was on the sheet and is not any more); cost is an estimate from tokens and the settings' rates. The schedules (hourly tick, weekly freshness, weekly digest with the twelve-month sweep) are Payload job schedules on the `ai` queue.*
 
 #### 10.2.4 Pipeline (Payload Jobs workflow `generatePost`, tasks are retryable, each â‰¤ 120 s)
 

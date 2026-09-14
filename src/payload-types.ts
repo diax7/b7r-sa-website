@@ -119,6 +119,7 @@ export interface Config {
     navigation: Navigation;
     'seo-defaults': SeoDefault;
     'ai-settings': AiSetting;
+    'payload-jobs-stats': PayloadJobsStat;
   };
   globalsSelect: {
     home: HomeSelect<false> | HomeSelect<true>;
@@ -126,6 +127,7 @@ export interface Config {
     navigation: NavigationSelect<false> | NavigationSelect<true>;
     'seo-defaults': SeoDefaultsSelect<false> | SeoDefaultsSelect<true>;
     'ai-settings': AiSettingsSelect<false> | AiSettingsSelect<true>;
+    'payload-jobs-stats': PayloadJobsStatsSelect<false> | PayloadJobsStatsSelect<true>;
   };
   locale: 'ar' | 'en';
   widgets: {
@@ -135,6 +137,9 @@ export interface Config {
   jobs: {
     tasks: {
       'indexnow-ping': TaskIndexnowPing;
+      'content-tick': TaskContentTick;
+      'content-freshness': TaskContentFreshness;
+      'content-digest': TaskContentDigest;
       schedulePublish: TaskSchedulePublish;
       inline: {
         input: unknown;
@@ -632,6 +637,15 @@ export interface Post {
    * A change by an editor to an engine post marks it "engine, then edited" and exempts it from the freshness job.
    */
   origin: 'manual' | 'ai' | 'ai-edited';
+  factsBaseline?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   warnings?:
     | {
         text?: string | null;
@@ -938,7 +952,8 @@ export interface PayloadJob {
     | {
         executedAt: string;
         completedAt: string;
-        taskSlug: 'inline' | 'indexnow-ping' | 'schedulePublish';
+        taskSlug:
+          'inline' | 'indexnow-ping' | 'content-tick' | 'content-freshness' | 'content-digest' | 'schedulePublish';
         taskID: string;
         input?:
           | {
@@ -972,10 +987,20 @@ export interface PayloadJob {
       }[]
     | null;
   workflowSlug?: 'generatePost' | null;
-  taskSlug?: ('inline' | 'indexnow-ping' | 'schedulePublish') | null;
+  taskSlug?:
+    ('inline' | 'indexnow-ping' | 'content-tick' | 'content-freshness' | 'content-digest' | 'schedulePublish') | null;
   queue?: string | null;
   waitUntil?: string | null;
   processing?: boolean | null;
+  meta?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1466,6 +1491,7 @@ export interface PostsSelect<T extends boolean = true> {
   contentUpdatedAt?: T;
   readingMinutes?: T;
   origin?: T;
+  factsBaseline?: T;
   warnings?:
     | T
     | {
@@ -1664,6 +1690,7 @@ export interface PayloadJobsSelect<T extends boolean = true> {
   queue?: T;
   waitUntil?: T;
   processing?: T;
+  meta?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -2090,6 +2117,24 @@ export interface AiSetting {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payload-jobs-stats".
+ */
+export interface PayloadJobsStat {
+  id: number;
+  stats?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "home_select".
  */
 export interface HomeSelect<T extends boolean = true> {
@@ -2416,6 +2461,16 @@ export interface AiSettingsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payload-jobs-stats_select".
+ */
+export interface PayloadJobsStatsSelect<T extends boolean = true> {
+  stats?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "collections_widget".
  */
 export interface CollectionsWidget {
@@ -2442,6 +2497,41 @@ export interface TaskIndexnowPing {
   };
   output: {
     status?: number | null;
+  };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TaskContent-tick".
+ */
+export interface TaskContentTick {
+  input?: unknown;
+  output: {
+    queued?: boolean | null;
+    reason?: string | null;
+  };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TaskContent-freshness".
+ */
+export interface TaskContentFreshness {
+  input?: unknown;
+  output: {
+    checked?: number | null;
+    queued?: number | null;
+    reason?: string | null;
+  };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TaskContent-digest".
+ */
+export interface TaskContentDigest {
+  input?: unknown;
+  output: {
+    sent?: boolean | null;
+    deleted?: number | null;
+    reason?: string | null;
   };
 }
 /**
