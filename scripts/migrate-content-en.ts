@@ -23,7 +23,6 @@ import {
 } from '../src/content/seed/en/products';
 import { seoEn } from '../src/content/seed/en/seo';
 import { siteEn } from '../src/content/seed/en/site';
-import { DEFAULT_STYLE } from '../src/modules/ai-content/prompts/defaults';
 import { testimonialsEn } from '../src/content/seed/en/testimonials';
 
 const EN = { locale: 'en', fallbackLocale: false, depth: 0, overrideAccess: true } as const;
@@ -358,29 +357,6 @@ export async function ensureEnglish(payload: Payload): Promise<EnglishSummary> {
         context: CONTEXT,
       });
       done(`en page ${ar.slug}`);
-    }
-  }
-
-  // The engine's style tab in English (5c): the code defaults, so the admin sees and edits them.
-  {
-    const en = await payload.findGlobal({ slug: 'ai-settings', ...EN });
-    if (en.style?.styleGuide) skip('en ai-settings');
-    else {
-      const style = DEFAULT_STYLE.en;
-      await payload.updateGlobal({
-        slug: 'ai-settings',
-        locale: 'en',
-        data: {
-          style: {
-            styleGuide: style.styleGuide,
-            systemPrompt: style.systemPrompt,
-            bannedPhrases: style.bannedPhrases.join('\n'),
-            bannedClaims: style.bannedClaims,
-          },
-        },
-        context: CONTEXT,
-      });
-      done('en ai-settings');
     }
   }
 

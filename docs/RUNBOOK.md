@@ -390,8 +390,8 @@ The engine in English (5c): a topic's `language` decides the post's language; th
 backlog is seeded beside the Arabic one, and a CSV import takes `language` as its seventh
 column (`ar` by default): `title,hub,primaryKeyword,secondaryKeywords,intent,priority,language`,
 for example `Connect a Shopify store,salla-zid-shopify,Shopify print on demand,,commercial,4,en`. Engine settings, "Language and style": switch the panel's locale
-to edit the English style guide, system prompt, banned phrases and banned claims (pre-filled
-from the code defaults). The facts sheet tab shows both languages. On the review server
+to edit the English style guide, system prompt, banned phrases and banned claims (the code
+defaults show until you save your own). The facts sheet tab shows both languages. On the review server
 `node scripts/dev/engine-demo.mjs run 1 en` writes one English post with the mock;
 `... clean` removes it. `/llms.txt` and `/en/llms.txt` are generated from the CMS and
 regenerate with the listings on publish; nothing to maintain by hand.
