@@ -26,6 +26,13 @@ serves, warms the image cache and prints the same mobile scores. CI runs
 and its image transforms once (ISR entries and the `next/image` cache warm, the steady state
 production reaches after the first visitor), then runs `lhci autorun` with three runs.
 
+CI runs on the pull request only (ADR-045). Merge with `bash scripts/merge-pr.sh <number>
+[subject]` (`gh` signed in with access to the repository): it refuses a branch whose remote
+head does not contain `origin/main` (merge `main` in, push, let the PR run again), waits for
+every check on the head and prints them, squash-merges with the subject given or the PR's
+title, deletes the branch and pulls `main`. `gh workflow run ci.yml --ref main` runs `main`
+by hand.
+
 ## Local CMS (Phase 2a)
 
 ```bash
