@@ -1003,3 +1003,41 @@ header sets; no pill before hydration), so a field with a pill changes per langu
 field without one is shared; a `LocaleNote` line before the document controls of every
 document with localized fields says the same in words (`tests/admin-config.test.ts` checks
 the registration on every such config).
+
+## ADR-045: CI runs on the pull request only; the merge goes through one script (2026-09-15)
+
+Every PR cost two identical CI events: the `pull_request` run and the `push` run on `main`
+after the squash merge, about 32 billed minutes each (the quality job 24, the S3 job 8 in
+parallel), so about 64 per PR plus reruns; the month's free minutes ran out on 2026-09-14 and
+blocked PR #15. The `push` run repeats the PR run by construction: changes land by squash
+merge only (BRD 8.2), and a branch whose remote head contains `origin/main` lands the tree the
+PR run tested (`refs/pull/N/merge`). So `ci.yml` runs on `pull_request` and `workflow_dispatch`
+(a full run of `main` by hand: `gh workflow run ci.yml --ref main`), and the property the push
+run used to check is checked by `scripts/merge-pr.sh <number> [subject]` instead, every time
+and the same way: fetch; `origin/<branch>` must contain `origin/main`, else it stops with the
+instruction to merge `main` in and let the PR run again; `gh pr checks --watch --fail-fast` on
+the head, every check line printed, then the gate proper, every check in the pass bucket
+(`gh pr checks` exits 0 on a cancelled check: only failed and pending are non-zero);
+`gh pr merge --squash --delete-branch` with the subject given or the PR's title, the PR number
+appended, no body; `main` checked out and pulled fast-forward only. Found on the way:
+the CI warm-up (`e2e/global-setup.ts`, `scripts/ci/warm-lib.sh`) requested every image
+transform with the default Accept (any type), which Next answers with a resized JPEG, while
+every browser in the suite and Lighthouse's Chrome get AVIF (WebKit lists WebP before AVIF, but
+Next answers with the first of its own `formats` the client accepts), so no AVIF was ever warm and
+the first minute of a run paid the cold encodes (PR #15's second run: the no-JS home tests
+past 30 s for `load`); both warmers now send `image/avif,image/webp,*/*;q=0.8`. The trade-off,
+accepted: `main` has no CI event, so the deploy (ADR-025, its own `push` trigger; its
+`next build` fails closed on a broken `main`) trusts the routine, and a merge from the GitHub
+UI skips the script. The re-arm path if that ever matters: `push: main` back in `ci.yml` and
+a `workflow_run` gate on the deploy. Considered and not done: keeping `.next/cache` between
+runs (Next's `actions/cache` pattern): a `pull_request` run's cache is scoped to its PR, and
+with no trusted run on `main` nothing writes `main`'s scope, so it would warm only the reruns
+of one PR (about 20 to 45 s per job) and would need a restore/save split to keep the runtime
+image cache (`.next/cache/images`, written by `next start` during the e2e and Lighthouse) from
+being saved and served stale to the budgets test; caching the Playwright browsers
+(Playwright's CI guide: the restore costs what the download costs, and the OS dependencies
+cannot be cached); more Playwright workers (the default, 50% of cores, adapts to the runner
+class and keeps the WebKit device projects honest); sharding the e2e across jobs (shorter wall
+clock, more billed minutes). Open, for Dhia's call: the admin suite runs twice per event (the
+quality job on local-disk media, the S3 job on MinIO, the storage production uses); dropping
+it from the quality job would save about 3 minutes.

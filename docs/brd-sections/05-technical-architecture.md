@@ -125,7 +125,7 @@ Secrets never reach the client; only `NEXT_PUBLIC_*` do. `.env.example` lists al
 - **Cutover (§12.4):** keep WordPress live at Hostinger until Level 1 is approved; then point `b7r.sa` DNS to CranL; verify redirects and TLS; keep the old host for 14 days as a fallback, then cancel.
 - **Level 2 additions:** a CranL managed Postgres and an S3 bucket in the same project (§9.2).
 
-### 8.7 CI pipeline (`.github/workflows/ci.yml`, on every PR and on `main`)
+### 8.7 CI pipeline (`.github/workflows/ci.yml`, on every pull request; `main` by hand)
 
 1. `pnpm install --frozen-lockfile`
 2. `pnpm typecheck` (`tsc --noEmit`)
@@ -135,7 +135,7 @@ Secrets never reach the client; only `NEXT_PUBLIC_*` do. `.env.example` lists al
 6. `pnpm build`
 7. `pnpm e2e` (Playwright against the built app: navigation, mobile menu, hero controls, designer upload and drag, calculator values, contact form validation + honeypot, newsletter, WhatsApp link, consent bar behaviour, 404 status, five redirects, axe scan on each page with zero serious violations)
 8. `pnpm lhci` (Lighthouse CI, mobile preset, thresholds from §7.8 on `/`, `/products`, `/products/tee-essential`, `/contact`, `/blog/{sample}`); the report is uploaded as an artifact and linked in the PR.
-9. On `main` only: after CranL reports the deploy healthy, run `scripts/indexnow.ts` for changed URLs.
+9. No CI event runs on `main` (ADR-045): `scripts/merge-pr.sh <number> [subject]` checks that the branch's remote head contains `origin/main` and that every check on it is green, then squash-merges; `gh workflow run ci.yml --ref main` runs `main` by hand. The deploy workflow's own `push` trigger builds the image (§8.6); IndexNow runs in-process on the production runtime (ADR-033).
 
 Zero warnings policy: any warning from any step is fixed or suppressed inline with a justification comment.
 
