@@ -1,14 +1,16 @@
-import { productsPage } from '@/content/pages';
+import type { SiteCopy } from '@/content/copy';
 import type { Product } from '@/content/schema';
 
+type ProductsCopy = SiteCopy['productsPage'];
+
 /** Definition list of the six BRD 4.8 spec rows. */
-export function SpecList({ product }: { product: Product }) {
-  const { specLabels, weightUnit } = productsPage;
+export function SpecList({ product, copy }: { product: Product; copy: ProductsCopy }) {
+  const { specLabels, weightUnit, listSeparator: sep } = copy;
   const rows: Array<[string, string]> = [
     [specLabels.material, product.material],
     [specLabels.weight, `${product.weightGrams} ${weightUnit}`],
-    [specLabels.sizes, product.sizes.map((s) => s.label).join('، ')],
-    [specLabels.colors, product.colors.map((c) => c.name).join('، ')],
+    [specLabels.sizes, product.sizes.map((s) => s.label).join(sep)],
+    [specLabels.colors, product.colors.map((c) => c.name).join(sep)],
     [specLabels.printArea, product.printArea.label],
     [specLabels.printMethod, product.printMethodLabel],
   ];
@@ -33,12 +35,20 @@ const COLUMN_ORDER = ['length', 'chest', 'sleeve'] as const;
  * product actually carries (adult: length/chest/sleeve; baby: chest/length), digits LTR.
  * Returns null when no size has measurements (the tote bag: «مقاس واحد» lives in the specs).
  */
-export function SizeChart({ product, caption }: { product: Product; caption: string }) {
+export function SizeChart({
+  product,
+  caption,
+  copy,
+}: {
+  product: Product;
+  caption: string;
+  copy: ProductsCopy;
+}) {
   const keys = COLUMN_ORDER.filter((k) =>
     product.sizes.some((s) => s.measurements?.[k] !== undefined),
   );
   if (keys.length === 0) return null;
-  const headers = productsPage.sizeChartHeaders;
+  const headers = copy.sizeChartHeaders;
   return (
     <div className="overflow-x-auto rounded-base border border-border bg-surface">
       <table className="w-full min-w-[420px] text-start text-body">

@@ -7,3 +7,4 @@ export { Testimonials } from '@/modules/home/testimonials/testimonials';
 export { Integrations } from '@/modules/home/integrations/integrations';
 export { HomeFaq } from '@/modules/home/faq/home-faq';
 export { alternateTones } from '@/modules/home/tones';
+export { shouldRenderTestimonials } from '@/modules/home/testimonials/rule';

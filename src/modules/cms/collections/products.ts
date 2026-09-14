@@ -181,7 +181,13 @@ export const Products: CollectionConfig = {
       label: { ar: 'المقاسات', en: 'Sizes' },
       labels: { singular: { ar: 'مقاس', en: 'Size' }, plural: { ar: 'المقاسات', en: 'Sizes' } },
       fields: [
-        { name: 'label', type: 'text', required: true, label: { ar: 'المقاس', en: 'Label' } },
+        {
+          name: 'label',
+          type: 'text',
+          required: true,
+          localized: true,
+          label: { ar: 'المقاس', en: 'Label' },
+        },
         {
           type: 'row',
           fields: [
@@ -196,6 +202,7 @@ export const Products: CollectionConfig = {
       name: 'sizesSummary',
       type: 'text',
       required: true,
+      localized: true,
       label: { ar: 'ملخص المقاسات', en: 'Sizes summary' },
       admin: { description: { ar: 'مثال: S – 2XL', en: 'e.g. S – 2XL' } },
     },

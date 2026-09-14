@@ -2,14 +2,15 @@ import Image from 'next/image';
 import { Button } from '@/components/shared/button';
 import { Container } from '@/components/shared/container';
 import { Section, type SectionTone } from '@/components/shared/section';
+import { copyFor } from '@/content/copy';
 import { getHome } from '@/lib/cms';
+import type { Locale } from '@/lib/i18n';
 import { env } from '@/lib/env';
 import { registerUrl } from '@/lib/utm';
 import { VideoLoopLoader } from '@/modules/home/video/video-loop-loader';
 
 export const VIDEO_SRC = '/video/printer-marketing.mp4';
 export const VIDEO_POSTER = '/video/printer-marketing-poster.jpg';
-const POSTER_ALT = 'طابعة رقمية تطبع تصميماً على تيشيرت أسود';
 
 /**
  * Video section (BRD 6.4.5, amended 2026-09-13, ADR-037): a full-width frame with the
@@ -17,13 +18,20 @@ const POSTER_ALT = 'طابعة رقمية تطبع تصميماً على تيش�
  * every frame), and a muted looping video mounted near the viewport by a small island. No
  * controls: the video is decorative, the text carries the meaning.
  */
-export async function VideoSection({ tone = 'ground' }: { tone?: SectionTone }) {
-  const { video, hero } = await getHome();
+export async function VideoSection({
+  locale,
+  tone = 'ground',
+}: {
+  locale: Locale;
+  tone?: SectionTone;
+}) {
+  const { video, hero } = await getHome(locale);
+  const posterAlt = copyFor(locale).media.videoPosterAlt;
   if (!video.enabled) return null;
   return (
     <Section id="video" tone={tone} className="py-0 md:py-0" aria-labelledby="video-title">
       <div className="relative isolate min-h-[420px] overflow-hidden md:min-h-[520px]">
-        <Image src={VIDEO_POSTER} alt={POSTER_ALT} fill sizes="100vw" className="object-cover" />
+        <Image src={VIDEO_POSTER} alt={posterAlt} fill sizes="100vw" className="object-cover" />
         <VideoLoopLoader src={VIDEO_SRC} poster={VIDEO_POSTER} />
         {/* Scrim: the copy stays readable whatever the frame shows. */}
         <div aria-hidden="true" className="absolute inset-0 bg-navy/60" />

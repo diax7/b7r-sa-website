@@ -1,14 +1,15 @@
 import { z } from 'zod';
+import { ar } from '@/content/copy/ar';
+import { en } from '@/content/copy/en';
+import { LOCALES } from '@/lib/i18n';
 import { normalisePhone } from '@/lib/phone';
-import {
-  EMAIL_MAX,
-  INQUIRY_OPTIONS,
-  MESSAGE_MAX,
-  NAME_MAX,
-  NAME_MIN,
-} from '@/modules/contact/validate';
+import { EMAIL_MAX, MESSAGE_MAX, NAME_MAX, NAME_MIN } from '@/modules/contact/validate';
 
-export { INQUIRY_OPTIONS };
+/**
+ * BRD 4.11 inquiry types of both languages: the API accepts either list (ADR-043). Server
+ * only: the banks stay out of the `/contact` chunk, whose rules read the copy they are given.
+ */
+export const INQUIRY_OPTIONS = [...ar.contactForm.inquiryOptions, ...en.contactForm.inquiryOptions];
 export type Inquiry = (typeof INQUIRY_OPTIONS)[number];
 
 /**
@@ -32,6 +33,8 @@ export const contactBodySchema = z.object({
   email: z.email().max(EMAIL_MAX),
   inquiry: z.enum(INQUIRY_OPTIONS as unknown as [string, ...string[]]),
   message: z.string().trim().min(1).max(MESSAGE_MAX),
+  /** The language of the form the sender used; the notification e-mail follows it. */
+  locale: z.enum(LOCALES).default('ar'),
   website: z.string().max(200).optional(),
   turnstileToken: z.string().max(4096).optional(),
 });

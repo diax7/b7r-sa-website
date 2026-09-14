@@ -24,8 +24,9 @@ import { seo } from '../src/content/seed/seo';
 import { site } from '../src/content/seed/site';
 import { testimonials } from '../src/content/seed/testimonials';
 import { nextWindow, seedTopics } from '../src/content/seed/topics';
+import { ensureEnglish } from './migrate-content-en';
 import { factsSheet } from '../src/modules/ai-content/facts';
-import { SEO_TITLE_TEMPLATE } from '../src/content/seo-copy';
+import { ar } from '../src/content/copy/ar';
 import {
   RESERVED_PAGE_SLUGS,
   type Block,
@@ -375,7 +376,7 @@ async function ensureGlobals(payload: Payload): Promise<void> {
     await payload.updateGlobal({
       slug: 'seo-defaults',
       data: {
-        titleTemplate: SEO_TITLE_TEMPLATE,
+        titleTemplate: ar.seo.titleTemplate,
         defaultOgImage: '/og/default.png',
         routes: seo
           .filter((row) => CODE_ROUTES.has(row.route))
@@ -706,6 +707,10 @@ async function main(): Promise<number> {
   for (const [i, item] of testimonials.entries()) await ensureTestimonial(payload, item, i + 1);
   for (const [i, item] of integrations.entries()) await ensureIntegration(payload, item, i + 1);
   await ensureBlog(payload);
+  // The English values of every localised field, once the Arabic documents exist (ADR-043).
+  const english = await ensureEnglish(payload);
+  summary.created.push(...english.written);
+  summary.skipped.push(...english.skipped);
   console.warn(
     `content:migrate: created ${summary.created.length}, skipped ${summary.skipped.length}.` +
       (summary.created.length ? `\n  created: ${summary.created.join(', ')}` : '') +

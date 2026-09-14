@@ -123,6 +123,9 @@ export function securityHeaders(options: SecurityHeaderOptions = {}): HeaderEntr
 /** Page routes only: not the API, not Next internals, not files with an extension. */
 export const PAGE_ROUTE_SOURCE = '/((?!api/|_next/|.*\\..*).*)';
 
+/** The English document and its routes (ADR-043): `/en` and `/en/anything`. */
+export const ENGLISH_ROUTE_SOURCES = ['/en', '/en/:path*'];
+
 /** The CMS surfaces (ADR-028); later routes override earlier ones for the same header key. */
 export const ADMIN_ROUTE_SOURCES = ['/admin/:path*', '/api/payload/:path*'];
 
@@ -140,6 +143,10 @@ export function headerRoutes(options: SecurityHeaderOptions = {}): HeaderRoute[]
   return [
     { source: '/(.*)', headers: securityHeaders(options) },
     { source: PAGE_ROUTE_SOURCE, headers: [{ key: 'Content-Language', value: 'ar' }] },
+    ...ENGLISH_ROUTE_SOURCES.map((source) => ({
+      source,
+      headers: [{ key: 'Content-Language', value: 'en' }],
+    })),
     // Without this Next answers `max-age=0` for /public files and every admin navigation
     // re-validates the brand font, which shows as a font swap on each page (ADR-039).
     { source: '/fonts/:path*', headers: [FONT_CACHE] },

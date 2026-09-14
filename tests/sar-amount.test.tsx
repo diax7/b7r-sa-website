@@ -26,7 +26,8 @@ describe('SarAmount', () => {
     expect(bdi?.getAttribute('dir')).toBe('ltr');
     const children = Array.from(bdi?.children ?? []);
     expect(children[0]?.tagName.toLowerCase()).toBe('svg');
-    expect(children[0]?.getAttribute('aria-label')).toBe('ريال سعودي');
+    // Named once per document, in the site's language (ADR-043): the symbol points at it.
+    expect(children[0]?.getAttribute('aria-labelledby')).toBe('sar-name');
     expect(children[0]?.getAttribute('fill')).toBe('currentColor');
     expect(children[1]?.textContent).toBe('89');
   });

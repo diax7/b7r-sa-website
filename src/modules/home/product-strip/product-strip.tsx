@@ -5,18 +5,20 @@ import { Container } from '@/components/shared/container';
 import { SarAmount } from '@/components/shared/sar-amount';
 import { Section } from '@/components/shared/section';
 import { SectionHeader } from '@/components/shared/section-header';
+import { copyFor } from '@/content/copy';
 import { getHome, getProduct } from '@/lib/cms';
+import { type Locale, localePath } from '@/lib/i18n';
 import { stripColorFor } from '@/lib/product-helpers';
-import messages from '@/messages/ar.json';
 import { StripHint } from '@/modules/home/product-strip/strip-hint';
 
 /**
  * Hover-expand product strip (BRD 6.4.2). Five real links; CSS owns the expansion so it works
  * with keyboard focus and without JS. Mobile: native snap carousel with labels always visible.
  */
-export async function ProductStrip() {
-  const { productStrip } = await getHome();
-  const found = await Promise.all(productStrip.order.map((slug) => getProduct(slug)));
+export async function ProductStrip({ locale }: { locale: Locale }) {
+  const { productStrip } = await getHome(locale);
+  const messages = copyFor(locale);
+  const found = await Promise.all(productStrip.order.map((slug) => getProduct(locale, slug)));
   const items = productStrip.order.flatMap((slug, i) => {
     const product = found[i];
     // A strip product unpublished or deleted after the home was published: the strip keeps
@@ -46,7 +48,7 @@ export async function ProductStrip() {
           lead={productStrip.lead}
           action={
             <Button asChild variant="secondary" trailingArrow={false}>
-              <Link href="/products">{productStrip.button}</Link>
+              <Link href={localePath(locale, '/products')}>{productStrip.button}</Link>
             </Button>
           }
         />
@@ -56,7 +58,7 @@ export async function ProductStrip() {
           {items.map(({ product, color }) => (
             <li key={product.slug} className="contents">
               <Link
-                href={`/products/${product.slug}`}
+                href={localePath(locale, `/products/${product.slug}`)}
                 className="strip-panel"
                 data-strip-panel={product.slug}
               >

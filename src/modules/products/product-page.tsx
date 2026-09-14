@@ -5,13 +5,13 @@ import { Container } from '@/components/shared/container';
 import { SarAmount } from '@/components/shared/sar-amount';
 import { Section, type SectionTone } from '@/components/shared/section';
 import { SectionHeader } from '@/components/shared/section-header';
-import { productsPage } from '@/content/pages';
+import { copyFor } from '@/content/copy';
 import type { Product } from '@/content/schema';
 import { getProducts, getSiteSettings } from '@/lib/cms';
 import { cn } from '@/lib/cn';
 import { env, siteBase } from '@/lib/env';
+import { type Locale, localePath } from '@/lib/i18n';
 import { registerUrl } from '@/lib/utm';
-import messages from '@/messages/ar.json';
 import { JsonLd, jsonLd } from '@/modules/core';
 import { CtaRibbon } from '@/modules/core/cta-ribbon';
 import { Gallery } from '@/modules/products/gallery';
@@ -35,9 +35,10 @@ export function relatedProducts(current: Product, products: Product[]): Product[
 }
 
 /** Product detail (BRD 6.6). */
-export async function ProductPage({ product }: { product: Product }) {
-  const [products, site] = await Promise.all([getProducts(), getSiteSettings()]);
-  const copy = productsPage;
+export async function ProductPage({ product, locale }: { product: Product; locale: Locale }) {
+  const [products, site] = await Promise.all([getProducts(locale), getSiteSettings(locale)]);
+  const messages = copyFor(locale);
+  const copy = messages.productsPage;
   const base = siteBase();
   const registerHref = registerUrl(env.appUrl, { campaign: 'product', content: product.slug });
   const profit = product.suggestedPrice - product.baseCost;
@@ -45,16 +46,16 @@ export async function ProductPage({ product }: { product: Product }) {
   // surface (intro) → ground (description + sizes) → surface (related) → ribbon
   const relatedTone: SectionTone = 'surface';
   const crumbs = [
-    { name: copy.breadcrumbHome, href: '/' },
-    { name: copy.title, href: '/products' },
-    { name: product.name, href: `/products/${product.slug}` },
+    { name: copy.breadcrumbHome, href: localePath(locale, '/') },
+    { name: copy.title, href: localePath(locale, '/products') },
+    { name: product.name, href: localePath(locale, `/products/${product.slug}`) },
   ];
 
   return (
     <>
       <JsonLd
         nodes={[
-          jsonLd.product(base, product, site),
+          jsonLd.product(base, locale, product, site),
           jsonLd.breadcrumbs(
             base,
             crumbs.map((c) => ({ name: c.name, path: c.href })),
@@ -65,7 +66,7 @@ export async function ProductPage({ product }: { product: Product }) {
 
       <Section tone="surface" className="pt-6 md:pt-10" aria-labelledby="product-title">
         <Container className="flex flex-col gap-8">
-          <Breadcrumbs items={crumbs} />
+          <Breadcrumbs items={crumbs} label={messages.breadcrumbs.label} />
           <div className="grid gap-10 lg:grid-cols-2 lg:gap-16">
             {/* Gallery first on phones, end column on desktop (BRD 6.6). */}
             <div className="lg:order-last">
@@ -79,6 +80,7 @@ export async function ProductPage({ product }: { product: Product }) {
                   back: messages.gallery.back,
                   colorLabel: copy.specLabels.colors,
                   colorOptionAria: copy.colorSwitchAria.replace('{colour}', '{color}'),
+                  separator: copy.listSeparator,
                 }}
               />
             </div>
@@ -115,7 +117,9 @@ export async function ProductPage({ product }: { product: Product }) {
                   </a>
                 </Button>
                 <Button asChild variant="link" size="lg">
-                  <Link href={`/#designer?product=${product.slug}`}>{copy.secondaryLink}</Link>
+                  <Link href={`${localePath(locale, '/')}#designer?product=${product.slug}`}>
+                    {copy.secondaryLink}
+                  </Link>
                 </Button>
               </div>
             </div>
@@ -142,7 +146,7 @@ export async function ProductPage({ product }: { product: Product }) {
             <h2 id="product-specs-title" className="text-h3 text-text">
               {copy.sections.specs}
             </h2>
-            <SpecList product={product} />
+            <SpecList product={product} copy={copy} />
           </div>
           {hasSizeChart && (
             <div className="flex flex-col gap-4">
@@ -152,6 +156,7 @@ export async function ProductPage({ product }: { product: Product }) {
               <SizeChart
                 product={product}
                 caption={`${copy.sections.sizeChart}: ${product.name}`}
+                copy={copy}
               />
             </div>
           )}
@@ -164,14 +169,14 @@ export async function ProductPage({ product }: { product: Product }) {
           <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {relatedProducts(product, products).map((other) => (
               <li key={other.slug}>
-                <ProductCard product={other} />
+                <ProductCard product={other} locale={locale} />
               </li>
             ))}
           </ul>
         </Container>
       </Section>
 
-      <CtaRibbon topTone={relatedTone} page={`product-${product.slug}`} />
+      <CtaRibbon locale={locale} topTone={relatedTone} page={`product-${product.slug}`} />
       <ProductStickyBar
         slug={product.slug}
         pricePrefix={copy.pricePrefix}

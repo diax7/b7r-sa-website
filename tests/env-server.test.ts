@@ -41,6 +41,8 @@ describe('production env gate (BRD 8.5)', () => {
     );
     // The content engine's mock provider is for tests only (ADR-042).
     expect(() => assertProductionEnv({ ...prod, AI_CONTENT_MOCK: '1' })).toThrow(/AI_CONTENT_MOCK/);
+    // The English-off switch proves a build before the English seed; never a production state (ADR-043).
+    expect(() => assertProductionEnv({ ...prod, SITE_ENGLISH: 'off' })).toThrow(/SITE_ENGLISH/);
     expect(() =>
       assertProductionEnv({ ...prod, NEXT_PUBLIC_SITE_URL: 'https://preview.b7r.sa' }),
     ).toThrow(/must be https:\/\/b7r\.sa/);

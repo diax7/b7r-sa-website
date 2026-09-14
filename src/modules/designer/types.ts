@@ -1,4 +1,4 @@
-import messages from '@/messages/ar.json';
+import type { SiteCopy } from '@/content/copy';
 
 /** Strings the designer island receives from the server shell (BRD 4.4 + aria microcopy). */
 export interface DesignerCopy {
@@ -25,21 +25,35 @@ export interface DesignerCopy {
   dailyDecrementAria: string;
   dailyIncrementAria: string;
   dropzoneAria: string;
+  /** «{product} {color}، الواجهة الأمامية», the alt text of the static mockup. */
+  mockupAlt: string;
 }
 
-/** The interface strings of the designer (ADR-031): labels, hints, validation, prompts. */
-export const designerMessages = {
-  groups: { product: messages.designer.productGroup },
-  uploadPrompt: messages.designer.uploadPrompt,
-  uploadHelper: messages.designer.uploadHelper,
-  removeAria: messages.designer.remove,
-  canvasHint: messages.designer.canvasHint,
-  baseCostLabel: messages.designer.baseCost,
-  sellPriceLabel: messages.designer.sellPrice,
-  suggestedPriceHelper: messages.designer.suggestedPrice,
-  dailySalesLabel: messages.designer.dailySales,
-  perPieceLabel: messages.designer.perPiece,
-  monthlyLabel: messages.designer.monthly,
-  negativeWarning: messages.designer.negativeWarning,
-  fileError: messages.designer.fileError,
-} as const;
+/** The interface strings of the designer (ADR-031) from a locale's bank; `cta` comes from the CMS. */
+export function designerCopy(copy: SiteCopy, cta: string): DesignerCopy {
+  const d = copy.designer;
+  return {
+    groups: { product: d.productGroup },
+    uploadPrompt: d.uploadPrompt,
+    uploadHelper: d.uploadHelper,
+    removeAria: d.remove,
+    canvasHint: d.canvasHint,
+    baseCostLabel: d.baseCost,
+    sellPriceLabel: d.sellPrice,
+    suggestedPriceHelper: d.suggestedPrice,
+    dailySalesLabel: d.dailySales,
+    perPieceLabel: d.perPiece,
+    monthlyLabel: d.monthly,
+    negativeWarning: d.negativeWarning,
+    fileError: d.fileError,
+    cta,
+    canvasLabel: d.canvasLabel,
+    productGroupAria: d.productGroupLabel,
+    sellInputAria: d.sellPriceInput,
+    sellSliderAria: d.sellPriceSlider,
+    dailyDecrementAria: d.dailySalesDecrement,
+    dailyIncrementAria: d.dailySalesIncrement,
+    dropzoneAria: d.dropzoneLabel,
+    mockupAlt: d.mockupAlt,
+  };
+}

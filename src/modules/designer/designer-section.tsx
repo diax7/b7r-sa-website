@@ -1,13 +1,14 @@
 import { Container } from '@/components/shared/container';
 import { Section } from '@/components/shared/section';
 import { SectionHeader } from '@/components/shared/section-header';
+import { copyFor } from '@/content/copy';
 import { getHome, getProduct, getProducts } from '@/lib/cms';
-import messages from '@/messages/ar.json';
 import { env } from '@/lib/env';
+import type { Locale } from '@/lib/i18n';
 import { registerUrl } from '@/lib/utm';
 import { DesignerLoader } from '@/modules/designer/designer-loader';
 import { DesignerStatic } from '@/modules/designer/designer-static';
-import { designerMessages, type DesignerCopy } from '@/modules/designer/types';
+import { designerCopy } from '@/modules/designer/types';
 
 const DEFAULT_SLUG = 'tee-essential';
 
@@ -16,22 +17,12 @@ const DEFAULT_SLUG = 'tee-essential';
  * static preview (default mockup + labels) so the page is complete without JS; the Konva
  * island replaces the preview when the section nears the viewport.
  */
-export async function DesignerSection() {
-  const [{ designer }, products] = await Promise.all([getHome(), getProducts()]);
-  const product = (await getProduct(DEFAULT_SLUG)) ?? products[0];
+export async function DesignerSection({ locale }: { locale: Locale }) {
+  const [{ designer }, products] = await Promise.all([getHome(locale), getProducts(locale)]);
+  const product = (await getProduct(locale, DEFAULT_SLUG)) ?? products[0];
   if (!product) throw new Error('No products for the designer');
 
-  const copy: DesignerCopy = {
-    ...designerMessages,
-    cta: designer.cta,
-    canvasLabel: messages.designer.canvasLabel,
-    productGroupAria: messages.designer.productGroupLabel,
-    sellInputAria: messages.designer.sellPriceInput,
-    sellSliderAria: messages.designer.sellPriceSlider,
-    dailyDecrementAria: messages.designer.dailySalesDecrement,
-    dailyIncrementAria: messages.designer.dailySalesIncrement,
-    dropzoneAria: messages.designer.dropzoneLabel,
-  };
+  const copy = designerCopy(copyFor(locale), designer.cta);
 
   const registerTemplate = registerUrl(env.appUrl, { campaign: 'designer', product: '__SLUG__' });
   const fallback = (

@@ -22,15 +22,9 @@ export const renamed: Redirect[] = [
 /** Old paths whose only change is the trailing slash; Next's own 308 resolves them. */
 export const slashOnly = ['/about', '/contact', '/shipping', '/blog'];
 
-/** `/en/*` is reserved for the English phase: 302 to the Arabic route until it exists. */
-export const english: Redirect[] = [
-  { source: '/en', destination: '/', statusCode: 302 },
-  { source: '/en/:path*', destination: '/:path*', statusCode: 302 },
-];
-
-/** Everything `next.config.ts` `redirects()` returns, in order (`/en` exact before the glob). */
+/** Everything `next.config.ts` `redirects()` returns, in order. `/en/*` is a live site (ADR-043). */
 export function redirectRules(): Redirect[] {
-  return [...renamed, ...english];
+  return [...renamed];
 }
 
 /** Exact old paths that are gone for good (HTTP 410). */

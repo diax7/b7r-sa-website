@@ -24,8 +24,28 @@ describe('sitemap (BRD 7.5)', () => {
     hubs: [{ slug: 'pricing-profit' }],
     authors: [{ slug: 'dhia' }],
   };
-  const entries = sitemapEntries(BASE, codeRoutes, pages, products, blog);
+  const entries = sitemapEntries(BASE, [{ locale: 'ar', seo: codeRoutes, pages, products, blog }]);
   const urls = entries.map((e) => e.url);
+
+  it('pairs the routes that exist in both languages with hreflang alternates (ADR-043)', () => {
+    const both = sitemapEntries(BASE, [
+      { locale: 'ar', seo: codeRoutes, pages, products, blog },
+      { locale: 'en', seo: codeRoutes, pages: pages.slice(0, 1), products },
+    ]);
+    const urlsOfBoth = both.map((e) => e.url);
+    expect(urlsOfBoth).toContain(`${BASE}/en`);
+    expect(urlsOfBoth).toContain(`${BASE}/en/products/${products[0]!.slug}`);
+    // The Arabic home and its English twin point at each other, x-default on the Arabic.
+    const home = both.find((e) => e.url === BASE);
+    expect(home?.alternates?.languages).toEqual({ ar: BASE, en: `${BASE}/en`, 'x-default': BASE });
+    const enHome = both.find((e) => e.url === `${BASE}/en`);
+    expect(enHome?.alternates?.languages).toEqual(home?.alternates?.languages);
+    // A page without an English twin carries no alternates; the blog exists in Arabic only.
+    const only = both.find((e) => e.url === `${BASE}/${pages[1]!.slug}`);
+    expect(only?.alternates).toBeUndefined();
+    expect(urlsOfBoth.filter((u) => u.startsWith(`${BASE}/en/blog/`))).toEqual([]);
+    expect(new Set(urlsOfBoth).size).toBe(urlsOfBoth.length);
+  });
 
   it('lists every static page, product, post, hub and author, nothing else', () => {
     for (const page of codeRoutes) {

@@ -3,9 +3,10 @@ import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { InstagramIcon, TikTokIcon, WhatsAppIcon, XIcon } from '@/components/shared/brand-icons';
 import { Container } from '@/components/shared/container';
-import { footerCopy } from '@/content/pages';
+import { copyFor, type SiteCopy } from '@/content/copy';
 import type { Navigation, SiteSettings } from '@/content/schema';
 import { cn } from '@/lib/cn';
+import { type Locale, localePath } from '@/lib/i18n';
 import { whatsappUrl } from '@/lib/utm';
 
 const PAYMENT_BADGES = [
@@ -17,23 +18,26 @@ const PAYMENT_BADGES = [
   { file: 'mada.png', name: 'mada' },
 ];
 
-const TRUST_BADGES = [
-  { file: 'saudi-business-center.png', name: 'المركز السعودي للأعمال', w: 233, h: 81 },
-  { file: 'ministry-of-commerce.png', name: 'وزارة التجارة', w: 229, h: 81 },
+const trustBadges = (names: SiteCopy['media']['trustBadges']) => [
+  { file: 'saudi-business-center.png', name: names.saudiBusinessCenter, w: 233, h: 81 },
+  { file: 'ministry-of-commerce.png', name: names.ministryOfCommerce, w: 229, h: 81 },
 ];
 
 const linkCls =
   'inline-block py-1 text-white/90 transition-colors duration-(--duration-fast) hover:text-accent focus-visible:outline-accent';
 
 /** Strings the newsletter slot needs (BRD 4.5); the form itself lives in `modules/forms`. */
-export const newsletterCopy = {
-  label: footerCopy.newsletterLabel,
-  placeholder: footerCopy.newsletterPlaceholder,
-  button: footerCopy.newsletterButton,
-  success: footerCopy.newsletterSuccess,
-  invalid: footerCopy.newsletterError,
-  unavailable: footerCopy.newsletterUnavailable,
-};
+export function newsletterCopy(locale: Locale) {
+  const footer = copyFor(locale).footer;
+  return {
+    label: footer.newsletterLabel,
+    placeholder: footer.newsletterPlaceholder,
+    button: footer.newsletterButton,
+    success: footer.newsletterSuccess,
+    invalid: footer.newsletterError,
+    unavailable: footer.newsletterUnavailable,
+  };
+}
 
 /**
  * Site footer (BRD 6.3.2, copy 4.5). Navy, four columns, badges strip, contact line. The
@@ -43,11 +47,16 @@ export function Footer({
   newsletter,
   navigation,
   site,
+  locale,
+  copy,
 }: {
   newsletter: ReactNode;
   navigation: Navigation;
   site: SiteSettings;
+  locale: Locale;
+  copy: SiteCopy;
 }) {
+  const footerCopy = copy.footer;
   const year = new Date().getFullYear();
   const socials = [
     { href: site.social.x, label: footerCopy.socialAria.x, Icon: XIcon },
@@ -65,7 +74,11 @@ export function Footer({
       <Container className="pt-16 pb-10 md:pt-20">
         <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1.4fr] lg:gap-8">
           <div className="flex flex-col items-start gap-5">
-            <Link href="/" className="inline-block rounded-inner" aria-label={site.brandName}>
+            <Link
+              href={localePath(locale, '/')}
+              className="inline-block rounded-inner"
+              aria-label={site.brandName}
+            >
               <Image
                 src="/images/logo/logo-white-footer.png"
                 alt=""
@@ -152,7 +165,7 @@ export function Footer({
               ))}
             </ul>
             <ul className="flex items-center gap-2">
-              {TRUST_BADGES.map((b) => (
+              {trustBadges(copy.media.trustBadges).map((b) => (
                 <li
                   key={b.file}
                   className="grid h-9 place-items-center rounded-inner bg-white px-2.5"
@@ -169,7 +182,7 @@ export function Footer({
             </ul>
             <Image
               src="/images/badges/misk-foundation-logo.png"
-              alt="مؤسسة مسك"
+              alt={copy.media.trustBadges.misk}
               width={400}
               height={230}
               className="h-10 w-auto rounded-inner bg-white p-1"

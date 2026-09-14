@@ -3,11 +3,11 @@ import { Card } from '@/components/shared/card';
 import { Container } from '@/components/shared/container';
 import { Section } from '@/components/shared/section';
 import { SectionHeader } from '@/components/shared/section-header';
-import { blogCopy } from '@/content/blog';
-import { footerCopy, productsPage } from '@/content/pages';
+import { copyFor } from '@/content/copy';
 import { getSeo } from '@/lib/cms';
 import { getHubs, getPostIndex, getPostPage } from '@/lib/cms/blog';
 import { siteBase } from '@/lib/env';
+import { type Locale, localePath } from '@/lib/i18n';
 import { JsonLd, jsonLd } from '@/modules/core';
 import { CtaRibbon } from '@/modules/core/cta-ribbon';
 import { HubChips } from '@/modules/blog/hub-chips';
@@ -23,26 +23,36 @@ const ROUTE = '/blog';
  * newsletter form comes in as a slot from the route so this module never imports the forms
  * module.
  */
-export async function BlogIndex({ page, newsletter }: { page: number; newsletter: ReactNode }) {
+export async function BlogIndex({
+  locale,
+  page,
+  newsletter,
+}: {
+  locale: Locale;
+  page: number;
+  newsletter: ReactNode;
+}) {
   const base = siteBase();
   const [seo, hubs, listing, index] = await Promise.all([
-    getSeo(ROUTE),
-    getHubs(),
-    getPostPage(page),
-    getPostIndex(),
+    getSeo(locale, ROUTE),
+    getHubs(locale),
+    getPostPage(locale, page),
+    getPostIndex(locale),
   ]);
+  const { blog: blogCopy, footer: footerCopy, productsPage } = copyFor(locale);
   const featured = page === 1 ? (listing.posts[0] ?? null) : null;
   const rest = page === 1 ? listing.posts.slice(1) : listing.posts;
   const route = pageHref(ROUTE, page);
+  const listingPath = localePath(locale, ROUTE);
 
   return (
     <>
       <JsonLd
         nodes={[
-          jsonLd.webPage(base, route, seo.title, seo.description),
+          jsonLd.webPage(base, locale, route, seo.title, seo.description),
           jsonLd.breadcrumbs(base, [
-            { name: productsPage.breadcrumbHome, path: '/' },
-            { name: blogCopy.title, path: ROUTE },
+            { name: productsPage.breadcrumbHome, path: localePath(locale, '/') },
+            { name: blogCopy.title, path: listingPath },
           ]),
         ]}
       />
@@ -50,17 +60,26 @@ export async function BlogIndex({ page, newsletter }: { page: number; newsletter
       <Section tone="surface" className="pt-10 md:pt-16" aria-labelledby="blog-title">
         <Container className="flex flex-col gap-10">
           <SectionHeader as="h1" id="blog-title" title={blogCopy.title} lead={blogCopy.lead} />
-          <HubChips hubs={hubs} />
-          <BlogSearch index={index} copy={blogCopy.search} grid="[data-post-listing]" />
+          <HubChips hubs={hubs} locale={locale} allLabel={blogCopy.allHubs} />
+          <BlogSearch
+            index={index}
+            basePath={listingPath}
+            copy={blogCopy.search}
+            grid="[data-post-listing]"
+          />
           <div className="flex flex-col gap-10" data-post-listing="">
-            {featured && <PostCard post={featured} featured priority />}
+            {featured && <PostCard post={featured} locale={locale} featured priority />}
             {rest.length > 0 && (
               <>
                 {page === 1 && <h2 className="text-h3 text-text">{blogCopy.latest}</h2>}
                 <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3" data-post-grid="">
                   {rest.map((post) => (
                     <li key={post.slug}>
-                      <PostCard post={post} headingLevel={page === 1 ? 'h3' : 'h2'} />
+                      <PostCard
+                        post={post}
+                        locale={locale}
+                        headingLevel={page === 1 ? 'h3' : 'h2'}
+                      />
                     </li>
                   ))}
                 </ul>
@@ -71,7 +90,12 @@ export async function BlogIndex({ page, newsletter }: { page: number; newsletter
                 {blogCopy.emptyHub}
               </p>
             )}
-            <Pagination base={ROUTE} page={page} totalPages={listing.totalPages} />
+            <Pagination
+              base={listingPath}
+              page={page}
+              totalPages={listing.totalPages}
+              copy={blogCopy.pagination}
+            />
           </div>
         </Container>
       </Section>
@@ -87,7 +111,7 @@ export async function BlogIndex({ page, newsletter }: { page: number; newsletter
         </Container>
       </Section>
 
-      <CtaRibbon topTone="ground" page="blog" />
+      <CtaRibbon locale={locale} topTone="ground" page="blog" />
     </>
   );
 }

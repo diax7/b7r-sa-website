@@ -1,16 +1,18 @@
 import { Container } from '@/components/shared/container';
 import { Section } from '@/components/shared/section';
 import { SectionHeader } from '@/components/shared/section-header';
-import { productsPage } from '@/content/pages';
+import { copyFor } from '@/content/copy';
 import { getProducts } from '@/lib/cms';
 import { siteBase } from '@/lib/env';
+import { type Locale, localePath } from '@/lib/i18n';
 import { JsonLd, jsonLd } from '@/modules/core';
 import { CtaRibbon } from '@/modules/core/cta-ribbon';
 import { ProductCard } from '@/modules/products/product-card';
 
 /** Products listing (BRD 6.5): H1 + lead, the five cards, the ribbon. */
-export async function ProductsListing() {
-  const ordered = await getProducts();
+export async function ProductsListing({ locale }: { locale: Locale }) {
+  const ordered = await getProducts(locale);
+  const productsPage = copyFor(locale).productsPage;
   const base = siteBase();
   return (
     <>
@@ -18,11 +20,11 @@ export async function ProductsListing() {
         nodes={[
           jsonLd.itemList(
             base,
-            ordered.map((p) => `/products/${p.slug}`),
+            ordered.map((p) => localePath(locale, `/products/${p.slug}`)),
           ),
           jsonLd.breadcrumbs(base, [
-            { name: productsPage.breadcrumbHome, path: '/' },
-            { name: productsPage.title, path: '/products' },
+            { name: productsPage.breadcrumbHome, path: localePath(locale, '/') },
+            { name: productsPage.title, path: localePath(locale, '/products') },
           ]),
         ]}
       />
@@ -37,13 +39,13 @@ export async function ProductsListing() {
           <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3" data-product-grid="">
             {ordered.map((product, i) => (
               <li key={product.slug}>
-                <ProductCard product={product} priority={i < 3} headingLevel="h2" />
+                <ProductCard product={product} locale={locale} priority={i < 3} headingLevel="h2" />
               </li>
             ))}
           </ul>
         </Container>
       </Section>
-      <CtaRibbon topTone="surface" page="products" />
+      <CtaRibbon locale={locale} topTone="surface" page="products" />
     </>
   );
 }

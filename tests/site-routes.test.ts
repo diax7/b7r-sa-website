@@ -3,21 +3,52 @@ import { join } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
 import { RESERVED_PAGE_SLUGS } from '@/content/schema';
 import { createSlugCache, SLUG_SHAPE } from '@/lib/page-slugs';
-import { CODE_TOP_LEVEL, NOT_FOUND_PREFIX, SLUG_MATCHER, topLevelSlug } from '@/lib/site-routes';
+import {
+  CODE_TOP_LEVEL,
+  isEnglishPath,
+  localeSlug,
+  NOT_FOUND_PREFIX,
+  SLUG_MATCHER,
+  topLevelSlug,
+} from '@/lib/site-routes';
 import { FORBIDDEN_PAGE_SLUGS, pageSlugProblem } from '@/modules/cms/collections/pages';
 import { config as proxyConfig } from '@/proxy';
 
-/** The `(site)` route folders: every one must be a code-owned segment the proxy leaves alone. */
-function siteFolders(): string[] {
-  return readdirSync(join(process.cwd(), 'src', 'app', '(site)'), { withFileTypes: true })
+/** The route folders of a root layout: every one must be a code-owned segment the proxy leaves alone. */
+function routeFolders(...group: string[]): string[] {
+  return readdirSync(join(process.cwd(), 'src', 'app', ...group), { withFileTypes: true })
     .filter((d) => d.isDirectory() && !d.name.startsWith('['))
     .map((d) => d.name);
 }
+const siteFolders = () => routeFolders('(site)');
+const englishFolders = () => routeFolders('(en)', 'en');
 
 describe('B0: the proxy and the (site) routes agree on the code-owned segments (ADR-032)', () => {
   it('every (site) folder is in CODE_TOP_LEVEL, and the matcher literal is built from it', () => {
     for (const folder of siteFolders()) expect(CODE_TOP_LEVEL, folder).toContain(folder);
     expect(proxyConfig.matcher.at(-1)).toBe(SLUG_MATCHER);
+    expect(proxyConfig.matcher).toEqual(expect.arrayContaining(['/en', '/en/:path*']));
+  });
+
+  it('the English root layout owns a subset of the Arabic folders (the blog waits for 5b)', () => {
+    const arabic = siteFolders();
+    for (const folder of englishFolders()) expect(arabic, folder).toContain(folder);
+    expect(englishFolders()).not.toContain('blog');
+  });
+
+  it('classifies paths in both locales (ADR-043)', () => {
+    expect(localeSlug('/creators')).toEqual({ locale: 'ar', slug: 'creators' });
+    expect(localeSlug('/en/creators')).toEqual({ locale: 'en', slug: 'creators' });
+    expect(localeSlug('/en/creators/')).toEqual({ locale: 'en', slug: 'creators' });
+    expect(localeSlug('/en')).toBeNull();
+    expect(localeSlug('/en/products')).toBeNull();
+    expect(localeSlug('/en/products/hoodie')).toBeNull();
+    expect(localeSlug('/en/file.txt')).toBeNull();
+    expect(localeSlug('/english')).toEqual({ locale: 'ar', slug: 'english' });
+    expect(isEnglishPath('/en')).toBe(true);
+    expect(isEnglishPath('/en/faq')).toBe(true);
+    expect(isEnglishPath('/english')).toBe(false);
+    expect(isEnglishPath('/')).toBe(false);
   });
 
   it('the seven designed pages are reserved and none of them is a forbidden slug', () => {

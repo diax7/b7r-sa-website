@@ -1,7 +1,6 @@
 import { ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { Icon } from '@/components/shared/icon';
-import messages from '@/messages/ar.json';
 
 export interface BreadcrumbItem {
   name: string;
@@ -12,9 +11,9 @@ export interface BreadcrumbItem {
  * Breadcrumb trail (BRD 5.3: product pages and posts only). The last item is the current page
  * (`aria-current`). `ChevronRight` points forward in LTR; `Icon` mirrors it under RTL.
  */
-export function Breadcrumbs({ items }: { items: BreadcrumbItem[] }) {
+export function Breadcrumbs({ items, label }: { items: BreadcrumbItem[]; label: string }) {
   return (
-    <nav aria-label={messages.breadcrumbs.label} className="text-small text-text-muted">
+    <nav aria-label={label} className="text-small text-text-muted">
       <ol className="flex flex-wrap items-center gap-1">
         {items.map((item, i) => {
           const last = i === items.length - 1;

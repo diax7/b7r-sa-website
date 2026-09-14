@@ -12,8 +12,8 @@ import type { BlockProps } from '@/modules/pages/blocks/types';
  * as H1 when this is the first block, with the delivery origin as a chip over the photo,
  * then the facts band built from the home page (welcome credit + the why-us pairs).
  */
-export async function StoryBlock({ block, tone, anchor, heading }: BlockProps<'story'>) {
-  const [site, home] = await Promise.all([getSiteSettings(), getHome()]);
+export async function StoryBlock({ block, locale, tone, anchor, heading }: BlockProps<'story'>) {
+  const [site, home] = await Promise.all([getSiteSettings(locale), getHome(locale)]);
   return (
     <>
       <Section

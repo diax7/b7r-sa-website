@@ -19,6 +19,7 @@ import {
   type SiteSettings,
   type Testimonial,
 } from '@/content/schema';
+import { type Locale, localePath } from '@/lib/i18n';
 import type {
   Faq as FaqDoc,
   Home as HomeDoc,
@@ -121,18 +122,19 @@ export function toSiteSettings(doc: SiteSetting): SiteSettings {
   });
 }
 
-function navItem(row: NonNullable<NavigationDoc['primary']>[number]) {
-  return {
+function navItem(locale: Locale) {
+  return (row: NonNullable<NavigationDoc['primary']>[number]) => ({
     label: row.label,
-    href: row.href,
-    ...(row.matchPrefix ? { matchPrefix: row.matchPrefix } : {}),
-  };
+    href: localePath(locale, row.href),
+    ...(row.matchPrefix ? { matchPrefix: localePath(locale, row.matchPrefix) } : {}),
+  });
 }
 
-export function toNavigation(doc: NavigationDoc): Navigation {
+/** The navigation with its hrefs under the locale's prefix (`/en/products` for English). */
+export function toNavigation(doc: NavigationDoc, locale: Locale): Navigation {
   return NavigationSchema.parse({
-    primary: (doc.primary ?? []).map(navItem),
-    policies: (doc.policies ?? []).map(navItem),
+    primary: (doc.primary ?? []).map(navItem(locale)),
+    policies: (doc.policies ?? []).map(navItem(locale)),
     ctaLabel: doc.ctaLabel,
     loginLabel: doc.loginLabel,
     skipLinkLabel: doc.skipLinkLabel,
@@ -161,9 +163,13 @@ function requiredMedia(value: number | Media | null | undefined, field: string):
   return url;
 }
 
-/** Alt text of a populated upload, empty when depth was 0. */
+/**
+ * Alt text of a populated upload: empty when depth was 0, and empty (decorative) when the
+ * request locale has none yet (an English page reads without fallback, ADR-043); the seed
+ * writes the English alt of every file it ships.
+ */
 function mediaAlt(value: number | Media | null | undefined): string {
-  return value && typeof value !== 'number' ? value.alt : '';
+  return value && typeof value !== 'number' ? (value.alt ?? '') : '';
 }
 
 /**

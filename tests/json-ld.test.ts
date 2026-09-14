@@ -8,6 +8,7 @@ import {
   breadcrumbs,
   graph,
   itemList,
+  person,
   onlineStore,
   product,
   serialize,
@@ -75,7 +76,7 @@ describe('JSON-LD builders (BRD 7.4)', () => {
     expectRequired(list);
     expect((list['itemListElement'] as unknown[]).length).toBe(5);
     for (const p of products) {
-      const node = product(BASE, p, site);
+      const node = product(BASE, 'ar', p, site);
       expectRequired(node);
       expect(node['offers']).toMatchObject({
         '@type': 'Offer',
@@ -90,7 +91,7 @@ describe('JSON-LD builders (BRD 7.4)', () => {
 
   it('product images: site paths get the origin, CMS media on S3 stays absolute (ADR-029)', () => {
     const local = products[0]!;
-    expect(product(BASE, local, site)['image']).toEqual(
+    expect(product(BASE, 'ar', local, site)['image']).toEqual(
       local.colors.map((c) => `${BASE}${c.images.front}`),
     );
     const s3 = 'https://media.b7r.sa/media/hoodie-black-front.jpg';
@@ -98,7 +99,7 @@ describe('JSON-LD builders (BRD 7.4)', () => {
       ...local,
       colors: [{ ...local.colors[0]!, images: { front: s3 } }],
     };
-    expect(product(BASE, onS3, site)['image']).toEqual([s3]);
+    expect(product(BASE, 'ar', onS3, site)['image']).toEqual([s3]);
   });
 
   it('breadcrumbs: positions start at 1 and the home item is the bare origin', () => {
@@ -114,7 +115,7 @@ describe('JSON-LD builders (BRD 7.4)', () => {
   });
 
   it('pages and posts', () => {
-    const page = webPage(BASE, '/faq', 'الأسئلة الشائعة', 'وصف', '2026-09-12');
+    const page = webPage(BASE, 'ar', '/faq', 'الأسئلة الشائعة', 'وصف', '2026-09-12');
     expectRequired(page);
     expect(page['dateModified']).toBe('2026-09-12');
     const author = {
@@ -132,7 +133,7 @@ describe('JSON-LD builders (BRD 7.4)', () => {
       contentUpdatedAt: '2026-10-01T09:00:00.000Z',
       author,
     };
-    const node = blogPosting(BASE, post, site);
+    const node = blogPosting(BASE, 'ar', post, site);
     expectRequired(node);
     expect(node['author']).toMatchObject({
       '@type': 'Person',
@@ -142,14 +143,15 @@ describe('JSON-LD builders (BRD 7.4)', () => {
     });
     expect(node['image']).toEqual([`${BASE}/media/cover-pricing.jpg`]);
     expect(node['dateModified']).toBe('2026-10-01T09:00:00.000Z');
-    expect(blogPosting(BASE, { ...post, contentUpdatedAt: null }, site)['dateModified']).toBe(
+    expect(blogPosting(BASE, 'ar', { ...post, contentUpdatedAt: null }, site)['dateModified']).toBe(
       post.publishedAt,
     );
-    const profile = profilePage(BASE, author);
+    const profile = profilePage(BASE, 'ar', author);
     expect(profile['@type']).toBe('ProfilePage');
     expect(profile['mainEntity']).toMatchObject({ '@type': 'Person', name: 'ضياء' });
     const hub = collectionPage(
       BASE,
+      'ar',
       { slug: 'pricing-profit', name: 'التسعير والربح', description: 'وصف' },
       [post],
     );
@@ -157,8 +159,25 @@ describe('JSON-LD builders (BRD 7.4)', () => {
     expect(hub['hasPart']).toEqual([{ '@id': `${BASE}/blog/${post.slug}#article` }]);
   });
 
+  it('English nodes carry the /en URLs and inLanguage en; the Person id is shared (ADR-043)', () => {
+    const p = products[0]!;
+    const node = product(BASE, 'en', p, site);
+    expect(node['url']).toBe(`${BASE}/en/products/${p.slug}`);
+    expect(JSON.stringify(node)).toContain('Merchant cost');
+    const page = webPage(BASE, 'en', '/faq', 'FAQ', 'desc');
+    expect(page['url']).toBe(`${BASE}/en/faq`);
+    expect(page['inLanguage']).toBe('en');
+    const author = { slug: 'dhia', name: 'Dhia', role: 'Founder' };
+    const who = person(BASE, 'en', author);
+    expect(who['@id']).toBe(`${BASE}/author/dhia#person`);
+    expect(who['url']).toBe(`${BASE}/en/author/dhia`);
+    expect(webSite(BASE, site)['inLanguage']).toEqual(['ar', 'en']);
+  });
+
   it('serialises one graph per page and escapes < so content cannot close the script', () => {
-    const json = serialize(graph([webSite(BASE, site), webPage(BASE, '/x', '<b>', 'a</script>')]));
+    const json = serialize(
+      graph([webSite(BASE, site), webPage(BASE, 'ar', '/x', '<b>', 'a</script>')]),
+    );
     expect(json).not.toContain('</script>');
     expect(json).not.toContain('<');
     const parsed = JSON.parse(json) as { '@context': string; '@graph': unknown[] };

@@ -6,7 +6,9 @@
         "http://localhost:3004/products",
         "http://localhost:3004/products/tee-essential",
         "http://localhost:3004/contact",
-        "http://localhost:3004/blog/how-to-price-printed-tshirt-saudi"
+        "http://localhost:3004/blog/how-to-price-printed-tshirt-saudi",
+        "http://localhost:3004/en",
+        "http://localhost:3004/en/products/tee-essential"
       ],
       "numberOfRuns": 3,
       "settings": {

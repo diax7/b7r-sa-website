@@ -21,7 +21,7 @@
   --color-text: #14181f;
   --color-text-muted: #5b6470;
   --color-border: #e5e9ef;
-  --color-success: #16a34a;
+  --color-success: #15803d;
   --color-warning: #f59e0b;
   --color-error: #d90000;
   --color-whatsapp: #25d366;
@@ -214,6 +214,15 @@
   .hero-image {
     object-position: 20% 60%;
   }
+  /* The English document (ADR-043) keeps the copy over the calm right area of the same
+     photo: inline-start is the left there, so the copy and the dots move to the end. */
+  [dir='ltr'] .hero-copy {
+    margin-inline-start: auto;
+  }
+  [dir='ltr'] .hero-dots {
+    justify-content: flex-end;
+    padding-inline: 0 1.5rem;
+  }
 }
 
 /* Product strip (BRD 6.4.2): five panels, hover/focus expands one to 2.6 of the others. */
@@ -357,9 +366,18 @@
     );
     border-radius: var(--radius-pill);
   }
+  /* A step waiting its turn reads muted, never faded: text at 0.4 opacity fails the 4.5:1
+     contrast the BRD holds every page to (found by the English axe scan, Level 5). */
   html.js .steps .steps-item {
-    opacity: 0.4;
-    transition: opacity var(--duration-slow) var(--ease-standard);
+    color: var(--color-text-muted);
+    transition: color var(--duration-slow) var(--ease-standard);
+  }
+  html.js .steps .steps-item h3 {
+    color: inherit;
+    transition: color var(--duration-slow) var(--ease-standard);
+  }
+  html.js .steps .steps-item .steps-item-icon {
+    opacity: 0.6;
   }
   html.js .steps .steps-item + .steps-item::before {
     display: none;
@@ -384,7 +402,7 @@
       color var(--duration-slow) var(--ease-standard);
   }
   html.js .steps .steps-item[aria-current='step'] {
-    opacity: 1;
+    color: var(--color-text);
   }
   html.js .steps .steps-item[aria-current='step'] .steps-badge {
     background: var(--color-primary);

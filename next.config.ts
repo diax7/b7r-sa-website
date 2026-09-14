@@ -1,6 +1,5 @@
 import type { NextConfig } from 'next';
 import { withPayload } from '@payloadcms/next/withPayload';
-import createNextIntlPlugin from 'next-intl/plugin';
 import { createRequire } from 'node:module';
 import { redirectRules } from './src/lib/redirects';
 import { s3PublicOrigin, s3RemotePatterns } from './src/lib/image-url';
@@ -48,6 +47,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
-
-export default withPayload(withNextIntl(nextConfig));
+export default withPayload(nextConfig);

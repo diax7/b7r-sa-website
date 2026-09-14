@@ -107,6 +107,13 @@ jobs:
       - name: Restore rehearsal
         run: bash scripts/ci/restore-check.sh
 
+      # A production database seeded before Level 5 has no English: the build must still
+      # pass, with /en as a static 404 (ADR-043). Proven once here, before the real build.
+      - name: Build with the site not in English
+        run: pnpm build
+        env:
+          SITE_ENGLISH: off
+
       - name: Build
         run: pnpm build
 

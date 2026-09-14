@@ -2,34 +2,42 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Badge } from '@/components/shared/badge';
 import { Card } from '@/components/shared/card';
-import { blogCopy } from '@/content/blog';
+import { copyFor, type SiteCopy } from '@/content/copy';
 import type { PostCard as PostCardData } from '@/lib/cms/blog';
 import { cn } from '@/lib/cn';
-import { formatArabicDate } from '@/lib/dates';
+import { formatDate } from '@/lib/dates';
+import { type Locale, localePath } from '@/lib/i18n';
 import { readingLabel } from '@/lib/reading-time';
 
 interface PostCardProps {
   post: PostCardData;
+  locale: Locale;
   headingLevel?: 'h2' | 'h3';
   /** The newest post on the blog index: a wide card with the cover beside the text. */
   featured?: boolean;
   priority?: boolean;
 }
 
-/** Post meta line per BRD 4.13: «كتبه ضياء · {date} · {n} دقائق قراءة». */
-export function postMeta(post: Pick<PostCardData, 'publishedAt' | 'readingMinutes'>): string {
-  return blogCopy.metaTemplate
-    .replace('{date}', formatArabicDate(post.publishedAt))
-    .replace('{n} دقائق قراءة', readingLabel(post.readingMinutes));
+/** Post meta line per BRD 4.13: «كتبه ضياء · {date} · {n} دقائق قراءة»; the reading part is the 3–10 form. */
+export function postMeta(
+  copy: SiteCopy,
+  locale: Locale,
+  post: Pick<PostCardData, 'publishedAt' | 'readingMinutes'>,
+): string {
+  return copy.blog.metaTemplate
+    .replace('{date}', formatDate(locale, post.publishedAt))
+    .replace(copy.readingTime.few, readingLabel(copy.readingTime, post.readingMinutes));
 }
 
 /** Post card (BRD 6.11): 16:9 cover, hub chip, title, excerpt, meta. */
 export function PostCard({
   post,
+  locale,
   headingLevel = 'h2',
   featured = false,
   priority = false,
 }: PostCardProps) {
+  const copy = copyFor(locale);
   const Heading = headingLevel;
   return (
     <Card
@@ -39,7 +47,7 @@ export function PostCard({
       data-post-card={featured ? 'featured' : ''}
     >
       <Link
-        href={`/blog/${post.slug}`}
+        href={localePath(locale, `/blog/${post.slug}`)}
         className={cn('flex h-full flex-col', featured && 'md:grid md:grid-cols-2')}
       >
         <div className="relative aspect-video overflow-hidden bg-ground md:h-full">
@@ -59,7 +67,7 @@ export function PostCard({
         <div
           className={cn('flex flex-1 flex-col gap-3 p-5', featured && 'md:justify-center md:p-8')}
         >
-          {featured && <p className="eyebrow">{blogCopy.featured}</p>}
+          {featured && <p className="eyebrow">{copy.blog.featured}</p>}
           <Badge tone="primary" className="self-start">
             {post.hub.name}
           </Badge>
@@ -67,7 +75,9 @@ export function PostCard({
             {post.title}
           </Heading>
           <p className="text-body text-text-muted">{post.excerpt}</p>
-          <p className="mt-auto pt-2 text-caption text-text-muted">{postMeta(post)}</p>
+          <p className="mt-auto pt-2 text-caption text-text-muted">
+            {postMeta(copy, locale, post)}
+          </p>
         </div>
       </Link>
     </Card>

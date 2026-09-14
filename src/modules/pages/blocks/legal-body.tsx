@@ -1,19 +1,19 @@
 import { Container } from '@/components/shared/container';
 import { Prose } from '@/components/shared/prose';
 import { Section } from '@/components/shared/section';
+import { copyFor } from '@/content/copy';
 import { renderMarkdown, type Heading } from '@/lib/markdown';
-import messages from '@/messages/ar.json';
 import type { BlockProps } from '@/modules/pages/blocks/types';
 
 /** Sticky list of the H2s on desktop (BRD 6.12). */
-export function OnThisPage({ headings }: { headings: Heading[] }) {
+export function OnThisPage({ headings, label }: { headings: Heading[]; label: string }) {
   if (headings.length === 0) return null;
   return (
     <nav
-      aria-label={messages.legal.onThisPage}
+      aria-label={label}
       className="hidden lg:block lg:self-start lg:sticky lg:top-[calc(var(--header-h)+24px)]"
     >
-      <p className="mb-3 text-caption font-medium text-text-muted">{messages.legal.onThisPage}</p>
+      <p className="mb-3 text-caption font-medium text-text-muted">{label}</p>
       <ul className="flex flex-col gap-1 border-s border-border">
         {headings.map((h) => (
           <li key={h.id}>
@@ -34,7 +34,15 @@ export function OnThisPage({ headings }: { headings: Heading[] }) {
  * A legal text (BRD 6.12, Appendix B): Markdown from the admin rendered on the server through
  * the allowlisting renderer, the «آخر تحديث» line, the on-this-page list on desktop.
  */
-export function LegalBodyBlock({ block, page, tone, anchor, heading }: BlockProps<'legalBody'>) {
+export function LegalBodyBlock({
+  block,
+  page,
+  locale,
+  tone,
+  anchor,
+  heading,
+}: BlockProps<'legalBody'>) {
+  const messages = copyFor(locale);
   const { html, headings } = renderMarkdown(block.body, `${anchor}-section`);
   return (
     <Section
@@ -64,7 +72,7 @@ export function LegalBodyBlock({ block, page, tone, anchor, heading }: BlockProp
           </header>
           <Prose html={html} />
         </article>
-        <OnThisPage headings={headings} />
+        <OnThisPage label={messages.legal.onThisPage} headings={headings} />
       </Container>
     </Section>
   );

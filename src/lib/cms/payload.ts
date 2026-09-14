@@ -13,4 +13,4 @@ export function cms(): Promise<Payload> {
   return getPayload({ config, cron: true });
 }
 
-export { PUBLIC_READ, PUBLISHED } from '@/lib/cms/read';
+export { inLocale, publicRead, PUBLISHED } from '@/lib/cms/read';

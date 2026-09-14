@@ -2,9 +2,10 @@ import 'server-only';
 import { cache } from 'react';
 import type { LexicalState } from '@/lib/lexical';
 import { mediaUrl } from '@/lib/cms/mappers';
-import { cms, PUBLIC_READ } from '@/lib/cms/payload';
+import { cms, inLocale, publicRead } from '@/lib/cms/payload';
 import { PUBLISHED } from '@/lib/cms/read';
 import { versionedRead } from '@/lib/cms/read-mode';
+import type { Locale } from '@/lib/i18n';
 import type {
   Author as AuthorDoc,
   Category as CategoryDoc,
@@ -112,7 +113,7 @@ function cover(post: PostDoc, hub: Hub): Cover {
   if (!media || !src) return { src: hub.cover ?? '', alt: '' };
   return {
     src,
-    alt: media.alt,
+    alt: media.alt ?? '',
     ...(typeof media.filesize === 'number' ? { bytes: media.filesize } : {}),
     ...(media.mimeType ? { mime: media.mimeType } : {}),
   };
@@ -159,11 +160,12 @@ export function toPost(doc: PostDoc): Post | null {
 const SORT = '-publishedAt';
 
 /** The hubs in their admin order. */
-export const getHubs = cache(async (): Promise<Hub[]> => {
+export const getHubs = cache(async (locale: Locale): Promise<Hub[]> => {
   const payload = await cms();
   const { docs } = await payload.find({
     collection: 'categories',
-    ...PUBLIC_READ,
+    ...publicRead(locale),
+    where: inLocale('name'),
     depth: 1,
     limit: 50,
     pagination: false,
@@ -172,15 +174,16 @@ export const getHubs = cache(async (): Promise<Hub[]> => {
   return docs.map(toHub);
 });
 
-export async function getHub(slug: string): Promise<Hub | undefined> {
-  return (await getHubs()).find((h) => h.slug === slug);
+export async function getHub(locale: Locale, slug: string): Promise<Hub | undefined> {
+  return (await getHubs(locale)).find((h) => h.slug === slug);
 }
 
-export const getAllAuthors = cache(async (): Promise<Author[]> => {
+export const getAllAuthors = cache(async (locale: Locale): Promise<Author[]> => {
   const payload = await cms();
   const { docs } = await payload.find({
     collection: 'authors',
-    ...PUBLIC_READ,
+    ...publicRead(locale),
+    where: inLocale('name'),
     depth: 1,
     limit: 50,
     pagination: false,
@@ -189,29 +192,31 @@ export const getAllAuthors = cache(async (): Promise<Author[]> => {
   return docs.map(toAuthor);
 });
 
-export const getAuthor = cache(async (slug: string): Promise<Author | undefined> => {
-  const payload = await cms();
-  const { docs } = await payload.find({
-    collection: 'authors',
-    ...PUBLIC_READ,
-    depth: 1,
-    limit: 1,
-    where: { slug: { equals: slug } },
-  });
-  return docs[0] ? toAuthor(docs[0]) : undefined;
-});
+export const getAuthor = cache(
+  async (locale: Locale, slug: string): Promise<Author | undefined> => {
+    const payload = await cms();
+    const { docs } = await payload.find({
+      collection: 'authors',
+      ...publicRead(locale),
+      depth: 1,
+      limit: 1,
+      where: { and: [{ slug: { equals: slug } }, inLocale('name')] },
+    });
+    return docs[0] ? toAuthor(docs[0]) : undefined;
+  },
+);
 
 /**
  * Every published post as a card, newest first; drafts in a preview. Read once per render
  * and sliced by the callers: the corpus is small (BRD 10.2 caps it at one post a day) and
  * one read keeps the index, the hub pages, related and adjacent posts consistent.
  */
-export const getAllPosts = cache(async (): Promise<PostCard[]> => {
+export const getAllPosts = cache(async (locale: Locale): Promise<PostCard[]> => {
   const payload = await cms();
-  const read = await versionedRead();
+  const read = await versionedRead('title');
   const { docs } = await payload.find({
     collection: 'posts',
-    ...PUBLIC_READ,
+    ...publicRead(locale),
     ...read,
     depth: 1,
     limit: 1000,
@@ -223,13 +228,14 @@ export const getAllPosts = cache(async (): Promise<PostCard[]> => {
 
 /** One page of cards, optionally within a hub or by an author; page 1 is the first. */
 export async function getPostPage(
+  locale: Locale,
   page: number,
   filter: { hub?: string; author?: string } = {},
 ): Promise<PostPage> {
-  let posts = await getAllPosts();
+  let posts = await getAllPosts(locale);
   if (filter.hub) posts = posts.filter((p) => p.hub.slug === filter.hub);
   if (filter.author) {
-    const slugs = await postSlugsByAuthor(filter.author);
+    const slugs = await postSlugsByAuthor(locale, filter.author);
     posts = posts.filter((p) => slugs.has(p.slug));
   }
   const totalPages = Math.max(1, Math.ceil(posts.length / POSTS_PER_PAGE));
@@ -242,26 +248,24 @@ export async function getPostPage(
   };
 }
 
-const postSlugsByAuthor = cache(async (author: string): Promise<Set<string>> => {
+const postSlugsByAuthor = cache(async (locale: Locale, author: string): Promise<Set<string>> => {
   const payload = await cms();
-  const read = await versionedRead();
+  const read = await versionedRead('title');
   const { docs } = await payload.find({
     collection: 'posts',
-    ...PUBLIC_READ,
-    ...read,
+    ...publicRead(locale),
+    draft: read.draft,
     depth: 1,
     limit: 1000,
     pagination: false,
-    where: {
-      and: [...('where' in read ? [read.where] : []), { 'author.slug': { equals: author } }],
-    },
+    where: { and: [read.where, { 'author.slug': { equals: author } }] },
   });
   return new Set(docs.map((d) => d.slug));
 });
 
 /** The index the search island embeds. */
-export async function getPostIndex(): Promise<PostIndexEntry[]> {
-  return (await getAllPosts()).map((p) => ({
+export async function getPostIndex(locale: Locale): Promise<PostIndexEntry[]> {
+  return (await getAllPosts(locale)).map((p) => ({
     slug: p.slug,
     title: p.title,
     excerpt: p.excerpt,
@@ -270,18 +274,16 @@ export async function getPostIndex(): Promise<PostIndexEntry[]> {
 }
 
 /** One post with its body, or undefined. */
-export const getPost = cache(async (slug: string): Promise<Post | undefined> => {
+export const getPost = cache(async (locale: Locale, slug: string): Promise<Post | undefined> => {
   const payload = await cms();
-  const read = await versionedRead();
+  const read = await versionedRead('title');
   const { docs } = await payload.find({
     collection: 'posts',
-    ...PUBLIC_READ,
-    ...read,
+    ...publicRead(locale),
+    draft: read.draft,
     depth: 1,
     limit: 1,
-    where: {
-      and: [...('where' in read ? [read.where] : []), { slug: { equals: slug } }],
-    },
+    where: { and: [read.where, { slug: { equals: slug } }] },
   });
   return docs[0] ? (toPost(docs[0]) ?? undefined) : undefined;
 });
@@ -289,12 +291,12 @@ export const getPost = cache(async (slug: string): Promise<Post | undefined> => 
 export const FEED_LIMIT = 20;
 
 /** The latest published posts with their bodies, for the feed (never drafts). */
-export const getFeedPosts = cache(async (): Promise<Post[]> => {
+export const getFeedPosts = cache(async (locale: Locale): Promise<Post[]> => {
   const payload = await cms();
   const { docs } = await payload.find({
     collection: 'posts',
-    ...PUBLIC_READ,
-    where: PUBLISHED,
+    ...publicRead(locale),
+    where: { and: [PUBLISHED, inLocale('title')] },
     depth: 1,
     limit: FEED_LIMIT,
     sort: SORT,

@@ -13,7 +13,7 @@ import { extname, join } from 'node:path';
 import nextEnv from '@next/env';
 import { chromium } from '@playwright/test';
 import sharp from 'sharp';
-import { productsPage } from '../src/content/pages';
+import { ar } from '../src/content/copy/ar';
 import type { Product } from '../src/content/schema';
 import { products as seedProducts } from '../src/content/seed/products';
 import { site as seedSite } from '../src/content/seed/site';
@@ -70,18 +70,18 @@ async function fromCms(): Promise<OgSource> {
   const { getPayload } = await import('payload');
   const { default: config } = await import('../src/payload.config');
   const { toProduct, toSiteSettings } = await import('../src/lib/cms/mappers');
-  const { PUBLIC_READ, PUBLISHED } = await import('../src/lib/cms/read');
+  const { publicRead, PUBLISHED } = await import('../src/lib/cms/read');
   const payload = await getPayload({ config });
   const [found, settings] = await Promise.all([
     payload.find({
       collection: 'products',
-      ...PUBLIC_READ,
+      ...publicRead('ar'),
       where: PUBLISHED,
       depth: 1,
       pagination: false,
       sort: 'sortOrder',
     }),
-    payload.findGlobal({ slug: 'site-settings', ...PUBLIC_READ }),
+    payload.findGlobal({ slug: 'site-settings', ...publicRead('ar') }),
   ]);
   return { products: found.docs.map(toProduct), tagline: toSiteSettings(settings).tagline };
 }
@@ -115,7 +115,7 @@ function productTemplate(product: Product): string {
       <div style="margin-top:20px;font-weight:500;font-size:30px;color:${TOKEN_HEX['text-muted']};line-height:1.5">${product.shortDescription}</div>
     </div>
     <div style="display:inline-flex;align-items:center;gap:16px;align-self:flex-start;background:${TOKEN_HEX.primary};color:#fff;border-radius:999px;padding:14px 32px;font-weight:700;font-size:34px">
-      <span>${productsPage.pricePrefix}</span>
+      <span>${ar.productsPage.pricePrefix}</span>
       <bdi dir="ltr" style="display:inline-flex;align-items:center;gap:8px">${sar(30)}<span>${product.baseCost}</span></bdi>
     </div>
   </div>

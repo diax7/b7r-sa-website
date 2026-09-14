@@ -1,11 +1,10 @@
 import type { Metadata } from 'next';
-import { BlogIndex } from '@/modules/blog';
+import { blogIndexMetadata, renderBlogIndex } from '@/modules/blog';
 import { newsletterCopy } from '@/modules/core';
-import { buildMetadata } from '@/modules/core/seo/metadata';
 import { NewsletterForm } from '@/modules/forms';
 
-export const generateMetadata = (): Promise<Metadata> => buildMetadata('/blog');
+export const generateMetadata = (): Promise<Metadata> => blogIndexMetadata('ar');
 
 export default function BlogRoute() {
-  return <BlogIndex page={1} newsletter={<NewsletterForm tone="light" copy={newsletterCopy} />} />;
+  return renderBlogIndex('ar', <NewsletterForm tone="light" copy={newsletterCopy('ar')} />);
 }

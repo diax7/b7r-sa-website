@@ -123,11 +123,17 @@ export function NewsletterForm({ copy, tone = 'dark' }: NewsletterFormProps) {
         aria-live="polite"
         className={cn(
           'min-h-5 text-small',
+          // On the navy footer neither status colour reaches 4.5:1; the message reads in
+          // white there and the field's invalid state carries the error affordance.
           status === 'success'
-            ? 'text-success'
+            ? dark
+              ? 'text-white'
+              : 'text-success'
             : status === 'idle' || status === 'submitting'
               ? ''
-              : 'text-error',
+              : dark
+                ? 'text-white'
+                : 'text-error',
         )}
         data-testid="newsletter-message"
       >

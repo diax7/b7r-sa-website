@@ -1,8 +1,9 @@
 import { notFound } from 'next/navigation';
-import { productsPage } from '@/content/pages';
+import { copyFor } from '@/content/copy';
 import type { Block, Page } from '@/content/schema';
 import { getPage } from '@/lib/cms';
 import { siteBase } from '@/lib/env';
+import { type Locale, localePath } from '@/lib/i18n';
 import { JsonLd, jsonLd } from '@/modules/core';
 import { CtaRibbon } from '@/modules/core/cta-ribbon';
 import { rendererFor } from '@/modules/pages/blocks';
@@ -15,6 +16,7 @@ import {
 
 interface CmsPageProps {
   slug: string;
+  locale: Locale;
   /** Renderers for blocks whose section lives in another feature module (contact). */
   renderers?: ExtraRenderers;
 }
@@ -31,21 +33,24 @@ export function blockTones(count: number): BlockTone[] {
  * the first one carries the page title as its H1, and the CTA ribbon. `notFound()` when the
  * slug is not published (the proxy already answers unknown top-level URLs, B0).
  */
-export async function CmsPage({ slug, renderers = NO_EXTRA }: CmsPageProps) {
-  const page = await getPage(slug);
+export async function CmsPage({ slug, locale, renderers = NO_EXTRA }: CmsPageProps) {
+  const page = await getPage(locale, slug);
   if (!page) notFound();
-  return <CmsPageBody page={page} renderers={renderers} />;
+  return <CmsPageBody page={page} locale={locale} renderers={renderers} />;
 }
 
 export function CmsPageBody({
   page,
+  locale,
   renderers = NO_EXTRA,
 }: {
   page: Page;
+  locale: Locale;
   renderers?: ExtraRenderers;
 }) {
   const base = siteBase();
   const route = `/${page.slug}`;
+  const productsPage = copyFor(locale).productsPage;
   const tones = blockTones(page.blocks.length);
   const anchors = blockAnchors(page.blocks);
   const legal = page.blocks.find((b) => b.blockType === 'legalBody');
@@ -55,14 +60,15 @@ export function CmsPageBody({
         nodes={[
           jsonLd.webPage(
             base,
+            locale,
             route,
             page.seo.title,
             page.seo.description,
             legal ? legal.updatedAt : undefined,
           ),
           jsonLd.breadcrumbs(base, [
-            { name: productsPage.breadcrumbHome, path: '/' },
-            { name: page.title, path: route },
+            { name: productsPage.breadcrumbHome, path: localePath(locale, '/') },
+            { name: page.title, path: localePath(locale, route) },
           ]),
         ]}
       />
@@ -76,13 +82,18 @@ export function CmsPageBody({
             key={block.id}
             block={block}
             page={page}
+            locale={locale}
             tone={tones[i] ?? 'surface'}
             anchor={anchors[i] ?? block.blockType}
             heading={i === 0 ? { title: page.title, lead: page.lead } : undefined}
           />
         );
       })}
-      <CtaRibbon topTone={tones[page.blocks.length - 1] ?? 'surface'} page={page.slug} />
+      <CtaRibbon
+        locale={locale}
+        topTone={tones[page.blocks.length - 1] ?? 'surface'}
+        page={page.slug}
+      />
     </>
   );
 }

@@ -33,3 +33,6 @@ resources/source-files/
 # typescript incremental cache
 *.tsbuildinfo
 public/media/
+
+# Golden HTML snapshots of the review server (scripts/dev/golden.mjs), local only
+.golden/

@@ -1,9 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
-import { contactForm } from '@/content/pages';
+import { copyFor } from '@/content/copy';
 import { buildContactEmail, getContactTransport } from '@/lib/contact-transport';
 import { verifyTurnstile } from '@/lib/turnstile';
 import { contactBodySchema, INQUIRY_OPTIONS } from '@/modules/contact/schema';
 import { validateContact } from '@/modules/contact/validate';
+
+const contactForm = copyFor('ar').contactForm;
 
 const valid = {
   name: 'ضياء',
@@ -21,19 +23,22 @@ describe('contact schema (BRD 4.11, 6.9)', () => {
   });
 
   it('the client rules answer every field with the BRD 4.11 message', () => {
-    const errors = validateContact({
-      name: '',
-      phone: '12345',
-      email: 'nope',
-      inquiry: 'غير موجود',
-      message: '   ',
-    });
+    const errors = validateContact(
+      {
+        name: '',
+        phone: '12345',
+        email: 'nope',
+        inquiry: 'غير موجود',
+        message: '   ',
+      },
+      contactForm,
+    );
     expect(errors.name).toBe(contactForm.validation.name);
     expect(errors.phone).toBe(contactForm.validation.phone);
     expect(errors.email).toBe(contactForm.validation.email);
     expect(errors.message).toBe(contactForm.validation.message);
     expect(errors.inquiry).toBeDefined();
-    expect(validateContact(valid)).toEqual({});
+    expect(validateContact(valid, contactForm)).toEqual({});
   });
 
   it('the client rules and the API schema agree', () => {
@@ -53,14 +58,27 @@ describe('contact schema (BRD 4.11, 6.9)', () => {
       { ...valid, message: 'م'.repeat(4001) },
     ];
     for (const values of cases) {
-      const client = Object.keys(validateContact(values)).length === 0;
+      const client = Object.keys(validateContact(values, contactForm)).length === 0;
       const api = contactBodySchema.safeParse(values).success;
       expect(api, JSON.stringify(values).slice(0, 80)).toBe(client);
     }
   });
 
-  it('limits inquiries to the four BRD options', () => {
-    expect([...INQUIRY_OPTIONS]).toEqual(['تاجر', 'شراكة', 'استثمار', 'أخرى']);
+  it('limits inquiries to the four BRD options in either language (ADR-043)', () => {
+    expect([...INQUIRY_OPTIONS]).toEqual([
+      'تاجر',
+      'شراكة',
+      'استثمار',
+      'أخرى',
+      'Merchant',
+      'Partnership',
+      'Investment',
+      'Other',
+    ]);
+    expect(
+      contactBodySchema.safeParse({ ...valid, inquiry: 'Merchant', locale: 'en' }).success,
+    ).toBe(true);
+    expect(contactBodySchema.safeParse({ ...valid, locale: 'fr' }).success).toBe(false);
   });
 });
 

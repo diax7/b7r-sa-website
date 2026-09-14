@@ -1,10 +1,9 @@
 import type { Metadata } from 'next';
 import { SITE_BLOCK_RENDERERS } from '@/app/(site)/cms-blocks';
-import { cmsPageMetadata } from '@/modules/core/seo/metadata';
-import { CmsPage } from '@/modules/pages';
+import { designedPageMetadata, renderDesignedPage } from '@/modules/pages';
 
-export const generateMetadata = (): Promise<Metadata> => cmsPageMetadata('contact');
+export const generateMetadata = (): Promise<Metadata> => designedPageMetadata('ar', 'contact');
 
-export default function ContactRoute() {
-  return <CmsPage slug="contact" renderers={SITE_BLOCK_RENDERERS} />;
+export default function PageRoute() {
+  return renderDesignedPage('ar', 'contact', SITE_BLOCK_RENDERERS);
 }

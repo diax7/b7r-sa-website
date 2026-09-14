@@ -37,6 +37,9 @@ DoD: all of §6.18; Search Console and Bing verification tokens in place; launch
 | 4a | Inbox collections and dashboard, subscribers sync | §11.5 items 1 (contact part), 3 |
 | 4b | Cal.com embed, `/book`, webhook, bookings | §11.5 items 1 (booking part), 2 |
 | 4c | Metrics job, analytics view, Search Console topic suggestions | §11.5 item 4 |
+| 5a | The English site at `/en/` (`specs/009-level-5-english/`, ADR-043): second root layout, per-locale copy banks, locale reads with the presence gate, hreflang and sitemap alternates, the switch, English forms and e-mails, English CMS content and legal drafts in the seed | Every public page except the blog answers in English with the same static behaviour, budgets and accessibility; the Arabic site unchanged |
+| 5b | The blog in English: `/en/blog`, hubs, authors, pagination, search, feed, translation pairs; the three Level 1 posts in English | `/en/blog/*` per locale; `BLOG_ENGLISH_PENDING` removed |
+| 5c | The engine in English: `ai-topics.language`, prompts and checks per locale, a 15-topic English backlog; `llms.txt` | English posts from the backlog under the same guardrails |
 
 ### 12.4 Launch checklist (Level 1 go-live on b7r.sa)
 
@@ -66,8 +69,8 @@ After cutover (same day):
 
 ### 12.5 Documentation upkeep rule
 
-This BRD is a living document. When a feature changes, the agent updates the relevant section in `docs/brd-sections/`, rebuilds the master file, and records an ADR. When a phase completes, its DoD evidence is linked from `docs/DECISIONS.md`. The BRD never lags the code by more than one merged PR.
+This BRD is a living document. When a feature changes, the agent updates the relevant section in `docs/brd-sections/`, rebuilds the master file, and records an ADR. Appendix H (the English copy bank) is generated from `src/content/copy/en.ts` by `pnpm copy:appendix` before the rebuild; it is never edited by hand. When a phase completes, its DoD evidence is linked from `docs/DECISIONS.md`. The BRD never lags the code by more than one merged PR.
 
 ### 12.6 Future blocks (reserved, not built until Dhia schedules them)
 
-English locale (`/en`, native copy, hreflang) · Salla and Zid landing pages (`/salla`, `/zid`) with app-store deep links · Comparison page "بحر مقابل Printful وPrintify" · Seasonal calendar hub · Creators landing (`/creators`) · Business landing (`/business`) · `llms.txt` · 2FA for admin · GlitchTip error tracking · Product-level Merchant Center feed · Newsletter campaigns · Case studies collection · Live order ticker on product pages (once volume exists) · WebMCP readiness.
+Salla and Zid landing pages (`/salla`, `/zid`) with app-store deep links · Comparison page "بحر مقابل Printful وPrintify" · Seasonal calendar hub · Creators landing (`/creators`) · Business landing (`/business`) · `llms.txt` · 2FA for admin · GlitchTip error tracking · Product-level Merchant Center feed · Newsletter campaigns · Case studies collection · Live order ticker on product pages (once volume exists) · WebMCP readiness.
