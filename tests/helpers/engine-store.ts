@@ -5,6 +5,7 @@ import type {
   EngineSettings,
   HubInfo,
   NewPost,
+  Outline,
   RunPatch,
   Store,
   Topic,
@@ -178,6 +179,8 @@ export function topic(overrides: Partial<Topic> = {}): Topic {
 
 export interface MemoryState {
   settings: EngineSettings;
+  /** Swapped by the freshness tests: the sheet the engine reads today. */
+  facts: FactsSheet;
   topics: Topic[];
   topicStatus: Map<number, string>;
   topicPatches: Array<{ id: number; patch: Record<string, unknown> }>;
@@ -194,6 +197,7 @@ export interface MemoryState {
 export function memoryStore(init: Partial<MemoryState> = {}): { store: Store; state: MemoryState } {
   const state: MemoryState = {
     settings: settings(),
+    facts: FACTS,
     topics: [topic()],
     topicStatus: new Map(),
     topicPatches: [],
@@ -212,12 +216,15 @@ export function memoryStore(init: Partial<MemoryState> = {}): { store: Store; st
       return state.settings;
     },
     async facts() {
-      return FACTS;
+      return state.facts;
     },
-    async pickTopic(_now, topicId) {
+    async pickTopic(_now, topicId, regenerate = false) {
+      const pickable = regenerate
+        ? ['backlog', 'failed', 'scheduled', 'published']
+        : ['backlog', 'failed', 'scheduled'];
       const candidates = topicId ? state.topics.filter((t) => t.id === topicId) : state.topics;
-      const free = candidates.find(
-        (t) => (state.topicStatus.get(t.id) ?? 'backlog') !== 'generating',
+      const free = candidates.find((t) =>
+        pickable.includes(state.topicStatus.get(t.id) ?? 'backlog'),
       );
       if (!free) return null;
       state.topicStatus.set(free.id, 'generating');
@@ -263,9 +270,16 @@ export function memoryStore(init: Partial<MemoryState> = {}): { store: Store; st
     },
     async postForRegeneration(id) {
       const existing = state.posts.find((p) => p.id === id);
-      return existing
-        ? { topicId: state.topics[0]?.id ?? null, slug: existing.slug, cover: existing.cover }
-        : null;
+      if (!existing) return null;
+      const lastDone = [...state.runs.values()]
+        .toReversed()
+        .find((r) => r['status'] === 'done' && r['post'] === id);
+      return {
+        topicId: state.topics[0]?.id ?? null,
+        slug: existing.slug,
+        cover: existing.cover,
+        outline: (lastDone?.['outline'] as Outline | undefined) ?? null,
+      };
     },
     async uploadImage() {
       state.uploads += 1;

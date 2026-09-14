@@ -1,8 +1,11 @@
 import { adminOnly, jsonBody, parseTopicsCsv } from '@/modules/ai-content';
 
+/** A pasted spreadsheet is created row by row in the request: a generous bound for a backlog. */
+const MAX_ROWS = 200;
+
 /**
  * Bulk add topics from CSV (BRD 10.2.7): `{ csv: string }`; hubs by slug; a title already in
- * the backlog is skipped. Admins only.
+ * the backlog is skipped; at most 200 rows per import. Admins only.
  */
 export async function POST(req: Request): Promise<Response> {
   const guard = await adminOnly(req);
@@ -11,6 +14,12 @@ export async function POST(req: Request): Promise<Response> {
   const csv = typeof body['csv'] === 'string' ? body['csv'] : '';
   if (!csv.trim()) return Response.json({ error: 'csv required' }, { status: 400 });
   const { rows, errors } = parseTopicsCsv(csv);
+  if (rows.length > MAX_ROWS) {
+    return Response.json(
+      { error: `${rows.length} rows; at most ${MAX_ROWS} per import` },
+      { status: 400 },
+    );
+  }
   const { payload } = guard;
   const hubs = await payload.find({
     collection: 'categories',

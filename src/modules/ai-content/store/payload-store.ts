@@ -12,6 +12,7 @@ import type {
   HubInfo,
   MediaUpload,
   NewPost,
+  Outline,
   RunPatch,
   Store,
   Topic,
@@ -136,7 +137,7 @@ export function payloadStore(payload: Payload): Store {
       });
     },
 
-    async pickTopic(now, topicId) {
+    async pickTopic(now, topicId, regenerate = false) {
       const iso = now.toISOString();
       const open = {
         and: [
@@ -144,13 +145,11 @@ export function payloadStore(payload: Payload): Store {
           { or: [{ windowEnd: { exists: false } }, { windowEnd: { greater_than_equal: iso } }] },
         ],
       };
+      const pickable = regenerate
+        ? ['backlog', 'failed', 'scheduled', 'published']
+        : ['backlog', 'failed', 'scheduled'];
       const where = topicId
-        ? {
-            and: [
-              { id: { equals: topicId } },
-              { status: { in: ['backlog', 'failed', 'scheduled'] } },
-            ],
-          }
+        ? { and: [{ id: { equals: topicId } }, { status: { in: pickable } }] }
         : { and: [{ status: { equals: 'backlog' } }, open] };
       const { docs } = await payload.find({
         collection: 'ai-topics',
@@ -162,7 +161,10 @@ export function payloadStore(payload: Payload): Store {
       });
       for (const doc of docs) {
         // Compare-and-set, one candidate at a time: only the runner that flips the status
-        // owns the topic; a lost race moves to the next candidate.
+        // owns the topic; a lost race moves to the next candidate. Payload runs this as a
+        // find then an update, so the guarantee holds for one runner per deployment (the
+        // `ai` queue at limit 1, ADR-033); a second container would need the atomic form,
+        // `UPDATE ai_topics SET status = 'generating' WHERE id = $1 AND status = $2 RETURNING id`.
         // oxlint-disable-next-line no-await-in-loop
         const result = await payload.update({
           collection: 'ai-topics',
@@ -275,7 +277,6 @@ export function payloadStore(payload: Payload): Store {
           collection: 'ai-runs',
           where: {
             and: [
-              { kind: { equals: 'generate' } },
               { startedAt: { greater_than_equal: day } },
               { status: { not_equals: 'skipped' } },
             ],
@@ -298,7 +299,7 @@ export function payloadStore(payload: Payload): Store {
         }),
       ]);
       return {
-        runsToday: today.docs.length,
+        runsToday: today.docs.filter((r) => r.kind === 'generate').length,
         runsThisMonth: thisMonth.totalDocs,
         costTodayUsd: today.docs.reduce((n, r) => n + (r.costUsd ?? 0), 0),
       };
@@ -389,15 +390,31 @@ export function payloadStore(payload: Payload): Store {
         disableErrors: true,
       });
       if (!post) return null;
-      const topics = await payload.find({
-        collection: 'ai-topics',
-        where: { post: { equals: id } },
-        depth: 0,
-        limit: 1,
-        overrideAccess: true,
-      });
+      const [topics, runs] = await Promise.all([
+        payload.find({
+          collection: 'ai-topics',
+          where: { post: { equals: id } },
+          depth: 0,
+          limit: 1,
+          overrideAccess: true,
+        }),
+        payload.find({
+          collection: 'ai-runs',
+          where: { and: [{ post: { equals: id } }, { status: { equals: 'done' } }] },
+          depth: 0,
+          limit: 1,
+          sort: '-startedAt',
+          overrideAccess: true,
+        }),
+      ]);
       const cover = typeof post.cover === 'object' && post.cover ? post.cover.id : post.cover;
-      return { topicId: topics.docs[0]?.id ?? null, slug: post.slug, cover };
+      const outline = runs.docs[0]?.outline;
+      return {
+        topicId: topics.docs[0]?.id ?? null,
+        slug: post.slug,
+        cover,
+        outline: outline && typeof outline === 'object' ? (outline as unknown as Outline) : null,
+      };
     },
 
     async uploadImage(upload: MediaUpload) {

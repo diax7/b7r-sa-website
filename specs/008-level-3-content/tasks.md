@@ -41,9 +41,9 @@ Branches `level-3/blog`, `level-3/engine`, `level-3/live`. CTO: plan 87 → amen
 - [x] T207 Docs: ADR-042, BRD §10.2 amendments, RUNBOOK, design system.
 
 ## Phase 3c: the engine live
-- [ ] T301 `content-tick` schedule with the guards; `freshness` and `digest` schedules; the
+- [x] T301 `content-tick` schedule with the guards; `freshness` and `digest` schedules; the
   12-month retention sweep.
-- [ ] T302 The 30-topic backlog in the seed with windows; ten mock posts on the review server.
-- [ ] T303 Tests: tick across a day, freshness on a changed `maxDays`, the digest; e2e for
+- [x] T302 The 30-topic backlog in the seed with windows; ten mock posts on the review server.
+- [x] T303 Tests: tick across a day, freshness on a changed `maxDays`, the digest; e2e for
   the health row and the monitoring view.
-- [ ] T304 Docs: ADR-042 amendment, RUNBOOK (day to day), BRD §12.3 caveat, IDEAS; memory.
+- [x] T304 Docs: ADR-042 amendment, RUNBOOK (day to day), BRD §12.3 caveat, IDEAS; memory.

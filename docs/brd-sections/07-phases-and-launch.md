@@ -33,6 +33,7 @@ DoD: all of §6.18; Search Console and Bing verification tokens in place; launch
 | 3a | Blog collections, hub and author routes, RSS, search, templates upgrade, editorial validations | §10.3 item 1, 5 |
 | 3b | `ai-settings`, `ai-topics`, `ai-runs`, provider layer, pipeline tasks with mocked-provider tests, admin screens | §10.3 items 2 (mocked), 4, 5 |
 | 3c | Live provider runs, scheduling endpoint, freshness job, seeded backlog, first ten automatic posts, monitoring and digest | §10.3 all |
+| | *Amended 2026-09-14 (ADR-042): shipped as Payload schedules on the in-process runner (no endpoint), the freshness pass on a facts baseline per run, the digest and the retention sweep, the thirty-topic backlog with windows, ten mock posts on the review server. The live run per provider (§10.3 item 2) waits for Dhia's keys: add a key in Engine settings, pick the provider, press "Generate now"; the first three posts land as drafts.* | |
 | 4a | Inbox collections and dashboard, subscribers sync | §11.5 items 1 (contact part), 3 |
 | 4b | Cal.com embed, `/book`, webhook, bookings | §11.5 items 1 (booking part), 2 |
 | 4c | Metrics job, analytics view, Search Console topic suggestions | §11.5 item 4 |

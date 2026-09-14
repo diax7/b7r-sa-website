@@ -23,6 +23,7 @@ import { products } from '../src/content/seed/products';
 import { seo } from '../src/content/seed/seo';
 import { site } from '../src/content/seed/site';
 import { testimonials } from '../src/content/seed/testimonials';
+import { nextWindow, seedTopics } from '../src/content/seed/topics';
 import { SEO_TITLE_TEMPLATE } from '../src/content/seo-copy';
 import {
   RESERVED_PAGE_SLUGS,
@@ -605,12 +606,67 @@ async function ensurePost(
   summary.created.push(`post ${post.slug}`);
 }
 
+/**
+ * A backlog topic (BRD Appendix E, ADR-042): by title, never overwritten; seasonal windows
+ * computed for their next occurrence; a topic whose post exists already is `published`
+ * and linked to it.
+ */
+async function ensureTopic(
+  payload: Payload,
+  topic: (typeof seedTopics)[number],
+  hubs: Map<string, number>,
+  now: Date,
+): Promise<void> {
+  const existing = await payload.count({
+    collection: 'ai-topics',
+    where: { title: { equals: topic.title } },
+  });
+  if (existing.totalDocs > 0) {
+    summary.skipped.push(`topic ${topic.title.slice(0, 24)}`);
+    return;
+  }
+  const hub = hubs.get(topic.hub);
+  if (!hub) throw new Error(`seed topics: ${topic.title} names an unknown hub ${topic.hub}`);
+  const post = topic.post
+    ? (
+        await payload.find({
+          collection: 'posts',
+          where: { slug: { equals: topic.post } },
+          depth: 0,
+          limit: 1,
+        })
+      ).docs[0]
+    : undefined;
+  const window = topic.window ? nextWindow(now, topic.window) : null;
+  await payload.create({
+    collection: 'ai-topics',
+    data: {
+      title: topic.title,
+      hub,
+      primaryKeyword: topic.primaryKeyword,
+      secondaryKeywords: topic.secondaryKeywords.map((keyword) => ({ keyword })),
+      intent: topic.intent,
+      priority: topic.priority,
+      ...(window
+        ? { windowStart: `${window.start}T00:00:00.000Z`, windowEnd: `${window.end}T23:59:59.000Z` }
+        : {}),
+      status: post ? 'published' : 'backlog',
+      source: 'seed',
+      ...(post ? { post: post.id } : {}),
+    },
+    depth: 0,
+  });
+  summary.created.push(`topic ${topic.title.slice(0, 24)}`);
+}
+
 async function ensureBlog(payload: Payload): Promise<void> {
   const hubs = new Map<string, number>();
   for (const [i, hub] of blogHubs.entries())
     hubs.set(hub.slug, await ensureHub(payload, hub, i + 1));
   const author = await ensureAuthor(payload, blogAuthor);
   for (const post of blogPosts) await ensurePost(payload, post, hubs, author);
+  const now = new Date();
+  for (const topic of seedTopics) await ensureTopic(payload, topic, hubs, now);
 }
 
 async function main(): Promise<number> {

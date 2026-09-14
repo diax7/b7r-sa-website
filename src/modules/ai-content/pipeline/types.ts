@@ -2,7 +2,7 @@ import type { LexicalState } from '@/lib/lexical';
 import type { CapCounts } from '@/modules/ai-content/caps';
 import type { Rates, Usage } from '@/modules/ai-content/cost';
 import type { PublishedPost } from '@/modules/ai-content/dedupe';
-import type { FactsSheet } from '@/modules/ai-content/facts';
+import type { FactNumber, FactsSheet } from '@/modules/ai-content/facts';
 import type { Provider, ProviderName } from '@/modules/ai-content/provider/types';
 
 /** The settings the pipeline reads, keys revealed (the Local API read carries `decryptKeys`). */
@@ -91,6 +91,8 @@ export interface RunPatch {
   status?: 'running' | 'done' | 'failed' | 'skipped';
   steps?: StepRecord[];
   outline?: Outline;
+  /** The facts sheet's numbers at generation time: the freshness job's baseline. */
+  facts?: FactNumber[];
   score?: number;
   rubric?: Rubric & { deductions: Array<{ rule: string; points: number; detail: string }> };
   tokensIn?: number;
@@ -131,8 +133,11 @@ export interface MediaUpload {
 export interface Store {
   settings(): Promise<EngineSettings>;
   facts(): Promise<FactsSheet>;
-  /** Compare-and-set: the topic (given or the best backlog one) moves to `generating`, or null. */
-  pickTopic(now: Date, topicId?: number): Promise<Topic | null>;
+  /**
+   * Compare-and-set: the topic (given or the best backlog one) moves to `generating`, or
+   * null. A `published` topic is only picked to regenerate its post.
+   */
+  pickTopic(now: Date, topicId?: number, regenerate?: boolean): Promise<Topic | null>;
   publishedPosts(): Promise<PublishedPost[]>;
   hub(id: number): Promise<HubInfo>;
   authorId(): Promise<number>;
@@ -158,9 +163,13 @@ export interface Store {
     id: number,
     post: Omit<NewPost, 'slug' | 'cover' | 'status'>,
   ): Promise<{ id: number; slug: string }>;
-  postForRegeneration(
-    id: number,
-  ): Promise<{ topicId: number | null; slug: string; cover: number } | null>;
+  /** The post's topic, slug, cover and the outline of its last successful run. */
+  postForRegeneration(id: number): Promise<{
+    topicId: number | null;
+    slug: string;
+    cover: number;
+    outline: Outline | null;
+  } | null>;
   uploadImage(upload: MediaUpload): Promise<number>;
   markdownToLexical(markdown: string): Promise<LexicalState>;
   decrementReviewFirstRuns(): Promise<void>;

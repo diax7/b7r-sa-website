@@ -336,3 +336,18 @@ ignore when 2.0.2 ships.
 - **The mock.** `AI_CONTENT_MOCK=1` (never in production; the boot assert refuses it) lets the
   settings select "Mock (tests only)": deterministic Arabic posts built from the facts sheet,
   no network. CI and the review server use it.
+
+- **Day to day (3c).** The hourly tick queues one run when the Riyadh hour reaches the publish
+  hour and no run started today; the dashboard card shows the next slot. Monday 06:00 Riyadh
+  the freshness pass reads the ten oldest engine posts against the facts sheet and rewrites
+  the ones whose numbers changed (same slug, same cover, `contentUpdatedAt` set); Sunday 08:00
+  Riyadh the digest e-mail goes out and runs older than a year are deleted. All three are
+  Payload schedules on the in-process runner: nothing to call from outside. Crons are read on
+  the runtime's UTC clock.
+- **The review server.** `node scripts/dev/engine-demo.mjs run 5` writes five mock posts from
+  the backlog (the daily cap's maximum; run it again the next day for more); `... clean`
+  removes every engine post and run so the public e2e (which assumes the seed's three posts)
+  passes again.
+- **Going live.** Add the vendor key in Engine settings, pick the provider, keep
+  `reviewFirstRuns` at 3: the first three posts land as drafts for a read, then the engine
+  publishes on its own. Watch the first digest.

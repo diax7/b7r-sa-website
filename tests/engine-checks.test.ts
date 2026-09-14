@@ -33,6 +33,11 @@ describe('deterministic checks (BRD 10.2.4 step 5)', () => {
   const options = { bannedPhrases: ['قم بـ', 'تم '], minWords: 5, maxWords: 2000 };
 
   it('extracts numbers with their unit words', () => {
+    // The facts sheet spells grams «جم»; a draft's «غرام» or «غراماً» is the same number.
+    expect(statedNumbers('وزن 180 جم')).toEqual([{ value: 180, unit: 'g', raw: '180 جم' }]);
+    expect(unknownNumbers('وزن 180 غرام', [{ value: 180, unit: 'g', label: 'weight' }])).toEqual(
+      [],
+    );
     expect(statedNumbers('التكلفة 45 ريالاً والتوصيل خلال 5 أيام ووزن 180 غراماً')).toEqual([
       { value: 45, unit: 'sar', raw: '45 ريالاً' },
       { value: 5, unit: 'days', raw: '5 أيام' },

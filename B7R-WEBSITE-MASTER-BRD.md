@@ -1314,7 +1314,7 @@ Fields: title, hub, primaryKeyword, secondaryKeywords[], intent (informational �
 
 One document per pipeline execution: topic, provider/model, each step's input hash, output summary, review score and rubric breakdown, tokens and estimated cost, duration, final status, post id, error. Retained 12 months.
 
-*Amended 2026-09-14 (ADR-042): each run row also keeps the outline (the freshness job regenerates from it), the step log with an input hash over the brief and the outline, and `kind` (`generate | freshness`); cost is an estimate from tokens and the settings' rates.*
+*Amended 2026-09-14 (ADR-042): each run row also keeps the outline (the freshness job regenerates from it), the facts sheet's numbers of the day (the freshness baseline: drift is a number that was on the sheet and is not any more), the step log with an input hash over the brief and the outline, and `kind` (`generate | freshness`); cost is an estimate from tokens and the settings' rates. The schedules (hourly tick, weekly freshness, weekly digest with the twelve-month sweep) are Payload job schedules on the `ai` queue.*
 
 #### 10.2.4 Pipeline (Payload Jobs workflow `generatePost`, tasks are retryable, each ≤ 120 s)
 
@@ -1437,6 +1437,7 @@ DoD: all of §6.18; Search Console and Bing verification tokens in place; launch
 | 3a | Blog collections, hub and author routes, RSS, search, templates upgrade, editorial validations | §10.3 item 1, 5 |
 | 3b | `ai-settings`, `ai-topics`, `ai-runs`, provider layer, pipeline tasks with mocked-provider tests, admin screens | §10.3 items 2 (mocked), 4, 5 |
 | 3c | Live provider runs, scheduling endpoint, freshness job, seeded backlog, first ten automatic posts, monitoring and digest | §10.3 all |
+| | *Amended 2026-09-14 (ADR-042): shipped as Payload schedules on the in-process runner (no endpoint), the freshness pass on a facts baseline per run, the digest and the retention sweep, the thirty-topic backlog with windows, ten mock posts on the review server. The live run per provider (§10.3 item 2) waits for Dhia's keys: add a key in Engine settings, pick the provider, press "Generate now"; the first three posts land as drafts.* | |
 | 4a | Inbox collections and dashboard, subscribers sync | §11.5 items 1 (contact part), 3 |
 | 4b | Cal.com embed, `/book`, webhook, bookings | §11.5 items 1 (booking part), 2 |
 | 4c | Metrics job, analytics view, Search Console topic suggestions | §11.5 item 4 |
