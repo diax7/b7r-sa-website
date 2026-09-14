@@ -29,7 +29,9 @@ const LISTED: Record<string, string> = {
 const PRODUCT_PHOTO = /^([a-z-]+)-(white|black|beige)-(front|back)\.jpg$/;
 
 /** The English alt of a seeded media file, or null for a file the seed does not know. */
-export function mediaAltEn(filename: string): string | null {
+export function mediaAltEn(uploaded: string): string | null {
+  // Payload numbers a filename that already exists in the media folder (`name-2.jpg`).
+  const filename = uploaded.replace(/-\d+(\.[a-z0-9]+)$/i, '$1');
   const listed = LISTED[filename];
   if (listed) return listed;
   const photo = PRODUCT_PHOTO.exec(filename);
