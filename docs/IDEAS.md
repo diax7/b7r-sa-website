@@ -19,6 +19,20 @@ Constitution VIII: features outside the current phase are written here, not buil
 - Designer colour choice: the home designer shows one colour per product (ADR-036); the product page's «جرّب تصميمك عليه» link could carry the chosen colour into the designer if colour returns later.
 - Phase 2b candidates recorded here rather than built: login Turnstile (ADR-027), IndexNow ping and CDN purge from the publish hooks (BRD 9.6), scheduled publish and live preview (BRD 9.3), the remaining collections/globals of BRD 9.4 (pages, home, faqs, testimonials, integrations, redirects) and a weekly `pg_dump` to S3 (BRD 9.2).
 
+## CI (ADR-045, 2026-09-15)
+
+- The S3 job's server log carries about 1,300 `upstream image response failed for
+  http://localhost:9000/b7r-media/media/<file> 404` lines per run (since before PR #15): the
+  URLs the site builds for CMS media and the keys the objects are stored under disagree in the
+  MinIO job, and no test asserts an image response there, so the job does not prove that CMS
+  media is served through the optimizer from S3 (ADR-029). Find the key/URL disagreement, fix
+  it, then one assertion in the S3 subset (`products.spec.ts`: the product image answers 200
+  with an image content type) so it cannot regress silently.
+- The admin suite (the `cms` project, 24 tests) runs twice per CI event: in the quality job
+  against local-disk media and in the S3 job against MinIO, the storage production uses.
+  Dropping it from the quality job saves about 3 minutes of the 24; Dhia's call (the quality
+  job's run is the one with Playwright's project ordering).
+
 ## Admin panel (ADR-039, 2026-09-13)
 
 - Payload's edit-view chrome has axe gaps that are its engine's, not the shell's (unnamed

@@ -46,11 +46,16 @@ warm_pages() {
         echo "warm $path: $(curl -s -o /dev/null -D - "http://localhost:3004$path" | grep -i x-nextjs-cache | tr -d '\r' || echo 'no cache header')"
       fi
       # The format follows the Accept header: Lighthouse's Chrome asks for AVIF, curl's `*/*`
-      # would warm a JPEG nobody requests.
-      (echo "$html" | grep -o '/_next/image[^" ]*' | sort -u || true) | while read -r img; do
-        curl -s -o /dev/null -H 'Accept: image/avif,image/webp,*/*;q=0.8' \
-          "http://localhost:3004${img//&amp;/&}" || true
+      # would warm a JPEG nobody requests. The second round counts the transforms still cold.
+      misses=0
+      total=0
+      for img in $(echo "$html" | grep -o '/_next/image[^" ]*' | sort -u || true); do
+        total=$((total + 1))
+        cache=$(curl -s -o /dev/null -D - -H 'Accept: image/avif,image/webp,*/*;q=0.8' \
+          "http://localhost:3004${img//&amp;/&}" | grep -i x-nextjs-cache | tr -d '\r' || true)
+        case "$cache" in *MISS*) misses=$((misses + 1)) ;; esac
       done
+      if [ "$round" = 2 ]; then echo "warm $path images: $total, $misses miss"; fi
     done
   done
 }

@@ -1016,11 +1016,14 @@ PR run tested (`refs/pull/N/merge`). So `ci.yml` runs on `pull_request` and `wor
 run used to check is checked by `scripts/merge-pr.sh <number> [subject]` instead, every time
 and the same way: fetch; `origin/<branch>` must contain `origin/main`, else it stops with the
 instruction to merge `main` in and let the PR run again; `gh pr checks --watch --fail-fast` on
-the head, then every check line printed; `gh pr merge --squash --delete-branch` with the
-subject given or the PR's title and no body; `main` checked out and pulled. Found on the way:
+the head, every check line printed, then the gate proper, every check in the pass bucket
+(`gh pr checks` exits 0 on a cancelled check: only failed and pending are non-zero);
+`gh pr merge --squash --delete-branch` with the subject given or the PR's title, the PR number
+appended, no body; `main` checked out and pulled fast-forward only. Found on the way:
 the CI warm-up (`e2e/global-setup.ts`, `scripts/ci/warm-lib.sh`) requested every image
 transform with the default Accept (any type), which Next answers with a resized JPEG, while
-every browser in the suite and Lighthouse's Chrome ask for AVIF, so no AVIF was ever warm and
+every browser in the suite and Lighthouse's Chrome get AVIF (WebKit lists WebP before AVIF, but
+Next answers with the first of its own `formats` the client accepts), so no AVIF was ever warm and
 the first minute of a run paid the cold encodes (PR #15's second run: the no-JS home tests
 past 30 s for `load`); both warmers now send `image/avif,image/webp,*/*;q=0.8`. The trade-off,
 accepted: `main` has no CI event, so the deploy (ADR-025, its own `push` trigger; its

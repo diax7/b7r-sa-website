@@ -36,8 +36,10 @@ Step durations of the last green run on `main` (34865487681, private-repository 
    the push run used to check is checked every time and the same way: fetch; `origin/<branch>`
    must contain `origin/main` (the remote head is what the run tested), else stop with the
    instruction to merge `main` in and let the PR run again; `gh pr checks --watch --fail-fast`
-   on the head, then print every check line; `gh pr merge --squash --delete-branch`;
-   `git checkout main && git pull`. `set -euo pipefail`; shellcheck-clean.
+   on the head, print every check line, then require every check in the pass bucket (code
+   review: `gh pr checks` exits 0 on a cancelled check); `gh pr merge --squash --delete-branch`
+   with the PR number on the subject; `git checkout main && git pull --ff-only`.
+   `set -euo pipefail`; shellcheck and shfmt clean.
 3. **The warm-up asks for AVIF.** `e2e/global-setup.ts` and `scripts/ci/warm-lib.sh` request
    every image transform a page references so no test pays for a cold encode, but Next encodes
    the format the request accepts: fetch's and curl's default (any type) got a resized JPEG,

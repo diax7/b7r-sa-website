@@ -25,11 +25,14 @@ export default async function globalSetup(): Promise<void> {
       if (round === 2)
         console.log(`warm ${path}: ${res.headers.get('x-nextjs-cache') ?? 'no cache header'}`);
       const images = [...new Set(html.match(/\/_next\/image[^" ]*/g) ?? [])];
+      let misses = 0;
       for (const img of images) {
-        await fetch(`${BASE_URL}${img.replaceAll('&amp;', '&')}`, {
+        const image = await fetch(`${BASE_URL}${img.replaceAll('&amp;', '&')}`, {
           headers: { accept: IMAGE_ACCEPT },
         }).catch(() => undefined);
+        if (image?.headers.get('x-nextjs-cache') === 'MISS') misses += 1;
       }
+      if (round === 2) console.log(`warm ${path} images: ${images.length}, ${misses} miss`);
     }
   }
 }

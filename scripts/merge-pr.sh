@@ -8,9 +8,11 @@ cd "$(dirname "$0")/.."
 
 pr="${1:?usage: scripts/merge-pr.sh <number> [subject]}"
 branch=$(gh pr view "$pr" --json headRefName -q .headRefName)
-# The squash commit: the subject given, or the PR's title the way GitHub writes it, and no
-# body (the generated list of the branch's commits says nothing the PR does not).
-subject="${2:-$(gh pr view "$pr" --json title -q .title) (#$pr)}"
+# The squash commit: the subject given, or the PR's title the way GitHub writes it, always
+# ending in the PR number; no body (the generated list of the branch's commits says nothing
+# the PR does not).
+subject="${2:-$(gh pr view "$pr" --json title -q .title)}"
+case "$subject" in *"(#$pr)") ;; *) subject="$subject (#$pr)" ;; esac
 
 git fetch -q origin main "$branch"
 if ! git merge-base --is-ancestor origin/main "origin/$branch"; then
@@ -20,11 +22,16 @@ if ! git merge-base --is-ancestor origin/main "origin/$branch"; then
 fi
 echo "merge-pr: origin/$branch contains origin/main"
 
-# `--fail-fast` stops at the first failed check; the second call prints every line for the
-# record (both jobs must read pass).
+# `--fail-fast` stops at the first failed check and the second call prints every line for
+# the record, but `gh pr checks` exits 0 on a cancelled check (only failed and pending are
+# non-zero), so the third call is the gate: every check on the head in the pass bucket.
 gh pr checks "$pr" --watch --fail-fast
 gh pr checks "$pr"
+if [ "$(gh pr checks "$pr" --json bucket --jq 'length > 0 and all(.bucket == "pass")')" != true ]; then
+  echo "merge-pr: a check on the head is not a pass (cancelled, skipped or none); rerun it" >&2
+  exit 1
+fi
 
 gh pr merge "$pr" --squash --delete-branch --subject "$subject" --body ""
 git checkout main
-git pull
+git pull --ff-only
