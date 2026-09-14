@@ -924,8 +924,9 @@ so an Arabic title is no duplicate of an English topic; the post is written with
 `locale: 'en'` and lands on the English blog only. **The style tab is localised**
 (`styleGuide`, `systemPrompt`, `bannedPhrases`, `bannedClaims`, a data-carrying migration
 moved the Arabic values; `systemPromptVersion` stays shared): the admin edits each language
-under the panel's locale control, the code defaults per language (`DEFAULT_STYLE`) fill an
-empty language, and the seed writes the English defaults so they are visible. **Prompts**
+under the panel's locale control; the code defaults per language (`DEFAULT_STYLE`) are the
+fields' `defaultValue`, which Payload applies on read, so the English tab shows them from the
+first visit without a seed (the store falls back to the same constants). **Prompts**
 have an English set (`pipeline/prompts.ts`, a text table per locale; the header gains a
 `LANGUAGE:` line the mock switches its fixtures on); the rubric's `arabic` dimension is now
 `language` in both. **Checks** follow the language: English unit words (`SAR 45`, `45
