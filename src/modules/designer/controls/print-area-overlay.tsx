@@ -36,7 +36,8 @@ interface PrintAreaOverlayProps {
  * 2026-09-13, ADR-036). Empty: the area itself is the upload target, a visually hidden but
  * focusable file input with the prompt as its label, so a click, Enter or Space opens the
  * picker and the focus ring lands on the area. With a design: one «×» at the top-end corner
- * of the area, shown only while the edit chrome is visible.
+ * of the area, a small red disc on a 44 px target, shown only while the edit chrome is
+ * visible.
  */
 export function PrintAreaOverlay({
   area,
@@ -124,13 +125,16 @@ export function PrintAreaOverlay({
         onClick={onRemove}
         aria-label={copy.removeAria}
         data-design-remove=""
-        // 44 px target; invisible AND inert while the chrome is hidden, except for keyboard focus.
+        // 44 px target around a 28 px disc; invisible AND inert while the chrome is hidden,
+        // except for keyboard focus.
         className={cn(
-          'absolute end-0 top-0 grid size-11 -translate-y-1/2 translate-x-1/2 place-items-center rounded-pill border border-border bg-surface text-text shadow-popover transition-opacity duration-(--duration-fast) hover:text-error focus-visible:pointer-events-auto focus-visible:opacity-100 rtl:-translate-x-1/2',
+          'group absolute end-0 top-0 grid size-11 -translate-y-1/2 translate-x-1/2 place-items-center rounded-pill transition-opacity duration-(--duration-fast) focus-visible:pointer-events-auto focus-visible:opacity-100 rtl:-translate-x-1/2',
           chrome ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0',
         )}
       >
-        <Icon icon={X} size={18} />
+        <span className="grid size-7 place-items-center rounded-pill bg-error text-white shadow-popover transition-transform duration-(--duration-fast) group-hover:scale-110 group-focus-visible:ring-2 group-focus-visible:ring-error/40">
+          <Icon icon={X} size={14} />
+        </span>
       </button>
     </div>
   );

@@ -15,7 +15,6 @@ import {
 import type { Design } from '@/modules/designer/use-designer-state';
 
 const MIN_SIZE = 40;
-const WHEEL_STEP = 1.05;
 
 // Konva reads these when it creates canvases, so they must be set before the Stage mounts.
 // This chunk is client-only (loaded with ssr: false).
@@ -30,7 +29,7 @@ interface DesignCanvasProps {
   /** `null` while the print area is empty (the overlay shows the upload prompt). */
   design: Design | null;
   area: Box;
-  /** A mouse pointer is inside the stage (touch never sets it; the host decides). */
+  /** The pointer is inside the print area (a mouse there, or a finger just there); the host decides. */
   hovered: boolean;
   /** Fires on the first drag so the one-time canvas hint can dismiss. */
   onInteract: () => void;
@@ -58,12 +57,17 @@ function tokens() {
  * The mockup canvas (BRD 6.4.3). Two layers: a static, cached mockup and one interactive
  * layer holding the clipped design, the Transformer (a sibling of the clip group so its
  * anchors stay reachable outside the area) and the dashed print-area outline. Drag, corner
- * resize, rotation with snaps, wheel and pinch scaling, double-tap recentre, and a snap-back
- * when less than 25 % of the design remains inside the area.
+ * resize, rotation with snaps, pinch scaling, double-tap recentre, and a snap-back when less
+ * than 25 % of the design remains inside the area. The wheel scrolls the page, never the
+ * design (Dhia, 2026-09-14).
  *
- * Edit chrome shows while a mouse pointer is inside the stage or the design is selected
- * (a tap or click on it; cleared by a tap or click elsewhere on the stage), so the mockup
- * reads as a clean preview otherwise and touch users keep their selection (ADR-036).
+ * Edit chrome shows only while the pointer is inside the print area (`hovered`, judged by
+ * the host: a mouse there, or a finger there and a moment after it lifts) or a drag, resize
+ * or pinch is in progress, so the mockup reads as a clean preview the rest of the time and
+ * nothing has to be clicked to dismiss it (ADR-036, amended).
+ *
+ * A stage resize keeps the design where the person put it, scaled with the stage; a new
+ * design or a new mockup re-centres it.
  */
 export function DesignCanvas({
   size,
@@ -80,7 +84,6 @@ export function DesignCanvas({
   const [prevMockup, setPrevMockup] = useState<HTMLImageElement | null>(null);
   // Client-only component: tokens are read from the live stylesheet, never hard-coded.
   const [colors] = useState(tokens);
-  const [selected, setSelected] = useState(false);
   const [dragging, setDragging] = useState(false);
 
   const designRef = useRef<Konva.Image>(null);
@@ -90,18 +93,17 @@ export function DesignCanvas({
   const lastValid = useRef<Point | null>(null);
   const lastMockup = useRef<HTMLImageElement | null>(null);
   const pinch = useRef<{ dist: number } | null>(null);
+  const areaRef = useRef(area);
+  areaRef.current = area;
+  const placedAt = useRef(0);
 
   const initialBox = useMemo(
     () => initialDesignBox(area, design?.width ?? 1, design?.height ?? 1),
     [area, design?.width, design?.height],
   );
-  // Re-placement key: the box, plus the mockup so a colour swap re-centres too (BRD 6.4.3).
-  const placement = useMemo(
-    () => ({ box: initialBox, mockup: mockupSrc }),
-    [initialBox, mockupSrc],
-  );
 
-  // Mockup crossfade (200 ms) when the product or colour changes.
+  // Mockup crossfade (200 ms) when the product or colour changes; the cache is a bitmap at
+  // the node's size, so it is rebuilt when the stage changes size too.
   useEffect(() => {
     if (!mockup) return;
     const previous = lastMockup.current;
@@ -113,15 +115,19 @@ export function DesignCanvas({
       prevRef.current?.opacity(1);
       prevRef.current?.to({ opacity: 0, duration: 0.2, onFinish: () => setPrevMockup(null) });
     }
+    mockupRef.current?.clearCache();
     mockupRef.current?.cache();
-  }, [mockup]);
+    mockupRef.current?.getLayer()?.batchDraw();
+  }, [mockup, size]);
 
-  // Place the design (60 % of the area width, centred) whenever the design, the area, or the
-  // mockup (product or colour, BRD 6.4.3) changes.
+  // Place the design (60 % of the area width, centred) whenever the design or the mockup
+  // (product or colour, BRD 6.4.3) changes; the area is read at that moment, so a stage
+  // resize alone never re-centres (the effect below scales instead).
   useEffect(() => {
     const node = designRef.current;
     if (!node || !designImg) return;
-    const { box } = placement;
+    const box = initialDesignBox(areaRef.current, designImg.naturalWidth, designImg.naturalHeight);
+    placedAt.current = areaRef.current.width;
     node.setAttrs({
       image: designImg,
       x: box.x + box.width / 2,
@@ -138,7 +144,26 @@ export function DesignCanvas({
     trRef.current?.nodes([node]);
     trRef.current?.forceUpdate();
     node.getLayer()?.batchDraw();
-  }, [designImg, placement]);
+    // The area is a fraction of the stage: the area's width tracks the stage's size.
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- the area is read at placement time on purpose
+  }, [designImg, mockupSrc]);
+
+  // A stage resize (the window, a rotation): scale the placed design with it.
+  useEffect(() => {
+    const node = designRef.current;
+    const before = placedAt.current;
+    if (!node || !designImg || before === 0 || before === area.width) return;
+    const factor = area.width / before;
+    placedAt.current = area.width;
+    node.position({ x: node.x() * factor, y: node.y() * factor });
+    node.size({ width: node.width() * factor, height: node.height() * factor });
+    node.offset({ x: node.offsetX() * factor, y: node.offsetY() * factor });
+    if (lastValid.current) {
+      lastValid.current = { x: lastValid.current.x * factor, y: lastValid.current.y * factor };
+    }
+    trRef.current?.forceUpdate();
+    node.getLayer()?.batchDraw();
+  }, [area.width, designImg]);
 
   function recentre() {
     const node = designRef.current;
@@ -182,16 +207,6 @@ export function DesignCanvas({
     node.getLayer()?.batchDraw();
   }
 
-  function onWheel(e: KonvaEventObject<WheelEvent>) {
-    e.evt.preventDefault();
-    const node = designRef.current;
-    const stage = node?.getStage();
-    if (!node || !stage) return;
-    const factor = e.evt.deltaY < 0 ? WHEEL_STEP : 1 / WHEEL_STEP;
-    scaleAbout(node, factor, stage.getPointerPosition());
-    lastValid.current = { x: node.x(), y: node.y() };
-  }
-
   function onTouchMove(e: KonvaEventObject<TouchEvent>) {
     const [t1, t2] = [e.evt.touches[0], e.evt.touches[1]];
     const node = designRef.current;
@@ -208,23 +223,11 @@ export function DesignCanvas({
     pinch.current = null;
   }
 
-  const chrome = Boolean(designImg) && (hovered || selected || dragging);
+  const chrome = Boolean(designImg) && (hovered || dragging);
   useEffect(() => onChromeChange(chrome), [chrome, onChromeChange]);
 
-  // A tap or click anywhere but the design clears the selection (touch keeps it otherwise).
-  function onStagePointer(e: KonvaEventObject<MouseEvent | TouchEvent>) {
-    setSelected(e.target === designRef.current);
-  }
-
   return (
-    <Stage
-      width={size}
-      height={size}
-      onMouseDown={onStagePointer}
-      onTouchStart={onStagePointer}
-      onTouchMove={onTouchMove}
-      onTouchEnd={onTouchEnd}
-    >
+    <Stage width={size} height={size} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}>
       <Layer listening={false}>
         {prevMockup && <KImage ref={prevRef} image={prevMockup} width={size} height={size} />}
         {mockup && <KImage ref={mockupRef} image={mockup} width={size} height={size} />}
@@ -253,7 +256,6 @@ export function DesignCanvas({
               }}
               onDblClick={recentre}
               onDblTap={recentre}
-              onWheel={onWheel}
               onMouseEnter={(e) => {
                 const container = e.target.getStage()?.container();
                 if (container) container.style.cursor = 'grab';

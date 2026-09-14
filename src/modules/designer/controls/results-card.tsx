@@ -95,13 +95,11 @@ export function ResultsCard({
           </dd>
         </div>
       </dl>
-      <div aria-live="polite" className="min-h-6">
-        {belowCost && (
-          <p className="text-small font-medium text-error" data-result="warning">
-            {copy.negativeWarning}
-          </p>
-        )}
-      </div>
+      {belowCost && (
+        <p role="status" className="text-small font-medium text-error" data-result="warning">
+          {copy.negativeWarning}
+        </p>
+      )}
       <Button asChild size="lg" fullWidth>
         <a href={ctaHref} data-track="cta_click" data-location="designer">
           {copy.cta}

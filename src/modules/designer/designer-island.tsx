@@ -1,6 +1,14 @@
 'use client';
 
-import { type DragEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  type DragEvent,
+  type PointerEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { Button } from '@/components/shared/button';
 import { SarAmount } from '@/components/shared/sar-amount';
 import { useBottomDock } from '@/components/shared/use-bottom-dock';
@@ -20,6 +28,10 @@ import type { DesignerCopy } from '@/modules/designer/types';
 
 const MAX_CANVAS = 640;
 const HINT_KEY = 'b7r_canvas_hint';
+/** The edit chrome's reach beyond the print area: the corner handles and the «×» sit there. */
+const AREA_MARGIN = 28;
+/** A finger lifted inside the area keeps the chrome this long, so the «×» can be tapped. */
+const TOUCH_LINGER_MS = 3000;
 
 export interface DesignerIslandProps {
   products: Product[];
@@ -54,6 +66,7 @@ export function DesignerIsland({
   const [chrome, setChrome] = useState(false);
   const [hovered, setHovered] = useState(false);
   const [dragOver, setDragOver] = useState(false);
+  const linger = useRef<number | null>(null);
 
   const color =
     state.product.colors.find((c) => c.slug === state.colorSlug) ?? state.product.colors[0];
@@ -147,6 +160,40 @@ export function DesignerIsland({
 
   const onChromeChange = useCallback((visible: boolean) => setChrome(visible), []);
 
+  // The edit chrome follows the pointer's place, not the stage: inside the print area (with
+  // a margin for the handles and the «×») it shows; anywhere else it hides on its own. A
+  // finger there keeps it for a moment after lifting, long enough to tap the «×».
+  function insideArea(e: { clientX: number; clientY: number; currentTarget: HTMLElement }) {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    return (
+      x >= area.x - AREA_MARGIN &&
+      x <= area.x + area.width + AREA_MARGIN &&
+      y >= area.y - AREA_MARGIN &&
+      y <= area.y + area.height + AREA_MARGIN
+    );
+  }
+  const clearLinger = useCallback(() => {
+    if (linger.current !== null) window.clearTimeout(linger.current);
+    linger.current = null;
+  }, []);
+  function onPointerMove(e: PointerEvent<HTMLDivElement>) {
+    if (e.pointerType !== 'mouse') return;
+    setHovered(insideArea(e));
+  }
+  function onPointerDown(e: PointerEvent<HTMLDivElement>) {
+    if (e.pointerType === 'mouse') return;
+    clearLinger();
+    setHovered(insideArea(e));
+  }
+  function onPointerUp(e: PointerEvent<HTMLDivElement>) {
+    if (e.pointerType === 'mouse') return;
+    clearLinger();
+    linger.current = window.setTimeout(() => setHovered(false), TOUCH_LINGER_MS);
+  }
+  useEffect(() => clearLinger, [clearLinger]);
+
   // A design is an object URL: revoke it whenever it is replaced or on unmount.
   const design = state.design;
   useEffect(
@@ -177,9 +224,11 @@ export function DesignerIsland({
           }}
           onDragLeave={() => setDragOver(false)}
           onDrop={onDrop}
-          // Only a mouse "hovers": a finger leaving the screen must not hide the handles.
-          onPointerEnter={(e) => e.pointerType === 'mouse' && setHovered(true)}
+          onPointerMove={onPointerMove}
           onPointerLeave={(e) => e.pointerType === 'mouse' && setHovered(false)}
+          onPointerDown={onPointerDown}
+          onPointerUp={onPointerUp}
+          onPointerCancel={onPointerUp}
           data-design-dropzone=""
           data-chrome={chrome ? 'true' : 'false'}
         >

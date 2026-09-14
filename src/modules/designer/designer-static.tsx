@@ -5,7 +5,7 @@ import { Icon } from '@/components/shared/icon';
 import { SarAmount } from '@/components/shared/sar-amount';
 import { SarSymbol } from '@/components/shared/sar-symbol';
 import type { Product } from '@/content/schema';
-import { stripColorFor } from '@/lib/product-helpers';
+import { designerColorFor } from '@/lib/product-helpers';
 import { cn } from '@/lib/cn';
 import { monthlyProfit, perPieceProfit } from '@/modules/designer/profit';
 import type { DesignerCopy } from '@/modules/designer/types';
@@ -24,7 +24,8 @@ interface DesignerStaticProps {
  */
 export function DesignerStatic({ products, product, copy, ctaHref }: DesignerStaticProps) {
   const designer = copy;
-  const color = product.colors[0];
+  const color =
+    product.colors.find((c) => c.slug === designerColorFor(product)) ?? product.colors[0];
   const perPiece = perPieceProfit(product.suggestedPrice, product.baseCost);
   const monthly = monthlyProfit(product.suggestedPrice, product.baseCost, 10);
 
@@ -67,7 +68,7 @@ export function DesignerStatic({ products, product, copy, ctaHref }: DesignerSta
           <div className="flex flex-wrap gap-2">
             {products.map((p) => {
               const thumb =
-                p.colors.find((c) => c.slug === stripColorFor(p))?.images.front ??
+                p.colors.find((c) => c.slug === designerColorFor(p))?.images.front ??
                 p.colors[0]?.images.front ??
                 '';
               const active = p.slug === product.slug;
@@ -142,7 +143,6 @@ export function DesignerStatic({ products, product, copy, ctaHref }: DesignerSta
               </dd>
             </div>
           </dl>
-          <div className="min-h-6" />
           <Button asChild size="lg" fullWidth>
             <a href={ctaHref} data-track="cta_click" data-location="designer">
               {designer.cta}
