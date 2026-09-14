@@ -11,6 +11,7 @@ export const CODE_TOP_LEVEL = [
   ...RESERVED_PAGE_SLUGS,
   'products',
   'blog',
+  'author',
   'admin',
   'api',
   '_next',

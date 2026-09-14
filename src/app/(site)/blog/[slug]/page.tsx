@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { blogPosts, getBlogPost } from '@/content/blog';
+import { getAllPosts, getPost } from '@/lib/cms/blog';
 import { BlogPostPage } from '@/modules/blog';
 import { postMetadata } from '@/modules/core/seo/metadata';
 
@@ -8,22 +8,24 @@ interface Params {
   params: Promise<{ slug: string }>;
 }
 
-export const dynamicParams = false;
+/**
+ * A post published in the admin after the build gets its page on first request (ISR), so
+ * unknown slugs must reach the page and `notFound()` (ADR-030, as products).
+ */
+export const dynamicParams = true;
 
-export function generateStaticParams() {
-  return blogPosts.map((p) => ({ slug: p.slug }));
+export async function generateStaticParams() {
+  return (await getAllPosts()).map((p) => ({ slug: p.slug }));
 }
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
-  const { slug } = await params;
-  const post = getBlogPost(slug);
+  const post = await getPost((await params).slug);
   if (!post) notFound();
   return postMetadata(post);
 }
 
 export default async function PostRoute({ params }: Params) {
-  const { slug } = await params;
-  const post = getBlogPost(slug);
+  const post = await getPost((await params).slug);
   if (!post) notFound();
   return <BlogPostPage post={post} />;
 }

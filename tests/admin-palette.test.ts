@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { initials } from '@/modules/cms/admin/account/initials';
 import { searchTerm } from '@/modules/cms/admin/header/palette';
-import { fold, MIN_QUERY, rank, score } from '@/modules/cms/admin/header/palette-rank';
+import { fold } from '@/lib/arabic-fold';
+import { MIN_QUERY, rank, score } from '@/modules/cms/admin/header/palette-rank';
 
 const items = [
   { label: 'الصفحات', keywords: 'المحتوى pages' },

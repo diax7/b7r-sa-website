@@ -1,7 +1,7 @@
 import { getTranslation } from '@payloadcms/translations';
 import type { I18nClient } from '@payloadcms/translations';
 import type { LucideIcon } from 'lucide-react';
-import { CirclePlus, Upload } from 'lucide-react';
+import { CirclePlus } from 'lucide-react';
 import type { Payload, PayloadRequest, SanitizedPermissions, TypedUser } from 'payload';
 import { formatAdminURL } from 'payload/shared';
 import {
@@ -87,13 +87,13 @@ export function quickActions(args: {
       ...s.actions.addFaq,
     });
   }
-  if (can('collections', 'media', 'create')) {
+  if (can('collections', 'posts', 'create')) {
     actions.push({
-      key: 'media',
-      href: url('/collections/media/create'),
-      icon: Upload,
-      hue: COLLECTION_HUES.media,
-      ...s.actions.media,
+      key: 'add-post',
+      href: url('/collections/posts/create'),
+      icon: COLLECTION_ICONS.posts,
+      hue: COLLECTION_HUES.posts,
+      ...s.actions.addPost,
     });
   }
   actions.push({

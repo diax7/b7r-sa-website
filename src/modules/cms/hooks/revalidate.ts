@@ -71,9 +71,14 @@ const OUTSIDE_REQUEST = /store missing|during render/i;
  * unsupported". Outside a request the 60 s timer covers the change, so the helper logs that
  * once and moves on (ADR-033).
  */
-export function safeRevalidatePath(path: string, logger: Pick<Console, 'info'> = console): void {
+export function safeRevalidatePath(
+  path: string,
+  logger: Pick<Console, 'info'> = console,
+  type?: 'page',
+): void {
   try {
-    revalidatePath(path);
+    if (type) revalidatePath(path, type);
+    else revalidatePath(path);
   } catch (error) {
     // Anything else is a real failure and must surface.
     if (!(error instanceof Error) || !OUTSIDE_REQUEST.test(error.message)) throw error;
@@ -183,6 +188,88 @@ export const revalidateRedirects: CollectionAfterChangeHook & CollectionAfterDel
   if (typeof doc?.['from'] === 'string') paths.add(doc['from']);
   if (typeof previous?.from === 'string') paths.add(previous.from);
   for (const path of paths) safeRevalidatePath(path);
+  return doc;
+};
+
+/** The blog's listing routes: the index, every paginated page, every hub page, the feed. */
+export const BLOG_LISTINGS = ['/blog', '/feed.xml', '/sitemap.xml'] as const;
+
+/** Dynamic listing routes revalidated as a whole (`revalidatePath(route, 'page')`). */
+export const BLOG_LISTING_PATTERNS = [
+  '/blog/page/[n]',
+  '/blog/category/[hub]',
+  '/blog/category/[hub]/page/[n]',
+  '/author/[slug]',
+] as const;
+
+interface PostRef {
+  slug?: unknown;
+  hub?: unknown;
+  author?: unknown;
+}
+
+/** The slug of a related document: populated on the doc, or looked up by id. */
+async function relatedSlug(
+  req: PayloadRequest,
+  collection: 'categories' | 'authors',
+  value: unknown,
+): Promise<string | null> {
+  if (value && typeof value === 'object') {
+    const slug = (value as { slug?: unknown }).slug;
+    return typeof slug === 'string' ? slug : null;
+  }
+  if (typeof value !== 'number' && typeof value !== 'string') return null;
+  try {
+    const doc = await req.payload.findByID({ collection, id: value, depth: 0, req });
+    return typeof doc?.slug === 'string' ? doc.slug : null;
+  } catch {
+    return null;
+  }
+}
+
+/** The concrete pages a post change touches (IndexNow gets these; the listings regenerate too). */
+export async function pathsForPost(req: PayloadRequest, post: PostRef): Promise<string[]> {
+  const paths = new Set<string>(['/blog']);
+  if (typeof post.slug === 'string' && post.slug) paths.add(`/blog/${post.slug}`);
+  const hub = await relatedSlug(req, 'categories', post.hub);
+  if (hub) paths.add(`/blog/category/${hub}`);
+  const author = await relatedSlug(req, 'authors', post.author);
+  if (author) paths.add(`/author/${author}`);
+  return [...paths];
+}
+
+/**
+ * Posts: a publish, an unpublish, a slug or hub change or a delete regenerates the post, the
+ * listings that show it (index, paginated pages, hub pages, author page, feed, sitemap) and
+ * pings IndexNow for the pages; a draft autosave of a never-published post is not visible.
+ */
+export const revalidatePosts: CollectionAfterChangeHook & CollectionAfterDeleteHook = async ({
+  doc,
+  req,
+  ...rest
+}) => {
+  if (!shouldRevalidate(req)) return doc;
+  const previous = (rest as { previousDoc?: PostRef }).previousDoc;
+  if (!isVisibleChange({ doc, ...rest })) return doc;
+  const paths = new Set<string>([
+    ...(await pathsForPost(req, doc as PostRef)),
+    ...(previous ? await pathsForPost(req, previous) : []),
+    ...BLOG_LISTINGS,
+  ]);
+  for (const path of paths) safeRevalidatePath(path);
+  for (const pattern of BLOG_LISTING_PATTERNS) safeRevalidatePath(pattern, console, 'page');
+  if (pingWorthy(req, { doc, ...rest })) await queueIndexNow(req, paths);
+  return doc;
+};
+
+/** Hubs and authors: their own page and every listing, no ping (the posts carry the content). */
+export const revalidateBlogListings: CollectionAfterChangeHook & CollectionAfterDeleteHook = ({
+  doc,
+  req,
+}) => {
+  if (!shouldRevalidate(req)) return doc;
+  for (const path of BLOG_LISTINGS) safeRevalidatePath(path);
+  for (const pattern of BLOG_LISTING_PATTERNS) safeRevalidatePath(pattern, console, 'page');
   return doc;
 };
 

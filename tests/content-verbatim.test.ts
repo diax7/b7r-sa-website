@@ -9,7 +9,8 @@ import { describe, expect, it } from 'vitest';
 import { faq } from '@/content/seed/faq';
 import { home } from '@/content/seed/home';
 import { navigation } from '@/content/seed/navigation';
-import { blogCopy, blogHubs, blogPosts } from '@/content/blog';
+import { blogCopy } from '@/content/blog';
+import { blogAuthor, blogHubs, blogPosts } from '@/content/seed/blog';
 import { seo } from '@/content/seed/seo';
 import { MERCHANT_COST_NOTE, productSeo } from '@/content/seo-copy';
 import {
@@ -37,6 +38,21 @@ const TODO_COPY = new Set<string>([
   blogCopy.allHubs,
   blogCopy.emptyHub,
   blogCopy.copied,
+  // Level 3 template strings and the hub and author copy (BRD 10.1 names them, not their
+  // text); listed for Dhia in Appendix G.
+  blogCopy.toc,
+  blogCopy.updatedPrefix,
+  blogCopy.previousPost,
+  blogCopy.nextPost,
+  blogCopy.featured,
+  blogCopy.latest,
+  ...Object.values(blogCopy.search),
+  ...Object.values(blogCopy.pagination),
+  blogCopy.hubIntro,
+  blogCopy.authorIntro,
+  blogCopy.authorPosts,
+  ...blogHubs.flatMap((h) => [h.description, h.lead]),
+  blogAuthor.bio,
 ]);
 
 const brd = readFileSync(join(process.cwd(), 'B7R-WEBSITE-MASTER-BRD.md'), 'utf8').replace(
@@ -112,7 +128,15 @@ const sources: Record<string, unknown> = {
   'seo.ts': [seo, productSeo, MERCHANT_COST_NOTE],
   // Post titles and hub names are BRD 4.13; excerpts, takeaways and bodies are agent-written
   // samples listed for Dhia (ADR-018), so only the BRD fields are checked here.
-  'blog/index.ts': [blogCopy, blogHubs, blogPosts.map((p) => p.title)],
+  'blog/index.ts': [blogCopy],
+  // Hub names, the author line and post titles are BRD 4.13 / Appendix E; hub copy, the bio,
+  // excerpts, takeaways and bodies are agent-written and listed for Dhia (ADR-018, ADR-041).
+  'seed/blog.ts': [
+    blogHubs.map((h) => h.name),
+    blogAuthor.name,
+    blogAuthor.role,
+    blogPosts.map((p) => p.title),
+  ],
 };
 
 describe('copy is verbatim from the BRD', () => {

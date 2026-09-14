@@ -28,6 +28,14 @@ Constitution VIII: features outside the current phase are written here, not buil
   ellipsis); `pnpm check:dash` covers our sources, not `node_modules`.
 - The content-locale switcher offers `en` although no English content is live yet: an editor
   who flips it sees empty fields. Hide `en` until the English phase, or label it "not live".
+
+## Blog (ADR-041, 2026-09-14)
+
+- Tag pages (`/blog/tag/{slug}`) once tags carry enough posts to be worth a listing.
+- Server-side search with Arabic stemming if the corpus outgrows the embedded index (a few
+  hundred posts); until then the island folds hamza forms and diacritics only.
+- A post's `contentUpdatedAt` could be set automatically when the body changes on a
+  published post; today an editor sets it (the freshness job will, in 3c).
 - A lenient preview for a half-filled block: today a draft whose block fails the content
   contract renders the error page under preview (the public site must never render it); a
   preview could skip the broken block with a notice instead.

@@ -689,3 +689,47 @@ meaning; the four meaning colours keep their jobs. Tokens `violet`, `teal`, `ora
 (each at least 5.8:1 on the surface) and `success-tint` were added. **Room under the header.**
 Every view started flush under Payload's 56 px header; 24 px now. **Collapse control** at the
 start of its row. The saved-by widget's strings moved to `strings.ts`.
+
+
+## ADR-041: The blog in the CMS: Lexical body, static listings, a search island (2026-09-14)
+
+Phase 3a (`specs/008-level-3-content/`, BRD §10.1) moves the blog from three Markdown files
+into Payload: `posts`, `categories` (the six hubs of Appendix E, each with its own page,
+description, lead and default cover), `authors` (one seeded author with a page and
+`ProfilePage` data) and `tags` (optional; related posts fall back to hub then recency).
+**Lexical body.** A post's body is the same rich text an editor uses on pages, with exactly
+the features the Markdown transformers cover (h2/h3, paragraphs, bold, italic, lists, links,
+blockquote, uploads; no tables), so the content engine's Markdown (3b) converts to the tree an
+editor would produce, and one server renderer (`modules/core/rich-text`) serves pages and
+posts. Every H2 gets the id `section-n` by position, computed from the tree at render time,
+so the table of contents and the anchors agree whoever wrote the post. **The CTA is placed by
+the template** after the second H2, as in Level 1; there is no CTA block to misplace.
+**Editorial rules on publish** (`fields/editorial.ts`): a publish is refused, with the
+reason, without a title (≤ 70), an excerpt (≤ 160), exactly three takeaways, a cover and at
+least two links to pages of this site; a competitor link, a Latin paragraph or an em dash
+become `warnings` an editor sees in the sidebar (never a refusal). `readingMinutes` and the
+warnings are computed on every save; `publishedAt` fills on the first publish;
+`contentUpdatedAt` is the "updated" date and only shows when later than the publish day.
+`origin` tells a hand-written post (`manual`) from the engine's (`ai`) and from one an
+editor changed since (`ai-edited`); the three Level 1 posts seed as `ai` because they were
+machine-written (ADR-018) and stay owed Dhia's read. **Static listings, no query string.**
+Reading `searchParams` would make `/blog` a dynamic route (Constitution II), so pagination is
+`/blog/page/[n]` and `/blog/category/[hub]/page/[n]` (page 1 is the base route; page 1's
+segment, page 0 and an out-of-range page are 404s), and the search is a client island over an
+index the page embeds (slug, title, excerpt, hub of the published posts), folded like the
+admin palette (`lib/arabic-fold.ts`); `q` is read from the URL on mount so a search can be
+linked, and no server query runs. `plugin-search` is not used (one collection, a few hundred
+posts at most, no other collection to search across); BRD §10.1 amended. Arabic
+normalisation stops at the fold (hamza forms, alef maqsura, diacritics). **Routes.**
+`/author/[slug]` joins the code-owned top-level segments; `/feed.xml` is RSS 2.0 with the
+latest 20 posts in full (`content:encoded` from `@payloadcms/richtext-lexical/html`, every
+link and image made absolute), announced on every page as `alternates.types`; the sitemap
+lists posts with `lastmod` = `contentUpdatedAt` or `publishedAt`, the hub pages and the
+authors, never a paginated page. A post's publish, unpublish, slug change or delete
+regenerates its page, the listings (index, paginated pages, hub pages, author page, feed,
+sitemap) and pings IndexNow for the pages. **Admin.** A "Blog" group with icons and hues;
+"Write a post" replaces "Upload a file" among the dashboard tiles (the library is one click
+away in the sidebar and every upload field); the rich-text editor uses the brand face
+(`--font-serif` pointed at it: Payload's Georgia had no Arabic). The nav preference is now
+written whole from one copy of the state on every change (Payload's merge path batches across
+writes and two quick changes could lose one). Robots disallows `/*?q=` instead of `/*?hub=`.

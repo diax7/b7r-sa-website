@@ -25,7 +25,7 @@ function position(label: string): number {
 }
 
 /** `{ groups: { [label]: { open } } }`, the shape Payload's own nav stores under `nav`. */
-export type NavPrefs = { groups?: Record<string, { open?: boolean }> } | null;
+export type NavPrefs = { open?: boolean; groups?: Record<string, { open?: boolean }> } | null;
 
 /**
  * The entities the signed-in user may open, grouped the way Payload groups them (by the

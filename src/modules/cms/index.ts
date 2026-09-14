@@ -7,11 +7,15 @@ import { lexicalEditor } from '@payloadcms/richtext-lexical';
 import { s3Storage } from '@payloadcms/storage-s3';
 import { en } from '@payloadcms/translations/languages/en';
 import { buildConfig } from 'payload';
+import { Authors } from '@/modules/cms/collections/authors';
+import { Categories } from '@/modules/cms/collections/categories';
 import { Faqs } from '@/modules/cms/collections/faqs';
 import { Integrations } from '@/modules/cms/collections/integrations';
 import { Media } from '@/modules/cms/collections/media';
 import { Pages } from '@/modules/cms/collections/pages';
+import { Posts } from '@/modules/cms/collections/posts';
 import { Products } from '@/modules/cms/collections/products';
+import { Tags } from '@/modules/cms/collections/tags';
 import { REDIRECT_OVERRIDES } from '@/modules/cms/collections/redirects';
 import { indexNowTask } from '@/modules/cms/jobs/indexnow';
 import { Testimonials } from '@/modules/cms/collections/testimonials';
@@ -94,7 +98,19 @@ export default buildConfig({
         }),
       }
     : {}),
-  collections: [Users, Media, Products, Pages, Faqs, Testimonials, Integrations],
+  collections: [
+    Users,
+    Media,
+    Products,
+    Pages,
+    Faqs,
+    Testimonials,
+    Integrations,
+    Posts,
+    Categories,
+    Authors,
+    Tags,
+  ],
   globals: [Home, SiteSettings, Navigation, SeoDefaults],
   db: postgresAdapter({
     pool: { connectionString: env.databaseUrl },

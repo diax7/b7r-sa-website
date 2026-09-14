@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
-import { blogHubs, blogPosts } from '@/content/blog';
+import { blogAuthor, blogHubs, blogPosts } from '@/content/seed/blog';
 import { faq, homeFaq } from '@/content/seed/faq';
 import { home } from '@/content/seed/home';
 import { integrations } from '@/content/seed/integrations';
@@ -8,6 +8,7 @@ import { navigation } from '@/content/seed/navigation';
 import { products } from '@/content/seed/products';
 import {
   BlogHubSchema,
+  BlogAuthorSchema,
   BlogPostSchema,
   FaqItemSchema,
   HomeSchema,
@@ -86,8 +87,9 @@ describe('content contract (BRD 8.4)', () => {
       expect(body && 'body' in body ? body.body.length : 0).toBeGreaterThan(500);
     }
   });
-  it('blog/index.ts', () => {
+  it('seed/blog.ts', () => {
     expectValid('blog#hubs', z.array(BlogHubSchema).length(6), blogHubs);
+    expectValid('blog#author', BlogAuthorSchema, blogAuthor);
     expectValid('blog#posts', z.array(BlogPostSchema).length(3), blogPosts);
     const hubSlugs = new Set(blogHubs.map((h) => h.slug));
     for (const p of blogPosts) expect(hubSlugs.has(p.hub)).toBe(true);

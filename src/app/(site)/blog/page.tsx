@@ -7,5 +7,5 @@ import { NewsletterForm } from '@/modules/forms';
 export const generateMetadata = (): Promise<Metadata> => buildMetadata('/blog');
 
 export default function BlogRoute() {
-  return <BlogIndex newsletter={<NewsletterForm tone="light" copy={newsletterCopy} />} />;
+  return <BlogIndex page={1} newsletter={<NewsletterForm tone="light" copy={newsletterCopy} />} />;
 }

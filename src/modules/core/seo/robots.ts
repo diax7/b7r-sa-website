@@ -14,7 +14,7 @@ export const ANSWER_ENGINE_BOTS = [
 /**
  * robots.txt (BRD 7.2). Any host other than the production origin gets `Disallow: /` so
  * previews never rank; production allows everything except the API, the future admin, the
- * hub filter query and UTM variants, and names the answer-engine bots explicitly.
+ * blog search query and UTM variants, and names the answer-engine bots explicitly.
  */
 export function robotsRules(isProductionSite: boolean, base: string): MetadataRoute.Robots {
   if (!isProductionSite) {
@@ -22,7 +22,7 @@ export function robotsRules(isProductionSite: boolean, base: string): MetadataRo
   }
   return {
     rules: [
-      { userAgent: '*', allow: '/', disallow: ['/api/', '/admin/', '/*?hub=', '/*&utm_'] },
+      { userAgent: '*', allow: '/', disallow: ['/api/', '/admin/', '/*?q=', '/*&utm_'] },
       ...ANSWER_ENGINE_BOTS.map((userAgent) => ({ userAgent, allow: '/' })),
     ],
     sitemap: `${base}/sitemap.xml`,

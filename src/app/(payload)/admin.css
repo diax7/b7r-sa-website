@@ -84,6 +84,9 @@
     --admin-ring: rgb(0 152 224 / 0.4);
     --admin-rail-width: 72px;
     --font-body: var(--font-sans);
+    /* The rich-text editor sets its content in `--font-serif` (Georgia on Arabic: a system
+       fallback). The brand face carries Arabic, so the editor shows what the site shows. */
+    --font-serif: var(--font-sans);
     --style-radius-s: var(--radius-inner);
     --style-radius-m: 8px;
     --style-radius-l: var(--radius-base);
@@ -133,6 +136,9 @@
   .rich-text-lexical .editor-shell {
     unicode-bidi: plaintext;
     text-align: start;
+  }
+  .rich-text-lexical .editor-container {
+    letter-spacing: 0;
   }
 
   /* Our shell renders without Tailwind's preflight, so Payload's element defaults (button

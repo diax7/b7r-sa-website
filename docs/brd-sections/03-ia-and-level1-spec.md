@@ -237,6 +237,8 @@ H1 + lead. Groups as H2s (Appendix D) each with an `Accordion`. A sticky in-page
 
 Level 3 replaces the data source with the CMS and adds hub routes; the templates stay.
 
+*Amended 2026-09-14 (ADR-041, as shipped): the index shows the newest post as a wide featured card, then the grid; the hub chips are links to the hub pages (no `?hub=` filter); the search is a client island over an embedded index; pagination is `/blog/page/{n}`. The post template adds a table of contents from the H2s (a side rail from 1024 px, a folded list under the takeaways below it), the "updated" date when `contentUpdatedAt` is later than the publish day, previous/next within the hub, and the author card links to `/author/{slug}`. The in-post CTA stays where the template puts it: after the second H2.*
+
 ### 6.12 Legal pages
 
 Single-column text pages (max-width 760 px), H1, updated line, then the Appendix B body rendered from Markdown with H2 numbering preserved. A sticky "on this page" list of H2s on desktop.

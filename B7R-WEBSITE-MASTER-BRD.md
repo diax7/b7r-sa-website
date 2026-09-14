@@ -849,6 +849,8 @@ H1 + lead. Groups as H2s (Appendix D) each with an `Accordion`. A sticky in-page
 
 Level 3 replaces the data source with the CMS and adds hub routes; the templates stay.
 
+*Amended 2026-09-14 (ADR-041, as shipped): the index shows the newest post as a wide featured card, then the grid; the hub chips are links to the hub pages (no `?hub=` filter); the search is a client island over an embedded index; pagination is `/blog/page/{n}`. The post template adds a table of contents from the H2s (a side rail from 1024 px, a folded list under the takeaways below it), the "updated" date when `contentUpdatedAt` is later than the publish day, previous/next within the hub, and the author card links to `/author/{slug}`. The in-post CTA stays where the template puts it: after the second H2.*
+
 ### 6.12 Legal pages
 
 Single-column text pages (max-width 760 px), H1, updated line, then the Appendix B body rendered from Markdown with H2 numbering preserved. A sticky "on this page" list of H2s on desktop.
@@ -1281,6 +1283,8 @@ Amended 2026-09-13 (Phase 2b, ADR-034): (1) proven by `e2e/admin.spec.ts` (a hom
 **Templates:** unchanged from Level 1 plus: table of contents from H2s (desktop side rail), estimated reading time, "updated" date when `updatedAt` > `publishedAt`, related posts by hub then tags, previous/next within the hub.
 
 **Editorial rules enforced in the CMS:** title ≤ 70 characters, excerpt ≤ 160, exactly three takeaways, at least two internal links (validated on publish), cover alt text required, no external links to competitors (soft warning), no Latin-script paragraphs (warning).
+
+*Amended 2026-09-14 (ADR-041, as shipped): the body is Lexical rich text (h2/h3, lists, links, blockquote, uploads; no tables); `readingMinutes` is computed on save; `updatedAt` is the field `contentUpdatedAt`, set by an editor or the freshness job; `origin` is `manual | ai | ai-edited`. Pagination is `/blog/page/{n}` and `/blog/category/{hub}/page/{n}` rather than `?page=`, and search is a client-side island over an embedded index rather than `plugin-search`, so every blog route prerenders (Constitution II). An em dash in the text is a third soft warning. `tags` are optional; related posts fall back to the hub, then recency.*
 
 ### 10.2 Automated content engine
 
@@ -1748,11 +1752,13 @@ Decision history: `docs/00-decisions-log.md` (rounds 1–4 with Dhia, 2026-09-12
 10. Review the agent-written aria/microcopy strings in `src/messages/ar.json` and the `TODO(copy)` strings in `src/content/pages.ts`: the two error-page strings and «تعذّر الاشتراك الآن، حاول لاحقاً.» (newsletter 429/5xx).
 8. Whether the video needs an intro title card or Arabic captions (none specified). Note: without a captions track the `<video>` element fails axe's `video-caption` rule (WCAG 1.2.2), so it mounts only after the visitor presses play until captions exist.
 11. Phase 1c `TODO(copy)` strings: the 410 page title «هذه الصفحة أُزيلت» (`src/content/pages.ts`), the blog «الكل» chip, «لا مقالات في هذا القسم بعد.» and «نُسخ الرابط» (`src/content/blog/index.ts`), and the new aria strings in `src/messages/ar.json` (gallery, breadcrumbs, FAQ group nav, on-this-page, share). The reading-time meta line inflects the noun by count (دقيقة قراءة · دقيقتا قراءة · {n} دقائق قراءة · {n} دقيقة قراءة); §4.13's template is the 3–10 form.
-12. The three sample blog posts (bodies in `src/content/blog/posts/*.md`, excerpts and takeaways in `src/content/blog/index.ts`) are agent-written under §4.1 with facts from §1.1 only and marked `sample: true` (ADR-018); review or replace before Level 3.
+12. The three sample blog posts (bodies in `src/content/seed/blog/*.md`, excerpts and takeaways in `src/content/seed/blog.ts`) are agent-written under §4.1 with facts from §1.1 only (ADR-018); since Level 3 they live in the CMS as published posts with `origin: ai` (ADR-041), each now carrying two internal links, and still await Dhia's read.
 13. About banner: §6.8 names `hanging-tshirt-mockup.jpg`, but that file carries the vendor's "Free t-shirt mockup" sample print, so the site uses `hanging-tshirt-mockup-2.jpg` (same subject, real design). Blog covers use `designer-at-desk-stock.jpg`, `hodie2.jpg` and `totebag1.jpg`. Swap when final photography exists.
 14. `NEXT_PUBLIC_TURNSTILE_SITE_KEY` is set to Cloudflare's public always-pass test key in `.env.local` and CI so the widget island renders in tests; production needs the real pair (§12.4 item 5).
 15. Product OG images use `og:type website` (see §7.3 amendment); confirm in WhatsApp/X previews at cutover (§12.4 item 8).
 16. Three sample testimonials (`src/content/testimonials.ts`) were written by the agent on Dhia's instruction (ADR-023) and stay `placeholder: true`; to show them on b7r.sa set `placeholder: false` (they are not real merchants' words, §3.14) or replace them with real entries (§12.4 item 1).
+
+18. Level 3 blog copy (2026-09-14, ADR-041, `TODO(copy)`): the six hub descriptions and leads and the author bio in `src/content/seed/blog.ts` (editable in the admin after the seed), the cover alt texts in `scripts/migrate-content.ts`, and the template strings in `src/content/blog/index.ts` («في هذا المقال», «حُدّث», «المقال السابق», «المقال التالي», «أحدث مقال», «أحدث المقالات», the search box and pagination labels, «كل ما كتبه {name}»).
 
 17. Design edits 2026-09-13 (`src/content/home.ts`, `TODO(copy)`): the designer's upload prompt «اضغط لرفع شعارك أو صورتك» and the remove control «إزالة التصميم» (ADR-036), and the product gallery's toggle name «اقلب الصورة» (`src/messages/ar.json`, ADR-035). These three also belong to the 2b `home` global seed. The designer now starts with an empty print area; the pre-placed sample of the earlier build is a one-line switch (`initialState.design`) if Dhia prefers it.
 
