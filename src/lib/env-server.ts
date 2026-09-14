@@ -107,8 +107,14 @@ export function missingProductionEnv(raw: RawEnv = process.env): string[] {
 export function assertProductionEnv(raw: RawEnv = process.env): void {
   if (!isProductionRuntime(raw)) return;
   const problems = missingProductionEnv(raw).map((name) => `${name} is required in production`);
-  // The transport overrides and the content engine's mock provider exist for tests only.
-  for (const name of ['NEWSLETTER_TRANSPORT', 'CONTACT_TRANSPORT', 'AI_CONTENT_MOCK']) {
+  // The transport overrides, the content engine's mock provider and the English-off switch
+  // exist for tests only.
+  for (const name of [
+    'NEWSLETTER_TRANSPORT',
+    'CONTACT_TRANSPORT',
+    'AI_CONTENT_MOCK',
+    'SITE_ENGLISH',
+  ]) {
     if (raw[name]) problems.push(`${name} must not be set in production`);
   }
   if (raw['NEXT_PUBLIC_SITE_URL'] && raw['NEXT_PUBLIC_SITE_URL'] !== 'https://b7r.sa') {

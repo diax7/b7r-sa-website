@@ -844,7 +844,8 @@ have English values (`localeEnabled('en')`), which the proxy checks through
 seeded before Level 5), the English root layout answers `notFound()` for the same state (so
 `next build`, which prerenders `/en`, succeeds on an Arabic-only production database and the
 English routes regenerate once the seed ran; a throw there would have failed every deploy
-until then), the Arabic header shows no switch and the 404 no English line while the site
+until then; CI builds once with `SITE_ENGLISH=off`, a test-only switch refused in production,
+to keep that proof), the Arabic header shows no switch and the 404 no English line while the site
 has one language (`siteLocales()`). The blog stays Arabic-only until 5b
 (`BLOG_ENGLISH_PENDING`: `/en/blog` 404, no pair on `/blog`). **SEO.**
 Canonical under the locale's prefix; `alternates.languages` `{ ar, en, x-default → ar }` and
