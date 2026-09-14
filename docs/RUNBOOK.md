@@ -357,8 +357,12 @@ ignore when 2.0.2 ships.
 The site is in English once `site-settings.brandName` and `navigation.ctaLabel` have English
 values; `pnpm content:migrate` writes every English value after the Arabic documents (on a
 database that already has content: `pnpm content:migrate --force`, which fills the missing
-language and overwrites nothing). Without them every `/en` URL is a 404 and the build fails
-with "The site is not in English yet".
+language and overwrites nothing). Until then every `/en` URL is a 404 (the bilingual
+document), the Arabic header shows no switch and the build logs "The site is not in English
+yet" for each English route it prerenders; the build itself succeeds. Order on a database
+seeded before Level 5: deploy the image, run `pnpm content:migrate --force` against
+production, then wait a minute (`revalidate`) or republish the site settings: `/en` answers
+and the switch appears on its own.
 
 Publishing a page in English: open the document, switch the locale to English in the panel's
 locale control, fill the title and the rest, save. The page is on `/en/<slug>` and carries

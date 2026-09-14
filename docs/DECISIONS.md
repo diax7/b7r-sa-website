@@ -840,17 +840,25 @@ stand-in and an Arabic-only page is absent from `/en` (404, no hreflang). A docu
 twins come from one read at `locale: 'all'` of its title field (`documentLocales`); the
 code-owned routes exist in English once `site-settings.brandName` and `navigation.ctaLabel`
 have English values (`localeEnabled('en')`), which the proxy checks through
-`/api/pages/slugs/en` (`enabled: false` answers 404 for every `/en` URL on a half-seeded
-database, and the English root layout throws rather than render empty labels). The blog stays
-Arabic-only until 5b (`BLOG_ENGLISH_PENDING`: `/en/blog` 404, no pair on `/blog`). **SEO.**
+`/api/pages/slugs/en` (`enabled: false` answers 404 for every `/en` URL on a database
+seeded before Level 5), the English root layout answers `notFound()` for the same state (so
+`next build`, which prerenders `/en`, succeeds on an Arabic-only production database and the
+English routes regenerate once the seed ran; a throw there would have failed every deploy
+until then), the Arabic header shows no switch and the 404 no English line while the site
+has one language (`siteLocales()`). The blog stays Arabic-only until 5b
+(`BLOG_ENGLISH_PENDING`: `/en/blog` 404, no pair on `/blog`). **SEO.**
 Canonical under the locale's prefix; `alternates.languages` `{ ar, en, x-default → ar }` and
 `og:locale:alternate` only when both twins exist; sitemap alternates from the same pairing;
 JSON-LD `inLanguage` per locale, `availableLanguage: ['ar', 'en']`; English titles use
 `| B7R Print`. The manifest stays Arabic (one manifest per origin, the default language).
 **The switch** is a link, not a redirect: the header (and the phone menu) links the twin in
-the other language by its own name, rendered as the other home on the server and upgraded to
-the twin from the page's own `<link rel="alternate" hreflang>` on mount, so a page without a
-twin sends the reader to the English home, never to a 404. No browser-language detection
+the other language by its own name, rendered on the server as the current path under the
+other locale (right for every page with a twin, before hydration and without JavaScript) and
+downgraded on mount to that language's home when the page emits no `<link rel="alternate"
+hreflang>` for it, so a page without a twin never sends the reader to a 404. An unknown
+`/en/*` URL answers the bilingual 404 document under `Content-Language: en` (the header
+route matches the request path; the document is the one static 404). No browser-language
+detection
 (BRD §5.1; a Saudi reader on an English phone must land on Arabic). **The seed** writes the
 English values of every localised field (`scripts/migrate-content-en.ts`, `ensureEnglish`)
 after the Arabic documents exist, idempotent per document; `content:migrate --force` fills a
@@ -865,6 +873,8 @@ so it never covers the photo's subject; the pinned steps dim inactive items by c
 opacity, so they meet AA; `--color-success` darkens to `#15803D` (the profit line was 3.1:1
 on `ground`; §3.2 amended) and the navy footer's newsletter messages read in white. The
 Arabic site is byte-for-byte unchanged in body HTML for the five audited pages
-(`scripts/dev/golden.mjs diff`, one class added to the hero). **Owed Dhia's read**: the
-English bank (Appendix H), the English CMS content and the English legal drafts, which the
-agent wrote.
+(`scripts/dev/golden.mjs diff`, one class added to the hero). **Known state**: the English
+pages share the Arabic-rendered Open Graph images (`public/og/**`, whose text is Arabic);
+English renders (`pnpm og --locale en`, `public/og/en/`) are the first task of 5b. **Owed
+Dhia's read**: the English bank (Appendix H), the English CMS content and the English legal
+drafts, which the agent wrote.

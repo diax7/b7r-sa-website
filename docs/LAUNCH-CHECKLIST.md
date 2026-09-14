@@ -47,6 +47,7 @@ b7r.sa to go live.
 | 23 | CranL pulls `ghcr.io/diax7/b7r-sa-website:latest` (package visibility or a pull token); health check on `/api/health` | Dhia | open | `deploy.yml` pushes on every merge to `main` once the secrets exist |
 | 24 | An editor account created for the second person; the editor seat verified (no users, no settings, no delete of published) | Dhia | open | `e2e/admin.spec.ts` proves the matrix in CI |
 | 25 | Backup restore rehearsed once from a CranL snapshot into a scratch database | Dhia | open | BRD 9.8 (6); CI rehearses a restore of the seeded database every run (`scripts/ci/restore-check.sh`) and the weekly `Backup` workflow needs the `BACKUP_S3_*` secrets (ADR-034) |
+| 26 | English content seeded: `pnpm content:migrate --force` against production once the Level 5 image is live; then `/en` answers 200 and the header shows the switch | Dhia | open | ADR-043, RUNBOOK "The English site"; until then `/en` is a 404 and the Arabic site shows no switch |
 
 ## Also needed before any of the above
 

@@ -1,8 +1,10 @@
 import type { Metadata, Viewport } from 'next';
+import { notFound } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { SiteDocument } from '@/app/site-document';
 import { getNavigation, getSiteSettings } from '@/lib/cms';
 import { localeEnabled } from '@/lib/cms/settings';
+import { LOCALES } from '@/lib/i18n';
 import { BRAND_PRIMARY_HEX } from '@/lib/tokens';
 import { DraftBar } from '@/modules/core/draft-bar';
 import { rootMetadata } from '@/modules/core/seo/metadata';
@@ -22,17 +24,26 @@ export const viewport: Viewport = {
 
 /**
  * Root layout of every English page (ADR-043): a second root layout, so `/en/*` is a real
- * `lang="en" dir="ltr"` document on the same shell. The proxy answers 404 for every `/en`
- * URL while the site is not in English; this guard is the last line for a build that ran
- * against a half-seeded database (a clear error, never a shell with empty labels).
+ * `lang="en" dir="ltr"` document on the same shell. While the site is not in English (a
+ * database seeded before Level 5) every English route is a 404: the proxy answers it for
+ * requests, and this guard answers it for the build, which prerenders `/en` and would
+ * otherwise fail on an Arabic-only production database until the English seed ran. The
+ * routes regenerate once the English settings and navigation exist (`revalidate`).
  */
 export default async function EnglishLayout({ children }: { children: ReactNode }) {
   if (!(await localeEnabled('en'))) {
-    throw new Error('The site is not in English yet: seed the English settings and navigation');
+    console.error('The site is not in English yet: /en answers 404 until the English seed runs');
+    notFound();
   }
   const [site, navigation] = await Promise.all([getSiteSettings('en'), getNavigation('en')]);
   return (
-    <SiteDocument locale="en" site={site} navigation={navigation} banner={<DraftBar locale="en" />}>
+    <SiteDocument
+      locale="en"
+      locales={LOCALES}
+      site={site}
+      navigation={navigation}
+      banner={<DraftBar locale="en" />}
+    >
       {children}
     </SiteDocument>
   );

@@ -10,7 +10,7 @@ import type { ShellCopy } from '@/content/copy';
 import type { Navigation, SiteSettings } from '@/content/schema';
 import { cn } from '@/lib/cn';
 import { env } from '@/lib/env';
-import { type Locale, localePath } from '@/lib/i18n';
+import { type Locale, localePath, otherLocale } from '@/lib/i18n';
 import { isActive } from '@/lib/nav';
 import { loginUrl, registerUrl } from '@/lib/utm';
 import { LanguageSwitch } from '@/modules/core/header/language-switch';
@@ -25,11 +25,14 @@ export interface ShellData {
   navigation: Navigation;
   site: SiteSettings;
   locale: Locale;
+  /** The locales the site is in; the switch renders only when the other one is among them. */
+  locales: readonly Locale[];
   copy: ShellCopy;
 }
 
-export function Header({ navigation, site, locale, copy }: ShellData) {
+export function Header({ navigation, site, locale, locales, copy }: ShellData) {
   const pathname = usePathname();
+  const switchable = locales.includes(otherLocale(locale));
   const [scrolled, setScrolled] = useState(false);
   const sentinel = useRef<HTMLDivElement>(null);
 
@@ -106,7 +109,9 @@ export function Header({ navigation, site, locale, copy }: ShellData) {
             </nav>
 
             <div className="hidden items-center gap-6 lg:flex">
-              <LanguageSwitch locale={locale} ariaLabel={copy.a11y.switchLanguage} />
+              {switchable && (
+                <LanguageSwitch locale={locale} ariaLabel={copy.a11y.switchLanguage} />
+              )}
               <a
                 href={loginUrl(env.appUrl)}
                 className="text-body font-medium text-text transition-colors duration-(--duration-fast) hover:text-primary"
@@ -129,6 +134,7 @@ export function Header({ navigation, site, locale, copy }: ShellData) {
               navigation={navigation}
               site={site}
               locale={locale}
+              switchable={switchable}
               copy={copy}
             />
           </Container>

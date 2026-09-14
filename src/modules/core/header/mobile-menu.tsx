@@ -32,6 +32,7 @@ export function MobileMenu({
   navigation,
   site,
   locale,
+  switchable,
   copy,
   autoOpen = false,
 }: {
@@ -39,6 +40,8 @@ export function MobileMenu({
   navigation: Navigation;
   site: SiteSettings;
   locale: Locale;
+  /** Whether the site exists in the other language (the header decides). */
+  switchable: boolean;
   copy: ShellCopy;
   autoOpen?: boolean;
 }) {
@@ -114,11 +117,13 @@ export function MobileMenu({
           <Button asChild variant="secondary" size="lg" fullWidth>
             <a href={loginUrl(env.appUrl)}>{navigation.loginLabel}</a>
           </Button>
-          <LanguageSwitch
-            locale={locale}
-            ariaLabel={copy.a11y.switchLanguage}
-            className="self-start px-0 py-2 text-body"
-          />
+          {switchable && (
+            <LanguageSwitch
+              locale={locale}
+              ariaLabel={copy.a11y.switchLanguage}
+              className="self-start px-0 py-2 text-body"
+            />
+          )}
           <a
             href={whatsappUrl(site.contact.whatsapp)}
             target="_blank"

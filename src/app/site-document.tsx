@@ -19,6 +19,8 @@ const FONT_WEIGHTS = ['Regular', 'Medium', 'Bold'] as const;
 
 interface SiteDocumentProps {
   locale: Locale;
+  /** The locales the site is in (`siteLocales()`); the header's switch needs the other one. */
+  locales: readonly Locale[];
   /** Rendered above the header (the draft-mode bar, ADR-039). */
   banner?: ReactNode;
   site: SiteSettings;
@@ -32,7 +34,14 @@ interface SiteDocumentProps {
  * analytics scripts. Shared by the two site root layouts and the global 404, which Next
  * renders outside any layout (ADR-024).
  */
-export function SiteDocument({ locale, site, navigation, banner, children }: SiteDocumentProps) {
+export function SiteDocument({
+  locale,
+  locales,
+  site,
+  navigation,
+  banner,
+  children,
+}: SiteDocumentProps) {
   const copy = copyFor(locale);
   const shell = shellCopy(locale);
   // Browsers fetch a weight as soon as any text in the document uses it, so the three weights
@@ -64,7 +73,13 @@ export function SiteDocument({ locale, site, navigation, banner, children }: Sit
         </span>
         <SkipLink label={navigation.skipLinkLabel} />
         {banner}
-        <Header navigation={navigation} site={site} locale={locale} copy={shell} />
+        <Header
+          navigation={navigation}
+          site={site}
+          locale={locale}
+          locales={locales}
+          copy={shell}
+        />
         <main id="content" className="relative">
           {children}
         </main>

@@ -1,5 +1,11 @@
 import { type MigrateDownArgs, type MigrateUpArgs, sql } from '@payloadcms/db-postgres';
 
+// Localises `products.sizes.label` and `products.sizesSummary` (ADR-043): the new locale
+// tables and columns, the Arabic values carried into them, then the old columns dropped in
+// place. Pre-launch only: nothing is deployed, so the additive rule (ADR-025, RUNBOOK) has
+// no running image to protect. After launch a moved field is a two-release contract: add
+// and copy first, drop the old column in the next release.
+
 export async function up({ db }: MigrateUpArgs): Promise<void> {
   await db.execute(sql`
    CREATE TABLE "products_sizes_locales" (

@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { SiteDocument } from '@/app/site-document';
 import { copyFor } from '@/content/copy';
 import { getNavigation, getSiteSettings } from '@/lib/cms';
+import { siteLocales } from '@/lib/cms/locales';
 import { BRAND_PRIMARY_HEX } from '@/lib/tokens';
 import { StatusPage } from '@/modules/core';
 import { rootMetadata } from '@/modules/core/seo/metadata';
@@ -27,29 +28,35 @@ export const viewport: Viewport = {
  * BRD 4.15 / 6.13, ADR-043. With two root layouts (site and admin) Next cannot compose a 404
  * from a layout, so this file renders the whole document itself (ADR-024), and it cannot
  * vary by URL, so an unknown `/en/*` lands here too: the Arabic document, then one English
- * line with a link to `/en`. HTTP 404, no ribbon.
+ * line with a link to `/en` (once the site is in English). HTTP 404, no ribbon.
  */
 export default async function GlobalNotFound() {
-  const [site, navigation] = await Promise.all([getSiteSettings('ar'), getNavigation('ar')]);
+  const [site, navigation, locales] = await Promise.all([
+    getSiteSettings('ar'),
+    getNavigation('ar'),
+    siteLocales(),
+  ]);
   return (
-    <SiteDocument locale="ar" site={site} navigation={navigation}>
+    <SiteDocument locale="ar" locales={locales} site={site} navigation={navigation}>
       <StatusPage
         title={ar.notFoundPage.title}
         text={ar.notFoundPage.text}
         button={ar.notFoundPage.button}
         home="/"
       />
-      <p
-        lang="en"
-        dir="ltr"
-        className="pb-16 text-center text-small text-text-muted"
-        data-not-found-en=""
-      >
-        {en.notFoundPage.title}. {en.notFoundPage.text}{' '}
-        <Link href="/en" hrefLang="en" className="font-medium text-primary hover:underline">
-          {en.notFoundPage.button}
-        </Link>
-      </p>
+      {locales.includes('en') && (
+        <p
+          lang="en"
+          dir="ltr"
+          className="pb-16 text-center text-small text-text-muted"
+          data-not-found-en=""
+        >
+          {en.notFoundPage.title}. {en.notFoundPage.text}{' '}
+          <Link href="/en" hrefLang="en" className="font-medium text-primary hover:underline">
+            {en.notFoundPage.button}
+          </Link>
+        </p>
+      )}
     </SiteDocument>
   );
 }

@@ -32,12 +32,14 @@ export function MobileMenuTrigger({
   navigation,
   site,
   locale,
+  switchable,
   copy,
 }: {
   pathname: string;
   navigation: Navigation;
   site: SiteSettings;
   locale: Locale;
+  switchable: boolean;
   copy: ShellCopy;
 }) {
   const [wanted, setWanted] = useState(false);
@@ -49,6 +51,7 @@ export function MobileMenuTrigger({
         navigation={navigation}
         site={site}
         locale={locale}
+        switchable={switchable}
         copy={copy}
         autoOpen
       />
