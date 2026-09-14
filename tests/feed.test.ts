@@ -28,6 +28,15 @@ describe('RSS feed (BRD 10.1, ADR-041)', () => {
     expect(xml).toContain(`<atom:link href="${BASE}/feed.xml" rel="self"`);
   });
 
+  it('an English channel links the English blog, feed and posts (ADR-043)', () => {
+    const xml = buildFeed({ ...channel, locale: 'en', language: 'en' }, [item]);
+    expect(xml).toContain(`<link>${BASE}/en/blog</link>`);
+    expect(xml).toContain(`<atom:link href="${BASE}/en/feed.xml" rel="self"`);
+    expect(xml).toContain(`<link>${BASE}/en/blog/first</link>`);
+    expect(xml).toContain(`<guid isPermaLink="true">${BASE}/en/blog/first</guid>`);
+    expect(xml).toContain('<language>en</language>');
+  });
+
   it('carries the cover as an enclosure with its real size, or no enclosure at all', () => {
     const withCover = buildFeed(channel, [item]);
     expect(withCover).toContain(

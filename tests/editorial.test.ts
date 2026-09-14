@@ -85,10 +85,27 @@ describe('editorial warnings: what an editor should look at', () => {
     ]);
   });
 
-  it('reads the body for the meta line', () => {
+  it('mirrors the script rule for an English body: Arabic prose is the warning there (ADR-043)', () => {
+    const english = {
+      ...good,
+      body: body(
+        p(text('An English paragraph with a link to '), a('/en/faq', 'the FAQ'), text('.')),
+        p(text('هذه فقرة كاملة مكتوبة بالعربية داخل مقال إنجليزي.')),
+        p(a('/en/products', 'Products')),
+      ),
+    };
+    expect(editorialWarnings(english, 'en')).toEqual(['1 paragraph in Arabic script']);
+    // The same body judged as Arabic flags the English paragraph instead.
+    expect(editorialWarnings(english, 'ar')).toEqual(['1 paragraph in Latin script']);
+  });
+
+  it("reads the body for the meta line at each language's pace", () => {
     expect(bodyReadingMinutes(good.body)).toBe(1);
     expect(bodyReadingMinutes(undefined)).toBe(1);
     const long = body(p(text(Array.from({ length: 400 }, () => 'كلمة').join(' '))));
     expect(bodyReadingMinutes(long)).toBe(3);
+    const english = body(p(text(Array.from({ length: 400 }, () => 'word').join(' '))));
+    expect(bodyReadingMinutes(english, 'en')).toBe(2);
+    expect(bodyReadingMinutes(english, 'ar')).toBe(3);
   });
 });

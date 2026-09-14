@@ -3,6 +3,7 @@
  * text field). No Lexical runtime: the tree is walked as data, so the blog templates, the
  * editorial rules and the content engine share one reading of a post's body.
  */
+import { type Locale, localePath } from '@/lib/i18n';
 
 export interface LexicalNode {
   type: string;
@@ -140,23 +141,28 @@ export function linkTargets(state: LexicalState | null | undefined): LinkTarget[
   return out;
 }
 
-/** The site path of a document a link points at, when the relationship is populated. */
+/**
+ * The site path of a document a link points at, when the relationship is populated, under
+ * the locale's prefix (ADR-043): an English body links the English twin.
+ */
 export function docHref(
   doc: { relationTo?: string; value?: unknown } | null | undefined,
+  locale: Locale = 'ar',
 ): string | null {
   if (!doc || typeof doc.value !== 'object' || doc.value === null) return null;
   const slug = (doc.value as { slug?: unknown })['slug'];
   if (typeof slug !== 'string') return null;
-  if (doc.relationTo === 'pages') return `/${slug}`;
-  if (doc.relationTo === 'products') return `/products/${slug}`;
-  if (doc.relationTo === 'posts') return `/blog/${slug}`;
+  if (doc.relationTo === 'pages') return localePath(locale, `/${slug}`);
+  if (doc.relationTo === 'products') return localePath(locale, `/products/${slug}`);
+  if (doc.relationTo === 'posts') return localePath(locale, `/blog/${slug}`);
   return null;
 }
 
 const ARABIC_LETTER = /[\u0600-\u06FF]/g;
 const LATIN_LETTER = /[A-Za-z]/g;
 const LATIN_WORD = /[A-Za-z]{2,}/g;
-const LATIN_PROSE_WORDS = 4;
+const ARABIC_WORD = /[\u0600-\u06FF]{2,}/g;
+const PROSE_WORDS = 4;
 
 /**
  * Paragraphs written in Latin script (BRD 10.1, a soft rule): four Latin words or more and
@@ -171,6 +177,18 @@ export function latinParagraphs(state: LexicalState | null | undefined): string[
       const words = line.match(LATIN_WORD)?.length ?? 0;
       const latin = line.match(LATIN_LETTER)?.length ?? 0;
       const arabic = line.match(ARABIC_LETTER)?.length ?? 0;
-      return words >= LATIN_PROSE_WORDS && latin > arabic;
+      return words >= PROSE_WORDS && latin > arabic;
+    });
+}
+
+/** The mirror for an English body (ADR-043): paragraphs written in Arabic script. */
+export function arabicParagraphs(state: LexicalState | null | undefined): string[] {
+  return plainText(state)
+    .split('\n')
+    .filter((line) => {
+      const words = line.match(ARABIC_WORD)?.length ?? 0;
+      const latin = line.match(LATIN_LETTER)?.length ?? 0;
+      const arabic = line.match(ARABIC_LETTER)?.length ?? 0;
+      return words >= PROSE_WORDS && arabic > latin;
     });
 }

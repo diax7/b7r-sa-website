@@ -6,6 +6,7 @@ import { Refused } from '@/modules/cms/refused';
 import { PAGE_BLOCKS } from '@/modules/cms/blocks';
 import { isDraftSave, revalidatePages } from '@/modules/cms/hooks/revalidate';
 import { savedByField, stampSavedBy } from '@/modules/cms/fields/saved-by';
+import { localePath, requestLocale } from '@/lib/i18n';
 import { previewUrl } from '@/lib/preview-token';
 
 /** Slugs a page may never take: every code-owned segment except the seven designed pages. */
@@ -38,9 +39,13 @@ export const Pages: CollectionConfig = {
   admin: {
     useAsTitle: 'title',
     // «معاينة»: a signed link that turns on draft mode and lands on the page (ADR-039).
-    preview: (doc, { req }) =>
+    preview: (doc, { req, locale }) =>
       typeof doc['slug'] === 'string' && doc['slug']
-        ? previewUrl(req.payload.config.serverURL, `/${doc['slug']}`, req.payload.secret)
+        ? previewUrl(
+            req.payload.config.serverURL,
+            localePath(requestLocale(locale), `/${doc['slug']}`),
+            req.payload.secret,
+          )
         : null,
     defaultColumns: ['title', 'slug', 'updatedAt', '_status'],
     listSearchableFields: ['title', 'slug'],

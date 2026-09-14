@@ -22,6 +22,7 @@ function routeFolders(...group: string[]): string[] {
 }
 const siteFolders = () => routeFolders('(site)');
 const englishFolders = () => routeFolders('(en)', 'en');
+const pageFolders = (folders: string[]) => folders.filter((f) => !f.includes('.')).toSorted();
 
 describe('B0: the proxy and the (site) routes agree on the code-owned segments (ADR-032)', () => {
   it('every (site) folder is in CODE_TOP_LEVEL, and the matcher literal is built from it', () => {
@@ -30,10 +31,10 @@ describe('B0: the proxy and the (site) routes agree on the code-owned segments (
     expect(proxyConfig.matcher).toEqual(expect.arrayContaining(['/en', '/en/:path*']));
   });
 
-  it('the English root layout owns a subset of the Arabic folders (the blog waits for 5b)', () => {
-    const arabic = siteFolders();
-    for (const folder of englishFolders()) expect(arabic, folder).toContain(folder);
-    expect(englishFolders()).not.toContain('blog');
+  it('the English root layout mirrors every Arabic route folder (ADR-043)', () => {
+    // The Arabic feed lives outside the group (`app/feed.xml`); the English one under `/en`.
+    expect(pageFolders(englishFolders())).toEqual(pageFolders(siteFolders()));
+    expect(englishFolders()).toContain('feed.xml');
   });
 
   it('classifies paths in both locales (ADR-043)', () => {

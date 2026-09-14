@@ -1,4 +1,5 @@
 import { revalidatePath } from 'next/cache';
+import { localePath } from '@/lib/i18n';
 import { queueIndexNow } from '@/modules/cms/jobs/indexnow';
 import type {
   CollectionAfterChangeHook,
@@ -17,15 +18,28 @@ import type {
  * way, or product pages must go back to the timer only.
  */
 
+/** Routes that exist once for both languages: the sitemap, the manifest, the API. */
+const SINGLE = new Set(['/sitemap.xml', '/manifest.webmanifest']);
+
+/**
+ * Every page path with its English twin after it (ADR-043): the two documents render from
+ * the same content, so a publish regenerates both and IndexNow hears about both.
+ */
+export function withEnglish(paths: readonly string[]): string[] {
+  return paths.flatMap((path) =>
+    SINGLE.has(path) || path.startsWith('/api/') ? [path] : [path, localePath('en', path)],
+  );
+}
+
 /** Routes that render the products: home strip and designer, the listing, the sitemap. */
-export const PATHS_FOR_PRODUCTS = ['/', '/products', '/sitemap.xml'];
+export const PATHS_FOR_PRODUCTS = withEnglish(['/', '/products', '/sitemap.xml']);
 
 /**
  * Every static route of the site: the globals feed the shell (header, footer, meta, the CTA
  * ribbon) of all of them, so any global change regenerates all at once; product pages
  * follow the timer.
  */
-export const STATIC_ROUTES = [
+export const STATIC_ROUTES = withEnglish([
   '/',
   '/products',
   '/how-it-works',
@@ -38,14 +52,14 @@ export const STATIC_ROUTES = [
   '/privacy',
   '/sitemap.xml',
   '/manifest.webmanifest',
-];
+]);
 
 /** Routes that list the FAQ entries: the home accordion, the FAQ page, the mini FAQ. */
-export const PATHS_FOR_FAQS = ['/', '/faq', '/how-it-works'];
+export const PATHS_FOR_FAQS = withEnglish(['/', '/faq', '/how-it-works']);
 
 /** The product's own page plus the routes that list it. */
 export function pathsForProduct(slug: string): string[] {
-  return [`/products/${slug}`, ...PATHS_FOR_PRODUCTS];
+  return [...withEnglish([`/products/${slug}`]), ...PATHS_FOR_PRODUCTS];
 }
 
 /** Skips revalidation for the migration script (`context.disableRevalidate`) and during build. */
@@ -146,10 +160,12 @@ export const revalidateProducts: CollectionAfterChangeHook & CollectionAfterDele
 
 /** The proxy's allowlist of top-level slugs (B0, ADR-032): published pages and redirect sources. */
 export const SLUGS_ENDPOINT = '/api/pages/slugs';
+/** The same list for the English document (ADR-043). */
+export const EN_SLUGS_ENDPOINT = '/api/pages/slugs/en';
 
-/** A page's own route plus the sitemap and the proxy allowlist. */
+/** A page's own route in both languages plus the sitemap and the proxy allowlists. */
 export function pathsForPage(slug: string): string[] {
-  return [`/${slug}`, '/sitemap.xml', SLUGS_ENDPOINT];
+  return [...withEnglish([`/${slug}`]), '/sitemap.xml', SLUGS_ENDPOINT, EN_SLUGS_ENDPOINT];
 }
 
 /**
@@ -192,15 +208,15 @@ export const revalidateRedirects: CollectionAfterChangeHook & CollectionAfterDel
 };
 
 /** The blog's listing routes: the index, every paginated page, every hub page, the feed. */
-export const BLOG_LISTINGS = ['/blog', '/feed.xml', '/sitemap.xml'] as const;
+export const BLOG_LISTINGS = withEnglish(['/blog', '/feed.xml', '/sitemap.xml']);
 
 /** Dynamic listing routes revalidated as a whole (`revalidatePath(route, 'page')`). */
-export const BLOG_LISTING_PATTERNS = [
+export const BLOG_LISTING_PATTERNS = withEnglish([
   '/blog/page/[n]',
   '/blog/category/[hub]',
   '/blog/category/[hub]/page/[n]',
   '/author/[slug]',
-] as const;
+]);
 
 interface PostRef {
   slug?: unknown;
@@ -235,7 +251,7 @@ export async function pathsForPost(req: PayloadRequest, post: PostRef): Promise<
   if (hub) paths.add(`/blog/category/${hub}`);
   const author = await relatedSlug(req, 'authors', post.author);
   if (author) paths.add(`/author/${author}`);
-  return [...paths];
+  return withEnglish([...paths]);
 }
 
 /**

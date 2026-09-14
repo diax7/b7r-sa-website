@@ -2,6 +2,7 @@ import type { CollectionConfig } from 'payload';
 import { canDeleteVersioned, isEditorOrAdmin, publishedOrStaff } from '@/modules/cms/access';
 import { revalidateProducts } from '@/modules/cms/hooks/revalidate';
 import { savedByField, stampSavedBy } from '@/modules/cms/fields/saved-by';
+import { localePath, requestLocale } from '@/lib/i18n';
 import { previewUrl } from '@/lib/preview-token';
 
 const PRICE_HELP = {
@@ -18,9 +19,13 @@ export const Products: CollectionConfig = {
   labels: { singular: { ar: 'منتج', en: 'Product' }, plural: { ar: 'المنتجات', en: 'Products' } },
   admin: {
     useAsTitle: 'name',
-    preview: (doc, { req }) =>
+    preview: (doc, { req, locale }) =>
       typeof doc['slug'] === 'string' && doc['slug']
-        ? previewUrl(req.payload.config.serverURL, `/products/${doc['slug']}`, req.payload.secret)
+        ? previewUrl(
+            req.payload.config.serverURL,
+            localePath(requestLocale(locale), `/products/${doc['slug']}`),
+            req.payload.secret,
+          )
         : null,
     defaultColumns: ['name', 'slug', 'baseCost', 'suggestedPrice', 'sortOrder', '_status'],
     listSearchableFields: ['name', 'slug'],

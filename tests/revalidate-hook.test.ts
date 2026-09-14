@@ -63,7 +63,9 @@ describe('publish hooks (BRD 9.6, ADR-030): the affected routes regenerate at on
     changed({ slug: 'hoodie', _status: 'published' });
     expect(paths()).toEqual(pathsForProduct('hoodie').toSorted());
     expect(paths()).toContain('/products/hoodie');
-    expect(PATHS_FOR_PRODUCTS).toEqual(['/', '/products', '/sitemap.xml']);
+    // Both documents regenerate (ADR-043); the sitemap serves both.
+    expect(PATHS_FOR_PRODUCTS).toEqual(['/', '/en', '/products', '/en/products', '/sitemap.xml']);
+    expect(paths()).toContain('/en/products/hoodie');
   });
 
   it('a draft autosave changes nothing on the site', () => {
@@ -81,7 +83,8 @@ describe('publish hooks (BRD 9.6, ADR-030): the affected routes regenerate at on
     changed({ slug: 'hoodie-2', _status: 'published' }, { slug: 'hoodie', _status: 'published' });
     expect(paths()).toContain('/products/hoodie');
     expect(paths()).toContain('/products/hoodie-2');
-    expect(revalidatePath).toHaveBeenCalledTimes(5);
+    expect(paths()).toContain('/en/products/hoodie-2');
+    expect(revalidatePath).toHaveBeenCalledTimes(9);
   });
 
   it('a delete always regenerates, the page included so it turns 404', () => {
@@ -193,7 +196,7 @@ describe('IndexNow gating (ADR-033): a publish pings, a draft save never does', 
     expect(queue).toHaveBeenCalledTimes(1);
     expect(
       (queue.mock.calls[0] as unknown as [{ input: { urls: string[] } }])[0].input.urls,
-    ).toEqual(['https://b7r.sa/creators']);
+    ).toEqual(['https://b7r.sa/creators', 'https://b7r.sa/en/creators']);
     // An unpublish (no draft flag) still tells the engines to recrawl.
     await hook({
       doc: { ...published, _status: 'draft' },

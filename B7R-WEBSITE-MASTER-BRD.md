@@ -845,6 +845,8 @@ H1 + lead. Groups as H2s (Appendix D) each with an `Accordion`. A sticky in-page
 
 ### 6.11 Blog `/blog` and `/blog/{slug}` (placeholder in Level 1)
 
+*Since Level 5b (ADR-043) the same templates render the English blog under `/en/blog` from the documents' English values; see §10.1.*
+
 **Index:** H1 + lead; a row of hub `Chip`s (6, filter only, `?hub=` query, no separate pages yet); a grid of post cards (cover 16:9, hub chip, title, excerpt, meta). Three sample posts from `content/blog/*.ts` marked `sample: true`; their body is short (200–300 words each, written in Arabic by the agent following §4.1, on the three §4.13 topics, factual, no claims beyond §1.1). Newsletter block at the end (same component as the footer).
 
 **Post template:** breadcrumbs; H1; meta line; cover; "أهم النقاط" box (3 bullets); body with H2 questions, short paragraphs, lists; the in-post CTA block after the second H2; related posts (2); share buttons (WhatsApp, X, copy link); author card (ضياء, one line: مؤسس بحر برنت). JSON-LD `BlogPosting` (§7.4). Content max-width 760 px.
@@ -1287,6 +1289,8 @@ Amended 2026-09-13 (Phase 2b, ADR-034): (1) proven by `e2e/admin.spec.ts` (a hom
 **Editorial rules enforced in the CMS:** title ≤ 70 characters, excerpt ≤ 160, exactly three takeaways, at least two internal links (validated on publish), cover alt text required, no external links to competitors (soft warning), no Latin-script paragraphs (warning).
 
 *Amended 2026-09-14 (ADR-041, as shipped): the body is Lexical rich text (h2/h3, lists, links, blockquote, uploads; no tables); `readingMinutes` is computed on save; `updatedAt` is the field `contentUpdatedAt`, set by an editor or the freshness job; `origin` is `manual | ai | ai-edited`. Pagination is `/blog/page/{n}` and `/blog/category/{hub}/page/{n}` rather than `?page=`, and search is a client-side island over an embedded index rather than `plugin-search`, so every blog route prerenders (Constitution II). An em dash in the text is a third soft warning. `tags` are optional; related posts fall back to the hub, then recency.*
+
+*Amended 2026-09-14 (Level 5b, ADR-043): the blog exists in English under `/en/blog`, `/en/blog/category/{hub}`, `/en/author/{slug}` and `/en/feed.xml` from the same documents; a post, hub or author with an English value is on the English site, one without is not. Editorial rules apply per language: the "Latin-script paragraphs" warning on the Arabic version, an "Arabic-script paragraphs" warning on the English one; reading time at 150 words a minute for Arabic and 200 for English; `readingMinutes` and `warnings` per language. The engine (§10.2) writes Arabic until 5c.*
 
 ### 10.2 Automated content engine
 

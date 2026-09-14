@@ -5,22 +5,31 @@
  *   public/og/default.png            white, colour logo, tagline, the five product photos
  *   public/og/products/{slug}.png    product photo, name, «يبدأ من {price}» with the riyal symbol
  *
- * Idempotent; run with `pnpm og` after a product or tagline change. PNGs are committed.
- * Reads the CMS when `DATABASE_URL` is set (the live catalogue), else the seed fixtures.
+ * The English set (ADR-043) renders the same templates left-to-right from the English
+ * values into `public/og/en/` with `pnpm og --locale en`. Idempotent; run with `pnpm og`
+ * after a product or tagline change. PNGs are committed. Reads the CMS when `DATABASE_URL`
+ * is set (the live catalogue), else the seed fixtures.
  */
 import { mkdirSync, readFileSync } from 'node:fs';
 import { extname, join } from 'node:path';
 import nextEnv from '@next/env';
 import { chromium } from '@playwright/test';
 import sharp from 'sharp';
-import { ar } from '../src/content/copy/ar';
+import { copyFor } from '../src/content/copy';
 import type { Product } from '../src/content/schema';
+import { COLOR_NAMES_EN, productsEn } from '../src/content/seed/en/products';
+import { siteEn } from '../src/content/seed/en/site';
 import { products as seedProducts } from '../src/content/seed/products';
 import { site as seedSite } from '../src/content/seed/site';
+import { htmlDir, isLocale, languageTag, type Locale } from '../src/lib/i18n';
 import { stripColorFor } from '../src/lib/product-helpers';
 import { TOKEN_HEX } from '../src/lib/tokens';
 
 nextEnv.loadEnvConfig(process.cwd());
+
+const localeArg = process.argv[process.argv.indexOf('--locale') + 1];
+const locale: Locale = process.argv.includes('--locale') && isLocale(localeArg) ? localeArg : 'ar';
+const copy = copyFor(locale);
 
 const root = process.cwd();
 const pub = (...p: string[]) => join(root, 'public', ...p);
@@ -50,7 +59,7 @@ const sar = (size: number) =>
   `<svg viewBox="0 0 1124.14 1256.39" width="${size}" height="${size * 1.12}" fill="currentColor" aria-hidden="true"><path d="${SAR_PATHS}" /></svg>`;
 
 function shell(body: string): string {
-  return `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><style>
+  return `<!doctype html><html lang="${languageTag(locale)}" dir="${htmlDir(locale)}"><head><meta charset="utf-8"><style>
 @font-face{font-family:Rayat;font-weight:700;src:url(${fileUrl('fonts', 'ITFRayatRound-Bold.woff2')}) format('woff2')}
 @font-face{font-family:Rayat;font-weight:500;src:url(${fileUrl('fonts', 'ITFRayatRound-Medium.woff2')}) format('woff2')}
 @font-face{font-family:Rayat;font-weight:900;src:url(${fileUrl('fonts', 'ITFRayatRound-Black.woff2')}) format('woff2')}
@@ -75,15 +84,31 @@ async function fromCms(): Promise<OgSource> {
   const [found, settings] = await Promise.all([
     payload.find({
       collection: 'products',
-      ...publicRead('ar'),
+      ...publicRead(locale),
       where: PUBLISHED,
       depth: 1,
       pagination: false,
       sort: 'sortOrder',
     }),
-    payload.findGlobal({ slug: 'site-settings', ...publicRead('ar') }),
+    payload.findGlobal({ slug: 'site-settings', ...publicRead(locale) }),
   ]);
   return { products: found.docs.map(toProduct), tagline: toSiteSettings(settings).tagline };
+}
+
+/** The seed fixtures in the locale: the English values laid over the Arabic products. */
+function fromSeed(): OgSource {
+  if (locale === 'ar') return { products: seedProducts, tagline: seedSite.tagline };
+  const products = seedProducts.map((product) => {
+    const english = productsEn[product.slug];
+    if (!english) throw new Error(`build-og: no English seed for ${product.slug}`);
+    return {
+      ...product,
+      name: english.name,
+      shortDescription: english.shortDescription,
+      colors: product.colors.map((c) => ({ ...c, name: COLOR_NAMES_EN[c.slug] ?? c.name })),
+    };
+  });
+  return { products, tagline: siteEn.tagline };
 }
 
 function defaultTemplate({ products, tagline }: OgSource): string {
@@ -115,7 +140,7 @@ function productTemplate(product: Product): string {
       <div style="margin-top:20px;font-weight:500;font-size:30px;color:${TOKEN_HEX['text-muted']};line-height:1.5">${product.shortDescription}</div>
     </div>
     <div style="display:inline-flex;align-items:center;gap:16px;align-self:flex-start;background:${TOKEN_HEX.primary};color:#fff;border-radius:999px;padding:14px 32px;font-weight:700;font-size:34px">
-      <span>${ar.productsPage.pricePrefix}</span>
+      <span>${copy.productsPage.pricePrefix}</span>
       <bdi dir="ltr" style="display:inline-flex;align-items:center;gap:8px">${sar(30)}<span>${product.baseCost}</span></bdi>
     </div>
   </div>
@@ -125,10 +150,9 @@ function productTemplate(product: Product): string {
 }
 
 async function main() {
-  const source = process.env['DATABASE_URL']
-    ? await fromCms()
-    : { products: seedProducts, tagline: seedSite.tagline };
-  mkdirSync(pub('og', 'products'), { recursive: true });
+  const source = process.env['DATABASE_URL'] ? await fromCms() : fromSeed();
+  const target = (...p: string[]) => (locale === 'ar' ? pub('og', ...p) : pub('og', 'en', ...p));
+  mkdirSync(target('products'), { recursive: true });
   const browser = await chromium.launch();
   const page = await browser.newPage({
     viewport: { width: WIDTH, height: HEIGHT },
@@ -162,14 +186,14 @@ async function main() {
       .png({ palette: true, quality: 80, dither: 0.5, compressionLevel: 9 })
       .toFile(out);
   };
-  await shoot(defaultTemplate(source), pub('og', 'default.png'));
+  await shoot(defaultTemplate(source), target('default.png'));
   for (const product of source.products) {
-    await shoot(productTemplate(product), pub('og', 'products', `${product.slug}.png`));
+    await shoot(productTemplate(product), target('products', `${product.slug}.png`));
   }
   await browser.close();
   console.warn(
-    `build-og: default + ${source.products.length} product images written to public/og/ ` +
-      `(source: ${process.env['DATABASE_URL'] ? 'cms' : 'seed'}).`,
+    `build-og (${locale}): default + ${source.products.length} product images written to ` +
+      `${locale === 'ar' ? 'public/og/' : 'public/og/en/'} (source: ${process.env['DATABASE_URL'] ? 'cms' : 'seed'}).`,
   );
 }
 
