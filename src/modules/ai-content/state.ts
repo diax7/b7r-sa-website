@@ -1,7 +1,7 @@
 import type { Payload } from 'payload';
 import { envAllows } from '@/modules/ai-content/caps';
-import { connectionIdOf } from '@/modules/ai-content/store/payload-store';
 import { mockAllowed } from '@/modules/connections/kinds';
+import { connectionIdOf, findConnection } from '@/modules/connections/read';
 import { connectionSpend } from '@/modules/connections/spend';
 
 /**
@@ -11,6 +11,15 @@ import { connectionSpend } from '@/modules/connections/spend';
  * is allowed), `on`.
  */
 export type EngineState = 'on' | 'off' | 'mock' | 'noConnection' | 'connectionOff';
+
+/** The colour each state takes on the dashboard card and the health row (one map, two readers). */
+export const ENGINE_STATE_TONE: Record<EngineState, 'success' | 'warning' | 'error' | 'muted'> = {
+  on: 'success',
+  mock: 'warning',
+  connectionOff: 'warning',
+  noConnection: 'error',
+  off: 'muted',
+};
 
 export interface EngineConnectionSummary {
   id: number;
@@ -38,12 +47,7 @@ export async function engineState(payload: Payload, now = new Date()): Promise<E
     postsPerDay: settings.postsPerDay ?? 1,
   };
   const id = connectionIdOf(settings);
-  const doc =
-    id === null
-      ? null
-      : await payload
-          .findByID({ collection: 'connections', id, depth: 0, overrideAccess: true })
-          .catch(() => null);
+  const doc = id === null ? null : await findConnection(payload, id);
   const connection: EngineConnectionSummary | null = doc
     ? {
         id: doc.id,

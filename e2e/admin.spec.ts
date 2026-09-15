@@ -1514,6 +1514,9 @@ test.describe('CMS admin', () => {
         expect(afterFail['lastTestOk']).toBe(false);
         expect(afterFail['lastTestMessage']).toBe(failedBody.error);
         expect(typeof afterFail['lastTestAt']).toBe('string');
+        // The test's own write omitted the key; the row still holds it (the secret field reads
+        // the stored ciphertext, never the mask a hook is handed).
+        expect(afterFail['apiKey']).toBe('••••cdef');
         // The mock answers without a call; a second test within ten seconds is refused.
         const mockId = await mockConnectionId(request, auth);
         const ok = await request.post('/api/connections/test', {
@@ -1589,7 +1592,7 @@ test.describe('CMS admin', () => {
       request,
     }) => {
       // Two runs and two refusals, each picked up by the queue within a minute.
-      test.setTimeout(300_000);
+      test.setTimeout(360_000);
       const auth = await login(request, ADMIN);
       const json = { ...auth, 'Content-Type': 'application/json' };
       // A mock connection is only accepted with AI_CONTENT_MOCK=1 (CI and the review server

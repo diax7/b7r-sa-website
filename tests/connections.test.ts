@@ -5,7 +5,8 @@ import { CONNECTION_KINDS, isConnectionKind, KINDS } from '@/modules/connections
 import { languageModel } from '@/modules/connections/model';
 import { toConnectionSpec } from '@/modules/connections/read';
 import { connectionSpend } from '@/modules/connections/spend';
-import { safeMessage, TEST_MESSAGE_MAX } from '@/modules/connections/test';
+import { safeMessage, TEST_MESSAGE_MAX } from '@/modules/connections/safe-message';
+import { secretField } from '@/modules/cms/fields/secret-field';
 import type { Connection } from '@/payload-types';
 
 /** The SDK's `LanguageModel` is a model object or a plain id string; the factory returns objects. */
@@ -134,6 +135,56 @@ describe('connections (ADR-047)', () => {
     expect(safeMessage(new Error(''), null)).toBe('the call failed with no message');
     expect(safeMessage('x'.repeat(500), null)).toHaveLength(TEST_MESSAGE_MAX);
     expect(safeMessage(new Error('short'), 'tiny')).toBe('short');
+    expect(safeMessage('y'.repeat(300), null, 1000)).toHaveLength(300);
+  });
+
+  it('keeps the stored ciphertext when a save sends the mask or omits the field', async () => {
+    const field = secretField('apiKey', { ar: 'مفتاح', en: 'Key' });
+    if (field.type !== 'text') throw new Error('a text field');
+    const hook = field.hooks!.beforeChange![0]!;
+    const reads: unknown[] = [];
+    const req = {
+      payload: {
+        encrypt: (plain: string) => `enc(${plain})`,
+        db: {
+          findOne: async (args: unknown) => {
+            reads.push(args);
+            return { id: 9, apiKey: 'enc(sk-old)' };
+          },
+          findGlobal: async () => ({ images: { pexelsKey: 'enc(px-old)' } }),
+        },
+      },
+    };
+    const base = {
+      req,
+      collection: { slug: 'connections' },
+      originalDoc: { id: 9, apiKey: '••••-old' },
+      path: ['apiKey'],
+      context: {},
+    };
+    // The admin form posts the mask back; the Local API omits the field: both keep the row's value.
+    expect(await hook({ ...base, value: '••••-old', previousValue: '••••-old' } as never)).toBe(
+      'enc(sk-old)',
+    );
+    expect(await hook({ ...base, value: undefined, previousValue: '••••-old' } as never)).toBe(
+      'enc(sk-old)',
+    );
+    expect(reads[0]).toMatchObject({ collection: 'connections', where: { id: { equals: 9 } } });
+    // A new key is encrypted without a read; an empty value clears it.
+    expect(await hook({ ...base, value: 'sk-new' } as never)).toBe('enc(sk-new)');
+    expect(await hook({ ...base, value: '' } as never)).toBeNull();
+    expect(reads).toHaveLength(2);
+    // A global's secret follows its path into the row.
+    expect(
+      await hook({
+        req,
+        global: { slug: 'ai-settings' },
+        originalDoc: {},
+        path: ['images', 'pexelsKey'],
+        context: {},
+        value: '••••-old',
+      } as never),
+    ).toBe('enc(px-old)');
   });
 
   it('fills the model and the rates of a new row from its kind; leaves a sent value alone', async () => {

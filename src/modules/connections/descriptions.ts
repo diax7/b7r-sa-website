@@ -7,7 +7,7 @@ export const CONNECTION_DESCRIPTIONS: Described = {
     en: 'A name you recognise in the list and in the engine settings: "OpenAI, production". Never shown to a visitor.',
   },
   kind: {
-    ar: 'الخدمة التي يُرسل إليها المفتاح. «نقطة متوافقة مع OpenAI» لأي خدمة أخرى تقدّم واجهة OpenAI على عنوانها؛ «تجريبي» للاختبارات فقط.',
+    ar: 'الخدمة التي يُرسل إليها المفتاح. «خدمة متوافقة مع OpenAI» لأي خدمة أخرى تقدّم واجهة OpenAI على عنوانها؛ «تجريبي» للاختبارات فقط.',
     en: 'The service the key is sent to. "OpenAI-compatible endpoint" fits any other AI that serves the OpenAI API at its own address; "Mock" is for tests only.',
   },
   model: {

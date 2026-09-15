@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto';
 import { capDecision } from '@/modules/ai-content/caps';
+import { safeMessage } from '@/modules/connections/safe-message';
 import { checkDraft, deterministicScore } from '@/modules/ai-content/checks';
 import { addUsage, estimateCostUsd, type Usage, ZERO_USAGE } from '@/modules/ai-content/cost';
 import { duplicateReason } from '@/modules/ai-content/dedupe';
@@ -68,6 +69,8 @@ export async function runPipeline(
   let runId: number | null = null;
   let topicId: number | null = null;
   const settings = await store.settings();
+  // Every message that leaves the pipeline (the run row, the e-mail) is scrubbed of the key.
+  const apiKey = settings.connection?.apiKey ?? null;
 
   /** One step: timed, hashed on its input, written to the run row, retried by the runner. */
   async function step<T>(
@@ -92,7 +95,7 @@ export async function runPipeline(
       steps.push({
         name,
         inputHash: hash(inputForHash),
-        summary: error instanceof Error ? error.message : String(error),
+        summary: safeMessage(error, apiKey, RUN_MESSAGE_MAX),
         ms: Date.now() - t0,
         ok: false,
       });
@@ -162,7 +165,9 @@ export async function runPipeline(
       if (settings.notifyEmail && /cost/.test(decision.reason ?? '')) {
         await store.sendEmail({
           to: settings.notifyEmail,
-          subject: 'Content engine: cost cap reached',
+          subject: /limit/.test(decision.reason ?? '')
+            ? "Content engine: the connection's monthly limit reached"
+            : 'Content engine: cost cap reached',
           text: decision.reason ?? '',
         });
       }
@@ -433,11 +438,14 @@ export async function runPipeline(
       usage,
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
+    const message = safeMessage(error, apiKey, RUN_MESSAGE_MAX);
     const status = error instanceof PipelineStop ? error.status : 'failed';
     return finish({ status, runId, postId: null, score: null, reason: message, usage }, message);
   }
 }
+
+/** A run's error keeps more of a message than a test's line (a validation report has detail). */
+const RUN_MESSAGE_MAX = 1000;
 
 const LLM_STEPS = new Set(['outline', 'draft', 'review', 'revise', 'seo', 'image']);
 

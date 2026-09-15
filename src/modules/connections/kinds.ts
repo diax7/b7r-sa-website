@@ -51,7 +51,7 @@ export const KINDS: Record<ConnectionKind, KindInfo> = {
     needsBaseUrl: false,
   },
   'openai-compatible': {
-    label: { ar: 'نقطة متوافقة مع OpenAI', en: 'OpenAI-compatible endpoint' },
+    label: { ar: 'خدمة متوافقة مع OpenAI', en: 'OpenAI-compatible endpoint' },
     defaultModel: '',
     rates: { input: 0, output: 0 },
     needsBaseUrl: true,

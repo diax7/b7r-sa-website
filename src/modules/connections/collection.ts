@@ -55,10 +55,11 @@ const keepTheEnginesConnection: CollectionBeforeDeleteHook = async ({ id, req })
   }
 };
 
-function readOnly(field: Field & { name: string }): Field {
+/** A sidebar field the API never writes: the test and the runs log fill it. */
+function sidebarReadOnly(field: Field & { name: string }): Field {
   return {
     ...field,
-    access: { update: () => false },
+    access: { create: () => false, update: () => false },
     admin: { ...field.admin, position: 'sidebar', readOnly: true },
   } as Field;
 }
@@ -175,7 +176,7 @@ export const Connections: CollectionConfig = {
           components: { Field: '@/modules/cms/admin/fields/enabled-switch#EnabledSwitch' },
         },
       },
-      readOnly({
+      sidebarReadOnly({
         name: 'spentThisMonthUsd',
         type: 'number',
         virtual: true,
@@ -189,7 +190,7 @@ export const Connections: CollectionConfig = {
           ],
         },
       }),
-      readOnly({
+      sidebarReadOnly({
         name: 'callsThisMonth',
         type: 'number',
         virtual: true,
@@ -203,18 +204,18 @@ export const Connections: CollectionConfig = {
           ],
         },
       }),
-      readOnly({
+      sidebarReadOnly({
         name: 'lastTestAt',
         type: 'date',
         label: { ar: 'آخر اختبار', en: 'Last test' },
         admin: { date: { pickerAppearance: 'dayAndTime' } },
       }),
-      readOnly({
+      sidebarReadOnly({
         name: 'lastTestOk',
         type: 'checkbox',
         label: { ar: 'نجح آخر اختبار', en: 'Last test passed' },
       }),
-      readOnly({
+      sidebarReadOnly({
         name: 'lastTestMessage',
         type: 'text',
         label: { ar: 'نتيجة آخر اختبار', en: 'Last test said' },

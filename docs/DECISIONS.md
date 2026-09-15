@@ -1128,9 +1128,11 @@ dashboard card and the health row share one reading (`engineState`): on, off, mo
 month's spend and limit. The engine's connection cannot be deleted (`beforeDelete`, a
 `Refused` 400: "pick another in the engine settings first"). **The test.**
 `POST /api/connections/test { id }` behind the admin guard: one `generateText` with
-`maxOutputTokens: 8`, no retries, a 20 s abort, the key read with `decryptKeys` through the
-Local API; the outcome written on the row (the model id on success; on failure the vendor's
-message, one line, URLs replaced, the key replaced, 200 characters at most); one test per
+`maxOutputTokens: 32` (OpenAI's Responses API refuses fewer than 16), no retries, a 20 s
+abort, the key read with `decryptKeys` through the Local API; the outcome written on the row
+(the model id on success; on failure the vendor's message through `safeMessage`: one line,
+URLs replaced, the key replaced, 200 characters at most; a run's error and the failure e-mail
+go through the same helper, at 1,000 characters); one test per
 connection per ten seconds in memory (one container, ADR-033); the button renders only on a
 saved row and reads "Save, then test" while the form is dirty; the mock answers without a
 call. **Dependencies.** `src/modules/connections/` is the leaf (the collection, kinds, the
@@ -1149,7 +1151,9 @@ restores them. **Found on the way.** The secret field's `previousValue` in a `be
 hook has been through `afterRead`, so it is the mask, not the ciphertext: saving a document
 with the mask, or any Local API update that omitted the field (the engine's
 `decrementReviewFirstRuns`), stored the mask and made the key unreadable. The hook now reads
-the stored value from the database row. Nothing in production had a key yet. **Not done.**
+the stored value from the database row. Nothing in production had a key yet. The `openai` kind is the Responses API, whose
+`max_output_tokens` floor is 16: the plan's 8 would have failed every OpenAI test. **Not
+done.**
 `filterOptions` on the engine's picker (every kind is engine-capable today; project 3's
 analytics kinds bring the filter with their consumers); Perplexity; a shared rate-limit
 store.

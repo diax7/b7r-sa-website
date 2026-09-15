@@ -12,6 +12,12 @@ import { type MigrateDownArgs, type MigrateUpArgs, sql } from '@payloadcms/db-po
  * connection's kind (a compatible connection reads back as the default, openai).
  */
 const VENDORS = ['openai', 'deepseek', 'anthropic', 'google'] as const;
+const NAMES: Record<(typeof VENDORS)[number], string> = {
+  openai: 'OpenAI',
+  deepseek: 'DeepSeek',
+  anthropic: 'Anthropic',
+  google: 'Google',
+};
 
 export async function up({ db }: MigrateUpArgs): Promise<void> {
   await db.execute(sql`
@@ -54,7 +60,7 @@ export async function up({ db }: MigrateUpArgs): Promise<void> {
     await db.execute(sql`
       INSERT INTO "connections" ("label", "kind", "model", "api_key", "input_per_million_usd", "output_per_million_usd", "enabled")
       SELECT
-        ${vendor}::varchar,
+        ${NAMES[vendor]}::varchar,
         ${vendor}::"enum_connections_kind",
         ${sql.raw(`"providers_${vendor}_model"`)},
         ${sql.raw(`"providers_${vendor}_api_key"`)},

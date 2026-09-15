@@ -24,7 +24,7 @@ import type {
 import { DECRYPT_CONTEXT } from '@/modules/cms/fields/secret-field';
 import { DEFAULT_AUTHOR_SLUG } from '@/modules/cms/collections/posts';
 import type { ConnectionSpec } from '@/modules/connections/kinds';
-import { readConnection } from '@/modules/connections/read';
+import { connectionIdOf, readConnection } from '@/modules/connections/read';
 import { connectionSpend } from '@/modules/connections/spend';
 import type { AiSetting, AiTopic, Category, Post } from '@/payload-types';
 
@@ -38,13 +38,6 @@ function lines(text: string | null | undefined): string[] {
     .split(/\r?\n/)
     .map((l) => l.trim())
     .filter(Boolean);
-}
-
-/** The id the settings' relationship holds, whatever its depth. */
-export function connectionIdOf(doc: AiSetting): number | null {
-  const value = doc.connection;
-  if (value === null || value === undefined) return null;
-  return typeof value === 'object' ? value.id : value;
 }
 
 export function toEngineSettings(

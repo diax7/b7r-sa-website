@@ -4,9 +4,14 @@ import { createRateLimiter } from '@/lib/rate-limit';
 import { type ConnectionSpec, mockAllowed } from '@/modules/connections/kinds';
 import { languageModel } from '@/modules/connections/model';
 import { readConnection } from '@/modules/connections/read';
+import { safeMessage } from '@/modules/connections/safe-message';
 
 export const TEST_TIMEOUT_MS = 20_000;
-export const TEST_MESSAGE_MAX = 200;
+/**
+ * The reply's size: OpenAI's Responses API (the `openai` kind) refuses fewer than 16 output
+ * tokens; 32 leaves a thinking model room for one word and keeps the cost of a test bounded.
+ */
+export const TEST_MAX_OUTPUT_TOKENS = 32;
 /** One test per connection per ten seconds; one container (ADR-033), so a map is enough. */
 const limiter = createRateLimiter(1, 10_000);
 
@@ -14,22 +19,7 @@ export type TestResult =
   | { ok: true; message: string }
   | { ok: false; message: string; status: 400 | 404 | 429 | 502 };
 
-/**
- * A vendor's error as the admin may see it: one line, at most 200 characters, never the key
- * and never a URL (a query string may carry a key). The stored message is the same line.
- */
-export function safeMessage(error: unknown, apiKey: string | null): string {
-  const raw = error instanceof Error ? error.message : String(error);
-  let text = raw
-    .replace(/https?:\/\/\S+/g, '[url]')
-    .replace(/\s+/g, ' ')
-    .trim();
-  if (apiKey && apiKey.length >= 8) text = text.replaceAll(apiKey, '[key]');
-  if (!text) text = 'the call failed with no message';
-  return text.length > TEST_MESSAGE_MAX ? `${text.slice(0, TEST_MESSAGE_MAX - 1)}…` : text;
-}
-
-/** One short call (`maxOutputTokens: 8`, 20 s): a reply of any kind is a working connection. */
+/** One short call (32 output tokens, 20 s, no retry): a reply of any kind is a working connection. */
 async function ping(spec: ConnectionSpec): Promise<string> {
   if (spec.kind === 'mock') {
     if (!mockAllowed()) throw new Error('the mock kind needs AI_CONTENT_MOCK=1');
@@ -46,7 +36,7 @@ async function ping(spec: ConnectionSpec): Promise<string> {
   await generateText({
     model,
     prompt: 'Reply with the single word: ok',
-    maxOutputTokens: 8,
+    maxOutputTokens: TEST_MAX_OUTPUT_TOKENS,
     maxRetries: 0,
     abortSignal: AbortSignal.timeout(TEST_TIMEOUT_MS),
   });

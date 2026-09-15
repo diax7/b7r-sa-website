@@ -6,6 +6,7 @@ import { Card } from '@/components/shared/card';
 import { Icon } from '@/components/shared/icon';
 import { riyadh, riyadhDayStart, riyadhMonthStart } from '@/lib/riyadh';
 import {
+  ENGINE_STATE_TONE,
   type EngineConnectionSummary,
   type EngineState,
   engineState,
@@ -94,14 +95,6 @@ export async function engineSummary(payload: Payload, now = new Date()): Promise
   };
 }
 
-const STATE_TONE: Record<EngineState, 'success' | 'warning' | 'error' | 'muted'> = {
-  on: 'success',
-  mock: 'warning',
-  connectionOff: 'warning',
-  noConnection: 'error',
-  off: 'muted',
-};
-
 const STATUS_TONE = {
   done: 'success',
   failed: 'error',
@@ -126,7 +119,7 @@ export function EngineCard({
   summary: EngineSummary;
   adminRoute: string;
 }) {
-  const stateTone = STATE_TONE[summary.state];
+  const stateTone = ENGINE_STATE_TONE[summary.state];
   const stateLabel = s.state[summary.state];
   const c = summary.connection;
   return (

@@ -11,7 +11,8 @@ export interface ConnectionSpend {
  * What a connection has cost this month (ADR-047): the `ai-runs` rows that name it, started
  * since the Riyadh month began, `skipped` left out (a refused run costs nothing). There is no
  * ledger: the runs are the record, and the header, the engine card and the monthly limit all
- * read this one sum. A Test is not a run and never counts.
+ * read this one sum; every row of the month is read (no page limit: this guards money). A
+ * Test is not a run and never counts.
  */
 export async function connectionSpend(
   payload: Payload,
@@ -28,7 +29,6 @@ export async function connectionSpend(
       ],
     },
     depth: 0,
-    limit: 1000,
     pagination: false,
     select: { costUsd: true },
     overrideAccess: true,

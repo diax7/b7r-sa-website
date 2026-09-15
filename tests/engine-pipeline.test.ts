@@ -165,7 +165,7 @@ describe('generatePost with the mock provider (BRD 10.2.4, 10.3 item 2)', () => 
     expect(result.reason).toMatch(/cost/);
     expect(costly.state.emails[0]?.subject).toMatch(/cost cap/);
     // The connection (ADR-047): none, off, or over its monthly limit refuses with the reason
-    // in the skipped row; the limit mails like the daily cap does.
+    // in the skipped row; the limit mails like the daily cap does, under its own subject.
     const none = context({ settings: settings({ connection: null }) });
     expect((await runPipeline(none.ctx, { manual: true })).reason).toMatch(/no connection/);
     const offConnection = context({
@@ -180,7 +180,7 @@ describe('generatePost with the mock provider (BRD 10.2.4, 10.3 item 2)', () => 
     });
     const overLimit = await runPipeline(limited.ctx, { manual: true });
     expect(overLimit.reason).toMatch(/reached its limit 4 USD/);
-    expect(limited.state.emails[0]?.subject).toMatch(/cost cap/);
+    expect(limited.state.emails[0]?.subject).toMatch(/monthly limit reached/);
   });
 
   it('refuses image generation until a provider draws; stock uploads a photo', async () => {
