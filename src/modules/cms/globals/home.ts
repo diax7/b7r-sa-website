@@ -6,6 +6,8 @@ import { previewUrl } from '@/lib/preview-token';
 import { HERO_CHIPS_MAX, HERO_OVERLAY_DEFAULT, HEX_COLOR } from '@/content/schema';
 import { globalComponents } from '@/modules/cms/admin/document/config';
 import { adminGroup } from '@/modules/cms/admin/icons';
+import { HOME_DESCRIPTIONS } from '@/modules/cms/admin/descriptions/site';
+import { describeFields } from '@/modules/cms/admin/descriptions/describe';
 
 /** The three why-us icons the section knows how to draw (BRD 6.4.6). */
 export const WHY_US_ICONS = ['ShieldCheck', 'Workflow', 'Zap'] as const;
@@ -72,288 +74,302 @@ export const Home: GlobalConfig = {
   // reads through the Local API with `draft: false`.
   access: { read: isEditorOrAdmin, update: isEditorOrAdmin },
   hooks: { beforeChange: [stampSavedByGlobal], afterChange: [revalidateGlobal] },
-  fields: [
-    {
-      name: 'hero',
-      type: 'group',
-      label: { ar: 'الواجهة (Hero)', en: 'Hero' },
-      fields: [
-        {
-          name: 'slides',
-          type: 'array',
-          required: true,
-          minRows: 4,
-          maxRows: 4,
-          label: { ar: 'الشرائح', en: 'Slides' },
-          labels: {
-            singular: { ar: 'شريحة', en: 'Slide' },
-            plural: { ar: 'الشرائح', en: 'Slides' },
-          },
-          fields: [
-            text('headline', { ar: 'العنوان الرئيسي', en: 'Headline' }),
-            text('subline', { ar: 'السطر الثاني', en: 'Subline' }),
-            {
-              type: 'row',
-              // Per language (ADR-044): the English document mirrors the layout, so its photo
-              // is a mirrored composition; the site reads without locale fallback, so both
-              // languages need their own.
-              fields: [
-                {
-                  name: 'imageDesktop',
-                  type: 'upload',
-                  relationTo: 'media',
-                  required: true,
-                  localized: true,
-                  label: { ar: 'الصورة (سطح المكتب 16:9)', en: 'Image (desktop 16:9)' },
-                  admin: { description: PHOTO_PER_LANGUAGE },
+  fields: describeFields(
+    [
+      // One tab per section of the home page, in site order (ADR-046). A named tab stores
+      // under the same path and the same columns as the group it replaced: no migration.
+      {
+        type: 'tabs',
+        tabs: [
+          {
+            name: 'hero',
+            label: { ar: 'الواجهة (Hero)', en: 'Hero' },
+            fields: [
+              {
+                name: 'slides',
+                type: 'array',
+                required: true,
+                minRows: 4,
+                maxRows: 4,
+                label: { ar: 'الشرائح', en: 'Slides' },
+                labels: {
+                  singular: { ar: 'شريحة', en: 'Slide' },
+                  plural: { ar: 'الشرائح', en: 'Slides' },
                 },
-                {
-                  name: 'imageMobile',
-                  type: 'upload',
-                  relationTo: 'media',
-                  required: true,
-                  localized: true,
-                  label: { ar: 'الصورة (الجوال 4:5)', en: 'Image (mobile 4:5)' },
-                  admin: { description: PHOTO_PER_LANGUAGE },
-                },
-              ],
-            },
-          ],
-        },
-        {
-          name: 'overlay',
-          type: 'group',
-          label: { ar: 'التدرّج فوق الصورة', en: 'Fade over the photo' },
-          admin: {
-            description: {
-              ar: 'طبقة شفافة من لون واحد تبدأ من جهة النص وتتلاشى فوق الصورة؛ تُقرأ العناوين فوق أي صورة.',
-              en: 'A one-colour fade from the copy side over the photo, so the headline reads on any photo.',
-            },
-          },
-          fields: [
-            {
-              name: 'enabled',
-              type: 'checkbox',
-              defaultValue: true,
-              label: { ar: 'يظهر فوق الصورة', en: 'Shown over the photo' },
-              admin: {
-                description: {
-                  ar: 'عند الإيقاف تظهر الصورة كما هي خلف النص، بلا تدرّج.',
-                  en: 'Off shows the photo as it is behind the copy, with no fade.',
-                },
-                components: { Field: '@/modules/cms/admin/fields/enabled-switch#EnabledSwitch' },
+                fields: [
+                  text('headline', { ar: 'العنوان الرئيسي', en: 'Headline' }),
+                  text('subline', { ar: 'السطر الثاني', en: 'Subline' }),
+                  {
+                    type: 'row',
+                    // Per language (ADR-044): the English document mirrors the layout, so its photo
+                    // is a mirrored composition; the site reads without locale fallback, so both
+                    // languages need their own.
+                    fields: [
+                      {
+                        name: 'imageDesktop',
+                        type: 'upload',
+                        relationTo: 'media',
+                        required: true,
+                        localized: true,
+                        label: { ar: 'الصورة (سطح المكتب 16:9)', en: 'Image (desktop 16:9)' },
+                        admin: { description: PHOTO_PER_LANGUAGE },
+                      },
+                      {
+                        name: 'imageMobile',
+                        type: 'upload',
+                        relationTo: 'media',
+                        required: true,
+                        localized: true,
+                        label: { ar: 'الصورة (الجوال 4:5)', en: 'Image (mobile 4:5)' },
+                        admin: { description: PHOTO_PER_LANGUAGE },
+                      },
+                    ],
+                  },
+                ],
               },
-            },
-            {
-              name: 'color',
-              type: 'text',
-              required: true,
-              defaultValue: HERO_OVERLAY_DEFAULT,
-              label: { ar: 'اللون', en: 'Colour' },
-              admin: {
-                description: {
-                  ar: 'لون التدرّج؛ الأبيض هو الأصل. يُكتب بصيغة #rrggbb.',
-                  en: 'The fade colour; white is the default. Written as #rrggbb.',
+              {
+                name: 'overlay',
+                type: 'group',
+                label: { ar: 'التدرّج فوق الصورة', en: 'Fade over the photo' },
+                admin: {
+                  description: {
+                    ar: 'طبقة شفافة من لون واحد تبدأ من جهة النص وتتلاشى فوق الصورة؛ تُقرأ العناوين فوق أي صورة.',
+                    en: 'A one-colour fade from the copy side over the photo, so the headline reads on any photo.',
+                  },
                 },
-                components: { Field: '@/modules/cms/admin/fields/color-field#ColorField' },
+                fields: [
+                  {
+                    name: 'enabled',
+                    type: 'checkbox',
+                    defaultValue: true,
+                    label: { ar: 'يظهر فوق الصورة', en: 'Shown over the photo' },
+                    admin: {
+                      description: {
+                        ar: 'عند الإيقاف تظهر الصورة كما هي خلف النص، بلا تدرّج.',
+                        en: 'Off shows the photo as it is behind the copy, with no fade.',
+                      },
+                      components: {
+                        Field: '@/modules/cms/admin/fields/enabled-switch#EnabledSwitch',
+                      },
+                    },
+                  },
+                  {
+                    name: 'color',
+                    type: 'text',
+                    required: true,
+                    defaultValue: HERO_OVERLAY_DEFAULT,
+                    label: { ar: 'اللون', en: 'Colour' },
+                    admin: {
+                      description: {
+                        ar: 'لون التدرّج؛ الأبيض هو الأصل. يُكتب بصيغة #rrggbb.',
+                        en: 'The fade colour; white is the default. Written as #rrggbb.',
+                      },
+                      components: { Field: '@/modules/cms/admin/fields/color-field#ColorField' },
+                    },
+                    validate: (value: unknown) =>
+                      typeof value === 'string' && HEX_COLOR.test(value)
+                        ? true
+                        : 'اكتب لوناً بصيغة #rrggbb',
+                  },
+                ],
               },
-              validate: (value: unknown) =>
-                typeof value === 'string' && HEX_COLOR.test(value)
-                  ? true
-                  : 'اكتب لوناً بصيغة #rrggbb',
-            },
-          ],
-        },
-        {
-          type: 'row',
-          fields: [
-            text('primaryCta', { ar: 'الزر الرئيسي', en: 'Primary CTA' }),
-            text('secondaryCta', { ar: 'الرابط الثانوي', en: 'Secondary link' }),
-          ],
-        },
-        text('microcopy', {
-          ar: 'سطر الرصيد الترحيبي (شريط الحقائق في «من نحن»)',
-          en: 'Welcome-credit line (the About facts band)',
-        }),
-        {
-          name: 'chips',
-          type: 'array',
-          minRows: 0,
-          maxRows: HERO_CHIPS_MAX,
-          label: { ar: 'شارات الإثبات', en: 'Proof chips' },
-          labels: { singular: { ar: 'شارة', en: 'Chip' }, plural: { ar: 'الشارات', en: 'Chips' } },
-          admin: {
+              {
+                type: 'row',
+                fields: [
+                  text('primaryCta', { ar: 'الزر الرئيسي', en: 'Primary CTA' }),
+                  text('secondaryCta', { ar: 'الرابط الثانوي', en: 'Secondary link' }),
+                ],
+              },
+              text('microcopy', {
+                ar: 'سطر الرصيد الترحيبي (شريط الحقائق في «من نحن»)',
+                en: 'Welcome-credit line (the About facts band)',
+              }),
+              {
+                name: 'chips',
+                type: 'array',
+                minRows: 0,
+                maxRows: HERO_CHIPS_MAX,
+                label: { ar: 'شارات الإثبات', en: 'Proof chips' },
+                labels: {
+                  singular: { ar: 'شارة', en: 'Chip' },
+                  plural: { ar: 'الشارات', en: 'Chips' },
+                },
+                admin: {
+                  description: {
+                    ar: `من صفر إلى ${HERO_CHIPS_MAX}؛ بلا شارات يختفي الصف. الصفوف مشتركة بين اللغتين والنص لكل لغة: صف بلا نص إنجليزي لا يظهر في الموقع الإنجليزي.`,
+                    en: `Zero to ${HERO_CHIPS_MAX}; none hides the row. The rows are shared by both languages, the text is per language: a row without an English text does not show on the English site.`,
+                  },
+                },
+                fields: [text('text', { ar: 'النص', en: 'Text' })],
+              },
+            ],
+          },
+          {
+            name: 'productStrip',
+            label: { ar: 'شريط المنتجات', en: 'Product strip' },
+            fields: [
+              ...header(),
+              {
+                type: 'row',
+                fields: [
+                  text('pricePrefix', { ar: 'قبل السعر', en: 'Price prefix' }),
+                  text('button', { ar: 'الزر', en: 'Button' }),
+                ],
+              },
+              {
+                name: 'products',
+                type: 'relationship',
+                relationTo: 'products',
+                hasMany: true,
+                required: true,
+                minRows: STRIP_SIZE,
+                maxRows: STRIP_SIZE,
+                // Drafts never reach the strip: the picker lists published products only.
+                filterOptions: { _status: { equals: 'published' } },
+                label: { ar: 'المنتجات الخمسة بالترتيب', en: 'The five products, in order' },
+                admin: {
+                  description: {
+                    ar: 'منتجات منشورة فقط؛ منتج يُلغى نشره لاحقاً يسقط من الشريط حتى يُنشر من جديد.',
+                    en: 'Published products only; one unpublished later drops out of the strip until it is published again.',
+                  },
+                },
+                validate: (value: unknown) => {
+                  const ids = Array.isArray(value)
+                    ? value.map((v) =>
+                        typeof v === 'object' && v ? (v as { id?: unknown }).id : v,
+                      )
+                    : [];
+                  if (ids.length !== STRIP_SIZE) return `اختر ${STRIP_SIZE} منتجات بالضبط`;
+                  if (new Set(ids.map(String)).size !== STRIP_SIZE) return 'كل منتج مرة واحدة';
+                  return true;
+                },
+              },
+            ],
+          },
+          {
+            name: 'designer',
+            label: { ar: 'المصمّم', en: 'Designer' },
             description: {
-              ar: `من صفر إلى ${HERO_CHIPS_MAX}؛ بلا شارات يختفي الصف. الصفوف مشتركة بين اللغتين والنص لكل لغة: صف بلا نص إنجليزي لا يظهر في الموقع الإنجليزي.`,
-              en: `Zero to ${HERO_CHIPS_MAX}; none hides the row. The rows are shared by both languages, the text is per language: a row without an English text does not show on the English site.`,
+              ar: 'قسم المصمّم والحاسبة: يجرّب الزائر تصميماً على منتج ويرى ربحه قبل أن يسجّل.',
+              en: 'The designer and calculator section: a visitor tries a design on a product and sees the profit before signing up.',
             },
+            fields: [...header(), text('cta', { ar: 'الزر', en: 'CTA' })],
           },
-          fields: [text('text', { ar: 'النص', en: 'Text' })],
-        },
-      ],
-    },
-    {
-      name: 'productStrip',
-      type: 'group',
-      label: { ar: 'شريط المنتجات', en: 'Product strip' },
-      fields: [
-        ...header(),
-        {
-          type: 'row',
-          fields: [
-            text('pricePrefix', { ar: 'قبل السعر', en: 'Price prefix' }),
-            text('button', { ar: 'الزر', en: 'Button' }),
-          ],
-        },
-        {
-          name: 'products',
-          type: 'relationship',
-          relationTo: 'products',
-          hasMany: true,
-          required: true,
-          minRows: STRIP_SIZE,
-          maxRows: STRIP_SIZE,
-          // Drafts never reach the strip: the picker lists published products only.
-          filterOptions: { _status: { equals: 'published' } },
-          label: { ar: 'المنتجات الخمسة بالترتيب', en: 'The five products, in order' },
-          admin: {
+          {
+            name: 'steps',
+            label: { ar: 'الخطوات الثلاث', en: 'Three steps' },
+            fields: [
+              enabled({ ar: 'الخطوات الثلاث', en: 'Three steps' }),
+              ...header(true, false),
+              text('link', { ar: 'رابط «اعرف أكثر»', en: 'Learn-more link' }),
+              {
+                name: 'items',
+                type: 'array',
+                required: true,
+                minRows: 3,
+                maxRows: 3,
+                label: { ar: 'الخطوات', en: 'Steps' },
+                labels: {
+                  singular: { ar: 'خطوة', en: 'Step' },
+                  plural: { ar: 'الخطوات', en: 'Steps' },
+                },
+                fields: [
+                  text('title', { ar: 'العنوان', en: 'Title' }),
+                  text('text', { ar: 'النص', en: 'Text' }),
+                  {
+                    name: 'icon',
+                    type: 'upload',
+                    relationTo: 'media',
+                    required: true,
+                    label: { ar: 'الأيقونة المجسّمة', en: '3D icon' },
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            name: 'video',
+            label: { ar: 'الفيديو', en: 'Video' },
             description: {
-              ar: 'منتجات منشورة فقط؛ منتج يُلغى نشره لاحقاً يسقط من الشريط حتى يُنشر من جديد.',
-              en: 'Published products only; one unpublished later drops out of the strip until it is published again.',
+              ar: 'المقطع نفسه ملف ثابت في الموقع؛ هنا العنوان والوصف فقط.',
+              en: 'The loop itself ships with the site; only the copy lives here.',
             },
+            fields: [enabled({ ar: 'الفيديو', en: 'Video' }), ...header(false)],
           },
-          validate: (value: unknown) => {
-            const ids = Array.isArray(value)
-              ? value.map((v) => (typeof v === 'object' && v ? (v as { id?: unknown }).id : v))
-              : [];
-            if (ids.length !== STRIP_SIZE) return `اختر ${STRIP_SIZE} منتجات بالضبط`;
-            if (new Set(ids.map(String)).size !== STRIP_SIZE) return 'كل منتج مرة واحدة';
-            return true;
+          {
+            name: 'whyUs',
+            label: { ar: 'لماذا بحر', en: 'Why us' },
+            fields: [
+              enabled({ ar: 'لماذا بحر', en: 'Why us' }),
+              ...header(true, false),
+              {
+                name: 'items',
+                type: 'array',
+                required: true,
+                minRows: 3,
+                maxRows: 3,
+                label: { ar: 'البطاقات', en: 'Cards' },
+                labels: {
+                  singular: { ar: 'بطاقة', en: 'Card' },
+                  plural: { ar: 'البطاقات', en: 'Cards' },
+                },
+                fields: [
+                  {
+                    name: 'icon',
+                    type: 'select',
+                    required: true,
+                    options: WHY_US_ICONS.map((i) => ({ label: i, value: i })),
+                    label: { ar: 'الأيقونة', en: 'Icon' },
+                    admin: {
+                      components: { Field: '@/modules/cms/admin/fields/icon-select#IconSelect' },
+                    },
+                  },
+                  text('title', { ar: 'العنوان', en: 'Title' }),
+                  text('text', { ar: 'النص', en: 'Text' }),
+                ],
+              },
+            ],
           },
-        },
-      ],
-    },
-    {
-      name: 'designer',
-      type: 'group',
-      label: { ar: 'المصمّم والحاسبة', en: 'Designer and calculator' },
-      fields: [...header(), text('cta', { ar: 'الزر', en: 'CTA' })],
-    },
-    {
-      name: 'steps',
-      type: 'group',
-      label: { ar: 'الخطوات الثلاث', en: 'Three steps' },
-      fields: [
-        enabled({ ar: 'الخطوات الثلاث', en: 'Three steps' }),
-        ...header(true, false),
-        text('link', { ar: 'رابط «اعرف أكثر»', en: 'Learn-more link' }),
-        {
-          name: 'items',
-          type: 'array',
-          required: true,
-          minRows: 3,
-          maxRows: 3,
-          label: { ar: 'الخطوات', en: 'Steps' },
-          labels: { singular: { ar: 'خطوة', en: 'Step' }, plural: { ar: 'الخطوات', en: 'Steps' } },
-          fields: [
-            text('title', { ar: 'العنوان', en: 'Title' }),
-            text('text', { ar: 'النص', en: 'Text' }),
-            {
-              name: 'icon',
-              type: 'upload',
-              relationTo: 'media',
-              required: true,
-              label: { ar: 'الأيقونة المجسّمة', en: '3D icon' },
+          {
+            name: 'testimonials',
+            label: { ar: 'آراء التجار', en: 'Testimonials' },
+            description: {
+              ar: 'الآراء نفسها في «آراء التجار»؛ هنا عنوان القسم.',
+              en: 'The entries live in Testimonials; the section title lives here.',
             },
-          ],
-        },
-      ],
-    },
-    {
-      name: 'video',
-      type: 'group',
-      label: { ar: 'الفيديو', en: 'Video' },
-      admin: {
-        description: {
-          ar: 'المقطع نفسه ملف ثابت في الموقع؛ هنا العنوان والوصف فقط.',
-          en: 'The loop itself ships with the site; only the copy lives here.',
-        },
-      },
-      fields: [enabled({ ar: 'الفيديو', en: 'Video' }), ...header(false)],
-    },
-    {
-      name: 'whyUs',
-      type: 'group',
-      label: { ar: 'لماذا بحر', en: 'Why us' },
-      fields: [
-        enabled({ ar: 'لماذا بحر', en: 'Why us' }),
-        ...header(true, false),
-        {
-          name: 'items',
-          type: 'array',
-          required: true,
-          minRows: 3,
-          maxRows: 3,
-          label: { ar: 'البطاقات', en: 'Cards' },
-          labels: {
-            singular: { ar: 'بطاقة', en: 'Card' },
-            plural: { ar: 'البطاقات', en: 'Cards' },
+            fields: [enabled({ ar: 'آراء التجار', en: 'Testimonials' }), ...header(true, false)],
           },
-          fields: [
-            {
-              name: 'icon',
-              type: 'select',
-              required: true,
-              options: WHY_US_ICONS.map((i) => ({ label: i, value: i })),
-              label: { ar: 'الأيقونة', en: 'Icon' },
-              admin: { components: { Field: '@/modules/cms/admin/fields/icon-select#IconSelect' } },
+          {
+            name: 'integrations',
+            label: { ar: 'المتاجر المتصلة', en: 'Integrations' },
+            fields: [enabled({ ar: 'المتاجر المتصلة', en: 'Integrations' }), ...header(false)],
+          },
+          {
+            name: 'faq',
+            label: { ar: 'الأسئلة الشائعة', en: 'FAQ' },
+            description: {
+              ar: 'الأسئلة نفسها في «الأسئلة الشائعة» (المعلَّمة «يظهر في الرئيسية»).',
+              en: 'The entries flagged «show on home» in the FAQ collection.',
             },
-            text('title', { ar: 'العنوان', en: 'Title' }),
-            text('text', { ar: 'النص', en: 'Text' }),
-          ],
-        },
-      ],
-    },
-    {
-      name: 'testimonials',
-      type: 'group',
-      label: { ar: 'آراء التجار', en: 'Testimonials' },
-      admin: {
-        description: {
-          ar: 'الآراء نفسها في «آراء التجار»؛ هنا عنوان القسم.',
-          en: 'The entries live in Testimonials; the section title lives here.',
-        },
+            fields: [
+              enabled({ ar: 'الأسئلة الشائعة', en: 'FAQ' }),
+              ...header(false, false),
+              text('link', { ar: 'رابط «كل الأسئلة»', en: 'All-questions link' }),
+            ],
+          },
+          {
+            name: 'ribbon',
+            label: { ar: 'شريط الدعوة', en: 'Ribbon' },
+            description: {
+              ar: 'شريط الدعوة أسفل كل صفحة من الموقع، فوق التذييل؛ يُحرَّر هنا مرة واحدة.',
+              en: 'The CTA ribbon at the bottom of every page of the site, above the footer; edited here once.',
+            },
+            fields: [...header(false), text('button', { ar: 'الزر', en: 'Button' })],
+          },
+        ],
       },
-      fields: [enabled({ ar: 'آراء التجار', en: 'Testimonials' }), ...header(true, false)],
-    },
-    {
-      name: 'integrations',
-      type: 'group',
-      label: { ar: 'المتاجر المتصلة', en: 'Integrations' },
-      fields: [enabled({ ar: 'المتاجر المتصلة', en: 'Integrations' }), ...header(false)],
-    },
-    {
-      name: 'faq',
-      type: 'group',
-      label: { ar: 'الأسئلة الشائعة', en: 'FAQ' },
-      admin: {
-        description: {
-          ar: 'الأسئلة نفسها في «الأسئلة الشائعة» (المعلَّمة «يظهر في الرئيسية»).',
-          en: 'The entries flagged «show on home» in the FAQ collection.',
-        },
-      },
-      fields: [
-        enabled({ ar: 'الأسئلة الشائعة', en: 'FAQ' }),
-        ...header(false, false),
-        text('link', { ar: 'رابط «كل الأسئلة»', en: 'All-questions link' }),
-      ],
-    },
-    {
-      name: 'ribbon',
-      type: 'group',
-      label: { ar: 'شريط الدعوة (كل الصفحات)', en: 'CTA ribbon (every page)' },
-      fields: [...header(false), text('button', { ar: 'الزر', en: 'Button' })],
-    },
-    savedByField,
-  ],
+      savedByField,
+    ],
+    HOME_DESCRIPTIONS,
+  ),
 };

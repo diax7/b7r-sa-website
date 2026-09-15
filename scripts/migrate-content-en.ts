@@ -12,6 +12,7 @@ import type { Payload } from 'payload';
 import { blogAuthorEn, blogHubsEn, blogPostBodyEn, blogPostsEn } from '../src/content/seed/en/blog';
 import { faqEn } from '../src/content/seed/en/faq';
 import { homeEn } from '../src/content/seed/en/home';
+import { postBodyField } from '../src/lib/cms/post-body';
 import { integrationsEn } from '../src/content/seed/en/integrations';
 import { mediaAltEn } from '../src/content/seed/en/media';
 import { navigationEn } from '../src/content/seed/en/navigation';
@@ -432,11 +433,7 @@ export async function ensureEnglish(payload: Payload): Promise<EnglishSummary> {
   }
   {
     const { docs } = await payload.find({ collection: 'posts', ...AR, limit: 100, draft: true });
-    const field = payload.collections['posts']?.config.fields.find(
-      (f) => 'name' in f && f.name === 'body',
-    );
-    if (!field || field.type !== 'richText') throw new Error('seed en: no posts body field');
-    const editorConfig = editorConfigFactory.fromField({ field });
+    const editorConfig = editorConfigFactory.fromField({ field: postBodyField(payload) });
     for (const ar of docs) {
       const english = blogPostsEn[ar.slug];
       // Engine posts and an editor's own posts have no English seed; they stay Arabic-only.

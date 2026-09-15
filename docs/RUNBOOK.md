@@ -365,6 +365,16 @@ ignore when 2.0.2 ships.
   `reviewFirstRuns` at 3: the first three posts land as drafts for a read, then the engine
   publishes on its own. Watch the first digest.
 
+## The admin's words (ADR-046)
+
+Every field an editor sees carries a two-language sentence saying where it shows on the site
+and what it does, then its limit or an example. They live in one map per entity
+(`src/modules/cms/admin/descriptions/*.ts`; the engine's in
+`src/modules/ai-content/descriptions.ts`), keyed by the field's path (`hero.slides.headline`,
+`blocks.cards.items.title`), and reach the config through `describeFields()`. To change a
+sentence, edit the map; to add a field, add its key (the config test fails until it exists
+and refuses a key that names no field).
+
 ## The English site (Level 5, ADR-043)
 
 The site is in English once `site-settings.brandName` and `site-settings.menu.ctaLabel` have English

@@ -6,6 +6,8 @@ import { localePath, requestLocale } from '@/lib/i18n';
 import { previewUrl } from '@/lib/preview-token';
 import { collectionComponents } from '@/modules/cms/admin/document/config';
 import { adminGroup } from '@/modules/cms/admin/icons';
+import { PRODUCT_DESCRIPTIONS } from '@/modules/cms/admin/descriptions/catalogue';
+import { describeFields } from '@/modules/cms/admin/descriptions/describe';
 
 const PRICE_HELP = {
   ar: 'يجب أن يطابق السعر في التطبيق (لا مزامنة آلية).',
@@ -56,257 +58,322 @@ export const Products: CollectionConfig = {
     afterChange: [revalidateProducts],
     afterDelete: [revalidateProducts],
   },
-  fields: [
-    {
-      type: 'row',
-      fields: [
-        {
-          name: 'name',
-          type: 'text',
-          required: true,
-          localized: true,
-          label: { ar: 'الاسم', en: 'Name' },
-        },
-        {
-          name: 'slug',
-          type: 'text',
-          required: true,
-          unique: true,
-          index: true,
-          label: { ar: 'المعرّف في الرابط', en: 'Slug' },
-          admin: {
-            description: { ar: 'حروف لاتينية صغيرة وشرطات فقط', en: 'lowercase-hyphenated' },
+  fields: describeFields(
+    [
+      {
+        type: 'tabs',
+        tabs: [
+          {
+            label: { ar: 'الأساسيات', en: 'Basics' },
+            fields: [
+              {
+                type: 'row',
+                fields: [
+                  {
+                    name: 'name',
+                    type: 'text',
+                    required: true,
+                    localized: true,
+                    label: { ar: 'الاسم', en: 'Name' },
+                  },
+                  {
+                    name: 'slug',
+                    type: 'text',
+                    required: true,
+                    unique: true,
+                    index: true,
+                    label: { ar: 'المعرّف في الرابط', en: 'Slug' },
+                    admin: {
+                      description: {
+                        ar: 'حروف لاتينية صغيرة وشرطات فقط',
+                        en: 'lowercase-hyphenated',
+                      },
+                    },
+                    validate: (value: unknown) =>
+                      typeof value === 'string' && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value)
+                        ? true
+                        : 'حروف لاتينية صغيرة وأرقام وشرطات فقط',
+                  },
+                ],
+              },
+              {
+                name: 'shortDescription',
+                type: 'textarea',
+                required: true,
+                localized: true,
+                label: { ar: 'الوصف المختصر', en: 'Short description' },
+                admin: {
+                  description: {
+                    ar: 'سطر واحد للبطاقات ووصف الصفحة',
+                    en: 'One line for cards and meta',
+                  },
+                },
+              },
+              {
+                name: 'description',
+                type: 'textarea',
+                required: true,
+                localized: true,
+                label: { ar: 'الوصف الكامل', en: 'Description' },
+              },
+              {
+                type: 'row',
+                fields: [
+                  {
+                    name: 'baseCost',
+                    type: 'number',
+                    required: true,
+                    min: 1,
+                    label: { ar: 'التكلفة الأساسية (ريال)', en: 'Base cost (SAR)' },
+                    admin: { description: PRICE_HELP, step: 1 },
+                  },
+                  {
+                    name: 'suggestedPrice',
+                    type: 'number',
+                    required: true,
+                    min: 1,
+                    label: { ar: 'سعر البيع المقترح (ريال)', en: 'Suggested price (SAR)' },
+                    admin: { description: PRICE_HELP, step: 1 },
+                    validate: (
+                      value: unknown,
+                      { siblingData }: { siblingData: Record<string, unknown> },
+                    ) => {
+                      const base = siblingData['baseCost'];
+                      if (typeof value === 'number' && typeof base === 'number' && value < base) {
+                        return 'سعر البيع المقترح يجب ألا يقل عن التكلفة الأساسية';
+                      }
+                      return true;
+                    },
+                  },
+                  {
+                    name: 'sortOrder',
+                    type: 'number',
+                    required: true,
+                    defaultValue: 1,
+                    label: { ar: 'الترتيب', en: 'Order' },
+                  },
+                ],
+              },
+            ],
           },
-          validate: (value: unknown) =>
-            typeof value === 'string' && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value)
-              ? true
-              : 'حروف لاتينية صغيرة وأرقام وشرطات فقط',
-        },
-      ],
-    },
-    {
-      name: 'shortDescription',
-      type: 'textarea',
-      required: true,
-      localized: true,
-      label: { ar: 'الوصف المختصر', en: 'Short description' },
-      admin: {
-        description: { ar: 'سطر واحد للبطاقات ووصف الصفحة', en: 'One line for cards and meta' },
+          {
+            label: { ar: 'الصور والألوان', en: 'Photos & colours' },
+            fields: [
+              {
+                name: 'colors',
+                type: 'array',
+                required: true,
+                minRows: 1,
+                label: { ar: 'الألوان', en: 'Colours' },
+                labels: {
+                  singular: { ar: 'لون', en: 'Colour' },
+                  plural: { ar: 'الألوان', en: 'Colours' },
+                },
+                fields: [
+                  {
+                    type: 'row',
+                    fields: [
+                      {
+                        name: 'slug',
+                        type: 'text',
+                        required: true,
+                        label: { ar: 'المعرّف', en: 'Slug' },
+                      },
+                      {
+                        name: 'name',
+                        type: 'text',
+                        required: true,
+                        localized: true,
+                        label: { ar: 'اسم اللون', en: 'Name' },
+                      },
+                      {
+                        name: 'hex',
+                        type: 'text',
+                        required: true,
+                        label: { ar: 'اللون (hex)', en: 'Hex' },
+                        validate: (value: unknown) =>
+                          typeof value === 'string' && /^#[0-9A-Fa-f]{6}$/.test(value)
+                            ? true
+                            : 'مثال: #FFFFFF',
+                      },
+                    ],
+                  },
+                  {
+                    type: 'row',
+                    fields: [
+                      {
+                        name: 'front',
+                        type: 'upload',
+                        relationTo: 'media',
+                        required: true,
+                        label: { ar: 'صورة الواجهة الأمامية', en: 'Front photo' },
+                      },
+                      {
+                        name: 'back',
+                        type: 'upload',
+                        relationTo: 'media',
+                        label: { ar: 'صورة الواجهة الخلفية', en: 'Back photo' },
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            label: { ar: 'المقاسات', en: 'Sizes' },
+            fields: [
+              {
+                name: 'sizes',
+                type: 'array',
+                required: true,
+                minRows: 1,
+                label: { ar: 'المقاسات', en: 'Sizes' },
+                labels: {
+                  singular: { ar: 'مقاس', en: 'Size' },
+                  plural: { ar: 'المقاسات', en: 'Sizes' },
+                },
+                fields: [
+                  {
+                    name: 'label',
+                    type: 'text',
+                    required: true,
+                    localized: true,
+                    label: { ar: 'المقاس', en: 'Label' },
+                  },
+                  {
+                    type: 'row',
+                    fields: [
+                      {
+                        name: 'length',
+                        type: 'number',
+                        label: { ar: 'الطول (سم)', en: 'Length (cm)' },
+                      },
+                      {
+                        name: 'chest',
+                        type: 'number',
+                        label: { ar: 'عرض الصدر (سم)', en: 'Chest (cm)' },
+                      },
+                      {
+                        name: 'sleeve',
+                        type: 'number',
+                        label: { ar: 'طول الكم (سم)', en: 'Sleeve (cm)' },
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
+                name: 'sizesSummary',
+                type: 'text',
+                required: true,
+                localized: true,
+                label: { ar: 'ملخص المقاسات', en: 'Sizes summary' },
+                admin: { description: { ar: 'مثال: S – 2XL', en: 'e.g. S – 2XL' } },
+              },
+              {
+                type: 'row',
+                fields: [
+                  {
+                    name: 'material',
+                    type: 'text',
+                    required: true,
+                    localized: true,
+                    label: { ar: 'الخامة', en: 'Material' },
+                  },
+                  {
+                    name: 'weightGrams',
+                    type: 'number',
+                    required: true,
+                    min: 1,
+                    label: { ar: 'الوزن (غم)', en: 'Weight (g)' },
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            label: { ar: 'منطقة الطباعة', en: 'Print area' },
+            fields: [
+              {
+                name: 'printArea',
+                type: 'group',
+                label: { ar: 'منطقة الطباعة', en: 'Print area' },
+                fields: [
+                  {
+                    name: 'label',
+                    type: 'text',
+                    required: true,
+                    localized: true,
+                    defaultValue: 'الواجهة الأمامية، 28 × 38 سم',
+                    label: { ar: 'الوصف', en: 'Label' },
+                  },
+                  {
+                    type: 'row',
+                    fields: [
+                      {
+                        name: 'widthCm',
+                        type: 'number',
+                        required: true,
+                        defaultValue: 28,
+                        validate: (value: null | number | undefined) =>
+                          value === 28 || 'العرض ثابت: 28 سم',
+                        label: { ar: 'العرض (سم)', en: 'Width (cm)' },
+                        admin: { readOnly: true },
+                      },
+                      {
+                        name: 'heightCm',
+                        type: 'number',
+                        required: true,
+                        defaultValue: 38,
+                        validate: (value: null | number | undefined) =>
+                          value === 38 || 'الارتفاع ثابت: 38 سم',
+                        label: { ar: 'الارتفاع (سم)', en: 'Height (cm)' },
+                        admin: { readOnly: true },
+                      },
+                    ],
+                  },
+                  {
+                    name: 'canvas',
+                    type: 'group',
+                    label: {
+                      ar: 'موضع الطباعة على الصورة (نِسَب 0–1)',
+                      en: 'Canvas fractions (0–1)',
+                    },
+                    admin: {
+                      description: {
+                        ar: 'يحدد أين تظهر منطقة الطباعة فوق صورة المنتج في المصمّم التفاعلي.',
+                        en: 'Where the print area sits over the product photo in the designer.',
+                      },
+                    },
+                    fields: [
+                      {
+                        type: 'row',
+                        fields: [
+                          { name: 'x', type: 'number', required: true, min: 0, max: 1, label: 'x' },
+                          { name: 'y', type: 'number', required: true, min: 0, max: 1, label: 'y' },
+                          { name: 'w', type: 'number', required: true, min: 0, max: 1, label: 'w' },
+                          { name: 'h', type: 'number', required: true, min: 0, max: 1, label: 'h' },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
+                name: 'printMethodLabel',
+                type: 'text',
+                required: true,
+                localized: true,
+                defaultValue: 'طباعة رقمية عالية الجودة',
+                label: { ar: 'طريقة الطباعة', en: 'Print method' },
+              },
+            ],
+          },
+        ],
       },
-    },
-    {
-      name: 'description',
-      type: 'textarea',
-      required: true,
-      localized: true,
-      label: { ar: 'الوصف الكامل', en: 'Description' },
-    },
-    {
-      type: 'row',
-      fields: [
-        {
-          name: 'baseCost',
-          type: 'number',
-          required: true,
-          min: 1,
-          label: { ar: 'التكلفة الأساسية (ريال)', en: 'Base cost (SAR)' },
-          admin: { description: PRICE_HELP, step: 1 },
-        },
-        {
-          name: 'suggestedPrice',
-          type: 'number',
-          required: true,
-          min: 1,
-          label: { ar: 'سعر البيع المقترح (ريال)', en: 'Suggested price (SAR)' },
-          admin: { description: PRICE_HELP, step: 1 },
-          validate: (value: unknown, { siblingData }: { siblingData: Record<string, unknown> }) => {
-            const base = siblingData['baseCost'];
-            if (typeof value === 'number' && typeof base === 'number' && value < base) {
-              return 'سعر البيع المقترح يجب ألا يقل عن التكلفة الأساسية';
-            }
-            return true;
-          },
-        },
-        {
-          name: 'sortOrder',
-          type: 'number',
-          required: true,
-          defaultValue: 1,
-          label: { ar: 'الترتيب', en: 'Order' },
-        },
-      ],
-    },
-    {
-      name: 'colors',
-      type: 'array',
-      required: true,
-      minRows: 1,
-      label: { ar: 'الألوان', en: 'Colours' },
-      labels: { singular: { ar: 'لون', en: 'Colour' }, plural: { ar: 'الألوان', en: 'Colours' } },
-      fields: [
-        {
-          type: 'row',
-          fields: [
-            { name: 'slug', type: 'text', required: true, label: { ar: 'المعرّف', en: 'Slug' } },
-            {
-              name: 'name',
-              type: 'text',
-              required: true,
-              localized: true,
-              label: { ar: 'اسم اللون', en: 'Name' },
-            },
-            {
-              name: 'hex',
-              type: 'text',
-              required: true,
-              label: { ar: 'اللون (hex)', en: 'Hex' },
-              validate: (value: unknown) =>
-                typeof value === 'string' && /^#[0-9A-Fa-f]{6}$/.test(value)
-                  ? true
-                  : 'مثال: #FFFFFF',
-            },
-          ],
-        },
-        {
-          type: 'row',
-          fields: [
-            {
-              name: 'front',
-              type: 'upload',
-              relationTo: 'media',
-              required: true,
-              label: { ar: 'صورة الواجهة الأمامية', en: 'Front photo' },
-            },
-            {
-              name: 'back',
-              type: 'upload',
-              relationTo: 'media',
-              label: { ar: 'صورة الواجهة الخلفية', en: 'Back photo' },
-            },
-          ],
-        },
-      ],
-    },
-    {
-      name: 'sizes',
-      type: 'array',
-      required: true,
-      minRows: 1,
-      label: { ar: 'المقاسات', en: 'Sizes' },
-      labels: { singular: { ar: 'مقاس', en: 'Size' }, plural: { ar: 'المقاسات', en: 'Sizes' } },
-      fields: [
-        {
-          name: 'label',
-          type: 'text',
-          required: true,
-          localized: true,
-          label: { ar: 'المقاس', en: 'Label' },
-        },
-        {
-          type: 'row',
-          fields: [
-            { name: 'length', type: 'number', label: { ar: 'الطول (سم)', en: 'Length (cm)' } },
-            { name: 'chest', type: 'number', label: { ar: 'عرض الصدر (سم)', en: 'Chest (cm)' } },
-            { name: 'sleeve', type: 'number', label: { ar: 'طول الكم (سم)', en: 'Sleeve (cm)' } },
-          ],
-        },
-      ],
-    },
-    {
-      name: 'sizesSummary',
-      type: 'text',
-      required: true,
-      localized: true,
-      label: { ar: 'ملخص المقاسات', en: 'Sizes summary' },
-      admin: { description: { ar: 'مثال: S – 2XL', en: 'e.g. S – 2XL' } },
-    },
-    {
-      type: 'row',
-      fields: [
-        {
-          name: 'material',
-          type: 'text',
-          required: true,
-          localized: true,
-          label: { ar: 'الخامة', en: 'Material' },
-        },
-        {
-          name: 'weightGrams',
-          type: 'number',
-          required: true,
-          min: 1,
-          label: { ar: 'الوزن (غم)', en: 'Weight (g)' },
-        },
-      ],
-    },
-    {
-      name: 'printArea',
-      type: 'group',
-      label: { ar: 'منطقة الطباعة', en: 'Print area' },
-      fields: [
-        {
-          name: 'label',
-          type: 'text',
-          required: true,
-          localized: true,
-          defaultValue: 'الواجهة الأمامية، 28 × 38 سم',
-          label: { ar: 'الوصف', en: 'Label' },
-        },
-        {
-          type: 'row',
-          fields: [
-            {
-              name: 'widthCm',
-              type: 'number',
-              required: true,
-              defaultValue: 28,
-              validate: (value: null | number | undefined) => value === 28 || 'العرض ثابت: 28 سم',
-              label: { ar: 'العرض (سم)', en: 'Width (cm)' },
-              admin: { readOnly: true },
-            },
-            {
-              name: 'heightCm',
-              type: 'number',
-              required: true,
-              defaultValue: 38,
-              validate: (value: null | number | undefined) => value === 38 || 'الارتفاع ثابت: 38 سم',
-              label: { ar: 'الارتفاع (سم)', en: 'Height (cm)' },
-              admin: { readOnly: true },
-            },
-          ],
-        },
-        {
-          name: 'canvas',
-          type: 'group',
-          label: { ar: 'موضع الطباعة على الصورة (نِسَب 0–1)', en: 'Canvas fractions (0–1)' },
-          admin: {
-            description: {
-              ar: 'يحدد أين تظهر منطقة الطباعة فوق صورة المنتج في المصمّم التفاعلي.',
-              en: 'Where the print area sits over the product photo in the designer.',
-            },
-          },
-          fields: [
-            {
-              type: 'row',
-              fields: [
-                { name: 'x', type: 'number', required: true, min: 0, max: 1, label: 'x' },
-                { name: 'y', type: 'number', required: true, min: 0, max: 1, label: 'y' },
-                { name: 'w', type: 'number', required: true, min: 0, max: 1, label: 'w' },
-                { name: 'h', type: 'number', required: true, min: 0, max: 1, label: 'h' },
-              ],
-            },
-          ],
-        },
-      ],
-    },
-    {
-      name: 'printMethodLabel',
-      type: 'text',
-      required: true,
-      localized: true,
-      defaultValue: 'طباعة رقمية عالية الجودة',
-      label: { ar: 'طريقة الطباعة', en: 'Print method' },
-    },
-    savedByField,
-  ],
+      savedByField,
+    ],
+    PRODUCT_DESCRIPTIONS,
+  ),
 };

@@ -1,9 +1,11 @@
-import type { Field, GlobalConfig } from 'payload';
+import type { Field, GlobalConfig, NamedTab } from 'payload';
 import { hiddenUnlessAdmin, isAdmin } from '@/modules/cms/access';
 import { revalidateGlobal } from '@/modules/cms/hooks/revalidate';
 import { savedByField, stampSavedByGlobal } from '@/modules/cms/fields/saved-by';
 import { globalComponents } from '@/modules/cms/admin/document/config';
 import { adminGroup } from '@/modules/cms/admin/icons';
+import { SITE_SETTINGS_DESCRIPTIONS } from '@/modules/cms/admin/descriptions/site';
+import { describeFields } from '@/modules/cms/admin/descriptions/describe';
 
 const APP_HELP = {
   ar: 'يجب أن يطابق التطبيق (لا مزامنة آلية).',
@@ -46,18 +48,16 @@ const navItem: Field[] = [
 ];
 
 /**
- * The menus (the former Navigation global, folded in by ADR-046): the header links, the
- * footer's policy links, the CTA and the three menu labels Dhia keeps editable.
+ * The menus (the former Navigation global, folded in by ADR-046) as a named tab: the header
+ * links, the footer's policy links, the CTA and the three menu labels Dhia keeps editable.
+ * A named tab stores under `menu.*` like the group it replaced.
  */
-const menu: Field = {
+const menu: NamedTab = {
   name: 'menu',
-  type: 'group',
   label: { ar: 'القوائم والتذييل', en: 'Menus & footer' },
-  admin: {
-    description: {
-      ar: 'روابط الترويسة والتذييل وتسميات القائمة، في كل صفحة من الموقع.',
-      en: 'The header and footer links and the menu labels, on every page of the site.',
-    },
+  description: {
+    ar: 'روابط الترويسة والتذييل وتسميات القائمة، في كل صفحة من الموقع.',
+    en: 'The header and footer links and the menu labels, on every page of the site.',
   },
   fields: [
     {
@@ -171,133 +171,160 @@ export const SiteSettings: GlobalConfig = {
   },
   access: { read: () => true, update: isAdmin },
   hooks: { beforeChange: [stampSavedByGlobal], afterChange: [revalidateGlobal] },
-  fields: [
-    {
-      type: 'row',
-      fields: [
-        {
-          name: 'brandName',
-          type: 'text',
-          required: true,
-          localized: true,
-          label: { ar: 'اسم العلامة', en: 'Brand name' },
-        },
-        {
-          name: 'brandNameLatin',
-          type: 'text',
-          required: true,
-          label: { ar: 'الاسم اللاتيني', en: 'Latin name' },
-        },
-      ],
-    },
-    {
-      name: 'tagline',
-      type: 'text',
-      required: true,
-      localized: true,
-      label: { ar: 'الشعار النصي', en: 'Tagline' },
-    },
-    {
-      name: 'contact',
-      type: 'group',
-      label: { ar: 'التواصل', en: 'Contact' },
-      fields: [
-        {
-          type: 'row',
-          fields: [
-            {
-              name: 'phone',
-              type: 'text',
-              required: true,
-              label: { ar: 'الهاتف (محلي)', en: 'Phone (local)' },
-            },
-            {
-              name: 'phoneIntl',
-              type: 'text',
-              required: true,
-              label: { ar: 'الهاتف (دولي)', en: 'Phone (intl)' },
-            },
-            {
-              name: 'whatsapp',
-              type: 'text',
-              required: true,
-              label: { ar: 'واتساب (أرقام فقط)', en: 'WhatsApp digits' },
-            },
-          ],
-        },
-        {
-          name: 'email',
-          type: 'email',
-          required: true,
-          label: { ar: 'البريد الإلكتروني', en: 'Email' },
-        },
-      ],
-    },
-    {
-      name: 'social',
-      type: 'group',
-      label: { ar: 'الحسابات', en: 'Social' },
-      fields: [
-        { name: 'x', type: 'text', required: true, label: 'X' },
-        { name: 'instagram', type: 'text', required: true, label: 'Instagram' },
-        { name: 'tiktok', type: 'text', required: true, label: 'TikTok' },
-      ],
-    },
-    {
-      type: 'row',
-      fields: [
-        {
-          name: 'welcomeCredit',
-          type: 'number',
-          required: true,
-          min: 0,
-          label: { ar: 'الرصيد الترحيبي (ريال)', en: 'Welcome credit (SAR)' },
-          admin: { description: APP_HELP, step: 1 },
-        },
-        {
-          name: 'deliveryMaxDays',
-          type: 'number',
-          required: true,
-          min: 1,
-          label: { ar: 'أقصى مدة توصيل (أيام)', en: 'Max delivery days' },
-          admin: { description: APP_HELP, step: 1 },
-        },
-      ],
-    },
-    {
-      type: 'row',
-      fields: [
-        {
-          name: 'deliveryOrigin',
-          type: 'text',
-          required: true,
-          localized: true,
-          label: { ar: 'مدينة الإنتاج', en: 'Origin city' },
-        },
-        {
-          name: 'deliveryRegion',
-          type: 'text',
-          required: true,
-          localized: true,
-          label: { ar: 'المنطقة (للبيانات المنظمة)', en: 'Region (structured data)' },
-        },
-      ],
-    },
-    {
-      name: 'bookingUrl',
-      type: 'text',
-      label: { ar: 'رابط حجز الاستشارة (Cal.com)', en: 'Booking URL' },
-      admin: {
-        description: { ar: 'اتركه فارغاً لاستخدام واتساب', en: 'Leave empty to use WhatsApp' },
+  fields: describeFields(
+    [
+      // Five tabs (ADR-046): the menus are a named tab storing under `menu.*`.
+      {
+        type: 'tabs',
+        tabs: [
+          {
+            label: { ar: 'العلامة', en: 'Brand' },
+            fields: [
+              {
+                type: 'row',
+                fields: [
+                  {
+                    name: 'brandName',
+                    type: 'text',
+                    required: true,
+                    localized: true,
+                    label: { ar: 'اسم العلامة', en: 'Brand name' },
+                  },
+                  {
+                    name: 'brandNameLatin',
+                    type: 'text',
+                    required: true,
+                    label: { ar: 'الاسم اللاتيني', en: 'Latin name' },
+                  },
+                ],
+              },
+              {
+                name: 'tagline',
+                type: 'text',
+                required: true,
+                localized: true,
+                label: { ar: 'الشعار النصي', en: 'Tagline' },
+              },
+            ],
+          },
+          {
+            label: { ar: 'التواصل والحسابات', en: 'Contact & social' },
+            fields: [
+              {
+                name: 'contact',
+                type: 'group',
+                label: { ar: 'التواصل', en: 'Contact' },
+                fields: [
+                  {
+                    type: 'row',
+                    fields: [
+                      {
+                        name: 'phone',
+                        type: 'text',
+                        required: true,
+                        label: { ar: 'الهاتف (محلي)', en: 'Phone (local)' },
+                      },
+                      {
+                        name: 'phoneIntl',
+                        type: 'text',
+                        required: true,
+                        label: { ar: 'الهاتف (دولي)', en: 'Phone (intl)' },
+                      },
+                      {
+                        name: 'whatsapp',
+                        type: 'text',
+                        required: true,
+                        label: { ar: 'واتساب (أرقام فقط)', en: 'WhatsApp digits' },
+                      },
+                    ],
+                  },
+                  {
+                    name: 'email',
+                    type: 'email',
+                    required: true,
+                    label: { ar: 'البريد الإلكتروني', en: 'Email' },
+                  },
+                ],
+              },
+              {
+                name: 'social',
+                type: 'group',
+                label: { ar: 'الحسابات', en: 'Social' },
+                fields: [
+                  { name: 'x', type: 'text', required: true, label: 'X' },
+                  { name: 'instagram', type: 'text', required: true, label: 'Instagram' },
+                  { name: 'tiktok', type: 'text', required: true, label: 'TikTok' },
+                ],
+              },
+            ],
+          },
+          menu,
+          {
+            label: { ar: 'الأرقام والكيان', en: 'Numbers & legal' },
+            fields: [
+              {
+                type: 'row',
+                fields: [
+                  {
+                    name: 'welcomeCredit',
+                    type: 'number',
+                    required: true,
+                    min: 0,
+                    label: { ar: 'الرصيد الترحيبي (ريال)', en: 'Welcome credit (SAR)' },
+                    admin: { description: APP_HELP, step: 1 },
+                  },
+                  {
+                    name: 'deliveryMaxDays',
+                    type: 'number',
+                    required: true,
+                    min: 1,
+                    label: { ar: 'أقصى مدة توصيل (أيام)', en: 'Max delivery days' },
+                    admin: { description: APP_HELP, step: 1 },
+                  },
+                ],
+              },
+              {
+                type: 'row',
+                fields: [
+                  {
+                    name: 'deliveryOrigin',
+                    type: 'text',
+                    required: true,
+                    localized: true,
+                    label: { ar: 'مدينة الإنتاج', en: 'Origin city' },
+                  },
+                  {
+                    name: 'deliveryRegion',
+                    type: 'text',
+                    required: true,
+                    localized: true,
+                    label: { ar: 'المنطقة (للبيانات المنظمة)', en: 'Region (structured data)' },
+                  },
+                ],
+              },
+              {
+                name: 'bookingUrl',
+                type: 'text',
+                label: { ar: 'رابط حجز الاستشارة (Cal.com)', en: 'Booking URL' },
+                admin: {
+                  description: {
+                    ar: 'اتركه فارغاً لاستخدام واتساب',
+                    en: 'Leave empty to use WhatsApp',
+                  },
+                },
+              },
+              {
+                name: 'legalEntity',
+                type: 'text',
+                required: true,
+                label: { ar: 'الكيان القانوني', en: 'Legal entity' },
+              },
+            ],
+          },
+        ],
       },
-    },
-    {
-      name: 'legalEntity',
-      type: 'text',
-      required: true,
-      label: { ar: 'الكيان القانوني', en: 'Legal entity' },
-    },
-    menu,
-    savedByField,
-  ],
+      savedByField,
+    ],
+    SITE_SETTINGS_DESCRIPTIONS,
+  ),
 };

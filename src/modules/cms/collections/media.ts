@@ -3,6 +3,8 @@ import { isAdmin, isEditorOrAdmin } from '@/modules/cms/access';
 import { savedByField, stampSavedBy } from '@/modules/cms/fields/saved-by';
 import { collectionComponents } from '@/modules/cms/admin/document/config';
 import { adminGroup } from '@/modules/cms/admin/icons';
+import { MEDIA_DESCRIPTIONS } from '@/modules/cms/admin/descriptions/site';
+import { describeFields } from '@/modules/cms/admin/descriptions/describe';
 
 const ARABIC = /[؀-ۿ]/;
 
@@ -52,31 +54,34 @@ export const Media: CollectionConfig = {
     adminThumbnail: 'thumbnail',
   },
   hooks: { beforeChange: [stampSavedBy] },
-  fields: [
-    {
-      name: 'alt',
-      type: 'text',
-      required: true,
-      localized: true,
-      label: { ar: 'النص البديل', en: 'Alt text' },
-      admin: {
-        description: {
-          ar: 'وصف الصورة كما يقرؤه قارئ الشاشة، بلغة التبويب المفتوح. مطلوب.',
-          en: 'Describe the image in the language of the open locale tab; required.',
+  fields: describeFields(
+    [
+      {
+        name: 'alt',
+        type: 'text',
+        required: true,
+        localized: true,
+        label: { ar: 'النص البديل', en: 'Alt text' },
+        admin: {
+          description: {
+            ar: 'وصف الصورة كما يقرؤه قارئ الشاشة، بلغة التبويب المفتوح. مطلوب.',
+            en: 'Describe the image in the language of the open locale tab; required.',
+          },
+        },
+        // Arabic in the Arabic locale, any script in English (ADR-043).
+        validate: (value: unknown, { req }: { req: { locale?: string } }) => {
+          if (typeof value !== 'string' || value.trim().length < 3) return 'اكتب نصاً بديلاً';
+          if (req.locale !== 'en' && !ARABIC.test(value)) return 'النص البديل يجب أن يكون بالعربية';
+          return true;
         },
       },
-      // Arabic in the Arabic locale, any script in English (ADR-043).
-      validate: (value: unknown, { req }: { req: { locale?: string } }) => {
-        if (typeof value !== 'string' || value.trim().length < 3) return 'اكتب نصاً بديلاً';
-        if (req.locale !== 'en' && !ARABIC.test(value)) return 'النص البديل يجب أن يكون بالعربية';
-        return true;
+      {
+        name: 'credit',
+        type: 'text',
+        label: { ar: 'المصدر (اختياري)', en: 'Credit (optional)' },
       },
-    },
-    {
-      name: 'credit',
-      type: 'text',
-      label: { ar: 'المصدر (اختياري)', en: 'Credit (optional)' },
-    },
-    savedByField,
-  ],
+      savedByField,
+    ],
+    MEDIA_DESCRIPTIONS,
+  ),
 };

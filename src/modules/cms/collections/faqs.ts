@@ -6,6 +6,8 @@ import { PATHS_FOR_FAQS, revalidateRoutes } from '@/modules/cms/hooks/revalidate
 import { savedByField, stampSavedBy } from '@/modules/cms/fields/saved-by';
 import { collectionComponents } from '@/modules/cms/admin/document/config';
 import { adminGroup } from '@/modules/cms/admin/icons';
+import { FAQ_DESCRIPTIONS } from '@/modules/cms/admin/descriptions/catalogue';
+import { describeFields } from '@/modules/cms/admin/descriptions/describe';
 
 /** The home accordion shows exactly this many entries (BRD 4.4, 6.4.9). */
 export const HOME_FAQ_LIMIT = 5;
@@ -83,70 +85,73 @@ export const Faqs: CollectionConfig = {
     afterChange: [revalidateRoutes(PATHS_FOR_FAQS)],
     afterDelete: [revalidateRoutes(PATHS_FOR_FAQS)],
   },
-  fields: [
-    {
-      name: 'question',
-      type: 'text',
-      required: true,
-      localized: true,
-      label: { ar: 'السؤال', en: 'Question' },
-    },
-    {
-      name: 'answer',
-      type: 'textarea',
-      required: true,
-      localized: true,
-      label: { ar: 'الإجابة', en: 'Answer' },
-      admin: { description: { ar: 'نص عادي، بلا روابط', en: 'Plain text, no links' } },
-    },
-    {
-      type: 'row',
-      fields: [
-        {
-          name: 'group',
-          type: 'select',
-          required: true,
-          options: FAQ_GROUPS.map((g) => ({ label: g, value: g })),
-          label: { ar: 'القسم', en: 'Group' },
-        },
-        {
-          name: 'order',
-          type: 'number',
-          required: true,
-          defaultValue: 1,
-          label: { ar: 'الترتيب داخل القسم', en: 'Order within the group' },
-          admin: { step: 1 },
-        },
-      ],
-    },
-    {
-      type: 'row',
-      fields: [
-        {
-          name: 'showOnHome',
-          type: 'checkbox',
-          defaultValue: false,
-          label: { ar: 'يظهر في الرئيسية', en: 'Show on the home page' },
-          admin: {
-            description: {
-              ar: `${HOME_FAQ_LIMIT} أسئلة كحد أقصى`,
-              en: `At most ${HOME_FAQ_LIMIT} entries`,
+  fields: describeFields(
+    [
+      {
+        name: 'question',
+        type: 'text',
+        required: true,
+        localized: true,
+        label: { ar: 'السؤال', en: 'Question' },
+      },
+      {
+        name: 'answer',
+        type: 'textarea',
+        required: true,
+        localized: true,
+        label: { ar: 'الإجابة', en: 'Answer' },
+        admin: { description: { ar: 'نص عادي، بلا روابط', en: 'Plain text, no links' } },
+      },
+      {
+        type: 'row',
+        fields: [
+          {
+            name: 'group',
+            type: 'select',
+            required: true,
+            options: FAQ_GROUPS.map((g) => ({ label: g, value: g })),
+            label: { ar: 'القسم', en: 'Group' },
+          },
+          {
+            name: 'order',
+            type: 'number',
+            required: true,
+            defaultValue: 1,
+            label: { ar: 'الترتيب داخل القسم', en: 'Order within the group' },
+            admin: { step: 1 },
+          },
+        ],
+      },
+      {
+        type: 'row',
+        fields: [
+          {
+            name: 'showOnHome',
+            type: 'checkbox',
+            defaultValue: false,
+            label: { ar: 'يظهر في الرئيسية', en: 'Show on the home page' },
+            admin: {
+              description: {
+                ar: `${HOME_FAQ_LIMIT} أسئلة كحد أقصى`,
+                en: `At most ${HOME_FAQ_LIMIT} entries`,
+              },
             },
           },
-        },
-        {
-          name: 'homeOrder',
-          type: 'number',
-          min: 1,
-          max: HOME_FAQ_LIMIT,
-          label: { ar: 'الترتيب في الرئيسية', en: 'Order on the home page' },
-          admin: {
-            step: 1,
-            condition: (_data, siblingData) => Boolean(siblingData?.['showOnHome']),
+          {
+            name: 'homeOrder',
+            type: 'number',
+            min: 1,
+            max: HOME_FAQ_LIMIT,
+            label: { ar: 'الترتيب في الرئيسية', en: 'Order on the home page' },
+            admin: {
+              step: 1,
+              condition: (_data, siblingData) => Boolean(siblingData?.['showOnHome']),
+            },
           },
-        },
-      ],
-    },
-    savedByField,
-  ],
+        ],
+      },
+      savedByField,
+    ],
+    FAQ_DESCRIPTIONS,
+  ),
 };

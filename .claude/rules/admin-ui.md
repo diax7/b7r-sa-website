@@ -20,8 +20,14 @@ note), `check:rtl` and the admin e2e.
    slot; the locale note rides along when the config has per-language fields).
 3. `labels.singular` / `labels.plural` (collections) or `label` (globals) in Arabic + English;
    nouns, never sentences.
-4. `admin.description`: one Arabic sentence about what it is *for the site*, not how it is
-   stored. English fallback too.
+4. `admin.description` on the entity: one sentence about what it is *for the site*, not how
+   it is stored, Arabic + English. And on **every field an editor sees** (ADR-046): what it
+   does on the site and where, then the limit or an example, through the entity's map in
+   `src/modules/cms/admin/descriptions/*.ts` (engine fields in
+   `src/modules/ai-content/descriptions.ts`), applied by `describeFields()` on the config's
+   `fields`; `tests/admin-config.test.ts` refuses a field without both languages and a map
+   key that names no field. A form with more than one screen of fields is tabs, one per
+   section of the site in site order (named tabs where a group existed: same columns).
 5. `admin.useAsTitle` (collections) on the field an editor recognises; `admin.defaultColumns`
    with the 3–5 columns that answer "which one is this?"; `admin.listSearchableFields` on the
    title-like fields (the command palette searches the same fields).

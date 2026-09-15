@@ -5,6 +5,8 @@ import { SLUG_PATTERN } from '@/modules/cms/collections/pages';
 import { savedByField, stampSavedBy } from '@/modules/cms/fields/saved-by';
 import { collectionComponents } from '@/modules/cms/admin/document/config';
 import { adminGroup } from '@/modules/cms/admin/icons';
+import { TAG_DESCRIPTIONS } from '@/modules/cms/admin/descriptions/blog';
+import { describeFields } from '@/modules/cms/admin/descriptions/describe';
 
 /**
  * Post tags (BRD 10.1): optional, free, used by related posts after the hub. No public tag
@@ -50,28 +52,31 @@ export const Tags: CollectionConfig = {
       },
     ],
   },
-  fields: [
-    {
-      type: 'row',
-      fields: [
-        {
-          name: 'name',
-          type: 'text',
-          required: true,
-          localized: true,
-          label: { ar: 'الاسم', en: 'Name' },
-        },
-        {
-          name: 'slug',
-          type: 'text',
-          required: true,
-          unique: true,
-          index: true,
-          label: { ar: 'المعرّف', en: 'Slug' },
-          admin: { description: { ar: 'حروف لاتينية صغيرة وشرطات', en: 'lowercase-hyphenated' } },
-        },
-      ],
-    },
-    savedByField,
-  ],
+  fields: describeFields(
+    [
+      {
+        type: 'row',
+        fields: [
+          {
+            name: 'name',
+            type: 'text',
+            required: true,
+            localized: true,
+            label: { ar: 'الاسم', en: 'Name' },
+          },
+          {
+            name: 'slug',
+            type: 'text',
+            required: true,
+            unique: true,
+            index: true,
+            label: { ar: 'المعرّف', en: 'Slug' },
+            admin: { description: { ar: 'حروف لاتينية صغيرة وشرطات', en: 'lowercase-hyphenated' } },
+          },
+        ],
+      },
+      savedByField,
+    ],
+    TAG_DESCRIPTIONS,
+  ),
 };

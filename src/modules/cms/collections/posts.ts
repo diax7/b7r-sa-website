@@ -33,6 +33,8 @@ import { savedByField, stampSavedBy } from '@/modules/cms/fields/saved-by';
 import { isDraftSave, revalidatePosts } from '@/modules/cms/hooks/revalidate';
 import { collectionComponents } from '@/modules/cms/admin/document/config';
 import { adminGroup } from '@/modules/cms/admin/icons';
+import { POST_DESCRIPTIONS } from '@/modules/cms/admin/descriptions/blog';
+import { describeFields } from '@/modules/cms/admin/descriptions/describe';
 
 /**
  * The post body's editor: exactly the features the Markdown transformers cover, so the
@@ -174,239 +176,271 @@ export const Posts: CollectionConfig = {
     afterChange: [revalidatePosts],
     afterDelete: [revalidatePosts],
   },
-  fields: [
-    {
-      type: 'row',
-      fields: [
-        {
-          name: 'title',
-          type: 'text',
-          required: true,
-          localized: true,
-          maxLength: TITLE_MAX,
-          label: { ar: `العنوان (حتى ${TITLE_MAX} حرفاً)`, en: `Title (≤ ${TITLE_MAX})` },
-        },
-        {
-          name: 'slug',
-          type: 'text',
-          required: true,
-          unique: true,
-          index: true,
-          label: { ar: 'المعرّف في الرابط', en: 'Slug' },
-          admin: {
-            description: {
-              ar: 'حروف لاتينية صغيرة وشرطات؛ يصبح /blog/المعرّف',
-              en: 'lowercase-hyphenated; served at /blog/slug',
-            },
+  fields: describeFields(
+    [
+      {
+        type: 'tabs',
+        tabs: [
+          {
+            label: { ar: 'المحتوى', en: 'Content' },
+            fields: [
+              {
+                type: 'row',
+                fields: [
+                  {
+                    name: 'title',
+                    type: 'text',
+                    required: true,
+                    localized: true,
+                    maxLength: TITLE_MAX,
+                    label: { ar: `العنوان (حتى ${TITLE_MAX} حرفاً)`, en: `Title (≤ ${TITLE_MAX})` },
+                  },
+                  {
+                    name: 'slug',
+                    type: 'text',
+                    required: true,
+                    unique: true,
+                    index: true,
+                    label: { ar: 'المعرّف في الرابط', en: 'Slug' },
+                    admin: {
+                      description: {
+                        ar: 'حروف لاتينية صغيرة وشرطات؛ يصبح /blog/المعرّف',
+                        en: 'lowercase-hyphenated; served at /blog/slug',
+                      },
+                    },
+                  },
+                ],
+              },
+              {
+                name: 'body',
+                type: 'richText',
+                required: true,
+                localized: true,
+                editor: postEditor,
+                label: { ar: 'المتن', en: 'Body' },
+                admin: {
+                  description: {
+                    ar: 'عناوين H2 بصيغة أسئلة، فقرات قصيرة، رابطان على الأقل إلى صفحات الموقع.',
+                    en: 'H2s as questions, short paragraphs, at least two links to pages of this site.',
+                  },
+                },
+              },
+            ],
+          },
+          {
+            label: { ar: 'الملخص والغلاف', en: 'Summary & cover' },
+            fields: [
+              {
+                name: 'excerpt',
+                type: 'textarea',
+                required: true,
+                localized: true,
+                maxLength: EXCERPT_MAX,
+                label: {
+                  ar: `المقتطف (حتى ${EXCERPT_MAX} حرفاً)`,
+                  en: `Excerpt (≤ ${EXCERPT_MAX})`,
+                },
+                admin: {
+                  description: {
+                    ar: 'جملة أو جملتان تظهران في بطاقة المقال وفي نتائج البحث.',
+                    en: 'One or two sentences on the post card and in search results.',
+                  },
+                },
+              },
+              {
+                type: 'row',
+                fields: [
+                  {
+                    name: 'hub',
+                    type: 'relationship',
+                    relationTo: 'categories',
+                    required: true,
+                    label: { ar: 'القسم', en: 'Hub' },
+                  },
+                  {
+                    name: 'tags',
+                    type: 'relationship',
+                    relationTo: 'tags',
+                    hasMany: true,
+                    label: { ar: 'الوسوم (اختياري)', en: 'Tags (optional)' },
+                  },
+                ],
+              },
+              {
+                name: 'cover',
+                type: 'upload',
+                relationTo: 'media',
+                required: true,
+                label: { ar: 'الغلاف (16:9)', en: 'Cover (16:9)' },
+                admin: {
+                  description: {
+                    ar: 'صورة الغلاف مع نص بديل عربي في المكتبة.',
+                    en: 'The cover with its Arabic alt text in the library.',
+                  },
+                },
+              },
+              {
+                name: 'takeaways',
+                type: 'array',
+                required: true,
+                localized: true,
+                minRows: TAKEAWAYS,
+                maxRows: TAKEAWAYS,
+                label: { ar: 'أهم النقاط (ثلاث)', en: 'Key takeaways (three)' },
+                labels: {
+                  singular: { ar: 'نقطة', en: 'Takeaway' },
+                  plural: { ar: 'نقاط', en: 'Takeaways' },
+                },
+                fields: [
+                  {
+                    name: 'text',
+                    type: 'text',
+                    required: true,
+                    label: { ar: 'النقطة', en: 'Takeaway' },
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            label: { ar: 'البحث', en: 'Search' },
+            fields: [
+              {
+                name: 'seo',
+                type: 'group',
+                label: { ar: 'محركات البحث', en: 'SEO' },
+                admin: {
+                  description: {
+                    ar: 'اختياري: يُستخدم العنوان والمقتطف عندما تُترك فارغة.',
+                    en: 'Optional: the title and the excerpt are used when left empty.',
+                  },
+                },
+                fields: [
+                  {
+                    name: 'title',
+                    type: 'text',
+                    localized: true,
+                    maxLength: TITLE_MAX,
+                    label: {
+                      ar: `عنوان الصفحة (حتى ${TITLE_MAX} حرفاً)`,
+                      en: `Meta title (≤ ${TITLE_MAX})`,
+                    },
+                  },
+                  {
+                    name: 'description',
+                    type: 'textarea',
+                    localized: true,
+                    maxLength: EXCERPT_MAX,
+                    label: {
+                      ar: `الوصف (حتى ${EXCERPT_MAX} حرفاً)`,
+                      en: `Meta description (≤ ${EXCERPT_MAX})`,
+                    },
+                  },
+                  {
+                    name: 'ogImage',
+                    type: 'upload',
+                    relationTo: 'media',
+                    label: { ar: 'صورة المشاركة (اختياري)', en: 'Share image (optional)' },
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+      {
+        name: 'author',
+        type: 'relationship',
+        relationTo: 'authors',
+        required: true,
+        defaultValue: defaultAuthor,
+        label: { ar: 'الكاتب', en: 'Author' },
+        admin: { position: 'sidebar' },
+      },
+      {
+        name: 'publishedAt',
+        type: 'date',
+        label: { ar: 'تاريخ النشر', en: 'Published at' },
+        admin: {
+          position: 'sidebar',
+          date: { pickerAppearance: 'dayAndTime' },
+          description: {
+            ar: 'يُملأ عند أول نشر إن تُرك فارغاً.',
+            en: 'Filled on the first publish when left empty.',
           },
         },
-      ],
-    },
-    {
-      name: 'excerpt',
-      type: 'textarea',
-      required: true,
-      localized: true,
-      maxLength: EXCERPT_MAX,
-      label: { ar: `المقتطف (حتى ${EXCERPT_MAX} حرفاً)`, en: `Excerpt (≤ ${EXCERPT_MAX})` },
-      admin: {
-        description: {
-          ar: 'جملة أو جملتان تظهران في بطاقة المقال وفي نتائج البحث.',
-          en: 'One or two sentences on the post card and in search results.',
-        },
       },
-    },
-    {
-      type: 'row',
-      fields: [
-        {
-          name: 'hub',
-          type: 'relationship',
-          relationTo: 'categories',
-          required: true,
-          label: { ar: 'القسم', en: 'Hub' },
-        },
-        {
-          name: 'tags',
-          type: 'relationship',
-          relationTo: 'tags',
-          hasMany: true,
-          label: { ar: 'الوسوم (اختياري)', en: 'Tags (optional)' },
-        },
-      ],
-    },
-    {
-      name: 'cover',
-      type: 'upload',
-      relationTo: 'media',
-      required: true,
-      label: { ar: 'الغلاف (16:9)', en: 'Cover (16:9)' },
-      admin: {
-        description: {
-          ar: 'صورة الغلاف مع نص بديل عربي في المكتبة.',
-          en: 'The cover with its Arabic alt text in the library.',
-        },
-      },
-    },
-    {
-      name: 'takeaways',
-      type: 'array',
-      required: true,
-      localized: true,
-      minRows: TAKEAWAYS,
-      maxRows: TAKEAWAYS,
-      label: { ar: 'أهم النقاط (ثلاث)', en: 'Key takeaways (three)' },
-      labels: { singular: { ar: 'نقطة', en: 'Takeaway' }, plural: { ar: 'نقاط', en: 'Takeaways' } },
-      fields: [
-        {
-          name: 'text',
-          type: 'text',
-          required: true,
-          label: { ar: 'النقطة', en: 'Takeaway' },
-        },
-      ],
-    },
-    {
-      name: 'body',
-      type: 'richText',
-      required: true,
-      localized: true,
-      editor: postEditor,
-      label: { ar: 'المتن', en: 'Body' },
-      admin: {
-        description: {
-          ar: 'عناوين H2 بصيغة أسئلة، فقرات قصيرة، رابطان على الأقل إلى صفحات الموقع.',
-          en: 'H2s as questions, short paragraphs, at least two links to pages of this site.',
-        },
-      },
-    },
-    {
-      name: 'author',
-      type: 'relationship',
-      relationTo: 'authors',
-      required: true,
-      defaultValue: defaultAuthor,
-      label: { ar: 'الكاتب', en: 'Author' },
-      admin: { position: 'sidebar' },
-    },
-    {
-      name: 'publishedAt',
-      type: 'date',
-      label: { ar: 'تاريخ النشر', en: 'Published at' },
-      admin: {
-        position: 'sidebar',
-        date: { pickerAppearance: 'dayAndTime' },
-        description: {
-          ar: 'يُملأ عند أول نشر إن تُرك فارغاً.',
-          en: 'Filled on the first publish when left empty.',
-        },
-      },
-    },
-    {
-      name: 'contentUpdatedAt',
-      type: 'date',
-      label: { ar: 'تاريخ التحديث (اختياري)', en: 'Updated at (optional)' },
-      admin: {
-        position: 'sidebar',
-        date: { pickerAppearance: 'dayAndTime' },
-        description: {
-          ar: 'يُعرض على المقال عندما يتغيّر محتواه فعلاً.',
-          en: 'Shown on the post when its content really changed.',
-        },
-      },
-    },
-    {
-      name: 'readingMinutes',
-      type: 'number',
-      localized: true,
-      label: { ar: 'دقائق القراءة', en: 'Reading minutes' },
-      admin: { position: 'sidebar', readOnly: true },
-    },
-    {
-      name: 'origin',
-      type: 'select',
-      required: true,
-      defaultValue: 'manual',
-      options: [
-        { label: { ar: 'كتابة يدوية', en: 'Written by hand' }, value: 'manual' },
-        { label: { ar: 'المحرّك الآلي', en: 'Content engine' }, value: 'ai' },
-        { label: { ar: 'آلي ثم عُدّل', en: 'Engine, then edited' }, value: 'ai-edited' },
-      ],
-      label: { ar: 'المصدر', en: 'Origin' },
-      access: { update: adminField },
-      admin: {
-        position: 'sidebar',
-        description: {
-          ar: 'تعديل محرّر على مقال آلي يجعله "آلي ثم عُدّل" ويستثنيه من التحديث الآلي.',
-          en: 'A change by an editor to an engine post marks it "engine, then edited" and exempts it from the freshness job.',
-        },
-      },
-    },
-    {
-      // The facts sheet's numbers when the engine (or the seed) wrote the post: the freshness
-      // job's baseline (ADR-042). Hidden from the form; the runs log is swept yearly, the post
-      // is not.
-      name: 'factsBaseline',
-      type: 'json',
-      access: { update: adminField },
-      admin: { hidden: true },
-    },
-    {
-      name: 'engineActions',
-      type: 'ui',
-      admin: {
-        position: 'sidebar',
-        components: { Field: '@/modules/ai-content/admin/post-engine-actions#PostEngineActions' },
-      },
-    },
-    {
-      name: 'warnings',
-      type: 'array',
-      localized: true,
-      label: { ar: 'تنبيهات التحرير', en: 'Editorial warnings' },
-      admin: {
-        position: 'sidebar',
-        readOnly: true,
-        components: { Field: '@/modules/cms/admin/fields/warnings-field#WarningsField' },
-      },
-      fields: [{ name: 'text', type: 'text' }],
-    },
-    {
-      name: 'seo',
-      type: 'group',
-      label: { ar: 'محركات البحث', en: 'SEO' },
-      admin: {
-        description: {
-          ar: 'اختياري: يُستخدم العنوان والمقتطف عندما تُترك فارغة.',
-          en: 'Optional: the title and the excerpt are used when left empty.',
-        },
-      },
-      fields: [
-        {
-          name: 'title',
-          type: 'text',
-          localized: true,
-          maxLength: TITLE_MAX,
-          label: { ar: `عنوان الصفحة (حتى ${TITLE_MAX} حرفاً)`, en: `Meta title (≤ ${TITLE_MAX})` },
-        },
-        {
-          name: 'description',
-          type: 'textarea',
-          localized: true,
-          maxLength: EXCERPT_MAX,
-          label: {
-            ar: `الوصف (حتى ${EXCERPT_MAX} حرفاً)`,
-            en: `Meta description (≤ ${EXCERPT_MAX})`,
+      {
+        name: 'contentUpdatedAt',
+        type: 'date',
+        label: { ar: 'تاريخ التحديث (اختياري)', en: 'Updated at (optional)' },
+        admin: {
+          position: 'sidebar',
+          date: { pickerAppearance: 'dayAndTime' },
+          description: {
+            ar: 'يُعرض على المقال عندما يتغيّر محتواه فعلاً.',
+            en: 'Shown on the post when its content really changed.',
           },
         },
-        {
-          name: 'ogImage',
-          type: 'upload',
-          relationTo: 'media',
-          label: { ar: 'صورة المشاركة (اختياري)', en: 'Share image (optional)' },
+      },
+      {
+        name: 'readingMinutes',
+        type: 'number',
+        localized: true,
+        label: { ar: 'دقائق القراءة', en: 'Reading minutes' },
+        admin: { position: 'sidebar', readOnly: true },
+      },
+      {
+        name: 'origin',
+        type: 'select',
+        required: true,
+        defaultValue: 'manual',
+        options: [
+          { label: { ar: 'كتابة يدوية', en: 'Written by hand' }, value: 'manual' },
+          { label: { ar: 'المحرّك الآلي', en: 'Content engine' }, value: 'ai' },
+          { label: { ar: 'آلي ثم عُدّل', en: 'Engine, then edited' }, value: 'ai-edited' },
+        ],
+        label: { ar: 'المصدر', en: 'Origin' },
+        access: { update: adminField },
+        admin: {
+          position: 'sidebar',
+          description: {
+            ar: 'تعديل محرّر على مقال آلي يجعله "آلي ثم عُدّل" ويستثنيه من التحديث الآلي.',
+            en: 'A change by an editor to an engine post marks it "engine, then edited" and exempts it from the freshness job.',
+          },
         },
-      ],
-    },
-    savedByField,
-  ],
+      },
+      {
+        // The facts sheet's numbers when the engine (or the seed) wrote the post: the freshness
+        // job's baseline (ADR-042). Hidden from the form; the runs log is swept yearly, the post
+        // is not.
+        name: 'factsBaseline',
+        type: 'json',
+        access: { update: adminField },
+        admin: { hidden: true },
+      },
+      {
+        name: 'engineActions',
+        type: 'ui',
+        admin: {
+          position: 'sidebar',
+          components: { Field: '@/modules/ai-content/admin/post-engine-actions#PostEngineActions' },
+        },
+      },
+      {
+        name: 'warnings',
+        type: 'array',
+        localized: true,
+        label: { ar: 'تنبيهات التحرير', en: 'Editorial warnings' },
+        admin: {
+          position: 'sidebar',
+          readOnly: true,
+          components: { Field: '@/modules/cms/admin/fields/warnings-field#WarningsField' },
+        },
+        fields: [{ name: 'text', type: 'text' }],
+      },
+      savedByField,
+    ],
+    POST_DESCRIPTIONS,
+  ),
 };

@@ -175,9 +175,12 @@ export interface UserAuthOperations {
  */
 export interface User {
   id: number;
+  /**
+   * The name as it shows in "Last saved" on documents and in the account menu. Not shown on the site.
+   */
   name: string;
   /**
-   * Admins can do everything; editors edit content only.
+   * Admin: opens settings, users and the engine. Editor: changes content only. Not shown on the site.
    */
   role: 'admin' | 'editor';
   updatedAt: string;
@@ -211,6 +214,9 @@ export interface Media {
    * Describe the image in the language of the open locale tab; required.
    */
   alt: string;
+  /**
+   * The photo's source or photographer, for the record. Not shown on the site.
+   */
   credit?: string | null;
   /**
    * Who saved the current version and when. Drafts do not change it.
@@ -274,47 +280,101 @@ export interface Media {
  */
 export interface Product {
   id: number;
+  /**
+   * The product's name on its card, its page title, the designer's picker and llms.txt.
+   */
   name: string;
   /**
-   * lowercase-hyphenated
+   * The last part of the page address: b7r.sa/products/tee-essential. Lowercase letters and hyphens only; changing it after publishing breaks old links.
    */
   slug: string;
   /**
-   * One line for cards and meta
+   * One line under the name on the product card, and the description of the product page's Google result.
    */
   shortDescription: string;
+  /**
+   * The paragraph at the top of the product's page, and the product's line in llms.txt.
+   */
   description: string;
   /**
-   * Must match the app; there is no automatic sync.
+   * What the merchant pays per piece: the product page, the calculator, the home strip and llms.txt. Must equal the app's price: there is no sync.
    */
   baseCost: number;
   /**
-   * Must match the app; there is no automatic sync.
+   * The sell price we suggest to the merchant: the product page, the calculator and llms.txt. Must equal the app's: there is no sync.
    */
   suggestedPrice: number;
+  /**
+   * Where the product sits on the products page and the home strip: 1 shows first.
+   */
   sortOrder: number;
+  /**
+   * The product's colours: the swatches on the card, the colour choice on the page and in the designer. The first is the default.
+   */
   colors: {
+    /**
+     * The colour's id in the address and the designer: black, white. Lowercase, never shown to a visitor.
+     */
     slug: string;
+    /**
+     * The colour name a visitor reads when choosing it on the page and in the designer.
+     */
     name: string;
+    /**
+     * The colour of the small swatch: #000000. As close to the real fabric as possible.
+     */
     hex: string;
+    /**
+     * The front photo in this colour: the card, the page, and the designer lays the design over it. Square, 1000 by 1000.
+     */
     front: number | Media;
+    /**
+     * The back photo in this colour: the «back» toggle of the page's gallery. Leave empty if there is none.
+     */
     back?: (number | null) | Media;
     id?: string | null;
   }[];
+  /**
+   * The sizes on offer: the size table on the product's page, in this order.
+   */
   sizes: {
+    /**
+     * The size name in the table and the designer: S, M, One size.
+     */
     label: string;
+    /**
+     * The piece's length in centimetres in the size table. Empty hides the cell.
+     */
     length?: number | null;
+    /**
+     * The chest width in centimetres in the size table. Empty hides the cell.
+     */
     chest?: number | null;
+    /**
+     * The sleeve length in centimetres in the size table. Empty hides the cell.
+     */
     sleeve?: number | null;
     id?: string | null;
   }[];
   /**
-   * e.g. S – 2XL
+   * Shows on the product card under the price and in the designer picker. Short: "S – 2XL", "One size".
    */
   sizesSummary: string;
+  /**
+   * The material in the product page's facts line: 100% cotton, canvas.
+   */
   material: string;
+  /**
+   * The weight in grams in the facts line; merchants ask for it before ordering.
+   */
   weightGrams: number;
+  /**
+   * The print area: what a visitor reads on the page, and where the designer places the design on the photo.
+   */
   printArea: {
+    /**
+     * The area as the page states it: "Front, 28 by 38 cm".
+     */
     label: string;
     widthCm: number;
     heightCm: number;
@@ -322,12 +382,27 @@ export interface Product {
      * Where the print area sits over the product photo in the designer.
      */
     canvas: {
+      /**
+       * Where the area starts from the left of the front photo, as a fraction of its width (0 to 1). Moves the design in the designer.
+       */
       x: number;
+      /**
+       * Where the area starts from the top of the front photo, as a fraction of its height (0 to 1).
+       */
       y: number;
+      /**
+       * The area's width as a fraction of the photo's width (0 to 1): the widest a design can be in the designer.
+       */
       w: number;
+      /**
+       * The area's height as a fraction of the photo's height (0 to 1): the tallest a design can be in the designer.
+       */
       h: number;
     };
   };
+  /**
+   * The print method in the product page's facts line: high-quality digital print.
+   */
   printMethodLabel: string;
   /**
    * Who saved the current version and when. Drafts do not change it.
@@ -348,15 +423,30 @@ export interface Product {
  */
 export interface Page {
   id: number;
+  /**
+   * The page's title: the H1 at the top, and the tab name when no search title is set.
+   */
   title: string;
   /**
-   * lowercase-hyphenated; served at /slug
+   * The last part of the page address: b7r.sa/about. Lowercase letters and hyphens; changing it after publishing breaks old links.
    */
   slug: string;
+  /**
+   * One line under the title, in a lighter weight. Empty hides the line.
+   */
   lead?: string | null;
+  /**
+   * The page's sections, top to bottom; drag to reorder. Each type has its own fields.
+   */
   blocks: (
     | {
+        /**
+         * The section's heading (H2) above the text. Empty shows the text alone.
+         */
         title?: string | null;
+        /**
+         * The formatted text itself: paragraphs, subheadings, lists, links.
+         */
         content: {
           root: {
             type: string;
@@ -377,9 +467,21 @@ export interface Page {
         blockType: 'richText';
       }
     | {
+        /**
+         * The heading of the story section on the About page, above the photo and the text.
+         */
         heading: string;
+        /**
+         * The story beside the photo: one or two paragraphs.
+         */
         text: string;
+        /**
+         * The location line under the text: "Jeddah, Saudi Arabia".
+         */
         line: string;
+        /**
+         * The story photo beside the text, portrait 4:5.
+         */
         photo: number | Media;
         /**
          * The welcome credit and the why-us pairs from the home page
@@ -390,11 +492,29 @@ export interface Page {
         blockType: 'story';
       }
     | {
+        /**
+         * A heading above the card grid. Empty shows the cards alone.
+         */
         title?: string | null;
+        /**
+         * The cards in grid order: an icon, a title, a text. Three per row on a desktop.
+         */
         items: {
+          /**
+           * The icon at the card's top, from the fixed set.
+           */
           icon: 'ShieldCheck' | 'Workflow' | 'Zap' | 'Target' | 'Eye' | 'Heart';
+          /**
+           * The card's title under the icon; two to four words.
+           */
           title: string;
+          /**
+           * The card's text under the title: one or two sentences.
+           */
           text: string;
+          /**
+           * A picture in place of the icon at the top of the card. Empty shows the icon.
+           */
           art?: (number | null) | Media;
           id?: string | null;
         }[];
@@ -403,9 +523,21 @@ export interface Page {
         blockType: 'cards';
       }
     | {
+        /**
+         * The numbered steps on the how-it-works page, in order: a 3D icon, a title, a text.
+         */
         items: {
+          /**
+           * The step's title beside its number.
+           */
           title: string;
+          /**
+           * The step's explanation under its title: one or two sentences.
+           */
           text: string;
+          /**
+           * The step's 3D icon, from the library (icons-3d-*).
+           */
           icon: number | Media;
           id?: string | null;
         }[];
@@ -414,45 +546,120 @@ export interface Page {
         blockType: 'steps';
       }
     | {
+        /**
+         * The heading of the profit-equation band on the how-it-works page.
+         */
         title: string;
+        /**
+         * The name of the first term of the equation: "Sell price".
+         */
         sell: string;
+        /**
+         * The name of the second term: "Base cost".
+         */
         base: string;
+        /**
+         * The name of the result, after the equals sign: "Your profit".
+         */
         profit: string;
+        /**
+         * The worked example under the equation, with real catalogue numbers: "A tee at 89 SAR…".
+         */
         exampleLine: string;
         id?: string | null;
         blockName?: string | null;
         blockType: 'profitEquation';
       }
     | {
+        /**
+         * Which entries show: all of them, grouped (the FAQ page), or the home entries only.
+         */
         selection: 'all' | 'home';
+        /**
+         * How many entries to skip from the start. Empty or 0: none.
+         */
         offset?: number | null;
+        /**
+         * The most entries shown. Empty: all of them.
+         */
         limit?: number | null;
+        /**
+         * A heading above the list. Empty shows the list alone.
+         */
         title?: string | null;
+        /**
+         * The text of a link under the list, such as "All questions". Empty hides the link.
+         */
         linkLabel?: string | null;
+        /**
+         * Where the link under the list goes: /faq.
+         */
         linkHref?: string | null;
+        /**
+         * A closing sentence under the list with one word carrying a link. Empty hides the sentence.
+         */
         bottomLine?: string | null;
+        /**
+         * The word of the closing sentence that becomes the link; it must appear in the sentence exactly.
+         */
         bottomLinkWord?: string | null;
         id?: string | null;
         blockName?: string | null;
         blockType: 'faqList';
       }
     | {
+        /**
+         * The title of the Misk Launchpad card on the About page.
+         */
         title: string;
+        /**
+         * The card's text under the title: what the programme is and what it means for B7R.
+         */
         text: string;
         id?: string | null;
         blockName?: string | null;
         blockType: 'miskCredential';
       }
     | {
+        /**
+         * The title of the WhatsApp card on the contact page.
+         */
         whatsappTitle: string;
+        /**
+         * The line under the WhatsApp card's title: when we answer.
+         */
         whatsappText: string;
+        /**
+         * The title of the e-mail card on the contact page; the address itself comes from Site settings.
+         */
         emailTitle: string;
+        /**
+         * The title of the phone card; the number itself comes from Site settings.
+         */
         phoneTitle: string;
+        /**
+         * The title of the social card; the links come from Site settings.
+         */
         followTitle: string;
+        /**
+         * The consultation card: opens the booking link from Site settings, or WhatsApp with a prefilled message when it is empty.
+         */
         booking: {
+          /**
+           * The booking card's title on the contact page.
+           */
           title: string;
+          /**
+           * The line under the booking card's title: the length and that it is free.
+           */
           text: string;
+          /**
+           * The booking button's text on the card.
+           */
           button: string;
+          /**
+           * The prefilled message WhatsApp opens with when there is no booking link.
+           */
           whatsappMessage: string;
         };
         id?: string | null;
@@ -460,6 +667,9 @@ export interface Page {
         blockType: 'contact';
       }
     | {
+        /**
+         * The "last updated" date at the top of the legal page, and the modified date search engines read.
+         */
         updatedAt: string;
         /**
          * ## headings become the on-this-page list; no HTML.
@@ -470,16 +680,34 @@ export interface Page {
         blockType: 'legalBody';
       }
     | {
+        /**
+         * The section's wide image, the full width of the page.
+         */
         media: number | Media;
+        /**
+         * A line under the image. Empty hides it.
+         */
         caption?: string | null;
         id?: string | null;
         blockName?: string | null;
         blockType: 'mediaBanner';
       }
   )[];
+  /**
+   * What search engines and shares see: the title and description in the Google result, the image when the link is shared.
+   */
   seo: {
+    /**
+     * The search result's title and the browser tab; the site name from Search defaults is appended. Up to 70 characters.
+     */
     title: string;
+    /**
+     * The description under the title in the search result. One or two sentences, up to 160 characters.
+     */
     description: string;
+    /**
+     * The image shown when the link is shared on WhatsApp and X. Empty uses the site's default.
+     */
     ogImage?: (number | null) | Media;
   };
   /**
@@ -501,17 +729,29 @@ export interface Page {
  */
 export interface Faq {
   id: number;
+  /**
+   * The question as it reads on the FAQ page, and in the home page section when flagged for it.
+   */
   question: string;
   /**
-   * Plain text, no links
+   * The answer under the question on the FAQ page and in the home section: plain text, no links, two to four sentences.
    */
   answer: string;
+  /**
+   * The group the question is listed under on the FAQ page; the group headings are fixed.
+   */
   group: 'البداية' | 'الأسعار والربح' | 'الطلبات والتوصيل' | 'المتاجر والربط' | 'الجودة والدعم';
+  /**
+   * Where the question sits inside its group on the FAQ page: 1 first.
+   */
   order: number;
   /**
-   * At most 5 entries
+   * On: the entry also shows in the home FAQ section (five at most, sorted by "Order on the home page").
    */
   showOnHome?: boolean | null;
+  /**
+   * Where the question sits in the home page section, for entries flagged «show on home»: 1 first.
+   */
   homeOrder?: number | null;
   /**
    * Who saved the current version and when. Drafts do not change it.
@@ -531,10 +771,25 @@ export interface Faq {
  */
 export interface Testimonial {
   id: number;
+  /**
+   * The merchant's words as they read on the card on the home page. Two or three sentences, no numbers that cannot be proven.
+   */
   quote: string;
+  /**
+   * The merchant's name under the quote on the home page.
+   */
   name: string;
+  /**
+   * The merchant's store name under their name on the card.
+   */
   store: string;
+  /**
+   * The merchant's round photo beside the name. Empty shows the name's initial.
+   */
   avatar?: (number | null) | Media;
+  /**
+   * Where the card sits in the home page section: 1 first.
+   */
   order: number;
   /**
    * Placeholders show a «sample» badge on previews and are omitted on b7r.sa until a real entry exists.
@@ -560,11 +815,20 @@ export interface Testimonial {
 export interface Integration {
   id: number;
   /**
-   * Selects the logo shown on the site
+   * Which platform this is: picks the logo shown in the connected-stores section; the name fields say how it is written.
    */
   platform: 'salla' | 'zid' | 'shopify';
+  /**
+   * Where the platform's logo sits in the home page section: 1 first.
+   */
   order: number;
+  /**
+   * The platform's name as a visitor reads it under its logo: Salla, Zid.
+   */
   name: string;
+  /**
+   * The platform's Latin name: structured data and the logo's alt text. Salla, Zid, Shopify.
+   */
   nameLatin: string;
   /**
    * Who saved the current version and when. Drafts do not change it.
@@ -584,25 +848,14 @@ export interface Integration {
  */
 export interface Post {
   id: number;
+  /**
+   * The post's title: the H1 on its page, its name on the blog cards, in the feed and llms.txt. Up to 70 characters.
+   */
   title: string;
   /**
-   * lowercase-hyphenated; served at /blog/slug
+   * The last part of the post address: b7r.sa/blog/how-to-price. Lowercase letters and hyphens; changing it after publishing breaks old links.
    */
   slug: string;
-  /**
-   * One or two sentences on the post card and in search results.
-   */
-  excerpt: string;
-  hub: number | Category;
-  tags?: (number | Tag)[] | null;
-  /**
-   * The cover with its Arabic alt text in the library.
-   */
-  cover: number | Media;
-  takeaways: {
-    text: string;
-    id?: string | null;
-  }[];
   /**
    * H2s as questions, short paragraphs, at least two links to pages of this site.
    */
@@ -621,6 +874,52 @@ export interface Post {
     };
     [k: string]: unknown;
   };
+  /**
+   * One or two sentences on the post card and in search results.
+   */
+  excerpt: string;
+  /**
+   * The hub the post belongs to: the hub's page lists it, and the hub line shows above the title.
+   */
+  hub: number | Category;
+  /**
+   * Tags for sorting posts inside the admin (the list filters by them). Not shown on the site; related posts are chosen by hub.
+   */
+  tags?: (number | Tag)[] | null;
+  /**
+   * The cover with its Arabic alt text in the library.
+   */
+  cover: number | Media;
+  /**
+   * The "key takeaways" box above the body: three short sentences for the reader in a hurry and for answer engines.
+   */
+  takeaways: {
+    /**
+     * One takeaway: a full sentence, no full stop at the end.
+     */
+    text: string;
+    id?: string | null;
+  }[];
+  /**
+   * Optional: the title and the excerpt are used when left empty.
+   */
+  seo?: {
+    /**
+     * The search result's title and the browser tab. Empty uses the post's title. Up to 70 characters.
+     */
+    title?: string | null;
+    /**
+     * The description under the title in the search result. Empty uses the excerpt. Up to 160 characters.
+     */
+    description?: string | null;
+    /**
+     * The image shown when the link is shared on WhatsApp and X. Empty uses the cover.
+     */
+    ogImage?: (number | null) | Media;
+  };
+  /**
+   * The author in the byline under the title and in the search data; opens the author's page.
+   */
   author: number | Author;
   /**
    * Filled on the first publish when left empty.
@@ -651,14 +950,6 @@ export interface Post {
       }[]
     | null;
   /**
-   * Optional: the title and the excerpt are used when left empty.
-   */
-  seo?: {
-    title?: string | null;
-    description?: string | null;
-    ogImage?: (number | null) | Media;
-  };
-  /**
    * Who saved the current version and when. Drafts do not change it.
    */
   lastSavedBy?: {
@@ -677,20 +968,29 @@ export interface Post {
  */
 export interface Category {
   id: number;
+  /**
+   * The hub's name: its page title on the blog, and the hub line above each post's title.
+   */
   name: string;
   /**
-   * lowercase-hyphenated; served at /blog/category/slug
+   * The last part of the hub page address: b7r.sa/blog/category/pricing. Lowercase letters and hyphens.
    */
   slug: string;
   /**
    * One sentence under the hub title and on the blog cards.
    */
   description: string;
+  /**
+   * A line under the hub's name on its page. Empty hides the line.
+   */
   lead?: string | null;
   /**
    * Used when a post has no cover of its own.
    */
   defaultCover?: (number | null) | Media;
+  /**
+   * Where the hub sits in the blog's hub list: 1 first.
+   */
   order: number;
   /**
    * Who saved the current version and when. Drafts do not change it.
@@ -710,9 +1010,12 @@ export interface Category {
  */
 export interface Tag {
   id: number;
+  /**
+   * The tag's name in the posts list and its filters inside the admin. Not shown on the site.
+   */
   name: string;
   /**
-   * lowercase-hyphenated
+   * The tag's id: lowercase letters and hyphens. Not shown on the site.
    */
   slug: string;
   /**
@@ -733,22 +1036,34 @@ export interface Tag {
  */
 export interface Author {
   id: number;
+  /**
+   * The author's name in the byline under a post's title and on their page.
+   */
   name: string;
   /**
-   * lowercase-hyphenated; served at /author/slug
+   * The last part of the author page address: b7r.sa/author/dhia. Lowercase letters and hyphens.
    */
   slug: string;
   /**
-   * For example: founder of B7R Print
+   * The role under the author name in the byline and on their page: "Founder of B7R Print".
    */
   role: string;
+  /**
+   * The author's bio on their page and in the search data. Two or three sentences. Empty hides the paragraph.
+   */
   bio?: string | null;
+  /**
+   * The author's round photo on their page and beside the byline. Empty shows the initial.
+   */
   photo?: (number | null) | Media;
   /**
    * Public profiles (X, LinkedIn…) for the structured data of the page.
    */
   sameAs?:
     | {
+        /**
+         * An official profile of the author (LinkedIn, X): ties the name to the person in the search data. Not shown to a visitor.
+         */
         url: string;
         id?: string | null;
       }[]
@@ -771,28 +1086,61 @@ export interface Author {
  */
 export interface AiTopic {
   id: number;
+  /**
+   * The working title of the topic; the engine writes the final title itself. Not shown on the site.
+   */
   title: string;
   /**
    * The language the post is written in: it lands on the Arabic or the English blog.
    */
   language: 'ar' | 'en';
+  /**
+   * The hub the post is filed under when it is written.
+   */
   hub: number | Category;
+  /**
+   * Who the post is for: informational (learning), commercial (comparing to buy), seasonal (an occasion with a date).
+   */
   intent: 'informational' | 'commercial' | 'seasonal';
+  /**
+   * Priority 1 (highest) to 5; the engine takes the highest priority in the backlog first.
+   */
   priority: number;
+  /**
+   * The phrase people search for that the post must target: "pricing a printed t-shirt".
+   */
   primaryKeyword: string;
+  /**
+   * Secondary search phrases the post works in where they fit.
+   */
   secondaryKeywords?:
     | {
+        /**
+         * One phrase as a searcher types it.
+         */
         keyword: string;
         id?: string | null;
       }[]
     | null;
+  /**
+   * For seasonal topics: the date after which the engine may write it (about six weeks before the occasion).
+   */
   windowStart?: string | null;
   /**
    * Seasonal topics publish inside the window only. Leave both empty for an evergreen topic.
    */
   windowEnd?: string | null;
+  /**
+   * Where the topic is in the cycle: backlog, scheduled, generating, published, failed, rejected.
+   */
   status: 'backlog' | 'scheduled' | 'generating' | 'published' | 'failed' | 'rejected';
+  /**
+   * Where the topic came from: the seed list, added by hand, or Search Console.
+   */
   source: 'seed' | 'manual' | 'searchConsole';
+  /**
+   * Notes for the engine before it writes: an angle, an example, what to avoid. Not shown on the site.
+   */
   notes?: string | null;
   post?: (number | null) | Post;
   lastRun?: (number | null) | AiRun;
@@ -1477,24 +1825,12 @@ export interface IntegrationsSelect<T extends boolean = true> {
 export interface PostsSelect<T extends boolean = true> {
   title?: T;
   slug?: T;
+  body?: T;
   excerpt?: T;
   hub?: T;
   tags?: T;
   cover?: T;
   takeaways?:
-    | T
-    | {
-        text?: T;
-        id?: T;
-      };
-  body?: T;
-  author?: T;
-  publishedAt?: T;
-  contentUpdatedAt?: T;
-  readingMinutes?: T;
-  origin?: T;
-  factsBaseline?: T;
-  warnings?:
     | T
     | {
         text?: T;
@@ -1506,6 +1842,18 @@ export interface PostsSelect<T extends boolean = true> {
         title?: T;
         description?: T;
         ogImage?: T;
+      };
+  author?: T;
+  publishedAt?: T;
+  contentUpdatedAt?: T;
+  readingMinutes?: T;
+  origin?: T;
+  factsBaseline?: T;
+  warnings?:
+    | T
+    | {
+        text?: T;
+        id?: T;
       };
   lastSavedBy?:
     | T
@@ -1738,8 +2086,17 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
 export interface Home {
   id: number;
   hero: {
+    /**
+     * The four slides at the top of the home page, rotating; the first is what a visitor sees first. Each has a headline, a subline and two photos per language.
+     */
     slides: {
+      /**
+       * The big headline on the slide, and the page's H1 for the first one. Two rows on a desktop: up to 6 words.
+       */
       headline: string;
+      /**
+       * The line under the headline on the slide. One row on a desktop: up to 10 words.
+       */
       subline: string;
       /**
        * Per language (the English site has no fallback). English: the mirrored composition, calm area under the copy.
@@ -1764,24 +2121,51 @@ export interface Home {
        */
       color: string;
     };
+    /**
+     * The blue button under the slides; opens the app's sign-up.
+     */
     primaryCta: string;
+    /**
+     * The link beside the button; opens the products page.
+     */
     secondaryCta: string;
+    /**
+     * The welcome-credit line in the facts band of the About page (built from the home page).
+     */
     microcopy: string;
     /**
      * Zero to 6; none hides the row. The rows are shared by both languages, the text is per language: a row without an English text does not show on the English site.
      */
     chips?:
       | {
+          /**
+           * The small chip under the buttons: "Kingdom-wide delivery in 5 days". Two to five words.
+           */
           text: string;
           id?: string | null;
         }[]
       | null;
   };
   productStrip: {
+    /**
+     * The small word above the product strip's title.
+     */
     eyebrow: string;
+    /**
+     * The product strip's heading (H2).
+     */
     title: string;
+    /**
+     * The line under the strip's heading.
+     */
     lead: string;
+    /**
+     * The word before the price on each card: "from". The price itself comes from the product.
+     */
     pricePrefix: string;
+    /**
+     * The "all products" button under the strip; opens the products page.
+     */
     button: string;
     /**
      * Published products only; one unpublished later drops out of the strip until it is published again.
@@ -1789,9 +2173,21 @@ export interface Home {
     products: (number | Product)[];
   };
   designer: {
+    /**
+     * The small word above the designer section's title.
+     */
     eyebrow: string;
+    /**
+     * The designer section's heading (H2).
+     */
     title: string;
+    /**
+     * The line under the designer's heading: what a visitor does here.
+     */
     lead: string;
+    /**
+     * The button at the end of the designer; opens the app's sign-up.
+     */
     cta: string;
   };
   steps: {
@@ -1799,25 +2195,49 @@ export interface Home {
      * Off hides the “Three steps” section from the home page.
      */
     enabled?: boolean | null;
+    /**
+     * The small word above the three steps' title.
+     */
     eyebrow: string;
+    /**
+     * The three steps' heading (H2).
+     */
     title: string;
+    /**
+     * The "learn more" link under the steps; opens the how-it-works page.
+     */
     link: string;
+    /**
+     * The three steps in order: a 3D icon, a title, a text.
+     */
     items: {
+      /**
+       * The step's title beside its number; two to four words.
+       */
       title: string;
+      /**
+       * The step's explanation under the title: one sentence.
+       */
       text: string;
+      /**
+       * The step's 3D icon, from the library (icons-3d-*).
+       */
       icon: number | Media;
       id?: string | null;
     }[];
   };
-  /**
-   * The loop itself ships with the site; only the copy lives here.
-   */
   video: {
     /**
      * Off hides the “Video” section from the home page.
      */
     enabled?: boolean | null;
+    /**
+     * The heading above the video; the loop itself ships with the site.
+     */
     title: string;
+    /**
+     * The line under the video's heading.
+     */
     lead: string;
   };
   whyUs: {
@@ -1825,24 +2245,45 @@ export interface Home {
      * Off hides the “Why us” section from the home page.
      */
     enabled?: boolean | null;
+    /**
+     * The small word above the "why us" title.
+     */
     eyebrow: string;
+    /**
+     * The "why us" heading (H2).
+     */
     title: string;
+    /**
+     * The three cards in order: an icon, a title, a text. Also the facts band of the About page.
+     */
     items: {
+      /**
+       * The card's icon, from the fixed set.
+       */
       icon: 'ShieldCheck' | 'Workflow' | 'Zap';
+      /**
+       * The card's title; two to four words.
+       */
       title: string;
+      /**
+       * The card's text: one sentence with a number or a promise that can be kept.
+       */
       text: string;
       id?: string | null;
     }[];
   };
-  /**
-   * The entries live in Testimonials; the section title lives here.
-   */
   testimonials: {
     /**
      * Off hides the “Testimonials” section from the home page.
      */
     enabled?: boolean | null;
+    /**
+     * The small word above the testimonials' title.
+     */
     eyebrow: string;
+    /**
+     * The testimonials heading (H2); the quotes come from the Testimonials collection.
+     */
     title: string;
   };
   integrations: {
@@ -1850,23 +2291,41 @@ export interface Home {
      * Off hides the “Integrations” section from the home page.
      */
     enabled?: boolean | null;
+    /**
+     * The connected-stores heading (H2); the logos come from Store integrations.
+     */
     title: string;
+    /**
+     * The line under the connected-stores heading.
+     */
     lead: string;
   };
-  /**
-   * The entries flagged «show on home» in the FAQ collection.
-   */
   faq: {
     /**
      * Off hides the “FAQ” section from the home page.
      */
     enabled?: boolean | null;
+    /**
+     * The home FAQ heading (H2); the entries come from the FAQ flagged «show on home».
+     */
     title: string;
+    /**
+     * The "all questions" link under the section; opens the FAQ page.
+     */
     link: string;
   };
   ribbon: {
+    /**
+     * The CTA ribbon heading at the bottom of every page, above the footer.
+     */
     title: string;
+    /**
+     * The line under the ribbon's heading.
+     */
     lead: string;
+    /**
+     * The ribbon's button; opens the app's sign-up.
+     */
     button: string;
   };
   /**
@@ -1888,44 +2347,68 @@ export interface Home {
  */
 export interface SiteSetting {
   id: number;
+  /**
+   * The brand's name as a visitor reads it: the footer, the first line of llms.txt, and the organisation data search engines read.
+   */
   brandName: string;
+  /**
+   * The brand's Latin name: the alternate name in the organisation data search engines read, and the engine's facts sheet. B7R Print.
+   */
   brandNameLatin: string;
+  /**
+   * The one-line definition: under the logo in the footer, the first line of llms.txt, and the engine's facts sheet. The same sentence everywhere.
+   */
   tagline: string;
+  /**
+   * How to reach us: the footer, the contact page, the WhatsApp widget and the organisation data.
+   */
   contact: {
+    /**
+     * The number as a visitor sees it in the footer and on the contact page: 0501699572.
+     */
     phone: string;
+    /**
+     * The international number the phone dials on a tap, and the organisation data: +966501699572.
+     */
     phoneIntl: string;
+    /**
+     * The WhatsApp digits, no + and no spaces, for the wa.me link in the widget and every WhatsApp button: 966501699572.
+     */
     whatsapp: string;
+    /**
+     * The e-mail in the footer and on the contact page, and the mailto link on a tap: contact@b7r.sa.
+     */
     email: string;
   };
+  /**
+   * The official accounts: the footer and phone-menu icons, and the sameAs links in the organisation data. Real links only.
+   */
   social: {
+    /**
+     * The full X profile link: https://x.com/b7rprint
+     */
     x: string;
+    /**
+     * The full Instagram profile link: https://instagram.com/b7rprint
+     */
     instagram: string;
+    /**
+     * The full TikTok profile link: https://tiktok.com/@b7rprint
+     */
     tiktok: string;
   };
-  /**
-   * Must match the app; no automatic sync.
-   */
-  welcomeCredit: number;
-  /**
-   * Must match the app; no automatic sync.
-   */
-  deliveryMaxDays: number;
-  deliveryOrigin: string;
-  deliveryRegion: string;
-  /**
-   * Leave empty to use WhatsApp
-   */
-  bookingUrl?: string | null;
-  legalEntity: string;
-  /**
-   * The header and footer links and the menu labels, on every page of the site.
-   */
   menu: {
     /**
      * The header links in order, the phone menu, and the "Links" column of the footer.
      */
     primary: {
+      /**
+       * The link text in the header, the phone menu and the "Links" column of the footer.
+       */
       label: string;
+      /**
+       * The path the link opens, starting with /: /products. The English site adds /en by itself.
+       */
       href: string;
       /**
        * The link stays marked as the current one on every page whose path starts with this. Example: /products
@@ -1937,7 +2420,13 @@ export interface SiteSetting {
      * The "Policies" column of the footer: terms, shipping, privacy, FAQ.
      */
     policies: {
+      /**
+       * The link text in the "Policies" column of the footer.
+       */
       label: string;
+      /**
+       * The path the link opens, starting with /: /privacy.
+       */
       href: string;
       /**
        * The link stays marked as the current one on every page whose path starts with this. Example: /products
@@ -1963,6 +2452,30 @@ export interface SiteSetting {
     menuCloseLabel: string;
   };
   /**
+   * The welcome credit in SAR: the credit line in the About facts band and llms.txt. Must equal the app's: there is no sync.
+   */
+  welcomeCredit: number;
+  /**
+   * The most days a delivery takes inside the Kingdom: the "within N days" promise in llms.txt and the shipping data search engines read. Must equal the app: there is no sync.
+   */
+  deliveryMaxDays: number;
+  /**
+   * The shipping city in the organisation's address for search engines and in the engine's facts sheet: Jeddah.
+   */
+  deliveryOrigin: string;
+  /**
+   * The origin region in the organisation data search engines read (addressRegion): Makkah Region. Not shown to a visitor.
+   */
+  deliveryRegion: string;
+  /**
+   * The consultation booking link (Cal.com) for the contact page booking card. Empty opens WhatsApp with the prefilled message instead.
+   */
+  bookingUrl?: string | null;
+  /**
+   * The legal entity's name in the footer's copyright line and on the legal pages.
+   */
+  legalEntity: string;
+  /**
    * Who saved the current version and when. Drafts do not change it.
    */
   lastSavedBy?: {
@@ -1981,31 +2494,46 @@ export interface SiteSetting {
 export interface SeoDefault {
   id: number;
   /**
-   * %s is the page title
+   * The browser tab and the Google result title of every page: %s becomes the page title itself. Keep the part after the bar under 15 characters.
    */
   titleTemplate: string;
   /**
-   * Title and description per static route
+   * One row per fixed page: its search title, its description and the date its content last changed.
    */
   routes: {
+    /**
+     * The fixed page this row is for: /, /products or /blog.
+     */
     route: string;
     /**
-     * Used for the sitemap
+     * The date the page content last really changed: the sitemap lastmod for this route (search engines recrawl on it).
      */
     updatedAt: string;
+    /**
+     * The search result's title and the browser tab for this route; the site name from the template is appended. Up to 70 characters.
+     */
     title: string;
     /**
-     * Aim for ≤ 155 characters
+     * The description under the title in the Google result for this route. One or two sentences, up to 155 characters.
      */
     description: string;
+    /**
+     * The share image's path for this route: /og/products.png. Empty uses /og/default.png.
+     */
     ogImage?: string | null;
     id?: string | null;
   }[];
   /**
-   * Optional: env variables are used when empty.
+   * The tokens Google Search Console and Bing Webmaster Tools gave you to prove ownership (meta tags on the home page). Empty uses the environment variables.
    */
   verification?: {
+    /**
+     * Google Search Console's verification token (a meta tag on the home page). Empty uses the environment variable.
+     */
     google?: string | null;
+    /**
+     * Bing Webmaster Tools' verification token (a meta tag on the home page). Empty uses the environment variable.
+     */
     bing?: string | null;
   };
   /**
@@ -2031,52 +2559,88 @@ export interface AiSetting {
    */
   activeProvider: 'openai' | 'deepseek' | 'anthropic' | 'google' | 'mock';
   providers: {
+    /**
+     * OpenAI's key, model and rates; used when it is the active provider. The key is encrypted and never shown again after saving.
+     */
     openai: {
       /**
-       * As in the vendor docs.
+       * The model id exactly as the vendor docs write it: gpt-5.1, claude-sonnet-5.
        */
       model: string;
       /**
        * Stored encrypted and never shown again; leave the mask to keep it, clear it to remove it.
        */
       apiKey?: string | null;
+      /**
+       * The vendor's price per million input tokens in USD, from its pricing page; for the cost estimate of each run and the daily cap.
+       */
       inputPerMillionUsd: number;
+      /**
+       * The vendor's price per million output tokens in USD, from its pricing page; for the cost estimate of each run and the daily cap.
+       */
       outputPerMillionUsd: number;
     };
+    /**
+     * DeepSeek's key, model and rates; used when it is the active provider. The key is encrypted and never shown again after saving.
+     */
     deepseek: {
       /**
-       * As in the vendor docs.
+       * The model id exactly as the vendor docs write it: gpt-5.1, claude-sonnet-5.
        */
       model: string;
       /**
        * Stored encrypted and never shown again; leave the mask to keep it, clear it to remove it.
        */
       apiKey?: string | null;
+      /**
+       * The vendor's price per million input tokens in USD, from its pricing page; for the cost estimate of each run and the daily cap.
+       */
       inputPerMillionUsd: number;
+      /**
+       * The vendor's price per million output tokens in USD, from its pricing page; for the cost estimate of each run and the daily cap.
+       */
       outputPerMillionUsd: number;
     };
+    /**
+     * Anthropic's key, model and rates; used when it is the active provider. The key is encrypted and never shown again after saving.
+     */
     anthropic: {
       /**
-       * As in the vendor docs.
+       * The model id exactly as the vendor docs write it: gpt-5.1, claude-sonnet-5.
        */
       model: string;
       /**
        * Stored encrypted and never shown again; leave the mask to keep it, clear it to remove it.
        */
       apiKey?: string | null;
+      /**
+       * The vendor's price per million input tokens in USD, from its pricing page; for the cost estimate of each run and the daily cap.
+       */
       inputPerMillionUsd: number;
+      /**
+       * The vendor's price per million output tokens in USD, from its pricing page; for the cost estimate of each run and the daily cap.
+       */
       outputPerMillionUsd: number;
     };
+    /**
+     * Google's key, model and rates; used when it is the active provider. The key is encrypted and never shown again after saving.
+     */
     google: {
       /**
-       * As in the vendor docs.
+       * The model id exactly as the vendor docs write it: gpt-5.1, claude-sonnet-5.
        */
       model: string;
       /**
        * Stored encrypted and never shown again; leave the mask to keep it, clear it to remove it.
        */
       apiKey?: string | null;
+      /**
+       * The vendor's price per million input tokens in USD, from its pricing page; for the cost estimate of each run and the daily cap.
+       */
       inputPerMillionUsd: number;
+      /**
+       * The vendor's price per million output tokens in USD, from its pricing page; for the cost estimate of each run and the daily cap.
+       */
       outputPerMillionUsd: number;
     };
   };
@@ -2088,18 +2652,39 @@ export interface AiSetting {
    * The research-backed range: 8 to 16 posts a month; quality before quantity.
    */
   postsPerDay: number;
+  /**
+   * The hour in Riyadh time (0 to 23) before which a scheduled run does not start that day; "Generate now" ignores it.
+   */
   publishHourRiyadh: number;
+  /**
+   * The most posts the engine publishes in a month; then it waits for the next month.
+   */
   maxPostsPerMonth: number;
+  /**
+   * The most the engine may spend in a day, in USD (estimated from the rates above); a run is refused once reached, until tomorrow.
+   */
   dailyCostCapUsd: number;
   /**
    * While above zero the posts of a live provider land as drafts for your read; set it to 0 once they read well.
    */
   reviewFirstRuns: number;
   style: {
+    /**
+     * The style guide the model reads before every post: tone, audience, what to say and what not to.
+     */
     styleGuide: string;
+    /**
+     * The model's standing instructions for every run. Changing it bumps the version number the runs record.
+     */
     systemPrompt: string;
     systemPromptVersion?: number | null;
+    /**
+     * Phrases a sentence may not start with, one per line; each costs 5 points in the self-review (25 at most).
+     */
     bannedPhrases: string;
+    /**
+     * Claims the engine may never make (certifications, unproven numbers), one per line.
+     */
     bannedClaims: string;
   };
   images: {
@@ -2107,6 +2692,9 @@ export interface AiSetting {
      * Generation is refused until an image provider is wired; Pexels needs a key.
      */
     imageMode: 'hubDefault' | 'stock' | 'generate';
+    /**
+     * Words appended to the Pexels search for a cover: "studio, white background". Empty searches by the title alone.
+     */
     imageStyle?: string | null;
     /**
      * Stored encrypted and never shown again; leave the mask to keep it, clear it to remove it.
@@ -2114,9 +2702,21 @@ export interface AiSetting {
     pexelsKey?: string | null;
   };
   quality: {
+    /**
+     * The lowest score (0 to 100) the self-review accepts; below it the post is rewritten or refused.
+     */
     qualityThreshold: number;
+    /**
+     * How many times a post below the threshold is rewritten before it is refused.
+     */
     maxRevisionPasses: number;
+    /**
+     * The fewest words a post should have; shorter loses 10 points in the self-review.
+     */
     minWords: number;
+    /**
+     * The most words a post should have; longer loses 10 points in the self-review.
+     */
     maxWords: number;
   };
   notifications?: {
@@ -2124,7 +2724,13 @@ export interface AiSetting {
      * Gets failure alerts and the weekly digest.
      */
     notifyEmail?: string | null;
+    /**
+     * A weekly e-mail to the notification address: what was published, what failed, the cost.
+     */
     weeklyDigest?: boolean | null;
+    /**
+     * An e-mail to the notification address as soon as a run fails.
+     */
     failureAlerts?: boolean | null;
   };
   /**
@@ -2306,12 +2912,6 @@ export interface SiteSettingsSelect<T extends boolean = true> {
         instagram?: T;
         tiktok?: T;
       };
-  welcomeCredit?: T;
-  deliveryMaxDays?: T;
-  deliveryOrigin?: T;
-  deliveryRegion?: T;
-  bookingUrl?: T;
-  legalEntity?: T;
   menu?:
     | T
     | {
@@ -2336,6 +2936,12 @@ export interface SiteSettingsSelect<T extends boolean = true> {
         menuOpenLabel?: T;
         menuCloseLabel?: T;
       };
+  welcomeCredit?: T;
+  deliveryMaxDays?: T;
+  deliveryOrigin?: T;
+  deliveryRegion?: T;
+  bookingUrl?: T;
+  legalEntity?: T;
   lastSavedBy?:
     | T
     | {
