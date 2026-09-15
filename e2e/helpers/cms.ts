@@ -41,3 +41,22 @@ export const POLL = { intervals: [1_000, 2_000, 3_000], timeout: 15_000 };
 
 export const shows = (request: APIRequestContext, path: string, text: string) => async () =>
   (await (await request.get(path)).text()).includes(text);
+
+/** The mock connection (ADR-047): the one there is, or a new one; the engine tests run on it. */
+export async function mockConnectionId(
+  request: APIRequestContext,
+  auth: Record<string, string>,
+): Promise<number> {
+  const found = (await (
+    await request.get(`${API}/connections?where[kind][equals]=mock&limit=1&depth=0`, {
+      headers: auth,
+    })
+  ).json()) as { docs: Array<{ id: number }> };
+  if (found.docs[0]) return found.docs[0].id;
+  const made = await request.post(`${API}/connections`, {
+    headers: { ...auth, 'Content-Type': 'application/json' },
+    data: { label: 'Mock', kind: 'mock' },
+  });
+  if (made.status() !== 201) throw new Error(`connections answered ${made.status()}`);
+  return ((await made.json()) as { doc: { id: number } }).doc.id;
+}

@@ -4,15 +4,21 @@ import type { Payload } from 'payload';
 import { Badge } from '@/components/shared/badge';
 import { Card } from '@/components/shared/card';
 import { Icon } from '@/components/shared/icon';
-import { envAllows, riyadh, riyadhDayStart, riyadhMonthStart } from '@/modules/ai-content/caps';
-import { mockAllowed } from '@/modules/ai-content/provider';
+import { riyadh, riyadhDayStart, riyadhMonthStart } from '@/lib/riyadh';
+import {
+  ENGINE_STATE_TONE,
+  type EngineConnectionSummary,
+  type EngineState,
+  engineState,
+} from '@/modules/ai-content/state';
 import { relativeTime } from '@/modules/cms/admin/dashboard/relative-time';
 import { adminStrings } from '@/modules/cms/admin/strings';
 
 const s = adminStrings.engine.card;
 
 export interface EngineSummary {
-  state: 'on' | 'off' | 'mock';
+  state: EngineState;
+  connection: EngineConnectionSummary | null;
   postsThisMonth: number;
   averageScore: number | null;
   failures: number;
@@ -23,17 +29,12 @@ export interface EngineSummary {
 
 /** The numbers behind the card (BRD 10.2.7), read once per dashboard render. */
 export async function engineSummary(payload: Payload, now = new Date()): Promise<EngineSummary> {
-  const settings = await payload.findGlobal({
-    slug: 'ai-settings',
-    depth: 0,
-    overrideAccess: true,
-  });
-  const state: EngineSummary['state'] =
-    !settings.enabled || !envAllows()
-      ? 'off'
-      : settings.activeProvider === 'mock' && mockAllowed()
-        ? 'mock'
-        : 'on';
+  const {
+    state,
+    connection,
+    publishHourRiyadh: hour,
+    postsPerDay,
+  } = await engineState(payload, now);
   const month = riyadhMonthStart(now).toISOString();
   const [monthRuns, recent, today] = await Promise.all([
     payload.find({
@@ -67,16 +68,16 @@ export async function engineSummary(payload: Payload, now = new Date()): Promise
   ]);
   const done = monthRuns.docs.filter((r) => r.status === 'done');
   const scores = done.map((r) => r.score).filter((n): n is number => typeof n === 'number');
-  const hour = settings.publishHourRiyadh ?? 9;
   let nextSlot: string = s.nextSlotOff;
-  if (state !== 'off') {
-    if (today.totalDocs >= (settings.postsPerDay ?? 1))
-      nextSlot = s.nextSlotDone.replace('{hour}', String(hour));
+  if (state === 'noConnection' || state === 'connectionOff') nextSlot = s.nextSlotNoConnection;
+  else if (state !== 'off') {
+    if (today.totalDocs >= postsPerDay) nextSlot = s.nextSlotDone.replace('{hour}', String(hour));
     else if (riyadh(now).hour < hour) nextSlot = s.nextSlotToday.replace('{hour}', String(hour));
     else nextSlot = s.nextSlotSoon;
   }
   return {
     state,
+    connection,
     postsThisMonth: done.length,
     averageScore: scores.length
       ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
@@ -118,9 +119,9 @@ export function EngineCard({
   summary: EngineSummary;
   adminRoute: string;
 }) {
-  const stateTone =
-    summary.state === 'on' ? 'success' : summary.state === 'mock' ? 'warning' : 'muted';
-  const stateLabel = summary.state === 'on' ? s.on : summary.state === 'mock' ? s.mock : s.off;
+  const stateTone = ENGINE_STATE_TONE[summary.state];
+  const stateLabel = s.state[summary.state];
+  const c = summary.connection;
   return (
     <Card
       className="flex flex-col gap-4 p-5"
@@ -142,6 +143,28 @@ export function EngineCard({
       </div>
       <p className="text-small text-text-muted">
         <span className="font-medium text-text">{s.nextSlot}:</span> {summary.nextSlot}
+      </p>
+      <p className="text-small text-text-muted" data-admin-engine-connection={c ? c.id : 'none'}>
+        <span className="font-medium text-text">{s.connection}:</span>{' '}
+        {c ? (
+          <>
+            <Link
+              href={`${adminRoute}/collections/connections/${c.id}`}
+              className="text-accent underline underline-offset-2"
+            >
+              {c.label}
+            </Link>
+            {c.enabled ? '' : ` (${s.connectionOff})`} · ${c.spentUsd.toFixed(2)}
+            {c.limitUsd === null ? ` ${s.noLimit}` : ` / $${c.limitUsd}`}
+          </>
+        ) : (
+          <Link
+            href={`${adminRoute}/collections/connections`}
+            className="text-accent underline underline-offset-2"
+          >
+            {s.pickConnection}
+          </Link>
+        )}
       </p>
       {summary.recent.length === 0 ? (
         <p className="text-small text-text-muted">{s.empty}</p>

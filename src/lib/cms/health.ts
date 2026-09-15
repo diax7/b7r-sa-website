@@ -6,7 +6,7 @@ import { getContactTransport } from '@/lib/contact-transport';
 import { contactEnv } from '@/lib/env-server';
 import { indexNowKey } from '@/lib/indexnow';
 import { getNewsletterTransport } from '@/lib/newsletter-transport';
-import { envAllows, mockAllowed } from '@/modules/ai-content';
+import { type EngineState, engineState } from '@/modules/ai-content';
 
 const DB_TIMEOUT_MS = 2000;
 
@@ -58,13 +58,10 @@ export async function failedJobs(): Promise<number | null> {
   }
 }
 
-/** The content engine's switch (ADR-042): `mock` when the mock provider is selected and allowed. */
-export async function engineStatus(): Promise<'on' | 'off' | 'mock'> {
+/** The content engine (ADR-042, ADR-047): the switch, then its connection, then the mock gate. */
+export async function engineStatus(): Promise<EngineState> {
   try {
-    const payload = await cms();
-    const doc = await payload.findGlobal({ slug: 'ai-settings', depth: 0, overrideAccess: true });
-    if (!doc.enabled || !envAllows()) return 'off';
-    return doc.activeProvider === 'mock' && mockAllowed() ? 'mock' : 'on';
+    return (await engineState(await cms())).state;
   } catch (error) {
     console.error('health: engine check failed:', error);
     return 'off';
@@ -89,7 +86,7 @@ export interface HealthReport {
   email: 'resend' | 'console';
   jobs: 'on' | 'off';
   jobsFailed: number | null;
-  engine: 'on' | 'off' | 'mock';
+  engine: EngineState;
 }
 
 /**

@@ -4,7 +4,7 @@ import { wordCount } from '@/modules/ai-content/checks';
 import { runPipeline } from '@/modules/ai-content/pipeline/run';
 import type { PipelineContext } from '@/modules/ai-content/pipeline/types';
 import { mockProvider } from '@/modules/ai-content/provider/mock';
-import { FACTS, memoryStore, settings, topic } from './helpers/engine-store';
+import { connection, FACTS, memoryStore, settings, topic } from './helpers/engine-store';
 
 const LATE = () => new Date('2026-09-14T07:30:00Z'); // 10:30 in Riyadh, after the 9:00 slot
 const runDirect: PipelineContext['run'] = async (_name, fn) => fn();
@@ -157,12 +157,30 @@ describe('generatePost with the mock provider (BRD 10.2.4, 10.3 item 2)', () => 
     expect((await runPipeline(early.ctx, { manual: true })).status).toBe('done');
     const off = context({ settings: settings({ enabled: false }) });
     expect((await runPipeline(off.ctx, { manual: true })).reason).toMatch(/switched off/);
-    const capped = context({ counts: { runsToday: 1, runsThisMonth: 1, costTodayUsd: 0 } });
+    const zero = { runsToday: 0, runsThisMonth: 0, costTodayUsd: 0, connectionSpentMonthUsd: 0 };
+    const capped = context({ counts: { ...zero, runsToday: 1, runsThisMonth: 1 } });
     expect((await runPipeline(capped.ctx, { manual: true })).reason).toMatch(/today/);
-    const costly = context({ counts: { runsToday: 0, runsThisMonth: 0, costTodayUsd: 9 } });
+    const costly = context({ counts: { ...zero, costTodayUsd: 9 } });
     const result = await runPipeline(costly.ctx, { manual: true });
     expect(result.reason).toMatch(/cost/);
     expect(costly.state.emails[0]?.subject).toMatch(/cost cap/);
+    // The connection (ADR-047): none, off, or over its monthly limit refuses with the reason
+    // in the skipped row; the limit mails like the daily cap does, under its own subject.
+    const none = context({ settings: settings({ connection: null }) });
+    expect((await runPipeline(none.ctx, { manual: true })).reason).toMatch(/no connection/);
+    const offConnection = context({
+      settings: settings({ connection: connection({ enabled: false, label: 'Paused' }) }),
+    });
+    const refused = await runPipeline(offConnection.ctx, { manual: true });
+    expect(refused.reason).toMatch(/"Paused" is off/);
+    expect([...offConnection.state.runs.values()][0]?.['error']).toMatch(/is off/);
+    const limited = context({
+      settings: settings({ connection: connection({ monthlyLimitUsd: 4 }) }),
+      counts: { ...zero, connectionSpentMonthUsd: 4 },
+    });
+    const overLimit = await runPipeline(limited.ctx, { manual: true });
+    expect(overLimit.reason).toMatch(/reached its limit 4 USD/);
+    expect(limited.state.emails[0]?.subject).toMatch(/monthly limit reached/);
   });
 
   it('refuses image generation until a provider draws; stock uploads a photo', async () => {

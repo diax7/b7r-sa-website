@@ -24,7 +24,8 @@ note), `check:rtl` and the admin e2e.
    it is stored, Arabic + English. And on **every field an editor sees** (ADR-046): what it
    does on the site and where, then the limit or an example, through the entity's map in
    `src/modules/cms/admin/descriptions/*.ts` (engine fields in
-   `src/modules/ai-content/descriptions.ts`), applied by `describeFields()` on the config's
+   `src/modules/ai-content/descriptions.ts`, connections in
+   `src/modules/connections/descriptions.ts`), applied by `describeFields()` on the config's
    `fields`; `tests/admin-config.test.ts` refuses a field without both languages and a map
    key that names no field. A form with more than one screen of fields is tabs, one per
    section of the site in site order (named tabs where a group existed: same columns).
@@ -36,10 +37,19 @@ note), `check:rtl` and the admin e2e.
 7. If the document has a public route, set `admin.preview` (signed draft-mode URL).
 8. Access rules decide visibility: never render an admin-only thing greyed-out for editors.
 
+9. A field that holds a credential is `secretField()` (`src/modules/cms/fields/secret-field.ts`):
+   encrypted at rest, masked on read, the mask kept on save. An API key belongs to a row of
+   the Connections collection, not to a settings global (ADR-047).
+10. An admin-only JSON route goes through `adminOnly()` (`src/modules/cms/admin-api.ts`,
+   re-exported by the module's index) and a button through `ApiAction`
+   (`src/modules/cms/admin/api-action.tsx`), which says what happened beside the button.
+
 ## Adding an admin component
 
-- Location: `src/modules/cms/admin/<area>/`. Server components by default; `'use client'`
-  only for interaction. May import `@payloadcms/ui` and `payload`; nothing under
+- Location: `src/modules/cms/admin/<area>/` (a feature module's own under
+  `src/modules/<module>/admin/`, listed as a `@source` of `admin.css` so its Tailwind classes
+  are generated). Server components by default; `'use client'` only for interaction. May
+  import `@payloadcms/ui` and `payload`; nothing under
   `src/modules/home|pages|products|designer|contact` may import from here.
 - Styling: Tailwind utilities with the shared token names (`bg-surface`, `text-text-muted`,
   `text-accent`, `bg-primary`, `rounded-base`). Never `var(--color-*)` directly, never raw hex,

@@ -7,7 +7,7 @@ import { postBodyField } from '@/lib/cms/post-body';
 import type { LexicalState } from '@/lib/lexical';
 import { toIntegration, toProduct, toSiteSettings } from '@/lib/cms/mappers';
 import { inLocale, PUBLISHED } from '@/lib/cms/read';
-import { riyadhDayStart, riyadhMonthStart } from '@/modules/ai-content/caps';
+import { riyadhDayStart, riyadhMonthStart } from '@/lib/riyadh';
 import type { PublishedPost } from '@/modules/ai-content/dedupe';
 import { type FactsSheet, factsSheet } from '@/modules/ai-content/facts';
 import type {
@@ -21,18 +21,18 @@ import type {
   Store,
   Topic,
 } from '@/modules/ai-content/pipeline/types';
-import type { ProviderName } from '@/modules/ai-content/provider/types';
-import { DECRYPT_CONTEXT } from '@/modules/ai-content/secret-field';
+import { DECRYPT_CONTEXT } from '@/modules/cms/fields/secret-field';
 import { DEFAULT_AUTHOR_SLUG } from '@/modules/cms/collections/posts';
+import type { ConnectionSpec } from '@/modules/connections/kinds';
+import { connectionIdOf, readConnection } from '@/modules/connections/read';
+import { connectionSpend } from '@/modules/connections/spend';
 import type { AiSetting, AiTopic, Category, Post } from '@/payload-types';
 
 /**
  * The pipeline's `Store` on Payload's Local API (ADR-042): every read and write the engine
- * makes, with `overrideAccess` (no user behind a job) and, for the settings, the
- * `decryptKeys` context that reveals the provider keys.
+ * makes, with `overrideAccess` (no user behind a job) and, for the connection, the
+ * `decryptKeys` context that reveals its key (ADR-047).
  */
-const VENDORS = ['openai', 'deepseek', 'anthropic', 'google'] as const;
-
 function lines(text: string | null | undefined): string[] {
   return (text ?? '')
     .split(/\r?\n/)
@@ -40,26 +40,12 @@ function lines(text: string | null | undefined): string[] {
     .filter(Boolean);
 }
 
-export function toEngineSettings(doc: AiSetting): EngineSettings {
-  const providers = Object.fromEntries(
-    VENDORS.map((vendor) => {
-      const group = doc.providers?.[vendor];
-      return [
-        vendor,
-        {
-          model: group?.model ?? '',
-          apiKey: group?.apiKey ?? null,
-          rates: {
-            inputPerMillionUsd: group?.inputPerMillionUsd ?? 0,
-            outputPerMillionUsd: group?.outputPerMillionUsd ?? 0,
-          },
-        },
-      ];
-    }),
-  ) as EngineSettings['providers'];
+export function toEngineSettings(
+  doc: AiSetting,
+  connection: ConnectionSpec | null,
+): EngineSettings {
   return {
-    activeProvider: (doc.activeProvider ?? 'openai') as ProviderName,
-    providers,
+    connection,
     enabled: Boolean(doc.enabled),
     postsPerDay: doc.postsPerDay ?? 1,
     publishHourRiyadh: doc.publishHourRiyadh ?? 9,
@@ -118,13 +104,16 @@ export function payloadStore(payload: Payload): Store {
   const ctx = { [DECRYPT_CONTEXT]: true };
   return {
     async settings() {
+      // `ctx` reveals the Pexels key; the connection's key is revealed by its own read.
       const doc = await payload.findGlobal({
         slug: 'ai-settings',
         depth: 0,
         overrideAccess: true,
         context: ctx,
       });
-      return toEngineSettings(doc);
+      const id = connectionIdOf(doc);
+      const connection = id === null ? null : await readConnection(payload, id);
+      return toEngineSettings(doc, connection);
     },
 
     async style(locale) {
@@ -334,10 +323,21 @@ export function payloadStore(payload: Payload): Store {
           overrideAccess: true,
         }),
       ]);
+      const settings = await payload.findGlobal({
+        slug: 'ai-settings',
+        depth: 0,
+        overrideAccess: true,
+      });
+      const connectionId = connectionIdOf(settings);
+      const spend =
+        connectionId === null
+          ? { spentUsd: 0, calls: 0 }
+          : await connectionSpend(payload, connectionId, now);
       return {
         runsToday: today.docs.filter((r) => r.kind === 'generate').length,
         runsThisMonth: thisMonth.totalDocs,
         costTodayUsd: today.docs.reduce((n, r) => n + (r.costUsd ?? 0), 0),
+        connectionSpentMonthUsd: spend.spentUsd,
       };
     },
 

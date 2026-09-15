@@ -1,52 +1,20 @@
+import { riyadh } from '@/lib/riyadh';
+
 /**
  * The guards before a run (BRD 10.2.4 scheduling, 10.2.5): the switch, the env override,
- * the daily and monthly caps counted on runs started in the period (never on published
- * posts, so a second runner or a restart mid-run cannot publish twice), the cost cap, and
- * the publish hour in Riyadh. Pure: the tick and the "Generate now" route feed it.
+ * the connection (none, or off), the daily and monthly caps counted on runs started in the
+ * period (never on published posts, so a second runner or a restart mid-run cannot publish
+ * twice), the cost cap, the connection's monthly limit, and the publish hour in Riyadh.
+ * Pure: the tick and the "Generate now" route feed it.
  */
-export const RIYADH = 'Asia/Riyadh';
-
-export interface RiyadhTime {
-  hour: number;
-  /** `YYYY-MM-DD` in Riyadh. */
-  dateKey: string;
-  /** `YYYY-MM` in Riyadh. */
-  monthKey: string;
-}
-
-const parts = new Intl.DateTimeFormat('en-CA', {
-  timeZone: RIYADH,
-  year: 'numeric',
-  month: '2-digit',
-  day: '2-digit',
-  hour: '2-digit',
-  hour12: false,
-});
-
-export function riyadh(now: Date): RiyadhTime {
-  const map = Object.fromEntries(parts.formatToParts(now).map((p) => [p.type, p.value]));
-  const dateKey = `${map['year']}-${map['month']}-${map['day']}`;
-  return { hour: Number(map['hour']) % 24, dateKey, monthKey: dateKey.slice(0, 7) };
-}
-
-/** The UTC instant Riyadh's day began, for "runs started today" queries. */
-export function riyadhDayStart(now: Date): Date {
-  const { dateKey } = riyadh(now);
-  // Riyadh is UTC+3 all year (no daylight saving).
-  return new Date(`${dateKey}T00:00:00+03:00`);
-}
-
-export function riyadhMonthStart(now: Date): Date {
-  const { monthKey } = riyadh(now);
-  return new Date(`${monthKey}-01T00:00:00+03:00`);
-}
-
 export interface CapSettings {
   enabled: boolean;
   postsPerDay: number;
   publishHourRiyadh: number;
   maxPostsPerMonth: number;
   dailyCostCapUsd: number;
+  /** The engine's connection (ADR-047): null when the settings name none. */
+  connection: { label: string; enabled: boolean; monthlyLimitUsd: number | null } | null;
 }
 
 export interface CapCounts {
@@ -55,6 +23,8 @@ export interface CapCounts {
   runsThisMonth: number;
   /** Every run's cost today, whatever its kind. */
   costTodayUsd: number;
+  /** The connection's runs this month, whatever their kind; a Test never counts. */
+  connectionSpentMonthUsd: number;
 }
 
 export interface CapDecision {
@@ -70,9 +40,10 @@ export function envAllows(raw: Record<string, string | undefined> = process.env)
 
 /**
  * Whether a run may start now. `manual` skips the hour (a person pressed the button) but
- * never the switch, the env or the caps. A `freshness` run rewrites a post that exists, so
- * the posts-per-day and per-month caps and the hour do not apply to it; the switch, the env
- * and the cost cap do.
+ * never the switch, the env, the connection or the caps. A `freshness` run rewrites a post
+ * that exists, so the posts-per-day and per-month caps and the hour do not apply to it; the
+ * switch, the env, the connection, the daily cost cap and the connection's monthly limit do.
+ * The limit refuses at `spent >= limit`, so the overshoot is at most one run.
  */
 export function capDecision(args: {
   settings: CapSettings;
@@ -85,10 +56,23 @@ export function capDecision(args: {
   const { settings, counts, now, manual = false, kind = 'generate' } = args;
   if (!envAllows(args.env)) return { allowed: false, reason: 'AI_CONTENT_ENABLED is off' };
   if (!settings.enabled) return { allowed: false, reason: 'the engine is switched off' };
+  const connection = settings.connection;
+  if (!connection)
+    return { allowed: false, reason: 'no connection: pick one in the engine settings' };
+  if (!connection.enabled) {
+    return { allowed: false, reason: `the connection "${connection.label}" is off` };
+  }
   if (counts.costTodayUsd >= settings.dailyCostCapUsd) {
     return {
       allowed: false,
       reason: `today's cost ${counts.costTodayUsd.toFixed(2)} USD reached the cap ${settings.dailyCostCapUsd} USD`,
+    };
+  }
+  const limit = connection.monthlyLimitUsd;
+  if (limit !== null && counts.connectionSpentMonthUsd >= limit) {
+    return {
+      allowed: false,
+      reason: `this month's cost ${counts.connectionSpentMonthUsd.toFixed(2)} USD on the connection "${connection.label}" reached its limit ${limit} USD`,
     };
   }
   if (kind === 'freshness') return { allowed: true, reason: null };

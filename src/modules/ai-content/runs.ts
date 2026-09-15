@@ -12,7 +12,8 @@ export type RunKind = (typeof RUN_KINDS)[number];
 /**
  * The audit log (BRD 10.2.3): one row per pipeline execution, written by the pipeline
  * through the Local API and read-only for everyone else. Kept twelve months (the digest job
- * sweeps older rows).
+ * sweeps older rows). `connection` is the row's link to what it cost against (ADR-047);
+ * `provider` and `model` stay as text, the history of runs before Connections included.
  */
 export const AiRuns: CollectionConfig = {
   slug: 'ai-runs',
@@ -143,6 +144,13 @@ export const AiRuns: CollectionConfig = {
       type: 'number',
       label: { ar: 'نسخة التعليمات', en: 'Prompt version' },
       admin: { readOnly: true },
+    },
+    {
+      name: 'connection',
+      type: 'relationship',
+      relationTo: 'connections',
+      label: { ar: 'الاتصال', en: 'Connection' },
+      admin: { position: 'sidebar', readOnly: true },
     },
     {
       name: 'topic',

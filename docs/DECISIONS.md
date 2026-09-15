@@ -1097,3 +1097,63 @@ field; the 187 site-facing sentences were checked against the components that re
 field, and 16 corrected. Found on the way: tags, the testimonial's avatar and the settings'
 legal entity are read by nothing on the site (related posts go by hub, ADR-041; the copyright
 line is fixed copy), and their descriptions say so; whether to keep them is Dhia's call.
+
+## ADR-047: Connections: one place for every AI key, with a test and a monthly limit (2026-09-15)
+
+**Context.** The engine's keys lived in its settings, one group per vendor with a select for
+the active one: four keys to keep, no way to try one before a run, no per-key budget, and
+nothing for "any AI with an API" (Dhia's request, admin reshape plan D7) or for the accounts
+project 3 will read (prompt tracking through the same vendors, Search Console, Bing,
+PageSpeed). **Decision.** A `connections` collection (Admin group, admins only): `label`,
+`kind` (`openai`, `anthropic`, `google`, `deepseek`, `openai-compatible` with an `https://`
+base URL, `mock` for tests, refused in production as before), `model`, `apiKey` (the
+existing secret scheme: encrypted at rest with `PAYLOAD_SECRET`, masked on read, kept when
+the form posts the mask back), the two rates, `monthlyLimitUsd` (empty: no limit),
+`enabled`, and read-only `lastTestAt` / `lastTestOk` / `lastTestMessage` written only by
+the test. A new row that leaves the model or a rate empty gets its kind's usual value. Two
+numbers are derived on every read and never stored: `spentThisMonthUsd` and
+`callsThisMonth`, the `ai-runs` rows naming the connection since the Riyadh month began,
+`skipped` left out. **No ledger**: the runs are the record; `ai-runs` gains a nullable
+`connection` relationship and keeps `provider` and `model` as text for the history. The
+engine settings lose the Providers tab for one `connection` relationship on the Cadence tab;
+`ai-settings.images.pexelsKey` stays where it is (not a language model). **The guards.**
+`capDecision` refuses, in this order and for freshness runs too: env, switch, no
+connection, connection off, the daily cost cap, the connection's monthly limit at
+`spent >= limit` (overshoot at most one run), then the daily and monthly post caps and the
+hour. A manual run refused by the connection writes a skipped row with the reason; the
+hourly tick stays quiet. A job whose provider cannot be built (no key on the connection)
+still runs so the first model call records the reason on the run: `providerOrRefusal`. The
+dashboard card and the health row share one reading (`engineState`): on, off, mock,
+`noConnection` (red), `connectionOff` (amber); the card names the connection with its
+month's spend and limit. The engine's connection cannot be deleted (`beforeDelete`, a
+`Refused` 400: "pick another in the engine settings first"). **The test.**
+`POST /api/connections/test { id }` behind the admin guard: one `generateText` with
+`maxOutputTokens: 32` (OpenAI's Responses API refuses fewer than 16), no retries, a 20 s
+abort, the key read with `decryptKeys` through the Local API; the outcome written on the row
+(the model id on success; on failure the vendor's message through `safeMessage`: one line,
+URLs replaced, the key replaced, 200 characters at most; a run's error and the failure e-mail
+go through the same helper, at 1,000 characters); one test per
+connection per ten seconds in memory (one container, ADR-033); the button renders only on a
+saved row and reads "Save, then test" while the form is dirty; the mock answers without a
+call. **Dependencies.** `src/modules/connections/` is the leaf (the collection, kinds, the
+model factory `languageModel` that `provider/sdk.ts` now calls, the spend helper, the
+reader, the test); the engine depends on it and nothing there imports the engine. The
+Payload config and the engine import its files directly: the module's index re-exports the
+admin API guard (now `modules/cms/admin-api.ts`, shared by the `/api/ai/*` and
+`/api/connections/*` routes), which reaches the config, and an import of the index from the
+config side would be a cycle. The Riyadh clock moved to `lib/riyadh.ts` and the secret field
+to `modules/cms/fields/secret-field.ts` for the same reason. **Migration**
+`20260915_165626_connections`: one connection per vendor that had a key (ciphertext copied,
+same scheme), a mock connection when the mock was active, the settings pointed at the active
+vendor's connection (null when it had no key: the engine refuses with "no connection" until
+one is picked), every run linked by its provider text, the vendor columns dropped; `down`
+restores them. **Found on the way.** The secret field's `previousValue` in a `beforeChange`
+hook has been through `afterRead`, so it is the mask, not the ciphertext: saving a document
+with the mask, or any Local API update that omitted the field (the engine's
+`decrementReviewFirstRuns`), stored the mask and made the key unreadable. The hook now reads
+the stored value from the database row. Nothing in production had a key yet. The `openai` kind is the Responses API, whose
+`max_output_tokens` floor is 16: the plan's 8 would have failed every OpenAI test. **Not
+done.**
+`filterOptions` on the engine's picker (every kind is engine-capable today; project 3's
+analytics kinds bring the filter with their consumers); Perplexity; a shared rate-limit
+store.

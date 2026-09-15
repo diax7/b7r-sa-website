@@ -3,7 +3,7 @@
 import { useAuth, useDocumentInfo, useFormFields } from '@payloadcms/ui';
 import { RefreshCw } from 'lucide-react';
 import type { UIFieldClientComponent } from 'payload';
-import { EngineAction } from '@/modules/ai-content/admin/engine-action';
+import { ApiAction } from '@/modules/cms/admin/api-action';
 import { adminStrings } from '@/modules/cms/admin/strings';
 
 const s = adminStrings.engine;
@@ -25,7 +25,7 @@ export const PostEngineActions: UIFieldClientComponent = () => {
     <div className="mb-6 flex flex-col gap-2" data-admin-ui="" data-admin-post-engine="">
       <span className="text-small font-medium text-text">{s.postTitle}</span>
       <span className="text-caption text-text-muted">{s.regenerateHint}</span>
-      <EngineAction
+      <ApiAction
         label={s.regenerate}
         busyLabel={s.queueing}
         doneLabel={s.queued}

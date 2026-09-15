@@ -5,7 +5,7 @@ import type {
   PipelineResult,
   StepRunner,
 } from '@/modules/ai-content/pipeline/types';
-import { providerFor } from '@/modules/ai-content/provider';
+import { providerOrRefusal } from '@/modules/ai-content/provider';
 import { payloadStore } from '@/modules/ai-content/store/payload-store';
 
 export const GENERATE_POST = 'generatePost' as const;
@@ -31,7 +31,7 @@ export async function generatePost(
   const store = payloadStore(payload);
   // The provider is built before the topic is known; the mock reads the sheet by unit, not by language.
   const [settings, facts] = await Promise.all([store.settings(), store.facts('ar')]);
-  const provider = providerFor(settings, facts);
+  const provider = providerOrRefusal(settings, facts);
   return runPipeline({ store, provider, now: () => new Date(), run }, input);
 }
 

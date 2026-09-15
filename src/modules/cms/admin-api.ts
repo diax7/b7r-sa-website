@@ -4,9 +4,10 @@ import { acceptsJsonFrom } from '@/lib/request-guards';
 import { roleOf } from '@/modules/cms/access';
 
 /**
- * The `/api/ai/*` routes (ADR-042): JSON from the site's own origin, and a signed-in admin
- * (the cookie or a JWT through Payload's `auth`). Anything else is 403 without a body worth
- * reading; an editor gets the same answer as an outsider.
+ * The admin-only JSON routes (`/api/ai/*`, ADR-042; `/api/connections/*`, ADR-047): JSON from
+ * the site's own origin, and a signed-in admin (the cookie or a JWT through Payload's
+ * `auth`). Anything else is 403 without a body worth reading; an editor gets the same answer
+ * as an outsider.
  */
 export type AdminRequest = { ok: true; payload: Payload } | { ok: false; response: Response };
 

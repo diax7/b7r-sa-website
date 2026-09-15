@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { capDecision, envAllows, riyadh, riyadhDayStart } from '@/modules/ai-content/caps';
+import { riyadh, riyadhDayStart } from '@/lib/riyadh';
+import { capDecision, envAllows } from '@/modules/ai-content/caps';
 import {
   bannedPhrasesIn,
   checkDraft,
@@ -10,7 +11,7 @@ import {
 import { addUsage, estimateCostUsd } from '@/modules/ai-content/cost';
 import { duplicateReason, titleOverlap } from '@/modules/ai-content/dedupe';
 import { sanitizeLinks } from '@/modules/ai-content/pipeline/links';
-import { nextStoredValue, readValue } from '@/modules/ai-content/secret-field';
+import { nextStoredValue, readValue } from '@/modules/cms/fields/secret-field';
 import { parseTopicsCsv } from '@/modules/ai-content/topics-import';
 import { slugFor, transliterate } from '@/modules/ai-content/transliterate';
 import { FACTS, settings } from './helpers/engine-store';
@@ -170,7 +171,7 @@ describe('dedupe (BRD 10.2.5)', () => {
 
 describe('caps and the Riyadh clock (BRD 10.2.4, 10.2.5)', () => {
   const base = settings();
-  const counts = { runsToday: 0, runsThisMonth: 0, costTodayUsd: 0 };
+  const counts = { runsToday: 0, runsThisMonth: 0, costTodayUsd: 0, connectionSpentMonthUsd: 0 };
 
   it('reads the hour and the day in Riyadh (UTC+3)', () => {
     expect(riyadh(new Date('2026-09-14T05:30:00Z'))).toEqual({

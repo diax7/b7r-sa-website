@@ -1,6 +1,7 @@
 import type { Payload, TaskConfig } from 'payload';
 import { siteBase } from '@/lib/env';
-import { envAllows, riyadh } from '@/modules/ai-content/caps';
+import { riyadh } from '@/lib/riyadh';
+import { envAllows } from '@/modules/ai-content/caps';
 import { payloadStore } from '@/modules/ai-content/store/payload-store';
 import { AI_QUEUE } from '@/modules/ai-content/workflow';
 
