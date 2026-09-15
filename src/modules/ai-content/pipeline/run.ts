@@ -33,6 +33,9 @@ import type {
 import type { Provider } from '@/modules/ai-content/provider/types';
 import { SLUG_MAX, slugFor } from '@/modules/ai-content/transliterate';
 
+/** A run's error keeps more of a message than a test's line (a validation report has detail). */
+const RUN_MESSAGE_MAX = 1000;
+
 /**
  * The `generatePost` pipeline (BRD 10.2.4): nine steps in order, each recorded on the run
  * row as it goes, the topic marked `published` or `failed` at the end. Pure over a `Store`
@@ -443,9 +446,6 @@ export async function runPipeline(
     return finish({ status, runId, postId: null, score: null, reason: message, usage }, message);
   }
 }
-
-/** A run's error keeps more of a message than a test's line (a validation report has detail). */
-const RUN_MESSAGE_MAX = 1000;
 
 const LLM_STEPS = new Set(['outline', 'draft', 'review', 'revise', 'seo', 'image']);
 
