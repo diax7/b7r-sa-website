@@ -3,9 +3,15 @@ import { type MigrateDownArgs, type MigrateUpArgs, sql } from '@payloadcms/db-po
 /**
  * The Navigation global's fields move into the site settings as the `menu` group (ADR-046):
  * the new tables and columns first, then every row copied with its parent remapped to the
- * site-settings row, then the old tables dropped. Row ids are looked up, never assumed. The
- * localized labels are NOT NULL, so a locale row that exists in `site_settings_locales` but
- * not in `navigation_locales` (never the case after a seed) gets an empty string.
+ * site-settings row, then the old tables dropped. Row ids are looked up, never assumed; the
+ * array rows keep their ids, so their locale rows need no remap. The localized labels are
+ * NOT NULL, so a locale row that exists in `site_settings_locales` but not in
+ * `navigation_locales` gets an empty string, which `pnpm content:migrate --force` refills
+ * (the English seed's "settings without menus" branch). Two states this never sees after a
+ * seed, and what they do: an empty database copies nothing (the cross join with the empty
+ * site-settings subselect yields no rows); navigation rows without a site-settings row fail
+ * on the locale table's foreign key and roll the migration back, which is the right
+ * failure, no data is lost silently.
  */
 export async function up({ db }: MigrateUpArgs): Promise<void> {
   await db.execute(sql`

@@ -14,7 +14,7 @@ export async function localeEnabledWith(payload: Payload, locale: Locale): Promi
   if (locale === 'ar') return true;
   if (process.env['SITE_ENGLISH'] === 'off') return false;
   const site = await payload.findGlobal({ slug: 'site-settings', ...publicRead(locale), depth: 0 });
-  return Boolean(site.brandName) && Boolean(site.menu?.ctaLabel);
+  return Boolean(site.brandName) && Boolean(site.menu.ctaLabel);
 }
 
 /** The locales the site is in, for a hook that holds the request's Payload. */

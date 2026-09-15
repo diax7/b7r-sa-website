@@ -80,27 +80,29 @@ export async function ensureEnglish(payload: Payload): Promise<EnglishSummary> {
   // English labels merged onto the Arabic rows by position.
   {
     const en = await payload.findGlobal({ slug: 'site-settings', ...EN });
-    const ar = await payload.findGlobal({ slug: 'site-settings', ...AR });
-    const label = (map: Record<string, string>) => (row: Row) => ({
-      label: map[String(row['href'])] ?? String(row['label']),
-    });
-    const menuEn = {
-      primary: merged(ar.menu.primary, (ar.menu.primary ?? []).map(label(navigationEn.primary))),
-      policies: merged(
-        ar.menu.policies,
-        (ar.menu.policies ?? []).map(label(navigationEn.policies)),
-      ),
-      ctaLabel: navigationEn.ctaLabel,
-      skipLinkLabel: navigationEn.skipLinkLabel,
-      menuOpenLabel: navigationEn.menuOpenLabel,
-      menuCloseLabel: navigationEn.menuCloseLabel,
+    const menuEn = async () => {
+      const ar = await payload.findGlobal({ slug: 'site-settings', ...AR });
+      const label = (map: Record<string, string>) => (row: Row) => ({
+        label: map[String(row['href'])] ?? String(row['label']),
+      });
+      return {
+        primary: merged(ar.menu.primary, (ar.menu.primary ?? []).map(label(navigationEn.primary))),
+        policies: merged(
+          ar.menu.policies,
+          (ar.menu.policies ?? []).map(label(navigationEn.policies)),
+        ),
+        ctaLabel: navigationEn.ctaLabel,
+        skipLinkLabel: navigationEn.skipLinkLabel,
+        menuOpenLabel: navigationEn.menuOpenLabel,
+        menuCloseLabel: navigationEn.menuCloseLabel,
+      };
     };
     if (en.brandName && en.menu?.ctaLabel) skip('en site-settings');
     else if (en.brandName) {
       await payload.updateGlobal({
         slug: 'site-settings',
         locale: 'en',
-        data: { menu: menuEn },
+        data: { menu: await menuEn() },
         context: CONTEXT,
       });
       done('en site-settings: menu');
@@ -108,7 +110,7 @@ export async function ensureEnglish(payload: Payload): Promise<EnglishSummary> {
       await payload.updateGlobal({
         slug: 'site-settings',
         locale: 'en',
-        data: { ...siteEn, menu: menuEn },
+        data: { ...siteEn, menu: await menuEn() },
         context: CONTEXT,
       });
       done('en site-settings');
