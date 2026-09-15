@@ -109,13 +109,13 @@ page ("the 2nd section, under the hero").
 
 **Navigation → Site settings.** The `navigation` global's fields move into `site-settings` as
 a `menu` group under the Menus & footer tab: `menu.primary` (6), `menu.policies` (4),
-`menu.ctaLabel`. Its three interface strings (`skipLinkLabel`, `menuOpenLabel`,
-`menuCloseLabel`) are interface copy, which ADR-031 keeps in code: they move to the copy bank
-(`content/copy/*.ts`, both languages, current values) and leave the CMS. Dhia to confirm (the
-mock lists them nowhere; "keep the same options" is read as the options that shape the site).
+`menu.ctaLabel`, and its three labels `menu.skipLinkLabel`, `menu.menuOpenLabel`,
+`menu.menuCloseLabel` (interface text, but Dhia chose on 2026-09-15 to keep them editable;
+their descriptions say exactly where each is read: the keyboard skip link, the burger's
+accessible name open and closed).
 Migration: create `site_settings_menu_primary(_locales)` and `site_settings_menu_policies(_locales)`,
-copy the rows with `_parent_id` remapped to the site-settings row, copy `cta_label` into
-`site_settings_locales.menu_cta_label` per locale, then drop the `navigation*` tables (the
+copy the rows with `_parent_id` remapped to the site-settings row, copy the four localized
+strings into `site_settings_locales.menu_*` per locale, then drop the `navigation*` tables (the
 data-carrying statements precede the generated drops, as in the hero migration). `down`
 restores. `content/schema.ts` `Navigation` is read from site-settings by the mapper; the two
 seeds and `scripts/migrate-content*.ts` follow; `pnpm generate:types`; the golden HTML diff
