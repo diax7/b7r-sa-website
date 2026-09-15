@@ -516,9 +516,10 @@ test.describe('CMS admin', () => {
         .map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`),
     ).toEqual([]);
     // The field widgets: a section switch with its consequence, and the platform tiles. The
-    // hero overlay's switch comes first in the document, so the section's field is the one
-    // wrapping the steps switch.
+    // section's switch lives in its tab (ADR-046), which Payload opens only on a click (a
+    // remembered tab is a per-user preference, never assumed).
     await page.goto('/admin/globals/home');
+    await page.locator('.tabs-field__tab-button', { hasText: 'Three steps' }).click();
     const stepsSwitch = page.locator('[data-admin-switch="steps.enabled"]');
     await expect(stepsSwitch).toHaveAttribute('role', 'switch');
     await expect(stepsSwitch).toHaveAttribute('aria-checked', 'true');
