@@ -164,8 +164,11 @@ describe('the sidebar registry (ADR-046)', () => {
 /**
  * Every field an editor sees says what it does on the site (ADR-046, design system §1.5):
  * an `admin.description` in both languages, at least four words each. Layout fields (row,
- * collapsible, tabs, an unnamed group), `ui` fields, hidden, read-only and label-less fields
- * are not read by an editor and are left out; the tabs' own fields are walked.
+ * collapsible, tabs, an unnamed group) are transparent; `ui` fields are no fields; a hidden,
+ * read-only or disabled field is skipped with everything under it (`lastSavedBy`, the post's
+ * `warnings`); a `label: false` group is skipped but its fields are read. A field a widget
+ * renders (the switches, the pickers, the colour field) is held to the rule like any other:
+ * `FieldShell` shows its description.
  */
 const words = (v: unknown) => (typeof v === 'string' ? v.trim().split(/\s+/).length : 0);
 
@@ -179,22 +182,21 @@ function describedFields(fields: Field[], path = ''): Array<{ path: string; ok: 
       }
       continue;
     }
-    if (f.type === 'row' || f.type === 'collapsible' || f.type === 'ui') {
+    if (f.type === 'ui') continue;
+    if (
+      f.type === 'row' ||
+      f.type === 'collapsible' ||
+      (f.type === 'group' && !('name' in f && f.name))
+    ) {
       if ('fields' in f) out.push(...describedFields(f.fields, path));
       continue;
     }
     if (!('name' in f) || !f.name) continue;
     const name = `${path}${f.name}`;
-    // A field a custom widget renders (`admin.components.Field`) explains itself; its inner
-    // fields never reach an editor as fields.
-    const widget = Boolean((admin['components'] as { Field?: unknown } | undefined)?.Field);
-    const skip =
-      admin['hidden'] === true ||
-      admin['readOnly'] === true ||
-      (f as { label?: unknown }).label === false ||
-      admin['disabled'] === true ||
-      widget;
-    if (widget) continue;
+    if (admin['hidden'] === true || admin['readOnly'] === true || admin['disabled'] === true) {
+      continue;
+    }
+    const skip = (f as { label?: unknown }).label === false;
     if (!skip) {
       const d = admin['description'] as { ar?: string; en?: string } | undefined;
       out.push({ path: name, ok: words(d?.ar) >= 4 && words(d?.en) >= 4 });
@@ -219,11 +221,20 @@ function fieldPaths(fields: Field[], path = ''): string[] {
       }
       continue;
     }
-    if (f.type === 'row' || f.type === 'collapsible') {
+    if (f.type === 'ui') continue;
+    if (
+      f.type === 'row' ||
+      f.type === 'collapsible' ||
+      (f.type === 'group' && !('name' in f && f.name))
+    ) {
       out.push(...fieldPaths(f.fields, path));
       continue;
     }
     if (!('name' in f) || !f.name) continue;
+    const admin = (f as { admin?: Record<string, unknown> }).admin ?? {};
+    if (admin['hidden'] === true || admin['readOnly'] === true || admin['disabled'] === true) {
+      continue;
+    }
     const name = `${path}${f.name}`;
     out.push(name);
     if ('fields' in f && Array.isArray(f.fields)) out.push(...fieldPaths(f.fields, `${name}.`));

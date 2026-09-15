@@ -16,6 +16,7 @@ import { getPayload, type Payload } from 'payload';
 import { blogAuthor, blogHubs, blogPostBody, blogPosts } from '../src/content/seed/blog';
 import { faq } from '../src/content/seed/faq';
 import { home } from '../src/content/seed/home';
+import { postBodyField } from '../src/lib/cms/post-body';
 import { homeEn } from '../src/content/seed/en/home';
 import { integrations } from '../src/content/seed/integrations';
 import { navigation } from '../src/content/seed/navigation';
@@ -596,11 +597,7 @@ async function ensurePost(
   }
   const hub = hubs.get(post.hub);
   if (!hub) throw new Error(`seed posts: ${post.slug} names an unknown hub ${post.hub}`);
-  const field = payload.collections['posts']?.config.fields.find(
-    (f) => 'name' in f && f.name === 'body',
-  );
-  if (!field || field.type !== 'richText') throw new Error('seed posts: no body field');
-  const editorConfig = editorConfigFactory.fromField({ field });
+  const editorConfig = editorConfigFactory.fromField({ field: postBodyField(payload) });
   const body = convertMarkdownToLexical({ editorConfig, markdown: blogPostBody(post.slug) });
   await payload.create({
     collection: 'posts',

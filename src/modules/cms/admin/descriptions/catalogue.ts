@@ -3,8 +3,8 @@ import type { Described } from '@/modules/cms/admin/descriptions/describe';
 /** Products: what each field does on the site (ADR-046). */
 export const PRODUCT_DESCRIPTIONS: Described = {
   shortDescription: {
-    ar: 'سطر واحد تحت الاسم في بطاقة المنتج، وهو وصف نتيجة Google لصفحة المنتج.',
-    en: "One line under the name on the product card, and the description of the product page's Google result.",
+    ar: 'سطر واحد تحت الاسم في بطاقة المنتج، ووصف نتيجة Google لصفحة المنتج، وسطر المنتج في ملف llms.txt.',
+    en: "One line under the name on the product card, the description of the product page's Google result, and the product's line in llms.txt.",
   },
   baseCost: {
     ar: 'ما يدفعه التاجر عن القطعة: صفحة المنتج، والحاسبة، والشريط في الرئيسية، وملف llms.txt. يساوي سعر التطبيق؛ لا مزامنة بينهما.',
@@ -15,8 +15,8 @@ export const PRODUCT_DESCRIPTIONS: Described = {
     en: "The sell price we suggest to the merchant: the product page, the calculator and llms.txt. Must equal the app's: there is no sync.",
   },
   sizesSummary: {
-    ar: 'يظهر في بطاقة المنتج تحت السعر وفي قائمة المصمّم. قصير: «S – 2XL»، «مقاس واحد».',
-    en: 'Shows on the product card under the price and in the designer picker. Short: "S – 2XL", "One size".',
+    ar: 'يظهر في بطاقة المنتج تحت السعر. قصير: «S – 2XL»، «مقاس واحد».',
+    en: 'Shows on the product card under the price. Short: "S – 2XL", "One size".',
   },
   name: {
     ar: 'اسم المنتج كما يظهر في البطاقة، وعنوان صفحته، وقائمة المصمّم، وملف llms.txt.',
@@ -27,20 +27,20 @@ export const PRODUCT_DESCRIPTIONS: Described = {
     en: 'The last part of the page address: b7r.sa/products/tee-essential. Lowercase letters and hyphens only; changing it after publishing breaks old links.',
   },
   description: {
-    ar: 'الفقرة التعريفية أعلى صفحة المنتج، وسطر المنتج في ملف llms.txt.',
-    en: "The paragraph at the top of the product's page, and the product's line in llms.txt.",
+    ar: 'الفقرة التعريفية أعلى صفحة المنتج، تحت الاسم.',
+    en: "The paragraph at the top of the product's page, under the name.",
   },
   sortOrder: {
-    ar: 'ترتيب المنتج في صفحة المنتجات وشريط الرئيسية: 1 يظهر أولاً.',
-    en: 'Where the product sits on the products page and the home strip: 1 shows first.',
+    ar: 'ترتيب المنتج في صفحة المنتجات وفي ملف llms.txt: 1 يظهر أولاً. شريط الرئيسية له ترتيبه الخاص (الصفحة الرئيسية، شريط المنتجات).',
+    en: 'Where the product sits on the products page and in llms.txt: 1 shows first. The home strip has its own order (Home page, Product strip tab).',
   },
   colors: {
     ar: 'ألوان المنتج: مربعات اللون في البطاقة، وخيارات اللون في صفحة المنتج والمصمّم. اللون الأول هو الافتراضي.',
     en: "The product's colours: the swatches on the card, the colour choice on the page and in the designer. The first is the default.",
   },
   'colors.slug': {
-    ar: 'معرّف اللون في الرابط والمصمّم: black، white. حروف لاتينية صغيرة، لا يظهر للزائر.',
-    en: "The colour's id in the address and the designer: black, white. Lowercase, never shown to a visitor.",
+    ar: 'معرّف اللون الذي تستخدمه مربعات البطاقة والمصمّم: black، white. حروف لاتينية صغيرة؛ لا يظهر للزائر.',
+    en: "The colour's id, used by the card's swatches and the designer: black, white. Lowercase; never shown to a visitor.",
   },
   'colors.name': {
     ar: 'اسم اللون كما يقرؤه الزائر عند اختياره في صفحة المنتج والمصمّم.',
@@ -63,20 +63,20 @@ export const PRODUCT_DESCRIPTIONS: Described = {
     en: "The sizes on offer: the size table on the product's page, in this order.",
   },
   'sizes.label': {
-    ar: 'اسم المقاس في الجدول والمصمّم: S، M، مقاس واحد.',
-    en: 'The size name in the table and the designer: S, M, One size.',
+    ar: 'اسم المقاس في جدول المقاسات بصفحة المنتج: S، M، مقاس واحد.',
+    en: "The size name in the product page's size table: S, M, One size.",
   },
   'sizes.length': {
-    ar: 'طول القطعة بالسنتيمتر في جدول المقاسات. فارغ يخفي العمود لهذا المقاس.',
-    en: "The piece's length in centimetres in the size table. Empty hides the cell.",
+    ar: 'طول القطعة بالسنتيمتر في جدول المقاسات. فارغ في كل المقاسات يخفي العمود.',
+    en: "The piece's length in centimetres in the size table. Empty on every size hides the column.",
   },
   'sizes.chest': {
-    ar: 'عرض الصدر بالسنتيمتر في جدول المقاسات. فارغ يخفي العمود لهذا المقاس.',
-    en: 'The chest width in centimetres in the size table. Empty hides the cell.',
+    ar: 'عرض الصدر بالسنتيمتر في جدول المقاسات. فارغ في كل المقاسات يخفي العمود.',
+    en: 'The chest width in centimetres in the size table. Empty on every size hides the column.',
   },
   'sizes.sleeve': {
-    ar: 'طول الكم بالسنتيمتر في جدول المقاسات. فارغ يخفي العمود لهذا المقاس.',
-    en: 'The sleeve length in centimetres in the size table. Empty hides the cell.',
+    ar: 'طول الكم بالسنتيمتر في جدول المقاسات. فارغ في كل المقاسات يخفي العمود.',
+    en: 'The sleeve length in centimetres in the size table. Empty on every size hides the column.',
   },
   material: {
     ar: 'الخامة في سطر مواصفات صفحة المنتج: قطن 100%، كانفاس.',
@@ -159,8 +159,8 @@ export const TESTIMONIAL_DESCRIPTIONS: Described = {
     en: "The merchant's store name under their name on the card.",
   },
   avatar: {
-    ar: 'صورة التاجر الدائرية بجانب الاسم. فارغة تعرض الحرف الأول من الاسم.',
-    en: "The merchant's round photo beside the name. Empty shows the name's initial.",
+    ar: 'لا يقرؤه الموقع اليوم: البطاقة تعرض الاسم والمتجر بلا صورة. محفوظ لليوم الذي تعرض فيه البطاقات صوراً.',
+    en: 'Read by nothing on the site today: the card shows the name and the store, no photo. Kept for the day the cards carry photos.',
   },
   order: {
     ar: 'ترتيب البطاقة في قسم آراء التجار بالرئيسية: 1 أولاً.',

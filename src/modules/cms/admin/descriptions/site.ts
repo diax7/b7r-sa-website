@@ -43,8 +43,8 @@ export const HOME_DESCRIPTIONS: Described = {
     en: "The line under the strip's heading.",
   },
   'productStrip.pricePrefix': {
-    ar: 'الكلمة قبل السعر في كل بطاقة: «من». السعر نفسه من المنتج.',
-    en: 'The word before the price on each card: "from". The price itself comes from the product.',
+    ar: 'الكلمة قبل السعر: بطاقات الشريط، وبطاقات صفحة المنتجات، وصفحة المنتج وشريطها الثابت: «من». السعر نفسه من المنتج.',
+    en: 'The word before the price: the strip cards, the products page cards, and the product page with its sticky bar: "from". The price itself comes from the product.',
   },
   'productStrip.button': {
     ar: 'نص زر «كل المنتجات» تحت الشريط؛ يفتح صفحة المنتجات.',
@@ -171,24 +171,24 @@ export const SITE_SETTINGS_DESCRIPTIONS: Described = {
     en: "The welcome credit in SAR: the credit line in the About facts band and llms.txt. Must equal the app's: there is no sync.",
   },
   deliveryMaxDays: {
-    ar: 'أقصى أيام التوصيل داخل المملكة: وعد «خلال N أيام» في llms.txt وبيانات الشحن لمحركات البحث. يساوي التطبيق؛ لا مزامنة.',
-    en: 'The most days a delivery takes inside the Kingdom: the "within N days" promise in llms.txt and the shipping data search engines read. Must equal the app: there is no sync.',
+    ar: 'أقصى أيام التوصيل داخل المملكة: وعد «خلال N أيام» في llms.txt، وبيانات الشحن لمحركات البحث، وورقة حقائق المحرّك. يساوي التطبيق؛ لا مزامنة.',
+    en: 'The most days a delivery takes inside the Kingdom: the "within N days" promise in llms.txt, the shipping data search engines read, and the engine facts sheet. Must equal the app: there is no sync.',
   },
   bookingUrl: {
     ar: 'رابط حجز الاستشارة (Cal.com) لبطاقة الحجز في صفحة التواصل. فارغ يفتح واتساب بالرسالة الجاهزة بدلاً منه.',
     en: 'The consultation booking link (Cal.com) for the contact page booking card. Empty opens WhatsApp with the prefilled message instead.',
   },
   brandName: {
-    ar: 'اسم العلامة كما يقرؤه الزائر: التذييل، سطر llms.txt الأول، وبيانات المنظمة لمحركات البحث.',
-    en: "The brand's name as a visitor reads it: the footer, the first line of llms.txt, and the organisation data search engines read.",
+    ar: 'اسم العلامة: الاسم المقروء للشعار في الترويسة والتذييل، اسم الموقع في بطاقات المشاركة، السطر الأول في llms.txt، بيان التطبيق، وبيانات المنظمة لمحركات البحث.',
+    en: "The brand's name: the logo's accessible name in the header and the footer, the site name on share cards, the first line of llms.txt, the web app manifest, and the organisation data search engines read.",
   },
   brandNameLatin: {
     ar: 'الاسم اللاتيني للعلامة: الاسم البديل في بيانات المنظمة لمحركات البحث، وورقة حقائق المحرّك. B7R Print.',
     en: "The brand's Latin name: the alternate name in the organisation data search engines read, and the engine's facts sheet. B7R Print.",
   },
   tagline: {
-    ar: 'الجملة التعريفية الواحدة: تحت الشعار في التذييل، السطر الأول في llms.txt، وورقة حقائق المحرّك. الجملة نفسها في كل مكان.',
-    en: "The one-line definition: under the logo in the footer, the first line of llms.txt, and the engine's facts sheet. The same sentence everywhere.",
+    ar: 'الجملة التعريفية الواحدة: تحت الشعار في التذييل، السطر الأول في llms.txt، بيان التطبيق، وورقة حقائق المحرّك. الجملة نفسها في كل مكان.',
+    en: "The one-line definition: under the logo in the footer, the first line of llms.txt, the web app manifest, and the engine's facts sheet. The same sentence everywhere.",
   },
   contact: {
     ar: 'طرق التواصل: التذييل، صفحة التواصل، أداة واتساب، وبيانات المنظمة.',
@@ -243,16 +243,16 @@ export const SITE_SETTINGS_DESCRIPTIONS: Described = {
     en: 'The path the link opens, starting with /: /privacy.',
   },
   deliveryOrigin: {
-    ar: 'مدينة الشحن في عنوان المنظمة لمحركات البحث وفي ورقة حقائق المحرّك: جدة.',
-    en: "The shipping city in the organisation's address for search engines and in the engine's facts sheet: Jeddah.",
+    ar: 'مدينة الشحن: شارة الموقع في شريط حقائق «من نحن»، وسطر الشحن في llms.txt، وعنوان المنظمة لمحركات البحث، وورقة حقائق المحرّك: جدة.',
+    en: "The shipping city: the map-pin chip in the About facts band, the shipping line of llms.txt, the organisation's address for search engines, and the engine's facts sheet: Jeddah.",
   },
   deliveryRegion: {
     ar: 'منطقة المنشأ في بيانات المنظمة لمحركات البحث (حقل addressRegion): منطقة مكة المكرمة. لا يظهر للزائر.',
     en: 'The origin region in the organisation data search engines read (addressRegion): Makkah Region. Not shown to a visitor.',
   },
   legalEntity: {
-    ar: 'اسم الكيان القانوني في سطر الحقوق أسفل التذييل وفي الصفحات القانونية.',
-    en: "The legal entity's name in the footer's copyright line and on the legal pages.",
+    ar: 'لا يقرؤه الموقع اليوم: سطر الحقوق في التذييل والصفحات القانونية نصّها ثابت في الكود. محفوظ لليوم الذي يُقرأ فيه.',
+    en: "Read by nothing on the site today: the footer's copyright line and the legal pages carry their own fixed text. Kept for the day they read it.",
   },
 };
 

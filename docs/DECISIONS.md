@@ -1092,6 +1092,8 @@ then its limit or an example, in both languages, through one map per entity
 (`modules/cms/admin/descriptions/*.ts`, `modules/ai-content/descriptions.ts`) applied by
 `describeFields()` on the config, so the ~240 sentences are read in one place; the config
 test refuses a field without both languages (layout, hidden, read-only, label-less and
-widget-rendered fields excepted) and a map key that names no field. Found on the way: tags
-are read by nothing on the site (related posts go by hub, ADR-041), and their descriptions
-say so; whether to keep them is Dhia's call.
+label-less groups descended, hidden and read-only fields skipped) and a map key that names no
+field; the 187 site-facing sentences were checked against the components that read each
+field, and 16 corrected. Found on the way: tags, the testimonial's avatar and the settings'
+legal entity are read by nothing on the site (related posts go by hub, ADR-041; the copyright
+line is fixed copy), and their descriptions say so; whether to keep them is Dhia's call.

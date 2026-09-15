@@ -6,9 +6,10 @@ export type Described = Record<string, { ar: string; en: string }>;
 /**
  * Sets `admin.description` on every field the map names (ADR-046): the path is the field's
  * names joined by dots, through named tabs, groups and arrays, with a block's slug after the
- * blocks field (`blocks.cards.items.title`); rows and collapsibles are transparent. A field
- * that already carries a description keeps it unless the map names it. `applied` collects the
- * keys used, so `tests/admin-config.test.ts` can refuse a key that names nothing.
+ * blocks field (`blocks.cards.items.title`); rows, collapsibles and unnamed groups are
+ * transparent, `ui` fields are not fields. A field that already carries a description keeps
+ * it unless the map names it. `applied` collects the keys used, so
+ * `tests/admin-config.test.ts` can refuse a key that names nothing.
  */
 export function describeFields(
   fields: Field[],
@@ -31,8 +32,13 @@ export function describeFields(
         })) as typeof field.tabs,
       };
     }
-    if (field.type === 'row' || field.type === 'collapsible') {
-      return { ...field, fields: describeFields(field.fields, map, applied, path) };
+    if (field.type === 'ui') return field;
+    if (
+      field.type === 'row' ||
+      field.type === 'collapsible' ||
+      (field.type === 'group' && !('name' in field && field.name))
+    ) {
+      return { ...field, fields: describeFields(field.fields, map, applied, path) } as Field;
     }
     if (!('name' in field) || !field.name) return field;
     const name = `${path}${field.name}`;

@@ -1,8 +1,9 @@
 import { Buffer } from 'node:buffer';
 import { convertMarkdownToLexical, editorConfigFactory } from '@payloadcms/richtext-lexical';
-import { flattenTopLevelFields, type Payload } from 'payload';
+import type { Payload } from 'payload';
 import { type Locale, requestLocale } from '@/lib/i18n';
 import { DEFAULT_STYLE } from '@/modules/ai-content/prompts/defaults';
+import { postBodyField } from '@/lib/cms/post-body';
 import type { LexicalState } from '@/lib/lexical';
 import { toIntegration, toProduct, toSiteSettings } from '@/lib/cms/mappers';
 import { inLocale, PUBLISHED } from '@/lib/cms/read';
@@ -467,12 +468,7 @@ export function payloadStore(payload: Payload): Store {
     },
 
     async markdownToLexical(markdown: string): Promise<LexicalState> {
-      // The body sits inside the Content tab since ADR-046: the flattened fields see through tabs.
-      const field = flattenTopLevelFields(payload.collections['posts']?.config.fields ?? []).find(
-        (f) => 'name' in f && f.name === 'body',
-      );
-      if (!field || field.type !== 'richText') throw new Error('posts: no body field');
-      const editorConfig = editorConfigFactory.fromField({ field });
+      const editorConfig = editorConfigFactory.fromField({ field: postBodyField(payload) });
       return convertMarkdownToLexical({ editorConfig, markdown }) as unknown as LexicalState;
     },
 
