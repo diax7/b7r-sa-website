@@ -13,6 +13,7 @@ import {
   type Hue,
   NAV_SECTIONS,
   navPlacement,
+  type NavPlacement,
   type NavSection,
 } from '@/modules/cms/admin/icons';
 
@@ -49,6 +50,9 @@ function sameRef(a: EntityRef, e: { type: string; slug: string }): boolean {
   return a.type === e.type && a.slug === e.slug;
 }
 
+/** An allowed entity with its place in the registry. */
+type Placed = Pick<NavEntity, 'type' | 'slug' | 'label' | 'href'> & { placement: NavPlacement };
+
 /**
  * The entities the signed-in user may open, in the five task groups of the registry
  * (ADR-046). Payload's `groupNavItems` decides what the user may see (permissions,
@@ -61,8 +65,10 @@ export async function navGroups(args: {
   permissions: SanitizedPermissions | undefined;
   user: TypedUser | undefined;
   i18n: I18nClient;
+  /** Query the collections' document counts (the sidebar shows them; the palette and the dashboard do not). */
+  counts?: boolean;
 }): Promise<NavGroup[]> {
-  const { payload, permissions, user, i18n } = args;
+  const { payload, permissions, user, i18n, counts: withCounts = false } = args;
   const adminRoute = payload.config.routes.admin;
   const visible = (hidden: unknown): boolean =>
     typeof hidden === 'function'
@@ -87,38 +93,42 @@ export async function navGroups(args: {
         path: `/${e.type === EntityType.collection ? 'collections' : 'globals'}/${e.slug}`,
       }),
     }));
-  const counts = await collectionCounts(
-    payload,
-    user,
-    allowed.filter((e) => e.type === 'collections').map((e) => e.slug as CollectionSlug),
-  );
-  const placed = allowed
-    .map((e) => ({ ...e, placement: navPlacement(e.type, e.slug) }))
-    .filter((e) => e.placement !== undefined)
-    .toSorted((a, b) => a.placement!.order - b.placement!.order);
-  const toEntity = (e: (typeof placed)[number]): NavEntity => ({
+  const counts = withCounts
+    ? await collectionCounts(
+        payload,
+        user,
+        allowed.filter((e) => e.type === 'collections').map((e) => e.slug as CollectionSlug),
+      )
+    : {};
+  const placed: Placed[] = allowed
+    .flatMap((e) => {
+      const placement = navPlacement(e.type, e.slug);
+      return placement ? [{ ...e, placement }] : [];
+    })
+    .toSorted((a, b) => a.placement.order - b.placement.order);
+  const toEntity = (e: Placed): NavEntity => ({
     type: e.type,
     slug: e.slug,
     label: e.label,
     href: e.href,
     ...(e.type === 'collections' && counts[e.slug] !== undefined ? { count: counts[e.slug] } : {}),
     children: placed
-      .filter((c) => c.placement!.parent && sameRef(c.placement!.parent, e))
+      .filter((c) => c.placement.parent && sameRef(c.placement.parent, e))
       .map(toEntity),
   });
   return GROUP_ORDER.map((key) => {
-    const ofGroup = placed.filter((e) => e.placement!.group === key);
+    const ofGroup = placed.filter((e) => e.placement.group === key);
     // A secondary entry whose parent this user cannot see is shown as a primary one.
     const primary = ofGroup.filter(
       (e) =>
-        !e.placement!.section &&
-        (!e.placement!.parent || !placed.some((p) => sameRef(e.placement!.parent!, p))),
+        !e.placement.section &&
+        (!e.placement.parent || !placed.some((p) => sameRef(e.placement.parent!, p))),
     );
     const sections = (Object.keys(NAV_SECTIONS) as NavSection[])
       .map((section) => ({
         key: section,
         label: getTranslation({ ar: NAV_SECTIONS[section].ar, en: NAV_SECTIONS[section].en }, i18n),
-        entities: ofGroup.filter((e) => e.placement!.section === section).map(toEntity),
+        entities: ofGroup.filter((e) => e.placement.section === section).map(toEntity),
       }))
       .filter((s) => s.entities.length > 0);
     return {
@@ -151,7 +161,7 @@ async function collectionCounts(
         });
         return [slug, totalDocs] as const;
       } catch (error) {
-        console.error(`nav: count of ${slug} failed:`, error);
+        payload.logger.error({ err: error, msg: `nav: count of ${slug} failed` });
         return [slug, undefined] as const;
       }
     }),

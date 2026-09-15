@@ -34,13 +34,7 @@ export function EntityHeader(props: ViewDescriptionServerProps & { entity: Entit
       ? payload.config.collections.find((c) => c.slug === entity.slug)
       : payload.config.globals.find((g) => g.slug === entity.slug);
   const shows = config?.admin?.custom?.['shows'] as StaticLabel | undefined;
-  const label =
-    entity.type === 'collections'
-      ? getTranslation(
-          payload.config.collections.find((c) => c.slug === entity.slug)?.labels.plural ?? '',
-          i18n,
-        )
-      : '';
+  const label = config && 'labels' in config ? getTranslation(config.labels.plural, i18n) : '';
   return (
     <div
       className={cn('flex items-start gap-3 border-s-2 ps-3', HUE_BAR_CLASSES[hue])}
@@ -65,7 +59,7 @@ export function EntityHeader(props: ViewDescriptionServerProps & { entity: Entit
           <a
             href={placement.listing}
             target="_blank"
-            rel="noreferrer"
+            rel="noopener"
             className="inline-flex items-center gap-1 text-small text-accent hover:underline"
             data-admin-listing=""
           >

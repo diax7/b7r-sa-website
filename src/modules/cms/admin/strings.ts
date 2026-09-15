@@ -15,7 +15,7 @@ export const adminStrings = {
   },
   entityHeader: {
     shows: 'Shows on:',
-    listing: (label: string) => `See ${label.toLowerCase()} on the site`,
+    listing: (label: string) => `See ${label} on the site`,
     sectionsOn: (total: number, on: number) => `${total} sections, ${on} on`,
   },
   header: {

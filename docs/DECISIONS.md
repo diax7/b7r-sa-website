@@ -1061,8 +1061,9 @@ amber, the "careful" colour), Admin a neutral slate. The registry is `admin/icon
 place is a type error, and `tests/admin-config.test.ts` asserts that each config's
 `admin.group` (still what Payload groups by) names the registry's group. `navGroups()` keeps
 Payload's `groupNavItems` for permissions and hidden entities and shapes the result by the
-registry; the sidebar shows a collection's document count (14 `count` queries per render,
-10 ms warm, never cached: a stale number right after Create is worse than none). **An
+registry; the sidebar shows a collection's document count (14 `count` queries per page, for
+the sidebar only, 10 ms warm, never cached: a stale number right after Create is worse than
+none). **An
 amendment of the design system's §2**: the active sidebar entry sits on its group's tint with
 weight and `aria-current`, not on blue; blue keeps the main action, links, focus and the Site
 group. **The page header** (`EntityHeader`, in the description slot under Payload's title,

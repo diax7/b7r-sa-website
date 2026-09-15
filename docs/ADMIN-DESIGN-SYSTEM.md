@@ -3,7 +3,7 @@
 The rules for every screen an editor sees at `/admin` (BRD §9.3, ADR-039). Payload renders
 the forms and lists; we own the shell, the dashboard, the field widgets and the theme. New
 collections, globals and admin components follow this document, `.claude/rules/admin-ui.md`
-is the checklist, `tests/admin-config.test.ts` and `tests/admin-icons.test.ts` are the gate.
+is the checklist, `tests/admin-config.test.ts` is the gate.
 
 ## 1. Principles
 

@@ -409,10 +409,13 @@
   }
   .nav:not(.nav--nav-open) [data-rail-list] {
     align-items: center;
+  }
+  /* One hairline per group: the top-level list only, not the secondary or section lists. */
+  .nav:not(.nav--nav-open) [data-rail-group-list] {
     border-top: 1px solid var(--theme-elevation-150);
     padding-block: 8px;
   }
-  .nav:not(.nav--nav-open) [data-admin-group]:first-child [data-rail-list] {
+  .nav:not(.nav--nav-open) [data-admin-group]:first-child [data-rail-group-list] {
     border-top: 0;
     padding-block-start: 0;
   }

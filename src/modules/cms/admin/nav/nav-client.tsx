@@ -278,7 +278,7 @@ function Group({
       </CollapsibleTrigger>
       {/* Mounted while closed so the rail (which ignores group state) still lists every entry. */}
       <CollapsibleContent forceMount className="data-[state=closed]:hidden" data-rail-show="">
-        <ul className="flex flex-col gap-0.5 pb-2" data-rail-list="">
+        <ul className="flex flex-col gap-0.5 pb-2" data-rail-list="" data-rail-group-list="">
           {group.entities.map((entity) => (
             <Entry
               key={`${entity.type}-${entity.slug}`}
@@ -299,7 +299,7 @@ function Group({
                   <Icon icon={SectionIcon} size={12} />
                   <span>{section.label}</span>
                 </div>
-                <ul className="flex flex-col gap-0.5" data-rail-list="">
+                <ul className="flex flex-col gap-0.5" data-rail-list="" aria-label={section.label}>
                   {section.entities.map((entity) => (
                     <Entry
                       key={`${entity.type}-${entity.slug}`}

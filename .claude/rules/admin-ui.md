@@ -2,14 +2,22 @@
 
 Read `docs/ADMIN-DESIGN-SYSTEM.md` before touching anything under `src/modules/cms/**`,
 `src/app/(payload)/**` or a Payload collection/global config. These rules are enforced by
-`tests/admin-config.test.ts`, `tests/admin-icons.test.ts`, `check:rtl` and the admin e2e.
+`tests/admin-config.test.ts` (the config shape, the icons, the sidebar registry, the locale
+note), `check:rtl` and the admin e2e.
 
 ## Adding or changing a collection or global
 
-1. `admin.group` in Arabic + English, one of the existing groups (المحتوى / الإعدادات /
-   الإدارة) unless a new group is a deliberate decision (then add its icon to `GROUP_ICONS`).
-2. One icon in `src/modules/cms/admin/icons.ts` (`COLLECTION_ICONS` / `GLOBAL_ICONS`),
-   a noun for a collection, a place for a global. Missing = type error + failing test.
+1. `admin.group: adminGroup('…')`, one of the five task groups of `ADMIN_GROUPS` in
+   `src/modules/cms/admin/icons.ts` (site · catalogue · blog · visibility · admin, ADR-046);
+   a new group is a deliberate decision (icon, hue, order and both labels in the registry).
+2. A place in `ADMIN_NAV` (group, order, and a `parent` for a secondary entry or a `section`),
+   and one icon in `COLLECTION_ICONS` / `GLOBAL_ICONS`: a noun for a collection, a place for a
+   global; a group's icon must not repeat its first entry's. Missing = type error + failing
+   test; the test also checks that `admin.group` and the registry agree.
+2b. `admin.custom.shows` in Arabic + English (where on the site the thing shows) and the
+   header registered through `collectionComponents(slug, { localized })` /
+   `globalComponents(slug, { localized })` from `admin/document/config.ts` (the description
+   slot; the locale note rides along when the config has per-language fields).
 3. `labels.singular` / `labels.plural` (collections) or `label` (globals) in Arabic + English;
    nouns, never sentences.
 4. `admin.description`: one Arabic sentence about what it is *for the site*, not how it is
