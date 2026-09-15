@@ -3,7 +3,7 @@
 Date: 2026-09-15. Project 1 of 4 (then: traffic sources, the visibility score, GEO content).
 Four PRs: `admin/reshape-shell`, `admin/reshape-menus`, `admin/reshape-forms`,
 `admin/connections`. Status: approved by Dhia (design and decisions, 2026-09-15); CTO plan
-review 77 (revision 1 below, then re-reviewed).
+review 77, revision 1 re-reviewed 93 GO.
 
 ## Why
 
@@ -215,7 +215,16 @@ project 2.
   ok without a call.
 - **Engine.** `ai-settings.activeProvider` and the per-vendor key/model/rates groups are
   replaced by one `connection` relationship (required, `filterOptions` to the engine-capable
-  kinds); `provider/sdk.ts` receives the connection's kind, key, model and base URL.
+  kinds); `provider/sdk.ts` receives the connection's kind, key, model and base URL. The
+  compatible kind calls the chat API (`createOpenAI({ apiKey, baseURL }).chat(model)`): the
+  callable provider is the Responses API, which compatible endpoints do not serve; the unit
+  test for the kind covers it.
+- **Module.** `src/modules/connections/` (the collection, `spend.ts`, the delete guard, the
+  Test handler, `admin/test-action.tsx`) imports only the leaf `ai-content/provider/sdk.ts`;
+  `ai-content/settings.ts` names the collection by slug in `relationTo` and imports nothing
+  from it; the spend helper and the guard read `ai-runs` and `ai-settings` by slug. One-way
+  dependency, no cycle. The runs list keeps the `provider` text out of `defaultColumns` once
+  `connection` exists.
 - **Migration.** Row ids looked up; one `connections` row per vendor with a key in
   `ai_settings` (ciphertext copied as is, same scheme); `active_provider = 'mock'` creates a
   mock connection and points to it; no key anywhere leaves the relationship null and the
@@ -252,6 +261,8 @@ Payload's list and edit views, Lexical, the theme, permissions, login (rules in
 - **PR C `admin/connections`**: D7; ADR-047. Evidence: e2e (create a connection of the mock
   kind, Test records ok, the engine runs with it, the monthly limit refuses a run and the
   cards say so, an off connection refuses, the delete guard, an editor cannot open
-  Connections), unit (the spend helper, the refusal rules, the secret round-trip), the
-  migration on the review database.
+  Connections), unit (the spend helper, the refusal rules, the secret round-trip, the
+  compatible kind's chat call), the migration on the review database; the three callers that
+  set `activeProvider: 'mock'` today (`scripts/dev/engine-demo.mjs`, `e2e/admin.spec.ts`,
+  `tests/helpers/engine-store.ts`) create or pick the mock connection instead.
 - Each PR: CTO code review ≥ 90, both CI check lines, merged through `scripts/merge-pr.sh`.
