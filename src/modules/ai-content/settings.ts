@@ -6,6 +6,8 @@ import { DEFAULT_IMAGE_STYLE, DEFAULT_STYLE } from '@/modules/ai-content/prompts
 import { secretField } from '@/modules/ai-content/secret-field';
 import { globalComponents } from '@/modules/cms/admin/document/config';
 import { adminGroup } from '@/modules/cms/admin/icons';
+import { AI_SETTINGS_DESCRIPTIONS } from '@/modules/ai-content/descriptions';
+import { describeFields } from '@/modules/cms/admin/descriptions/describe';
 
 type Vendor = 'openai' | 'deepseek' | 'anthropic' | 'google';
 
@@ -138,272 +140,278 @@ export const AiSettings: GlobalConfig = {
       },
     ],
   },
-  fields: [
-    {
-      type: 'tabs',
-      tabs: [
-        {
-          label: { ar: 'المزوّدون', en: 'Providers' },
-          fields: [
-            {
-              name: 'activeProvider',
-              type: 'select',
-              required: true,
-              defaultValue: 'openai',
-              options: [
-                ...VENDORS,
-                { value: 'mock', label: { ar: 'تجريبي (اختبارات فقط)', en: 'Mock (tests only)' } },
-              ],
-              label: { ar: 'المزوّد الفعّال', en: 'Active provider' },
-              admin: {
-                description: {
-                  ar: 'التجريبي يعمل فقط عندما يكون AI_CONTENT_MOCK=1 في البيئة.',
-                  en: 'The mock only runs when AI_CONTENT_MOCK=1 is set in the environment.',
-                },
-              },
-            },
-            { type: 'group', name: 'providers', label: false, fields: VENDORS.map(vendorFields) },
-          ],
-        },
-        {
-          label: { ar: 'الوتيرة', en: 'Cadence' },
-          fields: [
-            {
-              name: 'enabled',
-              type: 'checkbox',
-              defaultValue: false,
-              label: { ar: 'المحرّك يعمل', en: 'Engine on' },
-              admin: {
-                description: {
-                  ar: 'مفتاح الإيقاف. عند الإيقاف لا تبدأ أي جولة جديدة خلال ساعة.',
-                  en: 'The kill switch. Off, no new run starts within the hour.',
-                },
-              },
-            },
-            {
-              type: 'row',
-              fields: [
-                number('postsPerDay', { ar: 'مقالات في اليوم', en: 'Posts per day' }, 1, {
-                  min: 0,
-                  max: 5,
+  fields: describeFields(
+    [
+      {
+        type: 'tabs',
+        tabs: [
+          {
+            label: { ar: 'المزوّدون', en: 'Providers' },
+            fields: [
+              {
+                name: 'activeProvider',
+                type: 'select',
+                required: true,
+                defaultValue: 'openai',
+                options: [
+                  ...VENDORS,
+                  {
+                    value: 'mock',
+                    label: { ar: 'تجريبي (اختبارات فقط)', en: 'Mock (tests only)' },
+                  },
+                ],
+                label: { ar: 'المزوّد الفعّال', en: 'Active provider' },
+                admin: {
                   description: {
-                    ar: 'التوصية المدعومة بالدراسات: 8 إلى 16 مقالة شهرياً؛ الجودة قبل الكمية.',
-                    en: 'The research-backed range: 8 to 16 posts a month; quality before quantity.',
+                    ar: 'التجريبي يعمل فقط عندما يكون AI_CONTENT_MOCK=1 في البيئة.',
+                    en: 'The mock only runs when AI_CONTENT_MOCK=1 is set in the environment.',
                   },
-                }),
-                number(
-                  'publishHourRiyadh',
-                  { ar: 'ساعة النشر (الرياض)', en: 'Publish hour (Riyadh)' },
-                  9,
-                  {
-                    min: 0,
-                    max: 23,
-                  },
-                ),
-                number('maxPostsPerMonth', { ar: 'الحد الشهري', en: 'Monthly cap' }, 31, {
-                  min: 0,
-                }),
-              ],
-            },
-            {
-              type: 'row',
-              fields: [
-                number(
-                  'dailyCostCapUsd',
-                  { ar: 'سقف التكلفة اليومي (دولار)', en: 'Daily cost cap (USD)' },
-                  5,
-                  {
-                    min: 0,
-                  },
-                ),
-                number(
-                  'reviewFirstRuns',
-                  { ar: 'أول مقالات حيّة كمسودات', en: 'First live posts as drafts' },
-                  3,
-                  {
-                    min: 0,
-                    description: {
-                      ar: 'ما دام العدد فوق الصفر تُحفظ مقالات المزوّد الحي كمسودات لتقرأها؛ ضعه صفراً عندما تطمئن.',
-                      en: 'While above zero the posts of a live provider land as drafts for your read; set it to 0 once they read well.',
-                    },
-                  },
-                ),
-              ],
-            },
-          ],
-        },
-        {
-          label: { ar: 'اللغة والأسلوب', en: 'Language and style' },
-          name: 'style',
-          description: {
-            ar: 'لكل لغة دليلها وتعليماتها وعباراتها الممنوعة: بدّل اللغة في أعلى الصفحة.',
-            en: 'Each language has its own guide, instructions and banned phrases: switch the locale at the top of the page.',
+                },
+              },
+              { type: 'group', name: 'providers', label: false, fields: VENDORS.map(vendorFields) },
+            ],
           },
-          fields: [
-            {
-              name: 'styleGuide',
-              type: 'textarea',
-              required: true,
-              localized: true,
-              defaultValue: ({ locale }) => DEFAULT_STYLE[requestLocale(locale)].styleGuide,
-              label: { ar: 'دليل الأسلوب', en: 'Style guide' },
-              admin: { rows: 14 },
-            },
-            {
-              type: 'row',
-              fields: [
-                {
-                  name: 'systemPrompt',
-                  type: 'textarea',
-                  required: true,
-                  localized: true,
-                  defaultValue: ({ locale }) => DEFAULT_STYLE[requestLocale(locale)].systemPrompt,
-                  label: { ar: 'التعليمات الأساسية', en: 'System prompt' },
-                  admin: { rows: 8, width: '80%' },
-                },
-                {
-                  name: 'systemPromptVersion',
-                  type: 'number',
-                  defaultValue: 1,
-                  label: { ar: 'النسخة', en: 'Version' },
-                  admin: { readOnly: true, width: '20%' },
-                },
-              ],
-            },
-            {
-              name: 'bannedPhrases',
-              type: 'textarea',
-              required: true,
-              localized: true,
-              defaultValue: ({ locale }) =>
-                DEFAULT_STYLE[requestLocale(locale)].bannedPhrases.join('\n'),
-              label: { ar: 'عبارات ممنوعة (سطر لكل عبارة)', en: 'Banned phrases (one per line)' },
-              admin: { rows: 6 },
-            },
-            {
-              name: 'bannedClaims',
-              type: 'textarea',
-              required: true,
-              localized: true,
-              defaultValue: ({ locale }) => DEFAULT_STYLE[requestLocale(locale)].bannedClaims,
-              label: { ar: 'ادعاءات ممنوعة', en: 'Banned claims' },
-              admin: { rows: 8 },
-            },
-          ],
-        },
-        {
-          label: { ar: 'ورقة الحقائق', en: 'Facts sheet' },
-          fields: [
-            {
-              name: 'factsSheet',
-              type: 'ui',
-              admin: {
-                components: {
-                  Field: '@/modules/ai-content/admin/facts-sheet-field#FactsSheetField',
-                },
-              },
-            },
-          ],
-        },
-        {
-          label: { ar: 'الصور', en: 'Images' },
-          name: 'images',
-          fields: [
-            {
-              name: 'imageMode',
-              type: 'select',
-              required: true,
-              defaultValue: 'hubDefault',
-              options: [
-                {
-                  value: 'hubDefault',
-                  label: { ar: 'غلاف القسم الافتراضي', en: 'The hub’s default cover' },
-                },
-                { value: 'stock', label: { ar: 'صورة من Pexels', en: 'A stock photo (Pexels)' } },
-                {
-                  value: 'generate',
-                  label: { ar: 'توليد (غير متاح بعد)', en: 'Generate (not wired yet)' },
-                },
-              ],
-              label: { ar: 'مصدر الغلاف', en: 'Cover source' },
-              admin: {
-                description: {
-                  ar: 'التوليد يُرفض حتى يُربط مزوّد صور؛ Pexels يحتاج مفتاحاً.',
-                  en: 'Generation is refused until an image provider is wired; Pexels needs a key.',
-                },
-              },
-            },
-            {
-              name: 'imageStyle',
-              type: 'text',
-              defaultValue: DEFAULT_IMAGE_STYLE,
-              label: { ar: 'ملحق أسلوب الصورة', en: 'Image style suffix' },
-            },
-            secretField('pexelsKey', { ar: 'مفتاح Pexels', en: 'Pexels API key' }),
-          ],
-        },
-        {
-          label: { ar: 'الجودة', en: 'Quality' },
-          name: 'quality',
-          fields: [
-            {
-              type: 'row',
-              fields: [
-                number(
-                  'qualityThreshold',
-                  { ar: 'حد الجودة (0 إلى 100)', en: 'Quality threshold (0 to 100)' },
-                  80,
-                  {
-                    min: 0,
-                    max: 100,
+          {
+            label: { ar: 'الوتيرة', en: 'Cadence' },
+            fields: [
+              {
+                name: 'enabled',
+                type: 'checkbox',
+                defaultValue: false,
+                label: { ar: 'المحرّك يعمل', en: 'Engine on' },
+                admin: {
+                  description: {
+                    ar: 'مفتاح الإيقاف. عند الإيقاف لا تبدأ أي جولة جديدة خلال ساعة.',
+                    en: 'The kill switch. Off, no new run starts within the hour.',
                   },
-                ),
-                number('maxRevisionPasses', { ar: 'جولات المراجعة', en: 'Revision passes' }, 1, {
-                  min: 0,
-                  max: 3,
-                }),
-                number('minWords', { ar: 'أقل عدد كلمات', en: 'Min words' }, 800, { min: 100 }),
-                number('maxWords', { ar: 'أعلى عدد كلمات', en: 'Max words' }, 1600, { min: 200 }),
-              ],
-            },
-          ],
-        },
-        {
-          label: { ar: 'التنبيهات', en: 'Notifications' },
-          name: 'notifications',
-          fields: [
-            {
-              name: 'notifyEmail',
-              type: 'email',
-              label: { ar: 'البريد', en: 'E-mail' },
-              admin: {
-                description: {
-                  ar: 'يستقبل تنبيهات الفشل والملخص الأسبوعي.',
-                  en: 'Gets failure alerts and the weekly digest.',
                 },
               },
+              {
+                type: 'row',
+                fields: [
+                  number('postsPerDay', { ar: 'مقالات في اليوم', en: 'Posts per day' }, 1, {
+                    min: 0,
+                    max: 5,
+                    description: {
+                      ar: 'التوصية المدعومة بالدراسات: 8 إلى 16 مقالة شهرياً؛ الجودة قبل الكمية.',
+                      en: 'The research-backed range: 8 to 16 posts a month; quality before quantity.',
+                    },
+                  }),
+                  number(
+                    'publishHourRiyadh',
+                    { ar: 'ساعة النشر (الرياض)', en: 'Publish hour (Riyadh)' },
+                    9,
+                    {
+                      min: 0,
+                      max: 23,
+                    },
+                  ),
+                  number('maxPostsPerMonth', { ar: 'الحد الشهري', en: 'Monthly cap' }, 31, {
+                    min: 0,
+                  }),
+                ],
+              },
+              {
+                type: 'row',
+                fields: [
+                  number(
+                    'dailyCostCapUsd',
+                    { ar: 'سقف التكلفة اليومي (دولار)', en: 'Daily cost cap (USD)' },
+                    5,
+                    {
+                      min: 0,
+                    },
+                  ),
+                  number(
+                    'reviewFirstRuns',
+                    { ar: 'أول مقالات حيّة كمسودات', en: 'First live posts as drafts' },
+                    3,
+                    {
+                      min: 0,
+                      description: {
+                        ar: 'ما دام العدد فوق الصفر تُحفظ مقالات المزوّد الحي كمسودات لتقرأها؛ ضعه صفراً عندما تطمئن.',
+                        en: 'While above zero the posts of a live provider land as drafts for your read; set it to 0 once they read well.',
+                      },
+                    },
+                  ),
+                ],
+              },
+            ],
+          },
+          {
+            label: { ar: 'اللغة والأسلوب', en: 'Language and style' },
+            name: 'style',
+            description: {
+              ar: 'لكل لغة دليلها وتعليماتها وعباراتها الممنوعة: بدّل اللغة في أعلى الصفحة.',
+              en: 'Each language has its own guide, instructions and banned phrases: switch the locale at the top of the page.',
             },
-            {
-              type: 'row',
-              fields: [
-                {
-                  name: 'weeklyDigest',
-                  type: 'checkbox',
-                  defaultValue: true,
-                  label: { ar: 'ملخص أسبوعي', en: 'Weekly digest' },
+            fields: [
+              {
+                name: 'styleGuide',
+                type: 'textarea',
+                required: true,
+                localized: true,
+                defaultValue: ({ locale }) => DEFAULT_STYLE[requestLocale(locale)].styleGuide,
+                label: { ar: 'دليل الأسلوب', en: 'Style guide' },
+                admin: { rows: 14 },
+              },
+              {
+                type: 'row',
+                fields: [
+                  {
+                    name: 'systemPrompt',
+                    type: 'textarea',
+                    required: true,
+                    localized: true,
+                    defaultValue: ({ locale }) => DEFAULT_STYLE[requestLocale(locale)].systemPrompt,
+                    label: { ar: 'التعليمات الأساسية', en: 'System prompt' },
+                    admin: { rows: 8, width: '80%' },
+                  },
+                  {
+                    name: 'systemPromptVersion',
+                    type: 'number',
+                    defaultValue: 1,
+                    label: { ar: 'النسخة', en: 'Version' },
+                    admin: { readOnly: true, width: '20%' },
+                  },
+                ],
+              },
+              {
+                name: 'bannedPhrases',
+                type: 'textarea',
+                required: true,
+                localized: true,
+                defaultValue: ({ locale }) =>
+                  DEFAULT_STYLE[requestLocale(locale)].bannedPhrases.join('\n'),
+                label: { ar: 'عبارات ممنوعة (سطر لكل عبارة)', en: 'Banned phrases (one per line)' },
+                admin: { rows: 6 },
+              },
+              {
+                name: 'bannedClaims',
+                type: 'textarea',
+                required: true,
+                localized: true,
+                defaultValue: ({ locale }) => DEFAULT_STYLE[requestLocale(locale)].bannedClaims,
+                label: { ar: 'ادعاءات ممنوعة', en: 'Banned claims' },
+                admin: { rows: 8 },
+              },
+            ],
+          },
+          {
+            label: { ar: 'ورقة الحقائق', en: 'Facts sheet' },
+            fields: [
+              {
+                name: 'factsSheet',
+                type: 'ui',
+                admin: {
+                  components: {
+                    Field: '@/modules/ai-content/admin/facts-sheet-field#FactsSheetField',
+                  },
                 },
-                {
-                  name: 'failureAlerts',
-                  type: 'checkbox',
-                  defaultValue: true,
-                  label: { ar: 'تنبيه عند الفشل', en: 'Failure alerts' },
+              },
+            ],
+          },
+          {
+            label: { ar: 'الصور', en: 'Images' },
+            name: 'images',
+            fields: [
+              {
+                name: 'imageMode',
+                type: 'select',
+                required: true,
+                defaultValue: 'hubDefault',
+                options: [
+                  {
+                    value: 'hubDefault',
+                    label: { ar: 'غلاف القسم الافتراضي', en: 'The hub’s default cover' },
+                  },
+                  { value: 'stock', label: { ar: 'صورة من Pexels', en: 'A stock photo (Pexels)' } },
+                  {
+                    value: 'generate',
+                    label: { ar: 'توليد (غير متاح بعد)', en: 'Generate (not wired yet)' },
+                  },
+                ],
+                label: { ar: 'مصدر الغلاف', en: 'Cover source' },
+                admin: {
+                  description: {
+                    ar: 'التوليد يُرفض حتى يُربط مزوّد صور؛ Pexels يحتاج مفتاحاً.',
+                    en: 'Generation is refused until an image provider is wired; Pexels needs a key.',
+                  },
                 },
-              ],
-            },
-          ],
-        },
-      ],
-    },
-    savedByField,
-  ],
+              },
+              {
+                name: 'imageStyle',
+                type: 'text',
+                defaultValue: DEFAULT_IMAGE_STYLE,
+                label: { ar: 'ملحق أسلوب الصورة', en: 'Image style suffix' },
+              },
+              secretField('pexelsKey', { ar: 'مفتاح Pexels', en: 'Pexels API key' }),
+            ],
+          },
+          {
+            label: { ar: 'الجودة', en: 'Quality' },
+            name: 'quality',
+            fields: [
+              {
+                type: 'row',
+                fields: [
+                  number(
+                    'qualityThreshold',
+                    { ar: 'حد الجودة (0 إلى 100)', en: 'Quality threshold (0 to 100)' },
+                    80,
+                    {
+                      min: 0,
+                      max: 100,
+                    },
+                  ),
+                  number('maxRevisionPasses', { ar: 'جولات المراجعة', en: 'Revision passes' }, 1, {
+                    min: 0,
+                    max: 3,
+                  }),
+                  number('minWords', { ar: 'أقل عدد كلمات', en: 'Min words' }, 800, { min: 100 }),
+                  number('maxWords', { ar: 'أعلى عدد كلمات', en: 'Max words' }, 1600, { min: 200 }),
+                ],
+              },
+            ],
+          },
+          {
+            label: { ar: 'التنبيهات', en: 'Notifications' },
+            name: 'notifications',
+            fields: [
+              {
+                name: 'notifyEmail',
+                type: 'email',
+                label: { ar: 'البريد', en: 'E-mail' },
+                admin: {
+                  description: {
+                    ar: 'يستقبل تنبيهات الفشل والملخص الأسبوعي.',
+                    en: 'Gets failure alerts and the weekly digest.',
+                  },
+                },
+              },
+              {
+                type: 'row',
+                fields: [
+                  {
+                    name: 'weeklyDigest',
+                    type: 'checkbox',
+                    defaultValue: true,
+                    label: { ar: 'ملخص أسبوعي', en: 'Weekly digest' },
+                  },
+                  {
+                    name: 'failureAlerts',
+                    type: 'checkbox',
+                    defaultValue: true,
+                    label: { ar: 'تنبيه عند الفشل', en: 'Failure alerts' },
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+      savedByField,
+    ],
+    AI_SETTINGS_DESCRIPTIONS,
+  ),
 };

@@ -112,7 +112,11 @@ The admin's strings are interface copy (ADR-031): written by us, under the ux-ar
 - Labels are nouns: «المنتجات», «الصفحة الرئيسية», «إعدادات الموقع». Never a sentence.
 - Actions are verb-first imperatives: «أضف صفحة», «ارفع ملفاً», «عرض الموقع». No «قم بـ».
 - Descriptions are one sentence that says what the thing is *for the site*: «الأسئلة الشائعة
-  بمجموعاتها. حتى خمسة أسئلة تظهر في الصفحة الرئيسية.» Not how Payload stores it.
+  بمجموعاتها. حتى خمسة أسئلة تظهر في الصفحة الرئيسية.» Not how Payload stores it. Since
+  ADR-046 every field an editor sees carries one: where it shows and what it does, then the
+  limit or an example («يظهر في بطاقة المنتج تحت السعر وفي قائمة المصمّم. قصير: S – 2XL»);
+  they live per entity in `modules/cms/admin/descriptions/*.ts` and are applied by
+  `describeFields()`; the config test enforces both languages on every field.
 - Consequences before switches: «عند الإيقاف يختفي قسم «لماذا بحر برنت» من الصفحة الرئيسية.»
 - Success and status: light passives or nominal («حُفظت المسودة», «الوظائف تعمل»), never «تم».
 - Empty states: why it is empty + the next step: «لا صفحات بعد. أضف الأولى.»
@@ -158,6 +162,7 @@ Payload's own elements (buttons, fields, pills, toasts) are themed in `admin.css
 | Login | `modules/cms/admin/login/*` | One line under the form; the Turnstile widget above it (ADR-034). |
 
 | Dashboard | `modules/cms/admin/dashboard/*` | Greeting (name in the accent), quick-action tiles by permission in their entity's hue, health card (`healthReport()`, rows with a colour and a sentence), latest saves with who saved them and a relative time (`relative-time.ts`); a draft nobody titled or saved (an unused "Create New") is left out. Every in-admin link is Payload's `Link`: no reload. |
+| Forms as tabs | `globals/{home,site-settings}.ts`, `collections/{products,posts,pages}.ts` | One tab per section of the site, in site order (ADR-046): Home ten named tabs (Hero · Product strip · Designer · Three steps · Video · Why us · Testimonials · Integrations · FAQ · Ribbon, each opening on its switch where one exists; a named tab stores under the group's old path and columns), Product four (Basics · Photos & colours · Sizes · Print area), Post three (Content · Summary & cover · Search; the sidebar keeps author, dates, reading time, origin, engine actions, warnings), Page two (Content · Search), Site settings four (Brand · Contact & social · Menus & footer · Numbers & legal; the menus are the named tab `menu`). |
 | Page header | `modules/cms/admin/document/entity-header.tsx` | The description slot under Payload's title (`admin.components.Description` on collections, shared with the list view; `admin.components.elements.Description` on globals; registered per config with its `serverProps.entity` through `admin/document/config.ts`): a bar and a disc in the group's hue, the description, "Shows on:" from `admin.custom.shows` (both languages), a link to the public listing where one exists, and on the home page "10 sections, N on" from the saved document (`HomeSectionsCount`). The locale note stays before the document controls. |
 | Blog group | `modules/cms/collections/{posts,categories,authors,tags}.ts` | Posts, hubs, authors, tags (violet, the Blog hue); the post's sidebar carries author, publish and update dates, reading minutes, origin, the editorial warnings (`WarningsField`) and "Last saved"; a publish that breaks a hard rule is refused with the reason (`fields/editorial.ts`, ADR-041). |
 | Content engine section (inside Blog) | `modules/ai-content/{settings,topics,runs}.ts`, `modules/ai-content/admin/*` | Admin only. Engine settings in tabs (keys masked, `SecretField`), topics with "Generate now" (`EngineAction`) and a CSV import panel, runs read-only; a "Content engine" card on the dashboard and a health row; "Regenerate" in an engine post's sidebar (`PostEngineActions`). ADR-042. |

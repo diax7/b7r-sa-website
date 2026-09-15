@@ -3,6 +3,31 @@ import { describe, expect, it } from 'vitest';
 import { isAbandonedDraft, titleOf } from '@/modules/cms/admin/dashboard/data';
 import { ENTITY_HEADER_PATH, LOCALE_NOTE_PATH } from '@/modules/cms/admin/document/config';
 import {
+  AUTHOR_DESCRIPTIONS,
+  CATEGORY_DESCRIPTIONS,
+  POST_DESCRIPTIONS,
+  TAG_DESCRIPTIONS,
+} from '@/modules/cms/admin/descriptions/blog';
+import {
+  FAQ_DESCRIPTIONS,
+  INTEGRATION_DESCRIPTIONS,
+  PRODUCT_DESCRIPTIONS,
+  TESTIMONIAL_DESCRIPTIONS,
+} from '@/modules/cms/admin/descriptions/catalogue';
+import type { Described } from '@/modules/cms/admin/descriptions/describe';
+import { PAGE_DESCRIPTIONS } from '@/modules/cms/admin/descriptions/pages';
+import {
+  HOME_DESCRIPTIONS,
+  MEDIA_DESCRIPTIONS,
+  SEO_DEFAULTS_DESCRIPTIONS,
+  SITE_SETTINGS_DESCRIPTIONS,
+  USER_DESCRIPTIONS,
+} from '@/modules/cms/admin/descriptions/site';
+import {
+  AI_SETTINGS_DESCRIPTIONS,
+  AI_TOPICS_DESCRIPTIONS,
+} from '@/modules/ai-content/descriptions';
+import {
   ADMIN_GROUPS,
   ADMIN_NAV,
   COLLECTION_ICONS,
@@ -134,6 +159,128 @@ describe('the sidebar registry (ADR-046)', () => {
       expect(ARABIC.test(group.ar)).toBe(true);
     }
   });
+});
+
+/**
+ * Every field an editor sees says what it does on the site (ADR-046, design system §1.5):
+ * an `admin.description` in both languages, at least four words each. Layout fields (row,
+ * collapsible, tabs, an unnamed group), `ui` fields, hidden, read-only and label-less fields
+ * are not read by an editor and are left out; the tabs' own fields are walked.
+ */
+const words = (v: unknown) => (typeof v === 'string' ? v.trim().split(/\s+/).length : 0);
+
+function describedFields(fields: Field[], path = ''): Array<{ path: string; ok: boolean }> {
+  const out: Array<{ path: string; ok: boolean }> = [];
+  for (const f of fields) {
+    const admin = (f as { admin?: Record<string, unknown> }).admin ?? {};
+    if (f.type === 'tabs') {
+      for (const t of f.tabs) {
+        out.push(...describedFields(t.fields, 'name' in t && t.name ? `${path}${t.name}.` : path));
+      }
+      continue;
+    }
+    if (f.type === 'row' || f.type === 'collapsible' || f.type === 'ui') {
+      if ('fields' in f) out.push(...describedFields(f.fields, path));
+      continue;
+    }
+    if (!('name' in f) || !f.name) continue;
+    const name = `${path}${f.name}`;
+    // A field a custom widget renders (`admin.components.Field`) explains itself; its inner
+    // fields never reach an editor as fields.
+    const widget = Boolean((admin['components'] as { Field?: unknown } | undefined)?.Field);
+    const skip =
+      admin['hidden'] === true ||
+      admin['readOnly'] === true ||
+      (f as { label?: unknown }).label === false ||
+      admin['disabled'] === true ||
+      widget;
+    if (widget) continue;
+    if (!skip) {
+      const d = admin['description'] as { ar?: string; en?: string } | undefined;
+      out.push({ path: name, ok: words(d?.ar) >= 4 && words(d?.en) >= 4 });
+    }
+    if ('fields' in f && Array.isArray(f.fields)) {
+      out.push(...describedFields(f.fields, `${name}.`));
+    }
+    if ('blocks' in f) {
+      for (const b of f.blocks) out.push(...describedFields(b.fields, `${name}.${b.slug}.`));
+    }
+  }
+  return out;
+}
+
+/** Every named field path of a config, the way the description maps address them. */
+function fieldPaths(fields: Field[], path = ''): string[] {
+  const out: string[] = [];
+  for (const f of fields) {
+    if (f.type === 'tabs') {
+      for (const t of f.tabs) {
+        out.push(...fieldPaths(t.fields, 'name' in t && t.name ? `${path}${t.name}.` : path));
+      }
+      continue;
+    }
+    if (f.type === 'row' || f.type === 'collapsible') {
+      out.push(...fieldPaths(f.fields, path));
+      continue;
+    }
+    if (!('name' in f) || !f.name) continue;
+    const name = `${path}${f.name}`;
+    out.push(name);
+    if ('fields' in f && Array.isArray(f.fields)) out.push(...fieldPaths(f.fields, `${name}.`));
+    if ('blocks' in f) {
+      for (const b of f.blocks) out.push(...fieldPaths(b.fields, `${name}.${b.slug}.`));
+    }
+  }
+  return out;
+}
+
+describe('the description maps name real fields (ADR-046)', () => {
+  const maps: Array<[{ slug: string; fields: Field[] }, Described]> = [
+    [Products, PRODUCT_DESCRIPTIONS],
+    [Faqs, FAQ_DESCRIPTIONS],
+    [Testimonials, TESTIMONIAL_DESCRIPTIONS],
+    [Integrations, INTEGRATION_DESCRIPTIONS],
+    [Pages, PAGE_DESCRIPTIONS],
+    [Posts, POST_DESCRIPTIONS],
+    [Categories, CATEGORY_DESCRIPTIONS],
+    [Authors, AUTHOR_DESCRIPTIONS],
+    [Tags, TAG_DESCRIPTIONS],
+    [Users, USER_DESCRIPTIONS],
+    [Media, MEDIA_DESCRIPTIONS],
+    [Home, HOME_DESCRIPTIONS],
+    [SiteSettings, SITE_SETTINGS_DESCRIPTIONS],
+    [SeoDefaults, SEO_DEFAULTS_DESCRIPTIONS],
+    [AiSettings, AI_SETTINGS_DESCRIPTIONS],
+    [AiTopics, AI_TOPICS_DESCRIPTIONS],
+  ];
+  for (const [c, map] of maps) {
+    it(`${c.slug}: every key of its map is a field`, () => {
+      const paths = new Set(fieldPaths(c.fields));
+      expect(Object.keys(map).filter((k) => !paths.has(k))).toEqual([]);
+    });
+  }
+});
+
+describe('every field says what it does on the site (ADR-046)', () => {
+  const configs: Array<{ slug: string; fields: Field[] }> = [
+    ...collections.filter((c) => c.slug !== 'redirects'),
+    Authors,
+    Categories,
+    Posts,
+    Tags,
+    AiTopics,
+    AiRuns,
+    ...globals,
+    AiSettings,
+  ];
+  for (const c of configs) {
+    it(`${c.slug}: a two-language description of four words or more on every field`, () => {
+      const missing = describedFields(c.fields)
+        .filter((f) => !f.ok)
+        .map((f) => f.path);
+      expect(missing).toEqual([]);
+    });
+  }
 });
 
 /** Whether any field, at any depth, is per language. */

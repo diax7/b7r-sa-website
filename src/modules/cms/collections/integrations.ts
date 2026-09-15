@@ -5,6 +5,8 @@ import { revalidateRoutes } from '@/modules/cms/hooks/revalidate';
 import { savedByField, stampSavedBy } from '@/modules/cms/fields/saved-by';
 import { collectionComponents } from '@/modules/cms/admin/document/config';
 import { adminGroup } from '@/modules/cms/admin/icons';
+import { INTEGRATION_DESCRIPTIONS } from '@/modules/cms/admin/descriptions/catalogue';
+import { describeFields } from '@/modules/cms/admin/descriptions/describe';
 
 /**
  * Integration tiles (BRD 4.4, 6.4.8): one document per platform. The logo is a brand SVG
@@ -45,53 +47,56 @@ export const Integrations: CollectionConfig = {
     afterChange: [revalidateRoutes(['/'])],
     afterDelete: [revalidateRoutes(['/'])],
   },
-  fields: [
-    {
-      type: 'row',
-      fields: [
-        {
-          name: 'platform',
-          type: 'select',
-          required: true,
-          unique: true,
-          options: INTEGRATION_PLATFORMS.map((p) => ({ label: p, value: p })),
-          label: { ar: 'المنصة', en: 'Platform' },
-          admin: {
-            description: {
-              ar: 'يحدد الشعار الذي يظهر في الموقع',
-              en: 'Selects the logo shown on the site',
+  fields: describeFields(
+    [
+      {
+        type: 'row',
+        fields: [
+          {
+            name: 'platform',
+            type: 'select',
+            required: true,
+            unique: true,
+            options: INTEGRATION_PLATFORMS.map((p) => ({ label: p, value: p })),
+            label: { ar: 'المنصة', en: 'Platform' },
+            admin: {
+              description: {
+                ar: 'يحدد الشعار الذي يظهر في الموقع',
+                en: 'Selects the logo shown on the site',
+              },
+              components: { Field: '@/modules/cms/admin/fields/platform-select#PlatformSelect' },
             },
-            components: { Field: '@/modules/cms/admin/fields/platform-select#PlatformSelect' },
           },
-        },
-        {
-          name: 'order',
-          type: 'number',
-          required: true,
-          defaultValue: 1,
-          label: { ar: 'الترتيب', en: 'Order' },
-          admin: { step: 1 },
-        },
-      ],
-    },
-    {
-      type: 'row',
-      fields: [
-        {
-          name: 'name',
-          type: 'text',
-          required: true,
-          localized: true,
-          label: { ar: 'الاسم', en: 'Name' },
-        },
-        {
-          name: 'nameLatin',
-          type: 'text',
-          required: true,
-          label: { ar: 'الاسم اللاتيني', en: 'Latin name' },
-        },
-      ],
-    },
-    savedByField,
-  ],
+          {
+            name: 'order',
+            type: 'number',
+            required: true,
+            defaultValue: 1,
+            label: { ar: 'الترتيب', en: 'Order' },
+            admin: { step: 1 },
+          },
+        ],
+      },
+      {
+        type: 'row',
+        fields: [
+          {
+            name: 'name',
+            type: 'text',
+            required: true,
+            localized: true,
+            label: { ar: 'الاسم', en: 'Name' },
+          },
+          {
+            name: 'nameLatin',
+            type: 'text',
+            required: true,
+            label: { ar: 'الاسم اللاتيني', en: 'Latin name' },
+          },
+        ],
+      },
+      savedByField,
+    ],
+    INTEGRATION_DESCRIPTIONS,
+  ),
 };

@@ -6,6 +6,8 @@ import { generateResetHtml, generateResetSubject } from '@/modules/cms/auth/rese
 import { Refused } from '@/modules/cms/refused';
 import { collectionComponents } from '@/modules/cms/admin/document/config';
 import { adminGroup } from '@/modules/cms/admin/icons';
+import { USER_DESCRIPTIONS } from '@/modules/cms/admin/descriptions/site';
+import { describeFields } from '@/modules/cms/admin/descriptions/describe';
 
 const LOCK_MINUTES = 15;
 
@@ -75,31 +77,34 @@ export const Users: CollectionConfig = {
     beforeOperation: [gateLogin],
     beforeValidate: [({ data }) => enforcePasswordPolicy(data).then(() => data)],
   },
-  fields: [
-    {
-      name: 'name',
-      type: 'text',
-      required: true,
-      label: { ar: 'الاسم', en: 'Name' },
-    },
-    {
-      name: 'role',
-      type: 'select',
-      required: true,
-      defaultValue: 'editor',
-      saveToJWT: true,
-      label: { ar: 'الدور', en: 'Role' },
-      options: [
-        { label: { ar: 'مدير', en: 'Admin' }, value: 'admin' },
-        { label: { ar: 'محرر', en: 'Editor' }, value: 'editor' },
-      ],
-      access: { update: adminField },
-      admin: {
-        description: {
-          ar: 'المدير يملك كل الصلاحيات. المحرر يعدّل المحتوى فقط ولا يرى المستخدمين أو الإعدادات.',
-          en: 'Admins can do everything; editors edit content only.',
+  fields: describeFields(
+    [
+      {
+        name: 'name',
+        type: 'text',
+        required: true,
+        label: { ar: 'الاسم', en: 'Name' },
+      },
+      {
+        name: 'role',
+        type: 'select',
+        required: true,
+        defaultValue: 'editor',
+        saveToJWT: true,
+        label: { ar: 'الدور', en: 'Role' },
+        options: [
+          { label: { ar: 'مدير', en: 'Admin' }, value: 'admin' },
+          { label: { ar: 'محرر', en: 'Editor' }, value: 'editor' },
+        ],
+        access: { update: adminField },
+        admin: {
+          description: {
+            ar: 'المدير يملك كل الصلاحيات. المحرر يعدّل المحتوى فقط ولا يرى المستخدمين أو الإعدادات.',
+            en: 'Admins can do everything; editors edit content only.',
+          },
         },
       },
-    },
-  ],
+    ],
+    USER_DESCRIPTIONS,
+  ),
 };

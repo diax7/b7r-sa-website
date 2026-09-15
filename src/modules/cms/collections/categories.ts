@@ -6,6 +6,8 @@ import { revalidateBlogListings } from '@/modules/cms/hooks/revalidate';
 import { savedByField, stampSavedBy } from '@/modules/cms/fields/saved-by';
 import { collectionComponents } from '@/modules/cms/admin/document/config';
 import { adminGroup } from '@/modules/cms/admin/icons';
+import { CATEGORY_DESCRIPTIONS } from '@/modules/cms/admin/descriptions/blog';
+import { describeFields } from '@/modules/cms/admin/descriptions/describe';
 
 /**
  * The blog's hubs (BRD 10.1, Appendix E): six seeded categories, each with its own page at
@@ -49,76 +51,79 @@ export const Categories: CollectionConfig = {
     afterChange: [revalidateBlogListings],
     afterDelete: [revalidateBlogListings],
   },
-  fields: [
-    {
-      type: 'row',
-      fields: [
-        {
-          name: 'name',
-          type: 'text',
-          required: true,
-          localized: true,
-          label: { ar: 'الاسم', en: 'Name' },
-        },
-        {
-          name: 'slug',
-          type: 'text',
-          required: true,
-          unique: true,
-          index: true,
-          label: { ar: 'المعرّف في الرابط', en: 'Slug' },
-          admin: {
-            description: {
-              ar: 'حروف لاتينية صغيرة وشرطات؛ يصبح /blog/category/المعرّف',
-              en: 'lowercase-hyphenated; served at /blog/category/slug',
+  fields: describeFields(
+    [
+      {
+        type: 'row',
+        fields: [
+          {
+            name: 'name',
+            type: 'text',
+            required: true,
+            localized: true,
+            label: { ar: 'الاسم', en: 'Name' },
+          },
+          {
+            name: 'slug',
+            type: 'text',
+            required: true,
+            unique: true,
+            index: true,
+            label: { ar: 'المعرّف في الرابط', en: 'Slug' },
+            admin: {
+              description: {
+                ar: 'حروف لاتينية صغيرة وشرطات؛ يصبح /blog/category/المعرّف',
+                en: 'lowercase-hyphenated; served at /blog/category/slug',
+              },
             },
           },
-        },
-      ],
-    },
-    {
-      name: 'description',
-      type: 'textarea',
-      required: true,
-      localized: true,
-      label: { ar: 'الوصف', en: 'Description' },
-      admin: {
-        description: {
-          ar: 'جملة واحدة تظهر تحت عنوان القسم وفي بطاقات المدونة.',
-          en: 'One sentence under the hub title and on the blog cards.',
+        ],
+      },
+      {
+        name: 'description',
+        type: 'textarea',
+        required: true,
+        localized: true,
+        label: { ar: 'الوصف', en: 'Description' },
+        admin: {
+          description: {
+            ar: 'جملة واحدة تظهر تحت عنوان القسم وفي بطاقات المدونة.',
+            en: 'One sentence under the hub title and on the blog cards.',
+          },
         },
       },
-    },
-    {
-      name: 'lead',
-      type: 'text',
-      localized: true,
-      label: { ar: 'السطر تحت العنوان (اختياري)', en: 'Lead (optional)' },
-    },
-    {
-      type: 'row',
-      fields: [
-        {
-          name: 'defaultCover',
-          type: 'upload',
-          relationTo: 'media',
-          label: { ar: 'الغلاف الافتراضي', en: 'Default cover' },
-          admin: {
-            description: {
-              ar: 'يُستخدم عندما لا يملك المقال غلافاً خاصاً.',
-              en: 'Used when a post has no cover of its own.',
+      {
+        name: 'lead',
+        type: 'text',
+        localized: true,
+        label: { ar: 'السطر تحت العنوان (اختياري)', en: 'Lead (optional)' },
+      },
+      {
+        type: 'row',
+        fields: [
+          {
+            name: 'defaultCover',
+            type: 'upload',
+            relationTo: 'media',
+            label: { ar: 'الغلاف الافتراضي', en: 'Default cover' },
+            admin: {
+              description: {
+                ar: 'يُستخدم عندما لا يملك المقال غلافاً خاصاً.',
+                en: 'Used when a post has no cover of its own.',
+              },
             },
           },
-        },
-        {
-          name: 'order',
-          type: 'number',
-          required: true,
-          defaultValue: 1,
-          label: { ar: 'الترتيب', en: 'Order' },
-        },
-      ],
-    },
-    savedByField,
-  ],
+          {
+            name: 'order',
+            type: 'number',
+            required: true,
+            defaultValue: 1,
+            label: { ar: 'الترتيب', en: 'Order' },
+          },
+        ],
+      },
+      savedByField,
+    ],
+    CATEGORY_DESCRIPTIONS,
+  ),
 };

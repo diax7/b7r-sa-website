@@ -4,6 +4,8 @@ import { revalidateRoutes } from '@/modules/cms/hooks/revalidate';
 import { savedByField, stampSavedBy } from '@/modules/cms/fields/saved-by';
 import { collectionComponents } from '@/modules/cms/admin/document/config';
 import { adminGroup } from '@/modules/cms/admin/icons';
+import { TESTIMONIAL_DESCRIPTIONS } from '@/modules/cms/admin/descriptions/catalogue';
+import { describeFields } from '@/modules/cms/admin/descriptions/describe';
 
 /**
  * Merchant testimonials (BRD 4.4, 6.4.7). Drafts so a quote can be prepared before it goes
@@ -45,64 +47,67 @@ export const Testimonials: CollectionConfig = {
     afterChange: [revalidateRoutes(['/'])],
     afterDelete: [revalidateRoutes(['/'])],
   },
-  fields: [
-    {
-      name: 'quote',
-      type: 'textarea',
-      required: true,
-      localized: true,
-      label: { ar: 'الاقتباس', en: 'Quote' },
-    },
-    {
-      type: 'row',
-      fields: [
-        {
-          name: 'name',
-          type: 'text',
-          required: true,
-          localized: true,
-          label: { ar: 'اسم التاجر', en: 'Name' },
-        },
-        {
-          name: 'store',
-          type: 'text',
-          required: true,
-          localized: true,
-          label: { ar: 'المتجر', en: 'Store' },
-        },
-      ],
-    },
-    {
-      type: 'row',
-      fields: [
-        {
-          name: 'avatar',
-          type: 'upload',
-          relationTo: 'media',
-          label: { ar: 'الصورة (اختياري)', en: 'Avatar (optional)' },
-        },
-        {
-          name: 'order',
-          type: 'number',
-          required: true,
-          defaultValue: 1,
-          label: { ar: 'الترتيب', en: 'Order' },
-          admin: { step: 1 },
-        },
-      ],
-    },
-    {
-      name: 'placeholder',
-      type: 'checkbox',
-      defaultValue: false,
-      label: { ar: 'نموذج (ليس رأي تاجر حقيقي)', en: 'Placeholder (not a real merchant)' },
-      admin: {
-        description: {
-          ar: 'النماذج تظهر بشارة «نموذج» في المعاينة وتُخفى على b7r.sa حتى يُنشر رأي حقيقي.',
-          en: 'Placeholders show a «sample» badge on previews and are omitted on b7r.sa until a real entry exists.',
+  fields: describeFields(
+    [
+      {
+        name: 'quote',
+        type: 'textarea',
+        required: true,
+        localized: true,
+        label: { ar: 'الاقتباس', en: 'Quote' },
+      },
+      {
+        type: 'row',
+        fields: [
+          {
+            name: 'name',
+            type: 'text',
+            required: true,
+            localized: true,
+            label: { ar: 'اسم التاجر', en: 'Name' },
+          },
+          {
+            name: 'store',
+            type: 'text',
+            required: true,
+            localized: true,
+            label: { ar: 'المتجر', en: 'Store' },
+          },
+        ],
+      },
+      {
+        type: 'row',
+        fields: [
+          {
+            name: 'avatar',
+            type: 'upload',
+            relationTo: 'media',
+            label: { ar: 'الصورة (اختياري)', en: 'Avatar (optional)' },
+          },
+          {
+            name: 'order',
+            type: 'number',
+            required: true,
+            defaultValue: 1,
+            label: { ar: 'الترتيب', en: 'Order' },
+            admin: { step: 1 },
+          },
+        ],
+      },
+      {
+        name: 'placeholder',
+        type: 'checkbox',
+        defaultValue: false,
+        label: { ar: 'نموذج (ليس رأي تاجر حقيقي)', en: 'Placeholder (not a real merchant)' },
+        admin: {
+          description: {
+            ar: 'النماذج تظهر بشارة «نموذج» في المعاينة وتُخفى على b7r.sa حتى يُنشر رأي حقيقي.',
+            en: 'Placeholders show a «sample» badge on previews and are omitted on b7r.sa until a real entry exists.',
+          },
         },
       },
-    },
-    savedByField,
-  ],
+      savedByField,
+    ],
+    TESTIMONIAL_DESCRIPTIONS,
+  ),
 };

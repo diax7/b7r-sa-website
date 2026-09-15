@@ -697,7 +697,8 @@ test.describe('CMS admin', () => {
     await page.locator('form button[type="submit"]').first().click();
     await page.waitForURL((u) => !u.pathname.endsWith('/login'));
     await page.goto('/admin/globals/site-settings');
-    await expect(page.getByRole('heading', { name: 'Menus & footer' })).toBeVisible();
+    // The menus are the "Menus & footer" tab (PR B2).
+    await page.locator('.tabs-field__tab-button', { hasText: 'Menus & footer' }).click();
     await expect(page.getByText('Primary 06')).toBeVisible();
     await expect(page.getByText('Policy 04')).toBeVisible();
     const stamp = `Start e2e ${Date.now()}`;
@@ -714,6 +715,83 @@ test.describe('CMS admin', () => {
       expect((await save(en.menu.ctaLabel)).status()).toBe(200);
     }
     await expect.poll(shows(request, '/en', stamp), { ...poll, timeout: 15_000 }).toBe(false);
+  });
+
+  // The big forms are tabs, one per section in site order (ADR-046, PR B2); sidebar fields
+  // stay in the sidebar; every field an editor sees says what it does under it.
+  test('the big forms are tabs in site order and every field says what it does', async ({
+    page,
+    request,
+  }) => {
+    test.setTimeout(120_000);
+    const auth = await login(request, admin);
+    await page.goto('/admin/login');
+    await page.locator('#field-email').fill(admin.email);
+    await page.locator('#field-password').fill(admin.password);
+    await page.locator('form button[type="submit"]').first().click();
+    await page.waitForURL((u) => !u.pathname.endsWith('/login'));
+    const tabsOf = async (url: string) => {
+      await page.goto(url);
+      await expect(page.locator('.tabs-field__tab-button').first()).toBeVisible();
+      return page.locator('.tabs-field__tab-button').allTextContents();
+    };
+    expect(await tabsOf('/admin/globals/home')).toEqual([
+      'Hero',
+      'Product strip',
+      'Designer',
+      'Three steps',
+      'Video',
+      'Why us',
+      'Testimonials',
+      'Integrations',
+      'FAQ',
+      'Ribbon',
+    ]);
+    // A section tab opens on its switch, whose description says what "off" hides.
+    await page.locator('.tabs-field__tab-button', { hasText: 'Three steps' }).click();
+    await expect(page.locator('[data-admin-switch="steps.enabled"]')).toBeVisible();
+    await expect(page.locator('[data-admin-field="enabled"]').first()).toContainText(/hides/);
+    expect(await tabsOf('/admin/globals/site-settings')).toEqual([
+      'Brand',
+      'Contact & social',
+      'Menus & footer',
+      'Numbers & legal',
+    ]);
+    const products = (await (
+      await request.get(`${API}/products?limit=1`, { headers: auth })
+    ).json()) as { docs: Array<{ id: number }> };
+    expect(await tabsOf(`/admin/collections/products/${products.docs[0]?.id}`)).toEqual([
+      'Basics',
+      'Photos & colours',
+      'Sizes',
+      'Print area',
+    ]);
+    // Every field on a tab says what it does on the site (the description line under it).
+    await page.locator('.tabs-field__tab-button', { hasText: 'Sizes' }).click();
+    await expect(page.locator('#field-sizesSummary')).toBeVisible();
+    await expect(
+      page
+        .locator('.field-description-sizesSummary, [id="field-description-sizesSummary"]')
+        .first(),
+    ).toContainText(/product card/);
+    const posts = (await (await request.get(`${API}/posts?limit=1`, { headers: auth })).json()) as {
+      docs: Array<{ id: number }>;
+    };
+    expect(await tabsOf(`/admin/collections/posts/${posts.docs[0]?.id}`)).toEqual([
+      'Content',
+      'Summary & cover',
+      'Search',
+    ]);
+    // The post's sidebar keeps the author and the dates.
+    await expect(page.locator('.document-fields__sidebar #field-author')).toBeVisible();
+    await expect(page.locator('.document-fields__sidebar #field-publishedAt')).toBeVisible();
+    const pages = (await (await request.get(`${API}/pages?limit=1`, { headers: auth })).json()) as {
+      docs: Array<{ id: number }>;
+    };
+    expect(await tabsOf(`/admin/collections/pages/${pages.docs[0]?.id}`)).toEqual([
+      'Content',
+      'Search',
+    ]);
   });
 
   test('an outsider holding no credential reads published content and nothing else', async ({

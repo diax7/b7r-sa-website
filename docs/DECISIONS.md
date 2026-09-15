@@ -1082,4 +1082,16 @@ Decided with Dhia for the next PRs of the same project: Navigation folds into Si
 as a "Menus & footer" tab (a data migration), the three menu labels stay editable there
 (his exception to ADR-031's rule that interface text lives in code), the big forms become
 tabs, every field gets a description that says what it does on the site, and a Connections
-collection holds every API key with a test and a monthly limit (ADR-047).
+collection holds every API key with a test and a monthly limit (ADR-047). **Done in PR B1
+and B2 (2026-09-15):** the menus are `site-settings.menu` (migration
+`20260915_143152`, the six `navigation*` tables gone); the forms are tabs, one per section of
+the site in site order (Home ten named tabs in place of its groups, same columns; Product
+four; Post three with the sidebar untouched; Page two; Site settings four with the menus as
+the named tab `menu`); and every field an editor sees says where it shows and what it does,
+then its limit or an example, in both languages, through one map per entity
+(`modules/cms/admin/descriptions/*.ts`, `modules/ai-content/descriptions.ts`) applied by
+`describeFields()` on the config, so the ~240 sentences are read in one place; the config
+test refuses a field without both languages (layout, hidden, read-only, label-less and
+widget-rendered fields excepted) and a map key that names no field. Found on the way: tags
+are read by nothing on the site (related posts go by hub, ADR-041), and their descriptions
+say so; whether to keep them is Dhia's call.

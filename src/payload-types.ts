@@ -590,20 +590,6 @@ export interface Post {
    */
   slug: string;
   /**
-   * One or two sentences on the post card and in search results.
-   */
-  excerpt: string;
-  hub: number | Category;
-  tags?: (number | Tag)[] | null;
-  /**
-   * The cover with its Arabic alt text in the library.
-   */
-  cover: number | Media;
-  takeaways: {
-    text: string;
-    id?: string | null;
-  }[];
-  /**
    * H2s as questions, short paragraphs, at least two links to pages of this site.
    */
   body: {
@@ -620,6 +606,28 @@ export interface Post {
       version: number;
     };
     [k: string]: unknown;
+  };
+  /**
+   * One or two sentences on the post card and in search results.
+   */
+  excerpt: string;
+  hub: number | Category;
+  tags?: (number | Tag)[] | null;
+  /**
+   * The cover with its Arabic alt text in the library.
+   */
+  cover: number | Media;
+  takeaways: {
+    text: string;
+    id?: string | null;
+  }[];
+  /**
+   * Optional: the title and the excerpt are used when left empty.
+   */
+  seo?: {
+    title?: string | null;
+    description?: string | null;
+    ogImage?: (number | null) | Media;
   };
   author: number | Author;
   /**
@@ -650,14 +658,6 @@ export interface Post {
         id?: string | null;
       }[]
     | null;
-  /**
-   * Optional: the title and the excerpt are used when left empty.
-   */
-  seo?: {
-    title?: string | null;
-    description?: string | null;
-    ogImage?: (number | null) | Media;
-  };
   /**
    * Who saved the current version and when. Drafts do not change it.
    */
@@ -1477,24 +1477,12 @@ export interface IntegrationsSelect<T extends boolean = true> {
 export interface PostsSelect<T extends boolean = true> {
   title?: T;
   slug?: T;
+  body?: T;
   excerpt?: T;
   hub?: T;
   tags?: T;
   cover?: T;
   takeaways?:
-    | T
-    | {
-        text?: T;
-        id?: T;
-      };
-  body?: T;
-  author?: T;
-  publishedAt?: T;
-  contentUpdatedAt?: T;
-  readingMinutes?: T;
-  origin?: T;
-  factsBaseline?: T;
-  warnings?:
     | T
     | {
         text?: T;
@@ -1506,6 +1494,18 @@ export interface PostsSelect<T extends boolean = true> {
         title?: T;
         description?: T;
         ogImage?: T;
+      };
+  author?: T;
+  publishedAt?: T;
+  contentUpdatedAt?: T;
+  readingMinutes?: T;
+  origin?: T;
+  factsBaseline?: T;
+  warnings?:
+    | T
+    | {
+        text?: T;
+        id?: T;
       };
   lastSavedBy?:
     | T
@@ -1809,9 +1809,6 @@ export interface Home {
       id?: string | null;
     }[];
   };
-  /**
-   * The loop itself ships with the site; only the copy lives here.
-   */
   video: {
     /**
      * Off hides the “Video” section from the home page.
@@ -1834,9 +1831,6 @@ export interface Home {
       id?: string | null;
     }[];
   };
-  /**
-   * The entries live in Testimonials; the section title lives here.
-   */
   testimonials: {
     /**
      * Off hides the “Testimonials” section from the home page.
@@ -1853,9 +1847,6 @@ export interface Home {
     title: string;
     lead: string;
   };
-  /**
-   * The entries flagged «show on home» in the FAQ collection.
-   */
   faq: {
     /**
      * Off hides the “FAQ” section from the home page.
@@ -1902,24 +1893,6 @@ export interface SiteSetting {
     instagram: string;
     tiktok: string;
   };
-  /**
-   * Must match the app; no automatic sync.
-   */
-  welcomeCredit: number;
-  /**
-   * Must match the app; no automatic sync.
-   */
-  deliveryMaxDays: number;
-  deliveryOrigin: string;
-  deliveryRegion: string;
-  /**
-   * Leave empty to use WhatsApp
-   */
-  bookingUrl?: string | null;
-  legalEntity: string;
-  /**
-   * The header and footer links and the menu labels, on every page of the site.
-   */
   menu: {
     /**
      * The header links in order, the phone menu, and the "Links" column of the footer.
@@ -1962,6 +1935,21 @@ export interface SiteSetting {
      */
     menuCloseLabel: string;
   };
+  /**
+   * Must match the app; no automatic sync.
+   */
+  welcomeCredit: number;
+  /**
+   * Must match the app; no automatic sync.
+   */
+  deliveryMaxDays: number;
+  deliveryOrigin: string;
+  deliveryRegion: string;
+  /**
+   * Leave empty to use WhatsApp
+   */
+  bookingUrl?: string | null;
+  legalEntity: string;
   /**
    * Who saved the current version and when. Drafts do not change it.
    */
@@ -2306,12 +2294,6 @@ export interface SiteSettingsSelect<T extends boolean = true> {
         instagram?: T;
         tiktok?: T;
       };
-  welcomeCredit?: T;
-  deliveryMaxDays?: T;
-  deliveryOrigin?: T;
-  deliveryRegion?: T;
-  bookingUrl?: T;
-  legalEntity?: T;
   menu?:
     | T
     | {
@@ -2336,6 +2318,12 @@ export interface SiteSettingsSelect<T extends boolean = true> {
         menuOpenLabel?: T;
         menuCloseLabel?: T;
       };
+  welcomeCredit?: T;
+  deliveryMaxDays?: T;
+  deliveryOrigin?: T;
+  deliveryRegion?: T;
+  bookingUrl?: T;
+  legalEntity?: T;
   lastSavedBy?:
     | T
     | {

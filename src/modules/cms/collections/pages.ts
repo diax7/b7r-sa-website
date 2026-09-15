@@ -10,6 +10,8 @@ import { localePath, requestLocale } from '@/lib/i18n';
 import { previewUrl } from '@/lib/preview-token';
 import { collectionComponents } from '@/modules/cms/admin/document/config';
 import { adminGroup } from '@/modules/cms/admin/icons';
+import { PAGE_DESCRIPTIONS } from '@/modules/cms/admin/descriptions/pages';
+import { describeFields } from '@/modules/cms/admin/descriptions/describe';
 
 /** Slugs a page may never take: every code-owned segment except the seven designed pages. */
 export const FORBIDDEN_PAGE_SLUGS: readonly string[] = CODE_TOP_LEVEL.filter(
@@ -110,77 +112,98 @@ export const Pages: CollectionConfig = {
     afterChange: [revalidatePages],
     afterDelete: [revalidatePages],
   },
-  fields: [
-    {
-      type: 'row',
-      fields: [
-        {
-          name: 'title',
-          type: 'text',
-          required: true,
-          localized: true,
-          label: { ar: 'العنوان', en: 'Title' },
-        },
-        {
-          name: 'slug',
-          type: 'text',
-          required: true,
-          unique: true,
-          index: true,
-          label: { ar: 'المعرّف في الرابط', en: 'Slug' },
-          admin: {
-            description: {
-              ar: 'حروف لاتينية صغيرة وشرطات؛ يصبح /المعرّف',
-              en: 'lowercase-hyphenated; served at /slug',
-            },
+  fields: describeFields(
+    [
+      {
+        type: 'tabs',
+        tabs: [
+          {
+            label: { ar: 'المحتوى', en: 'Content' },
+            fields: [
+              {
+                type: 'row',
+                fields: [
+                  {
+                    name: 'title',
+                    type: 'text',
+                    required: true,
+                    localized: true,
+                    label: { ar: 'العنوان', en: 'Title' },
+                  },
+                  {
+                    name: 'slug',
+                    type: 'text',
+                    required: true,
+                    unique: true,
+                    index: true,
+                    label: { ar: 'المعرّف في الرابط', en: 'Slug' },
+                    admin: {
+                      description: {
+                        ar: 'حروف لاتينية صغيرة وشرطات؛ يصبح /المعرّف',
+                        en: 'lowercase-hyphenated; served at /slug',
+                      },
+                    },
+                  },
+                ],
+              },
+              {
+                name: 'lead',
+                type: 'text',
+                localized: true,
+                label: { ar: 'السطر تحت العنوان (اختياري)', en: 'Lead (optional)' },
+              },
+              {
+                name: 'blocks',
+                type: 'blocks',
+                required: true,
+                minRows: 1,
+                blocks: PAGE_BLOCKS,
+                label: { ar: 'الأقسام', en: 'Sections' },
+                labels: {
+                  singular: { ar: 'قسم', en: 'Section' },
+                  plural: { ar: 'الأقسام', en: 'Sections' },
+                },
+              },
+            ],
           },
-        },
-      ],
-    },
-    {
-      name: 'lead',
-      type: 'text',
-      localized: true,
-      label: { ar: 'السطر تحت العنوان (اختياري)', en: 'Lead (optional)' },
-    },
-    {
-      name: 'blocks',
-      type: 'blocks',
-      required: true,
-      minRows: 1,
-      blocks: PAGE_BLOCKS,
-      label: { ar: 'الأقسام', en: 'Sections' },
-      labels: { singular: { ar: 'قسم', en: 'Section' }, plural: { ar: 'الأقسام', en: 'Sections' } },
-    },
-    {
-      name: 'seo',
-      type: 'group',
-      label: { ar: 'محركات البحث', en: 'SEO' },
-      fields: [
-        {
-          name: 'title',
-          type: 'text',
-          required: true,
-          localized: true,
-          maxLength: 70,
-          label: { ar: 'عنوان الصفحة (حتى 70 حرفاً)', en: 'Meta title (≤ 70)' },
-        },
-        {
-          name: 'description',
-          type: 'textarea',
-          required: true,
-          localized: true,
-          maxLength: 160,
-          label: { ar: 'الوصف (حتى 160 حرفاً)', en: 'Meta description (≤ 160)' },
-        },
-        {
-          name: 'ogImage',
-          type: 'upload',
-          relationTo: 'media',
-          label: { ar: 'صورة المشاركة (اختياري)', en: 'Share image (optional)' },
-        },
-      ],
-    },
-    savedByField,
-  ],
+          {
+            label: { ar: 'البحث', en: 'Search' },
+            fields: [
+              {
+                name: 'seo',
+                type: 'group',
+                label: { ar: 'محركات البحث', en: 'SEO' },
+                fields: [
+                  {
+                    name: 'title',
+                    type: 'text',
+                    required: true,
+                    localized: true,
+                    maxLength: 70,
+                    label: { ar: 'عنوان الصفحة (حتى 70 حرفاً)', en: 'Meta title (≤ 70)' },
+                  },
+                  {
+                    name: 'description',
+                    type: 'textarea',
+                    required: true,
+                    localized: true,
+                    maxLength: 160,
+                    label: { ar: 'الوصف (حتى 160 حرفاً)', en: 'Meta description (≤ 160)' },
+                  },
+                  {
+                    name: 'ogImage',
+                    type: 'upload',
+                    relationTo: 'media',
+                    label: { ar: 'صورة المشاركة (اختياري)', en: 'Share image (optional)' },
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+      savedByField,
+    ],
+    PAGE_DESCRIPTIONS,
+  ),
 };
