@@ -166,7 +166,7 @@ async function ensureProduct(payload: Payload, product: Product): Promise<void> 
   summary.created.push(`product ${product.slug}`);
 }
 
-const GLOBALS = ['home', 'site-settings', 'navigation', 'seo-defaults'] as const;
+const GLOBALS = ['home', 'site-settings', 'seo-defaults'] as const;
 
 async function globalIsFilled(payload: Payload, slug: (typeof GLOBALS)[number]) {
   const doc = await payload.findGlobal({ slug, depth: 0, draft: true });
@@ -174,7 +174,6 @@ async function globalIsFilled(payload: Payload, slug: (typeof GLOBALS)[number]) 
     return ((doc as { hero?: { slides?: unknown[] } }).hero?.slides?.length ?? 0) > 0;
   }
   if (slug === 'site-settings') return Boolean((doc as { brandName?: string }).brandName);
-  if (slug === 'navigation') return ((doc as { primary?: unknown[] }).primary?.length ?? 0) > 0;
   return ((doc as { routes?: unknown[] }).routes?.length ?? 0) > 0;
 }
 
@@ -335,9 +334,38 @@ async function ensureIntegration(payload: Payload, item: Integration, order: num
   summary.created.push(`integration ${item.slug}`);
 }
 
+const menuItem = (i: { label: string; href: string; matchPrefix?: string | undefined }) => ({
+  label: i.label,
+  href: i.href,
+  ...(i.matchPrefix ? { matchPrefix: i.matchPrefix } : {}),
+});
+
+/** The site settings' `menu` group (ADR-046) from the navigation seed. */
+function menuData() {
+  return {
+    primary: navigation.primary.map(menuItem),
+    policies: navigation.policies.map(menuItem),
+    ctaLabel: navigation.ctaLabel,
+    skipLinkLabel: navigation.skipLinkLabel,
+    menuOpenLabel: navigation.menuOpenLabel,
+    menuCloseLabel: navigation.menuCloseLabel,
+  };
+}
+
 async function ensureGlobals(payload: Payload): Promise<void> {
-  if (await globalIsFilled(payload, 'site-settings')) summary.skipped.push('global site-settings');
-  else {
+  if (await globalIsFilled(payload, 'site-settings')) {
+    summary.skipped.push('global site-settings');
+    // A database that had the settings before the menus moved in (ADR-046) gets them here.
+    const doc = await payload.findGlobal({ slug: 'site-settings', depth: 0, draft: true });
+    if ((doc.menu?.primary?.length ?? 0) === 0) {
+      await payload.updateGlobal({
+        slug: 'site-settings',
+        data: { menu: menuData() },
+        context: CONTEXT,
+      });
+      summary.created.push('global site-settings: menu');
+    }
+  } else {
     await payload.updateGlobal({
       slug: 'site-settings',
       data: {
@@ -352,34 +380,11 @@ async function ensureGlobals(payload: Payload): Promise<void> {
         deliveryRegion: site.delivery.region,
         ...(site.bookingUrl ? { bookingUrl: site.bookingUrl } : {}),
         legalEntity: site.legalEntity,
+        menu: menuData(),
       },
       context: CONTEXT,
     });
     summary.created.push('global site-settings');
-  }
-  if (await globalIsFilled(payload, 'navigation')) summary.skipped.push('global navigation');
-  else {
-    await payload.updateGlobal({
-      slug: 'navigation',
-      data: {
-        primary: navigation.primary.map((i) => ({
-          label: i.label,
-          href: i.href,
-          ...(i.matchPrefix ? { matchPrefix: i.matchPrefix } : {}),
-        })),
-        policies: navigation.policies.map((i) => ({
-          label: i.label,
-          href: i.href,
-          ...(i.matchPrefix ? { matchPrefix: i.matchPrefix } : {}),
-        })),
-        ctaLabel: navigation.ctaLabel,
-        skipLinkLabel: navigation.skipLinkLabel,
-        menuOpenLabel: navigation.menuOpenLabel,
-        menuCloseLabel: navigation.menuCloseLabel,
-      },
-      context: CONTEXT,
-    });
-    summary.created.push('global navigation');
   }
   if (await globalIsFilled(payload, 'seo-defaults')) summary.skipped.push('global seo-defaults');
   else {

@@ -1,4 +1,4 @@
-import type { GlobalConfig } from 'payload';
+import type { Field, GlobalConfig } from 'payload';
 import { hiddenUnlessAdmin, isAdmin } from '@/modules/cms/access';
 import { revalidateGlobal } from '@/modules/cms/hooks/revalidate';
 import { savedByField, stampSavedByGlobal } from '@/modules/cms/fields/saved-by';
@@ -10,6 +10,146 @@ const APP_HELP = {
   en: 'Must match the app; no automatic sync.',
 };
 
+/** One link of the header or the footer: its label per language, its path, and what counts as active. */
+const navItem: Field[] = [
+  {
+    type: 'row',
+    fields: [
+      {
+        name: 'label',
+        type: 'text',
+        required: true,
+        localized: true,
+        label: { ar: 'النص', en: 'Label' },
+      },
+      {
+        name: 'href',
+        type: 'text',
+        required: true,
+        label: { ar: 'الرابط', en: 'Link' },
+        validate: (value: unknown) =>
+          typeof value === 'string' && value.startsWith('/') ? true : 'الرابط يبدأ بـ /',
+      },
+      {
+        name: 'matchPrefix',
+        type: 'text',
+        label: { ar: 'يُعدّ نشطاً لكل ما يبدأ بـ', en: 'Active prefix' },
+        admin: {
+          description: {
+            ar: 'يبقى الرابط مُعلَّماً في الترويسة لكل صفحة يبدأ مسارها بهذا. مثال: /products',
+            en: 'The link stays marked as the current one on every page whose path starts with this. Example: /products',
+          },
+        },
+      },
+    ],
+  },
+];
+
+/**
+ * The menus (the former Navigation global, folded in by ADR-046): the header links, the
+ * footer's policy links, the CTA and the three menu labels Dhia keeps editable.
+ */
+const menu: Field = {
+  name: 'menu',
+  type: 'group',
+  label: { ar: 'القوائم والتذييل', en: 'Menus & footer' },
+  admin: {
+    description: {
+      ar: 'روابط الترويسة والتذييل وتسميات القائمة، في كل صفحة من الموقع.',
+      en: 'The header and footer links and the menu labels, on every page of the site.',
+    },
+  },
+  fields: [
+    {
+      name: 'primary',
+      type: 'array',
+      required: true,
+      minRows: 6,
+      maxRows: 6,
+      label: { ar: 'القائمة الرئيسية (6)', en: 'Primary (6)' },
+      admin: {
+        description: {
+          ar: 'روابط الترويسة بترتيبها، وقائمة الجوال، وعمود «روابط» في التذييل.',
+          en: 'The header links in order, the phone menu, and the "Links" column of the footer.',
+        },
+      },
+      fields: navItem,
+    },
+    {
+      name: 'policies',
+      type: 'array',
+      required: true,
+      minRows: 4,
+      maxRows: 4,
+      label: { ar: 'روابط السياسات (4)', en: 'Policies (4)' },
+      admin: {
+        description: {
+          ar: 'عمود «السياسات» في التذييل: الشروط، الشحن، الخصوصية، الأسئلة الشائعة.',
+          en: 'The "Policies" column of the footer: terms, shipping, privacy, FAQ.',
+        },
+      },
+      fields: navItem,
+    },
+    {
+      name: 'ctaLabel',
+      type: 'text',
+      required: true,
+      localized: true,
+      label: { ar: 'زر الدعوة', en: 'CTA label' },
+      admin: {
+        description: {
+          ar: 'نص الزر الأزرق في الترويسة وفي قائمة الجوال.',
+          en: 'The blue button in the header and in the phone menu.',
+        },
+      },
+    },
+    {
+      type: 'row',
+      fields: [
+        {
+          name: 'skipLinkLabel',
+          type: 'text',
+          required: true,
+          localized: true,
+          label: { ar: 'رابط التخطي', en: 'Skip link' },
+          admin: {
+            description: {
+              ar: 'رابط يظهر عند الضغط على Tab أول مرة، يقفز إلى المحتوى.',
+              en: 'The link a keyboard user sees on the first Tab, jumping past the header to the content.',
+            },
+          },
+        },
+        {
+          name: 'menuOpenLabel',
+          type: 'text',
+          required: true,
+          localized: true,
+          label: { ar: 'فتح القائمة', en: 'Menu open' },
+          admin: {
+            description: {
+              ar: 'الاسم الذي يقرؤه قارئ الشاشة لزر القائمة في الجوال وهي مغلقة.',
+              en: "What a screen reader calls the phone menu's burger while the menu is closed.",
+            },
+          },
+        },
+        {
+          name: 'menuCloseLabel',
+          type: 'text',
+          required: true,
+          localized: true,
+          label: { ar: 'إغلاق القائمة', en: 'Menu close' },
+          admin: {
+            description: {
+              ar: 'الاسم الذي يقرؤه قارئ الشاشة لزر القائمة في الجوال وهي مفتوحة.',
+              en: "What a screen reader calls the phone menu's button while the menu is open.",
+            },
+          },
+        },
+      ],
+    },
+  ],
+};
+
 /** BRD 9.4 `site-settings` ⇄ `SiteSettings` in content/schema.ts. Admin only (BRD 9.3). */
 export const SiteSettings: GlobalConfig = {
   slug: 'site-settings',
@@ -19,14 +159,14 @@ export const SiteSettings: GlobalConfig = {
     group: adminGroup('site'),
     custom: {
       shows: {
-        ar: 'كل الصفحات: الترويسة، التذييل، روابط التواصل، والأرقام التي يعرضها الموقع',
-        en: 'every page: the header, the footer, the contact links and the numbers the site quotes',
+        ar: 'كل الصفحات: الترويسة وروابطها، التذييل، روابط التواصل، والأرقام التي يعرضها الموقع',
+        en: 'every page: the header and its links, the footer, the contact links and the numbers the site quotes',
       },
     },
     hidden: hiddenUnlessAdmin,
     description: {
-      ar: 'اسم الموقع، بيانات التواصل، الحسابات الاجتماعية والعرض الترحيبي.',
-      en: 'Site name, contact details, social accounts and the welcome offer.',
+      ar: 'اسم الموقع، بيانات التواصل، الحسابات الاجتماعية، القوائم والعرض الترحيبي.',
+      en: 'Site name, contact details, social accounts, the menus and the welcome offer.',
     },
   },
   access: { read: () => true, update: isAdmin },
@@ -157,6 +297,7 @@ export const SiteSettings: GlobalConfig = {
       required: true,
       label: { ar: 'الكيان القانوني', en: 'Legal entity' },
     },
+    menu,
     savedByField,
   ],
 };

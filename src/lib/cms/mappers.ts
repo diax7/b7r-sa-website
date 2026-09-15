@@ -26,7 +26,6 @@ import type {
   Home as HomeDoc,
   Integration as IntegrationDoc,
   Media,
-  Navigation as NavigationDoc,
   Page as PageDoc,
   Product as ProductDoc,
   SeoDefault,
@@ -122,23 +121,30 @@ export function toSiteSettings(doc: SiteSetting): SiteSettings {
   });
 }
 
+/** The `menu` group of the site settings (the former Navigation global, ADR-046). */
+type MenuDoc = SiteSetting['menu'];
+
 function navItem(locale: Locale) {
-  return (row: NonNullable<NavigationDoc['primary']>[number]) => ({
+  return (row: NonNullable<MenuDoc['primary']>[number]) => ({
     label: row.label,
     href: localePath(locale, row.href),
     ...(row.matchPrefix ? { matchPrefix: localePath(locale, row.matchPrefix) } : {}),
   });
 }
 
-/** The navigation with its hrefs under the locale's prefix (`/en/products` for English). */
-export function toNavigation(doc: NavigationDoc, locale: Locale): Navigation {
+/**
+ * The navigation, read from the site settings' `menu` group, with its hrefs under the locale's
+ * prefix (`/en/products` for English).
+ */
+export function toNavigation(doc: SiteSetting, locale: Locale): Navigation {
+  const menu = doc.menu;
   return NavigationSchema.parse({
-    primary: (doc.primary ?? []).map(navItem(locale)),
-    policies: (doc.policies ?? []).map(navItem(locale)),
-    ctaLabel: doc.ctaLabel,
-    skipLinkLabel: doc.skipLinkLabel,
-    menuOpenLabel: doc.menuOpenLabel,
-    menuCloseLabel: doc.menuCloseLabel,
+    primary: (menu.primary ?? []).map(navItem(locale)),
+    policies: (menu.policies ?? []).map(navItem(locale)),
+    ctaLabel: menu.ctaLabel,
+    skipLinkLabel: menu.skipLinkLabel,
+    menuOpenLabel: menu.menuOpenLabel,
+    menuCloseLabel: menu.menuCloseLabel,
   });
 }
 

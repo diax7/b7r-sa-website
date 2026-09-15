@@ -116,7 +116,6 @@ export interface Config {
   globals: {
     home: Home;
     'site-settings': SiteSetting;
-    navigation: Navigation;
     'seo-defaults': SeoDefault;
     'ai-settings': AiSetting;
     'payload-jobs-stats': PayloadJobsStat;
@@ -124,7 +123,6 @@ export interface Config {
   globalsSelect: {
     home: HomeSelect<false> | HomeSelect<true>;
     'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
-    navigation: NavigationSelect<false> | NavigationSelect<true>;
     'seo-defaults': SeoDefaultsSelect<false> | SeoDefaultsSelect<true>;
     'ai-settings': AiSettingsSelect<false> | AiSettingsSelect<true>;
     'payload-jobs-stats': PayloadJobsStatsSelect<false> | PayloadJobsStatsSelect<true>;
@@ -1883,7 +1881,7 @@ export interface Home {
   createdAt?: string | null;
 }
 /**
- * Site name, contact details, social accounts and the welcome offer.
+ * Site name, contact details, social accounts, the menus and the welcome offer.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "site-settings".
@@ -1920,45 +1918,50 @@ export interface SiteSetting {
   bookingUrl?: string | null;
   legalEntity: string;
   /**
-   * Who saved the current version and when. Drafts do not change it.
+   * The header and footer links and the menu labels, on every page of the site.
    */
-  lastSavedBy?: {
-    name?: string | null;
-    at?: string | null;
+  menu: {
+    /**
+     * The header links in order, the phone menu, and the "Links" column of the footer.
+     */
+    primary: {
+      label: string;
+      href: string;
+      /**
+       * The link stays marked as the current one on every page whose path starts with this. Example: /products
+       */
+      matchPrefix?: string | null;
+      id?: string | null;
+    }[];
+    /**
+     * The "Policies" column of the footer: terms, shipping, privacy, FAQ.
+     */
+    policies: {
+      label: string;
+      href: string;
+      /**
+       * The link stays marked as the current one on every page whose path starts with this. Example: /products
+       */
+      matchPrefix?: string | null;
+      id?: string | null;
+    }[];
+    /**
+     * The blue button in the header and in the phone menu.
+     */
+    ctaLabel: string;
+    /**
+     * The link a keyboard user sees on the first Tab, jumping past the header to the content.
+     */
+    skipLinkLabel: string;
+    /**
+     * What a screen reader calls the phone menu's burger while the menu is closed.
+     */
+    menuOpenLabel: string;
+    /**
+     * What a screen reader calls the phone menu's button while the menu is open.
+     */
+    menuCloseLabel: string;
   };
-  updatedAt?: string | null;
-  createdAt?: string | null;
-}
-/**
- * Header and footer links and the button labels.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "navigation".
- */
-export interface Navigation {
-  id: number;
-  primary: {
-    label: string;
-    href: string;
-    /**
-     * e.g. /products
-     */
-    matchPrefix?: string | null;
-    id?: string | null;
-  }[];
-  policies: {
-    label: string;
-    href: string;
-    /**
-     * e.g. /products
-     */
-    matchPrefix?: string | null;
-    id?: string | null;
-  }[];
-  ctaLabel: string;
-  skipLinkLabel: string;
-  menuOpenLabel: string;
-  menuCloseLabel: string;
   /**
    * Who saved the current version and when. Drafts do not change it.
    */
@@ -2309,41 +2312,30 @@ export interface SiteSettingsSelect<T extends boolean = true> {
   deliveryRegion?: T;
   bookingUrl?: T;
   legalEntity?: T;
-  lastSavedBy?:
+  menu?:
     | T
     | {
-        name?: T;
-        at?: T;
+        primary?:
+          | T
+          | {
+              label?: T;
+              href?: T;
+              matchPrefix?: T;
+              id?: T;
+            };
+        policies?:
+          | T
+          | {
+              label?: T;
+              href?: T;
+              matchPrefix?: T;
+              id?: T;
+            };
+        ctaLabel?: T;
+        skipLinkLabel?: T;
+        menuOpenLabel?: T;
+        menuCloseLabel?: T;
       };
-  updatedAt?: T;
-  createdAt?: T;
-  globalType?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "navigation_select".
- */
-export interface NavigationSelect<T extends boolean = true> {
-  primary?:
-    | T
-    | {
-        label?: T;
-        href?: T;
-        matchPrefix?: T;
-        id?: T;
-      };
-  policies?:
-    | T
-    | {
-        label?: T;
-        href?: T;
-        matchPrefix?: T;
-        id?: T;
-      };
-  ctaLabel?: T;
-  skipLinkLabel?: T;
-  menuOpenLabel?: T;
-  menuCloseLabel?: T;
   lastSavedBy?:
     | T
     | {

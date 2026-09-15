@@ -28,10 +28,11 @@ type Doc = Record<string, unknown>;
 
 /** The site is in English unless a test says otherwise (the hooks ask the globals). */
 let english = true;
+/** The English gate reads the site settings' brand name and the menu's CTA (ADR-046). */
 const findGlobal = async ({ slug }: { slug: string }) =>
   slug === 'site-settings'
-    ? { brandName: english ? 'B7R Print' : '' }
-    : { ctaLabel: english ? 'Start' : '' };
+    ? { brandName: english ? 'B7R Print' : '', menu: { ctaLabel: english ? 'Start' : '' } }
+    : {};
 
 const req = (context: Record<string, unknown> = {}, locale?: string) =>
   ({ context, locale, payload: { findGlobal } }) as unknown as PayloadRequest;

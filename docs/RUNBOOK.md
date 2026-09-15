@@ -367,7 +367,7 @@ ignore when 2.0.2 ships.
 
 ## The English site (Level 5, ADR-043)
 
-The site is in English once `site-settings.brandName` and `navigation.ctaLabel` have English
+The site is in English once `site-settings.brandName` and `site-settings.menu.ctaLabel` have English
 values; `pnpm content:migrate` writes every English value after the Arabic documents (on a
 database that already has content: `pnpm content:migrate --force`, which fills the missing
 language and overwrites nothing). Until then every `/en` URL is a 404 (the bilingual

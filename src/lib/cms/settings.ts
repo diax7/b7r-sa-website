@@ -12,18 +12,20 @@ import type { Locale } from '@/lib/i18n';
  * cache sits between here and Payload.
  */
 
-/** `site-settings` global as the Level 1 `SiteSettings` contract. */
-export const getSiteSettings = cache(async (locale: Locale): Promise<SiteSettings> => {
+/** The `site-settings` document, read once per render; the settings and the menus both come from it. */
+const siteSettingsDoc = cache(async (locale: Locale) => {
   const payload = await cms();
-  return toSiteSettings(await payload.findGlobal({ slug: 'site-settings', ...publicRead(locale) }));
+  return payload.findGlobal({ slug: 'site-settings', ...publicRead(locale) });
 });
 
+/** `site-settings` global as the Level 1 `SiteSettings` contract. */
+export const getSiteSettings = cache(async (locale: Locale): Promise<SiteSettings> => {
+  return toSiteSettings(await siteSettingsDoc(locale));
+});
+
+/** The menus (the site settings' `menu` group, ADR-046) as the `Navigation` contract. */
 export const getNavigation = cache(async (locale: Locale): Promise<Navigation> => {
-  const payload = await cms();
-  return toNavigation(
-    await payload.findGlobal({ slug: 'navigation', ...publicRead(locale) }),
-    locale,
-  );
+  return toNavigation(await siteSettingsDoc(locale), locale);
 });
 
 /**
