@@ -3,8 +3,8 @@
  * config imports the collections, the global and the workflow directly; nothing under the
  * site's `(site)` routes imports this module.
  */
-export { adminOnly, jsonBody } from '@/modules/ai-content/api/guard';
+export { adminOnly, jsonBody } from '@/modules/cms/admin-api';
 export { generatePost, queueGeneratePost } from '@/modules/ai-content/workflow';
+export { type EngineState, engineState } from '@/modules/ai-content/state';
 export { parseTopicsCsv } from '@/modules/ai-content/topics-import';
 export { envAllows } from '@/modules/ai-content/caps';
-export { mockAllowed } from '@/modules/ai-content/provider';

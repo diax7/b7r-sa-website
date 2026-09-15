@@ -1,6 +1,15 @@
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
 import { signPreview } from '../src/lib/preview-token';
-import { ADMIN, API, createEditor, hasAdmin, login, POLL, shows } from './helpers/cms';
+import {
+  ADMIN,
+  API,
+  createEditor,
+  hasAdmin,
+  login,
+  mockConnectionId,
+  POLL,
+  shows,
+} from './helpers/cms';
 
 /**
  * The CMS from three seats (BRD 9.3, 9.6, ADR-028): the admin who signs in through the
@@ -1438,27 +1447,167 @@ test.describe('CMS admin', () => {
         .toBe(404);
     });
 
+    test('connections (ADR-047): a key is stored masked, a test records its outcome, the limit and the guard hold; editors are refused', async ({
+      page,
+      request,
+    }) => {
+      const auth = await login(request, ADMIN);
+      const json = { ...auth, 'Content-Type': 'application/json' };
+      const ids: number[] = [];
+      try {
+        // A new connection: the key comes back as a mask, the empty model and rates as the
+        // service's usual ones.
+        const made = await request.post(`${API}/connections`, {
+          headers: json,
+          data: { label: 'OpenAI, e2e', kind: 'openai', apiKey: 'sk-e2e-not-a-real-key-7890' },
+        });
+        expect(made.status()).toBe(201);
+        const openai = ((await made.json()) as { doc: Record<string, unknown> }).doc;
+        ids.push(openai['id'] as number);
+        expect(openai['apiKey']).toBe('••••7890');
+        expect(openai['model']).toBe('gpt-4.1');
+        expect(openai['inputPerMillionUsd']).toBe(2);
+        expect(openai['outputPerMillionUsd']).toBe(8);
+        expect(openai['spentThisMonthUsd']).toBe(0);
+        expect(openai['callsThisMonth']).toBe(0);
+        // Saving the mask keeps the key; the list never shows it either.
+        const kept = await request.patch(`${API}/connections/${openai['id']}`, {
+          headers: json,
+          data: { apiKey: '••••7890', label: 'OpenAI, e2e (kept)' },
+        });
+        expect(((await kept.json()) as { doc: { apiKey: string } }).doc.apiKey).toBe('••••7890');
+        const listed = await (
+          await request.get(`${API}/connections?limit=50`, { headers: auth })
+        ).text();
+        expect(listed).not.toContain('sk-e2e-not-a-real-key');
+        // A compatible endpoint needs an https address; a test against a closed port fails
+        // with the reason, never the key, and the outcome is recorded on the row.
+        const badUrl = await request.post(`${API}/connections`, {
+          headers: json,
+          data: { label: 'Local', kind: 'openai-compatible', baseUrl: 'http://localhost:9/v1' },
+        });
+        expect(badUrl.status()).toBe(400);
+        const local = await request.post(`${API}/connections`, {
+          headers: json,
+          data: {
+            label: 'Local, e2e',
+            kind: 'openai-compatible',
+            baseUrl: 'https://127.0.0.1:9/v1',
+            model: 'llama',
+            apiKey: 'local-secret-key-abcdef',
+          },
+        });
+        expect(local.status()).toBe(201);
+        const localId = ((await local.json()) as { doc: { id: number } }).doc.id;
+        ids.push(localId);
+        const failed = await request.post('/api/connections/test', {
+          headers: json,
+          data: { id: localId },
+        });
+        expect(failed.status()).toBe(502);
+        const failedBody = (await failed.json()) as { error: string };
+        expect(failedBody.error).not.toContain('local-secret-key');
+        expect(failedBody.error.length).toBeLessThanOrEqual(200);
+        const afterFail = (await (
+          await request.get(`${API}/connections/${localId}?depth=0`, { headers: auth })
+        ).json()) as Record<string, unknown>;
+        expect(afterFail['lastTestOk']).toBe(false);
+        expect(afterFail['lastTestMessage']).toBe(failedBody.error);
+        expect(typeof afterFail['lastTestAt']).toBe('string');
+        // The mock answers without a call; a second test within ten seconds is refused.
+        const mockId = await mockConnectionId(request, auth);
+        const ok = await request.post('/api/connections/test', {
+          headers: json,
+          data: { id: mockId },
+        });
+        expect(ok.status()).toBe(200);
+        expect(await ok.json()).toEqual({ ok: true, message: 'mock' });
+        const tooSoon = await request.post('/api/connections/test', {
+          headers: json,
+          data: { id: mockId },
+        });
+        expect(tooSoon.status()).toBe(429);
+        const afterOk = (await (
+          await request.get(`${API}/connections/${mockId}?depth=0`, { headers: auth })
+        ).json()) as Record<string, unknown>;
+        expect(afterOk['lastTestOk']).toBe(true);
+        expect(afterOk['lastTestMessage']).toBe('mock');
+        // The stored test outcome cannot be written through the API.
+        await request.patch(`${API}/connections/${mockId}`, {
+          headers: json,
+          data: { lastTestOk: false, lastTestMessage: 'forged' },
+        });
+        const notForged = (await (
+          await request.get(`${API}/connections/${mockId}?depth=0`, { headers: auth })
+        ).json()) as Record<string, unknown>;
+        expect(notForged['lastTestMessage']).toBe('mock');
+        // Editors and outsiders: no list, no test.
+        const editor = await createEditor(request, auth);
+        try {
+          const editorAuth = await login(request, editor);
+          expect((await request.get(`${API}/connections`, { headers: editorAuth })).status()).toBe(
+            403,
+          );
+          expect(
+            (
+              await request.post('/api/connections/test', {
+                headers: { ...editorAuth, 'Content-Type': 'application/json' },
+                data: { id: mockId },
+              })
+            ).status(),
+          ).toBe(403);
+        } finally {
+          await request.delete(`${API}/users/${editor.id}`, { headers: auth });
+        }
+        expect(
+          (
+            await request.post('/api/connections/test', {
+              headers: { 'Content-Type': 'application/json' },
+              data: { id: mockId },
+            })
+          ).status(),
+        ).toBe(403);
+        // The panel: Connections under Admin, the Test button on a saved row, held while dirty.
+        expect((await page.request.post(`${API}/users/login`, { data: ADMIN })).status()).toBe(200);
+        await page.goto(`/admin/collections/connections/${mockId}`);
+        await expect(page.locator('[data-admin-action="test-connection"]')).toBeVisible();
+        await page.locator('#field-label').fill('Mock (edited)');
+        await expect(page.locator('[data-admin-action-result="disabled"]')).toHaveText(
+          /Save, then test/,
+        );
+        await page.goto('/admin/collections/connections/create');
+        await expect(page.locator('[data-admin-action="test-connection"]')).toHaveCount(0);
+        await page.goto('/admin/collections/connections');
+        await expect(page.locator('.collection-list')).toContainText('OpenAI, e2e (kept)');
+      } finally {
+        for (const id of ids) await request.delete(`${API}/connections/${id}`, { headers: auth });
+      }
+    });
+
     test('the content engine (BRD 10.2, ADR-042): a run with the mock provider publishes a post that meets the rules; editors and outsiders are refused', async ({
       page,
       request,
     }) => {
-      test.setTimeout(240_000);
+      // Two runs and two refusals, each picked up by the queue within a minute.
+      test.setTimeout(300_000);
       const auth = await login(request, ADMIN);
       const json = { ...auth, 'Content-Type': 'application/json' };
-      // The mock provider is only accepted with AI_CONTENT_MOCK=1 (CI and the review server set it).
+      // A mock connection is only accepted with AI_CONTENT_MOCK=1 (CI and the review server
+      // set it). Its rates are set so the runs cost something the monthly limit can refuse.
+      const mockId = await mockConnectionId(request, auth);
+      expect(
+        (
+          await request.patch(`${API}/connections/${mockId}`, {
+            headers: json,
+            data: { enabled: true, inputPerMillionUsd: 10, outputPerMillionUsd: 10 },
+          })
+        ).status(),
+      ).toBe(200);
       const settings = await request.post(`${API}/globals/ai-settings`, {
         headers: auth,
-        data: { activeProvider: 'mock', enabled: true, reviewFirstRuns: 3, postsPerDay: 5 },
+        data: { connection: mockId, enabled: true, reviewFirstRuns: 3, postsPerDay: 5 },
       });
       expect(settings.status()).toBe(200);
-      const masked = (await settings.json()) as {
-        result: { providers: { openai: { apiKey: string | null } } };
-      };
-      // A key is never echoed back: the field reads as a mask (or nothing when unset).
-      expect(
-        masked.result.providers.openai.apiKey === null ||
-          masked.result.providers.openai.apiKey.startsWith('••••'),
-      ).toBe(true);
       const hubs = (await (
         await request.get(`${API}/categories?limit=1&where[slug][equals]=design`, { headers: auth })
       ).json()) as {
@@ -1530,6 +1679,13 @@ test.describe('CMS admin', () => {
         const engineRun = (await latestRun())!;
         expect(engineRun['status'], JSON.stringify(engineRun['steps'])).toBe('done');
         expect(engineRun['score'] as number).toBeGreaterThanOrEqual(80);
+        // The run names its connection and cost it something (ADR-047).
+        expect(
+          typeof engineRun['connection'] === 'object'
+            ? (engineRun['connection'] as { id: number }).id
+            : engineRun['connection'],
+        ).toBe(mockId);
+        expect(engineRun['costUsd'] as number).toBeGreaterThan(0);
         expect(
           (engineRun['steps'] as Array<{ name: string; ok: boolean }>).map((s) => s.name),
         ).toEqual(['pickTopic', 'brief', 'outline', 'draft', 'review', 'seo', 'image', 'publish']);
@@ -1600,6 +1756,14 @@ test.describe('CMS admin', () => {
           'data-tone',
           'warning',
         );
+        // The card names the connection and what it has cost this month.
+        const connectionLine = page.locator('[data-admin-engine-connection]');
+        await expect(connectionLine).toHaveAttribute(
+          'data-admin-engine-connection',
+          String(mockId),
+        );
+        await expect(connectionLine).toContainText(/Mock/);
+        await expect(connectionLine).toContainText(/\$\d+\.\d\d this month, no limit/);
         // The topic's edit view carries "Generate now"; the post's sidebar carries "Regenerate".
         await page.goto(`/admin/collections/ai-topics/${topicId}`);
         await expect(page.locator('[data-admin-action="generate-now"]')).toBeVisible();
@@ -1674,19 +1838,102 @@ test.describe('CMS admin', () => {
           headers: auth,
           data: { postsPerDay: 1 },
         });
-        const again = await request.post('/api/ai/generate', { headers: json, data: { topicId } });
-        expect(again.status()).toBe(202);
-        await expect
-          .poll(async () => (await latestRun())?.['status'] ?? 'none', {
-            intervals: [2_000, 5_000],
-            timeout: 150_000,
-          })
-          .toBe('skipped');
-        expect((await latestRun())?.['error']).toMatch(/today/);
+        const skippedRun = async (match: RegExp) => {
+          const before = (await latestRun())?.['id'];
+          const again = await request.post('/api/ai/generate', {
+            headers: json,
+            data: { topicId },
+          });
+          expect(again.status()).toBe(202);
+          await expect
+            .poll(
+              async () => {
+                const r = await latestRun();
+                return r && r['id'] !== before && r['status'] !== 'running' ? r['status'] : 'wait';
+              },
+              { intervals: [2_000, 5_000], timeout: 150_000 },
+            )
+            .not.toBe('wait');
+          const row = (await latestRun())!;
+          expect(row['status']).toBe('skipped');
+          expect(row['error']).toMatch(match);
+        };
+        await skippedRun(/today/);
+        // The connection's monthly limit (ADR-047): below what the runs cost, a run is refused
+        // with the reason; the card and the health row say so. The connection's own numbers
+        // come from the runs log.
+        const spent = (await (
+          await request.get(`${API}/connections/${mockId}?depth=0`, { headers: auth })
+        ).json()) as { spentThisMonthUsd: number; callsThisMonth: number };
+        expect(spent.spentThisMonthUsd).toBeGreaterThan(0);
+        expect(spent.callsThisMonth).toBeGreaterThanOrEqual(2);
+        await request.post(`${API}/globals/ai-settings`, {
+          headers: auth,
+          data: { postsPerDay: 5 },
+        });
+        await request.patch(`${API}/connections/${mockId}`, {
+          headers: json,
+          data: { monthlyLimitUsd: 0.01 },
+        });
+        await skippedRun(/reached its limit 0.01 USD/);
+        await request.patch(`${API}/connections/${mockId}`, {
+          headers: json,
+          data: { monthlyLimitUsd: null },
+        });
+        // An off connection refuses every run (the rule is unit-tested; the queue picks a job
+        // up once a minute, so the e2e reads the dashboard) and says so in amber.
+        await request.patch(`${API}/connections/${mockId}`, {
+          headers: json,
+          data: { enabled: false },
+        });
+        await page.goto('/admin');
+        await expect(page.locator('[data-admin-engine]')).toHaveAttribute(
+          'data-admin-engine-state',
+          'connectionOff',
+        );
+        await expect(page.locator('[data-health-row="engine"]')).toHaveAttribute(
+          'data-tone',
+          'warning',
+        );
+        await request.patch(`${API}/connections/${mockId}`, {
+          headers: json,
+          data: { enabled: true },
+        });
+        // The engine's connection cannot be deleted from under it.
+        const guarded = await request.delete(`${API}/connections/${mockId}`, { headers: auth });
+        expect(guarded.status()).toBe(400);
+        expect(await guarded.text()).toMatch(/pick another/);
+        // No connection: the engine refuses in red.
+        await request.post(`${API}/globals/ai-settings`, {
+          headers: auth,
+          data: { connection: null },
+        });
+        await page.goto('/admin');
+        await expect(page.locator('[data-admin-engine]')).toHaveAttribute(
+          'data-admin-engine-state',
+          'noConnection',
+        );
+        await expect(page.locator('[data-health-row="engine"]')).toHaveAttribute(
+          'data-tone',
+          'error',
+        );
+        await request.post(`${API}/globals/ai-settings`, {
+          headers: auth,
+          data: { connection: mockId },
+        });
       } finally {
         await request.post(`${API}/globals/ai-settings`, {
           headers: auth,
           data: { enabled: false, postsPerDay: 1 },
+        });
+        await request.patch(`${API}/connections/${mockId}`, {
+          headers: json,
+          data: {
+            enabled: true,
+            monthlyLimitUsd: null,
+            inputPerMillionUsd: 0,
+            outputPerMillionUsd: 0,
+          },
         });
         if (postId) await request.delete(`${API}/posts/${postId}`, { headers: auth });
         if (englishPostId) await request.delete(`${API}/posts/${englishPostId}`, { headers: auth });

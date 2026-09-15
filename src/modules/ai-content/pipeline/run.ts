@@ -102,10 +102,7 @@ export async function runPipeline(
   }
 
   const finish = async (result: PipelineResult, error?: string): Promise<PipelineResult> => {
-    const rates =
-      settings.activeProvider === 'mock'
-        ? { inputPerMillionUsd: 0, outputPerMillionUsd: 0 }
-        : settings.providers[settings.activeProvider].rates;
+    const rates = settings.connection?.rates ?? { inputPerMillionUsd: 0, outputPerMillionUsd: 0 };
     const costUsd = estimateCostUsd(usage, rates);
     if (runId !== null) {
       await store.updateRun(runId, {
@@ -175,6 +172,7 @@ export async function runPipeline(
           label: `${input.kind ?? 'generate'}: skipped`,
           kind: input.kind ?? 'generate',
           ...(input.topicId ? { topic: input.topicId } : {}),
+          ...(settings.connection ? { connection: settings.connection.id } : {}),
           provider: provider.name,
           model: provider.model,
           systemPromptVersion: settings.systemPromptVersion,
@@ -225,6 +223,7 @@ export async function runPipeline(
       label: `${input.kind ?? 'generate'}${locale === 'ar' ? '' : ` [${locale}]`}: ${topic.title}`,
       kind: input.kind ?? 'generate',
       topic: topic.id,
+      ...(settings.connection ? { connection: settings.connection.id } : {}),
       provider: provider.name,
       model: provider.model,
       systemPromptVersion: settings.systemPromptVersion,

@@ -43,6 +43,15 @@ const post = (path, data) =>
 const del = (path) => fetch(`${API}${path}`, { method: 'DELETE', headers: H });
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+/** The mock connection's id (ADR-047): the one there is, or a new one. */
+async function mockConnection() {
+  const found = await get('/connections?where[kind][equals]=mock&limit=1&depth=0');
+  if (found.docs?.[0]) return found.docs[0].id;
+  const made = await post('/connections', { label: 'Mock', kind: 'mock' });
+  if (!made.ok) throw new Error(`connections answered ${made.status}: ${await made.text()}`);
+  return (await made.json()).doc.id;
+}
+
 /** `run [n] [en]`: with a language, each run takes the best backlog topic of that language. */
 async function run(count, language) {
   if (count > DAY_MAX) {
@@ -51,7 +60,7 @@ async function run(count, language) {
   }
   const before = await get('/globals/ai-settings');
   const set = await post('/globals/ai-settings', {
-    activeProvider: 'mock',
+    connection: await mockConnection(),
     enabled: true,
     postsPerDay: count,
   });

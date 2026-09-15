@@ -27,6 +27,7 @@ import { REDIRECT_OVERRIDES } from '@/modules/cms/collections/redirects';
 import { indexNowTask } from '@/modules/cms/jobs/indexnow';
 import { Testimonials } from '@/modules/cms/collections/testimonials';
 import { Users } from '@/modules/cms/collections/users';
+import { Connections } from '@/modules/connections/collection';
 import { cmsEnv, isBuildPhase } from '@/lib/cms/env';
 import { Home } from '@/modules/cms/globals/home';
 import { SeoDefaults } from '@/modules/cms/globals/seo-defaults';
@@ -118,6 +119,7 @@ export default buildConfig({
     Tags,
     AiTopics,
     AiRuns,
+    Connections,
   ],
   globals: [Home, SiteSettings, SeoDefaults, AiSettings],
   db: postgresAdapter({

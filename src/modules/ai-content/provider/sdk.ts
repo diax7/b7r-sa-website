@@ -1,23 +1,20 @@
-import { createAnthropic } from '@ai-sdk/anthropic';
-import { createDeepSeek } from '@ai-sdk/deepseek';
-import { createGoogle } from '@ai-sdk/google';
-import { createOpenAI } from '@ai-sdk/openai';
-import { generateObject, generateText, type LanguageModel } from 'ai';
+import { generateObject, generateText } from 'ai';
 import type { Usage } from '@/modules/ai-content/cost';
 import {
   CALL_TIMEOUT_MS,
   type ObjectRequest,
   type ObjectResult,
   type Provider,
-  type ProviderName,
   type TextRequest,
   type TextResult,
 } from '@/modules/ai-content/provider/types';
+import type { ConnectionSpec } from '@/modules/connections/kinds';
+import { languageModel } from '@/modules/connections/model';
 
 /**
- * The Vercel AI SDK behind the `Provider` interface (BRD 10.2.6): one factory per vendor,
- * the model id a settings string, the key decrypted by the caller. Nothing here runs in the
- * browser. `image` is absent: no image provider is wired yet (ADR-042).
+ * The Vercel AI SDK behind the `Provider` interface (BRD 10.2.6): the model built from the
+ * connection's kind, model id, base URL and decrypted key (ADR-047). Nothing here runs in
+ * the browser. `image` is absent: no image provider is wired yet (ADR-042).
  */
 function usageOf(usage: {
   inputTokens?: number | undefined;
@@ -26,33 +23,11 @@ function usageOf(usage: {
   return { inputTokens: usage.inputTokens ?? 0, outputTokens: usage.outputTokens ?? 0 };
 }
 
-export function languageModel(
-  name: Exclude<ProviderName, 'mock'>,
-  model: string,
-  apiKey: string,
-): LanguageModel {
-  switch (name) {
-    case 'openai':
-      return createOpenAI({ apiKey })(model);
-    case 'deepseek':
-      return createDeepSeek({ apiKey })(model);
-    case 'anthropic':
-      return createAnthropic({ apiKey })(model);
-    case 'google':
-      return createGoogle({ apiKey })(model);
-    default:
-      throw new Error(`Unknown provider ${String(name)}`);
-  }
-}
-
-export function sdkProvider(
-  name: Exclude<ProviderName, 'mock'>,
-  model: string,
-  apiKey: string,
-): Provider {
-  const lm = languageModel(name, model, apiKey);
+export function sdkProvider(connection: ConnectionSpec & { apiKey: string }): Provider {
+  const { kind, model, apiKey, baseUrl } = connection;
+  const lm = languageModel({ kind, model, apiKey, baseUrl });
   return {
-    name,
+    name: kind,
     model,
     async text(req: TextRequest): Promise<TextResult> {
       const result = await generateText({

@@ -331,24 +331,41 @@ retry copy; `NEWSLETTER_TRANSPORT=mock` (tests only) keeps subscriptions in memo
 ignore when 2.0.2 ships.
 
 
-## The content engine (BRD 10.2, ADR-042)
+## The content engine (BRD 10.2, ADR-042, ADR-047)
 
-- **Keys.** Admin → AI content → Engine settings → Providers: paste the vendor's key and the
-  model id, choose the active provider, save. The key is stored encrypted and reads back as
-  a mask; leave the mask to keep it, clear the field to remove it.
+- **Keys.** Admin → Connections → Create: a name, the service (OpenAI, Anthropic, Google,
+  DeepSeek, or "OpenAI-compatible endpoint" with the service's `https://` address for any
+  other AI that serves the OpenAI API), the key, the model id (empty: the service's usual
+  one), the two rates from its pricing page (empty: the published ones), a monthly limit in
+  USD if you want one. Save, then press "Test connection": one short call through the stored
+  key; the answer shows beside the button and is recorded on the row (last test, passed,
+  what the service said). The key is stored encrypted and reads back as a mask; leave the
+  mask to keep it, clear the field to remove it. Then Blog → Engine settings → Cadence →
+  Connection: pick it.
+- **The limit.** Each connection's "Spent this month" and "Runs this month" are read from
+  the runs log (from the 1st, Riyadh time); a run is refused once the spend reaches the
+  connection's monthly limit, until next month. The daily cost cap stays in the engine
+  settings: two guards, one per day for the engine and one per month per connection. A test
+  never counts.
+- **Off.** A connection's switch off refuses every engine run on it (the dashboard says
+  "Connection off" in amber); the test still works. The engine's connection cannot be
+  deleted: pick another first. With no connection picked the dashboard shows "No
+  connection" in red and nothing runs.
 - **Switching on.** Cadence → "Engine on". `AI_CONTENT_ENABLED=false` in the environment stops
   every run whatever the panel says (the kill switch outside the panel). While
   `reviewFirstRuns` is above zero, a live provider's posts land as drafts for a read.
 - **Trying it.** Add a topic (or bulk-add from CSV), open it and press "Generate now": the
   run starts within a minute on the `ai` queue and shows in Runs with its steps, score and
   cost; the post appears under Blog → Posts. A refused manual run (switch off, a cap, no
-  key) writes a skipped run with the reason.
+  connection, the connection off or over its limit) writes a skipped run with the reason; a
+  connection without a key fails the run at its first model call, with the reason.
 - **When a run fails.** Runs → the row's error and step log say which step and why; the topic
   reads `failed` with the same reason and can be retried with "Generate now". A failure
   e-mail goes to the notification address when "Failure alerts" is on.
-- **The mock.** `AI_CONTENT_MOCK=1` (never in production; the boot assert refuses it) lets the
-  settings select "Mock (tests only)": deterministic Arabic posts built from the facts sheet,
-  no network. CI and the review server use it.
+- **The mock.** `AI_CONTENT_MOCK=1` (never in production; the boot assert refuses it) lets a
+  connection of the kind "Mock (tests only)" run: deterministic posts built from the facts
+  sheet, no network. CI and the review server use it (`scripts/dev/engine-demo.mjs` and the
+  e2e create the mock connection when there is none).
 
 - **Day to day (3c).** The hourly tick queues one run when the Riyadh hour reaches the publish
   hour and no run started today; the dashboard card shows the next slot. Monday 06:00 Riyadh
@@ -361,9 +378,9 @@ ignore when 2.0.2 ships.
   the backlog (the daily cap's maximum; run it again the next day for more); `... clean`
   removes every engine post and run so the public e2e (which assumes the seed's three posts)
   passes again.
-- **Going live.** Add the vendor key in Engine settings, pick the provider, keep
-  `reviewFirstRuns` at 3: the first three posts land as drafts for a read, then the engine
-  publishes on its own. Watch the first digest.
+- **Going live.** Add the connection under Connections, test it, pick it in Engine settings,
+  keep `reviewFirstRuns` at 3: the first three posts land as drafts for a read, then the
+  engine publishes on its own. Watch the first digest and the connection's month.
 
 ## The admin's words (ADR-046)
 

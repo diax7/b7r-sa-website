@@ -1,12 +1,14 @@
-import type { Field } from 'payload';
+import type { Field, FieldHookArgs } from 'payload';
 
 /**
- * A secret text field (ADR-042): stored encrypted with Payload's `encrypt` (derived from
+ * A secret text field (ADR-042, ADR-047): stored encrypted with Payload's `encrypt` (derived from
  * `PAYLOAD_SECRET`; rotating the secret invalidates every stored key), read back as a mask
  * (`••••` + the last four characters) unless the request carries
- * `context.decryptKeys === true`, which only the pipeline's Local API reads set. The admin
- * form posts the whole global back on every save, so an incoming mask keeps the stored
- * ciphertext; an empty value clears it; anything else is a new key.
+ * `context.decryptKeys === true`, which only the engine's and the connection test's Local API
+ * reads set. The admin form posts the whole document back on every save, so an incoming mask
+ * keeps the stored ciphertext; an empty value clears it; anything else is a new key. The
+ * ciphertext is read from the database row itself: the `previousValue` a hook is handed has
+ * been through `afterRead`, so it is the mask, not the stored value.
  */
 export const MASK_PREFIX = '••••';
 export const DECRYPT_CONTEXT = 'decryptKeys';
@@ -51,6 +53,26 @@ export function readValue(args: {
   return reveal ? plain : maskOf(plain);
 }
 
+/** The value as stored, straight from the database row (no `afterRead`), or null. */
+async function storedValue(args: FieldHookArgs): Promise<unknown> {
+  const { req, collection, global, originalDoc, path } = args;
+  let row: unknown = null;
+  const id = (originalDoc as { id?: number | string } | undefined)?.id;
+  if (collection && id !== undefined) {
+    row = await req.payload.db.findOne({
+      collection: collection.slug,
+      where: { id: { equals: id } },
+      req,
+    });
+  } else if (global) {
+    row = await req.payload.db.findGlobal({ slug: global.slug, req });
+  }
+  return path.reduce<unknown>(
+    (node, key) => (node as Record<string, unknown> | null | undefined)?.[String(key)],
+    row,
+  );
+}
+
 export function secretField(name: string, label: { ar: string; en: string }): Field {
   return {
     name,
@@ -64,11 +86,12 @@ export function secretField(name: string, label: { ar: string; en: string }): Fi
     },
     hooks: {
       beforeChange: [
-        ({ value, previousValue, req }) =>
+        async (args) =>
           nextStoredValue({
-            incoming: value,
-            previous: previousValue,
-            encrypt: (plain) => req.payload.encrypt(plain),
+            incoming: args.value,
+            previous:
+              args.value === undefined || isMask(args.value) ? await storedValue(args) : null,
+            encrypt: (plain) => args.req.payload.encrypt(plain),
           }),
       ],
       afterRead: [

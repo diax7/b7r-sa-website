@@ -3,79 +3,12 @@ import { hiddenUnlessAdmin, isAdmin } from '@/modules/cms/access';
 import { savedByField, stampSavedByGlobal } from '@/modules/cms/fields/saved-by';
 import { requestLocale } from '@/lib/i18n';
 import { DEFAULT_IMAGE_STYLE, DEFAULT_STYLE } from '@/modules/ai-content/prompts/defaults';
-import { secretField } from '@/modules/ai-content/secret-field';
+import { secretField } from '@/modules/cms/fields/secret-field';
+import { CONNECTIONS } from '@/modules/connections/collection';
 import { globalComponents } from '@/modules/cms/admin/document/config';
 import { adminGroup } from '@/modules/cms/admin/icons';
 import { AI_SETTINGS_DESCRIPTIONS } from '@/modules/ai-content/descriptions';
 import { describeFields } from '@/modules/cms/admin/descriptions/describe';
-
-type Vendor = 'openai' | 'deepseek' | 'anthropic' | 'google';
-
-/** Published prices per million tokens at the time of writing; an estimate, editable. */
-const DEFAULT_RATES: Record<Vendor, { input: number; output: number }> = {
-  openai: { input: 2, output: 8 },
-  deepseek: { input: 0.27, output: 1.1 },
-  anthropic: { input: 3, output: 15 },
-  google: { input: 1.25, output: 10 },
-};
-
-const DEFAULT_MODELS: Record<Vendor, string> = {
-  openai: 'gpt-4.1',
-  deepseek: 'deepseek-chat',
-  anthropic: 'claude-sonnet-4-5',
-  google: 'gemini-2.5-pro',
-};
-
-const VENDORS: Array<{ value: Vendor; label: string }> = [
-  { value: 'openai', label: 'OpenAI' },
-  { value: 'deepseek', label: 'DeepSeek' },
-  { value: 'anthropic', label: 'Anthropic' },
-  { value: 'google', label: 'Google' },
-];
-
-function vendorFields(vendor: { value: Vendor; label: string }): Field {
-  return {
-    type: 'group',
-    name: vendor.value,
-    label: vendor.label,
-    fields: [
-      {
-        type: 'row',
-        fields: [
-          {
-            name: 'model',
-            type: 'text',
-            required: true,
-            defaultValue: DEFAULT_MODELS[vendor.value],
-            label: { ar: 'معرّف النموذج', en: 'Model id' },
-            admin: { description: { ar: 'كما هو في وثائق المزوّد.', en: 'As in the vendor docs.' } },
-          },
-          secretField('apiKey', { ar: 'مفتاح API', en: 'API key' }),
-        ],
-      },
-      {
-        type: 'row',
-        fields: [
-          number(
-            'inputPerMillionUsd',
-            { ar: 'سعر المليون رمز داخل (تقديري، دولار)', en: 'Input USD per 1M tokens (estimate)' },
-            DEFAULT_RATES[vendor.value].input,
-            { min: 0 },
-          ),
-          number(
-            'outputPerMillionUsd',
-            {
-              ar: 'سعر المليون رمز خارج (تقديري، دولار)',
-              en: 'Output USD per 1M tokens (estimate)',
-            },
-            DEFAULT_RATES[vendor.value].output,
-            { min: 0 },
-          ),
-        ],
-      },
-    ],
-  };
-}
 
 interface NumberOptions {
   min?: number;
@@ -102,9 +35,10 @@ function number(
 }
 
 /**
- * The engine's settings (BRD 10.2.1; ADR-042): admin only, keys encrypted, the switch off
- * by default, every cap and every text the prompts use. The description carries the
- * research caveat the BRD asks for (10.2.5).
+ * The engine's settings (BRD 10.2.1; ADR-042, ADR-047): admin only, the connection it writes
+ * with (its key lives under Connections), the switch off by default, every cap and every
+ * text the prompts use. The description carries the research caveat the BRD asks for
+ * (10.2.5).
  */
 export const AiSettings: GlobalConfig = {
   slug: 'ai-settings',
@@ -146,34 +80,14 @@ export const AiSettings: GlobalConfig = {
         type: 'tabs',
         tabs: [
           {
-            label: { ar: 'المزوّدون', en: 'Providers' },
-            fields: [
-              {
-                name: 'activeProvider',
-                type: 'select',
-                required: true,
-                defaultValue: 'openai',
-                options: [
-                  ...VENDORS,
-                  {
-                    value: 'mock',
-                    label: { ar: 'تجريبي (اختبارات فقط)', en: 'Mock (tests only)' },
-                  },
-                ],
-                label: { ar: 'المزوّد الفعّال', en: 'Active provider' },
-                admin: {
-                  description: {
-                    ar: 'التجريبي يعمل فقط عندما يكون AI_CONTENT_MOCK=1 في البيئة.',
-                    en: 'The mock only runs when AI_CONTENT_MOCK=1 is set in the environment.',
-                  },
-                },
-              },
-              { type: 'group', name: 'providers', label: false, fields: VENDORS.map(vendorFields) },
-            ],
-          },
-          {
             label: { ar: 'الوتيرة', en: 'Cadence' },
             fields: [
+              {
+                name: 'connection',
+                type: 'relationship',
+                relationTo: CONNECTIONS,
+                label: { ar: 'الاتصال', en: 'Connection' },
+              },
               {
                 name: 'enabled',
                 type: 'checkbox',

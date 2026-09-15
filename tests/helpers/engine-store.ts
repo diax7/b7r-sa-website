@@ -1,6 +1,7 @@
 import type { Integration, Product, SiteSettings } from '@/content/schema';
 import type { Locale } from '@/lib/i18n';
 import type { LexicalNode, LexicalState } from '@/lib/lexical';
+import type { CapCounts } from '@/modules/ai-content/caps';
 import { type FactsSheet, factsSheet } from '@/modules/ai-content/facts';
 import type {
   EngineSettings,
@@ -12,6 +13,7 @@ import type {
   Topic,
 } from '@/modules/ai-content/pipeline/types';
 import { DEFAULT_STYLE } from '@/modules/ai-content/prompts/defaults';
+import type { ConnectionSpec } from '@/modules/connections';
 
 /** The site as the facts sheet sees it, from the seed numbers (BRD 1.1, Appendix A). */
 export const SITE: SiteSettings = {
@@ -104,31 +106,25 @@ export const FACTS_EN: FactsSheet = factsSheet(
   'en',
 );
 
+/** The mock connection the tests run on: zero rates, no limit, on. */
+export function connection(overrides: Partial<ConnectionSpec> = {}): ConnectionSpec {
+  return {
+    id: 1,
+    label: 'Mock',
+    kind: 'mock',
+    model: 'mock',
+    apiKey: null,
+    baseUrl: null,
+    rates: { inputPerMillionUsd: 0, outputPerMillionUsd: 0 },
+    monthlyLimitUsd: null,
+    enabled: true,
+    ...overrides,
+  };
+}
+
 export function settings(overrides: Partial<EngineSettings> = {}): EngineSettings {
   return {
-    activeProvider: 'mock',
-    providers: {
-      openai: {
-        model: 'gpt-4.1',
-        apiKey: null,
-        rates: { inputPerMillionUsd: 2, outputPerMillionUsd: 8 },
-      },
-      deepseek: {
-        model: 'deepseek-chat',
-        apiKey: null,
-        rates: { inputPerMillionUsd: 0.27, outputPerMillionUsd: 1.1 },
-      },
-      anthropic: {
-        model: 'claude-sonnet-4-5',
-        apiKey: null,
-        rates: { inputPerMillionUsd: 3, outputPerMillionUsd: 15 },
-      },
-      google: {
-        model: 'gemini-2.5-pro',
-        apiKey: null,
-        rates: { inputPerMillionUsd: 1.25, outputPerMillionUsd: 10 },
-      },
-    },
+    connection: connection(),
     enabled: true,
     postsPerDay: 1,
     publishHourRiyadh: 9,
@@ -201,7 +197,7 @@ export interface MemoryState {
   posts: Array<NewPost & { id: number }>;
   emails: Array<{ to: string; subject: string; text: string }>;
   uploads: number;
-  counts: { runsToday: number; runsThisMonth: number; costTodayUsd: number };
+  counts: CapCounts;
   published: Array<{ title: string; primaryKeyword: string | null; publishedAt: string }>;
   reviewFirstRunsDecrements: number;
 }
@@ -219,7 +215,7 @@ export function memoryStore(init: Partial<MemoryState> = {}): { store: Store; st
     posts: [],
     emails: [],
     uploads: 0,
-    counts: { runsToday: 0, runsThisMonth: 0, costTodayUsd: 0 },
+    counts: { runsToday: 0, runsThisMonth: 0, costTodayUsd: 0, connectionSpentMonthUsd: 0 },
     published: [],
     reviewFirstRunsDecrements: 0,
     ...init,

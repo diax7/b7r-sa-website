@@ -10,6 +10,7 @@ import {
   History,
   House,
   Image,
+  KeyRound,
   ListChecks,
   type LucideIcon,
   MessageSquareQuote,
@@ -58,6 +59,7 @@ export const COLLECTION_ICONS: Record<CollectionSlug, LucideIcon> = {
   tags: Tag,
   'ai-topics': ListChecks,
   'ai-runs': History,
+  connections: KeyRound,
 };
 
 export const GLOBAL_ICONS: Record<GlobalSlug, LucideIcon> = {
@@ -164,6 +166,7 @@ export const ADMIN_NAV: {
     'ai-runs': { group: 'blog', order: 11, section: 'engine' },
     redirects: { group: 'visibility', order: 1 },
     users: { group: 'admin', order: 0 },
+    connections: { group: 'admin', order: 1 },
   },
   globals: {
     home: { group: 'site', order: 0 },

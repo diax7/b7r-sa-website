@@ -1,40 +1,11 @@
 import type { Described } from '@/modules/cms/admin/descriptions/describe';
 
-const RATE_IN = {
-  ar: 'سعر مليون رمز إدخال بالدولار من صفحة أسعار المزوّد؛ لتقدير تكلفة كل تشغيل وسقف التكلفة اليومي.',
-  en: "The vendor's price per million input tokens in USD, from its pricing page; for the cost estimate of each run and the daily cap.",
-};
-const RATE_OUT = {
-  ar: 'سعر مليون رمز إخراج بالدولار من صفحة أسعار المزوّد؛ لتقدير تكلفة كل تشغيل وسقف التكلفة اليومي.',
-  en: "The vendor's price per million output tokens in USD, from its pricing page; for the cost estimate of each run and the daily cap.",
-};
-const MODEL = {
-  ar: 'معرّف النموذج كما تكتبه وثائق المزوّد حرفياً: gpt-5.1، claude-sonnet-5.',
-  en: 'The model id exactly as the vendor docs write it: gpt-5.1, claude-sonnet-5.',
-};
-const VENDOR = (name: { ar: string; en: string }) => ({
-  ar: `مفتاح ${name.ar} والنموذج والأسعار؛ يُستخدم عندما يكون هو المزوّد الفعّال. المفتاح مشفّر ولا يُعرض بعد الحفظ.`,
-  en: `${name.en}'s key, model and rates; used when it is the active provider. The key is encrypted and never shown again after saving.`,
-});
-
-/** Engine settings: what each field does (ADR-046). The Providers tab leaves with PR C. */
+/** Engine settings: what each field does (ADR-046, ADR-047). */
 export const AI_SETTINGS_DESCRIPTIONS: Described = {
-  'providers.openai': VENDOR({ ar: 'OpenAI', en: 'OpenAI' }),
-  'providers.openai.model': MODEL,
-  'providers.openai.inputPerMillionUsd': RATE_IN,
-  'providers.openai.outputPerMillionUsd': RATE_OUT,
-  'providers.deepseek': VENDOR({ ar: 'DeepSeek', en: 'DeepSeek' }),
-  'providers.deepseek.model': MODEL,
-  'providers.deepseek.inputPerMillionUsd': RATE_IN,
-  'providers.deepseek.outputPerMillionUsd': RATE_OUT,
-  'providers.anthropic': VENDOR({ ar: 'Anthropic', en: 'Anthropic' }),
-  'providers.anthropic.model': MODEL,
-  'providers.anthropic.inputPerMillionUsd': RATE_IN,
-  'providers.anthropic.outputPerMillionUsd': RATE_OUT,
-  'providers.google': VENDOR({ ar: 'Google', en: 'Google' }),
-  'providers.google.model': MODEL,
-  'providers.google.inputPerMillionUsd': RATE_IN,
-  'providers.google.outputPerMillionUsd': RATE_OUT,
+  connection: {
+    ar: 'الاتصال الذي يكتب به المحرّك: مفتاحه ونموذجه وأسعاره وحدّه الشهري في صفحة الاتصالات. بلا اتصال، أو باتصال موقوف، يرفض المحرّك كل تشغيل ويقول ذلك في لوحة التحكم.',
+    en: 'The connection the engine writes with: its key, model, rates and monthly limit live on the Connections page. With none, or with an off one, the engine refuses every run and says so on the dashboard.',
+  },
   publishHourRiyadh: {
     ar: 'الساعة بتوقيت الرياض (0 إلى 23) التي لا يبدأ المحرّك تشغيلاً مجدولاً قبلها في اليوم؛ «توليد الآن» لا يتقيّد بها.',
     en: 'The hour in Riyadh time (0 to 23) before which a scheduled run does not start that day; "Generate now" ignores it.',
@@ -44,8 +15,8 @@ export const AI_SETTINGS_DESCRIPTIONS: Described = {
     en: 'The most posts the engine publishes in a month; then it waits for the next month.',
   },
   dailyCostCapUsd: {
-    ar: 'أقصى إنفاق يومي بالدولار (تقديري من الأسعار أعلاه)؛ التشغيل يُرفض بعد بلوغه حتى الغد.',
-    en: 'The most the engine may spend in a day, in USD (estimated from the rates above); a run is refused once reached, until tomorrow.',
+    ar: 'أقصى إنفاق يومي بالدولار (تقديري من أسعار الاتصال)؛ التشغيل يُرفض بعد بلوغه حتى الغد. الحدّ الشهري على صفحة الاتصال نفسه.',
+    en: "The most the engine may spend in a day, in USD (estimated from the connection's rates); a run is refused once reached, until tomorrow. The monthly limit sits on the connection itself.",
   },
   'style.styleGuide': {
     ar: 'دليل الأسلوب الذي يقرؤه النموذج قبل كل مقال: النبرة، الجمهور، ما يُقال وما لا يُقال.',

@@ -2,7 +2,7 @@
 
 import { useDocumentInfo } from '@payloadcms/ui';
 import { Sparkles } from 'lucide-react';
-import { EngineAction } from '@/modules/ai-content/admin/engine-action';
+import { ApiAction } from '@/modules/cms/admin/api-action';
 import { adminStrings } from '@/modules/cms/admin/strings';
 
 const s = adminStrings.engine;
@@ -12,7 +12,7 @@ export function GenerateNow() {
   const { id } = useDocumentInfo();
   if (typeof id !== 'number') return null;
   return (
-    <EngineAction
+    <ApiAction
       label={s.generateNow}
       busyLabel={s.queueing}
       doneLabel={s.queued}

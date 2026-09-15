@@ -49,6 +49,3 @@ export interface Provider {
 
 /** Every LLM call gets this long (BRD 10.2.4: each task ≤ 120 s). */
 export const CALL_TIMEOUT_MS = 120_000;
-
-export const PROVIDER_NAMES = ['openai', 'deepseek', 'anthropic', 'google', 'mock'] as const;
-export type ProviderName = (typeof PROVIDER_NAMES)[number];

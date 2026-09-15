@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { nextWindow } from '@/content/seed/topics';
 import { plainText } from '@/lib/lexical';
-import { type CapCounts, riyadh } from '@/modules/ai-content/caps';
+import { riyadh } from '@/lib/riyadh';
+import type { CapCounts } from '@/modules/ai-content/caps';
 import { type DigestRun, digestText } from '@/modules/ai-content/digest';
 import { factsSheet } from '@/modules/ai-content/facts';
 import { driftedNumbers, driftedPosts } from '@/modules/ai-content/freshness';
@@ -22,7 +23,13 @@ function dayOfTicks(args: {
   env?: Record<string, string | undefined>;
 }): number[] {
   const s = settings({ enabled: true, ...args.settings });
-  const counts: CapCounts = { runsToday: 0, runsThisMonth: 0, costTodayUsd: 0, ...args.counts };
+  const counts: CapCounts = {
+    runsToday: 0,
+    runsThisMonth: 0,
+    costTodayUsd: 0,
+    connectionSpentMonthUsd: 0,
+    ...args.counts,
+  };
   const queuedAt: number[] = [];
   for (let h = 0; h < 24; h++) {
     const now = hourOfDay(h);
@@ -61,7 +68,7 @@ describe('the hourly tick (BRD 10.2.4 scheduling, ADR-042)', () => {
     expect(dayOfTicks({ env: { AI_CONTENT_ENABLED: 'false' } })).toEqual([]);
     const reason = tickDecision({
       settings: settings({ enabled: true }),
-      counts: { runsToday: 0, runsThisMonth: 0, costTodayUsd: 0 },
+      counts: { runsToday: 0, runsThisMonth: 0, costTodayUsd: 0, connectionSpentMonthUsd: 0 },
       now: hourOfDay(12),
       env: { AI_CONTENT_ENABLED: '0' },
     }).reason;
@@ -125,7 +132,7 @@ describe('the weekly freshness pass (BRD 10.2.4 amendment, ADR-042)', () => {
 
     // The delivery promise changes; a day with its run already started.
     state.facts = { ...FACTS, numbers: sevenDays };
-    state.counts = { runsToday: 1, runsThisMonth: 1, costTodayUsd: 0 };
+    state.counts = { runsToday: 1, runsThisMonth: 1, costTodayUsd: 0, connectionSpentMonthUsd: 0 };
     const second = mockProvider({ facts: state.facts });
     const refreshed = await runPipeline(
       { ...ctx, provider: second },

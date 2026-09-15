@@ -80,6 +80,7 @@ export interface Config {
     tags: Tag;
     'ai-topics': AiTopic;
     'ai-runs': AiRun;
+    connections: Connection;
     redirects: Redirect;
     'payload-kv': PayloadKv;
     'payload-jobs': PayloadJob;
@@ -102,6 +103,7 @@ export interface Config {
     tags: TagsSelect<false> | TagsSelect<true>;
     'ai-topics': AiTopicsSelect<false> | AiTopicsSelect<true>;
     'ai-runs': AiRunsSelect<false> | AiRunsSelect<true>;
+    connections: ConnectionsSelect<false> | ConnectionsSelect<true>;
     redirects: RedirectsSelect<false> | RedirectsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-jobs': PayloadJobsSelect<false> | PayloadJobsSelect<true>;
@@ -289,11 +291,11 @@ export interface Product {
    */
   slug: string;
   /**
-   * One line under the name on the product card, and the description of the product page's Google result.
+   * One line under the name on the product card, the description of the product page's Google result, and the product's line in llms.txt.
    */
   shortDescription: string;
   /**
-   * The paragraph at the top of the product's page, and the product's line in llms.txt.
+   * The paragraph at the top of the product's page, under the name.
    */
   description: string;
   /**
@@ -305,7 +307,7 @@ export interface Product {
    */
   suggestedPrice: number;
   /**
-   * Where the product sits on the products page and the home strip: 1 shows first.
+   * Where the product sits on the products page and in llms.txt: 1 shows first. The home strip has its own order (Home page, Product strip tab).
    */
   sortOrder: number;
   /**
@@ -313,7 +315,7 @@ export interface Product {
    */
   colors: {
     /**
-     * The colour's id in the address and the designer: black, white. Lowercase, never shown to a visitor.
+     * The colour's id, used by the card's swatches and the designer: black, white. Lowercase; never shown to a visitor.
      */
     slug: string;
     /**
@@ -339,25 +341,25 @@ export interface Product {
    */
   sizes: {
     /**
-     * The size name in the table and the designer: S, M, One size.
+     * The size name in the product page's size table: S, M, One size.
      */
     label: string;
     /**
-     * The piece's length in centimetres in the size table. Empty hides the cell.
+     * The piece's length in centimetres in the size table. Empty on every size hides the column.
      */
     length?: number | null;
     /**
-     * The chest width in centimetres in the size table. Empty hides the cell.
+     * The chest width in centimetres in the size table. Empty on every size hides the column.
      */
     chest?: number | null;
     /**
-     * The sleeve length in centimetres in the size table. Empty hides the cell.
+     * The sleeve length in centimetres in the size table. Empty on every size hides the column.
      */
     sleeve?: number | null;
     id?: string | null;
   }[];
   /**
-   * Shows on the product card under the price and in the designer picker. Short: "S – 2XL", "One size".
+   * Shows on the product card under the price. Short: "S – 2XL", "One size".
    */
   sizesSummary: string;
   /**
@@ -784,7 +786,7 @@ export interface Testimonial {
    */
   store: string;
   /**
-   * The merchant's round photo beside the name. Empty shows the name's initial.
+   * Read by nothing on the site today: the card shows the name and the store, no photo. Kept for the day the cards carry photos.
    */
   avatar?: (number | null) | Media;
   /**
@@ -1204,11 +1206,80 @@ export interface AiRun {
     | boolean
     | null;
   systemPromptVersion?: number | null;
+  connection?: (number | null) | Connection;
   topic?: (number | null) | AiTopic;
   post?: (number | null) | Post;
   error?: string | null;
   startedAt?: string | null;
   finishedAt?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * The AI accounts: one key per service, a test, and a monthly spending limit. The engine writes with the connection picked in its settings.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "connections".
+ */
+export interface Connection {
+  id: number;
+  /**
+   * A name you recognise in the list and in the engine settings: "OpenAI, production". Never shown to a visitor.
+   */
+  label: string;
+  /**
+   * The service the key is sent to. "OpenAI-compatible endpoint" fits any other AI that serves the OpenAI API at its own address; "Mock" is for tests only.
+   */
+  kind: 'openai' | 'anthropic' | 'google' | 'deepseek' | 'openai-compatible' | 'mock';
+  /**
+   * The model id exactly as the service docs write it: gpt-4.1, claude-sonnet-4-5, gemini-2.5-pro, deepseek-chat. Empty on save: the usual model of the service.
+   */
+  model?: string | null;
+  /**
+   * The compatible service’s address, https:// and without the chat path: https://api.example.com/v1.
+   */
+  baseUrl?: string | null;
+  /**
+   * Stored encrypted and never shown again; leave the mask to keep it, clear it to remove it.
+   */
+  apiKey?: string | null;
+  /**
+   * The service's price per million input tokens in USD, from its pricing page; each run's cost estimate and the monthly limit follow from it. Empty on save: the service's published price.
+   */
+  inputPerMillionUsd?: number | null;
+  /**
+   * The service's price per million output tokens in USD, from its pricing page; each run's cost estimate and the monthly limit follow from it. Empty on save: the service's published price.
+   */
+  outputPerMillionUsd?: number | null;
+  /**
+   * The most this connection may cost in a month (from the 1st, Riyadh time), estimated; past it the engine refuses to run on it until next month. Empty: no limit. The daily cap lives in the engine settings.
+   */
+  monthlyLimitUsd?: number | null;
+  /**
+   * Off refuses every engine run on this connection and says so on the dashboard; Test still works.
+   */
+  enabled?: boolean | null;
+  /**
+   * The estimated cost of this connection's runs since the 1st (Riyadh), from the runs log. A Test never counts.
+   */
+  spentThisMonthUsd?: number | null;
+  /**
+   * How many engine runs this connection served since the 1st (Riyadh), from the runs log.
+   */
+  callsThisMonth?: number | null;
+  lastTestAt?: string | null;
+  lastTestOk?: boolean | null;
+  /**
+   * What the service said at the last test: the model id on success, its error on failure.
+   */
+  lastTestMessage?: string | null;
+  /**
+   * Who saved the current version and when. Drafts do not change it.
+   */
+  lastSavedBy?: {
+    name?: string | null;
+    at?: string | null;
+  };
   updatedAt: string;
   createdAt: string;
 }
@@ -1412,6 +1483,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'ai-runs';
         value: number | AiRun;
+      } | null)
+    | ({
+        relationTo: 'connections';
+        value: number | Connection;
       } | null)
     | ({
         relationTo: 'redirects';
@@ -1979,11 +2054,40 @@ export interface AiRunsSelect<T extends boolean = true> {
   steps?: T;
   outline?: T;
   systemPromptVersion?: T;
+  connection?: T;
   topic?: T;
   post?: T;
   error?: T;
   startedAt?: T;
   finishedAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "connections_select".
+ */
+export interface ConnectionsSelect<T extends boolean = true> {
+  label?: T;
+  kind?: T;
+  model?: T;
+  baseUrl?: T;
+  apiKey?: T;
+  inputPerMillionUsd?: T;
+  outputPerMillionUsd?: T;
+  monthlyLimitUsd?: T;
+  enabled?: T;
+  spentThisMonthUsd?: T;
+  callsThisMonth?: T;
+  lastTestAt?: T;
+  lastTestOk?: T;
+  lastTestMessage?: T;
+  lastSavedBy?:
+    | T
+    | {
+        name?: T;
+        at?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
 }
@@ -2160,7 +2264,7 @@ export interface Home {
      */
     lead: string;
     /**
-     * The word before the price on each card: "from". The price itself comes from the product.
+     * The word before the price: the strip cards, the products page cards, and the product page with its sticky bar: "from". The price itself comes from the product.
      */
     pricePrefix: string;
     /**
@@ -2348,7 +2452,7 @@ export interface Home {
 export interface SiteSetting {
   id: number;
   /**
-   * The brand's name as a visitor reads it: the footer, the first line of llms.txt, and the organisation data search engines read.
+   * The brand's name: the logo's accessible name in the header and the footer, the site name on share cards, the first line of llms.txt, the web app manifest, and the organisation data search engines read.
    */
   brandName: string;
   /**
@@ -2356,7 +2460,7 @@ export interface SiteSetting {
    */
   brandNameLatin: string;
   /**
-   * The one-line definition: under the logo in the footer, the first line of llms.txt, and the engine's facts sheet. The same sentence everywhere.
+   * The one-line definition: under the logo in the footer, the first line of llms.txt, the web app manifest, and the engine's facts sheet. The same sentence everywhere.
    */
   tagline: string;
   /**
@@ -2456,11 +2560,11 @@ export interface SiteSetting {
    */
   welcomeCredit: number;
   /**
-   * The most days a delivery takes inside the Kingdom: the "within N days" promise in llms.txt and the shipping data search engines read. Must equal the app: there is no sync.
+   * The most days a delivery takes inside the Kingdom: the "within N days" promise in llms.txt, the shipping data search engines read, and the engine facts sheet. Must equal the app: there is no sync.
    */
   deliveryMaxDays: number;
   /**
-   * The shipping city in the organisation's address for search engines and in the engine's facts sheet: Jeddah.
+   * The shipping city: the map-pin chip in the About facts band, the shipping line of llms.txt, the organisation's address for search engines, and the engine's facts sheet: Jeddah.
    */
   deliveryOrigin: string;
   /**
@@ -2472,7 +2576,7 @@ export interface SiteSetting {
    */
   bookingUrl?: string | null;
   /**
-   * The legal entity's name in the footer's copyright line and on the legal pages.
+   * Read by nothing on the site today: the footer's copyright line and the legal pages carry their own fixed text. Kept for the day they read it.
    */
   legalEntity: string;
   /**
@@ -2555,95 +2659,9 @@ export interface SeoDefault {
 export interface AiSetting {
   id: number;
   /**
-   * The mock only runs when AI_CONTENT_MOCK=1 is set in the environment.
+   * The connection the engine writes with: its key, model, rates and monthly limit live on the Connections page. With none, or with an off one, the engine refuses every run and says so on the dashboard.
    */
-  activeProvider: 'openai' | 'deepseek' | 'anthropic' | 'google' | 'mock';
-  providers: {
-    /**
-     * OpenAI's key, model and rates; used when it is the active provider. The key is encrypted and never shown again after saving.
-     */
-    openai: {
-      /**
-       * The model id exactly as the vendor docs write it: gpt-5.1, claude-sonnet-5.
-       */
-      model: string;
-      /**
-       * Stored encrypted and never shown again; leave the mask to keep it, clear it to remove it.
-       */
-      apiKey?: string | null;
-      /**
-       * The vendor's price per million input tokens in USD, from its pricing page; for the cost estimate of each run and the daily cap.
-       */
-      inputPerMillionUsd: number;
-      /**
-       * The vendor's price per million output tokens in USD, from its pricing page; for the cost estimate of each run and the daily cap.
-       */
-      outputPerMillionUsd: number;
-    };
-    /**
-     * DeepSeek's key, model and rates; used when it is the active provider. The key is encrypted and never shown again after saving.
-     */
-    deepseek: {
-      /**
-       * The model id exactly as the vendor docs write it: gpt-5.1, claude-sonnet-5.
-       */
-      model: string;
-      /**
-       * Stored encrypted and never shown again; leave the mask to keep it, clear it to remove it.
-       */
-      apiKey?: string | null;
-      /**
-       * The vendor's price per million input tokens in USD, from its pricing page; for the cost estimate of each run and the daily cap.
-       */
-      inputPerMillionUsd: number;
-      /**
-       * The vendor's price per million output tokens in USD, from its pricing page; for the cost estimate of each run and the daily cap.
-       */
-      outputPerMillionUsd: number;
-    };
-    /**
-     * Anthropic's key, model and rates; used when it is the active provider. The key is encrypted and never shown again after saving.
-     */
-    anthropic: {
-      /**
-       * The model id exactly as the vendor docs write it: gpt-5.1, claude-sonnet-5.
-       */
-      model: string;
-      /**
-       * Stored encrypted and never shown again; leave the mask to keep it, clear it to remove it.
-       */
-      apiKey?: string | null;
-      /**
-       * The vendor's price per million input tokens in USD, from its pricing page; for the cost estimate of each run and the daily cap.
-       */
-      inputPerMillionUsd: number;
-      /**
-       * The vendor's price per million output tokens in USD, from its pricing page; for the cost estimate of each run and the daily cap.
-       */
-      outputPerMillionUsd: number;
-    };
-    /**
-     * Google's key, model and rates; used when it is the active provider. The key is encrypted and never shown again after saving.
-     */
-    google: {
-      /**
-       * The model id exactly as the vendor docs write it: gpt-5.1, claude-sonnet-5.
-       */
-      model: string;
-      /**
-       * Stored encrypted and never shown again; leave the mask to keep it, clear it to remove it.
-       */
-      apiKey?: string | null;
-      /**
-       * The vendor's price per million input tokens in USD, from its pricing page; for the cost estimate of each run and the daily cap.
-       */
-      inputPerMillionUsd: number;
-      /**
-       * The vendor's price per million output tokens in USD, from its pricing page; for the cost estimate of each run and the daily cap.
-       */
-      outputPerMillionUsd: number;
-    };
-  };
+  connection?: (number | null) | Connection;
   /**
    * The kill switch. Off, no new run starts within the hour.
    */
@@ -2661,7 +2679,7 @@ export interface AiSetting {
    */
   maxPostsPerMonth: number;
   /**
-   * The most the engine may spend in a day, in USD (estimated from the rates above); a run is refused once reached, until tomorrow.
+   * The most the engine may spend in a day, in USD (estimated from the connection's rates); a run is refused once reached, until tomorrow. The monthly limit sits on the connection itself.
    */
   dailyCostCapUsd: number;
   /**
@@ -2989,43 +3007,7 @@ export interface SeoDefaultsSelect<T extends boolean = true> {
  * via the `definition` "ai-settings_select".
  */
 export interface AiSettingsSelect<T extends boolean = true> {
-  activeProvider?: T;
-  providers?:
-    | T
-    | {
-        openai?:
-          | T
-          | {
-              model?: T;
-              apiKey?: T;
-              inputPerMillionUsd?: T;
-              outputPerMillionUsd?: T;
-            };
-        deepseek?:
-          | T
-          | {
-              model?: T;
-              apiKey?: T;
-              inputPerMillionUsd?: T;
-              outputPerMillionUsd?: T;
-            };
-        anthropic?:
-          | T
-          | {
-              model?: T;
-              apiKey?: T;
-              inputPerMillionUsd?: T;
-              outputPerMillionUsd?: T;
-            };
-        google?:
-          | T
-          | {
-              model?: T;
-              apiKey?: T;
-              inputPerMillionUsd?: T;
-              outputPerMillionUsd?: T;
-            };
-      };
+  connection?: T;
   enabled?: T;
   postsPerDay?: T;
   publishHourRiyadh?: T;

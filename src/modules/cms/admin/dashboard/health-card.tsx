@@ -33,6 +33,14 @@ function jobsFailedRow(failed: number | null): HealthRow {
   };
 }
 
+const ENGINE_TONE: Record<HealthReport['engine'], Tone> = {
+  on: 'success',
+  mock: 'warning',
+  connectionOff: 'warning',
+  noConnection: 'error',
+  off: 'muted',
+};
+
 /** The report as sentences an editor understands, each with a colour that says the same. */
 export function healthRows(r: HealthReport): HealthRow[] {
   return [
@@ -57,11 +65,7 @@ export function healthRows(r: HealthReport): HealthRow[] {
     { key: 'media', tone: r.media === 's3' ? 'success' : 'warning', text: s.rows.media[r.media] },
     kindRow('contact', s.rows.contact, r.contact),
     kindRow('newsletter', s.rows.newsletter, r.newsletter),
-    {
-      key: 'engine',
-      tone: r.engine === 'off' ? 'muted' : r.engine === 'mock' ? 'warning' : 'success',
-      text: s.engine[r.engine],
-    },
+    { key: 'engine', tone: ENGINE_TONE[r.engine], text: s.engine[r.engine] },
   ];
 }
 

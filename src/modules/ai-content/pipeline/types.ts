@@ -1,18 +1,18 @@
 import type { Locale } from '@/lib/i18n';
 import type { LexicalState } from '@/lib/lexical';
 import type { CapCounts } from '@/modules/ai-content/caps';
-import type { Rates, Usage } from '@/modules/ai-content/cost';
+import type { Usage } from '@/modules/ai-content/cost';
 import type { PublishedPost } from '@/modules/ai-content/dedupe';
 import type { FactNumber, FactsSheet } from '@/modules/ai-content/facts';
-import type { Provider, ProviderName } from '@/modules/ai-content/provider/types';
+import type { Provider } from '@/modules/ai-content/provider/types';
+import type { ConnectionSpec } from '@/modules/connections/kinds';
 
-/** The settings the pipeline reads, keys revealed (the Local API read carries `decryptKeys`). */
+/**
+ * The settings the pipeline reads, the connection's key revealed (the Local API reads carry
+ * `decryptKeys`). `connection` is null when the settings name none (ADR-047).
+ */
 export interface EngineSettings {
-  activeProvider: ProviderName;
-  providers: Record<
-    Exclude<ProviderName, 'mock'>,
-    { model: string; apiKey: string | null; rates: Rates }
-  >;
+  connection: ConnectionSpec | null;
   enabled: boolean;
   postsPerDay: number;
   publishHourRiyadh: number;
@@ -157,6 +157,7 @@ export interface Store {
     label: string;
     kind: 'generate' | 'freshness';
     topic?: number;
+    connection?: number;
     provider: string;
     model: string;
     systemPromptVersion: number;
