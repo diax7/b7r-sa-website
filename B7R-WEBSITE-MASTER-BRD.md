@@ -1363,7 +1363,7 @@ Vercel AI SDK provider registry: `openai`, `deepseek`, optional `anthropic` and 
 
 "المحتوى الآلي" group: الإعدادات (the Global), المواضيع (backlog table with bulk add from CSV and a "توليد الآن" action), السجل (runs with scores and costs), لوحة المتابعة (posts this month, average score, failures, cost to date, next scheduled slot).
 
-*Amended 2026-09-14 (ADR-042): the group is "AI content" with Engine settings, Topics and Runs; the monitoring numbers (posts this month, average score, failures, cost, next slot, latest runs) are a card on the dashboard for admins rather than a separate view.*
+*Amended 2026-09-14 (ADR-042): the group is "AI content" with Engine settings, Topics and Runs; the monitoring numbers (posts this month, average score, failures, cost, next slot, latest runs) are a card on the dashboard for admins rather than a separate view. Amended 2026-09-15 (ADR-046): the three entries are the "Content engine" section inside the Blog group of the reshaped sidebar (Site · Catalogue · Blog · Visibility · Admin), in the Blog hue.*
 
 ### 10.3 Acceptance (Level 3)
 

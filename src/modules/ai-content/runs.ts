@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload';
 import { hiddenUnlessAdmin, isAdmin } from '@/modules/cms/access';
-import { AI_GROUP } from '@/modules/ai-content/settings';
+import { collectionComponents } from '@/modules/cms/admin/document/config';
+import { adminGroup } from '@/modules/cms/admin/icons';
 
 export const RUN_STATUSES = ['running', 'done', 'failed', 'skipped'] as const;
 export type RunStatus = (typeof RUN_STATUSES)[number];
@@ -20,7 +21,14 @@ export const AiRuns: CollectionConfig = {
     useAsTitle: 'label',
     defaultColumns: ['label', 'status', 'score', 'costUsd', 'durationMs', 'createdAt'],
     listSearchableFields: ['label', 'model'],
-    group: AI_GROUP,
+    group: adminGroup('blog'),
+    components: collectionComponents('ai-runs', { localized: false }),
+    custom: {
+      shows: {
+        ar: 'لا يظهر في الموقع: سجل تشغيلات المحرّك',
+        en: 'nowhere on the site: what the engine did, run by run',
+      },
+    },
     hidden: hiddenUnlessAdmin,
     description: {
       ar: 'سجل جولات المحرّك: الخطوات، الدرجة، التكلفة التقديرية، والمقال الناتج. للقراءة فقط.',

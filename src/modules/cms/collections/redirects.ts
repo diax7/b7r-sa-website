@@ -3,6 +3,8 @@ import { CODE_TOP_LEVEL } from '@/lib/site-routes';
 import { hiddenUnlessAdmin, isAdmin } from '@/modules/cms/access';
 import { Refused } from '@/modules/cms/refused';
 import { revalidateRedirects } from '@/modules/cms/hooks/revalidate';
+import { collectionComponents } from '@/modules/cms/admin/document/config';
+import { adminGroup } from '@/modules/cms/admin/icons';
 
 /** A redirect source: one top-level path segment (`/showcase`), never a code-owned one. */
 export const FROM_PATTERN = /^\/[a-z0-9-]{1,64}$/;
@@ -91,7 +93,14 @@ export const REDIRECT_OVERRIDES: Omit<Partial<CollectionConfig>, 'fields'> & {
     plural: { ar: 'التحويلات', en: 'Redirects' },
   },
   admin: {
-    group: { ar: 'الإعدادات', en: 'Settings' },
+    group: adminGroup('visibility'),
+    components: collectionComponents('redirects', { localized: false }),
+    custom: {
+      shows: {
+        ar: 'الروابط القديمة: الزائر أو محرك البحث الواصل إليها يُحوَّل إلى الصفحة الجديدة',
+        en: 'old URLs: a visitor or a search engine arriving on one is sent to the new page',
+      },
+    },
     hidden: hiddenUnlessAdmin,
     useAsTitle: 'from',
     defaultColumns: ['from', 'to.type', 'type', 'updatedAt'],

@@ -4,7 +4,8 @@ import { isAdmin, isEditorOrAdmin } from '@/modules/cms/access';
 import { Refused } from '@/modules/cms/refused';
 import { PATHS_FOR_FAQS, revalidateRoutes } from '@/modules/cms/hooks/revalidate';
 import { savedByField, stampSavedBy } from '@/modules/cms/fields/saved-by';
-import { collectionLocaleNote } from '@/modules/cms/admin/locale/config';
+import { collectionComponents } from '@/modules/cms/admin/document/config';
+import { adminGroup } from '@/modules/cms/admin/icons';
 
 /** The home accordion shows exactly this many entries (BRD 4.4, 6.4.9). */
 export const HOME_FAQ_LIMIT = 5;
@@ -54,11 +55,17 @@ export const Faqs: CollectionConfig = {
     plural: { ar: 'الأسئلة الشائعة', en: 'FAQ' },
   },
   admin: {
-    components: collectionLocaleNote(),
+    components: collectionComponents('faqs', { localized: true }),
     useAsTitle: 'question',
     defaultColumns: ['question', 'group', 'order', 'showOnHome'],
     listSearchableFields: ['question'],
-    group: { ar: 'المحتوى', en: 'Content' },
+    group: adminGroup('catalogue'),
+    custom: {
+      shows: {
+        ar: 'صفحة الأسئلة الشائعة، وقسم الأسئلة في الصفحة الرئيسية للمدخلات المحددة له',
+        en: "b7r.sa/faq, and the home page's FAQ section for the entries marked for it",
+      },
+    },
     description: {
       ar: 'الأسئلة الشائعة بمجموعاتها. حتى خمسة أسئلة تظهر في الصفحة الرئيسية.',
       en: 'FAQ entries by group. Up to five show on the home page.',

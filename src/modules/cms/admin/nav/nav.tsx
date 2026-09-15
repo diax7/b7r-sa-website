@@ -10,7 +10,7 @@ import { NavClient } from '@/modules/cms/admin/nav/nav-client';
  */
 export async function Nav(props: ServerProps & { req?: PayloadRequest }) {
   const { payload, permissions, user, i18n, req } = props;
-  const groups = navGroups({ payload, permissions, user, i18n });
+  const groups = await navGroups({ payload, permissions, user, i18n, counts: true });
   const prefs = await navPrefs(req);
   const account = user
     ? {

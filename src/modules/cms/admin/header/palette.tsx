@@ -14,7 +14,7 @@ import { MIN_QUERY, rank } from '@/modules/cms/admin/header/palette-rank';
 import type { NavEntity } from '@/modules/cms/admin/nav/groups';
 import { adminStrings } from '@/modules/cms/admin/strings';
 
-export interface PaletteEntity extends NavEntity {
+export interface PaletteEntity extends Pick<NavEntity, 'type' | 'slug' | 'label' | 'href'> {
   group: string;
 }
 

@@ -13,6 +13,11 @@ export const adminStrings = {
     groupToggle: 'collapse or expand the group',
     viewSite: 'View website',
   },
+  entityHeader: {
+    shows: 'Shows on:',
+    listing: (label: string) => `See ${label} on the site`,
+    sectionsOn: (total: number, on: number) => `${total} sections, ${on} on`,
+  },
   header: {
     search: 'Search or jump to…',
     searchAria: 'Search or jump to a section',

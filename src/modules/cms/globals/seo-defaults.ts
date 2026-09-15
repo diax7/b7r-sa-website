@@ -2,15 +2,22 @@ import type { GlobalConfig } from 'payload';
 import { adminField, hiddenUnlessAdmin, isAdmin } from '@/modules/cms/access';
 import { revalidateGlobal } from '@/modules/cms/hooks/revalidate';
 import { savedByField, stampSavedByGlobal } from '@/modules/cms/fields/saved-by';
-import { globalLocaleNote } from '@/modules/cms/admin/locale/config';
+import { globalComponents } from '@/modules/cms/admin/document/config';
+import { adminGroup } from '@/modules/cms/admin/icons';
 
 /** BRD 9.4 `seo-defaults` ⇄ `content/seo.ts` (per-route titles/descriptions, BRD 4.16). */
 export const SeoDefaults: GlobalConfig = {
   slug: 'seo-defaults',
-  label: { ar: 'إعدادات SEO', en: 'SEO defaults' },
+  label: { ar: 'إعدادات البحث', en: 'Search defaults' },
   admin: {
-    components: globalLocaleNote(),
-    group: { ar: 'الإعدادات', en: 'Settings' },
+    components: globalComponents('seo-defaults', { localized: true }),
+    group: adminGroup('visibility'),
+    custom: {
+      shows: {
+        ar: 'عنوان التبويب ونتيجة Google وبطاقة المشاركة للصفحات الثابتة',
+        en: 'the browser tab, the Google result and the share card of the fixed pages',
+      },
+    },
     hidden: hiddenUnlessAdmin,
     description: {
       ar: 'عناوين ووصف محركات البحث للصفحات الثابتة، وصورة المشاركة الافتراضية.',

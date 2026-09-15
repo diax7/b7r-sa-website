@@ -4,7 +4,8 @@ import { Refused } from '@/modules/cms/refused';
 import { SLUG_PATTERN } from '@/modules/cms/collections/pages';
 import { revalidateBlogListings } from '@/modules/cms/hooks/revalidate';
 import { savedByField, stampSavedBy } from '@/modules/cms/fields/saved-by';
-import { collectionLocaleNote } from '@/modules/cms/admin/locale/config';
+import { collectionComponents } from '@/modules/cms/admin/document/config';
+import { adminGroup } from '@/modules/cms/admin/icons';
 
 /**
  * The blog's hubs (BRD 10.1, Appendix E): six seeded categories, each with its own page at
@@ -15,11 +16,17 @@ export const Categories: CollectionConfig = {
   slug: 'categories',
   labels: { singular: { ar: 'قسم', en: 'Hub' }, plural: { ar: 'أقسام المدونة', en: 'Hubs' } },
   admin: {
-    components: collectionLocaleNote(),
+    components: collectionComponents('categories', { localized: true }),
     useAsTitle: 'name',
     defaultColumns: ['name', 'slug', 'order', 'updatedAt'],
     listSearchableFields: ['name', 'slug'],
-    group: { ar: 'المدونة', en: 'Blog' },
+    group: adminGroup('blog'),
+    custom: {
+      shows: {
+        ar: 'صفحات الأقسام في المدونة وسطر القسم في كل مقال',
+        en: "the blog's hub pages and the hub line on each post",
+      },
+    },
     description: {
       ar: 'أقسام المدونة الستة. لكل قسم صفحته ووصفه وصورته الافتراضية.',
       en: 'The six blog hubs. Each has its own page, description and default cover.',

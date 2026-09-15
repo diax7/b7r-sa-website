@@ -1,7 +1,8 @@
 import type { CollectionConfig } from 'payload';
 import { hiddenUnlessAdmin, isAdmin } from '@/modules/cms/access';
 import { savedByField, stampSavedBy } from '@/modules/cms/fields/saved-by';
-import { AI_GROUP } from '@/modules/ai-content/settings';
+import { collectionComponents } from '@/modules/cms/admin/document/config';
+import { adminGroup } from '@/modules/cms/admin/icons';
 
 export const TOPIC_STATUSES = [
   'backlog',
@@ -28,13 +29,20 @@ export const AiTopics: CollectionConfig = {
     useAsTitle: 'title',
     defaultColumns: ['title', 'language', 'hub', 'status', 'priority', 'windowStart', 'post'],
     listSearchableFields: ['title', 'primaryKeyword'],
-    group: AI_GROUP,
+    group: adminGroup('blog'),
+    custom: {
+      shows: {
+        ar: 'لا يظهر في الموقع: قائمة المواضيع التي سيكتبها المحرّك',
+        en: "nowhere on the site: the engine's backlog of posts to write",
+      },
+    },
     hidden: hiddenUnlessAdmin,
     description: {
       ar: 'قائمة المواضيع التي يكتب عنها المحرّك، بالأولوية. الموسمية لها نافذة نشر.',
       en: 'What the engine writes about, by priority. Seasonal topics carry a publish window.',
     },
     components: {
+      ...collectionComponents('ai-topics', { localized: false }),
       edit: { beforeDocumentControls: ['@/modules/ai-content/admin/generate-now#GenerateNow'] },
       beforeList: ['@/modules/ai-content/admin/import-topics#ImportTopics'],
     },

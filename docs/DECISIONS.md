@@ -1041,3 +1041,45 @@ class and keeps the WebKit device projects honest); sharding the e2e across jobs
 clock, more billed minutes). Open, for Dhia's call: the admin suite runs twice per event (the
 quality job on local-disk media, the S3 job on MinIO, the storage production uses); dropping
 it from the quality job would save about 3 minutes.
+
+## ADR-046: The admin reshape: five task groups, one colour each, a header that says where (2026-09-15)
+
+Dhia's read of the admin after a week of use: too many doors, each page used differently,
+too little colour to find one's way, options that do not say what they do. The panel had
+19 sidebar entries in 5 groups of one grey (Content listed the home page last, after the
+collections; the blog was four entries; the engine three), every big form was one scroll, and
+the descriptions were terse. Decided with him, in one interview, with a mock: **five task
+groups by what he is doing**, Site (home page, pages, site settings, media), Catalogue
+(products, store integrations, testimonials, FAQ), Blog (posts, with hubs, authors and tags
+as secondary entries under it, and the content engine as a section inside it), Visibility
+(search defaults, redirects; the score and the traffic pages of the next projects join here)
+and Admin (users; connections next), each with **one identity colour** carried by every
+entity of the group onto the sidebar, the page header and the dashboard: Site the accent blue,
+Catalogue teal, Blog violet, Visibility pink (orange was the nearest free hue and sits next to
+amber, the "careful" colour), Admin a neutral slate. The registry is `admin/icons.ts`
+(`ADMIN_GROUPS`, `ADMIN_NAV`): typed against the generated config, so an entity without a
+place is a type error, and `tests/admin-config.test.ts` asserts that each config's
+`admin.group` (still what Payload groups by) names the registry's group. `navGroups()` keeps
+Payload's `groupNavItems` for permissions and hidden entities and shapes the result by the
+registry; the sidebar shows a collection's document count (14 `count` queries per page, for
+the sidebar only, 10 ms warm, never cached: a stale number right after Create is worse than
+none). **An
+amendment of the design system's §2**: the active sidebar entry sits on its group's tint with
+weight and `aria-current`, not on blue; blue keeps the main action, links, focus and the Site
+group. **The page header** (`EntityHeader`, in the description slot under Payload's title,
+`admin.components.Description` on collections where the list view shares it,
+`admin.components.elements.Description` on globals, each registered with its own `serverProps`
+because the slot carries no global slug): the entity's icon in a disc and a bar in its hue,
+the description, a "Shows on:" sentence from `admin.custom.shows` (both languages), a link to
+the public listing for products, posts and FAQ, and on the home page "10 sections, N on" read
+from the saved document (the slot renders outside Payload's form, so the live switches are
+out of reach; the number follows a save). The locale note (ADR-044) stays before the document
+controls: the description slot renders on list views too, where it would be wrong. Renamed:
+Integrations to Store integrations, SEO defaults to Search defaults (slugs unchanged); Runs
+takes a history icon, Engine settings sliders, the Blog group a pen so it no longer repeats
+the Posts icon. Not changed: Payload's list and edit views, Lexical, the theme, permissions.
+Decided with Dhia for the next PRs of the same project: Navigation folds into Site settings
+as a "Menus & footer" tab (a data migration), the three menu labels stay editable there
+(his exception to ADR-031's rule that interface text lives in code), the big forms become
+tabs, every field gets a description that says what it does on the site, and a Connections
+collection holds every API key with a test and a monthly limit (ADR-047).

@@ -6,15 +6,13 @@ import type { Payload, PayloadRequest, SanitizedPermissions, TypedUser } from 'p
 import { formatAdminURL } from 'payload/shared';
 import {
   ACTION_ICONS,
-  COLLECTION_HUES,
   COLLECTION_ICONS,
   entityHue,
   entityIcon,
-  GLOBAL_HUES,
   GLOBAL_ICONS,
   type Hue,
 } from '@/modules/cms/admin/icons';
-import { navGroups } from '@/modules/cms/admin/nav/groups';
+import { flattenNav, navGroups } from '@/modules/cms/admin/nav/groups';
 import { adminStrings } from '@/modules/cms/admin/strings';
 import { SAVED_BY } from '@/modules/cms/fields/saved-by';
 
@@ -56,7 +54,7 @@ export function quickActions(args: {
       key: 'home',
       href: url('/globals/home'),
       icon: GLOBAL_ICONS.home,
-      hue: GLOBAL_HUES.home,
+      hue: entityHue('globals', 'home'),
       ...s.actions.home,
     });
   }
@@ -65,7 +63,7 @@ export function quickActions(args: {
       key: 'add-page',
       href: url('/collections/pages/create'),
       icon: COLLECTION_ICONS.pages,
-      hue: COLLECTION_HUES.pages,
+      hue: entityHue('collections', 'pages'),
       ...s.actions.addPage,
     });
   }
@@ -74,7 +72,7 @@ export function quickActions(args: {
       key: 'add-product',
       href: url('/collections/products/create'),
       icon: COLLECTION_ICONS.products,
-      hue: COLLECTION_HUES.products,
+      hue: entityHue('collections', 'products'),
       ...s.actions.addProduct,
     });
   }
@@ -83,7 +81,7 @@ export function quickActions(args: {
       key: 'add-faq',
       href: url('/collections/faqs/create'),
       icon: CirclePlus,
-      hue: COLLECTION_HUES.faqs,
+      hue: entityHue('collections', 'faqs'),
       ...s.actions.addFaq,
     });
   }
@@ -92,7 +90,7 @@ export function quickActions(args: {
       key: 'add-post',
       href: url('/collections/posts/create'),
       icon: COLLECTION_ICONS.posts,
-      hue: COLLECTION_HUES.posts,
+      hue: entityHue('collections', 'posts'),
       ...s.actions.addPost,
     });
   }
@@ -164,7 +162,7 @@ export async function recentActivity(args: {
 }): Promise<RecentItem[]> {
   const { payload, req, user, permissions, i18n } = args;
   if (!user) return [];
-  const entities = navGroups({ payload, permissions, user, i18n }).flatMap((g) => g.entities);
+  const entities = flattenNav(await navGroups({ payload, permissions, user, i18n }));
   const items: RecentItem[] = [];
   await Promise.all(
     entities.map(async (entity) => {

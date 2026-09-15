@@ -31,7 +31,8 @@ import {
 } from '@/modules/cms/fields/editorial';
 import { savedByField, stampSavedBy } from '@/modules/cms/fields/saved-by';
 import { isDraftSave, revalidatePosts } from '@/modules/cms/hooks/revalidate';
-import { collectionLocaleNote } from '@/modules/cms/admin/locale/config';
+import { collectionComponents } from '@/modules/cms/admin/document/config';
+import { adminGroup } from '@/modules/cms/admin/icons';
 
 /**
  * The post body's editor: exactly the features the Markdown transformers cover, so the
@@ -102,7 +103,7 @@ export const Posts: CollectionConfig = {
   slug: 'posts',
   labels: { singular: { ar: 'مقال', en: 'Post' }, plural: { ar: 'المقالات', en: 'Posts' } },
   admin: {
-    components: collectionLocaleNote(),
+    components: collectionComponents('posts', { localized: true }),
     useAsTitle: 'title',
     preview: (doc, { req, locale }) =>
       typeof doc['slug'] === 'string' && doc['slug']
@@ -114,7 +115,13 @@ export const Posts: CollectionConfig = {
         : null,
     defaultColumns: ['title', 'hub', 'publishedAt', 'origin', '_status'],
     listSearchableFields: ['title', 'slug', 'excerpt'],
-    group: { ar: 'المدونة', en: 'Blog' },
+    group: adminGroup('blog'),
+    custom: {
+      shows: {
+        ar: 'المدونة وصفحة كل مقال، وخلاصة RSS، وملف llms.txt',
+        en: "b7r.sa/blog and each post's page, the RSS feed and llms.txt",
+      },
+    },
     description: {
       ar: 'مقالات المدونة. المسودات لا تُنشر؛ النشر يلزمه غلاف وثلاث نقاط ورابطان داخليان.',
       en: 'Blog posts. Drafts stay private; publishing needs a cover, three takeaways and two internal links.',

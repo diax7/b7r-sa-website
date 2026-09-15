@@ -4,7 +4,8 @@ import { revalidateGlobal } from '@/modules/cms/hooks/revalidate';
 import { savedByField, stampSavedByGlobal } from '@/modules/cms/fields/saved-by';
 import { previewUrl } from '@/lib/preview-token';
 import { HERO_CHIPS_MAX, HERO_OVERLAY_DEFAULT, HEX_COLOR } from '@/content/schema';
-import { globalLocaleNote } from '@/modules/cms/admin/locale/config';
+import { globalComponents } from '@/modules/cms/admin/document/config';
+import { adminGroup } from '@/modules/cms/admin/icons';
 
 /** The three why-us icons the section knows how to draw (BRD 6.4.6). */
 export const WHY_US_ICONS = ['ShieldCheck', 'Workflow', 'Zap'] as const;
@@ -52,8 +53,14 @@ export const Home: GlobalConfig = {
   slug: 'home',
   label: { ar: 'الصفحة الرئيسية', en: 'Home page' },
   admin: {
-    components: globalLocaleNote(),
-    group: { ar: 'المحتوى', en: 'Content' },
+    components: globalComponents('home', { localized: true }),
+    group: adminGroup('site'),
+    custom: {
+      shows: {
+        ar: 'الصفحة الرئيسية بلغتيها، قسماً قسماً',
+        en: 'the home page, b7r.sa and b7r.sa/en, section by section',
+      },
+    },
     preview: (_doc, { req }) => previewUrl(req.payload.config.serverURL, '/', req.payload.secret),
     description: {
       ar: 'أقسام الصفحة الرئيسية بالترتيب. احفظ مسودة بحرّية؛ النشر يظهر في الموقع خلال ثوانٍ.',
