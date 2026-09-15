@@ -11,8 +11,14 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/cn';
 import { AccountMenu } from '@/modules/cms/admin/account/account-menu';
-import { entityIcon, groupIcon } from '@/modules/cms/admin/icons';
-import type { NavGroup, NavPrefs } from '@/modules/cms/admin/nav/groups';
+import {
+  ADMIN_GROUPS,
+  entityIcon,
+  HUE_CLASSES,
+  type Hue,
+  NAV_SECTIONS,
+} from '@/modules/cms/admin/icons';
+import type { NavEntity, NavGroup, NavPrefs } from '@/modules/cms/admin/nav/groups';
 import { adminStrings } from '@/modules/cms/admin/strings';
 
 export interface NavClientProps {
@@ -30,7 +36,14 @@ function isActive(pathname: string, href: string): boolean {
 }
 
 const link =
-  'flex h-10 items-center gap-2.5 rounded-inner ps-8 pe-2.5 text-small text-text transition-colors duration-(--duration-fast) hover:bg-accent-tint focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-accent/40';
+  'flex h-10 items-center gap-2.5 rounded-inner ps-2.5 pe-2.5 text-small text-text transition-colors duration-(--duration-fast) hover:bg-surface-2 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-accent/40';
+
+/** A secondary entry: indented under its parent, a small icon and no disc. */
+const subLink =
+  'flex h-9 items-center gap-2.5 rounded-inner ps-12 pe-2.5 text-small text-text-muted transition-colors duration-(--duration-fast) hover:bg-surface-2 hover:text-text focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-accent/40';
+
+/** The active entry sits on its group's tint (ADR-046): identity, with weight and aria-current. */
+const activeLink = (hue: Hue) => `${HUE_CLASSES[hue]} font-medium`;
 
 const iconButton =
   'grid size-9 place-items-center rounded-inner text-text-muted transition-colors duration-(--duration-fast) hover:bg-accent-tint hover:text-text focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-accent/40';
@@ -226,7 +239,7 @@ function Group({
   rail: boolean;
 }) {
   const [isOpen, setIsOpen] = useState(open);
-  const GroupIcon = groupIcon(group.label);
+  const GroupIcon = ADMIN_GROUPS[group.key].icon;
 
   function toggle(next: boolean) {
     setIsOpen(next);
@@ -234,19 +247,31 @@ function Group({
   }
 
   return (
-    <Collapsible open={isOpen} onOpenChange={toggle} data-admin-group={group.label}>
+    <Collapsible
+      open={isOpen}
+      onOpenChange={toggle}
+      data-admin-group={group.label}
+      data-hue={group.hue}
+    >
       <CollapsibleTrigger
-        className="flex h-9 w-full items-center gap-2 rounded-inner px-2.5 text-caption font-medium text-text-muted transition-colors duration-(--duration-fast) hover:text-text focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-accent/40"
+        className="flex h-9 w-full items-center gap-2.5 rounded-inner px-2.5 text-caption font-semibold tracking-wide text-text uppercase transition-colors duration-(--duration-fast) hover:bg-surface-2 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-accent/40"
         aria-label={`${group.label}: ${s.groupToggle}`}
         data-rail-hide=""
       >
-        {GroupIcon && <Icon icon={GroupIcon} size={16} />}
+        <span
+          className={cn(
+            'grid size-6 shrink-0 place-items-center rounded-inner',
+            HUE_CLASSES[group.hue],
+          )}
+        >
+          <Icon icon={GroupIcon} size={13} />
+        </span>
         <span className="flex-1 text-start">{group.label}</span>
         <Icon
           icon={ChevronDown}
           size={14}
           className={cn(
-            'transition-transform duration-(--duration-fast)',
+            'text-text-muted transition-transform duration-(--duration-fast)',
             !isOpen && 'ltr:-rotate-90 rtl:rotate-90',
           )}
         />
@@ -254,41 +279,126 @@ function Group({
       {/* Mounted while closed so the rail (which ignores group state) still lists every entry. */}
       <CollapsibleContent forceMount className="data-[state=closed]:hidden" data-rail-show="">
         <ul className="flex flex-col gap-0.5 pb-2" data-rail-list="">
-          {group.entities.map((entity) => {
-            const EntityIcon = entityIcon(entity.type, entity.slug);
-            const active = isActive(pathname, entity.href);
-            // The label is the visible text when open and the only name in the rail, where
-            // the CSS hides the span before any JS runs.
-            const anchor = (
-              <Link
-                href={entity.href}
-                id={`nav-${entity.type === 'globals' ? 'global-' : ''}${entity.slug}`}
-                aria-current={active ? 'page' : undefined}
-                aria-label={entity.label}
-                className={cn(link, active && 'bg-accent-tint font-medium text-accent')}
-                data-rail-center=""
-              >
-                {EntityIcon && <Icon icon={EntityIcon} size={18} className="shrink-0" />}
-                <span className="truncate" data-rail-hide="">
-                  {entity.label}
-                </span>
-              </Link>
-            );
+          {group.entities.map((entity) => (
+            <Entry
+              key={`${entity.type}-${entity.slug}`}
+              entity={entity}
+              hue={group.hue}
+              pathname={pathname}
+              rail={rail}
+            />
+          ))}
+          {group.sections.map((section) => {
+            const SectionIcon = NAV_SECTIONS[section.key].icon;
             return (
-              <li key={`${entity.type}-${entity.slug}`}>
-                {rail ? (
-                  <Tooltip>
-                    <TooltipTrigger asChild>{anchor}</TooltipTrigger>
-                    <TooltipContent side="right">{entity.label}</TooltipContent>
-                  </Tooltip>
-                ) : (
-                  anchor
-                )}
+              <li key={section.key} data-admin-section={section.key}>
+                <div
+                  className="flex h-8 items-center gap-2 ps-8 pe-2.5 text-caption font-medium tracking-wide text-text-muted uppercase"
+                  data-rail-hide=""
+                >
+                  <Icon icon={SectionIcon} size={12} />
+                  <span>{section.label}</span>
+                </div>
+                <ul className="flex flex-col gap-0.5" data-rail-list="">
+                  {section.entities.map((entity) => (
+                    <Entry
+                      key={`${entity.type}-${entity.slug}`}
+                      entity={entity}
+                      hue={group.hue}
+                      pathname={pathname}
+                      rail={rail}
+                      secondary
+                    />
+                  ))}
+                </ul>
               </li>
             );
           })}
         </ul>
       </CollapsibleContent>
     </Collapsible>
+  );
+}
+
+/**
+ * One entry, and its secondary entries under it. A primary entry carries the entity's icon
+ * in a disc of the group's hue and the collection's count; a secondary one is indented with
+ * a small icon. The label is the visible text when open and the only name in the rail, where
+ * the CSS hides the span before any JS runs.
+ */
+function Entry({
+  entity,
+  hue,
+  pathname,
+  rail,
+  secondary = false,
+}: {
+  entity: NavEntity;
+  hue: Hue;
+  pathname: string;
+  rail: boolean;
+  secondary?: boolean;
+}) {
+  const EntityIcon = entityIcon(entity.type, entity.slug);
+  const active = isActive(pathname, entity.href);
+  const anchor = (
+    <Link
+      href={entity.href}
+      id={`nav-${entity.type === 'globals' ? 'global-' : ''}${entity.slug}`}
+      aria-current={active ? 'page' : undefined}
+      aria-label={entity.label}
+      className={cn(secondary ? subLink : link, active && activeLink(hue))}
+      data-rail-center=""
+      data-hue={hue}
+      data-admin-entry={secondary ? 'secondary' : 'primary'}
+    >
+      {secondary ? (
+        EntityIcon && <Icon icon={EntityIcon} size={14} className="shrink-0" />
+      ) : (
+        <span
+          className={cn('grid size-7 shrink-0 place-items-center rounded-inner', HUE_CLASSES[hue])}
+        >
+          {EntityIcon && <Icon icon={EntityIcon} size={15} />}
+        </span>
+      )}
+      <span className="truncate" data-rail-hide="">
+        {entity.label}
+      </span>
+      {entity.count !== undefined && (
+        <span
+          className="ms-auto text-caption text-text-muted tabular-nums"
+          data-rail-hide=""
+          data-admin-count=""
+        >
+          {entity.count}
+        </span>
+      )}
+    </Link>
+  );
+  return (
+    <li>
+      {rail ? (
+        <Tooltip>
+          <TooltipTrigger asChild>{anchor}</TooltipTrigger>
+          <TooltipContent side="right">{entity.label}</TooltipContent>
+        </Tooltip>
+      ) : (
+        anchor
+      )}
+      {entity.children.length > 0 && (
+        <ul className="flex flex-col gap-0.5" data-rail-list="">
+          {entity.children.map((child) => (
+            <Entry
+              key={`${child.type}-${child.slug}`}
+              entity={child}
+              hue={hue}
+              pathname={pathname}
+              rail={rail}
+              secondary
+            />
+          ))}
+        </ul>
+      )}
+    </li>
   );
 }

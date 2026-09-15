@@ -3,7 +3,8 @@ import { INTEGRATION_PLATFORMS } from '@/content/schema';
 import { isAdmin, isEditorOrAdmin } from '@/modules/cms/access';
 import { revalidateRoutes } from '@/modules/cms/hooks/revalidate';
 import { savedByField, stampSavedBy } from '@/modules/cms/fields/saved-by';
-import { collectionLocaleNote } from '@/modules/cms/admin/locale/config';
+import { collectionComponents } from '@/modules/cms/admin/document/config';
+import { adminGroup } from '@/modules/cms/admin/icons';
 
 /**
  * Integration tiles (BRD 4.4, 6.4.8): one document per platform. The logo is a brand SVG
@@ -13,15 +14,21 @@ import { collectionLocaleNote } from '@/modules/cms/admin/locale/config';
 export const Integrations: CollectionConfig = {
   slug: 'integrations',
   labels: {
-    singular: { ar: 'منصة متاجر', en: 'Integration' },
-    plural: { ar: 'المتاجر المتصلة', en: 'Integrations' },
+    singular: { ar: 'منصة متاجر', en: 'Store integration' },
+    plural: { ar: 'المتاجر المتصلة', en: 'Store integrations' },
   },
   admin: {
-    components: collectionLocaleNote(),
+    components: collectionComponents('integrations', { localized: true }),
     useAsTitle: 'name',
     defaultColumns: ['name', 'platform', 'order'],
     listSearchableFields: ['name'],
-    group: { ar: 'المحتوى', en: 'Content' },
+    group: adminGroup('catalogue'),
+    custom: {
+      shows: {
+        ar: 'قسم المتاجر المتصلة في الصفحة الرئيسية',
+        en: 'the connected-stores section of the home page',
+      },
+    },
     description: {
       ar: 'المنصات المتصلة (سلة، زد، شوبيفاي) وترتيبها في شريط التكاملات.',
       en: 'Connected platforms (Salla, Zid, Shopify) and their order in the integrations strip.',

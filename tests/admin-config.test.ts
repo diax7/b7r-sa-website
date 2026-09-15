@@ -1,7 +1,16 @@
 import type { CollectionConfig, Field, GlobalConfig } from 'payload';
 import { describe, expect, it } from 'vitest';
 import { isAbandonedDraft, titleOf } from '@/modules/cms/admin/dashboard/data';
-import { COLLECTION_ICONS, GLOBAL_ICONS, groupIcon } from '@/modules/cms/admin/icons';
+import { ENTITY_HEADER_PATH, LOCALE_NOTE_PATH } from '@/modules/cms/admin/document/config';
+import {
+  ADMIN_GROUPS,
+  ADMIN_NAV,
+  COLLECTION_ICONS,
+  GLOBAL_ICONS,
+  groupIcon,
+  groupKey,
+  navPlacement,
+} from '@/modules/cms/admin/icons';
 import { Authors } from '@/modules/cms/collections/authors';
 import { Categories } from '@/modules/cms/collections/categories';
 import { Faqs } from '@/modules/cms/collections/faqs';
@@ -19,6 +28,7 @@ import { Navigation } from '@/modules/cms/globals/navigation';
 import { SeoDefaults } from '@/modules/cms/globals/seo-defaults';
 import { SiteSettings } from '@/modules/cms/globals/site-settings';
 import { AiSettings } from '@/modules/ai-content/settings';
+import { AiRuns } from '@/modules/ai-content/runs';
 import { AiTopics } from '@/modules/ai-content/topics';
 
 /**
@@ -76,6 +86,57 @@ describe('admin config shape (ADR-039)', () => {
   }
 });
 
+/**
+ * The sidebar registry (ADR-046): every entity has a place, its config's `admin.group` names
+ * the registry's group, a parent is a real entity of the same group, and the header carries a
+ * "shows on" sentence in both languages.
+ */
+describe('the sidebar registry (ADR-046)', () => {
+  const everyCollection = [...collections, Authors, Categories, Posts, Tags, AiTopics, AiRuns];
+  const everyGlobal = [...globals, AiSettings];
+  for (const c of everyCollection) {
+    it(`collection ${c.slug}: placed, grouped as the config says, header registered`, () => {
+      const placement = navPlacement('collections', c.slug);
+      expect(placement, 'placement').toBeDefined();
+      expect(groupKey(groupOf(c.admin)), 'admin.group in the registry').toBe(placement?.group);
+      if (placement?.parent) {
+        expect(navPlacement(placement.parent.type, placement.parent.slug)?.group).toBe(
+          placement.group,
+        );
+      }
+      const header = c.admin?.components?.Description as { path?: string } | undefined;
+      expect(header?.path, 'Description slot').toBe(ENTITY_HEADER_PATH);
+      const shows = c.admin?.custom?.['shows'] as { ar?: string; en?: string } | undefined;
+      expect(shows?.en, 'shows.en').toBeTruthy();
+      expect(ARABIC.test(shows?.ar ?? ''), 'shows.ar').toBe(true);
+    });
+  }
+  for (const g of everyGlobal) {
+    it(`global ${g.slug}: placed, grouped as the config says, header registered`, () => {
+      const placement = navPlacement('globals', g.slug);
+      expect(placement, 'placement').toBeDefined();
+      expect(groupKey(groupOf(g.admin)), 'admin.group in the registry').toBe(placement?.group);
+      const header = g.admin?.components?.elements?.Description as { path?: string } | undefined;
+      expect(header?.path, 'Description slot').toBe(ENTITY_HEADER_PATH);
+      const shows = g.admin?.custom?.['shows'] as { ar?: string; en?: string } | undefined;
+      expect(shows?.en, 'shows.en').toBeTruthy();
+      expect(ARABIC.test(shows?.ar ?? ''), 'shows.ar').toBe(true);
+    });
+  }
+  it('every registry entry names a group of the five, and every group has an icon and a hue', () => {
+    for (const p of [
+      ...Object.values(ADMIN_NAV.collections),
+      ...Object.values(ADMIN_NAV.globals),
+    ]) {
+      expect(Object.keys(ADMIN_GROUPS)).toContain(p.group);
+    }
+    for (const group of Object.values(ADMIN_GROUPS)) {
+      expect(isIcon(group.icon)).toBe(true);
+      expect(ARABIC.test(group.ar)).toBe(true);
+    }
+  });
+});
+
 /** Whether any field, at any depth, is per language. */
 function hasLocalized(fields: Field[]): boolean {
   return fields.some((f) => {
@@ -86,7 +147,7 @@ function hasLocalized(fields: Field[]): boolean {
     return false;
   });
 }
-const NOTE = '@/modules/cms/admin/locale/locale-note#LocaleNote';
+const NOTE = LOCALE_NOTE_PATH;
 
 describe('the locale note (ADR-044): every document with per-language fields carries it', () => {
   const allCollections = [

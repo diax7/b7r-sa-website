@@ -4,7 +4,8 @@ import { Refused } from '@/modules/cms/refused';
 import { SLUG_PATTERN } from '@/modules/cms/collections/pages';
 import { revalidateBlogListings } from '@/modules/cms/hooks/revalidate';
 import { savedByField, stampSavedBy } from '@/modules/cms/fields/saved-by';
-import { collectionLocaleNote } from '@/modules/cms/admin/locale/config';
+import { collectionComponents } from '@/modules/cms/admin/document/config';
+import { adminGroup } from '@/modules/cms/admin/icons';
 
 /**
  * Blog authors (BRD 10.1): one seeded author (ضياء, مؤسس بحر برنت) with a page at
@@ -15,11 +16,17 @@ export const Authors: CollectionConfig = {
   slug: 'authors',
   labels: { singular: { ar: 'كاتب', en: 'Author' }, plural: { ar: 'الكتّاب', en: 'Authors' } },
   admin: {
-    components: collectionLocaleNote(),
+    components: collectionComponents('authors', { localized: true }),
     useAsTitle: 'name',
     defaultColumns: ['name', 'role', 'slug', 'updatedAt'],
     listSearchableFields: ['name', 'slug'],
-    group: { ar: 'المدونة', en: 'Blog' },
+    group: adminGroup('blog'),
+    custom: {
+      shows: {
+        ar: 'سطر الكاتب في كل مقال وصفحة الكاتب',
+        en: "the byline on each post and the author's page",
+      },
+    },
     description: {
       ar: 'من يوقّع مقالات المدونة. لكل كاتب صفحته على الموقع.',
       en: 'Who signs the blog posts. Each author has a page on the site.',

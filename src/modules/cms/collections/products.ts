@@ -4,7 +4,8 @@ import { revalidateProducts } from '@/modules/cms/hooks/revalidate';
 import { savedByField, stampSavedBy } from '@/modules/cms/fields/saved-by';
 import { localePath, requestLocale } from '@/lib/i18n';
 import { previewUrl } from '@/lib/preview-token';
-import { collectionLocaleNote } from '@/modules/cms/admin/locale/config';
+import { collectionComponents } from '@/modules/cms/admin/document/config';
+import { adminGroup } from '@/modules/cms/admin/icons';
 
 const PRICE_HELP = {
   ar: 'يجب أن يطابق السعر في التطبيق (لا مزامنة آلية).',
@@ -19,7 +20,7 @@ export const Products: CollectionConfig = {
   slug: 'products',
   labels: { singular: { ar: 'منتج', en: 'Product' }, plural: { ar: 'المنتجات', en: 'Products' } },
   admin: {
-    components: collectionLocaleNote(),
+    components: collectionComponents('products', { localized: true }),
     useAsTitle: 'name',
     preview: (doc, { req, locale }) =>
       typeof doc['slug'] === 'string' && doc['slug']
@@ -31,7 +32,13 @@ export const Products: CollectionConfig = {
         : null,
     defaultColumns: ['name', 'slug', 'baseCost', 'suggestedPrice', 'sortOrder', '_status'],
     listSearchableFields: ['name', 'slug'],
-    group: { ar: 'المحتوى', en: 'Content' },
+    group: adminGroup('catalogue'),
+    custom: {
+      shows: {
+        ar: 'صفحة المنتجات، وصفحة كل منتج، والمصمّم، والحاسبة، وملف llms.txt',
+        en: "b7r.sa/products, each product's page, the designer, the calculator and llms.txt",
+      },
+    },
     description: {
       ar: 'المنتجات المعروضة في الموقع والمصمّم: الأسعار، الصور، المقاسات والألوان.',
       en: 'Products on the site and in the designer: prices, photos, sizes and colours.',

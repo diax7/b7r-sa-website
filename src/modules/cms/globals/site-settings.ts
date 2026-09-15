@@ -2,7 +2,8 @@ import type { GlobalConfig } from 'payload';
 import { hiddenUnlessAdmin, isAdmin } from '@/modules/cms/access';
 import { revalidateGlobal } from '@/modules/cms/hooks/revalidate';
 import { savedByField, stampSavedByGlobal } from '@/modules/cms/fields/saved-by';
-import { globalLocaleNote } from '@/modules/cms/admin/locale/config';
+import { globalComponents } from '@/modules/cms/admin/document/config';
+import { adminGroup } from '@/modules/cms/admin/icons';
 
 const APP_HELP = {
   ar: 'يجب أن يطابق التطبيق (لا مزامنة آلية).',
@@ -14,8 +15,14 @@ export const SiteSettings: GlobalConfig = {
   slug: 'site-settings',
   label: { ar: 'إعدادات الموقع', en: 'Site settings' },
   admin: {
-    components: globalLocaleNote(),
-    group: { ar: 'الإعدادات', en: 'Settings' },
+    components: globalComponents('site-settings', { localized: true }),
+    group: adminGroup('site'),
+    custom: {
+      shows: {
+        ar: 'كل الصفحات: الترويسة، التذييل، روابط التواصل، والأرقام التي يعرضها الموقع',
+        en: 'every page: the header, the footer, the contact links and the numbers the site quotes',
+      },
+    },
     hidden: hiddenUnlessAdmin,
     description: {
       ar: 'اسم الموقع، بيانات التواصل، الحسابات الاجتماعية والعرض الترحيبي.',

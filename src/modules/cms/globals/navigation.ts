@@ -2,7 +2,8 @@ import type { Field, GlobalConfig } from 'payload';
 import { hiddenUnlessAdmin, isAdmin } from '@/modules/cms/access';
 import { revalidateGlobal } from '@/modules/cms/hooks/revalidate';
 import { savedByField, stampSavedByGlobal } from '@/modules/cms/fields/saved-by';
-import { globalLocaleNote } from '@/modules/cms/admin/locale/config';
+import { globalComponents } from '@/modules/cms/admin/document/config';
+import { adminGroup } from '@/modules/cms/admin/icons';
 
 const navItem: Field[] = [
   {
@@ -38,8 +39,14 @@ export const Navigation: GlobalConfig = {
   slug: 'navigation',
   label: { ar: 'التنقل', en: 'Navigation' },
   admin: {
-    components: globalLocaleNote(),
-    group: { ar: 'الإعدادات', en: 'Settings' },
+    components: globalComponents('navigation', { localized: true }),
+    group: adminGroup('site'),
+    custom: {
+      shows: {
+        ar: 'كل الصفحات: روابط الترويسة، وروابط السياسات في التذييل، وتسميات القائمة',
+        en: "every page: the header links, the footer's policy links and the menu labels",
+      },
+    },
     hidden: hiddenUnlessAdmin,
     description: {
       ar: 'روابط القائمة الرئيسية والتذييل ونصوص الأزرار.',

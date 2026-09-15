@@ -1,5 +1,6 @@
+import { EntityHeader as EntityHeader_f6dfb7db6d86b31e8afa488c8e2f837d } from '@/modules/cms/admin/document/entity-header'
 import { SavedByField as SavedByField_46120640bb11e96d61a3a62a5294d80c } from '@/modules/cms/admin/fields/saved-by-field'
-import { LocaleNote as LocaleNote_11232d1a50ddee4458a3955b2b8a321e } from '@/modules/cms/admin/locale/locale-note'
+import { LocaleNote as LocaleNote_9b28d080a4c5ff573d5e4d560dbf06bb } from '@/modules/cms/admin/document/locale-note'
 import { RscEntryLexicalCell as RscEntryLexicalCell_44fe37237e0ebf4470c9990d8cb7b07e } from '@payloadcms/richtext-lexical/rsc'
 import { RscEntryLexicalField as RscEntryLexicalField_44fe37237e0ebf4470c9990d8cb7b07e } from '@payloadcms/richtext-lexical/rsc'
 import { LexicalDiffComponent as LexicalDiffComponent_44fe37237e0ebf4470c9990d8cb7b07e } from '@payloadcms/richtext-lexical/rsc'
@@ -33,8 +34,9 @@ import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } f
 
 /** @type import('payload').ImportMap */
 export const importMap = {
+  "@/modules/cms/admin/document/entity-header#EntityHeader": EntityHeader_f6dfb7db6d86b31e8afa488c8e2f837d,
   "@/modules/cms/admin/fields/saved-by-field#SavedByField": SavedByField_46120640bb11e96d61a3a62a5294d80c,
-  "@/modules/cms/admin/locale/locale-note#LocaleNote": LocaleNote_11232d1a50ddee4458a3955b2b8a321e,
+  "@/modules/cms/admin/document/locale-note#LocaleNote": LocaleNote_9b28d080a4c5ff573d5e4d560dbf06bb,
   "@payloadcms/richtext-lexical/rsc#RscEntryLexicalCell": RscEntryLexicalCell_44fe37237e0ebf4470c9990d8cb7b07e,
   "@payloadcms/richtext-lexical/rsc#RscEntryLexicalField": RscEntryLexicalField_44fe37237e0ebf4470c9990d8cb7b07e,
   "@payloadcms/richtext-lexical/rsc#LexicalDiffComponent": LexicalDiffComponent_44fe37237e0ebf4470c9990d8cb7b07e,

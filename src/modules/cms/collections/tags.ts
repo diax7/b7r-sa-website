@@ -3,7 +3,8 @@ import { isEditorOrAdmin } from '@/modules/cms/access';
 import { Refused } from '@/modules/cms/refused';
 import { SLUG_PATTERN } from '@/modules/cms/collections/pages';
 import { savedByField, stampSavedBy } from '@/modules/cms/fields/saved-by';
-import { collectionLocaleNote } from '@/modules/cms/admin/locale/config';
+import { collectionComponents } from '@/modules/cms/admin/document/config';
+import { adminGroup } from '@/modules/cms/admin/icons';
 
 /**
  * Post tags (BRD 10.1): optional, free, used by related posts after the hub. No public tag
@@ -13,11 +14,17 @@ export const Tags: CollectionConfig = {
   slug: 'tags',
   labels: { singular: { ar: 'وسم', en: 'Tag' }, plural: { ar: 'الوسوم', en: 'Tags' } },
   admin: {
-    components: collectionLocaleNote(),
+    components: collectionComponents('tags', { localized: true }),
     useAsTitle: 'name',
     defaultColumns: ['name', 'slug', 'updatedAt'],
     listSearchableFields: ['name', 'slug'],
-    group: { ar: 'المدونة', en: 'Blog' },
+    group: adminGroup('blog'),
+    custom: {
+      shows: {
+        ar: 'قائمة الوسوم أسفل كل مقال وصفحات الوسوم',
+        en: 'the tag list under each post and the tag pages',
+      },
+    },
     description: {
       ar: 'وسوم اختيارية تربط المقالات ذات الصلة.',
       en: 'Optional tags that connect related posts.',

@@ -8,7 +8,8 @@ import { isDraftSave, revalidatePages } from '@/modules/cms/hooks/revalidate';
 import { savedByField, stampSavedBy } from '@/modules/cms/fields/saved-by';
 import { localePath, requestLocale } from '@/lib/i18n';
 import { previewUrl } from '@/lib/preview-token';
-import { collectionLocaleNote } from '@/modules/cms/admin/locale/config';
+import { collectionComponents } from '@/modules/cms/admin/document/config';
+import { adminGroup } from '@/modules/cms/admin/icons';
 
 /** Slugs a page may never take: every code-owned segment except the seven designed pages. */
 export const FORBIDDEN_PAGE_SLUGS: readonly string[] = CODE_TOP_LEVEL.filter(
@@ -38,7 +39,7 @@ export const Pages: CollectionConfig = {
   slug: 'pages',
   labels: { singular: { ar: 'صفحة', en: 'Page' }, plural: { ar: 'الصفحات', en: 'Pages' } },
   admin: {
-    components: collectionLocaleNote(),
+    components: collectionComponents('pages', { localized: true }),
     useAsTitle: 'title',
     // «معاينة»: a signed link that turns on draft mode and lands on the page (ADR-039).
     preview: (doc, { req, locale }) =>
@@ -51,7 +52,13 @@ export const Pages: CollectionConfig = {
         : null,
     defaultColumns: ['title', 'slug', 'updatedAt', '_status'],
     listSearchableFields: ['title', 'slug'],
-    group: { ar: 'المحتوى', en: 'Content' },
+    group: adminGroup('site'),
+    custom: {
+      shows: {
+        ar: 'الصفحات الثابتة بلغتيها: كيف تعمل، من نحن، تواصل معنا، الأسئلة الشائعة، والصفحات القانونية',
+        en: 'b7r.sa/<slug> and b7r.sa/en/<slug>: how it works, about, contact, FAQ and the legal pages',
+      },
+    },
     description: {
       ar: 'صفحات الموقع كأقسام قابلة للتحرير. الصفحات السبع الأساسية ثابتة الرابط؛ أضف صفحات جديدة بحرّية.',
       en: 'Site pages as editable blocks. The seven designed pages keep their URLs; add new ones freely.',

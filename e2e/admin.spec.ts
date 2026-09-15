@@ -300,19 +300,61 @@ test.describe('CMS admin', () => {
     );
     await expect(nav.locator('a[aria-current="page"]')).toHaveText(/Products/);
     await page.goto('/admin/collections/pages');
-    // Content first; a collapsed group stays collapsed across a reload (Payload's `nav` pref).
-    await expect(nav.locator('[data-admin-group]').first()).toHaveAttribute(
-      'data-admin-group',
-      'Content',
+    // The five task groups in order, each with its hue (ADR-046); the home page first in Site.
+    await expect(nav.locator('[data-admin-group]')).toHaveText([
+      /Site/,
+      /Catalogue/,
+      /Blog/,
+      /Visibility/,
+      /Admin/,
+    ]);
+    const groupHues = await nav
+      .locator('[data-admin-group]')
+      .evaluateAll((els) => els.map((el) => el.getAttribute('data-hue')));
+    expect(groupHues).toEqual(['blue', 'teal', 'violet', 'pink', 'slate']);
+    await expect(nav.locator('[data-admin-group="Site"] a[id^="nav-"]').first()).toHaveAttribute(
+      'id',
+      'nav-global-home',
     );
-    const settingsGroup = () => page.locator('[data-admin-group="Settings"]');
-    await settingsGroup().locator('button').first().click();
-    await expect(settingsGroup().locator('#nav-redirects')).toBeHidden();
+    // Secondary entries sit under their parent; the engine is a section inside Blog; a
+    // collection shows its count; the active entry wears its group's hue.
+    await expect(nav.locator('#nav-categories')).toHaveAttribute('data-admin-entry', 'secondary');
+    await expect(nav.locator('#nav-global-navigation')).toHaveAttribute(
+      'data-admin-entry',
+      'secondary',
+    );
+    await expect(
+      nav.locator('[data-admin-group="Blog"] [data-admin-section="engine"] #nav-ai-topics'),
+    ).toBeVisible();
+    await expect(nav.locator('#nav-products [data-admin-count]')).toHaveText(/^\d+$/);
+    await expect(nav.locator('a[aria-current="page"]')).toHaveAttribute('data-hue', 'blue');
+    // A collapsed group stays collapsed across a reload (Payload's `nav` pref).
+    const visibilityGroup = () => page.locator('[data-admin-group="Visibility"]');
+    await visibilityGroup().locator('button').first().click();
+    await expect(visibilityGroup().locator('#nav-redirects')).toBeHidden();
     await page.reload();
     await expect(page.locator('[data-admin-nav]')).toHaveClass(/nav--nav-open/);
-    await expect(settingsGroup().locator('#nav-redirects')).toBeHidden();
-    await settingsGroup().locator('button').first().click();
-    await expect(settingsGroup().locator('#nav-redirects')).toBeVisible();
+    await expect(visibilityGroup().locator('#nav-redirects')).toBeHidden();
+    await visibilityGroup().locator('button').first().click();
+    await expect(visibilityGroup().locator('#nav-redirects')).toBeVisible();
+    // The page header (the description slot): the entity's disc and bar in its hue, where the
+    // thing shows on the site, and the public listing on a list view.
+    const header = page.locator('[data-admin-header="pages"]');
+    await expect(header).toHaveAttribute('data-hue', 'blue');
+    await expect(header.locator('[data-admin-shows]')).toContainText(/Shows on:/);
+    await page.goto('/admin/collections/products');
+    await expect(page.locator('[data-admin-header="products"]')).toHaveAttribute(
+      'data-hue',
+      'teal',
+    );
+    await expect(
+      page.locator('[data-admin-header="products"] [data-admin-listing]'),
+    ).toHaveAttribute('href', '/products');
+    await page.goto('/admin/globals/home');
+    await expect(page.locator('[data-admin-header="home"] [data-admin-sections-on]')).toHaveText(
+      /10 sections, \d+ on/,
+    );
+    await page.goto('/admin/collections/pages');
     // Collapsed on a desktop the sidebar is an icon rail, still usable, and it stays a rail
     // across a reload; the expand button brings the labels back.
     await page.locator('[data-admin-collapse]').click();
@@ -370,7 +412,12 @@ test.describe('CMS admin', () => {
     await expect(page.locator('label[for="field-title"] .localized')).toHaveCount(1);
     await expect(page.locator('label[for="field-slug"] .localized')).toHaveCount(0);
     expect(
-      await serious('[data-admin-nav]', '.app-header', '[data-admin-locale-note]'),
+      await serious(
+        '[data-admin-nav]',
+        '.app-header',
+        '[data-admin-locale-note]',
+        '[data-admin-header]',
+      ),
       'axe: shell on an edit view',
     ).toEqual([]);
     // An editor never sees the settings entries.
@@ -386,7 +433,9 @@ test.describe('CMS admin', () => {
       await expect(editorNav.locator('#nav-pages')).toBeVisible();
       await expect(editorNav.locator('#nav-redirects')).toHaveCount(0);
       await expect(editorNav.locator('#nav-global-site-settings')).toHaveCount(0);
-      await expect(editorNav.locator('[data-admin-group="Settings"]')).toHaveCount(0);
+      await expect(editorNav.locator('[data-admin-group="Visibility"]')).toHaveCount(0);
+      // Users stays (an editor opens their own account), so Admin still lists it.
+      await expect(editorNav.locator('[data-admin-group="Admin"] #nav-users')).toBeVisible();
     } finally {
       await editorContext.close();
       await request.delete(`${API}/users/${editor.id}`, { headers: adminAuth });
@@ -440,8 +489,13 @@ test.describe('CMS admin', () => {
     const first = dashboard.locator('[data-admin-recent] li').first();
     await expect(first).toContainText(entry!.question);
     await expect(first).toContainText(/by /);
-    await expect(first.locator('[data-hue]')).toHaveAttribute('data-hue', 'orange');
+    // Hues are the group's (ADR-046): a FAQ entry is Catalogue teal, a page is Site blue.
+    await expect(first.locator('[data-hue]')).toHaveAttribute('data-hue', 'teal');
     await expect(dashboard.locator('[data-admin-action="add-page"]')).toHaveAttribute(
+      'data-hue',
+      'blue',
+    );
+    await expect(dashboard.locator('[data-admin-action="add-post"]')).toHaveAttribute(
       'data-hue',
       'violet',
     );

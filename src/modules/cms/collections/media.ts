@@ -1,7 +1,8 @@
 import type { CollectionConfig } from 'payload';
 import { isAdmin, isEditorOrAdmin } from '@/modules/cms/access';
 import { savedByField, stampSavedBy } from '@/modules/cms/fields/saved-by';
-import { collectionLocaleNote } from '@/modules/cms/admin/locale/config';
+import { collectionComponents } from '@/modules/cms/admin/document/config';
+import { adminGroup } from '@/modules/cms/admin/icons';
 
 const ARABIC = /[؀-ۿ]/;
 
@@ -15,8 +16,14 @@ export const Media: CollectionConfig = {
   slug: 'media',
   labels: { singular: { ar: 'ملف وسائط', en: 'Media' }, plural: { ar: 'الوسائط', en: 'Media' } },
   admin: {
-    components: collectionLocaleNote(),
-    group: { ar: 'المحتوى', en: 'Content' },
+    components: collectionComponents('media', { localized: true }),
+    group: adminGroup('site'),
+    custom: {
+      shows: {
+        ar: 'حيثما وُضعت صورة أو أيقونة: المنتجات، الصفحة الرئيسية، أغلفة المدونة',
+        en: 'wherever a photo or an icon is placed: products, the home page, the blog covers',
+      },
+    },
     description: {
       ar: 'الصور والملفات المستخدمة في الصفحات والمنتجات. اكتب نصاً بديلاً لكل صورة.',
       en: 'Images and files used by pages and products. Give every image alt text.',

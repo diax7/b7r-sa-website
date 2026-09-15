@@ -4,9 +4,8 @@ import { savedByField, stampSavedByGlobal } from '@/modules/cms/fields/saved-by'
 import { requestLocale } from '@/lib/i18n';
 import { DEFAULT_IMAGE_STYLE, DEFAULT_STYLE } from '@/modules/ai-content/prompts/defaults';
 import { secretField } from '@/modules/ai-content/secret-field';
-import { globalLocaleNote } from '@/modules/cms/admin/locale/config';
-
-export const AI_GROUP = { ar: 'المحتوى الآلي', en: 'AI content' };
+import { globalComponents } from '@/modules/cms/admin/document/config';
+import { adminGroup } from '@/modules/cms/admin/icons';
 
 type Vendor = 'openai' | 'deepseek' | 'anthropic' | 'google';
 
@@ -109,8 +108,14 @@ export const AiSettings: GlobalConfig = {
   slug: 'ai-settings',
   label: { ar: 'إعدادات المحرّك', en: 'Engine settings' },
   admin: {
-    components: globalLocaleNote(),
-    group: AI_GROUP,
+    components: globalComponents('ai-settings', { localized: true }),
+    group: adminGroup('blog'),
+    custom: {
+      shows: {
+        ar: 'لا يظهر في الموقع: كيف يكتب المحرّك وبأي وتيرة',
+        en: 'nowhere on the site: how the engine writes and how often',
+      },
+    },
     hidden: hiddenUnlessAdmin,
     description: {
       ar: 'المحرّك ينشر تلقائياً بلا مراجعة بشرية (قرار D-44). النشر الآلي بكميات كبيرة دون مراجعة يعرّض الموقع لسياسة Google للمحتوى الموسّع؛ أبقِ الوتيرة معتدلة وبوابات الجودة صارمة.',

@@ -45,7 +45,8 @@ render in both worlds without a fork. Raw hex lives only in the token block.
 | `text-muted` | `--theme-elevation-600` | Secondary text (rgb 181 181 181, 9.5:1). |
 | `border` | `--theme-elevation-150` | Hairlines (rgb 60 60 60). |
 | `success` / `warning` / `error` | `#3fbf6b` / `#f5b53f` / `#f26b6b` | Status text and badges; each ≥ 4.5:1 on `ground` and `surface`. `success-tint` sits behind green icons. |
-| `violet` / `teal` / `orange` / `pink` (+ `-tint`) | `#a78bfa` / `#2dd4bf` / `#fb923c` / `#f472b6` | Dashboard hues: one per entity (`COLLECTION_HUES`, `GLOBAL_HUES` in `icons.ts`), used only on the tinted icon discs of the quick actions and the latest changes. Identity, never meaning. Each ≥ 5.8:1 on `surface`. |
+| `teal` / `violet` / `pink` / `slate` (+ `-tint`) | `#2dd4bf` / `#a78bfa` / `#f472b6` / `#cbd5e1` | Identity hues (ADR-046): one per sidebar group (`ADMIN_GROUPS` in `icons.ts`; the Site group uses the accent blue), carried by every entity of the group onto the sidebar's discs and active entry, the page header's disc and bar, and the dashboard's discs. Identity, never meaning. Each ≥ 5.8:1 on `surface`; the slate disc is lighter than the 50 % disabled state so the two never read alike. |
+| `surface-2` | `--theme-elevation-100` | One step above the surface: the hover of a sidebar entry, neutral in every group. |
 | `radius-base` / `radius-lg` / `radius-inner` / `radius-pill` | 13 / 20 / 6 / 999 px | From `src/styles/tokens.css` (shared with the site). |
 | `shadow-card` / `shadow-popover` | black at 40 % / 60 % | Depth on the dark surface. |
 | `font-sans` | ITF Rayat Round | Also set as Payload's `--font-body`. |
@@ -60,7 +61,7 @@ Payload's elements and ours.
 
 | Colour | Means | Where |
 |---|---|---|
-| Blue (`primary` fill, `accent` text) | the main action, the active place, a link | Create New, Save, the active nav entry, the home and settings discs, focus rings |
+| Blue (`primary` fill, `accent` text) | the main action, a link, the Site group | Create New, Save, links, focus rings, the Site group's discs. Amended by ADR-046: the active sidebar entry sits on its own group's tint with weight and `aria-current`, so "active" is carried by weight and the tint, and the hue stays identity. |
 | Green (`--admin-green`) | publish, live | the publish button of a document with drafts, the Published pill, "answering/running" rows |
 | Red (`--admin-red`) | delete, failure | Delete items, row removal, the delete confirmation, failed rows, Log out |
 | Amber (`--admin-amber`) | careful | Unpublish, Revert, "off / test mode" rows |
@@ -87,15 +88,20 @@ published pill) is re-hued to the accent in `@layer payload`; its greys are unto
 - Sizes: 20 px in the sidebar and quick-action tiles, 16 px inline next to text, 24 px alone
   in an empty state.
 - Registry: `src/modules/cms/admin/icons.ts`, `COLLECTION_ICONS`, `GLOBAL_ICONS`,
-  `GROUP_ICONS`, `ACTION_ICONS`. A collection or global without an entry is a type error and a
-  failing test. Pick a noun icon for a collection (a shirt, a file, a question mark), a place
-  icon for a global (a house, sliders), a verb icon for an action (an eye for "view site").
+  `ADMIN_GROUPS` (icon, hue, order per group), `ADMIN_NAV` (group, order, parent, section,
+  public listing per entity), `NAV_SECTIONS`, `ACTION_ICONS`. A collection or global without
+  an entry is a type error and a failing test. Pick a noun icon for a collection (a shirt, a
+  file, a question mark), a place icon for a global (a house, sliders), a verb icon for an
+  action (an eye for "view site"); a group's icon must not repeat its first entry's.
 - Current registry: products `Shirt`, pages `FileText`, faqs `CircleHelp`, testimonials
   `MessageSquareQuote`, integrations `Plug`, media `Image`, redirects `ArrowRightLeft`, users
-  `Users`; home `House`, site-settings `Settings2`, navigation `Compass`, seo-defaults
-  `Search`; groups المحتوى `LayoutGrid`, الإعدادات `SlidersHorizontal`, الإدارة `Shield`.
-- Colour: icons inherit text colour; the active nav item uses `accent`. On the dashboard an
-  entity's disc takes its hue (§2), the same hue on its tile and in the latest changes.
+  `Users`, posts `Newspaper`, categories `FolderTree`, authors `UserPen`, tags `Tag`,
+  ai-topics `ListChecks`, ai-runs `History`; home `House`, site-settings `Settings2`,
+  navigation `Compass`, seo-defaults `Search`, ai-settings `SlidersHorizontal`; groups Site
+  `Globe`, Catalogue `ShoppingBag`, Blog `PenLine`, Visibility `Radar`, Admin `Shield`; the
+  engine section `Bot`.
+- Colour: icons inherit text colour. An entity's disc takes its group's hue (§2) in the
+  sidebar, the page header, its dashboard tile and the latest changes.
 
 ## 5. Writing (Arabic)
 
@@ -122,7 +128,7 @@ The admin's strings are interface copy (ADR-031): written by us, under the ux-ar
   with the open locale's code (`AR`/`EN`, ADR-044): a field with a pill changes per language,
   a field without one is shared. A document with per-language fields shows the `LocaleNote`
   line before its controls ("Editing the English content. Fields marked EN are per language;
-  the rest is shared with Arabic."); register it through `admin/locale/config.ts` on every
+  the rest is shared with Arabic."); register it through `admin/document/config.ts` on every
   new collection or global with a localised field (`tests/admin-config.test.ts` checks).
 
 ## 6. Components
@@ -145,15 +151,16 @@ Payload's own elements (buttons, fields, pills, toasts) are themed in `admin.css
 
 | Piece | File | Notes |
 |---|---|---|
-| Sidebar | `modules/cms/admin/nav/*` | Groups (Content · Settings · Administration) as collapsibles that remember their state in Payload's `nav` preference; an icon per entity; `aria-current="page"`; the collapse/expand control and the account block at the foot. Collapsed on a desktop it is a 72 px icon rail with tooltips, still usable, and it is CSS: the server renders one tree, `admin.css` toggles `[data-rail-hide]` / `[data-rail-show]` / `[data-rail-center]` / `[data-rail-list]` while the aside is closed above 1440 px, so the rail paints on the first frame with no shift; hydration adds `data-admin-rail`, tooltips and `aria-label`s. At or under 1440 px it is Payload's drawer without the collapse control. Keeps Payload's outer `nav` classes (layout, drawer). |
+| Sidebar | `modules/cms/admin/nav/*` | The five task groups (Site · Catalogue · Blog · Visibility · Admin, ADR-046) as collapsibles that remember their state in Payload's `nav` preference; a tinted disc with the group's icon on each header; primary entries with a disc in the group's hue and the collection's count, secondary entries indented under their parent (hubs, authors, tags under Posts; Navigation under Site settings until PR B1 folds it in), the content engine as a section inside Blog; the active entry on its group's tint; `aria-current="page"`; the collapse/expand control and the account block at the foot. Collapsed on a desktop it is a 72 px icon rail with tooltips, still usable, and it is CSS: the server renders one tree, `admin.css` toggles `[data-rail-hide]` / `[data-rail-show]` / `[data-rail-center]` / `[data-rail-list]` while the aside is closed above 1440 px, so the rail paints on the first frame with no shift; hydration adds `data-admin-rail`, tooltips and `aria-label`s. At or under 1440 px it is Payload's drawer without the collapse control. Keeps Payload's outer `nav` classes (layout, drawer). |
 | Header actions | `modules/cms/admin/header/actions*` | A bordered search box that opens the palette (with the Ctrl K hint) and a bordered "View website" link with text; icons only under 768 px. |
 | Command palette | `modules/cms/admin/header/palette*` | Ctrl/⌘ K; sections first, then documents of collections with `listSearchableFields` (5 per collection, from two characters); combobox semantics; ranking in `palette-rank.ts`. |
 | Account menu | `modules/cms/admin/account/*` | Initials avatar, name, e-mail (LTR), role badge, "My account", "Log out" (red). In the rail only the avatar shows. |
 | Login | `modules/cms/admin/login/*` | One line under the form; the Turnstile widget above it (ADR-034). |
 
 | Dashboard | `modules/cms/admin/dashboard/*` | Greeting (name in the accent), quick-action tiles by permission in their entity's hue, health card (`healthReport()`, rows with a colour and a sentence), latest saves with who saved them and a relative time (`relative-time.ts`); a draft nobody titled or saved (an unused "Create New") is left out. Every in-admin link is Payload's `Link`: no reload. |
-| Blog group | `modules/cms/collections/{posts,categories,authors,tags}.ts` | Posts (violet), hubs, authors, tags; the post's sidebar carries author, publish and update dates, reading minutes, origin, the editorial warnings (`WarningsField`) and "Last saved"; a publish that breaks a hard rule is refused with the reason (`fields/editorial.ts`, ADR-041). |
-| AI content group | `modules/ai-content/{settings,topics,runs}.ts`, `modules/ai-content/admin/*` | Admin only. Engine settings in tabs (keys masked, `SecretField`), topics with "Generate now" (`EngineAction`) and a CSV import panel, runs read-only; a "Content engine" card on the dashboard and a health row; "Regenerate" in an engine post's sidebar (`PostEngineActions`). ADR-042. |
+| Page header | `modules/cms/admin/document/entity-header.tsx` | The description slot under Payload's title (`admin.components.Description` on collections, shared with the list view; `admin.components.elements.Description` on globals; registered per config with its `serverProps.entity` through `admin/document/config.ts`): a bar and a disc in the group's hue, the description, "Shows on:" from `admin.custom.shows` (both languages), a link to the public listing where one exists, and on the home page "10 sections, N on" from the saved document (`HomeSectionsCount`). The locale note stays before the document controls. |
+| Blog group | `modules/cms/collections/{posts,categories,authors,tags}.ts` | Posts, hubs, authors, tags (violet, the Blog hue); the post's sidebar carries author, publish and update dates, reading minutes, origin, the editorial warnings (`WarningsField`) and "Last saved"; a publish that breaks a hard rule is refused with the reason (`fields/editorial.ts`, ADR-041). |
+| Content engine section (inside Blog) | `modules/ai-content/{settings,topics,runs}.ts`, `modules/ai-content/admin/*` | Admin only. Engine settings in tabs (keys masked, `SecretField`), topics with "Generate now" (`EngineAction`) and a CSV import panel, runs read-only; a "Content engine" card on the dashboard and a health row; "Regenerate" in an engine post's sidebar (`PostEngineActions`). ADR-042. |
 | Field widgets | `modules/cms/admin/fields/*` | `EnabledSwitch` (switch + the section's consequence), `IconSelect` (lucide tiles), `PlatformSelect` (brand SVG tiles), `SavedByField` (the `lastSavedBy` snapshot as one line, nothing on a create form), `WarningsField` (the post's soft editorial warnings as a list); all on `FieldShell` (label, description, error), the pickers on `ChoiceGrid` (radiogroup). |
 | Preview | `lib/preview-token.ts`, `app/api/preview/*`, `modules/core/draft-bar.tsx` | The preview button opens a signed link → Next draft mode → the page with a warning bar; exit returns to the page. |
 
@@ -195,7 +202,9 @@ hydration there is no pill rather than a wrong one.
 
 ## 9. Adding something new
 
-Follow `.claude/rules/admin-ui.md`. In short: group, icon, Arabic labels and description,
-`useAsTitle`, `defaultColumns`, `listSearchableFields`, a description on every switch,
-`admin.preview` if the thing has a route, `pnpm payload generate:importmap` after any new
-admin component, and the config test must pass.
+Follow `.claude/rules/admin-ui.md`. In short: a place in `ADMIN_NAV` (group, order, parent
+or section) and `admin.group` through `adminGroup()`, an icon, Arabic labels and description,
+`admin.custom.shows` in both languages and the header registered through
+`admin/document/config.ts`, `useAsTitle`, `defaultColumns`, `listSearchableFields`, a
+description on every switch, `admin.preview` if the thing has a route, `pnpm payload
+generate:importmap` after any new admin component, and the config test must pass.

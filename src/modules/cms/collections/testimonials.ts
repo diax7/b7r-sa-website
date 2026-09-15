@@ -2,7 +2,8 @@ import type { CollectionConfig } from 'payload';
 import { canDeleteVersioned, isEditorOrAdmin, publishedOrStaff } from '@/modules/cms/access';
 import { revalidateRoutes } from '@/modules/cms/hooks/revalidate';
 import { savedByField, stampSavedBy } from '@/modules/cms/fields/saved-by';
-import { collectionLocaleNote } from '@/modules/cms/admin/locale/config';
+import { collectionComponents } from '@/modules/cms/admin/document/config';
+import { adminGroup } from '@/modules/cms/admin/icons';
 
 /**
  * Merchant testimonials (BRD 4.4, 6.4.7). Drafts so a quote can be prepared before it goes
@@ -16,11 +17,17 @@ export const Testimonials: CollectionConfig = {
     plural: { ar: 'آراء التجار', en: 'Testimonials' },
   },
   admin: {
-    components: collectionLocaleNote(),
+    components: collectionComponents('testimonials', { localized: true }),
     useAsTitle: 'name',
     defaultColumns: ['name', 'store', 'placeholder', 'order', '_status'],
     listSearchableFields: ['name', 'store'],
-    group: { ar: 'المحتوى', en: 'Content' },
+    group: adminGroup('catalogue'),
+    custom: {
+      shows: {
+        ar: 'قسم آراء التجار في الصفحة الرئيسية',
+        en: 'the testimonials section of the home page',
+      },
+    },
     description: {
       ar: 'آراء التجار في الصفحة الرئيسية. النماذج المؤقتة لا تظهر في الموقع.',
       en: 'Merchant quotes on the home page. Placeholders never show on the site.',

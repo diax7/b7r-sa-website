@@ -4,6 +4,8 @@ import { adminField, isAdmin, isAdminOrSelf } from '@/modules/cms/access';
 import { gateLogin } from '@/modules/cms/auth/login-gate';
 import { generateResetHtml, generateResetSubject } from '@/modules/cms/auth/reset-email';
 import { Refused } from '@/modules/cms/refused';
+import { collectionComponents } from '@/modules/cms/admin/document/config';
+import { adminGroup } from '@/modules/cms/admin/icons';
 
 const LOCK_MINUTES = 15;
 
@@ -48,7 +50,14 @@ export const Users: CollectionConfig = {
     useAsTitle: 'name',
     defaultColumns: ['name', 'email', 'role'],
     listSearchableFields: ['name', 'email'],
-    group: { ar: 'الإدارة', en: 'Administration' },
+    group: adminGroup('admin'),
+    components: collectionComponents('users', { localized: false }),
+    custom: {
+      shows: {
+        ar: 'لا يظهر في الموقع: من يسجّل الدخول هنا وما يُسمح له بتغييره',
+        en: 'nowhere on the site: who can sign in here and what they may change',
+      },
+    },
     description: {
       ar: 'حسابات لوحة التحكم. المحرّر يعدّل المحتوى؛ المدير يعدّل الإعدادات والمستخدمين.',
       en: 'Panel accounts. Editors change content; admins also change settings and users.',

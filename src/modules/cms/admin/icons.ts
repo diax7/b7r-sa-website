@@ -6,21 +6,24 @@ import {
   Eye,
   FileText,
   FolderTree,
+  Globe,
   Heart,
+  History,
   House,
   Image,
-  LayoutGrid,
   ListChecks,
   type LucideIcon,
   MessageSquareQuote,
   Newspaper,
+  PenLine,
   Plug,
-  ScrollText,
+  Radar,
   Search,
   Settings2,
   Shield,
   ShieldCheck,
   Shirt,
+  ShoppingBag,
   SlidersHorizontal,
   Tag,
   Target,
@@ -32,12 +35,14 @@ import {
 import type { Config } from '@/payload-types';
 
 /**
- * The one place an admin icon is chosen (ADR-039, `.claude/rules/admin-ui.md`). The key
- * types are derived from the generated config, so a new collection or global without an
- * entry here is a type error, and `tests/admin-icons.test.ts` walks the runtime config too.
+ * The one place the shell learns about an entity (ADR-039, ADR-046, `.claude/rules/admin-ui.md`):
+ * its icon, its group and its place in the sidebar. The key types are derived from the
+ * generated config, so a new collection or global without an entry here is a type error, and
+ * `tests/admin-config.test.ts` walks the runtime config too.
  */
 export type CollectionSlug = Exclude<keyof Config['collections'], `payload-${string}`>;
 export type GlobalSlug = Exclude<keyof Config['globals'], `payload-${string}`>;
+export type EntityType = 'collections' | 'globals';
 
 export const COLLECTION_ICONS: Record<CollectionSlug, LucideIcon> = {
   products: Shirt,
@@ -53,7 +58,7 @@ export const COLLECTION_ICONS: Record<CollectionSlug, LucideIcon> = {
   authors: UserPen,
   tags: Tag,
   'ai-topics': ListChecks,
-  'ai-runs': ScrollText,
+  'ai-runs': History,
 };
 
 export const GLOBAL_ICONS: Record<GlobalSlug, LucideIcon> = {
@@ -61,33 +66,124 @@ export const GLOBAL_ICONS: Record<GlobalSlug, LucideIcon> = {
   'site-settings': Settings2,
   navigation: Compass,
   'seo-defaults': Search,
-  'ai-settings': Bot,
+  'ai-settings': SlidersHorizontal,
 };
 
 /**
- * The three nav groups in display order. Payload groups entities by the rendered label, in
- * the panel's language; `groupKey` maps either language back to the key.
+ * Identity hues (design system §2): one per group, carried by every entity of the group onto
+ * the sidebar, the page header and the dashboard. Identity, never meaning: blue keeps the main
+ * action and links, green stays "live", red "delete", amber "careful". Pink rather than orange
+ * for Visibility, because orange sits next to amber.
  */
+export type Hue = 'blue' | 'teal' | 'violet' | 'pink' | 'slate' | 'green';
+
+/** Tailwind classes per hue (literal, so the scanner keeps them): a tinted disc and its icon. */
+export const HUE_CLASSES: Record<Hue, string> = {
+  blue: 'bg-accent-tint text-accent',
+  teal: 'bg-teal-tint text-teal',
+  violet: 'bg-violet-tint text-violet',
+  pink: 'bg-pink-tint text-pink',
+  slate: 'bg-slate-tint text-slate',
+  green: 'bg-success-tint text-success',
+};
+
+/** The bar beside a page header, in the entity's hue (literal classes). */
+export const HUE_BAR_CLASSES: Record<Hue, string> = {
+  blue: 'border-accent',
+  teal: 'border-teal',
+  violet: 'border-violet',
+  pink: 'border-pink',
+  slate: 'border-slate',
+  green: 'border-success',
+};
+
+/** The five task groups of the sidebar, in display order (ADR-046). */
 export const ADMIN_GROUPS = {
-  content: { ar: 'المحتوى', en: 'Content' },
-  blog: { ar: 'المدونة', en: 'Blog' },
-  ai: { ar: 'المحتوى الآلي', en: 'AI content' },
-  settings: { ar: 'الإعدادات', en: 'Settings' },
-  administration: { ar: 'الإدارة', en: 'Administration' },
-} as const;
+  site: { ar: 'الموقع', en: 'Site', hue: 'blue', icon: Globe, order: 0 },
+  catalogue: { ar: 'الكتالوج', en: 'Catalogue', hue: 'teal', icon: ShoppingBag, order: 1 },
+  blog: { ar: 'المدونة', en: 'Blog', hue: 'violet', icon: PenLine, order: 2 },
+  visibility: { ar: 'الظهور', en: 'Visibility', hue: 'pink', icon: Radar, order: 3 },
+  admin: { ar: 'الإدارة', en: 'Admin', hue: 'slate', icon: Shield, order: 4 },
+} as const satisfies Record<
+  string,
+  { ar: string; en: string; hue: Hue; icon: LucideIcon; order: number }
+>;
 
 export type AdminGroupKey = keyof typeof ADMIN_GROUPS;
 
-export const GROUP_ORDER: AdminGroupKey[] = ['content', 'blog', 'ai', 'settings', 'administration'];
+export const GROUP_ORDER: AdminGroupKey[] = (Object.keys(ADMIN_GROUPS) as AdminGroupKey[]).toSorted(
+  (a, b) => ADMIN_GROUPS[a].order - ADMIN_GROUPS[b].order,
+);
 
-export const GROUP_ICONS: Record<AdminGroupKey, LucideIcon> = {
-  content: LayoutGrid,
-  blog: Newspaper,
-  ai: Bot,
-  settings: SlidersHorizontal,
-  administration: Shield,
+/** The `admin.group` value a config declares; the registry below must name the same group. */
+export function adminGroup(key: AdminGroupKey): { ar: string; en: string } {
+  return { ar: ADMIN_GROUPS[key].ar, en: ADMIN_GROUPS[key].en };
+}
+
+/** A sub-heading inside a group: the content engine's three entries under Blog. */
+export const NAV_SECTIONS = {
+  engine: { ar: 'محرّك المحتوى', en: 'Content engine', icon: Bot },
+} as const satisfies Record<string, { ar: string; en: string; icon: LucideIcon }>;
+
+export type NavSection = keyof typeof NAV_SECTIONS;
+
+export interface EntityRef {
+  type: EntityType;
+  slug: CollectionSlug | GlobalSlug;
+}
+
+/**
+ * Where an entity sits in the sidebar: its group, its order inside the group, an optional
+ * parent (a secondary entry, indented under the parent) and an optional section.
+ */
+export interface NavPlacement {
+  group: AdminGroupKey;
+  order: number;
+  parent?: EntityRef;
+  section?: NavSection;
+  /** The public listing the entity feeds, for the link on its list page. */
+  listing?: `/${string}` | '/';
+}
+
+const POSTS: EntityRef = { type: 'collections', slug: 'posts' };
+const SITE_SETTINGS: EntityRef = { type: 'globals', slug: 'site-settings' };
+
+export const ADMIN_NAV: {
+  collections: Record<CollectionSlug, NavPlacement>;
+  globals: Record<GlobalSlug, NavPlacement>;
+} = {
+  collections: {
+    pages: { group: 'site', order: 1 },
+    media: { group: 'site', order: 3 },
+    products: { group: 'catalogue', order: 0, listing: '/products' },
+    integrations: { group: 'catalogue', order: 1 },
+    testimonials: { group: 'catalogue', order: 2 },
+    faqs: { group: 'catalogue', order: 3, listing: '/faq' },
+    posts: { group: 'blog', order: 0, listing: '/blog' },
+    categories: { group: 'blog', order: 1, parent: POSTS },
+    authors: { group: 'blog', order: 2, parent: POSTS },
+    tags: { group: 'blog', order: 3, parent: POSTS },
+    'ai-topics': { group: 'blog', order: 10, section: 'engine' },
+    'ai-runs': { group: 'blog', order: 11, section: 'engine' },
+    redirects: { group: 'visibility', order: 1 },
+    users: { group: 'admin', order: 0 },
+  },
+  globals: {
+    home: { group: 'site', order: 0 },
+    'site-settings': { group: 'site', order: 2 },
+    navigation: { group: 'site', order: 0, parent: SITE_SETTINGS },
+    'seo-defaults': { group: 'visibility', order: 0 },
+    'ai-settings': { group: 'blog', order: 12, section: 'engine' },
+  },
 };
 
+export function navPlacement(type: EntityType, slug: string): NavPlacement | undefined {
+  return type === 'collections'
+    ? ADMIN_NAV.collections[slug as CollectionSlug]
+    : ADMIN_NAV.globals[slug as GlobalSlug];
+}
+
+/** Payload groups entities by the rendered label, in the panel's language; back to the key. */
 export function groupKey(label: string): AdminGroupKey | undefined {
   return GROUP_ORDER.find(
     (key) => ADMIN_GROUPS[key].ar === label || ADMIN_GROUPS[key].en === label,
@@ -96,60 +192,26 @@ export function groupKey(label: string): AdminGroupKey | undefined {
 
 export function groupIcon(label: string): LucideIcon | undefined {
   const key = groupKey(label);
-  return key ? GROUP_ICONS[key] : undefined;
+  return key ? ADMIN_GROUPS[key].icon : undefined;
+}
+
+export function groupHue(key: AdminGroupKey): Hue {
+  return ADMIN_GROUPS[key].hue;
+}
+
+/** An entity's hue is its group's; an unknown entity (never in practice) reads as blue. */
+export function entityHue(type: EntityType, slug: string): Hue {
+  const placement = navPlacement(type, slug);
+  return placement ? ADMIN_GROUPS[placement.group].hue : 'blue';
+}
+
+export function entityIcon(type: EntityType, slug: string): LucideIcon | undefined {
+  return type === 'collections'
+    ? COLLECTION_ICONS[slug as CollectionSlug]
+    : GLOBAL_ICONS[slug as GlobalSlug];
 }
 
 export const ACTION_ICONS = { viewSite: Eye } as const;
-
-/**
- * The dashboard's hues (design system §2): identity, never meaning. A page is violet on its
- * quick-action tile and in the latest-changes list; the settings entities share the blue.
- * Green is kept for "live" (the site link), so the four meaning colours stay honest.
- */
-export type Hue = 'blue' | 'violet' | 'teal' | 'orange' | 'pink' | 'green';
-
-export const COLLECTION_HUES: Record<CollectionSlug, Hue> = {
-  products: 'teal',
-  pages: 'violet',
-  faqs: 'orange',
-  testimonials: 'pink',
-  integrations: 'teal',
-  media: 'pink',
-  redirects: 'blue',
-  users: 'blue',
-  posts: 'violet',
-  categories: 'blue',
-  authors: 'pink',
-  tags: 'blue',
-  'ai-topics': 'orange',
-  'ai-runs': 'blue',
-};
-
-export const GLOBAL_HUES: Record<GlobalSlug, Hue> = {
-  home: 'blue',
-  'site-settings': 'blue',
-  navigation: 'blue',
-  'seo-defaults': 'blue',
-  'ai-settings': 'orange',
-};
-
-export function entityHue(type: 'collections' | 'globals', slug: string): Hue {
-  const hue =
-    type === 'collections'
-      ? COLLECTION_HUES[slug as CollectionSlug]
-      : GLOBAL_HUES[slug as GlobalSlug];
-  return hue ?? 'blue';
-}
-
-/** Tailwind classes per hue (literal, so the scanner keeps them): a tinted disc and its icon. */
-export const HUE_CLASSES: Record<Hue, string> = {
-  blue: 'bg-accent-tint text-accent',
-  violet: 'bg-violet-tint text-violet',
-  teal: 'bg-teal-tint text-teal',
-  orange: 'bg-orange-tint text-orange',
-  pink: 'bg-pink-tint text-pink',
-  green: 'bg-success-tint text-success',
-};
 
 /** The lucide names the content selects offer (`CARD_ICONS`, `WHY_US_ICONS`), for the picker. */
 export const WIDGET_ICONS: Record<string, LucideIcon> = {
@@ -160,9 +222,3 @@ export const WIDGET_ICONS: Record<string, LucideIcon> = {
   Eye,
   Heart,
 };
-
-export function entityIcon(type: 'collections' | 'globals', slug: string): LucideIcon | undefined {
-  return type === 'collections'
-    ? COLLECTION_ICONS[slug as CollectionSlug]
-    : GLOBAL_ICONS[slug as GlobalSlug];
-}
