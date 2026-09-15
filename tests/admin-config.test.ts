@@ -24,7 +24,6 @@ import { Tags } from '@/modules/cms/collections/tags';
 import { Testimonials } from '@/modules/cms/collections/testimonials';
 import { Users } from '@/modules/cms/collections/users';
 import { Home } from '@/modules/cms/globals/home';
-import { Navigation } from '@/modules/cms/globals/navigation';
 import { SeoDefaults } from '@/modules/cms/globals/seo-defaults';
 import { SiteSettings } from '@/modules/cms/globals/site-settings';
 import { AiSettings } from '@/modules/ai-content/settings';
@@ -47,7 +46,7 @@ const collections: CollectionConfig[] = [
   // The plugin builds the collection; its overrides carry the admin shape.
   { ...REDIRECT_OVERRIDES, slug: 'redirects', fields: [] } as unknown as CollectionConfig,
 ];
-const globals: GlobalConfig[] = [Home, SiteSettings, Navigation, SeoDefaults];
+const globals: GlobalConfig[] = [Home, SiteSettings, SeoDefaults];
 
 const ARABIC = /[؀-ۿ]/;
 /** lucide icons are `forwardRef` exotic components: objects with a `render`. */

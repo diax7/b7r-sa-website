@@ -2,7 +2,6 @@ import {
   ArrowRightLeft,
   Bot,
   CircleHelp,
-  Compass,
   Eye,
   FileText,
   FolderTree,
@@ -64,7 +63,6 @@ export const COLLECTION_ICONS: Record<CollectionSlug, LucideIcon> = {
 export const GLOBAL_ICONS: Record<GlobalSlug, LucideIcon> = {
   home: House,
   'site-settings': Settings2,
-  navigation: Compass,
   'seo-defaults': Search,
   'ai-settings': SlidersHorizontal,
 };
@@ -146,7 +144,6 @@ export interface NavPlacement {
 }
 
 const POSTS: EntityRef = { type: 'collections', slug: 'posts' };
-const SITE_SETTINGS: EntityRef = { type: 'globals', slug: 'site-settings' };
 
 export const ADMIN_NAV: {
   collections: Record<CollectionSlug, NavPlacement>;
@@ -171,7 +168,6 @@ export const ADMIN_NAV: {
   globals: {
     home: { group: 'site', order: 0 },
     'site-settings': { group: 'site', order: 2 },
-    navigation: { group: 'site', order: 0, parent: SITE_SETTINGS },
     'seo-defaults': { group: 'visibility', order: 0 },
     'ai-settings': { group: 'blog', order: 12, section: 'engine' },
   },

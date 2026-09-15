@@ -1,6 +1,6 @@
 import type { Navigation } from '@/content/schema';
 
-/** BRD 4.3 global elements and 4.5 policy links, verbatim: seed for the `navigation` global (ADR-026). */
+/** BRD 4.3 global elements and 4.5 policy links, verbatim: seed for the site settings' `menu` group (ADR-026, ADR-046). */
 export const navigation: Navigation = {
   primary: [
     { label: 'الرئيسية', href: '/' },

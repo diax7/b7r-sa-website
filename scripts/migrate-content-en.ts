@@ -76,44 +76,42 @@ export async function ensureEnglish(payload: Payload): Promise<EnglishSummary> {
   const done = (name: string) => out.written.push(name);
   const skip = (name: string) => out.skipped.push(name);
 
-  // site-settings
+  // site-settings, with the menus (the site settings' `menu` group since ADR-046): the
+  // English labels merged onto the Arabic rows by position.
   {
     const en = await payload.findGlobal({ slug: 'site-settings', ...EN });
-    if (en.brandName) skip('en site-settings');
-    else {
+    const ar = await payload.findGlobal({ slug: 'site-settings', ...AR });
+    const label = (map: Record<string, string>) => (row: Row) => ({
+      label: map[String(row['href'])] ?? String(row['label']),
+    });
+    const menuEn = {
+      primary: merged(ar.menu.primary, (ar.menu.primary ?? []).map(label(navigationEn.primary))),
+      policies: merged(
+        ar.menu.policies,
+        (ar.menu.policies ?? []).map(label(navigationEn.policies)),
+      ),
+      ctaLabel: navigationEn.ctaLabel,
+      skipLinkLabel: navigationEn.skipLinkLabel,
+      menuOpenLabel: navigationEn.menuOpenLabel,
+      menuCloseLabel: navigationEn.menuCloseLabel,
+    };
+    if (en.brandName && en.menu?.ctaLabel) skip('en site-settings');
+    else if (en.brandName) {
       await payload.updateGlobal({
         slug: 'site-settings',
         locale: 'en',
-        data: siteEn,
+        data: { menu: menuEn },
+        context: CONTEXT,
+      });
+      done('en site-settings: menu');
+    } else {
+      await payload.updateGlobal({
+        slug: 'site-settings',
+        locale: 'en',
+        data: { ...siteEn, menu: menuEn },
         context: CONTEXT,
       });
       done('en site-settings');
-    }
-  }
-
-  // navigation
-  {
-    const en = await payload.findGlobal({ slug: 'navigation', ...EN });
-    if (en.ctaLabel) skip('en navigation');
-    else {
-      const ar = await payload.findGlobal({ slug: 'navigation', ...AR });
-      const label = (map: Record<string, string>) => (row: Row) => ({
-        label: map[String(row['href'])] ?? String(row['label']),
-      });
-      await payload.updateGlobal({
-        slug: 'navigation',
-        locale: 'en',
-        data: {
-          primary: merged(ar.primary, (ar.primary ?? []).map(label(navigationEn.primary))),
-          policies: merged(ar.policies, (ar.policies ?? []).map(label(navigationEn.policies))),
-          ctaLabel: navigationEn.ctaLabel,
-          skipLinkLabel: navigationEn.skipLinkLabel,
-          menuOpenLabel: navigationEn.menuOpenLabel,
-          menuCloseLabel: navigationEn.menuCloseLabel,
-        },
-        context: CONTEXT,
-      });
-      done('en navigation');
     }
   }
 

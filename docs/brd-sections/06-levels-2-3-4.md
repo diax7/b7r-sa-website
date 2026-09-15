@@ -2,7 +2,7 @@
 
 ### 9.1 Goal
 
-Give Dhia and an editor a WordPress-like, Arabic, right-to-left admin at `https://b7r.sa/admin` to change every piece of site content and configuration without a deploy, while the public site stays static and fast. Since Level 5 (ADR-043) every localised field carries an Arabic and an English value (the panel's locale switch); a document is on the English site once its title has an English value, and the English site exists once the site settings and navigation have theirs. Payload CMS 3 runs inside the same Next.js app (decision from `docs/research/05`: MIT licence, Arabic RTL admin, built-in drafts, scheduled publishing, jobs queue, custom admin views).
+Give Dhia and an editor a WordPress-like, Arabic, right-to-left admin at `https://b7r.sa/admin` to change every piece of site content and configuration without a deploy, while the public site stays static and fast. Since Level 5 (ADR-043) every localised field carries an Arabic and an English value (the panel's locale switch); a document is on the English site once its title has an English value, and the English site exists once the site settings (brand name and the menu's CTA label, ADR-046) have theirs. Payload CMS 3 runs inside the same Next.js app (decision from `docs/research/05`: MIT licence, Arabic RTL admin, built-in drafts, scheduled publishing, jobs queue, custom admin views).
 
 ### 9.2 Infrastructure additions
 
@@ -29,6 +29,7 @@ Give Dhia and an editor a WordPress-like, Arabic, right-to-left admin at `https:
 |---|---|---|---|
 | `site-settings` | Global | brand, contact, social, offer.welcomeCredit, delivery.maxDays, delivery.origin, bookingUrl, badges (media[]), consent text | `content/site.ts` |
 | `navigation` | Global | header items[], footer columns[], ctaLabel | `content/navigation.ts` |
+| | | Amended 2026-09-15 (ADR-046): folded into `site-settings` as its `menu` group (primary[6], policies[4], ctaLabel, skipLinkLabel, menuOpenLabel, menuCloseLabel); the `Navigation` contract in `content/schema.ts` is read from there; the `navigation` global and its tables are gone (migration `20260915_143152`). | |
 | `home` | Global | heroSlides[] (media desktop/mobile, headline, subline), productStripOrder[], designerDefaults, steps[], video (media, poster, heading, lead), whyUs[], integrationsIntro, faqSelection (5 relationship), ribbon | `content/home.ts` |
 | | | Amended 2026-09-13 (ADR-031, as shipped): groups `hero` (4 slides: headline, subline, desktop and mobile media; CTAs, microcopy, 3 chips), `productStrip` (copy + 5 product relationships), `designer` (eyebrow, title, lead, sample, cta), `steps` (copy, link, 3 items with media icons), `video` (copy; the file ships with the site), `whyUs` (3 items, icon select), `testimonials`, `integrations`, `faq` (copy + link; the entries are the `faqs` rows flagged `showOnHome`), `ribbon`; `enabled` on every group but hero, productStrip, designer and ribbon; drafts + autosave; interface strings (aria, hints, input labels, validation) stay in `src/messages/ar.json`. | `content/seed/home.ts` (seed) |
 | `seo-defaults` | Global | titleTemplate, the routes' titles and descriptions, verification tokens (admin-only); the default Open Graph image is the rendered file per language (`pnpm og`, ADR-043) | `content/seo.ts` |

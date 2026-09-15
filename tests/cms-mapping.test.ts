@@ -4,13 +4,7 @@ import { products } from '@/content/seed/products';
 import { seo } from '@/content/seed/seo';
 import { site } from '@/content/seed/site';
 import { mediaUrl, toNavigation, toProduct, toSeoRows, toSiteSettings } from '@/lib/cms/mappers';
-import type {
-  Media,
-  Navigation as NavigationDoc,
-  Product as ProductDoc,
-  SeoDefault,
-  SiteSetting,
-} from '@/payload-types';
+import type { Media, Product as ProductDoc, SeoDefault, SiteSetting } from '@/payload-types';
 
 const SERVER = 'http://localhost:3004';
 
@@ -116,10 +110,21 @@ describe('toProduct', () => {
   });
 });
 
+/** The menus as the site settings store them (the `menu` group, ADR-046), from the seed. */
+const menuDoc: SiteSetting['menu'] = {
+  primary: navigation.primary.map((i) => ({ ...i, matchPrefix: i.matchPrefix ?? null })),
+  policies: navigation.policies.map((i) => ({ ...i, matchPrefix: null })),
+  ctaLabel: navigation.ctaLabel,
+  skipLinkLabel: navigation.skipLinkLabel,
+  menuOpenLabel: navigation.menuOpenLabel,
+  menuCloseLabel: navigation.menuCloseLabel,
+};
+
 describe('globals', () => {
   it('site settings round-trip from the seed shape', () => {
     const doc: SiteSetting = {
       id: 1,
+      menu: menuDoc,
       brandName: site.brandName,
       brandNameLatin: site.brandNameLatin,
       tagline: site.tagline,
@@ -140,18 +145,25 @@ describe('globals', () => {
     expect(() => toSiteSettings({ ...doc, contact: { ...doc.contact, email: 'nope' } })).toThrow();
   });
 
-  it('navigation keeps the six primary and four policy links and drops empty matchPrefix', () => {
-    const doc: NavigationDoc = {
+  it('the menus keep the six primary and four policy links and drop empty matchPrefix', () => {
+    const doc = {
       id: 1,
-      primary: navigation.primary.map((i) => ({ ...i, matchPrefix: i.matchPrefix ?? null })),
-      policies: navigation.policies.map((i) => ({ ...i, matchPrefix: null })),
-      ctaLabel: navigation.ctaLabel,
-      skipLinkLabel: navigation.skipLinkLabel,
-      menuOpenLabel: navigation.menuOpenLabel,
-      menuCloseLabel: navigation.menuCloseLabel,
-    };
+      brandName: site.brandName,
+      brandNameLatin: site.brandNameLatin,
+      tagline: site.tagline,
+      contact: site.contact,
+      social: site.social,
+      welcomeCredit: site.offer.welcomeCredit,
+      deliveryMaxDays: site.delivery.maxDays,
+      deliveryOrigin: site.delivery.origin,
+      deliveryRegion: site.delivery.region,
+      legalEntity: site.legalEntity,
+      menu: menuDoc,
+    } satisfies SiteSetting;
     expect(toNavigation(doc, 'ar')).toEqual(navigation);
-    expect(() => toNavigation({ ...doc, primary: doc.primary?.slice(1) }, 'ar')).toThrow();
+    expect(() =>
+      toNavigation({ ...doc, menu: { ...menuDoc, primary: menuDoc.primary?.slice(1) } }, 'ar'),
+    ).toThrow();
     // English: the same rows under the prefix (ADR-043).
     const english = toNavigation(doc, 'en');
     expect(english.primary.map((i) => i.href)).toEqual(

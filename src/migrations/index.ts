@@ -12,6 +12,7 @@ import * as migration_20260914_122646_posts_computed_locales from './20260914_12
 import * as migration_20260914_134500_seo_defaults_og_field from './20260914_134500_seo_defaults_og_field';
 import * as migration_20260914_135821_engine_language from './20260914_135821_engine_language';
 import * as migration_20260914_170855_hero_photos_per_locale_overlay_no_login from './20260914_170855_hero_photos_per_locale_overlay_no_login';
+import * as migration_20260915_143152_menus_into_site_settings from './20260915_143152_menus_into_site_settings';
 
 export const migrations = [
   {
@@ -83,5 +84,10 @@ export const migrations = [
     up: migration_20260914_170855_hero_photos_per_locale_overlay_no_login.up,
     down: migration_20260914_170855_hero_photos_per_locale_overlay_no_login.down,
     name: '20260914_170855_hero_photos_per_locale_overlay_no_login',
+  },
+  {
+    up: migration_20260915_143152_menus_into_site_settings.up,
+    down: migration_20260915_143152_menus_into_site_settings.down,
+    name: '20260915_143152_menus_into_site_settings',
   },
 ];

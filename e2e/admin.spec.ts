@@ -319,10 +319,6 @@ test.describe('CMS admin', () => {
     // Secondary entries sit under their parent; the engine is a section inside Blog; a
     // collection shows its count; the active entry wears its group's hue.
     await expect(nav.locator('#nav-categories')).toHaveAttribute('data-admin-entry', 'secondary');
-    await expect(nav.locator('#nav-global-navigation')).toHaveAttribute(
-      'data-admin-entry',
-      'secondary',
-    );
     await expect(
       nav.locator('[data-admin-group="Blog"] [data-admin-section="engine"] #nav-ai-topics'),
     ).toBeVisible();
@@ -677,6 +673,47 @@ test.describe('CMS admin', () => {
       const removed = await request.delete(`${API}/users/${editorId}`, { headers: adminAuth });
       expect(removed.status()).toBe(200);
     }
+  });
+
+  // The menus are the site settings' `menu` group (ADR-046, PR B1): the six header links and
+  // the four policy links live there, and a change to the CTA label reaches every page.
+  test('the menus live in the site settings and a saved CTA label reaches the header', async ({
+    page,
+    request,
+  }) => {
+    test.setTimeout(120_000);
+    const auth = await login(request, admin);
+    type Settings = {
+      menu: { primary: unknown[]; policies: unknown[]; ctaLabel: string };
+    };
+    const en = (await (
+      await request.get(`${API}/globals/site-settings?locale=en`, { headers: auth })
+    ).json()) as Settings;
+    expect(en.menu.primary).toHaveLength(6);
+    expect(en.menu.policies).toHaveLength(4);
+    await page.goto('/admin/login');
+    await page.locator('#field-email').fill(admin.email);
+    await page.locator('#field-password').fill(admin.password);
+    await page.locator('form button[type="submit"]').first().click();
+    await page.waitForURL((u) => !u.pathname.endsWith('/login'));
+    await page.goto('/admin/globals/site-settings');
+    await expect(page.getByRole('heading', { name: 'Menus & footer' })).toBeVisible();
+    await expect(page.getByText('Primary 06')).toBeVisible();
+    await expect(page.getByText('Policy 04')).toBeVisible();
+    const stamp = `Start e2e ${Date.now()}`;
+    const save = (ctaLabel: string) =>
+      request.post(`${API}/globals/site-settings?locale=en`, {
+        headers: auth,
+        data: { menu: { ...en.menu, ctaLabel } },
+      });
+    const poll = { intervals: [1_000, 2_000, 3_000] };
+    expect((await save(stamp)).status()).toBe(200);
+    try {
+      await expect.poll(shows(request, '/en', stamp), { ...poll, timeout: 15_000 }).toBe(true);
+    } finally {
+      expect((await save(en.menu.ctaLabel)).status()).toBe(200);
+    }
+    await expect.poll(shows(request, '/en', stamp), { ...poll, timeout: 15_000 }).toBe(false);
   });
 
   test('an outsider holding no credential reads published content and nothing else', async ({

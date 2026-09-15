@@ -29,7 +29,6 @@ import { Testimonials } from '@/modules/cms/collections/testimonials';
 import { Users } from '@/modules/cms/collections/users';
 import { cmsEnv, isBuildPhase } from '@/lib/cms/env';
 import { Home } from '@/modules/cms/globals/home';
-import { Navigation } from '@/modules/cms/globals/navigation';
 import { SeoDefaults } from '@/modules/cms/globals/seo-defaults';
 import { SiteSettings } from '@/modules/cms/globals/site-settings';
 import { migrations } from '@/migrations';
@@ -120,7 +119,7 @@ export default buildConfig({
     AiTopics,
     AiRuns,
   ],
-  globals: [Home, SiteSettings, Navigation, SeoDefaults, AiSettings],
+  globals: [Home, SiteSettings, SeoDefaults, AiSettings],
   db: postgresAdapter({
     pool: { connectionString: env.databaseUrl },
     push: false,
