@@ -58,7 +58,7 @@ function competitorOf(host: string | null): string | null {
 /**
  * The competitors as an answer names them (BRD 2.3), on word boundaries: "merchant" is not
  * Merch by Amazon and "springboard" is not Spring; Spring has no safe name and is found by
- * host only.
+ * host only. Matched against `fold(text)`, which lowercases: no `i` flag needed.
  */
 const COMPETITOR_NAMES: Array<[RegExp, (typeof COMPETITOR_HOSTS)[number]]> = [
   [/\bprintful\b|برنتفل|برينتفول/u, 'printful.com'],

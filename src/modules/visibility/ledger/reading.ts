@@ -133,7 +133,14 @@ function titled(
   return (['ar', 'en'] as const).flatMap((locale) => {
     const title = titles[locale];
     return typeof title === 'string' && title
-      ? [{ title, label: title, href: editHref(adminRoute, collection, doc.id, locale) }]
+      ? [
+          {
+            title,
+            // The English form is a different target: say so beside the title.
+            label: locale === 'en' ? `${title} (en)` : title,
+            href: editHref(adminRoute, collection, doc.id, locale),
+          },
+        ]
       : [];
   });
 }
