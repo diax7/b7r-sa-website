@@ -157,6 +157,16 @@ const SITE_HOST = /^(?:www\.)?b7r\.sa$/;
 const GOOGLE = /^google\.[a-z.]+$/;
 const BING = /^bing\.[a-z.]+$/;
 
+/** The site's own hostname without its port, as `foldHost` would fold it, or null. */
+function ownHost(siteHost: string | undefined): string | null {
+  if (!siteHost) return null;
+  try {
+    return new URL(`http://${siteHost}`).hostname.toLowerCase().replace(SUBDOMAINS, '');
+  } catch {
+    return null;
+  }
+}
+
 /** The channel key of a host the table knows (Google and Bing on any top-level domain), or null. */
 function knownHost(host: string): string | null {
   return HOSTS[host] ?? (GOOGLE.test(host) ? 'google' : BING.test(host) ? 'bing' : null);
@@ -175,9 +185,7 @@ export function sourceOf(args: {
   siteHost?: string;
 }): string | null {
   const host = foldHost(args.referrer);
-  if (host && (SITE_HOST.test(host) || (args.siteHost && host === args.siteHost.toLowerCase()))) {
-    return null;
-  }
+  if (host && (SITE_HOST.test(host) || host === ownHost(args.siteHost))) return null;
   const token = args.utmSource.trim().toLowerCase();
   if (host && knownHost(host)) return host;
   if (token && UTM_TOKENS[token]) return UTM_TOKENS[token];

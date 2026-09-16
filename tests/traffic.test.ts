@@ -9,10 +9,12 @@ import { channelOf, channels, foldHost, sourceOf } from '@/modules/traffic/chann
 import {
   count,
   FLUSH_AT,
+  FLUSH_MS,
   flush,
   KEY_CEILING,
   pending,
   resetCounter,
+  startFlusher,
   type TrafficRow,
 } from '@/modules/traffic/counter';
 import { sinceDay, summarise } from '@/modules/traffic/summary';
@@ -305,6 +307,36 @@ describe('traffic: the batcher (ADR-048)', () => {
     // A count that lands while the failed write is in flight is kept too, by addition.
     count({ kind: 'landing', source: 'direct', path: '/' });
     expect(pending()[0]?.hits).toBe(2);
+  });
+
+  it('holds the size-triggered flush after a failure until the next tick, and logs once a minute', async () => {
+    vi.useFakeTimers();
+    const quiet = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    let attempts = 0;
+    startFlusher(async () => {
+      attempts += 1;
+      return fakePayload(true).payload;
+    });
+    // The 500th count asks for a flush; it fails and the rows stay.
+    for (let i = 0; i < FLUSH_AT; i++) {
+      count({ kind: 'landing', source: `h${i}.example.com`, path: '/' });
+    }
+    await vi.advanceTimersByTimeAsync(0);
+    expect(attempts).toBe(1);
+    expect(pending()).toHaveLength(FLUSH_AT);
+    // Over the size threshold and failed a moment ago: no new attempt, no new log line.
+    for (let i = 0; i < 50; i++) {
+      count({ kind: 'landing', source: `late${i}.example.com`, path: '/' });
+    }
+    await vi.advanceTimersByTimeAsync(0);
+    expect(attempts).toBe(1);
+    expect(quiet).toHaveBeenCalledTimes(1);
+    // The next tick tries again and, still failing within the minute, logs nothing new.
+    await vi.advanceTimersByTimeAsync(FLUSH_MS);
+    expect(attempts).toBe(2);
+    expect(quiet).toHaveBeenCalledTimes(1);
+    expect(pending().length).toBe(FLUSH_AT + 50);
+    vi.useRealTimers();
   });
 
   it('drops new keys past the ceiling with one warning; a flush at 500 keys is asked for', async () => {

@@ -1,7 +1,7 @@
 import { type NextFetchEvent, NextResponse } from 'next/server';
 import { hasDraftCookie } from '@/lib/cookies';
 import { goneHtml } from '@/lib/gone-page';
-import { INTERNAL_HEADER, internalToken } from '@/lib/internal-token';
+import { CRAWL_TOKEN_PURPOSE, INTERNAL_HEADER, internalToken } from '@/lib/internal-token';
 import { createSlugCache, SLUG_SHAPE } from '@/lib/page-slugs';
 import { isGone } from '@/lib/redirects';
 import { isEnglishPath, localeSlug, NOT_FOUND_PREFIX } from '@/lib/site-routes';
@@ -17,8 +17,9 @@ import { crawlOf } from '@/lib/traffic/crawl';
  * be read the request passes through (fail open). A request carrying Next's draft cookie
  * passes through too: an editor previewing an unpublished page (ADR-039) is not on the
  * allowlist yet. And a known crawler's document GET of a page or a machine file is reported
- * to the traffic counter over the same loopback, fire-and-forget, after the response is
- * decided. The matcher is one pattern (`PROXY_MATCHER`): every page request passes here.
+ * to the traffic counter over the same loopback, fire-and-forget, once the proxy has let the
+ * request through (a retired URL and a slug the proxy itself turns away are not "what they
+ * read"). The matcher is one pattern (`PROXY_MATCHER`): every page request passes here.
  */
 const SLUGS_TTL_MS = 20_000;
 const CRAWL_LOG_EVERY_MS = 60_000;
@@ -32,7 +33,7 @@ async function reportCrawl(crawl: { bot: string; path: string }): Promise<void> 
       method: 'POST',
       headers: {
         'content-type': 'application/json',
-        [INTERNAL_HEADER]: await internalToken('traffic-crawl'),
+        [INTERNAL_HEADER]: await internalToken(CRAWL_TOKEN_PURPOSE),
       },
       body: JSON.stringify(crawl),
       cache: 'no-store',
@@ -80,24 +81,27 @@ export async function proxy(request: Request, event?: NextFetchEvent) {
       },
     });
   }
-  const crawl = crawlOf(request);
-  if (crawl) {
-    const report = reportCrawl(crawl);
-    if (event) event.waitUntil(report);
-  }
   const notFound = () =>
     NextResponse.rewrite(new URL(`${NOT_FOUND_PREFIX}${url.pathname.slice(1)}`, url));
+  const through = () => {
+    const crawl = crawlOf(request);
+    if (crawl) {
+      const report = reportCrawl(crawl);
+      if (event) event.waitUntil(report);
+    }
+    return undefined;
+  };
   // Every `/en` URL answers 404 while the site is not in English (a half-seeded environment).
   if (isEnglishPath(url.pathname) && (await slugs.en.knows(ENGLISH_OFF)) === true) {
     return notFound();
   }
   const candidate = localeSlug(url.pathname);
-  if (candidate === null) return undefined;
-  if (hasDraftCookie(request.headers.get('cookie'))) return undefined;
+  if (candidate === null) return through();
+  if (hasDraftCookie(request.headers.get('cookie'))) return through();
   if (!SLUG_SHAPE.test(candidate.slug)) return notFound();
   const known = await slugs[candidate.locale].knows(candidate.slug);
   if (known === false) return notFound();
-  return undefined;
+  return through();
 }
 
 export const config = {

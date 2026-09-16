@@ -1,12 +1,13 @@
 import { Link } from '@payloadcms/ui';
-import { Footprints } from 'lucide-react';
 import { Card } from '@/components/shared/card';
 import { Icon } from '@/components/shared/icon';
+import { COLLECTION_ICONS } from '@/modules/cms/admin/icons';
 import { adminStrings } from '@/modules/cms/admin/strings';
 import { CHANNEL_GROUPS } from '@/modules/traffic/channels';
 import type { TrafficSummary } from '@/modules/traffic/summary';
 
 const s = adminStrings.traffic;
+const TrafficIcon = COLLECTION_ICONS.traffic;
 
 function stat(label: string, value: string) {
   return (
@@ -33,7 +34,7 @@ export function TrafficCard({ summary, href }: { summary: TrafficSummary; href: 
     >
       <div className="flex items-center justify-between gap-3">
         <h2 className="flex items-center gap-2 text-h4 text-text">
-          <Icon icon={Footprints} size={20} className="text-accent" />
+          <Icon icon={TrafficIcon} size={20} className="text-accent" />
           {s.card.title}
         </h2>
         <Link href={href} className="text-caption text-accent hover:underline">
@@ -45,14 +46,14 @@ export function TrafficCard({ summary, href }: { summary: TrafficSummary; href: 
           className="flex items-center gap-2 text-small text-text-muted"
           data-admin-traffic-empty=""
         >
-          <Icon icon={Footprints} size={16} className="text-pink" />
+          <Icon icon={TrafficIcon} size={16} className="text-pink" />
           {s.card.empty}
         </p>
       ) : (
         <>
           <div className="grid grid-cols-3 gap-4">
             {stat(s.card.landings, String(summary.landings))}
-            {stat(s.card.topChannel, top ? top.channel.label : '·')}
+            {stat(s.card.topChannel, top ? top.channel.label : '')}
             {stat(s.card.crawls, String(summary.crawls))}
           </div>
           <ul className="flex flex-col gap-2" data-admin-traffic-groups="">

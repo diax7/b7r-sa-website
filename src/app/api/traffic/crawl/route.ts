@@ -1,10 +1,13 @@
 import { cms } from '@/lib/cms/payload';
-import { INTERNAL_HEADER, internalToken, sameToken } from '@/lib/internal-token';
+import {
+  CRAWL_TOKEN_PURPOSE,
+  INTERNAL_HEADER,
+  internalToken,
+  sameToken,
+} from '@/lib/internal-token';
 import { count, parseCrawl, startFlusher } from '@/modules/traffic';
 
 export const dynamic = 'force-dynamic';
-
-export const CRAWL_TOKEN_PURPOSE = 'traffic-crawl';
 
 /**
  * The proxy's report of a crawler reading a page (ADR-048): accepted only with the internal

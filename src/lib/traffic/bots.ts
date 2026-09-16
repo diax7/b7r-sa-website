@@ -24,7 +24,7 @@ export interface Bot {
   /** As the vendor writes it in the user agent. */
   token: string;
   family: BotFamily;
-  /** What the bot does: reads to answer a person now, indexes for search, or gathers for training. */
+  /** What the bot does: reads to answer a person now, indexes for search, or gathers for training (the Traffic page says which). */
   role: 'answer' | 'search' | 'training';
 }
 
