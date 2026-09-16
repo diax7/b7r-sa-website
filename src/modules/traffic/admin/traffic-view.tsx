@@ -7,7 +7,7 @@ import { cn } from '@/lib/cn';
 import { botByKey } from '@/lib/traffic/bots';
 import { ADMIN_VIEWS } from '@/modules/cms/admin/icons';
 import { adminStrings } from '@/modules/cms/admin/strings';
-import { AdminsOnly, adminView, isAdminUser, viewUser } from '@/modules/cms/admin/views/gate';
+import { adminView, viewUser } from '@/modules/cms/admin/views/gate';
 import { CHANNEL_GROUPS } from '@/modules/traffic/channels';
 import { type TrafficSummary, trafficSummary } from '@/modules/traffic/summary';
 
@@ -192,8 +192,8 @@ function Crawlers({ summary }: { summary: TrafficSummary }) {
  * to the login and shows an editor the sentence; the rows are read with the user's access.
  */
 export async function TrafficView(props: AdminViewServerProps) {
-  adminView(props, ADMIN_VIEWS.traffic.path);
-  if (!isAdminUser(props)) return <AdminsOnly />;
+  const refused = adminView(props, ADMIN_VIEWS.traffic.path);
+  if (refused) return refused;
   const days = rangeOf(props.searchParams?.['days']);
   const summary = await trafficSummary(props.payload, { days, user: viewUser(props) });
   const adminRoute = props.payload.config.routes.admin;

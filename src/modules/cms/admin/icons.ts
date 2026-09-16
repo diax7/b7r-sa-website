@@ -19,13 +19,13 @@ import {
   PenLine,
   Plug,
   Radar,
-  Radio,
   Search,
   Settings2,
   Shield,
   ShieldCheck,
   Shirt,
   ShoppingBag,
+  Signpost,
   SlidersHorizontal,
   Tag,
   Target,
@@ -85,7 +85,7 @@ export const ADMIN_VIEWS: Record<
   ViewSlug,
   { label: { ar: string; en: string }; path: `/${string}`; icon: LucideIcon }
 > = {
-  traffic: { label: { ar: 'مصادر الزيارات', en: 'Traffic' }, path: '/traffic', icon: Radio },
+  traffic: { label: { ar: 'مصادر الزيارات', en: 'Traffic' }, path: '/traffic', icon: Signpost },
 };
 
 /**

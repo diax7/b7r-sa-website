@@ -45,9 +45,11 @@ note), `check:rtl` and the admin e2e.
    (`src/modules/cms/admin/api-action.tsx`), which says what happened beside the button.
 11. A page of our own in the panel (a report, ADR-048) is a custom view: an entry in
    `ADMIN_VIEWS` (label, path, icon: a place, never the group's) and `ADMIN_NAV.views` in
-   `icons.ts`, its component in `admin/views/registry.ts`, and the component's first line is
-   `adminView(props, path)` then `isAdminUser(props)` (`admin/views/gate.tsx`): Payload
-   renders a custom view with a `path` for anyone. Reads inside run with the user's access.
+   `icons.ts`, its component in `admin/views/registry.ts`, and the component's first lines
+   are `const refused = adminView(props, path); if (refused) return refused;`
+   (`admin/views/gate.tsx`): Payload renders a custom view with a `path` for anyone. Reads
+   inside run with the user's access. A module's admin folder is a `@source` of `admin.css`
+   and a `@source not` of `globals.css` (`tests/admin-css.test.ts`).
 
 ## Adding an admin component
 

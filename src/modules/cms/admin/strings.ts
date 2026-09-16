@@ -182,7 +182,7 @@ export const adminStrings = {
       crawlers: 'Crawlers',
       bot: 'Bot',
       family: 'Company',
-      role: 'Reads to',
+      role: 'Purpose',
       reads: 'Reads',
       readMost: 'Read most',
       empty: 'Nothing in this range yet.',

@@ -97,7 +97,7 @@ published pill) is re-hued to the accent in `@layer payload`; its greys are unto
   `MessageSquareQuote`, integrations `Plug`, media `Image`, redirects `ArrowRightLeft`, users
   `Users`, posts `Newspaper`, categories `FolderTree`, authors `UserPen`, tags `Tag`,
   ai-topics `ListChecks`, ai-runs `History`, connections `KeyRound`, traffic `Footprints`;
-  the Traffic view `Radio`; home `House`,
+  the Traffic view `Signpost`; home `House`,
   site-settings `Settings2`,
   seo-defaults `Search`, ai-settings `SlidersHorizontal`; groups Site
   `Globe`, Catalogue `ShoppingBag`, Blog `PenLine`, Visibility `Radar`, Admin `Shield`; the
@@ -124,7 +124,9 @@ The admin's strings are interface copy (ADR-031): written by us, under the ux-ar
 - Empty states: why it is empty + the next step: «لا صفحات بعد. أضف الأولى.»
 - Errors: what happened + how to recover, no blame: «تعذّر الحفظ. تحقق من الحقول المعلّمة.»
 - Numbers Western (`1, 2, 3`), dates relative when recent («قبل 3 دقائق»), otherwise
-  `dd/MM/yyyy`. Brand and product names stay Latin: Salla, Zid, Shopify, Turnstile, Resend.
+  `dd/MM/yyyy`; the traffic count's day keys (`YYYY-MM-DD`, Riyadh) show as they are, since
+  they are keys that sort and match the rows. Brand and product names stay Latin: Salla, Zid,
+  Shopify, Turnstile, Resend.
 - Punctuation: Arabic comma «،», «أو» not «/», no «!». **No em dash anywhere** (ADR-040,
   `.claude/rules/writing.md`, `pnpm check:dash`): a colon or two sentences instead.
 - Localised fields (ADR-043): the panel's locale control switches every localised field

@@ -101,7 +101,7 @@ export async function navGroups(args: {
       }),
     }));
   // Our own pages (ADR-048): Payload knows nothing of them; the registry's rule is admins only.
-  if (roleOf({ user } as never) === 'admin') {
+  if (roleOf({ user: user ?? null }) === 'admin') {
     for (const [slug, view] of Object.entries(ADMIN_VIEWS)) {
       allowed.push({
         type: 'views',
