@@ -5,8 +5,8 @@ import { cmsEnv } from '@/lib/cms/env';
 import { getSiteSettings } from '@/lib/cms/settings';
 import { getContactTransport } from '@/lib/contact-transport';
 import { contactEnv } from '@/lib/env-server';
-import { indexNowKey } from '@/lib/indexnow';
 import { getNewsletterTransport } from '@/lib/newsletter-transport';
+import { shouldPing } from '@/modules/cms/jobs/indexnow';
 import { type EngineState, engineState } from '@/modules/ai-content';
 
 const DB_TIMEOUT_MS = 2000;
@@ -113,7 +113,8 @@ export async function healthReport(): Promise<HealthReport> {
     newsletter: getNewsletterTransport().kind,
     contact: getContactTransport(await contactRecipient()).kind,
     turnstile: contactEnv().turnstileSecretKey ? 'on' : 'off',
-    indexnow: indexNowKey() ? 'on' : 'off',
+    // Whether a publish pings (ADR-052): the key alone is always there now.
+    indexnow: shouldPing() ? 'on' : 'off',
     email: cmsEnv().email ? 'resend' : 'console',
     jobs: await jobsStatus(),
     jobsFailed: await failedJobs(),
