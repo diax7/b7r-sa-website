@@ -55,7 +55,7 @@ b7r.sa to go live.
 |---|---|---|---|---|
 | 27 | Umami: a site on cloud.umami.is or your own instance, or say so and the two variables leave the required set | Dhia | open | `NEXT_PUBLIC_UMAMI_SRC`, `NEXT_PUBLIC_UMAMI_ID` are asserted at start with `B7R_RUNTIME=production` |
 | 28 | A monthly limit on every AI connection; the prompts' periods set; the Mock connection and its citations removed before the dump | Dhia | open | RUNBOOK "The citation ledger"; the Anthropic row has no limit today |
-| 29 | The hero beyond Full HD is a card of the photo's width (ADR-051) | *code* | done | `e2e/home-hero.spec.ts` at 2560 and 3440 |
+| 29 | The hero never grows wider than its photo; white on both sides beyond 1920 px (ADR-051) | *code* | done | `e2e/home-hero.spec.ts` at 2560 and 3440 |
 | 30 | The image builds where the platform builds from the repository (build args, migration inside the build) | *code* | done | Dockerfile, ADR-025 amended; the first build-arg build on 2026-09-17 found a production-only type error (the mock kind and the generated types), fixed the same day |
 | 31 | An outsider's read of the API: `connections`, `prompts`, `citations`, `payload-jobs`, `users` answer 403 anonymously; GraphQL is off; drafts are not served | *code* | done | `tests/access.test.ts`; checked on the review server 2026-09-17 |
 | 32 | An external uptime monitor on `/api/health` every five minutes | Dhia | open | UptimeRobot or cron-job.org; the platform's own check restarts, the external one tells you |
