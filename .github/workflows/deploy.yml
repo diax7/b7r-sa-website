@@ -1,9 +1,11 @@
 name: Deploy
 
-# Builds the production image (BRD 8.6, ADR-025): migrate the production database, prerender
-# every page from it, push to GHCR. CranL then pulls `ghcr.io/diax7/b7r-sa-website:latest`
-# (docs/RUNBOOK.md, "Deploy"). Secrets live in the `production` GitHub environment; until
-# they are set the job ends early with a notice, so a push to main never fails on them.
+# Builds the production image (BRD 8.6, ADR-025) for a platform that deploys a registry
+# image: the Dockerfile migrates the production database and prerenders every page from it;
+# the image is pushed to GHCR. A platform that builds from the repository (CranL, Koyeb,
+# Render, Qovery) does not need this workflow (docs/RUNBOOK.md, "Deploy"). Secrets live in
+# the `production` GitHub environment; until they are set the job ends early with a notice,
+# so a push to main never fails on them.
 
 on:
   push:
@@ -56,19 +58,8 @@ jobs:
           node-version: 22
           cache: pnpm
 
-      - name: Install
-        if: steps.secrets.outputs.ready == 'true'
-        run: pnpm install --frozen-lockfile
-
-      # Additive migrations only (docs/RUNBOOK.md): the running image keeps serving while the
-      # new columns land, then the new image starts against the migrated schema.
-      - name: Migrate the production database
-        if: steps.secrets.outputs.ready == 'true'
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          PAYLOAD_SECRET: ${{ secrets.PAYLOAD_SECRET }}
-        run: bash scripts/ci/migrate.sh
-
+      # The Dockerfile's build stage migrates first (additive migrations only, docs/RUNBOOK.md:
+      # the running image keeps serving while the new columns land), then prerenders.
       - uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
         if: steps.secrets.outputs.ready == 'true'
 

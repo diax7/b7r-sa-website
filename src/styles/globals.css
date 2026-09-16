@@ -240,6 +240,24 @@
     padding-block-start: var(--header-h);
   }
 }
+/* Beyond Full HD (ADR-051): the desktop photo is 1920 x 1080 (`DESKTOP` in hero.tsx) and is
+   never shown larger than its pixels. Past that width the hero is a card of the photo's
+   width, centred under the header on the page's white, with the large radius; its height
+   stops at the photo's height so `cover` never upscales, and a shorter viewport keeps the
+   fold (the card ends a step above it). Just past the threshold the card keeps a gutter of
+   32 px a side rather than hugging the viewport with its corners. */
+@media (min-width: 1921px) {
+  .hero {
+    --hero-photo-w: 1920px;
+    --hero-photo-h: 1080px;
+    max-width: min(var(--hero-photo-w), calc(100% - 64px));
+    min-height: min(calc(100svh - var(--header-h) - 32px), var(--hero-photo-h));
+    margin-block-start: 0;
+    margin-inline: auto;
+    padding-block-start: 0;
+    border-radius: var(--radius-lg);
+  }
+}
 .hero-overlay {
   --hero-overlay: #ffffff;
   background: linear-gradient(

@@ -102,4 +102,43 @@ test.describe('hero (BRD 6.4.1)', () => {
     await expect(cta).toHaveAttribute('href', /utm_campaign=hero/);
     await expect(cta).toHaveText('ابدأ براندك مجانًا');
   });
+
+  // Beyond Full HD the hero is a card of the photo's width under the header (a 32 px gutter
+  // a side just past the threshold), and the photo is fetched at its own width, never an
+  // upscaled candidate (ADR-051).
+  for (const [width, path] of [
+    [1940, '/'],
+    [2560, '/'],
+    [3440, '/en'],
+  ] as const) {
+    test(`at ${width} px the hero is a card of the photo's width and the photo is not upscaled (${path})`, async ({
+      browser,
+      baseURL,
+    }) => {
+      const ctx = await browser.newContext({ viewport: { width, height: 1440 } });
+      const page = await ctx.newPage();
+      await page.goto(`${baseURL}${path}`);
+      const hero = page.locator('section.hero');
+      await expect(hero).toBeVisible();
+      const box = (await hero.boundingBox())!;
+      const cardWidth = Math.min(1920, width - 64);
+      expect(box.width).toBe(cardWidth);
+      expect(box.x).toBe((width - cardWidth) / 2);
+      expect(box.y).toBeGreaterThanOrEqual(88);
+      expect(box.height).toBeLessThanOrEqual(1080);
+      await expect(hero).toHaveCSS('border-radius', '20px');
+      const image = page.locator('[data-hero-image="0"]');
+      await expect
+        .poll(() => image.evaluate((el: HTMLImageElement) => el.naturalWidth))
+        .toBeLessThanOrEqual(1920);
+      await expect(image).toHaveAttribute('sizes', '100vw');
+      await expect(
+        page.locator('link[rel="preload"][as="image"][media="(min-width: 768px)"]').first(),
+      ).toHaveAttribute('imagesizes', '(min-width: 1921px) 1920px, 100vw');
+      await expect(
+        page.locator('section.hero source[media="(min-width: 768px)"]').first(),
+      ).toHaveAttribute('sizes', '(min-width: 1921px) 1920px, 100vw');
+      await ctx.close();
+    });
+  }
 });

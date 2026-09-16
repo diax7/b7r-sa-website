@@ -17,6 +17,7 @@ import { Icon } from '@/components/shared/icon';
 import type { HeroSlide } from '@/content/schema';
 import { cn } from '@/lib/cn';
 import { useReducedMotion } from '@/lib/reduced-motion';
+import { DESKTOP_SIZES } from '@/modules/home/hero/renditions';
 
 export interface HeroImageSet {
   /** Props from `getImageProps` for the desktop 16:9 rendition. */
@@ -137,7 +138,11 @@ export function HeroCarousel({ slides, images, overlay, copy }: HeroCarouselProp
                 active ? 'opacity-100' : 'opacity-0',
               )}
             >
-              <source media="(min-width: 768px)" srcSet={img.desktop.srcSet} sizes="100vw" />
+              <source
+                media="(min-width: 768px)"
+                srcSet={img.desktop.srcSet}
+                sizes={DESKTOP_SIZES}
+              />
               <img
                 src={img.mobile.src}
                 srcSet={img.mobile.srcSet}

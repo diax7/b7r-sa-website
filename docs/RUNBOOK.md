@@ -107,52 +107,72 @@ curl http://localhost:3000/api/health   # {"ok":true,"version":"0.1.0","db":"ok"
 `docker build --secret id=NAME` reads the value from the environment variable of the same
 name. Local uploads (`public/media`) are not copied into the image.
 
-## Deploy (CranL)
+## Deploy (the platform builds from the repository)
 
-GitHub push and the first CranL deploy wait for Dhia's approval (ADR-008). When enabled:
+The image is built from the `Dockerfile` at the root, and the build needs the production
+database and the Payload secret (ADR-025): it migrates the database, then prerenders every
+page from it. Any platform that builds a Dockerfile from the GitHub repository and hands the
+app's environment variables to the build works the same way: CranL (build type
+`Dockerfile`), Koyeb, Render, Qovery, or a custom host running `docker build --build-arg`.
+Verified 2026-09-17 with a build-arg build against the compose database (no secret mounts).
 
-1. Provision on CranL: Postgres 16 (a database `b7r`, a user with DDL rights, TLS) and an
-   S3-compatible bucket `b7r-media` with public read; note the values for the matrix below.
-   Region Saudi Arabia; port 3000; health check `GET /api/health` (`ok` is the liveness
-   signal; `db`, `media`, `newsletter`, `contact`, `turnstile`, `indexnow` are reported).
-2. Image: `.github/workflows/deploy.yml` runs on every push to `main` and on demand. It
-   migrates the production database (`scripts/ci/migrate.sh`: `pnpm migrate`, then
-   `migrate:status` must list every migration file as ran, three attempts; the Payload CLI
-   once exited 0 in CI without applying anything), builds the image with the database and
-   secret as BuildKit secrets, and pushes `ghcr.io/diax7/b7r-sa-website:{sha,latest}`. Point
-   CranL at that image (deploy on new tag / webhook). Secrets go in the GitHub `production`
-   environment (`DATABASE_URL`, `PAYLOAD_SECRET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`);
-   non-secret values are environment **variables** (`NEXT_PUBLIC_GA_ID`, `NEXT_PUBLIC_UMAMI_*`,
-   `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `S3_BUCKET`, `S3_REGION`, `S3_ENDPOINT`, `S3_PUBLIC_URL`).
-   Until the two secrets exist the workflow ends with a notice and deploys nothing. The
-   GitHub runner must reach the database (public endpoint with TLS, or an allow-list); the
-   fallback is building on CranL from the `Dockerfile` with the same secrets. `payload` is a
-   `serverExternalPackages` entry (ADR-033): the standalone trace copies it from
-   `node_modules`, so a slimmer image must keep that directory.
-   Release order: migrate (the workflow does it) → new image starts → old image stops;
-   migrations are additive so both images run on the schema (ADR-025).
-3. Runtime environment: every row of the matrix below; the same `NEXT_PUBLIC_*` values as
-   the build args. First deploy only: `pnpm content:migrate` and `pnpm admin:create` against
-   the production database from a machine with the secrets (ADR-026), then sign in at
-   `/admin` and change the password. A database seeded before 2b already holds products and
-   the three settings globals, so the first 2b deploy runs `pnpm content:migrate --force`:
-   it adds only what is missing (home, faqs, testimonials, integrations, the hero and step
-   media) and never overwrites a document.
-4. Set `B7R_RUNTIME=production` **only in the CranL production app**. `instrumentation.ts`
-   then asserts the BRD 8.5 + 9.2 required set at server start and throws if anything is
-   missing, so the container fails its health check and CranL keeps the previous image
-   (ADR-021). Never set it in CI or previews.
-5. Confirm the platform proxy sets `x-forwarded-for` (`curl -sI` from outside and read it
+1. Provision: Postgres 16 (a database `b7r`, TLS, a connection string the platform's
+   builder can reach: the external one, not an internal-only host) and an S3-compatible
+   bucket `b7r-media` with public read; note the values for the matrix below. Region
+   Saudi Arabia or the nearest MENA region.
+2. The application from `diax7/b7r-sa-website`, branch `main`, build type `Dockerfile`,
+   port 3000 (or set `PORT`; `server.js` and the health check follow it), health check
+   `GET /api/health` (`ok` is the liveness signal; `db`, `media`, `newsletter`, `contact`,
+   `turnstile`, `indexnow`, `jobs` are reported), **one instance** (the job queue runs inside
+   the app on a one-minute cron; two instances run every job twice).
+3. Environment: every row of the matrix below, set before the first build, because the
+   build reads `DATABASE_URL`, `PAYLOAD_SECRET`, the `NEXT_PUBLIC_*` values and the `S3_*`
+   location (media URLs are prerendered). The build refuses to start without the database
+   and the secret rather than prerender an empty site. A builder without BuildKit (Kaniko)
+   cannot parse the `RUN --mount` lines; every platform named above uses BuildKit. The
+   platform must hand its environment to the build as build args (Render and Koyeb do by
+   default; confirm it on CranL with the first build's log); a build arg lives in the build
+   stage's layer metadata and the platform's build log, never in the runner image, so keep
+   provenance attestations off on the platform path (they would embed build args), and
+   ignore `docker build`'s `SecretsUsedInArgOrEnv` lint line for `ARG PAYLOAD_SECRET`.
+   Because the build migrates, a preview or branch build given the production
+   `DATABASE_URL` would migrate production from a branch: previews get their own database
+   or no build at all.
+4. The first deploy's data, before the first build: either restore the review database
+   (`pg_dump --format=custom` → `pg_restore`, then copy `public/media/` into the bucket
+   under the `media/` prefix, which the rows already carry), or seed an empty one from a
+   machine with the secrets: `pnpm migrate`, `pnpm content:migrate`, `pnpm admin:create`
+   (ADR-026). Then sign in at `/admin`, change the password, and paste the connections'
+   keys again if the secret is new (they are encrypted with it, ADR-047).
+5. Set `B7R_RUNTIME=production` **only in the production app**. `instrumentation.ts` then
+   asserts the BRD 8.5 + 9.2 required set at server start and throws if anything is
+   missing, so the container fails its health check and the platform keeps the previous
+   deployment (ADR-021). Never set it in CI or previews. The first build on the platform's
+   temporary domain runs without it and without `NEXT_PUBLIC_SITE_URL`: the site is then
+   noindex while it is rehearsed; the two origins and the switch go in at cutover (a
+   rebuild, since the origin is inlined).
+6. Confirm the platform proxy sets `x-forwarded-for` (`curl -sI` from outside and read it
    back from a debug log line, or check the platform docs). The API rate limiters key on the
    last hop of that header; if it never arrives every visitor shares the `unknown` key and the
    sixth signup or message in ten minutes site-wide is refused.
-6. HSTS carries `preload`. Submitting `b7r.sa` to the preload list commits every future
+7. HSTS carries `preload`. Submitting `b7r.sa` to the preload list commits every future
    `*.b7r.sa` subdomain to HTTPS; do that only once every subdomain (app, umami, …) serves TLS.
-7. CDN / proxy rule: cache `/_next/static/*` and `/_next/image*` freely; never cache `/admin*`
+8. CDN / proxy rule: cache `/_next/static/*` and `/_next/image*` freely; never cache `/admin*`
    or `/api/*` (they answer `Cache-Control: private, no-store`); pages carry Next's own
    `s-maxage=60, stale-while-revalidate` and may be cached at the edge on those terms.
-8. Rollback: redeploy the previous image from CranL's deployment list. The database is
-   shared and migrations are additive, so the previous image runs on the current schema.
+9. Rollback: redeploy the previous build from the platform's deployment list. The database
+   is shared and migrations are additive, so the previous image runs on the current schema.
+   Release order on every push to `main`: the build migrates → the new image starts → the
+   old image stops (ADR-025).
+
+A platform that deploys a registry image instead of building (or a builder that cannot reach
+the database) uses `.github/workflows/deploy.yml`: the same Dockerfile built in GitHub
+Actions with BuildKit secrets, pushed to `ghcr.io/diax7/b7r-sa-website:{sha,latest}`.
+Secrets go in the GitHub `production` environment (`DATABASE_URL`, `PAYLOAD_SECRET`,
+`S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`); non-secret values are environment variables.
+Until the two secrets exist the workflow ends with a notice and deploys nothing. `payload`
+is a `serverExternalPackages` entry (ADR-033): the standalone trace copies it from
+`node_modules`, so a slimmer image must keep that directory.
 
 ### Environment matrix
 
