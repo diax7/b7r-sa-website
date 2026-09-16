@@ -323,6 +323,31 @@ retry copy; `NEWSLETTER_TRANSPORT=mock` (tests only) keeps subscriptions in memo
 `NEXT_PUBLIC_UMAMI_ID` load Umami on every page. Local previews and CI point Umami at
 `/umami-test.js`, a recorder that never sends anything.
 
+## Traffic sources (ADR-048)
+
+- **What it is.** The site's own count of where visitors come from and what the AI crawlers
+  read: one row per day, kind, source and page under Visibility → Traffic, and a "Traffic,
+  last 7 days" card on the dashboard (admins). Nothing needs configuring: the beacon and the
+  crawler count are on in every environment.
+- **Reading it.** A landing's source is the referring site folded (`chatgpt.com`,
+  `google.com`, `instagram.com`), a UTM token, or `direct`; the channel and its group (AI
+  assistants, search, social, other sites, direct) are derived from the source when the card
+  or the page reads it. A crawl's source is the bot (`gptbot`, `claudebot`, `googlebot`).
+- **What it cannot know.** Google's AI Overviews and AI Mode arrive with a Google referrer
+  and read as Google. The native apps (ChatGPT's, in-app browsers) send no referrer and
+  count as direct. A page reached from a bookmark or a typed address is direct too.
+- **Spikes.** A public counter can be fed: sixty landings a minute per address, so a spike of
+  `referral` from one host you have never heard of is referrer spam, not visitors; ignore it,
+  there is nothing to block. Crawl rows cannot be forged from outside (the proxy signs its
+  reports).
+- **The review server and CI.** The e2e lands on pages like a visitor, so the review
+  server's direct and ChatGPT counts include the suite's page loads. The batcher writes every
+  ten seconds: a row appears within that.
+- **Adding a channel or a bot.** One line in `src/modules/traffic/channels.ts` (a host and
+  its channel, or a UTM token and its host) or `src/lib/traffic/bots.ts` (the user-agent
+  token, its family and role); the history re-buckets itself because the channel is derived
+  at read. A bot named in `robots.txt` (C-08) must be in the table: a test says so.
+
 ## Known audit exceptions
 
 `extract-zip <= 2.0.1` (GHSA-jmr9-qjv8-65gv, GHSA-7pqw-9j4j-h8q3) via

@@ -8,7 +8,7 @@ import {
   isEnglishPath,
   localeSlug,
   NOT_FOUND_PREFIX,
-  SLUG_MATCHER,
+  PROXY_MATCHER,
   topLevelSlug,
 } from '@/lib/site-routes';
 import { FORBIDDEN_PAGE_SLUGS, pageSlugProblem } from '@/modules/cms/collections/pages';
@@ -25,10 +25,23 @@ const englishFolders = () => routeFolders('(en)', 'en');
 const pageFolders = (folders: string[]) => folders.filter((f) => !f.includes('.')).toSorted();
 
 describe('B0: the proxy and the (site) routes agree on the code-owned segments (ADR-032)', () => {
-  it('every (site) folder is in CODE_TOP_LEVEL, and the matcher literal is built from it', () => {
+  it('every (site) folder is in CODE_TOP_LEVEL, and the proxy matches every page request', () => {
     for (const folder of siteFolders()) expect(CODE_TOP_LEVEL, folder).toContain(folder);
-    expect(proxyConfig.matcher.at(-1)).toBe(SLUG_MATCHER);
-    expect(proxyConfig.matcher).toEqual(expect.arrayContaining(['/en', '/en/:path*']));
+    expect(proxyConfig.matcher).toEqual([PROXY_MATCHER]);
+    // The one pattern: pages and machine files in, the API, the admin and the assets out.
+    const re = new RegExp(`^${PROXY_MATCHER.replace('/(', '/(?:')}$`);
+    for (const path of ['/', '/en', '/products/hoodie', '/creators', '/llms.txt', '/wp-admin/x']) {
+      expect(re.test(path), path).toBe(true);
+    }
+    for (const path of [
+      '/api/health',
+      '/admin',
+      '/admin/login',
+      '/_next/static/a.js',
+      '/media/x.jpg',
+    ]) {
+      expect(re.test(path), path).toBe(false);
+    }
   });
 
   it('the English root layout mirrors every Arabic route folder (ADR-043)', () => {

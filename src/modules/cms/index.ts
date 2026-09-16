@@ -28,6 +28,7 @@ import { indexNowTask } from '@/modules/cms/jobs/indexnow';
 import { Testimonials } from '@/modules/cms/collections/testimonials';
 import { Users } from '@/modules/cms/collections/users';
 import { Connections } from '@/modules/connections/collection';
+import { Traffic } from '@/modules/traffic/collection';
 import { cmsEnv, isBuildPhase } from '@/lib/cms/env';
 import { Home } from '@/modules/cms/globals/home';
 import { SeoDefaults } from '@/modules/cms/globals/seo-defaults';
@@ -120,6 +121,7 @@ export default buildConfig({
     AiTopics,
     AiRuns,
     Connections,
+    Traffic,
   ],
   globals: [Home, SiteSettings, SeoDefaults, AiSettings],
   db: postgresAdapter({

@@ -5,6 +5,7 @@ import {
   Eye,
   FileText,
   FolderTree,
+  Footprints,
   Globe,
   Heart,
   History,
@@ -60,6 +61,7 @@ export const COLLECTION_ICONS: Record<CollectionSlug, LucideIcon> = {
   'ai-topics': ListChecks,
   'ai-runs': History,
   connections: KeyRound,
+  traffic: Footprints,
 };
 
 export const GLOBAL_ICONS: Record<GlobalSlug, LucideIcon> = {
@@ -165,6 +167,7 @@ export const ADMIN_NAV: {
     'ai-topics': { group: 'blog', order: 10, section: 'engine' },
     'ai-runs': { group: 'blog', order: 11, section: 'engine' },
     redirects: { group: 'visibility', order: 1 },
+    traffic: { group: 'visibility', order: 2 },
     users: { group: 'admin', order: 0 },
     connections: { group: 'admin', order: 1 },
   },

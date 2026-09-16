@@ -121,6 +121,23 @@ export const adminStrings = {
     worksWith: 'Works: {model} answered. Recorded on the connection.',
     saveFirst: 'Save, then test.',
   },
+  traffic: {
+    groups: {
+      ai: 'AI assistants',
+      search: 'Search',
+      social: 'Social',
+      referral: 'Other sites',
+      direct: 'Direct',
+    },
+    card: {
+      title: 'Traffic, last 7 days',
+      landings: 'Landings',
+      topChannel: 'Top channel',
+      crawls: 'Crawler reads',
+      empty: 'No landings yet: the count starts with the first visitor.',
+      link: 'All traffic',
+    },
+  },
   dashboard: {
     greeting: 'Welcome, {name}',
     intro: 'Everything on the site starts here.',

@@ -399,6 +399,11 @@ runtime map is the documented upgrade if exact codes or nested sources are ever 
 The redirects hook revalidates the source path and the allowlist, so a new source passes
 the proxy at once.
 
+*Amended 2026-09-16 (ADR-048): the matcher is one pattern, every request but the API, the
+admin, Next's files and the asset folders (`PROXY_MATCHER`), so the proxy can also count
+crawlers; the code-owned list stays what `localeSlug()` reads at runtime, and the 410 and
+unknown-slug answers are unchanged.*
+
 ## ADR-033: Jobs run in-process; IndexNow only on the production runtime (2026-09-13)
 
 Payload's jobs queue runs inside the Next process (BRD 9.6): `autoRun` on a one-minute
@@ -1157,3 +1162,69 @@ done.**
 `filterOptions` on the engine's picker (every kind is engine-capable today; project 3's
 analytics kinds bring the filter with their consumers); Perplexity; a shared rate-limit
 store.
+
+## ADR-048: Traffic sources: our own counter of visitors and AI crawlers (2026-09-16)
+
+**Context.** Dhia wants to see in the admin where visitors come from (ChatGPT, Gemini,
+Claude, Perplexity, Google, the social networks, other sites, nobody) and which AI crawlers
+read the site. GA4 needs consent and its own UI; Umami has its own UI. His decision: **our
+own counter**, first-party and cookieless, honest about being a count and not an audit.
+Interview (2026-09-16): landings only, nothing stored in the browser; crawlers counted,
+nothing blocked (C-08 stays); a dashboard card and a Traffic page under Visibility; daily
+counts kept forever. **Decision.** One collection `traffic` of daily rows `(date, kind,
+source, path, hits)` with a compound unique index; the only writer is a multi-row `INSERT ...
+ON CONFLICT DO UPDATE SET hits = traffic.hits + excluded.hits` through the adapter's drizzle
+handle; the panel reads it (admins), the API creates, changes and deletes nothing. **The
+channel is derived at read, never stored** (`channelOf(source)`, `modules/traffic/channels.ts`):
+the rows keep one vocabulary, the source, and the classifier's table can grow and re-bucket
+the history. At write time `sourceOf()` picks one word: a referrer host the table knows
+(folded of `www.`/`m.`/`l.` and the app-link forms), else a known `utm_source` token folded
+to its host (ChatGPT appends `utm_source=chatgpt.com`, Perplexity `perplexity`, Copilot
+`copilot`), else the host as it is, else an unknown token, else `direct`; the site's own host
+as a referrer is an internal move the client missed and stores nothing. **The beacon**
+(`modules/core/analytics/landing-beacon.tsx`, in `PageExtras`, never in the admin): on a
+fresh navigation (`performance` says `navigate`, so a reload or back/forward counts nothing
+twice) whose referrer is not same-origin, one keepalive POST of the path, the referrer and
+`utm_source`; no storage, no retry. The 404 shell renders `PageExtras`, so a dead inbound
+link is counted with its path, which is the broken link an admin wants to see. **The
+endpoint** `POST /api/traffic/landing`, in order: JSON with an `Origin` present and matching
+the site (a browser always sends one on a POST; a bare script call is refused), a user agent
+that is not a bot (the table's, or anything calling itself a bot: 204 and nothing stored), a
+body that parses (`lib/traffic/landing.ts`: a page path of zero to four plain segments, `/`
+and `/en` included; the referrer bounded; the token `[A-Za-z0-9._-]`), sixty a minute per
+client address in memory, then one count. **The crawler counter.** The proxy now runs on
+every page request (one matcher, `PROXY_MATCHER` in `lib/site-routes.ts`, repeated as a
+literal in `proxy.ts` because Next reads `config` statically and kept equal by the test);
+the 410 and unknown-slug logic keeps its own conditions, so no existing answer changes. A
+**document GET** (no `rsc` or `next-router-prefetch` header, no `_rsc` query, not HEAD, not a
+retired URL) of a page or a machine file (`llms.txt`, `en/llms.txt`, `robots.txt`,
+`sitemap.xml`, `feed.xml`, `en/feed.xml`) by a user agent the bot table knows
+(`lib/traffic/bots.ts`: OpenAI's three, Anthropic's three, Googlebot, Perplexity's two,
+Bing's two, Applebot, Meta's two, Amazonbot, Bytespider, CCBot, DuckAssistBot, YandexBot;
+`Google-Extended` and `Applebot-Extended` are robots.txt tokens, never a user agent; a test
+holds that every C-08 bot is in the table) is reported over loopback to
+`POST /api/traffic/crawl` with `event.waitUntil`, fire-and-forget, a failure logged once a
+minute. The report carries `x-b7r-internal`, an HMAC-SHA256 of `traffic-crawl` under
+`PAYLOAD_SECRET` through Web Crypto (`lib/internal-token.ts`; the proxy and a route handler
+are separate module graphs, so a boot-time random cannot be shared), compared in constant
+time: nobody outside the container can add a crawl row. The pure halves the proxy needs live
+in `lib/traffic`, so its bundle never pulls Payload. **The batcher**
+(`modules/traffic/counter.ts`): `count()` stamps the Riyadh date at that moment; every ten
+seconds (or at 500 keys) the map is swapped for a fresh one and the snapshot written in one
+statement; a failed write merges back by addition; a 5,000-key ceiling drops new keys with
+one warning; the timer is `unref()`ed and guarded on `globalThis`; a SIGTERM flush races
+Next's own close and usually saves a deploy's last seconds; a crash loses up to ten. One
+container (ADR-033). **The card** (`modules/traffic/admin/traffic-card.tsx`, admins): the
+last seven days' landings, one bar per group (AI, search, social, other sites, direct; the
+Visibility pink on the surface track, identity not meaning), the top channel, the crawler
+reads, an empty state before the first visitor. **Not stored, ever:** an IP, a user agent
+string, a cookie, an identifier, a time finer than the day. **Honesty.** A public counter can
+be fed: bounded per address, not in distinct hosts, so referrer spam can appear in the
+sources (the RUNBOOK says how to read it); Google's AI Overviews and AI Mode arrive with a
+Google referrer and read as Google; the native apps (ChatGPT's, in-app browsers) send no
+referrer and inflate `direct`; the e2e lands like a visitor, so the review server's count
+includes the suite's. **BRD.** §6.16 gains the beacon; §11.4's Umami pull loses its referrer
+part to this counter (visitors and page views stay "if ever"); GA4 stays for consented
+sessions; Search Console comes with project 3. **Next (PR 2b):** the Traffic page as a
+Payload custom view with the registry extended to views and a gate of its own (a custom view
+with a `path` is public in Payload 3.89), reused by project 3's Score page.

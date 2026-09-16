@@ -4,9 +4,9 @@ import type { Locale } from '@/lib/i18n';
 /**
  * Top-level path segments the code owns (B0, ADR-032): the `(site)` route folders, the CMS,
  * the metadata routes and the asset folders. Anything else at the top level is a `pages`
- * slug candidate, and the proxy decides between the page and the global 404. The matcher in
- * `src/proxy.ts` repeats this list as a literal (Next reads `config` statically);
- * `tests/site-routes.test.ts` keeps the two, and the `(site)` folders, identical.
+ * slug candidate, and the proxy decides between the page and the global 404. The proxy runs
+ * on every page request (`PROXY_MATCHER`, ADR-048) and this list is what `localeSlug()`
+ * reads at runtime; `tests/site-routes.test.ts` keeps it and the `(site)` folders identical.
  */
 export const CODE_TOP_LEVEL = [
   ...RESERVED_PAGE_SLUGS,
@@ -25,8 +25,12 @@ export const CODE_TOP_LEVEL = [
   'en',
 ] as const;
 
-/** The regex segment of the proxy matcher: one segment that is none of the above and has no dot. */
-export const SLUG_MATCHER = `/((?!(?:${CODE_TOP_LEVEL.join('|')})$)(?!.*\\.)[^/]+)`;
+/**
+ * The proxy's one matcher (Next reads `config` statically, so this is a literal there too):
+ * every request but the API, the admin, Next's own files and the asset folders. The page
+ * logic and the crawler count decide the rest at runtime.
+ */
+export const PROXY_MATCHER = '/((?!(?:api|admin|_next|media|images|fonts|og|video)(?:/|$)).*)';
 
 /** The path the proxy rewrites an unknown slug to: no route matches it, so Next renders the global 404. */
 export const NOT_FOUND_PREFIX = '/__404/';

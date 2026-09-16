@@ -1,23 +1,52 @@
-import { NextResponse } from 'next/server';
+import { type NextFetchEvent, NextResponse } from 'next/server';
 import { hasDraftCookie } from '@/lib/cookies';
 import { goneHtml } from '@/lib/gone-page';
+import { INTERNAL_HEADER, internalToken } from '@/lib/internal-token';
 import { createSlugCache, SLUG_SHAPE } from '@/lib/page-slugs';
 import { isGone } from '@/lib/redirects';
 import { isEnglishPath, localeSlug, NOT_FOUND_PREFIX } from '@/lib/site-routes';
+import { crawlOf } from '@/lib/traffic/crawl';
 
 /**
- * Two jobs (BRD 5.2, ADR-017, ADR-032). Retired WordPress URLs answer 410 Gone (`next.config`
- * redirects cannot emit 410). Unknown top-level URLs are rewritten to a path no route matches,
- * so Next renders `global-not-found` server-side with status 404 and the URL unchanged,
- * without this the `/[slug]` route would answer them from a bare document (ADR-024). The
- * allowlist is the published pages, read from the loopback address (never the public origin)
- * and cached in-process for 20 s with stale-while-revalidate; when it cannot be read the
- * request passes through (fail open). A request carrying Next's draft cookie passes through
- * too: an editor previewing an unpublished page (ADR-039) is not on the allowlist yet. The
- * matcher lists the code-owned segments as literals because Next reads `config` statically;
- * `tests/site-routes.test.ts` keeps them in sync.
+ * Three jobs (BRD 5.2, ADR-017, ADR-032, ADR-048). Retired WordPress URLs answer 410 Gone
+ * (`next.config` redirects cannot emit 410). Unknown top-level URLs are rewritten to a path
+ * no route matches, so Next renders `global-not-found` server-side with status 404 and the
+ * URL unchanged, without this the `/[slug]` route would answer them from a bare document
+ * (ADR-024). The allowlist is the published pages, read from the loopback address (never the
+ * public origin) and cached in-process for 20 s with stale-while-revalidate; when it cannot
+ * be read the request passes through (fail open). A request carrying Next's draft cookie
+ * passes through too: an editor previewing an unpublished page (ADR-039) is not on the
+ * allowlist yet. And a known crawler's document GET of a page or a machine file is reported
+ * to the traffic counter over the same loopback, fire-and-forget, after the response is
+ * decided. The matcher is one pattern (`PROXY_MATCHER`): every page request passes here.
  */
 const SLUGS_TTL_MS = 20_000;
+const CRAWL_LOG_EVERY_MS = 60_000;
+let lastCrawlLog = 0;
+
+/** One POST to the counter; a failure is logged with its status once a minute at most. */
+async function reportCrawl(crawl: { bot: string; path: string }): Promise<void> {
+  try {
+    const port = process.env['PORT'] ?? '3004';
+    const res = await fetch(`http://127.0.0.1:${port}/api/traffic/crawl`, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        [INTERNAL_HEADER]: await internalToken('traffic-crawl'),
+      },
+      body: JSON.stringify(crawl),
+      cache: 'no-store',
+    });
+    if (!res.ok) throw new Error(`answered ${res.status}`);
+  } catch (error) {
+    const now = Date.now();
+    if (now - lastCrawlLog < CRAWL_LOG_EVERY_MS) return;
+    lastCrawlLog = now;
+    console.error(
+      `traffic: crawl report failed: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
+}
 
 /** `enabled` marks whether the site is in English at all (the English list is empty then). */
 const ENGLISH_OFF = '__english_off__';
@@ -40,7 +69,7 @@ function allowlist(path: string) {
 /** The Arabic pages, and the English ones with the "is the site in English" flag (ADR-043). */
 const slugs = { ar: allowlist('/api/pages/slugs'), en: allowlist('/api/pages/slugs/en') };
 
-export async function proxy(request: Request) {
+export async function proxy(request: Request, event?: NextFetchEvent) {
   const url = new URL(request.url);
   if (isGone(url.pathname)) {
     return new Response(goneHtml(), {
@@ -50,6 +79,11 @@ export async function proxy(request: Request) {
         'Cache-Control': 'public, max-age=86400',
       },
     });
+  }
+  const crawl = crawlOf(request);
+  if (crawl) {
+    const report = reportCrawl(crawl);
+    if (event) event.waitUntil(report);
   }
   const notFound = () =>
     NextResponse.rewrite(new URL(`${NOT_FOUND_PREFIX}${url.pathname.slice(1)}`, url));
@@ -67,39 +101,7 @@ export async function proxy(request: Request) {
 }
 
 export const config = {
-  matcher: [
-    '/team',
-    '/our_services',
-    '/under-construction',
-    '/demo-design-system',
-    '/hello-world',
-    '/feed',
-    '/wp-login.php',
-    '/xmlrpc.php',
-    '/post001',
-    '/post002',
-    '/post003',
-    '/post004',
-    '/post005',
-    '/post006',
-    '/post007',
-    '/post008',
-    '/post009',
-    '/post010',
-    '/post011',
-    '/post012',
-    '/specialists/:path*',
-    '/project/:path*',
-    '/project-category/:path*',
-    '/services/:path*',
-    '/category/:path*',
-    '/wp-content/:path*',
-    '/wp-admin/:path*',
-    '/wp-json/:path*',
-    // The English document and its code-owned routes: gated on the site being in English.
-    '/en',
-    '/en/:path*',
-    // Top-level slug candidates: one segment, none of the code-owned names, no dot (files).
-    '/((?!(?:about|how-it-works|contact|faq|terms|shipping|privacy|products|blog|author|admin|api|_next|og|images|fonts|media|video|__404|en)$)(?!.*\\.)[^/]+)',
-  ],
+  // A literal: Next reads `config` statically. `tests/site-routes.test.ts` keeps it equal to
+  // `PROXY_MATCHER` in `lib/site-routes.ts`.
+  matcher: ['/((?!(?:api|admin|_next|media|images|fonts|og|video)(?:/|$)).*)'],
 };
