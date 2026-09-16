@@ -1473,19 +1473,16 @@ block forces on a stale `asOf` (a rule with points instead); linking to Printful
 sources; a `price` cell type rendering `SarAmount` in the table (block growth for one row); a
 second compare page before the first is cited; `HowTo` and `Speakable`.
 
-## ADR-051: The hero beyond Full HD is a card of the photo's width (2026-09-17)
+## ADR-051: The hero never grows wider than its photo (2026-09-17)
 
 Dhia, on an ultra-wide screen: the hero photo stretched across the whole viewport and lost
 its quality. The desktop photos are 1920 × 1080 (`renditions.ts`), and the image optimiser
 resizes a candidate to the width asked, so `sizes="100vw"` on a 3440 px viewport fetched a
-3440 px upscale of a 1920 px photo and `cover` stretched it further by height. From 1921 px
-the hero is a card: `max-width` the photo's width, centred (`margin-inline: auto`) under the
-header rather than pulled beneath it, the page's white on both sides, the large radius, and
-`min-height` capped at the photo's height (or a step above the fold on a shorter viewport)
-so `cover` never upscales; the desktop rendition's `sizes` is `(min-width: 1921px) 1920px,
-100vw` on the `<source>` and the preload, so the 1920 px candidate is the one fetched. Up to
-1920 px nothing changes. Studied against the alternatives on screenshots at 2560 and 3440:
-a flush-top box under the transparent header read as a banner cut off at the screen edge;
-boxing at the page column (1280 px) would have changed every desktop above it and cropped a
-third of the photo. `e2e/home-hero.spec.ts` asserts the card's geometry and the fetched
-width at 2560 and 3440.
+3440 px upscale of a 1920 px photo. The rule is as plain as his request: the hero has
+`max-width: 1920px` and is centred; on a wider screen the page's white shows on both sides
+and nothing else changes (the header still sits over it, the height is still the viewport).
+The desktop rendition's `sizes` is `(min-width: 1921px) 1920px, 100vw` on the `<source>` and
+the preload, so the 1920 px candidate is the one fetched. A first version made the hero a
+rounded card under the header with a height cap; Dhia refused it as over-engineering and it
+was removed the same day. `e2e/home-hero.spec.ts` asserts the width, the centring and the
+fetched width at 2560 and 3440.
