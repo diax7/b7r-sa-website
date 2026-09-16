@@ -16,7 +16,13 @@ export const PAGESPEED_CATEGORIES = [
 export interface PageSpeedAudit {
   url: string;
   strategy: 'mobile' | 'desktop';
-  scores: { performance: number; accessibility: number; bestPractices: number; seo: number };
+  /** Lighthouse's 0 to 1 as 0 to 100; null when the answer lacks the category. */
+  scores: {
+    performance: number | null;
+    accessibility: number | null;
+    bestPractices: number | null;
+    seo: number | null;
+  };
   lcpMs: number | null;
   cls: number | null;
   inpMs: number | null;
@@ -28,12 +34,12 @@ export interface PageSpeedSnapshot {
   errors: Array<{ url: string; strategy: 'mobile' | 'desktop'; error: string }>;
 }
 
-function score(body: Record<string, unknown>, category: string): number {
+function score(body: Record<string, unknown>, category: string): number | null {
   const categories = (
     body['lighthouseResult'] as { categories?: Record<string, { score?: number }> } | undefined
   )?.categories;
   const raw = categories?.[category]?.score;
-  return typeof raw === 'number' ? Math.round(raw * 100) : 0;
+  return typeof raw === 'number' ? Math.round(raw * 100) : null;
 }
 
 function labValue(body: Record<string, unknown>, id: string): number | null {

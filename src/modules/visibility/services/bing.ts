@@ -27,14 +27,15 @@ export interface BingSnapshot {
 }
 
 /**
- * `/Date(1700000000000)/` or an ISO string, as `YYYY-MM-DD`. An ISO string keeps its own
- * date: parsing one without a zone would read it in the server's zone and shift the day.
+ * `/Date(1700000000000)/`, `/Date(1700000000000+0000)/` or an ISO string, as `YYYY-MM-DD`. An
+ * ISO string keeps its own date: parsing one without a zone would read it in the server's
+ * zone and shift the day.
  */
 export function bingDate(value: unknown): string | null {
   if (typeof value !== 'string') return null;
   const iso = /^(\d{4}-\d{2}-\d{2})/.exec(value);
   if (iso) return iso[1]!;
-  const ms = /\/Date\((\d+)\)\//.exec(value);
+  const ms = /\/Date\((\d+)(?:[+-]\d{4})?\)\//.exec(value);
   const date = ms ? new Date(Number(ms[1])) : new Date(value);
   return Number.isNaN(date.getTime()) ? null : date.toISOString().slice(0, 10);
 }
@@ -98,7 +99,9 @@ export function bingClient(
         call('GetRankAndTrafficStats', { siteUrl }),
         call('GetQueryStats', { siteUrl }),
       ]);
-      const days = parseTrafficStats(traffic).slice(-28);
+      const days = parseTrafficStats(traffic)
+        .toSorted((a, b) => a.date.localeCompare(b.date))
+        .slice(-28);
       return {
         siteUrl,
         days,

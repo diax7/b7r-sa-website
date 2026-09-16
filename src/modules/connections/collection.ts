@@ -179,8 +179,10 @@ export const Connections: CollectionConfig = {
         'apiKey',
         { ar: 'المفتاح', en: 'Key' },
         {
-          serviceAccountWhen: (sibling) =>
-            KINDS[sibling['kind'] as keyof typeof KINDS]?.secret === 'serviceAccount',
+          // A partial update carries no `kind`: the stored row says which.
+          serviceAccountWhen: (sibling, stored) =>
+            KINDS[(sibling['kind'] ?? stored?.['kind']) as keyof typeof KINDS]?.secret ===
+            'serviceAccount',
         },
       ),
       {

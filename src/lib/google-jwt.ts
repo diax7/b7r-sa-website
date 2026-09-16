@@ -81,8 +81,18 @@ export async function accessToken(
     }),
     signal: AbortSignal.timeout(15_000),
   });
-  if (!res.ok) throw new Error(`Google token endpoint answered ${res.status}`);
-  const body = (await res.json()) as { access_token?: string; expires_in?: number };
+  const body = (await res.json().catch(() => ({}))) as {
+    access_token?: string;
+    expires_in?: number;
+    error?: string;
+    error_description?: string;
+  };
+  if (!res.ok) {
+    // Google's reason (`invalid_grant: Invalid JWT Signature`, an unknown account) is what a
+    // failed Test needs; neither field carries the key.
+    const reason = [body.error, body.error_description].filter(Boolean).join(': ');
+    throw new Error(`Google token endpoint answered ${res.status}${reason ? ` (${reason})` : ''}`);
+  }
   if (!body.access_token) throw new Error('Google token endpoint answered without a token');
   cache.set(cacheKey, {
     token: body.access_token,

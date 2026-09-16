@@ -46,7 +46,21 @@ export function windowEnding(
   return { from: from.toISOString().slice(0, 10), to: to.toISOString().slice(0, 10) };
 }
 
-/** The rows of a `searchAnalytics.query` answer, one key each. */
+/** The one row of a `searchAnalytics.query` without dimensions: the metrics, no keys. */
+export function parseTotals(body: unknown): SearchConsoleSnapshot['totals'] {
+  const rows = (body as { rows?: unknown[] } | null)?.rows;
+  const row = (Array.isArray(rows) ? rows[0] : undefined) as
+    | { clicks?: number; impressions?: number; ctr?: number; position?: number }
+    | undefined;
+  return {
+    clicks: Number(row?.clicks ?? 0),
+    impressions: Number(row?.impressions ?? 0),
+    ctr: Number(row?.ctr ?? 0),
+    position: Number(row?.position ?? 0),
+  };
+}
+
+/** The rows of a `searchAnalytics.query` by one dimension, one key each. */
 export function parseRows(body: unknown): SearchConsoleRow[] {
   const rows = (body as { rows?: unknown[] } | null)?.rows;
   if (!Array.isArray(rows)) return [];
@@ -114,17 +128,15 @@ export function searchConsoleClient(
     if (!res.ok) throw new Error(`Search Console answered ${res.status}`);
     return res.json() as Promise<unknown>;
   };
-  const query = async (from: string, to: string, dimension?: string) =>
-    parseRows(
-      await call(`/sites/${encodeURIComponent(property)}/searchAnalytics/query`, {
-        method: 'POST',
-        body: JSON.stringify({
-          startDate: from,
-          endDate: to,
-          ...(dimension ? { dimensions: [dimension], rowLimit: TOP_ROWS } : { rowLimit: 1 }),
-        }),
+  const query = (from: string, to: string, dimension?: string) =>
+    call(`/sites/${encodeURIComponent(property)}/searchAnalytics/query`, {
+      method: 'POST',
+      body: JSON.stringify({
+        startDate: from,
+        endDate: to,
+        ...(dimension ? { dimensions: [dimension], rowLimit: TOP_ROWS } : { rowLimit: 1 }),
       }),
-    );
+    });
   return {
     sites: async () => parseSites(await call('/sites')),
     async pull(now) {
@@ -135,20 +147,14 @@ export function searchConsoleClient(
         query(from, to, 'page'),
         query(from, to, 'country'),
       ]);
-      const total = totals[0] ?? { key: '', clicks: 0, impressions: 0, ctr: 0, position: 0 };
       return {
         property,
         from,
         to,
-        totals: {
-          clicks: total.clicks,
-          impressions: total.impressions,
-          ctr: total.ctr,
-          position: total.position,
-        },
-        queries,
-        pages,
-        countries,
+        totals: parseTotals(totals),
+        queries: parseRows(queries),
+        pages: parseRows(pages),
+        countries: parseRows(countries),
       };
     },
   };

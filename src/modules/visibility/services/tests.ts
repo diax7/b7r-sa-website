@@ -33,6 +33,8 @@ export const SERVICE_TESTS: ServiceTests = {
   },
   pagespeed: async (secret) => {
     const audit = await pagespeedClient(secret).audit(base(), 'mobile');
+    if (audit.scores.performance === null)
+      throw new Error('the answer carried no performance score');
     return `mobile performance ${audit.scores.performance} on the home page`;
   },
 };

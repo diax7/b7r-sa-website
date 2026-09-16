@@ -91,20 +91,30 @@ export function serviceAccountProblem(value: unknown): string | null {
   return typeof key === 'string' ? `Service account key: ${key}` : null;
 }
 
+type Row = Record<string, unknown>;
+
 /**
- * A secret field. `options.serviceAccountWhen(siblingData)` names the rows whose secret is a
- * service account's JSON key: those are checked at save (a bad paste fails in the form, on
- * the field) and mask as the account's e-mail tail. The check lives in the `beforeChange`
- * hook rather than `validate`: Payload runs a field's hooks first and validates what they
- * return, which here is the ciphertext.
+ * A secret field. `options.serviceAccountWhen(siblingData, storedSiblings)` names the rows
+ * whose secret is a service account's JSON key (the stored siblings answer for a partial
+ * update that omits the deciding field): those are checked at save (a bad paste fails in the
+ * form, on the field) and mask as the account's e-mail tail. The check lives in the
+ * `beforeChange` hook rather than `validate`: Payload runs a field's hooks first and
+ * validates what they return, which here is the ciphertext.
  */
 export function secretField(
   name: string,
   label: { ar: string; en: string },
-  options: { serviceAccountWhen?: (siblingData: Record<string, unknown>) => boolean } = {},
+  options: {
+    serviceAccountWhen?: (siblingData: Row, storedSiblings: Row | undefined) => boolean;
+  } = {},
 ): Field {
-  const isAccount = (siblingData: unknown) =>
-    Boolean(options.serviceAccountWhen?.((siblingData ?? {}) as Record<string, unknown>));
+  const isAccount = (siblingData: unknown, stored: unknown) =>
+    Boolean(
+      options.serviceAccountWhen?.(
+        (siblingData ?? {}) as Row,
+        (stored ?? undefined) as Row | undefined,
+      ),
+    );
   return {
     name,
     type: 'text',
@@ -118,7 +128,9 @@ export function secretField(
     hooks: {
       beforeChange: [
         async (args) => {
-          const problem = isAccount(args.siblingData) ? serviceAccountProblem(args.value) : null;
+          const problem = isAccount(args.siblingData, args.previousSiblingDoc)
+            ? serviceAccountProblem(args.value)
+            : null;
           if (problem) {
             throw new ValidationError({
               ...(args.collection ? { collection: args.collection.slug } : {}),
@@ -141,7 +153,7 @@ export function secretField(
             stored: value,
             reveal: req?.context?.[DECRYPT_CONTEXT] === true,
             decrypt: (hash) => req.payload.decrypt(hash),
-            ...(isAccount(siblingData) ? { mask: maskOfServiceAccount } : {}),
+            ...(isAccount(siblingData, undefined) ? { mask: maskOfServiceAccount } : {}),
           }),
       ],
     },

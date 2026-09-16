@@ -70,6 +70,11 @@ export async function auditUrls(payload: Payload, base: string): Promise<string[
 export const TOPIC_MIN_IMPRESSIONS = 50;
 export const TOPIC_QUERY_MAX = 100;
 
+/** The topic's priority, 1 to 5 (the field's range): 50 impressions read 2, 1,000 read 4, 10,000 read 5. */
+export function topicPriority(impressions: number): number {
+  return Math.min(5, Math.max(1, Math.round(Math.log10(Math.max(impressions, 1) + 1) * 1.3)));
+}
+
 /**
  * The top Search Console queries as topics for the engine's backlog (BRD 11.4): non-brand,
  * bounded, in Arabic or Latin script, not already a topic; the hub with the most keyword
@@ -119,7 +124,7 @@ export async function suggestTopics(
         hub: hub.id,
         primaryKeyword: q.key,
         intent: 'informational',
-        priority: Math.min(10, Math.max(1, Math.round(Math.log10(q.impressions + 1) * 3))),
+        priority: topicPriority(q.impressions),
         status: 'backlog',
         source: 'searchConsole',
       },
@@ -140,33 +145,47 @@ export async function pull(payload: Payload, now = new Date()): Promise<PullResu
   const date = riyadh(now).dateKey;
   const base = env.siteUrl ?? 'https://b7r.sa';
   const result: PullResult = { date, pulled: [], failed: [], topicsAdded: 0, score: null };
-  const attempt = async (source: MetricSource, run: () => Promise<unknown>) => {
+  const attempt = async (
+    source: MetricSource,
+    secret: string | null,
+    run: () => Promise<unknown>,
+  ): Promise<unknown> => {
     try {
       const data = await run();
       await upsertMetric(payload, { date, source, data });
       result.pulled.push(source);
+      return data;
     } catch (error) {
-      result.failed.push({ source, error: safeMessage(error, null) });
+      result.failed.push({ source, error: safeMessage(error, secret) });
       payload.logger.warn({
-        msg: `visibility pull: ${source} failed: ${safeMessage(error, null)}`,
+        msg: `visibility pull: ${source} failed: ${safeMessage(error, secret)}`,
       });
+      return null;
     }
   };
   const google = await serviceConnection(payload, 'google-search-console');
   if (google?.apiKey) {
-    await attempt('search-console', async () => {
-      const snapshot = await searchConsoleClient(google.apiKey!, base).pull(now);
-      result.topicsAdded = await suggestTopics(payload, snapshot);
-      return snapshot;
-    });
+    const snapshot = (await attempt('search-console', google.apiKey, () =>
+      searchConsoleClient(google.apiKey!, base).pull(now),
+    )) as SearchConsoleSnapshot | null;
+    // The row is written; the topics are a courtesy on top and never cost it.
+    if (snapshot) {
+      try {
+        result.topicsAdded = await suggestTopics(payload, snapshot);
+      } catch (error) {
+        payload.logger.warn({
+          msg: `visibility pull: the topic suggestions failed: ${safeMessage(error, null)}`,
+        });
+      }
+    }
   }
   const bing = await serviceConnection(payload, 'bing-webmaster');
   if (bing?.apiKey) {
-    await attempt('bing', () => bingClient(bing.apiKey!, base).pull());
+    await attempt('bing', bing.apiKey, () => bingClient(bing.apiKey!, base).pull());
   }
   const pagespeed = await serviceConnection(payload, 'pagespeed');
   if (pagespeed) {
-    await attempt('pagespeed', async () => {
+    await attempt('pagespeed', pagespeed.apiKey, async () => {
       const snapshot: PageSpeedSnapshot = await pagespeedClient(pagespeed.apiKey).pull(
         await auditUrls(payload, base),
       );
@@ -175,7 +194,7 @@ export async function pull(payload: Payload, now = new Date()): Promise<PullResu
       return snapshot;
     });
   }
-  await attempt('score', async () => {
+  await attempt('score', null, async () => {
     const score = scoreOf(await buildSnapshot(payload, { now }));
     result.score = score.overall;
     return {

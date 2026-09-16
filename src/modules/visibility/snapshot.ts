@@ -254,9 +254,11 @@ export async function buildSnapshot(
     pagespeed: pagespeed
       .map((row) => ({
         date: row.date,
-        mobilePerformance: row.data.audits
-          .filter((a) => a.strategy === 'mobile')
-          .map((a) => a.scores.performance),
+        mobilePerformance: Object.fromEntries(
+          row.data.audits
+            .filter((a) => a.strategy === 'mobile' && a.scores.performance !== null)
+            .map((a) => [a.url, a.scores.performance!]),
+        ),
       }))
       .toReversed(),
     searchConsole: searchConsole[0]

@@ -1,6 +1,7 @@
 /**
  * A service account's JSON key (Search Console, ADR-049): the three fields the JWT flow
- * needs, or a reason the paste is not one. Nothing else of the file is read.
+ * needs, or a reason the paste is not one. Nothing else of the file is read; the token
+ * endpoint is Google's, never the file's (a signed assertion goes nowhere else).
  */
 export interface ServiceAccountKey {
   clientEmail: string;
@@ -8,6 +9,8 @@ export interface ServiceAccountKey {
   privateKeyId: string;
   tokenUri: string;
 }
+
+export const GOOGLE_TOKEN_URI = 'https://oauth2.googleapis.com/token';
 
 export function parseServiceAccount(plain: string): ServiceAccountKey | string {
   let parsed: unknown;
@@ -26,13 +29,12 @@ export function parseServiceAccount(plain: string): ServiceAccountKey | string {
     return 'client_email is missing';
   if (typeof privateKey !== 'string' || !privateKey.includes('PRIVATE KEY'))
     return 'private_key is missing';
+  if (key['token_uri'] !== undefined && key['token_uri'] !== GOOGLE_TOKEN_URI)
+    return `token_uri is not ${GOOGLE_TOKEN_URI}`;
   return {
     clientEmail,
     privateKey,
     privateKeyId: typeof key['private_key_id'] === 'string' ? key['private_key_id'] : '',
-    tokenUri:
-      typeof key['token_uri'] === 'string'
-        ? key['token_uri']
-        : 'https://oauth2.googleapis.com/token',
+    tokenUri: GOOGLE_TOKEN_URI,
   };
 }

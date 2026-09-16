@@ -1,5 +1,5 @@
 import type { Payload } from 'payload';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { accessToken, forgetTokens, SEARCH_CONSOLE_SCOPE, signJwt } from '@/lib/google-jwt';
 import { parseServiceAccount, type ServiceAccountKey } from '@/lib/service-account';
 import {
@@ -11,7 +11,13 @@ import {
 import { isServiceKind, KINDS, kindsThat } from '@/modules/connections/kinds';
 import { Connections } from '@/modules/connections/collection';
 import { testConnection } from '@/modules/connections/test';
-import { auditUrls, suggestTopics, TOPIC_MIN_IMPRESSIONS } from '@/modules/visibility/pull';
+import {
+  auditUrls,
+  pull,
+  suggestTopics,
+  TOPIC_MIN_IMPRESSIONS,
+  topicPriority,
+} from '@/modules/visibility/pull';
 import {
   bingClient,
   bingDate,
@@ -27,6 +33,7 @@ import {
 import {
   parseRows,
   parseSites,
+  parseTotals,
   propertyFor,
   searchConsoleClient,
   windowEnding,
@@ -130,7 +137,15 @@ describe('the service account key and the JWT flow (ADR-049)', () => {
     expect(parseServiceAccount('{"type":"authorized_user"}')).toMatch(/not a service account/);
     expect(parseServiceAccount(keyFile(pem, { client_email: 'nope' }))).toMatch(/client_email/);
     expect(parseServiceAccount(keyFile(pem, { private_key: 'x' }))).toMatch(/private_key/);
-    expect(parseServiceAccount(keyFile(pem, { token_uri: 3 }))).toMatchObject({
+    // The token endpoint is Google's whatever the file says: a signed assertion goes nowhere else.
+    expect(parseServiceAccount(keyFile(pem, { token_uri: 'https://evil.example/token' }))).toMatch(
+      /token_uri is not https:\/\/oauth2\.googleapis\.com\/token/,
+    );
+    const { token_uri: _omitted, ...withoutUri } = JSON.parse(keyFile(pem)) as Record<
+      string,
+      unknown
+    >;
+    expect(parseServiceAccount(JSON.stringify(withoutUri))).toMatchObject({
       tokenUri: 'https://oauth2.googleapis.com/token',
     });
   });
@@ -179,11 +194,13 @@ describe('the service account key and the JWT flow (ADR-049)', () => {
     // Within the last minute of its life the token is fetched again.
     await accessToken(key, SEARCH_CONSOLE_SCOPE, fetcher, new Date(t0.getTime() + 3_550_000));
     expect(calls).toHaveLength(2);
-    // A refusal is an error, not a token.
-    const refused = fakeFetch([['token', { error: 'invalid_grant' }, 400]]);
+    // A refusal is an error carrying Google's reason, not a token.
+    const refused = fakeFetch([
+      ['token', { error: 'invalid_grant', error_description: 'Invalid JWT Signature.' }, 400],
+    ]);
     forgetTokens();
     await expect(accessToken(key, SEARCH_CONSOLE_SCOPE, refused.fetcher, t0)).rejects.toThrow(
-      /answered 400/,
+      /answered 400 \(invalid_grant: Invalid JWT Signature\.\)/,
     );
   });
 });
@@ -306,7 +323,20 @@ describe('Search Console (ADR-049 D4)', () => {
     });
   });
 
-  it('reads the rows and the sites out of the API shapes, skipping what has no key', () => {
+  it('reads the totals row (no keys), the rows by a dimension and the sites out of the API shapes', () => {
+    // A query without dimensions answers one keyless row: the property's totals.
+    expect(
+      parseTotals({
+        rows: [{ clicks: 41, impressions: 2210, ctr: 0.01855, position: 14.3 }],
+        responseAggregationType: 'byProperty',
+      }),
+    ).toEqual({ clicks: 41, impressions: 2210, ctr: 0.01855, position: 14.3 });
+    expect(parseTotals({ responseAggregationType: 'byProperty' })).toEqual({
+      clicks: 0,
+      impressions: 0,
+      ctr: 0,
+      position: 0,
+    });
     expect(
       parseRows({
         rows: [
@@ -329,10 +359,24 @@ describe('Search Console (ADR-049 D4)', () => {
     const { pem } = await freshKey();
     const { fetcher, calls } = fakeFetch([
       ['oauth2.googleapis.com/token', { access_token: 'ya29.t', expires_in: 3600 }],
-      ['/sites/sc-domain%3Ab7r.sa/searchAnalytics/query', { rows: [{ keys: ['k'], clicks: 2 }] }],
       ['/sites', { siteEntry: [{ siteUrl: 'sc-domain:b7r.sa', permissionLevel: 'siteOwner' }] }],
     ]);
-    const client = searchConsoleClient(keyFile(pem), 'https://b7r.sa', fetcher);
+    // The totals query has no dimension and answers a keyless row; the three others answer keyed rows.
+    const byBody = fetcher;
+    const routed = (async (input: RequestInfo | URL, init?: RequestInit) => {
+      if (String(input).includes('searchAnalytics')) {
+        calls.push({ url: String(input), init });
+        const asked = JSON.parse(String(init?.body)) as { dimensions?: string[] };
+        return Response.json(
+          asked.dimensions
+            ? { rows: [{ keys: [`${asked.dimensions[0]}-1`], clicks: 2, impressions: 9 }] }
+            : { rows: [{ clicks: 41, impressions: 2210, ctr: 0.0186, position: 14.3 }] },
+        );
+      }
+      return byBody(input, init);
+    }) as typeof fetch;
+    const fetcher2 = routed;
+    const client = searchConsoleClient(keyFile(pem), 'https://b7r.sa', fetcher2);
     expect(await client.sites()).toEqual([
       { siteUrl: 'sc-domain:b7r.sa', permissionLevel: 'siteOwner' },
     ]);
@@ -341,9 +385,13 @@ describe('Search Console (ADR-049 D4)', () => {
       property: 'sc-domain:b7r.sa',
       from: '2026-08-17',
       to: '2026-09-13',
-      totals: { clicks: 2 },
+      totals: { clicks: 41, impressions: 2210, position: 14.3 },
     });
-    expect(snapshot.queries).toHaveLength(1);
+    expect(snapshot.queries).toEqual([
+      { key: 'query-1', clicks: 2, impressions: 9, ctr: 0, position: 0 },
+    ]);
+    expect(snapshot.pages[0]?.key).toBe('page-1');
+    expect(snapshot.countries[0]?.key).toBe('country-1');
     const queries = calls.filter((c) => c.url.includes('searchAnalytics'));
     expect(queries).toHaveLength(4);
     expect(new Headers(queries[0]!.init!.headers).get('authorization')).toBe('Bearer ya29.t');
@@ -366,6 +414,7 @@ describe('Search Console (ADR-049 D4)', () => {
 describe('Bing Webmaster (ADR-049 D4)', () => {
   it('reads the JSON API shapes: the wrapped dates, the sites, the daily rows, the queries merged', () => {
     expect(bingDate('/Date(1757980800000)/')).toBe('2025-09-16');
+    expect(bingDate('/Date(1757980800000+0000)/')).toBe('2025-09-16');
     expect(bingDate('2026-09-01T00:00:00')).toBe('2026-09-01');
     expect(bingDate('soon')).toBeNull();
     expect(parseUserSites({ d: [{ Url: 'https://b7r.sa/' }, { Url: 3 }] })).toEqual([
@@ -395,11 +444,12 @@ describe('Bing Webmaster (ADR-049 D4)', () => {
   });
 
   it('pulls the last 28 days and the queries with the key as a query parameter', async () => {
+    // Forty rows over two months, newest first: the last 28 by date, whatever the order.
     const days = Array.from({ length: 40 }, (_, i) => ({
-      Date: `2026-08-${String(1 + (i % 28)).padStart(2, '0')}T00:00:00`,
+      Date: `2026-${i < 28 ? '08' : '07'}-${String(1 + (i % 28)).padStart(2, '0')}T00:00:00`,
       Clicks: 1,
-      Impressions: 2,
-    }));
+      Impressions: i < 28 ? 2 : 100,
+    })).toReversed();
     const { fetcher, calls } = fakeFetch([
       ['GetUserSites', { d: [{ Url: 'https://b7r.sa/' }] }],
       ['GetRankAndTrafficStats', { d: days }],
@@ -409,6 +459,8 @@ describe('Bing Webmaster (ADR-049 D4)', () => {
     expect(await client.sites()).toEqual(['https://b7r.sa/']);
     const snapshot = await client.pull();
     expect(snapshot.days).toHaveLength(28);
+    expect(snapshot.days[0]?.date).toBe('2026-08-01');
+    expect(snapshot.days.at(-1)?.date).toBe('2026-08-28');
     expect(snapshot.totals).toEqual({ clicks: 28, impressions: 56 });
     expect(snapshot.queries[0]).toMatchObject({ query: 'q' });
     expect(calls.every((c) => new URL(c.url).searchParams.get('apikey') === 'bing-key')).toBe(true);
@@ -446,7 +498,7 @@ describe('PageSpeed (ADR-049 D4)', () => {
       inpMs: 120,
     });
     expect(parseAudit('https://b7r.sa/', 'desktop', {})).toMatchObject({
-      scores: { performance: 0 },
+      scores: { performance: null, seo: null },
       lcpMs: null,
       inpMs: null,
     });
@@ -537,9 +589,64 @@ describe('the pull: the audited pages, the topics it suggests, the page reads (A
       ['طباعة تيشيرت', 'ar', 1, 'searchConsole'],
     ]);
     expect(created[0]).toMatchObject({ status: 'backlog', intent: 'informational' });
-    expect(
-      created.every((c) => (c['priority'] as number) >= 1 && (c['priority'] as number) <= 10),
-    ).toBe(true);
+    // The priority stays inside the field's 1 to 5 whatever the impressions.
+    expect(created.map((c) => c['priority'])).toEqual([3, 2]);
+    expect([0, 50, 99, 316, 1_000, 5_000, 1e9].map(topicPriority)).toEqual([1, 2, 3, 3, 4, 5, 5]);
+  });
+
+  it('writes the Search Console row before suggesting topics; a topics failure costs nothing', async () => {
+    const { pem } = await freshKey();
+    const written: string[] = [];
+    const warned: string[] = [];
+    const payload = {
+      find: async ({ collection, where }: { collection: string; where: unknown }) => {
+        if (collection === 'connections') {
+          const asked = JSON.stringify(where).includes('google-search-console');
+          const docs = asked ? [{ id: 1, kind: 'google-search-console', enabled: true }] : [];
+          return { docs, totalDocs: docs.length };
+        }
+        if (collection === 'categories') throw new Error('hubs unreadable');
+        return { docs: [], totalDocs: 0 };
+      },
+      findByID: async () => ({
+        id: 1,
+        kind: 'google-search-console',
+        apiKey: keyFile(pem),
+        model: '',
+        baseUrl: null,
+        enabled: true,
+      }),
+      findGlobal: async () => {
+        throw new Error('no globals in this test');
+      },
+      db: {
+        drizzle: {
+          // `upsertMetric`'s statement carries the source as its second parameter.
+          execute: async (q: { queryChunks?: unknown[] }) => {
+            const params = (q.queryChunks ?? []).filter((c) => typeof c === 'string');
+            written.push(String(params[1] ?? '?'));
+          },
+        },
+      },
+      logger: { warn: (o: { msg: string }) => warned.push(o.msg), info: () => {} },
+    } as unknown as Payload;
+    const { fetcher } = fakeFetch([
+      ['oauth2.googleapis.com/token', { access_token: 'ya29.t', expires_in: 3600 }],
+      ['searchAnalytics', { rows: [{ keys: ['q'], clicks: 1, impressions: 500 }] }],
+    ]);
+    vi.stubGlobal('fetch', fetcher);
+    try {
+      const result = await pull(payload, new Date('2026-09-16T01:00:00Z'));
+      expect(result.pulled).toEqual(['search-console']);
+      expect(written).toEqual(['search-console']);
+      expect(result.topicsAdded).toBe(0);
+      expect(warned.some((m) => /topic suggestions failed: hubs unreadable/.test(m))).toBe(true);
+      // The score row fails on this bare fake (no globals): named, the pull goes on.
+      expect(result.failed.map((f) => f.source)).toEqual(['score']);
+    } finally {
+      vi.unstubAllGlobals();
+      forgetTokens();
+    }
   });
 
   it('reads the latest snapshot per service, which are connected, and the week-old score', async () => {

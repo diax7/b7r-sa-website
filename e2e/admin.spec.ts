@@ -1642,6 +1642,13 @@ test.describe('CMS admin', () => {
         const googleDoc = ((await google.json()) as { doc: Record<string, unknown> }).doc;
         ids.push(googleDoc['id'] as number);
         expect(googleDoc['apiKey']).toBe('••••@b7r-e2e.iam.gserviceaccount.com');
+        // A partial update carries no kind; the stored row still says the key is a key file.
+        const partial = await request.patch(`${API}/connections/${googleDoc['id']}`, {
+          headers: json,
+          data: { apiKey: 'sk-x' },
+        });
+        expect(partial.status()).toBe(400);
+        expect(await partial.text()).toMatch(/Service account key: not JSON/);
         // The page: the three panels, PageSpeed and Search Console connected without a
         // snapshot yet, Bing with its Connect link; the Snapshots entry under the Score.
         expect((await page.request.post(`${API}/users/login`, { data: ADMIN })).status()).toBe(200);
