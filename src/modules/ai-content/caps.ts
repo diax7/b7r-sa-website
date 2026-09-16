@@ -21,7 +21,7 @@ export interface CapCounts {
   /** `generate` runs started today and this month (a freshness run rewrites, it does not add). */
   runsToday: number;
   runsThisMonth: number;
-  /** Every run's cost today, whatever its kind. */
+  /** The writing engine's cost today (`generate` and `freshness`); the ledger's `citation` runs are the connection's limit's business, not this cap's. */
   costTodayUsd: number;
   /** The connection's runs this month, whatever their kind; a Test never counts. */
   connectionSpentMonthUsd: number;
@@ -30,6 +30,13 @@ export interface CapCounts {
 export interface CapDecision {
   allowed: boolean;
   reason: string | null;
+}
+
+/** Today's cost as the daily cap reads it: the writing engine's runs, never the ledger's (ADR-049 D5). */
+export function costTodayOf(
+  runs: Array<{ kind?: string | null; costUsd?: number | null }>,
+): number {
+  return runs.filter((r) => r.kind !== 'citation').reduce((n, r) => n + (r.costUsd ?? 0), 0);
 }
 
 /** `AI_CONTENT_ENABLED=false` (or `0`) stops every run whatever the settings say. */

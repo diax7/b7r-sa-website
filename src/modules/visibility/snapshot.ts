@@ -5,6 +5,7 @@ import { indexNowKey } from '@/lib/indexnow';
 import { PUBLISHED } from '@/lib/cms/read';
 import { localeEnabledWith } from '@/lib/cms/locale-enabled';
 import { riyadh } from '@/lib/riyadh';
+import { citationRows, citedRateOf, lastLedgerRunAt } from '@/modules/visibility/ledger/reading';
 import { latestMetrics } from '@/modules/visibility/metrics';
 import { CHECKLIST_ITEMS } from '@/modules/visibility/rules/rest';
 import type { PageSpeedSnapshot } from '@/modules/visibility/services/pagespeed';
@@ -198,9 +199,12 @@ export async function buildSnapshot(
         usedBy: [...new Set(used.get(m['id'] as number) ?? [])],
       }))
     : [];
-  const [pagespeed, searchConsole] = await Promise.all([
+  const [pagespeed, searchConsole, prompts, citations, ledgerRunAt] = await Promise.all([
     latestMetrics<PageSpeedSnapshot>(payload, 'pagespeed', 3),
     latestMetrics<SearchConsoleSnapshot>(payload, 'search-console', 1),
+    read('prompts'),
+    citationRows(payload, access, now),
+    lastLedgerRunAt(payload, access),
   ]);
   const landings = await payload.count({
     collection: 'traffic',
@@ -248,9 +252,13 @@ export async function buildSnapshot(
       lastTestOk: typeof c['lastTestOk'] === 'boolean' ? c['lastTestOk'] : null,
     })),
     landings30d: landings.totalDocs,
-    prompts: [],
-    lastLedgerRunAt: null,
-    citedRate: null,
+    prompts: prompts.map((p) => ({
+      language: p['language'] === 'en' ? 'en' : 'ar',
+      enabled: p['enabled'] !== false,
+      namesBrand: p['namesBrand'] === true,
+    })),
+    lastLedgerRunAt: ledgerRunAt,
+    citedRate: citedRateOf(citations),
     pagespeed: pagespeed
       .map((row) => ({
         date: row.date,

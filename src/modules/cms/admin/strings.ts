@@ -179,6 +179,26 @@ export const adminStrings = {
       window: '{from} to {to}',
       psiErrors: '{n} audit(s) failed; the row is partial.',
     },
+    ledger: {
+      title: 'Citation ledger',
+      hint: 'Every enabled AI connection is asked every prompt each Monday; the last four weeks, on the prompts that do not name the brand.',
+      runNow: 'Run now',
+      queuing: 'Queuing',
+      queued: 'Queued: the answers land within minutes; reload to see them',
+      empty:
+        'No run yet. Add an AI connection under Admin, keep the prompts you want asked, then press Run now or wait for Monday.',
+      prompts: 'The prompts',
+      prompt: 'Prompt',
+      notRun: 'not run',
+      cited: 'Named B7R',
+      uncited: 'Did not name B7R',
+      linked: 'Linked to the site',
+      brand: '(names the brand)',
+      rateLine: '{cited} of {runs} named B7R; {linked} linked',
+      fix: 'No engine names B7R here: improve the answer block of',
+      excerpts: 'The latest answers',
+      competitors: 'Competitors named most:',
+    },
   },
   traffic: {
     groups: {

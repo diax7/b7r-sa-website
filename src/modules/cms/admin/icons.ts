@@ -9,6 +9,8 @@ import {
   Gauge,
   Globe,
   Camera,
+  MessageCircleQuestion,
+  Quote,
   Heart,
   History,
   House,
@@ -69,6 +71,8 @@ export const COLLECTION_ICONS: Record<CollectionSlug, LucideIcon> = {
   connections: KeyRound,
   traffic: Footprints,
   metrics: Camera,
+  prompts: MessageCircleQuestion,
+  citations: Quote,
 };
 
 export const GLOBAL_ICONS: Record<GlobalSlug, LucideIcon> = {
@@ -198,22 +202,24 @@ export const ADMIN_NAV: {
     tags: { group: 'blog', order: 3, parent: POSTS },
     'ai-topics': { group: 'blog', order: 10, section: 'engine' },
     'ai-runs': { group: 'blog', order: 11, section: 'engine' },
-    redirects: { group: 'visibility', order: 7 },
-    traffic: { group: 'visibility', order: 6, parent: TRAFFIC_VIEW },
+    redirects: { group: 'visibility', order: 9 },
+    traffic: { group: 'visibility', order: 8, parent: TRAFFIC_VIEW },
     metrics: { group: 'visibility', order: 2, parent: SCORE_VIEW },
+    prompts: { group: 'visibility', order: 3, parent: SCORE_VIEW },
+    citations: { group: 'visibility', order: 4, parent: SCORE_VIEW },
     users: { group: 'admin', order: 0 },
     connections: { group: 'admin', order: 1 },
   },
   globals: {
     home: { group: 'site', order: 0 },
     'site-settings': { group: 'site', order: 2 },
-    'seo-defaults': { group: 'visibility', order: 4 },
+    'seo-defaults': { group: 'visibility', order: 6 },
     'visibility-checklist': { group: 'visibility', order: 1, parent: SCORE_VIEW },
     'ai-settings': { group: 'blog', order: 12, section: 'engine' },
   },
   views: {
     visibility: { group: 'visibility', order: 0 },
-    traffic: { group: 'visibility', order: 5 },
+    traffic: { group: 'visibility', order: 7 },
   },
 };
 

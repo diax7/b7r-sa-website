@@ -7,8 +7,10 @@ import { ADMIN_VIEWS } from '@/modules/cms/admin/icons';
 import { adminStrings } from '@/modules/cms/admin/strings';
 import { relativeTime } from '@/modules/cms/admin/dashboard/relative-time';
 import { adminView, viewUser } from '@/modules/cms/admin/views/gate';
+import { Ledger } from '@/modules/visibility/admin/ledger';
 import { Ring } from '@/modules/visibility/admin/ring';
 import { Signals } from '@/modules/visibility/admin/signals';
+import { ledgerReading } from '@/modules/visibility/ledger/reading';
 import { reading } from '@/modules/visibility/reading';
 import { scoreTrend, signalRows } from '@/modules/visibility/signals';
 import type { SectionScore } from '@/modules/visibility/score';
@@ -157,9 +159,10 @@ export async function VisibilityView(props: AdminViewServerProps) {
   if (refused) return refused;
   const fresh = props.searchParams?.['fresh'] !== undefined;
   const { score, at } = await reading(props.payload, { user: viewUser(props), fresh });
-  const [signals, trend] = await Promise.all([
+  const [signals, trend, ledger] = await Promise.all([
     signalRows(props.payload),
     scoreTrend(props.payload, score.overall),
+    ledgerReading(props.payload, { user: viewUser(props) }),
   ]);
   const adminRoute = props.payload.config.routes.admin;
   const base = `${adminRoute}${ADMIN_VIEWS.visibility.path}`;
@@ -212,6 +215,7 @@ export async function VisibilityView(props: AdminViewServerProps) {
           ))}
         </div>
         <Signals rows={signals} adminRoute={adminRoute} />
+        <Ledger reading={ledger} adminRoute={adminRoute} />
         <footer className="flex flex-col gap-1 border-t border-border pt-4 text-caption text-text-muted">
           <p>{s.page.howOverall}</p>
           <p>{s.page.howSiteOnly}</p>

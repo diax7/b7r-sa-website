@@ -6,7 +6,7 @@ import { adminGroup } from '@/modules/cms/admin/icons';
 export const RUN_STATUSES = ['running', 'done', 'failed', 'skipped'] as const;
 export type RunStatus = (typeof RUN_STATUSES)[number];
 
-export const RUN_KINDS = ['generate', 'freshness'] as const;
+export const RUN_KINDS = ['generate', 'freshness', 'citation'] as const;
 export type RunKind = (typeof RUN_KINDS)[number];
 
 /**

@@ -367,6 +367,22 @@ retry copy; `NEWSLETTER_TRANSPORT=mock` (tests only) keeps subscriptions in memo
 - **The topics it suggests.** Search Console's queries with fifty impressions or more that do
   not name the brand become backlog topics (`source: searchConsole`) for the engine to write,
   one per keyword, under the hub whose name and description share the most words.
+- **The citation ledger.** Visibility → Prompts holds the questions a buyer asks an
+  assistant (fifteen seeded; add, edit or switch off; a prompt that names the brand is
+  ticked "Names the brand" and stays out of the rate). Every Monday at 07:00 Riyadh, every
+  enabled AI connection under Admin → Connections is asked every enabled prompt with the
+  vendor's web search on (OpenAI, Anthropic, Google; DeepSeek and a compatible endpoint are
+  asked plain), and the Score page's ledger shows who named B7R, who linked, and the
+  competitors named most; the rows sit under the page as Citations. "Run now" on the page
+  starts a batch (one per ten minutes; a connection asked within the hour is skipped).
+- **What it costs.** An estimate: fifteen prompts on one engine is about 15 × 1,500 output
+  tokens plus the vendor's search fee (OpenAI and Anthropic $0.01 a search, Google $0.035),
+  so $0.30 to $0.80 a week per engine, $2 to $4 for five. Each connection's monthly limit
+  guards it; the engine's daily cost cap does not count it (that cap guards the writing).
+  One `citation` run per connection per week lands in Blog → Runs with the cost.
+- **Reading a red row.** A prompt no engine names B7R on carries "improve the answer block
+  of" with a link to the page or post whose title is closest: make its opening paragraph
+  answer that question in 40 to 80 words (E3), and let the next Monday tell.
 
 ## Traffic sources (ADR-048)
 

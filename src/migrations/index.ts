@@ -17,6 +17,7 @@ import * as migration_20260915_165626_connections from './20260915_165626_connec
 import * as migration_20260916_070828_traffic from './20260916_070828_traffic';
 import * as migration_20260916_094521_visibility_checklist from './20260916_094521_visibility_checklist';
 import * as migration_20260916_102554_visibility_services from './20260916_102554_visibility_services';
+import * as migration_20260916_114303_visibility_ledger from './20260916_114303_visibility_ledger';
 
 export const migrations = [
   {
@@ -112,6 +113,11 @@ export const migrations = [
   {
     up: migration_20260916_102554_visibility_services.up,
     down: migration_20260916_102554_visibility_services.down,
-    name: '20260916_102554_visibility_services'
+    name: '20260916_102554_visibility_services',
+  },
+  {
+    up: migration_20260916_114303_visibility_ledger.up,
+    down: migration_20260916_114303_visibility_ledger.down,
+    name: '20260916_114303_visibility_ledger'
   },
 ];

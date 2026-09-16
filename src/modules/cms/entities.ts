@@ -19,6 +19,8 @@ import { SiteSettings } from '@/modules/cms/globals/site-settings';
 import { Connections } from '@/modules/connections/collection';
 import { Traffic } from '@/modules/traffic/collection';
 import { VisibilityChecklist } from '@/modules/visibility/checklist';
+import { Citations } from '@/modules/visibility/ledger/citations';
+import { Prompts } from '@/modules/visibility/ledger/prompts';
 import { Metrics } from '@/modules/visibility/metrics';
 
 /**
@@ -43,6 +45,8 @@ export const COLLECTIONS: CollectionConfig[] = [
   Connections,
   Traffic,
   Metrics,
+  Prompts,
+  Citations,
 ];
 
 export const GLOBALS: GlobalConfig[] = [

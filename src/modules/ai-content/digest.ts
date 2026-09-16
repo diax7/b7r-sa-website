@@ -17,7 +17,7 @@ const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 export interface DigestRun {
   id: number;
   label: string;
-  kind: 'generate' | 'freshness';
+  kind: 'generate' | 'freshness' | 'citation';
   status: string;
   score: number | null;
   costUsd: number;
@@ -45,8 +45,11 @@ export function digestText(args: {
   envOn: boolean;
 }): string {
   const { runs, settings, now, base } = args;
-  const done = runs.filter((r) => r.status === 'done');
-  const failed = runs.filter((r) => r.status === 'failed');
+  // The ledger's batches (ADR-049 D5) are listed on their own: they write no post.
+  const writes = runs.filter((r) => r.kind !== 'citation');
+  const ledger = runs.filter((r) => r.kind === 'citation');
+  const done = writes.filter((r) => r.status === 'done');
+  const failed = writes.filter((r) => r.status === 'failed');
   const cost = runs.reduce((n, r) => n + r.costUsd, 0);
   const lines: string[] = [
     `Content engine, the week to ${riyadh(now).dateKey} (Riyadh)`,
@@ -64,6 +67,14 @@ export function digestText(args: {
   if (failed.length > 0) {
     lines.push('', 'Failures:');
     for (const r of failed) lines.push(`- ${r.label}: ${r.error ?? 'no reason recorded'}`);
+  }
+  if (ledger.length > 0) {
+    lines.push('', 'Citation ledger:');
+    for (const r of ledger) {
+      lines.push(
+        `- ${r.label} (${usd(r.costUsd)})${r.status === 'skipped' && r.error ? `: ${r.error}` : ''}`,
+      );
+    }
   }
   lines.push('', `Next slot: ${nextSlot(settings, args.envOn)}`);
   lines.push('', `Runs: ${base}/admin/collections/ai-runs`);

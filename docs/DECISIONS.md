@@ -1328,3 +1328,39 @@ pull has run) and "up N points since <date>" from the oldest of the last eight s
 GA4 (BRD 11.4's second source): Search Console and the site's own counter (ADR-048) answer the
 same questions without a consented-sessions gap; `google-auth-library` (a dependency for one
 signature); storing the score only on the page (no history to say "up 6 points").
+
+**Decision, PR 3c (2026-09-16): the citation ledger.** Two collections under the Score page:
+`prompts` (the questions a buyer asks an assistant: text, language, intent, `namesBrand`,
+enabled, order; fifteen seeded by `content:migrate` from the BRD's category terms, ten Arabic
+and five English, two compare prompts naming the brand) and `citations` (read-only: one row
+per prompt, per connection, per batch: date, provider, model, mode, mentioned, linked,
+`namesBrand` as asked, the URLs, the competitors, a 400-character excerpt, the links to the
+prompt, the connection and the run). **The ask** (`ledger/ask.ts`): the connection's model
+through `languageModel()`, the vendor's own web search where it has one (`searchTool()` in
+`connections/model.ts`: OpenAI's `web_search`, Anthropic's `web_search` 2026-02-09 with three
+uses, Google's `google_search` grounding; a Saudi `userLocation` on the two that take one),
+the prompt as typed with no system prompt naming B7R, 1,500 output tokens, 60 s; DeepSeek, a
+compatible endpoint and the mock are asked plain. **The reader** (`ledger/read-answer.ts`, pure):
+`mentioned` by `(^|[^\p{L}])(?:و|ف|ل|ب|ك)?بحر\s*بر(?:ي)?نت` or `\bb7r\b` after `fold()`,
+never bare «بحر»; the URLs from the SDK's sources (OpenAI, Anthropic), from Google's source
+titles (its URLs are grounding redirects), from Perplexity's raw `citations` and
+`search_results`, or from the text in the plain mode; `linked` when a URL is ours; the
+competitors of BRD 2.3 by host or by name. **The batch** (`ledger/run.ts`, `citation-ledger`,
+Monday 07:00 Riyadh on the `ai` queue; "Run now" through `POST /api/visibility/ledger`, one
+per ten minutes): every enabled AI connection asks every enabled prompt in order, one
+`ai-runs` row of kind `citation` per connection (the tokens, the searches at the kind's
+`searchFeeUsd` and the cost summed; the label "N prompts, M cited, K not run"), one
+citation row per prompt; a twenty-minute budget per connection leaves the rest as not run;
+a connection over its monthly limit, without a key, or asked within the hour is skipped with
+a run that says why. The writing engine's `dailyCostCapUsd` leaves `citation` runs out
+(`costTodayOf`); the connection's monthly limit counts them. The mock kind answers without a
+call behind its gate (names B7R with a link on an Arabic prompt, two competitors on an
+English one), which is what the e2e and the review server run. **The page** gains the ledger:
+the cited-rate and linked-rate per engine over four weeks on the non-brand prompts, the
+per-prompt table with an engine per column (a check or a cross with its `aria-label`, or "not
+run"), the latest answers as collapsible excerpts, the competitors named most, and for a
+prompt no engine names B7R on, the page or post whose title shares the most words, to
+improve. M2, M3 and P4 read the prompts, the last finished run and the window's rows.
+**Rejected:** one run per prompt (seventy-five rows a week in the runs list); a system prompt
+that names B7R (the answer would name it back); counting a brand-naming prompt in the rate.
+BRD §7.7's quarterly manual check is this ledger, weekly.
