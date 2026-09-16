@@ -8,7 +8,9 @@ import { adminStrings } from '@/modules/cms/admin/strings';
 import { relativeTime } from '@/modules/cms/admin/dashboard/relative-time';
 import { adminView, viewUser } from '@/modules/cms/admin/views/gate';
 import { Ring } from '@/modules/visibility/admin/ring';
+import { Signals } from '@/modules/visibility/admin/signals';
 import { reading } from '@/modules/visibility/reading';
+import { scoreTrend, signalRows } from '@/modules/visibility/signals';
 import type { SectionScore } from '@/modules/visibility/score';
 import type { Finding, Status } from '@/modules/visibility/types';
 
@@ -155,8 +157,18 @@ export async function VisibilityView(props: AdminViewServerProps) {
   if (refused) return refused;
   const fresh = props.searchParams?.['fresh'] !== undefined;
   const { score, at } = await reading(props.payload, { user: viewUser(props), fresh });
-  const base = `${props.payload.config.routes.admin}${ADMIN_VIEWS.visibility.path}`;
+  const [signals, trend] = await Promise.all([
+    signalRows(props.payload),
+    scoreTrend(props.payload, score.overall),
+  ]);
+  const adminRoute = props.payload.config.routes.admin;
+  const base = `${adminRoute}${ADMIN_VIEWS.visibility.path}`;
   const open = score.findings.filter((f) => f.status !== 'done').length;
+  const trendText = trend
+    ? (trend.delta === 0 ? s.page.same : trend.delta > 0 ? s.page.up : s.page.down)
+        .replace('{n}', String(Math.abs(trend.delta)))
+        .replace('{date}', trend.since.date)
+    : null;
   return (
     <Gutter>
       <div
@@ -184,6 +196,14 @@ export async function VisibilityView(props: AdminViewServerProps) {
                 {relativeTime(at)}
               </time>
             </p>
+            {trend && trendText && (
+              <p
+                className="text-caption text-text-muted tabular-nums"
+                data-admin-visibility-trend={trend.delta}
+              >
+                {trendText}
+              </p>
+            )}
           </div>
         </header>
         <div className="grid gap-6 lg:grid-cols-2">
@@ -191,6 +211,7 @@ export async function VisibilityView(props: AdminViewServerProps) {
             <SectionCard key={section.key} section={section} />
           ))}
         </div>
+        <Signals rows={signals} adminRoute={adminRoute} />
         <footer className="flex flex-col gap-1 border-t border-border pt-4 text-caption text-text-muted">
           <p>{s.page.howOverall}</p>
           <p>{s.page.howSiteOnly}</p>

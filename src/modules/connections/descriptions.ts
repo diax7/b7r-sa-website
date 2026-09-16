@@ -7,8 +7,12 @@ export const CONNECTION_DESCRIPTIONS: Described = {
     en: 'A name you recognise in the list and in the engine settings: "OpenAI, production". Never shown to a visitor.',
   },
   kind: {
-    ar: 'الخدمة التي يُرسل إليها المفتاح. «خدمة متوافقة مع OpenAI» لأي خدمة أخرى تقدّم واجهة OpenAI على عنوانها؛ «تجريبي» للاختبارات فقط.',
-    en: 'The service the key is sent to. "OpenAI-compatible endpoint" fits any other AI that serves the OpenAI API at its own address; "Mock" is for tests only.',
+    ar: 'الخدمة التي يُرسل إليها المفتاح. «خدمة متوافقة مع OpenAI» لأي خدمة أخرى تقدّم واجهة OpenAI على عنوانها؛ «تجريبي» للاختبارات فقط. Search Console وBing وPageSpeed خدمات تقرأها درجة الظهور، لا نماذج: اتصال واحد مفعّل لكل منها.',
+    en: 'The service the key is sent to. "OpenAI-compatible endpoint" fits any other AI that serves the OpenAI API at its own address; "Mock" is for tests only. Search Console, Bing and PageSpeed are services the visibility score reads, not models: one enabled connection each.',
+  },
+  apiKey: {
+    ar: 'مفتاح الخدمة كما تعطيه لوحتها؛ لـ Search Console ملف مفتاح حساب الخدمة كاملاً (JSON)؛ PageSpeed يعمل بلا مفتاح. يُحفظ مشفّراً ولا يُعرض مرة أخرى؛ اتركه كما هو للإبقاء عليه، أو امسحه لإزالته.',
+    en: "The service's key as its console gives it; for Search Console the whole service account key file (JSON); PageSpeed works without one. Stored encrypted and never shown again; leave the mask to keep it, clear it to remove it.",
   },
   model: {
     ar: 'معرّف النموذج كما تكتبه وثائق الخدمة حرفياً: gpt-4.1، claude-sonnet-4-5، gemini-2.5-pro، deepseek-chat. فارغ عند الحفظ: النموذج المعتاد للخدمة.',
