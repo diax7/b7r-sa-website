@@ -149,6 +149,7 @@ export const adminStrings = {
       title: 'Visibility score',
       siteOnly: 'What you control: {n}%',
       intro: '{open} things to do. Every item links to the field that fixes it.',
+      introOne: 'One thing to do. It links to the field that fixes it.',
       recompute: 'Recompute',
       howOverall:
         'The overall score is the weighted sum of every item, outside signals included (PageSpeed, the verifications, the assistants), so 100% means the site, the engines and the assistants all agree. A filled site with no service connected scores about 70; until the GEO content ships, the ceiling is 93.',

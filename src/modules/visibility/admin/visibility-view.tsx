@@ -5,6 +5,7 @@ import { Icon } from '@/components/shared/icon';
 import { cn } from '@/lib/cn';
 import { ADMIN_VIEWS } from '@/modules/cms/admin/icons';
 import { adminStrings } from '@/modules/cms/admin/strings';
+import { relativeTime } from '@/modules/cms/admin/dashboard/relative-time';
 import { adminView, viewUser } from '@/modules/cms/admin/views/gate';
 import { Ring } from '@/modules/visibility/admin/ring';
 import { reading } from '@/modules/visibility/reading';
@@ -96,7 +97,8 @@ function SectionCard({ section }: { section: SectionScore }) {
   const done = byStatus('done');
   return (
     <section
-      className="flex flex-col gap-3 rounded-base border border-border bg-surface p-5"
+      id={section.key}
+      className="scroll-mt-20 flex flex-col gap-3 rounded-base border border-border bg-surface p-5"
       data-admin-section={section.key}
     >
       <div className="flex items-center justify-between gap-3">
@@ -174,12 +176,12 @@ export async function VisibilityView(props: AdminViewServerProps) {
               {s.page.siteOnly.replace('{n}', String(score.siteOnly))}
             </p>
             <p className="text-caption text-text-muted">
-              {s.page.intro.replace('{open}', String(open))}{' '}
+              {(open === 1 ? s.page.introOne : s.page.intro).replace('{open}', String(open))}{' '}
               <Link href={`${base}?fresh=1`} className="text-accent underline underline-offset-2">
                 {s.page.recompute}
               </Link>{' '}
               <time dateTime={at} className="tabular-nums">
-                {at.slice(0, 16).replace('T', ' ')}
+                {relativeTime(at)}
               </time>
             </p>
           </div>

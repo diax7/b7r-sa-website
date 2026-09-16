@@ -18,6 +18,10 @@ export function crawl(s: Snapshot): Finding[] {
         ...s.products.map((d) => ({ d, collection: 'products' })),
         ...s.posts.map((d) => ({ d, collection: 'posts' })),
         ...s.hubs.map((d) => ({ d, collection: 'categories' })),
+        ...s.authors.map((a) => ({
+          d: { id: a.id, slug: `author ${a.id}`, title: a.name },
+          collection: 'authors',
+        })),
       ].map(({ d, collection }) => ({
         ok: has(loc(d.title, 'en')),
         label: `${loc(d.title, 'ar') || d.slug} (${collection})`,
@@ -47,7 +51,7 @@ export function crawl(s: Snapshot): Finding[] {
       status: serviceStatus(s, 'google-search-console'),
       title: 'Search Console is connected and verified',
       guide:
-        'A Search Console connection whose Test passed proves Google sees the property. Add it under Admin → Connections (a service account added as a user of the property), then press Test.',
+        'A Search Console connection whose Test passed proves Google sees the property; a verification tag alone proves nothing. Add it under Admin → Connections (a service account added as a user of the property), then press Test.',
       href: connections,
     }),
     finding({
@@ -65,7 +69,7 @@ export function crawl(s: Snapshot): Finding[] {
       checks: english,
       title: 'Every published document exists in English',
       guide:
-        'While the site is in English, a document without an English title has no English page and no hreflang pair. Open its English tab and fill the title (and the rest).',
+        'While the site is in English, a document without an English title (an author without an English name) has no English page and no hreflang pair. Open its English tab and fill the title (and the rest).',
     }),
   ];
 }

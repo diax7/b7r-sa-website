@@ -68,11 +68,14 @@ export function words(text: string): number {
   return text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
 }
 
-/** The first paragraph's word count of a body, or 0 without one. */
+/** The first paragraph with words in a body (an editor's empty first line is skipped), or 0. */
 export function openingWords(state: LexicalState | null | undefined): number {
-  const first = state?.root.children.find((n) => n.type === 'paragraph');
-  if (!first) return 0;
-  return words(plainText({ root: { type: 'root', children: [first] } } as LexicalState));
+  for (const node of state?.root.children ?? []) {
+    if (node.type !== 'paragraph') continue;
+    const n = words(plainText({ root: { type: 'root', children: [node] } } as LexicalState));
+    if (n > 0) return n;
+  }
+  return 0;
 }
 
 /** A heading phrased as a buyer asks: ends in a question mark or starts with an interrogative. */

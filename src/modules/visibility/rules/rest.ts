@@ -59,7 +59,7 @@ export function measurement(s: Snapshot): Finding[] {
   const { promptsMin, ledgerDays, landingDays } = THRESHOLDS;
   const ledgerRecent =
     s.lastLedgerRunAt !== null &&
-    Date.now() - new Date(s.lastLedgerRunAt).getTime() <= ledgerDays * 86_400_000;
+    new Date(s.at).getTime() - new Date(s.lastLedgerRunAt).getTime() <= ledgerDays * 86_400_000;
   return [
     finding({
       key: 'M1',

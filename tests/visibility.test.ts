@@ -283,7 +283,8 @@ describe('the visibility score: the rules (ADR-049)', () => {
     expect(by(review, 'C1').guide).toMatch(/noindex/);
     expect(by(review, 'C2').status).toBe('missing');
     expect(by(review, 'C3').status).toBe('missing');
-    expect(by(review, 'C5')).toMatchObject({ status: 'next', count: { done: 3, total: 4 } });
+    // Four documents and one author, the post without English: 4 of 5.
+    expect(by(review, 'C5')).toMatchObject({ status: 'next', count: { done: 4, total: 5 } });
     expect(by(review, 'C5').items?.[0]?.href).toBe('/admin/collections/posts/3?locale=en');
     // Not in English: nothing to judge.
     expect(by(crawl(filled({ englishOn: false })), 'C5')).toMatchObject({
@@ -357,6 +358,8 @@ describe('the visibility score: the rules (ADR-049)', () => {
 
   it('reads an opening and a question heading the way the rule says', () => {
     expect(openingWords(body(paragraph(words(42)), paragraph('x')))).toBe(42);
+    // An editor's empty first line is skipped.
+    expect(openingWords(body(paragraph(''), paragraph(words(50))))).toBe(50);
     expect(openingWords(body(h2('عنوان'), paragraph(words(3))))).toBe(3);
     expect(openingWords(null)).toBe(0);
     expect(isQuestion('كيف أبدأ براند ملابس؟', 'ar')).toBe(true);

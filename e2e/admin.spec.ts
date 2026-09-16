@@ -1549,9 +1549,9 @@ test.describe('CMS admin', () => {
           'next',
         );
         await expect(page.locator('[data-admin-finding="R1"]')).toContainText(/1 of 5/);
-        await expect(
-          page.locator('[data-admin-finding="R1"] [data-admin-finding-items] li'),
-        ).toHaveCount(4);
+        const left = page.locator('[data-admin-finding="R1"] [data-admin-finding-items] li');
+        await expect(left).toHaveCount(4);
+        expect(await left.allTextContents()).not.toContain('LinkedIn company page');
       } finally {
         await request.post(`${API}/globals/visibility-checklist`, {
           headers: json,

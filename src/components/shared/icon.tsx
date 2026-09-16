@@ -41,6 +41,7 @@ export function Icon({
       size={size}
       strokeWidth={strokeWidth}
       aria-hidden={rest['aria-label'] ? undefined : true}
+      role={rest['aria-label'] ? 'img' : undefined}
       focusable="false"
       className={cn('shrink-0', shouldMirror && 'mirror-rtl', className)}
       {...rest}

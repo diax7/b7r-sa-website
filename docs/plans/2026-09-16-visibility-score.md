@@ -78,7 +78,7 @@ ADR-049 quotes; a change is one reviewed line.
 | | facts | | The tagline is the footer's, `llms.txt`'s, the manifest's and the store node's `slogan` (added in 3a, m2); the node is `OnlineStore`. |
 | Crawl access (20) | C1 Production URL | 5 | `isProductionSite`: else "the site URL is not https://b7r.sa: robots disallow and every page is noindex". |
 | | C2 IndexNow | 3 | The IndexNow key is configured. |
-| | C3 Search Console | 4 | A `google-search-console` connection exists and its last test passed (a token without a connection is `next`: "the tag is out; connect Search Console to confirm"). |
+| | C3 Search Console | 4 | A `google-search-console` connection exists and its last test passed; a connection whose test failed or never ran is `next`; a verification tag alone proves nothing and counts for nothing. |
 | | C4 Bing | 3 | The same for `bing-webmaster`. |
 | | C5 English versions | 5 | While the site is in English, every published page, product, post, hub and author has an English title (pro-rata over documents). |
 | | facts | | Robots names the AI bots (C-08); sitemap; `llms.txt` and `en/llms.txt`; canonicals and reciprocal hreflang. |
@@ -280,7 +280,7 @@ text above (facts versus points with a per-item table and pro-rata items; the re
 text, sources and raw; the brand matcher and the brand-naming prompts; one `citation` run
 per connection per batch and the daily cap's exclusion; rate limits and the hour's refusal;
 the upsert by `(date, source)` with the lag window; the Saudi user location and 1,500 tokens;
-the two BRD decisions; the production flag, `slogan`, "verified" through a passed Test,
+the two BRD decisions; the production flag, `slogan`, "verified" only through a passed Test (a tag alone counts for nothing, PR 3a review m4),
 per-kind Test timeouts and partial PSI rows, the PSI median, the per-kind mask and the save
 validation, the search fee, the topic bounds, the checklist in 3a, the three definitions,
 the reuse list, the batch budget, the compliance list; the group order, the status colours,

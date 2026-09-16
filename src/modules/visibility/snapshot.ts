@@ -1,4 +1,5 @@
 import type { Payload, TypedUser } from 'payload';
+import { type LexicalNode, walk } from '@/lib/lexical';
 import { env } from '@/lib/env';
 import { indexNowKey } from '@/lib/indexnow';
 import { PUBLISHED } from '@/lib/cms/read';
@@ -117,6 +118,14 @@ export async function buildSnapshot(
     use(p['cover'], title.ar ?? String(p['slug']));
     const seoGroup = p['seo'];
     const body = p['body'] as { ar?: unknown; en?: unknown } | undefined;
+    // Photos inline in the body (upload nodes) are photos in use too.
+    for (const state of [body?.ar, body?.en]) {
+      const root = (state as { root?: LexicalNode } | null | undefined)?.root;
+      if (!root) continue;
+      for (const node of walk(root)) {
+        if (node.type === 'upload') use(node['value'], title.ar ?? String(p['slug']));
+      }
+    }
     return {
       id: p['id'] as number,
       slug: String(p['slug']),
@@ -133,16 +142,26 @@ export async function buildSnapshot(
       author: idOf(p['author']),
     };
   });
-  const pageRows: SnapshotDoc[] = pages.map((p) => ({
-    id: p['id'] as number,
-    slug: String(p['slug']),
-    title: locOf(p['title']),
-    seo: {
-      title: locOf(group(p['seo'])['title']),
-      description: locOf(group(p['seo'])['description']),
-    },
-    lead: locOf(p['lead']),
-  }));
+  const pageRows: SnapshotDoc[] = pages.map((p) => {
+    const title = locOf(p['title']);
+    // The blocks' photos: the story's, the cards' art, the steps' icons, the media banner's.
+    for (const block of (p['blocks'] as Row[] | undefined) ?? []) {
+      for (const key of ['photo', 'media']) use(block[key], title.ar ?? String(p['slug']));
+      for (const item of (block['items'] as Row[] | undefined) ?? []) {
+        for (const key of ['art', 'icon']) use(item[key], title.ar ?? String(p['slug']));
+      }
+    }
+    return {
+      id: p['id'] as number,
+      slug: String(p['slug']),
+      title,
+      seo: {
+        title: locOf(group(p['seo'])['title']),
+        description: locOf(group(p['seo'])['description']),
+      },
+      lead: locOf(p['lead']),
+    };
+  });
   const hubRows: SnapshotDoc[] = hubs.map((h) => {
     const name = locOf(h['name']);
     use(h['defaultCover'], name.ar ?? String(h['slug']));
@@ -184,7 +203,7 @@ export async function buildSnapshot(
         { date: { greater_than_equal: riyadh(new Date(now.getTime() - 29 * 86_400_000)).dateKey } },
       ],
     },
-    overrideAccess: true,
+    ...access,
   });
   return {
     at: now.toISOString(),
