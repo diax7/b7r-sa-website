@@ -47,10 +47,18 @@ describe('content security policy (BRD 8.10, ADR-016)', () => {
       'https://*.google-analytics.com',
       'https://*.analytics.google.com',
       'https://region1.google-analytics.com',
+      'https://www.googletagmanager.com',
       'https://umami.b7r.app',
     ]);
+    // The tag's pixels: GA's documented CSP wants googletagmanager.com on img-src too.
     expect(directive(csp, 'img-src')).toEqual(
-      expect.arrayContaining(["'self'", 'data:', 'blob:', 'https://www.google-analytics.com']),
+      expect.arrayContaining([
+        "'self'",
+        'data:',
+        'blob:',
+        'https://www.google-analytics.com',
+        'https://www.googletagmanager.com',
+      ]),
     );
   });
 
@@ -67,7 +75,7 @@ describe('content security policy (BRD 8.10, ADR-016)', () => {
 
   it('does not repeat an Umami origin that is already self', () => {
     const local = contentSecurityPolicy({ umamiOrigin: undefined });
-    expect(directive(local, 'connect-src')).toHaveLength(4);
+    expect(directive(local, 'connect-src')).toHaveLength(5);
   });
 });
 
