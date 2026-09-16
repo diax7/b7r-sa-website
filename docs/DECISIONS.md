@@ -1242,3 +1242,53 @@ collection may sit under a view, as the `traffic` rows sit under the page as "Co
 sidebar and the palette list a view like a global, by the registry's own rule (admins), and
 the data paths that walk entities (the dashboard's Latest changes, the counts, the palette's
 search) leave views out explicitly. Project 3's Score page reuses all of it.
+
+## ADR-049: The visibility score: how compliant the site is with SEO and GEO, and what to do next (2026-09-16)
+
+**Context.** Dhia asked for a percentage per section of how compliant the site is with SEO and
+GEO, with what is done, what is next and what is missing, dynamic with the content, guiding him
+to the field that fixes each thing, connected to Search Console and the free services, with the
+goal of 100%. His SEO + GEO prompt (the Citation Trinity: identity, extractability,
+corroboration; crawl access; the citation ledger) is the rubric. Interview (2026-09-16): Search
+Console, Bing and PageSpeed as Connection kinds, Google by a service account; the ledger with
+web search on; weekly, guarded by each connection's monthly limit; **outside signals count in
+the percentage**, with a site-only number beside it. Plan: `docs/plans/2026-09-16-visibility-score.md`
+(CTO 93 GO). **Decision, PR 3a.** A rules engine of pure checks over one snapshot
+(`modules/visibility/snapshot.ts`: every published document in both languages, the media rows
+they use, the settings, the checklist, the connections without their keys, the counters, the
+production flag; read with the page's user, never `overrideAccess`), a Score page and a card.
+**Points versus facts.** A thing the site guarantees by construction (a required field, a
+publish rule: a product's photo, price and sizes; a post's takeaways, cover and links; the
+Arabic alt text and tagline; the socials' presence; the sitemap, `llms.txt`, canonicals,
+hreflang) can never be missing and earns no points: each section lists them as facts. Points go
+to what can move. **The table** (`rules/weights.ts`; sections 15 + 20 + 30 + 10 + 10 + 15):
+Identity I1 the English tagline 4, I2 the profiles as https links 4, I3 About in both languages
+3, I4 every author of a published post with a bio, a photo and a profile link 4; Crawl access
+C1 the production address (robots allow and indexing only on `https://b7r.sa`) 5, C2 IndexNow 3,
+C3 Search Console connected and its Test passed 4, C4 Bing the same 3, C5 every published
+document in English while the site is 5; Extractability E1 the emitted title within 70 and
+description within 155 on every page in every language (as `metadata.ts` derives them) 6, E2
+English alt on every photo in use 4, E3 every post's first paragraph 40 to 80 words 6, E4 a
+question H2 on every post 4, E5 at least five FAQ entries per language 3, E6 `FAQPage` JSON-LD 4
+and E7 a compare page 3 (both project 4, missing until then); Corroboration R1 the five-box
+off-site checklist (`visibility-checklist` global) 10; Measurement M1 landings in 30 days 3, M2
+five prompts per language 3, M3 a ledger run in 14 days 4; Outside signals P1 PageSpeed mobile
+≥ 90 on five pages by the median of three nights 6, P2 impressions 3, P3 a category term in the
+top ten queries 2, P4 the cited-rate ≥ 50% (next ≥ 10%) 4. A rule over documents is pro-rata
+("4 of 5" is 80%, `next` while partial) and lists up to ten of them, each linking to the field in
+the locale that is missing; a rule with nothing to judge is done. The overall is the sum over
+100; the site-only percentage is earned over possible on the items minus C3, C4, M3 and P1 to
+P4 (74 possible). A filled production site with no service scores about 70; until project 4
+ships E6 and E7 the ceiling is 93; the page says both. **The page** `/admin/visibility`
+(`ADMIN_VIEWS.visibility`, `adminView()`): the ring (the Visibility pink, identity), the
+site-only number, one card per section with its findings in the order next, missing, done
+(done collapsed after five), each with its guide, link and documents, the section's facts at
+the foot; "Recompute" bypasses the minute's per-process, per-user cache. No stored score: the
+score is a function of the content; the nightly snapshot (PR 3b) keeps the history. The
+Visibility group's order: the Score page, its checklist, the search defaults, the Traffic page
+and its counts, redirects. **Also in 3a:** `slogan: site.tagline` on the `OnlineStore` node, so
+I1's sentence is true. **Two BRD lines**, for Dhia to veto: `FAQPage` JSON-LD returns for the
+answer engines (project 4's ADR amends §7.10; Google dropping the rich result was the reason it
+was "not done"); Google Business Profile stays not done (no premises); §7.7's quarterly manual
+prompt check is replaced by the ledger (PR 3c). **Next:** PR 3b the three service kinds, the
+nightly pulls and the `metrics` snapshots; PR 3c the prompts and the citation ledger.

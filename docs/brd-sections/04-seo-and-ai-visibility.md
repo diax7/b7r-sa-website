@@ -78,7 +78,7 @@ The key is served at `/indexnow/{INDEXNOW_KEY}.txt` by `app/indexnow/[key]/route
 - Bing Webmaster Tools: verified; sitemap submitted; IndexNow enabled.
 - GA4: property `G-JPB02M7C49` (existing). Add a custom channel group "AI Assistants" above Referral with the session-source regex `^(chatgpt\.com|chat\.openai\.com|perplexity\.ai|www\.perplexity\.ai|claude\.ai|gemini\.google\.com|copilot\.microsoft\.com|deepseek\.com|grok\.com|x\.ai|meta\.ai|you\.com|poe\.com)$`. Mark `cta_click`, `outbound_app_click`, `contact_submit`, `whatsapp_click` as key events.
 - Umami: website added under `umami.b7r.app`; the same events sent with `umami.track`.
-- Quarterly manual check: run 20 Arabic buyer prompts (from Appendix E) in ChatGPT, Gemini, Perplexity, Copilot, and Google AI Mode; log whether b7r.sa is cited.
+- Quarterly manual check: run 20 Arabic buyer prompts (from Appendix E) in ChatGPT, Gemini, Perplexity, Copilot, and Google AI Mode; log whether b7r.sa is cited. *Amended 2026-09-16 (ADR-049): replaced by the citation ledger, a weekly run through the AI connections recorded in the admin (§10.4).*
 
 ### 7.8 Performance and asset budgets
 

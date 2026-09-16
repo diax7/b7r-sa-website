@@ -989,7 +989,7 @@ The key is served at `/indexnow/{INDEXNOW_KEY}.txt` by `app/indexnow/[key]/route
 - Bing Webmaster Tools: verified; sitemap submitted; IndexNow enabled.
 - GA4: property `G-JPB02M7C49` (existing). Add a custom channel group "AI Assistants" above Referral with the session-source regex `^(chatgpt\.com|chat\.openai\.com|perplexity\.ai|www\.perplexity\.ai|claude\.ai|gemini\.google\.com|copilot\.microsoft\.com|deepseek\.com|grok\.com|x\.ai|meta\.ai|you\.com|poe\.com)$`. Mark `cta_click`, `outbound_app_click`, `contact_submit`, `whatsapp_click` as key events.
 - Umami: website added under `umami.b7r.app`; the same events sent with `umami.track`.
-- Quarterly manual check: run 20 Arabic buyer prompts (from Appendix E) in ChatGPT, Gemini, Perplexity, Copilot, and Google AI Mode; log whether b7r.sa is cited.
+- Quarterly manual check: run 20 Arabic buyer prompts (from Appendix E) in ChatGPT, Gemini, Perplexity, Copilot, and Google AI Mode; log whether b7r.sa is cited. *Amended 2026-09-16 (ADR-049): replaced by the citation ledger, a weekly run through the AI connections recorded in the admin (§10.4).*
 
 ### 7.8 Performance and asset budgets
 
@@ -1370,6 +1370,21 @@ Vercel AI SDK provider registry: `openai`, `deepseek`, optional `anthropic` and 
 *Amended 2026-09-14 (ADR-042): the group is "AI content" with Engine settings, Topics and Runs; the monitoring numbers (posts this month, average score, failures, cost, next slot, latest runs) are a card on the dashboard for admins rather than a separate view. Amended 2026-09-15 (ADR-046): the three entries are the "Content engine" section inside the Blog group of the reshaped sidebar (Site · Catalogue · Blog · Visibility · Admin), in the Blog hue.*
 
 *Amended 2026-09-16 (ADR-048): the dashboard carries a "Traffic, last 7 days" card for admins: landings by group (AI assistants, search, social, other sites, direct), the top channel and the crawler reads, from the site's own count (§11.4).*
+
+### 10.4 The visibility score (ADR-049, 2026-09-16)
+
+An admin page under Visibility and a dashboard card: how compliant the site is with SEO and GEO, as a percentage overall and per section, each item done, next or missing with a guide that links to the field that fixes it. Computed from the content on every open (never stored; the nightly snapshot keeps the history), with outside signals counting in the number (Dhia's decision) and a site-only percentage beside it.
+
+| Section (weight) | Items (weight) |
+|---|---|
+| Identity (15) | English tagline (4) · profiles as https links (4) · About in both languages (3) · every author with a bio, a photo and a profile link (4) |
+| Crawl access (20) | the production address (5) · IndexNow (3) · Search Console connected and tested (4) · Bing connected and tested (3) · every published document in English (5) |
+| Extractability (30) | emitted titles ≤ 70 and descriptions ≤ 155 on every page (6) · English alt on every photo in use (4) · every post opens with a 40 to 80-word answer (6) · a question H2 on every post (4) · at least five FAQ entries per language (3) · FAQPage JSON-LD (4) · a compare page (3) |
+| Corroboration (10) | the five-box off-site checklist (10) |
+| Measurement (10) | landings in 30 days (3) · five prompts per language (3) · a ledger run in 14 days (4) |
+| Outside signals (15) | PageSpeed mobile ≥ 90 by the median of three nights (6) · impressions (3) · a category term in the top ten queries (2) · the cited-rate ≥ 50% (4) |
+
+What the site guarantees by construction (required fields, publish rules, the generated files) is listed as facts and earns no points. A rule over documents is pro-rata. The site-only percentage leaves out the four outside items and the two verifications. The services and the ledger follow in the same project (§11.4).
 
 ### 10.3 Acceptance (Level 3)
 

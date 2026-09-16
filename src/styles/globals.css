@@ -7,6 +7,7 @@
 @source not '../modules/ai-content/admin';
 @source not '../modules/connections/admin';
 @source not '../modules/traffic/admin';
+@source not '../modules/visibility/admin';
 @source not '../app/(payload)';
 
 /* ---------------------------------------------------------------------------------------

@@ -175,6 +175,21 @@ Vercel AI SDK provider registry: `openai`, `deepseek`, optional `anthropic` and 
 
 *Amended 2026-09-16 (ADR-048): the dashboard carries a "Traffic, last 7 days" card for admins: landings by group (AI assistants, search, social, other sites, direct), the top channel and the crawler reads, from the site's own count (§11.4).*
 
+### 10.4 The visibility score (ADR-049, 2026-09-16)
+
+An admin page under Visibility and a dashboard card: how compliant the site is with SEO and GEO, as a percentage overall and per section, each item done, next or missing with a guide that links to the field that fixes it. Computed from the content on every open (never stored; the nightly snapshot keeps the history), with outside signals counting in the number (Dhia's decision) and a site-only percentage beside it.
+
+| Section (weight) | Items (weight) |
+|---|---|
+| Identity (15) | English tagline (4) · profiles as https links (4) · About in both languages (3) · every author with a bio, a photo and a profile link (4) |
+| Crawl access (20) | the production address (5) · IndexNow (3) · Search Console connected and tested (4) · Bing connected and tested (3) · every published document in English (5) |
+| Extractability (30) | emitted titles ≤ 70 and descriptions ≤ 155 on every page (6) · English alt on every photo in use (4) · every post opens with a 40 to 80-word answer (6) · a question H2 on every post (4) · at least five FAQ entries per language (3) · FAQPage JSON-LD (4) · a compare page (3) |
+| Corroboration (10) | the five-box off-site checklist (10) |
+| Measurement (10) | landings in 30 days (3) · five prompts per language (3) · a ledger run in 14 days (4) |
+| Outside signals (15) | PageSpeed mobile ≥ 90 by the median of three nights (6) · impressions (3) · a category term in the top ten queries (2) · the cited-rate ≥ 50% (4) |
+
+What the site guarantees by construction (required fields, publish rules, the generated files) is listed as facts and earns no points. A rule over documents is pro-rata. The site-only percentage leaves out the four outside items and the two verifications. The services and the ledger follow in the same project (§11.4).
+
 ### 10.3 Acceptance (Level 3)
 
 1. Manual posts: an editor writes, previews, schedules, and publishes a post; hub pages, RSS, sitemap, IndexNow, and related posts update.

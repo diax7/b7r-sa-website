@@ -6,6 +6,7 @@ import {
   FileText,
   FolderTree,
   Footprints,
+  Gauge,
   Globe,
   Heart,
   History,
@@ -13,6 +14,7 @@ import {
   Image,
   KeyRound,
   ListChecks,
+  ListTodo,
   type LucideIcon,
   MessageSquareQuote,
   Newspaper,
@@ -45,7 +47,7 @@ import type { Config } from '@/payload-types';
 export type CollectionSlug = Exclude<keyof Config['collections'], `payload-${string}`>;
 export type GlobalSlug = Exclude<keyof Config['globals'], `payload-${string}`>;
 /** A page of our own in the panel (ADR-048): a report, not a document. */
-export type ViewSlug = 'traffic';
+export type ViewSlug = 'traffic' | 'visibility';
 export type EntityType = 'collections' | 'globals' | 'views';
 
 export const COLLECTION_ICONS: Record<CollectionSlug, LucideIcon> = {
@@ -72,6 +74,7 @@ export const GLOBAL_ICONS: Record<GlobalSlug, LucideIcon> = {
   'site-settings': Settings2,
   'seo-defaults': Search,
   'ai-settings': SlidersHorizontal,
+  'visibility-checklist': ListTodo,
 };
 
 /**
@@ -86,6 +89,11 @@ export const ADMIN_VIEWS: Record<
   { label: { ar: string; en: string }; path: `/${string}`; icon: LucideIcon }
 > = {
   traffic: { label: { ar: 'مصادر الزيارات', en: 'Traffic' }, path: '/traffic', icon: Signpost },
+  visibility: {
+    label: { ar: 'درجة الظهور', en: 'Visibility score' },
+    path: '/visibility',
+    icon: Gauge,
+  },
 };
 
 /**
@@ -148,7 +156,7 @@ export type NavSection = keyof typeof NAV_SECTIONS;
 
 export interface EntityRef {
   type: EntityType;
-  slug: CollectionSlug | GlobalSlug;
+  slug: CollectionSlug | GlobalSlug | ViewSlug;
 }
 
 /**
@@ -168,6 +176,7 @@ export interface NavPlacement {
 const POSTS: EntityRef = { type: 'collections', slug: 'posts' };
 
 const TRAFFIC_VIEW: EntityRef = { type: 'views', slug: 'traffic' };
+const SCORE_VIEW: EntityRef = { type: 'views', slug: 'visibility' };
 
 export const ADMIN_NAV: {
   collections: Record<CollectionSlug, NavPlacement>;
@@ -187,19 +196,21 @@ export const ADMIN_NAV: {
     tags: { group: 'blog', order: 3, parent: POSTS },
     'ai-topics': { group: 'blog', order: 10, section: 'engine' },
     'ai-runs': { group: 'blog', order: 11, section: 'engine' },
-    redirects: { group: 'visibility', order: 1 },
-    traffic: { group: 'visibility', order: 3, parent: TRAFFIC_VIEW },
+    redirects: { group: 'visibility', order: 7 },
+    traffic: { group: 'visibility', order: 6, parent: TRAFFIC_VIEW },
     users: { group: 'admin', order: 0 },
     connections: { group: 'admin', order: 1 },
   },
   globals: {
     home: { group: 'site', order: 0 },
     'site-settings': { group: 'site', order: 2 },
-    'seo-defaults': { group: 'visibility', order: 0 },
+    'seo-defaults': { group: 'visibility', order: 4 },
+    'visibility-checklist': { group: 'visibility', order: 1, parent: SCORE_VIEW },
     'ai-settings': { group: 'blog', order: 12, section: 'engine' },
   },
   views: {
-    traffic: { group: 'visibility', order: 2 },
+    visibility: { group: 'visibility', order: 0 },
+    traffic: { group: 'visibility', order: 5 },
   },
 };
 

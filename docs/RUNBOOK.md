@@ -323,6 +323,27 @@ retry copy; `NEWSLETTER_TRANSPORT=mock` (tests only) keeps subscriptions in memo
 `NEXT_PUBLIC_UMAMI_ID` load Umami on every page. Local previews and CI point Umami at
 `/umami-test.js`, a recorder that never sends anything.
 
+## The visibility score (ADR-049)
+
+- **Where.** Visibility → Visibility score (`/admin/visibility`), admins; the same number on
+  the dashboard card. "Recompute" re-reads everything now (the page keeps a reading for a
+  minute).
+- **Reading it.** Six sections, each with a bar and its items in the order next, missing, done.
+  An item over documents says "4 of 5" and lists what is left, each a link into the field in
+  the language that is missing. "The site guarantees" under a section lists what cannot be
+  wrong by construction; it earns no points. The footer says how the two numbers are made.
+- **Two numbers.** The overall counts the outside signals (PageSpeed, the verifications, the
+  assistants); "What you control" counts only the items that need no service. A filled site
+  with no service connected reads about 70; until the GEO content ships (FAQPage schema, a
+  compare page) the ceiling is 93.
+- **On the review server** the site URL is not `https://b7r.sa`, so "the production address"
+  reads missing with the reason (every page is noindex there, on purpose).
+- **The checklist.** Visibility → Off-site checklist: five boxes for the work outside the
+  site (LinkedIn company and founder, YouTube, X, a first third-party mention), each with what
+  counts. Tick a box once the thing exists; the score moves at once.
+- **Changing a weight or a threshold.** One line in `src/modules/visibility/rules/weights.ts`
+  (the table ADR-049 quotes); the unit test holds the sums.
+
 ## Traffic sources (ADR-048)
 
 - **What it is.** The site's own count of where visitors come from and what the AI crawlers

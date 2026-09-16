@@ -122,6 +122,7 @@ export interface Config {
     'site-settings': SiteSetting;
     'seo-defaults': SeoDefault;
     'ai-settings': AiSetting;
+    'visibility-checklist': VisibilityChecklist;
     'payload-jobs-stats': PayloadJobsStat;
   };
   globalsSelect: {
@@ -129,6 +130,7 @@ export interface Config {
     'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
     'seo-defaults': SeoDefaultsSelect<false> | SeoDefaultsSelect<true>;
     'ai-settings': AiSettingsSelect<false> | AiSettingsSelect<true>;
+    'visibility-checklist': VisibilityChecklistSelect<false> | VisibilityChecklistSelect<true>;
     'payload-jobs-stats': PayloadJobsStatsSelect<false> | PayloadJobsStatsSelect<true>;
   };
   locale: 'ar' | 'en';
@@ -2812,6 +2814,44 @@ export interface AiSetting {
   createdAt?: string | null;
 }
 /**
+ * What others say about the brand: five pieces of off-site work, ticked here once done, counted in the visibility score.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "visibility-checklist".
+ */
+export interface VisibilityChecklist {
+  id: number;
+  /**
+   * A company page named B7R Print whose About is the tagline itself, posting a product demo a week. Tick it once it exists.
+   */
+  linkedinCompany?: boolean | null;
+  /**
+   * The founder’s profile names B7R Print and links the site: the byline the answer engines resolve to a person. Tick it once it exists.
+   */
+  linkedinFounder?: boolean | null;
+  /**
+   * A channel with at least one walkthrough of the designer and the full transcript in its description. Tick it once the walkthrough is up.
+   */
+  youtube?: boolean | null;
+  /**
+   * An X profile whose bio is the tagline and whose pinned post shows the product. Tick it once pinned.
+   */
+  xProfile?: boolean | null;
+  /**
+   * A first independent mention: a guest post, a podcast or a directory describing B7R Print in its own words with the category terms. Tick it once published.
+   */
+  firstMention?: boolean | null;
+  /**
+   * Who saved the current version and when. Drafts do not change it.
+   */
+  lastSavedBy?: {
+    name?: string | null;
+    at?: string | null;
+  };
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-jobs-stats".
  */
@@ -3095,6 +3135,26 @@ export interface AiSettingsSelect<T extends boolean = true> {
         weeklyDigest?: T;
         failureAlerts?: T;
       };
+  lastSavedBy?:
+    | T
+    | {
+        name?: T;
+        at?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "visibility-checklist_select".
+ */
+export interface VisibilityChecklistSelect<T extends boolean = true> {
+  linkedinCompany?: T;
+  linkedinFounder?: T;
+  youtube?: T;
+  xProfile?: T;
+  firstMention?: T;
   lastSavedBy?:
     | T
     | {

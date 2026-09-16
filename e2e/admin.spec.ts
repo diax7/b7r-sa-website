@@ -1448,6 +1448,135 @@ test.describe('CMS admin', () => {
         .toBe(404);
     });
 
+    test('the visibility score (ADR-049): the page for the three roles, a change that moves the number, the card', async ({
+      page,
+      request,
+    }) => {
+      const auth = await login(request, ADMIN);
+      const json = { ...auth, 'Content-Type': 'application/json' };
+      // A visitor is sent to the login; an editor sees the sentence and no sidebar entry.
+      await page.context().clearCookies();
+      await page.goto('/admin/visibility');
+      await expect(page).toHaveURL(/\/admin\/login\?redirect=%2Fadmin%2Fvisibility/);
+      const editor = await createEditor(request, auth);
+      try {
+        expect((await page.request.post(`${API}/users/login`, { data: editor })).status()).toBe(
+          200,
+        );
+        await page.goto('/admin/visibility');
+        await expect(page.locator('[data-admin-view-refused]')).toContainText(/Admins only/);
+        await page.goto('/admin');
+        await expect(page.locator('#nav-view-visibility')).toHaveCount(0);
+        await expect(page.locator('[data-admin-visibility]')).toHaveCount(0);
+      } finally {
+        await page.context().clearCookies();
+        await request.delete(`${API}/users/${editor.id}`, { headers: auth });
+      }
+      // The admin: six sections, every finding with its status, the two numbers, axe.
+      expect((await page.request.post(`${API}/users/login`, { data: ADMIN })).status()).toBe(200);
+      await request.post(`${API}/globals/visibility-checklist`, {
+        headers: json,
+        data: {
+          linkedinCompany: false,
+          linkedinFounder: false,
+          youtube: false,
+          xProfile: false,
+          firstMention: false,
+        },
+      });
+      await page.goto('/admin/visibility?fresh=1');
+      const report = page.locator('[data-admin-visibility-page]');
+      await expect(report).toBeVisible();
+      await expect(page.locator('[data-admin-section]')).toHaveCount(6);
+      await expect(page.locator('[data-admin-finding]')).toHaveCount(24);
+      const before = Number(await report.getAttribute('data-admin-visibility-overall'));
+      expect(before).toBeGreaterThan(0);
+      expect(before).toBeLessThan(100);
+      const siteOnly = Number(
+        await page
+          .locator('[data-admin-visibility-site-only]')
+          .getAttribute('data-admin-visibility-site-only'),
+      );
+      expect(siteOnly).toBeGreaterThanOrEqual(before);
+      // C1 follows the host: CI builds with the production origin (done), the review server
+      // does not (missing, in red, and the guide says why: noindex).
+      const robots = await (await request.get('/robots.txt')).text();
+      const production = robots.includes('Sitemap: https://b7r.sa/sitemap.xml');
+      await expect(page.locator('[data-admin-finding="C1"]')).toHaveAttribute(
+        'data-status',
+        production ? 'done' : 'missing',
+      );
+      // A done item shows no guide; an open one says why.
+      await expect(page.locator('[data-admin-finding="C1"]')).toContainText(
+        production ? /production address/ : /noindex/,
+      );
+      // Project 4's items read as missing with their guide; the checklist as missing with its five items.
+      await expect(page.locator('[data-admin-finding="E6"]')).toHaveAttribute(
+        'data-status',
+        'missing',
+      );
+      await expect(page.locator('[data-admin-finding="R1"]')).toHaveAttribute(
+        'data-status',
+        'missing',
+      );
+      await expect(
+        page.locator('[data-admin-finding="R1"] [data-admin-finding-items] li'),
+      ).toHaveCount(5);
+      const { AxeBuilder } = await import('@axe-core/playwright');
+      const axe = await new AxeBuilder({ page })
+        .withTags(['wcag2a', 'wcag2aa'])
+        .include('[data-admin-visibility-page]')
+        .analyze();
+      expect(
+        axe.violations
+          .filter((v) => ['serious', 'critical'].includes(v.impact ?? ''))
+          .map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`),
+      ).toEqual([]);
+      // A change that can happen: one checklist box ticked earns two points of ten, pro-rata.
+      try {
+        expect(
+          (
+            await request.post(`${API}/globals/visibility-checklist`, {
+              headers: json,
+              data: { linkedinCompany: true },
+            })
+          ).status(),
+        ).toBe(200);
+        await page.goto('/admin/visibility?fresh=1');
+        expect(
+          Number(
+            await page
+              .locator('[data-admin-visibility-page]')
+              .getAttribute('data-admin-visibility-overall'),
+          ),
+        ).toBe(before + 2);
+        await expect(page.locator('[data-admin-finding="R1"]')).toHaveAttribute(
+          'data-status',
+          'next',
+        );
+        await expect(page.locator('[data-admin-finding="R1"]')).toContainText(/1 of 5/);
+        const left = page.locator('[data-admin-finding="R1"] [data-admin-finding-items] li');
+        await expect(left).toHaveCount(4);
+        expect(await left.allTextContents()).not.toContain('LinkedIn company page');
+      } finally {
+        await request.post(`${API}/globals/visibility-checklist`, {
+          headers: json,
+          data: { linkedinCompany: false },
+        });
+      }
+      // The dashboard card reads the minute's cache: recompute once after the reset, then look.
+      await page.goto('/admin/visibility?fresh=1');
+      await page.goto('/admin');
+      const card = page.locator('[data-admin-visibility]');
+      await expect(card).toBeVisible();
+      await expect(card).toHaveAttribute('data-admin-visibility-overall', String(before));
+      await expect(card.locator('[data-admin-visibility-next] li')).toHaveCount(3);
+      await expect(page.locator('#nav-view-visibility')).toHaveAttribute(
+        'href',
+        '/admin/visibility',
+      );
+    });
+
     test('traffic (ADR-048): landings and crawls are counted by day, source and page; the beacon fires once; outsiders and editors are refused', async ({
       page,
       request,

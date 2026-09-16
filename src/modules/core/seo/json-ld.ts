@@ -53,6 +53,7 @@ export function onlineStore(base: string, site: SiteSettings): JsonLdNode {
     alternateName: site.brandNameLatin,
     url: base,
     logo: `${base}${LOGO_PATH}`,
+    slogan: site.tagline,
     sameAs: [site.social.x, site.social.instagram, site.social.tiktok],
     address: {
       '@type': 'PostalAddress',

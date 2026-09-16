@@ -125,6 +125,38 @@ export const adminStrings = {
     adminsOnlyTitle: 'Admins only',
     adminsOnly: 'This page is for administrators. Ask an admin if you need its numbers.',
   },
+  visibility: {
+    overall: 'Visibility score',
+    open: 'Open',
+    andMore: 'and {n} more',
+    moreDone: '{n} more done',
+    guaranteed: 'The site guarantees',
+    status: { done: 'Done', next: 'Next', missing: 'Missing' },
+    sections: {
+      identity: 'Identity',
+      crawl: 'Crawl access',
+      extractability: 'Extractability',
+      corroboration: 'Corroboration',
+      measurement: 'Measurement',
+      signals: 'Outside signals',
+    },
+    card: {
+      title: 'Visibility score',
+      link: 'The full score',
+      hint: 'Search engines and AI assistants: what they can read, and what they say.',
+    },
+    page: {
+      title: 'Visibility score',
+      siteOnly: 'What you control: {n}%',
+      intro: '{open} things to do. Every item links to the field that fixes it.',
+      introOne: 'One thing to do. It links to the field that fixes it.',
+      recompute: 'Recompute',
+      howOverall:
+        'The overall score is the weighted sum of every item, outside signals included (PageSpeed, the verifications, the assistants), so 100% means the site, the engines and the assistants all agree. A filled site with no service connected scores about 70; until the GEO content ships, the ceiling is 93.',
+      howSiteOnly:
+        '"What you control" counts only the items that need no outside service or assistant. Items with many documents earn pro-rata: 4 of 5 is 80%.',
+    },
+  },
   traffic: {
     groups: {
       ai: 'AI assistants',
