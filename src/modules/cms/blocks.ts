@@ -375,8 +375,8 @@ export const CompareBlock: Block = {
           label: { ar: 'تاريخ القراءة', en: 'Read on' },
           admin: { date: { pickerAppearance: 'dayOnly' } },
           hooks: {
-            // A day picker stores the admin's local midnight; kept at noon UTC so the day
-            // the page shows is the day that was picked in any zone.
+            // The admin's day picker already stores noon UTC; a REST write may not. Pinned to
+            // noon so the day the page shows is the day that was picked in any zone.
             beforeChange: [
               ({ value }) =>
                 typeof value === 'string' ? `${value.slice(0, 10)}T12:00:00.000Z` : value,
