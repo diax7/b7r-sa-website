@@ -20,7 +20,7 @@ export const Traffic: CollectionConfig = {
   slug: TRAFFIC,
   labels: {
     singular: { ar: 'عدّاد يوم', en: 'Daily count' },
-    plural: { ar: 'مصادر الزيارات', en: 'Traffic' },
+    plural: { ar: 'العدّادات', en: 'Counts' },
   },
   admin: {
     useAsTitle: 'path',

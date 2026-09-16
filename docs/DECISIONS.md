@@ -1098,7 +1098,7 @@ then its limit or an example, in both languages, through one map per entity
 `describeFields()` on the config, so the ~240 sentences are read in one place; the config
 test refuses a field without both languages (layout, hidden, read-only, label-less and
 label-less groups descended, hidden and read-only fields skipped) and a map key that names no
-field; the 187 site-facing sentences were checked against the components that read each
+field (a read-only field is a real field for the map, since its sentence still renders); the 187 site-facing sentences were checked against the components that read each
 field, and 16 corrected. Found on the way: tags, the testimonial's avatar and the settings'
 legal entity are read by nothing on the site (related posts go by hub, ADR-041; the copyright
 line is fixed copy), and their descriptions say so; whether to keep them is Dhia's call.
@@ -1225,6 +1225,20 @@ Google referrer and read as Google; the native apps (ChatGPT's, in-app browsers)
 referrer and inflate `direct`; the e2e lands like a visitor, so the review server's count
 includes the suite's. **BRD.** §6.16 gains the beacon; §11.4's Umami pull loses its referrer
 part to this counter (visitors and page views stay "if ever"); GA4 stays for consented
-sessions; Search Console comes with project 3. **Next (PR 2b):** the Traffic page as a
-Payload custom view with the registry extended to views and a gate of its own (a custom view
-with a `path` is public in Payload 3.89), reused by project 3's Score page.
+sessions; Search Console comes with project 3. **The page (PR 2b).** `/admin/traffic` is a Payload custom view (`admin.components.views`,
+from `ADMIN_VIEW_COMPONENTS` in `modules/cms/admin/views/registry.ts`), a server component
+that gates itself first (`adminView()`, `views/gate.tsx`): Payload 3 renders a custom view
+with a `path` for anyone, so a visitor is redirected to the login with the way back, an
+editor sees the "Admins only" sentence inside the shell, and the rows are read with the
+user's access, never `overrideAccess`. Ranges of 7, 30 and 90 days as links; the totals and
+the five groups; four tables with an empty state each (the channels with their share and
+first and last day; the top twenty sources; the top twenty landing pages with the channel
+that brought most; the crawlers with their company, their role (answering a person, indexing
+for search, gathering for training) and the pages they read most); the three honesty lines
+at the foot. Tables, not charts: the design system has no chart primitive and the numbers
+are small. The registry gained custom views (`ADMIN_VIEWS` in `icons.ts`: label, path,
+icon; `EntityType` is `collections | globals | views`; a placement in `ADMIN_NAV.views`; a
+collection may sit under a view, as the `traffic` rows sit under the page as "Counts"); the
+sidebar and the palette list a view like a global, by the registry's own rule (admins), and
+the data paths that walk entities (the dashboard's Latest changes, the counts, the palette's
+search) leave views out explicitly. Project 3's Score page reuses all of it.

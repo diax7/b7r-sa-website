@@ -8,7 +8,8 @@ export interface CmsUser {
   role?: Role;
 }
 
-export function roleOf(req: PayloadRequest): Role | null {
+/** The signed-in user's role; the sidebar hands only the user, so a request's user is enough. */
+export function roleOf(req: Pick<PayloadRequest, 'user'>): Role | null {
   const user = req.user as CmsUser | null | undefined;
   return user?.role ?? null;
 }

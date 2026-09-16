@@ -1,7 +1,12 @@
 @import 'tailwindcss';
 @import './tokens.css';
-/* The admin has its own stylesheet (ADR-039); its components never reach the public CSS. */
+/* The admin has its own stylesheet (ADR-039); its components never reach the public CSS: the
+   shell under modules/cms/admin, every module's own admin folder, and the (payload) routes.
+   tests/admin-css.test.ts holds the two lists together. */
 @source not '../modules/cms/admin';
+@source not '../modules/ai-content/admin';
+@source not '../modules/connections/admin';
+@source not '../modules/traffic/admin';
 @source not '../app/(payload)';
 
 /* ---------------------------------------------------------------------------------------

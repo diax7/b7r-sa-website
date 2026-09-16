@@ -54,8 +54,10 @@ export function contentSecurityPolicy({
       ]),
     ],
     ['style-src', ["'self'", "'unsafe-inline'"]],
-    ['img-src', ["'self'", 'data:', 'blob:', 'https://www.google-analytics.com', ...GA_HOSTS]],
-    ['connect-src', unique(["'self'", ...GA_HOSTS, GA_REGION, umamiOrigin])],
+    // GA's tag also reports through image pixels and fetches on googletagmanager.com (its
+    // documented CSP asks for the host on both directives; WebKit took the pixel path first).
+    ['img-src', ["'self'", 'data:', 'blob:', 'https://www.google-analytics.com', ...GA_HOSTS, GTM]],
+    ['connect-src', unique(["'self'", ...GA_HOSTS, GA_REGION, GTM, umamiOrigin])],
     ['frame-src', [TURNSTILE]],
     ['font-src', ["'self'"]],
     ['media-src', ["'self'"]],
