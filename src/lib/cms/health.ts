@@ -2,6 +2,7 @@ import 'server-only';
 import { type PostgresAdapter, sql } from '@payloadcms/db-postgres';
 import { cms } from '@/lib/cms/payload';
 import { cmsEnv } from '@/lib/cms/env';
+import { getSiteSettings } from '@/lib/cms/settings';
 import { getContactTransport } from '@/lib/contact-transport';
 import { contactEnv } from '@/lib/env-server';
 import { indexNowKey } from '@/lib/indexnow';
@@ -89,6 +90,15 @@ export interface HealthReport {
   engine: EngineState;
 }
 
+/** The contact address from the site settings; undefined when the database has none yet. */
+async function contactRecipient(): Promise<string | undefined> {
+  try {
+    return (await getSiteSettings('ar')).contact.email;
+  } catch {
+    return undefined;
+  }
+}
+
 /**
  * What `/api/health` answers and the dashboard shows (ADR-039): one function, so the two
  * never disagree. `ok` is liveness (the process answers); the rest says what is wired.
@@ -101,7 +111,7 @@ export async function healthReport(): Promise<HealthReport> {
     db: await databaseStatus(),
     media: mediaStorage(),
     newsletter: getNewsletterTransport().kind,
-    contact: getContactTransport().kind,
+    contact: getContactTransport(await contactRecipient()).kind,
     turnstile: contactEnv().turnstileSecretKey ? 'on' : 'off',
     indexnow: indexNowKey() ? 'on' : 'off',
     email: cmsEnv().email ? 'resend' : 'console',

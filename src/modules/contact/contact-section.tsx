@@ -11,7 +11,6 @@ import { copyFor } from '@/content/copy';
 import type { BlockOf } from '@/content/schema';
 import { getSiteSettings } from '@/lib/cms';
 import { env } from '@/lib/env';
-import { bookingUrl } from '@/lib/env-server';
 import type { Locale } from '@/lib/i18n';
 import { whatsappUrl } from '@/lib/utm';
 import { ContactForm } from '@/modules/contact/contact-form';
@@ -70,7 +69,7 @@ export async function ContactSection({
   const site = await getSiteSettings(locale);
   const { contactForm, footer: footerCopy } = copyFor(locale);
   const whatsapp = whatsappUrl(site.contact.whatsapp);
-  const booking = site.bookingUrl ?? bookingUrl();
+  const booking = site.bookingUrl;
   const bookingHref = booking ?? whatsappUrl(site.contact.whatsapp, block.booking.whatsappMessage);
   const social = [
     { href: site.social.x, label: footerCopy.socialAria.x, Icon: XIcon },

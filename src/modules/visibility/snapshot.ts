@@ -226,7 +226,7 @@ export async function buildSnapshot(
     isProductionSite: env.isProductionSite,
     englishOn,
     indexNow: Boolean(indexNowKey()),
-    gaConfigured: Boolean(env.gaId),
+    gaConfigured: Boolean((site['analytics'] as Row | undefined)?.['gaId']),
     site: {
       tagline: locOf(site['tagline']),
       social: {

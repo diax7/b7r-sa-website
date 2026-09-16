@@ -107,8 +107,8 @@ export const SeoDefaults: GlobalConfig = {
         access: { read: adminField, update: adminField },
         admin: {
           description: {
-            ar: 'اختياري: تُقرأ من متغيرات البيئة عند تركها فارغة.',
-            en: 'Optional: env variables are used when empty.',
+            ar: 'اختياري: وسم التحقق في كل صفحة؛ فارغ يعني لا وسم.',
+            en: 'Optional: the verification meta tag on every page; empty means no tag.',
           },
         },
         fields: [

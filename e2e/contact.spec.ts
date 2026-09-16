@@ -223,7 +223,7 @@ test.describe('contact form (BRD 6.9, 4.11)', () => {
     await expect(page.getByTestId('contact-form')).toBeVisible();
   });
 
-  test('booking button opens WhatsApp with the BRD message when BOOKING_URL is unset', async ({
+  test('booking button opens WhatsApp with the BRD message when no booking link is set', async ({
     page,
   }) => {
     await page.goto('/contact');

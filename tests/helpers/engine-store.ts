@@ -34,6 +34,7 @@ export const SITE: SiteSettings = {
   offer: { welcomeCredit: 30 },
   delivery: { maxDays: 5, origin: 'جدة', region: 'منطقة مكة المكرمة' },
   legalEntity: 'مؤسسة بحر',
+  analytics: {},
 };
 
 const product = (

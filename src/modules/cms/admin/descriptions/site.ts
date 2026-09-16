@@ -250,6 +250,22 @@ export const SITE_SETTINGS_DESCRIPTIONS: Described = {
     ar: 'منطقة المنشأ في بيانات المنظمة لمحركات البحث (حقل addressRegion): منطقة مكة المكرمة. لا يظهر للزائر.',
     en: 'The origin region in the organisation data search engines read (addressRegion): Makkah Region. Not shown to a visitor.',
   },
+  analytics: {
+    ar: 'أدوات القياس: Google Analytics 4 (بعد موافقة الزائر) وUmami (بلا موافقة). اتركها فارغة لموقع بلا تتبّع.',
+    en: 'The measurement tools: Google Analytics 4 (after the visitor consents) and Umami (no consent needed). Leave empty for a site with no tracking.',
+  },
+  'analytics.gaId': {
+    ar: 'معرّف القياس في Google Analytics 4 (يبدأ بـ G-). عند تعبئته يظهر شريط الموافقة على ملفات الارتباط ويُحمَّل GA بعد الموافقة؛ فارغ يعني لا تتبّع ولا شريط.',
+    en: 'The Google Analytics 4 measurement id (starts with G-). Set, the cookie consent bar shows and GA loads after consent; empty means no tracking and no bar.',
+  },
+  'analytics.umamiSrc': {
+    ar: 'رابط سكربت Umami: على cloud.umami.is أو على نطاق فرعي من b7r.sa (سياسة الأمان تسمح بهذين فقط). يُحمَّل في كل صفحة عند تعبئته مع معرّف الموقع؛ لا يحتاج موافقة.',
+    en: 'The Umami script URL, on cloud.umami.is or on a b7r.sa subdomain (the security policy admits only these). Loads on every page when set together with the website id; needs no consent.',
+  },
+  'analytics.umamiId': {
+    ar: 'معرّف الموقع في Umami (UUID). يعمل فقط مع رابط السكربت.',
+    en: 'The Umami website id (a UUID). Works only together with the script URL.',
+  },
   legalEntity: {
     ar: 'لا يقرؤه الموقع اليوم: سطر الحقوق في التذييل والصفحات القانونية نصّها ثابت في الكود. محفوظ لليوم الذي يُقرأ فيه.',
     en: "Read by nothing on the site today: the footer's copyright line and the legal pages carry their own fixed text. Kept for the day they read it.",

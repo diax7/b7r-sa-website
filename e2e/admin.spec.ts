@@ -767,6 +767,7 @@ test.describe('CMS admin', () => {
       'Contact & social',
       'Menus & footer',
       'Numbers & legal',
+      'Analytics',
     ]);
     const products = (await (
       await request.get(`${API}/products?limit=1`, { headers: auth })

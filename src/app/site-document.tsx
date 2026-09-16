@@ -4,7 +4,7 @@ import { preload } from 'react-dom';
 import { SAR_NAME_ID } from '@/components/shared/sar-symbol';
 import { copyFor, shellCopy } from '@/content/copy';
 import type { Navigation, SiteSettings } from '@/content/schema';
-import { env } from '@/lib/env';
+
 import { htmlDir, languageTag, type Locale } from '@/lib/i18n';
 import { Footer, Header, newsletterCopy, SkipLink } from '@/modules/core';
 import { PageExtras } from '@/modules/core/page-extras';
@@ -63,7 +63,7 @@ export function SiteDocument({
         <script
           dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('js')" }}
         />
-        {env.gaId && (
+        {site.analytics.gaId && (
           <script id="consent-default" dangerouslySetInnerHTML={{ __html: CONSENT_DEFAULT }} />
         )}
       </head>
@@ -90,9 +90,18 @@ export function SiteDocument({
           locale={locale}
           copy={copy}
         />
-        <PageExtras gaId={env.gaId} whatsapp={site.contact.whatsapp} locale={locale} copy={shell} />
-        {env.umami && (
-          <Script src={env.umami.src} data-website-id={env.umami.id} strategy="afterInteractive" />
+        <PageExtras
+          gaId={site.analytics.gaId}
+          whatsapp={site.contact.whatsapp}
+          locale={locale}
+          copy={shell}
+        />
+        {site.analytics.umami && (
+          <Script
+            src={site.analytics.umami.src}
+            data-website-id={site.analytics.umami.id}
+            strategy="afterInteractive"
+          />
         )}
       </body>
     </html>

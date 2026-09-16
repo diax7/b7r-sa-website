@@ -19,8 +19,6 @@ export interface HeaderRoute {
 }
 
 export interface SecurityHeaderOptions {
-  /** Origin of the Umami script (`NEXT_PUBLIC_UMAMI_SRC`), added to script and connect. */
-  umamiOrigin?: string | undefined;
   /** Origin of the S3 public URL: the admin shows upload previews straight from storage. */
   mediaOrigin?: string | undefined;
   /** Next dev needs `eval` for React Refresh; never set in production builds. */
@@ -31,15 +29,35 @@ const GTM = 'https://www.googletagmanager.com';
 const TURNSTILE = 'https://challenges.cloudflare.com';
 const GA_HOSTS = ['https://*.google-analytics.com', 'https://*.analytics.google.com'];
 const GA_REGION = 'https://region1.google-analytics.com';
+/**
+ * Where a Umami script and its events may live (ADR-052): Umami Cloud, or a Umami on a
+ * b7r.sa subdomain. The admin's Umami field accepts only these, so the policy never blocks
+ * a configured script; the policy is static (ADR-016) and cannot follow an arbitrary URL.
+ */
+export const UMAMI_HOSTS = [
+  'https://cloud.umami.is',
+  'https://api-gateway.umami.dev',
+  'https://*.b7r.sa',
+] as const;
+/** Whether a Umami script URL is one the policy admits (a root-relative path is `'self'`). */
+export function umamiSrcAllowed(src: string): boolean {
+  if (/^\/[^/]/.test(src)) return true;
+  let host: string;
+  try {
+    const url = new URL(src);
+    if (url.protocol !== 'https:') return false;
+    host = url.host;
+  } catch {
+    return false;
+  }
+  return host === 'cloud.umami.is' || (host.endsWith('.b7r.sa') && host !== 'b7r.sa');
+}
 
 function unique(values: Array<string | undefined>): string[] {
   return [...new Set(values.filter((v): v is string => Boolean(v)))];
 }
 
-export function contentSecurityPolicy({
-  umamiOrigin,
-  allowEval = false,
-}: SecurityHeaderOptions = {}): string {
+export function contentSecurityPolicy({ allowEval = false }: SecurityHeaderOptions = {}): string {
   const directives: Array<[string, string[]]> = [
     ['default-src', ["'self'"]],
     [
@@ -50,14 +68,14 @@ export function contentSecurityPolicy({
         allowEval ? "'unsafe-eval'" : undefined,
         GTM,
         TURNSTILE,
-        umamiOrigin,
+        ...UMAMI_HOSTS,
       ]),
     ],
     ['style-src', ["'self'", "'unsafe-inline'"]],
     // GA's tag also reports through image pixels and fetches on googletagmanager.com (its
     // documented CSP asks for the host on both directives; WebKit took the pixel path first).
     ['img-src', ["'self'", 'data:', 'blob:', 'https://www.google-analytics.com', ...GA_HOSTS, GTM]],
-    ['connect-src', unique(["'self'", ...GA_HOSTS, GA_REGION, GTM, umamiOrigin])],
+    ['connect-src', unique(["'self'", ...GA_HOSTS, GA_REGION, GTM, ...UMAMI_HOSTS])],
     ['frame-src', [TURNSTILE]],
     ['font-src', ["'self'"]],
     ['media-src', ["'self'"]],
@@ -154,14 +172,4 @@ export function headerRoutes(options: SecurityHeaderOptions = {}): HeaderRoute[]
     { source: '/fonts/:path*', headers: [FONT_CACHE] },
     ...ADMIN_ROUTE_SOURCES.map((source) => ({ source, headers: adminHeaders(options) })),
   ];
-}
-
-/** Origin of a script URL, or undefined when unset or not a URL. */
-export function originOf(url: string | undefined): string | undefined {
-  if (!url) return undefined;
-  try {
-    return new URL(url).origin;
-  } catch {
-    return undefined;
-  }
 }

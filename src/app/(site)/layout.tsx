@@ -1,16 +1,15 @@
 import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
 import { SiteDocument } from '@/app/site-document';
-import { getNavigation, getSiteSettings } from '@/lib/cms';
+import { getNavigation, getSeoDefaults, getSiteSettings } from '@/lib/cms';
 import { siteLocales } from '@/lib/cms/locales';
-import { verificationTokens } from '@/lib/env-server';
 import { BRAND_PRIMARY_HEX } from '@/lib/tokens';
 import { DraftBar } from '@/modules/core/draft-bar';
 import { rootMetadata } from '@/modules/core/seo/metadata';
 
-/** Root metadata: the title template and the verification metas (CMS first, env as fallback). */
+/** Root metadata: the title template and the verification metas from the SEO settings (ADR-052). */
 export async function generateMetadata(): Promise<Metadata> {
-  const tokens = verificationTokens();
+  const tokens = (await getSeoDefaults('ar')).verification;
   return {
     ...(await rootMetadata('ar')),
     verification: {

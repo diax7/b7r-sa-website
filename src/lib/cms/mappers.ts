@@ -118,6 +118,12 @@ export function toSiteSettings(doc: SiteSetting): SiteSettings {
     },
     ...(doc.bookingUrl ? { bookingUrl: doc.bookingUrl } : {}),
     legalEntity: doc.legalEntity,
+    analytics: {
+      ...(doc.analytics?.gaId ? { gaId: doc.analytics.gaId } : {}),
+      ...(doc.analytics?.umamiSrc && doc.analytics?.umamiId
+        ? { umami: { src: doc.analytics.umamiSrc, id: doc.analytics.umamiId } }
+        : {}),
+    },
   });
 }
 

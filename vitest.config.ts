@@ -20,12 +20,9 @@ export default defineConfig({
     // unit tests that assert the unconfigured defaults.
     env: {
       NEXT_PUBLIC_APP_URL: 'https://b7r.app',
-      NEXT_PUBLIC_WHATSAPP: '966501699572',
       NEXT_PUBLIC_SITE_URL: '',
-      NEXT_PUBLIC_GA_ID: '',
-      NEXT_PUBLIC_UMAMI_SRC: '',
-      NEXT_PUBLIC_UMAMI_ID: '',
       NEXT_PUBLIC_TURNSTILE_SITE_KEY: '',
+      PAYLOAD_SECRET: '',
       NEWSLETTER_TRANSPORT: '',
       CONTACT_TRANSPORT: '',
       RESEND_API_KEY: '',

@@ -127,7 +127,9 @@ Verified 2026-09-17 with a build-arg build against the compose database (no secr
    the app on a one-minute cron; two instances run every job twice).
 3. Environment: every row of the matrix below, set before the first build, because the
    build reads `DATABASE_URL`, `PAYLOAD_SECRET`, the `NEXT_PUBLIC_*` values and the `S3_*`
-   location (media URLs are prerendered). The build refuses to start without the database
+   location (media URLs are prerendered). The rest (the WhatsApp number, the contact
+   address, the analytics ids, the verification tokens) is entered in the admin after the
+   restore, not here. The build refuses to start without the database
    and the secret rather than prerender an empty site. A builder without BuildKit (Kaniko)
    cannot parse the `RUN --mount` lines; every platform named above uses BuildKit. The
    platform must hand its environment to the build as build args (Render and Koyeb do by
@@ -176,25 +178,26 @@ is a `serverExternalPackages` entry (ADR-033): the standalone trace copies it fr
 
 ### Environment matrix
 
+The environment is technical (ADR-052). What a person at B7R changes is in the admin: the
+WhatsApp number and the contact address (Site settings → Contact), the booking link
+(Numbers), the analytics ids (Analytics), the verification tokens (SEO settings).
+
 | Variable | Where | Value |
 |---|---|---|
 | `NEXT_PUBLIC_SITE_URL` | prod only | `https://b7r.sa` (anything else = noindex + `Disallow: /`) |
-| `NEXT_PUBLIC_APP_URL` | all | `https://b7r.app` |
-| `NEXT_PUBLIC_WHATSAPP` | all | `966501699572` |
-| `NEXT_PUBLIC_GA_ID` | prod | `G-JPB02M7C49` (CI: `G-TEST00000`) |
-| `NEXT_PUBLIC_UMAMI_SRC`, `NEXT_PUBLIC_UMAMI_ID` | prod | Umami script URL + website id (CI: the `/umami-test.js` recorder) |
-| `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` | prod | Cloudflare pair (CI/local: the public always-pass test site key, no secret) |
-| `RESEND_API_KEY`, `RESEND_FROM`, `CONTACT_TO`, `RESEND_AUDIENCE_ID` | prod | Resend key, `بحر برنت <no-reply@b7r.sa>`, `contact@b7r.sa`, audience id |
-| `BOOKING_URL` | prod, optional | Cal.com link; empty = WhatsApp fallback on the booking card |
-| `INDEXNOW_KEY` | prod | 8–128 chars `[a-zA-Z0-9-]`; served at `/indexnow/{key}.txt` |
-| `GOOGLE_SITE_VERIFICATION`, `BING_SITE_VERIFICATION` | prod | verification tokens → `<meta>` tags |
-| `B7R_RUNTIME` | prod only | `production` (turns on the startup assertion) |
-| `NEWSLETTER_TRANSPORT`, `CONTACT_TRANSPORT` | CI/local only | `mock`; refused in production |
+| `PAYLOAD_PUBLIC_SERVER_URL` | all | `https://b7r.sa` in production (same origin as the site); `http://localhost:3004` locally and in CI; the temporary domain on a rehearsal |
+| `NEXT_PUBLIC_APP_URL` | optional | defaults to `https://b7r.app` |
 | `DATABASE_URL` | all | Postgres connection string (build **and** runtime) |
-| `PAYLOAD_SECRET` | all | 32+ random characters; signs admin sessions (rotating it signs everyone out) |
-| `PAYLOAD_PUBLIC_SERVER_URL` | all | `https://b7r.sa` in production (same origin as the site); `http://localhost:3004` locally and in CI |
-| `S3_BUCKET`, `S3_REGION`, `S3_ENDPOINT`, `S3_PUBLIC_URL` | prod (+ local MinIO) | bucket, region (`auto` for MinIO/R2), API endpoint, public base URL of objects |
+| `PAYLOAD_SECRET` | all | 32+ random characters; signs admin sessions and encrypts the connections' keys (rotating it signs everyone out and makes every stored key unreadable) |
+| `S3_BUCKET`, `S3_REGION`, `S3_ENDPOINT`, `S3_PUBLIC_URL` | prod (+ local MinIO) | bucket, region (`auto`), API endpoint, public base URL of objects (empty = endpoint/bucket) |
 | `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` | prod (+ local MinIO) | credentials with read/write on the bucket |
+| `RESEND_API_KEY`, `RESEND_AUDIENCE_ID` | prod | the Resend key and the newsletter audience id |
+| `RESEND_FROM` | optional | the sender on the verified domain; defaults to `بحر برنت <no-reply@b7r.sa>` |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` | prod | Cloudflare pair (CI/local: the public always-pass test site key, no secret) |
+| `INDEXNOW_KEY` | optional | derived from `PAYLOAD_SECRET` when unset; set only to keep a key already registered |
+| `B7R_RUNTIME` | prod only | `production` (turns on the startup assertion) |
+| `AI_CONTENT_ENABLED` | optional | `false` stops every content-engine run |
+| `NEWSLETTER_TRANSPORT`, `CONTACT_TRANSPORT`, `AI_CONTENT_MOCK` | CI/local only | test transports and the mock provider; refused in production |
 | `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_NAME` | one-off | `pnpm admin:create` on an empty users table; the e2e admin suite signs in with the pair |
 
 ### Cutover (BRD 12.4 items 13–18)
@@ -240,8 +243,8 @@ page answers 200 within a minute more.
 ## IndexNow
 
 A publish in the admin queues an `indexnow-ping` job with the regenerated URLs (three
-retries, exponential backoff), only when `B7R_RUNTIME=production` and `INDEXNOW_KEY` are
-set, so CI and previews never ping (ADR-033). For the deploy-time submission:
+retries, exponential backoff), only when `B7R_RUNTIME=production` (the key is derived from
+`PAYLOAD_SECRET` unless `INDEXNOW_KEY` is set), so CI and previews never ping (ADR-033). For the deploy-time submission:
 `scripts/indexnow.ts <before.xml> <after.xml>` diffs two sitemap snapshots and POSTs the
 changed URLs with `keyLocation = https://b7r.sa/indexnow/{key}.txt`. It exits 0 without a
 request when `NEXT_PUBLIC_SITE_URL` or `INDEXNOW_KEY` is unset. Intended GitHub Actions step
@@ -274,35 +277,18 @@ password from a machine with the secrets: `pnpm payload …` is not needed, the
 `admin:create` script only creates the first admin; use the admin UI as another admin
 (Users → the account → new password).
 
-## Backups and restore
+## Backups
 
-Weekly, `.github/workflows/backup.yml` (Sundays 03:00 UTC, or «Run workflow») runs
-`scripts/backup.sh`: `pg_dump --format=custom` → `s3://$BACKUP_S3_BUCKET/YYYY-MM-DD.dump`.
-The bucket is **private** with its own key pair (put + list only); never the media bucket
-, the script refuses it. Retention: a lifecycle rule on the bucket, e.g.
-`mc ilm rule add --expire-days 30 cranl/b7r-backups` (or the provider's console). Set the
-five `BACKUP_S3_*` secrets in the `production` environment; until then the workflow ends
-with a notice.
-
-Restore into a scratch database (the CI rehearsal `scripts/ci/restore-check.sh` does the
-same on every run):
-
-```bash
-aws --endpoint-url "$BACKUP_S3_ENDPOINT" s3 cp "s3://$BACKUP_S3_BUCKET/2026-09-13.dump" ./backup.dump
-psql "$ADMIN_URL" -c 'CREATE DATABASE b7r_restore;'
-pg_restore --no-owner --no-privileges --dbname "$SCRATCH_URL" ./backup.dump
-psql "$SCRATCH_URL" -c 'select count(*) from pages;'   # 7 or more
-```
-
-To restore production itself: stop the app, restore into a fresh database the same way,
-point `DATABASE_URL` at it, run `pnpm migrate` (no-op when the dump is current), start the
-app. Media lives in the S3 bucket and is not part of the dump.
+None of ours (Dhia, 2026-09-17): the platform's database snapshots are the backup, and
+media lives in the bucket. To move a database by hand: `pg_dump --format=custom` from the
+source, `pg_restore --no-owner --no-privileges` into a fresh database, `pnpm migrate`
+(a no-op when the dump is current), point `DATABASE_URL` at it.
 
 ## Contact form
 
 `POST /api/contact` order: JSON + same origin → validation → honeypot (200) → rate limit
 5/10 min/IP → Turnstile `siteverify` when `TURNSTILE_SECRET_KEY` is set → Resend
-`emails.send` to `CONTACT_TO` with `replyTo` = the sender. `CONTACT_TRANSPORT=mock` (tests
+`emails.send` to the contact address in the site settings (ADR-052) with `replyTo` = the sender. `CONTACT_TRANSPORT=mock` (tests
 only, refused with a key) keeps messages in memory. Message bodies are never logged.
 
 ## Open Graph images
@@ -339,8 +325,10 @@ retry copy; `NEWSLETTER_TRANSPORT=mock` (tests only) keeps subscriptions in memo
 
 ## Analytics
 
-`NEXT_PUBLIC_GA_ID` turns on the consent card and GA4 (after «موافق»); `NEXT_PUBLIC_UMAMI_SRC` +
-`NEXT_PUBLIC_UMAMI_ID` load Umami on every page. Local previews and CI point Umami at
+Site settings → Analytics (ADR-052): the GA4 id turns on the consent card and GA4 (after
+«موافق»); the Umami script URL and website id load Umami on every page. The Umami script
+must be on cloud.umami.is or a b7r.sa subdomain (the security policy admits only these).
+CI writes its dummy ids into the settings (`scripts/ci/analytics-ids.ts`), the Umami one at
 `/umami-test.js`, a recorder that never sends anything.
 
 ## The visibility score (ADR-049)

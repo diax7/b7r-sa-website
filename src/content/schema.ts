@@ -28,6 +28,11 @@ export const SiteSettingsSchema = z.object({
   delivery: z.object({ maxDays: z.int().positive(), origin: nonEmpty, region: nonEmpty }),
   bookingUrl: z.url().optional(),
   legalEntity: nonEmpty,
+  /** The analytics ids (ADR-052): GA loads after consent when `gaId` is set; Umami when both of its values are. */
+  analytics: z.object({
+    gaId: z.string().optional(),
+    umami: z.object({ src: nonEmpty, id: nonEmpty }).optional(),
+  }),
 });
 export type SiteSettings = z.infer<typeof SiteSettingsSchema>;
 

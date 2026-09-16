@@ -8,10 +8,6 @@ declare global {
     interface ProcessEnv {
       NEXT_PUBLIC_SITE_URL?: string;
       NEXT_PUBLIC_APP_URL?: string;
-      NEXT_PUBLIC_WHATSAPP?: string;
-      NEXT_PUBLIC_GA_ID?: string;
-      NEXT_PUBLIC_UMAMI_SRC?: string;
-      NEXT_PUBLIC_UMAMI_ID?: string;
       RESEND_API_KEY?: string;
       RESEND_AUDIENCE_ID?: string;
       NEWSLETTER_TRANSPORT?: string;
