@@ -5,5 +5,6 @@
 export { reading, type Reading } from '@/modules/visibility/reading';
 export { scoreOf, type Score } from '@/modules/visibility/score';
 export { buildSnapshot } from '@/modules/visibility/snapshot';
+export { queueLedger } from '@/modules/visibility/ledger/run';
 export { queuePull } from '@/modules/visibility/pull';
 export { SERVICE_TESTS } from '@/modules/visibility/services/tests';

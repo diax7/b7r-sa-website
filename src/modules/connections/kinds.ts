@@ -34,6 +34,12 @@ export interface KindInfo {
   needsBaseUrl: boolean;
   /** What the secret is, for the field's label and its guide. */
   secret: 'apiKey' | 'serviceAccount';
+  /**
+   * What the vendor charges per web search beyond tokens, in USD (the ledger, ADR-049 D5):
+   * OpenAI and Anthropic $10 per thousand searches, Google $35 per thousand grounded prompts;
+   * DeepSeek, a compatible endpoint and the mock search nothing through us.
+   */
+  searchFeeUsd: number;
 }
 
 export const KINDS: Record<ConnectionKind, KindInfo> = {
@@ -44,6 +50,7 @@ export const KINDS: Record<ConnectionKind, KindInfo> = {
     rates: { input: 2, output: 8 },
     needsBaseUrl: false,
     secret: 'apiKey',
+    searchFeeUsd: 0.01,
   },
   anthropic: {
     label: { ar: 'Anthropic (Claude)', en: 'Anthropic (Claude)' },
@@ -52,6 +59,7 @@ export const KINDS: Record<ConnectionKind, KindInfo> = {
     rates: { input: 3, output: 15 },
     needsBaseUrl: false,
     secret: 'apiKey',
+    searchFeeUsd: 0.01,
   },
   google: {
     label: { ar: 'Google (Gemini)', en: 'Google (Gemini)' },
@@ -60,6 +68,7 @@ export const KINDS: Record<ConnectionKind, KindInfo> = {
     rates: { input: 1.25, output: 10 },
     needsBaseUrl: false,
     secret: 'apiKey',
+    searchFeeUsd: 0.035,
   },
   deepseek: {
     label: { ar: 'DeepSeek', en: 'DeepSeek' },
@@ -68,6 +77,7 @@ export const KINDS: Record<ConnectionKind, KindInfo> = {
     rates: { input: 0.27, output: 1.1 },
     needsBaseUrl: false,
     secret: 'apiKey',
+    searchFeeUsd: 0,
   },
   'openai-compatible': {
     label: { ar: 'خدمة متوافقة مع OpenAI', en: 'OpenAI-compatible endpoint' },
@@ -76,6 +86,7 @@ export const KINDS: Record<ConnectionKind, KindInfo> = {
     rates: { input: 0, output: 0 },
     needsBaseUrl: true,
     secret: 'apiKey',
+    searchFeeUsd: 0,
   },
   mock: {
     label: { ar: 'تجريبي (اختبارات فقط)', en: 'Mock (tests only)' },
@@ -84,6 +95,7 @@ export const KINDS: Record<ConnectionKind, KindInfo> = {
     rates: { input: 0, output: 0 },
     needsBaseUrl: false,
     secret: 'apiKey',
+    searchFeeUsd: 0,
   },
   'google-search-console': {
     label: { ar: 'Google Search Console', en: 'Google Search Console' },
@@ -92,6 +104,7 @@ export const KINDS: Record<ConnectionKind, KindInfo> = {
     rates: { input: 0, output: 0 },
     needsBaseUrl: false,
     secret: 'serviceAccount',
+    searchFeeUsd: 0,
   },
   'bing-webmaster': {
     label: { ar: 'Bing Webmaster Tools', en: 'Bing Webmaster Tools' },
@@ -100,6 +113,7 @@ export const KINDS: Record<ConnectionKind, KindInfo> = {
     rates: { input: 0, output: 0 },
     needsBaseUrl: false,
     secret: 'apiKey',
+    searchFeeUsd: 0,
   },
   pagespeed: {
     label: { ar: 'PageSpeed Insights', en: 'PageSpeed Insights' },
@@ -108,6 +122,7 @@ export const KINDS: Record<ConnectionKind, KindInfo> = {
     rates: { input: 0, output: 0 },
     needsBaseUrl: false,
     secret: 'apiKey',
+    searchFeeUsd: 0,
   },
 };
 

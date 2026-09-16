@@ -1740,6 +1740,160 @@ test.describe('CMS admin', () => {
       }
     });
 
+    test('the citation ledger (ADR-049 3c): the prompts, "Run now" once per ten minutes, a mock run writing one citation per prompt and one run, the page', async ({
+      page,
+      request,
+    }) => {
+      // The `ai` queue serves the batch within the minute; the poll below waits up to 150 s.
+      test.setTimeout(240_000);
+      const auth = await login(request, ADMIN);
+      const json = { ...auth, 'Content-Type': 'application/json' };
+      const ids: number[] = [];
+      try {
+        // The seed's fifteen prompts, admins only; a new one is a plain create.
+        const seeded = (await (
+          await request.get(`${API}/prompts?limit=0&where[enabled][equals]=true`, { headers: auth })
+        ).json()) as { totalDocs: number; docs: Array<{ language: string; namesBrand: boolean }> };
+        expect(seeded.totalDocs).toBeGreaterThanOrEqual(15);
+        const editor = await createEditor(request, auth);
+        try {
+          const editorAuth = await login(request, editor);
+          expect((await request.get(`${API}/prompts`, { headers: editorAuth })).status()).toBe(403);
+          expect((await request.get(`${API}/citations`, { headers: editorAuth })).status()).toBe(
+            403,
+          );
+        } finally {
+          await request.delete(`${API}/users/${editor.id}`, { headers: auth });
+        }
+        // A mock AI connection for the batch (AI_CONTENT_MOCK=1 on the review server and CI).
+        const made = await request.post(`${API}/connections`, {
+          headers: json,
+          data: { label: 'Mock, ledger e2e', kind: 'mock' },
+        });
+        expect(made.status()).toBe(201);
+        const mockId = ((await made.json()) as { doc: { id: number } }).doc.id;
+        ids.push(mockId);
+        // "Run now": an outsider is refused; the button queues once; the second call waits.
+        expect(
+          (
+            await request.post('/api/visibility/ledger', {
+              headers: { 'Content-Type': 'application/json' },
+              data: {},
+            })
+          ).status(),
+        ).toBe(403);
+        expect((await page.request.post(`${API}/users/login`, { data: ADMIN })).status()).toBe(200);
+        await page.goto('/admin/visibility');
+        const ledger = page.locator('[data-admin-visibility-ledger]');
+        await expect(ledger).toBeVisible();
+        await page.locator('[data-admin-action="visibility-ledger"]').click();
+        await expect(
+          page.locator(
+            '[data-admin-action="visibility-ledger"] ~ [data-admin-action-result="done"]',
+          ),
+        ).toHaveText(/Queued/);
+        const again = await request.post('/api/visibility/ledger', { headers: json, data: {} });
+        expect(again.status()).toBe(429);
+        // One `citation` run on the mock connection, done, with the label saying how many.
+        const latestRun = async () => {
+          const res = await request.get(
+            `${API}/ai-runs?sort=-createdAt&limit=1&depth=0&where[connection][equals]=${mockId}&where[kind][equals]=citation`,
+            { headers: auth },
+          );
+          return ((await res.json()) as { docs: Array<Record<string, unknown>> }).docs[0];
+        };
+        await expect
+          .poll(async () => (await latestRun())?.['status'] ?? 'none', {
+            intervals: [2_000, 5_000],
+            timeout: 150_000,
+          })
+          .not.toMatch(/running|none/);
+        const batch = (await latestRun())!;
+        expect(batch['status'], JSON.stringify(batch['steps'])).toBe('done');
+        expect(batch['label']).toMatch(
+          /^Citation ledger, Mock, ledger e2e: \d+ prompts, \d+ cited$/,
+        );
+        expect(batch['costUsd']).toBe(0);
+        // One citation per enabled prompt, the Arabic ones named and linked (the mock's rule),
+        // the brand-naming prompts flagged as such.
+        const rows = (await (
+          await request.get(`${API}/citations?limit=0&depth=0&where[run][equals]=${batch['id']}`, {
+            headers: auth,
+          })
+        ).json()) as {
+          totalDocs: number;
+          docs: Array<{
+            id: number;
+            mentioned: boolean;
+            linked: boolean;
+            namesBrand: boolean;
+            mode: string;
+            provider: string;
+            promptText: string;
+            title: string;
+          }>;
+        };
+        expect(rows.totalDocs).toBe(seeded.totalDocs);
+        expect(rows.docs.filter((r) => r.mentioned).length).toBe(
+          seeded.docs.filter((p) => p.language === 'ar').length,
+        );
+        expect(rows.docs.filter((r) => r.namesBrand).length).toBe(
+          seeded.docs.filter((p) => p.namesBrand).length,
+        );
+        expect(rows.docs.every((r) => r.provider === 'mock' && r.mode === 'plain')).toBe(true);
+        // The row keeps what was asked and reads in the list by day and connection.
+        expect(rows.docs.every((r) => r.promptText.length > 0)).toBe(true);
+        expect(rows.docs[0]!.title).toMatch(/^\d{4}-\d{2}-\d{2} · Mock, ledger e2e$/);
+        expect(rows.docs.filter((r) => r.linked).length).toBe(
+          rows.docs.filter((r) => r.mentioned).length,
+        );
+        // Citations are read-only.
+        expect(
+          (await request.post(`${API}/citations`, { headers: json, data: rows.docs[0] })).status(),
+        ).toBe(403);
+        // The page: the engine's rate card, a check on an Arabic prompt, a cross on an English
+        // one, the competitors line; the score's M3 and P4 read the run.
+        await page.goto('/admin/visibility?fresh=1');
+        await expect(ledger.locator(`[data-admin-ledger-engine="${mockId}"]`)).toContainText(
+          /Mock, ledger e2e/,
+        );
+        expect(await ledger.locator('[data-admin-cited="true"]').count()).toBeGreaterThan(0);
+        expect(await ledger.locator('[data-admin-cited="false"]').count()).toBeGreaterThan(0);
+        await expect(ledger.locator('[data-admin-ledger-competitors]')).toContainText(/printful/);
+        await expect(page.locator('[data-admin-finding="M3"]')).toHaveAttribute(
+          'data-status',
+          'done',
+        );
+        await expect(page.locator('[data-admin-finding="M2"]')).toHaveAttribute(
+          'data-status',
+          'done',
+        );
+        await expect(page.locator('[data-admin-finding="P4"]')).toHaveAttribute(
+          'data-status',
+          'done',
+        );
+        // A wrong batch can be removed: the rows and the run go, the prompts stay.
+        const gone = await request.delete(`${API}/citations?where[run][equals]=${batch['id']}`, {
+          headers: auth,
+        });
+        expect(gone.status()).toBe(200);
+        expect(
+          (
+            (await (
+              await request.get(`${API}/citations?limit=0&where[run][equals]=${batch['id']}`, {
+                headers: auth,
+              })
+            ).json()) as { totalDocs: number }
+          ).totalDocs,
+        ).toBe(0);
+        expect(
+          (await request.delete(`${API}/ai-runs/${batch['id']}`, { headers: auth })).status(),
+        ).toBe(200);
+      } finally {
+        for (const id of ids) await request.delete(`${API}/connections/${id}`, { headers: auth });
+      }
+    });
+
     test('traffic (ADR-048): landings and crawls are counted by day, source and page; the beacon fires once; outsiders and editors are refused', async ({
       page,
       request,

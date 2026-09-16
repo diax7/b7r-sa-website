@@ -1,3 +1,4 @@
+import { costTodayOf } from '@/modules/ai-content/caps';
 import { Buffer } from 'node:buffer';
 import { convertMarkdownToLexical, editorConfigFactory } from '@payloadcms/richtext-lexical';
 import type { Payload } from 'payload';
@@ -336,7 +337,7 @@ export function payloadStore(payload: Payload): Store {
       return {
         runsToday: today.docs.filter((r) => r.kind === 'generate').length,
         runsThisMonth: thisMonth.totalDocs,
-        costTodayUsd: today.docs.reduce((n, r) => n + (r.costUsd ?? 0), 0),
+        costTodayUsd: costTodayOf(today.docs),
         connectionSpentMonthUsd: spend.spentUsd,
       };
     },

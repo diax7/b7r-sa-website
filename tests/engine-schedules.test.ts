@@ -220,6 +220,28 @@ describe('the weekly digest (BRD 10.2.4 step 9)', () => {
       post: null,
       startedAt: '2026-09-10T06:00:00.000Z',
     },
+    {
+      id: 4,
+      label: 'Citation ledger, OpenAI: 15 prompts, 6 cited',
+      kind: 'citation',
+      status: 'done',
+      score: null,
+      costUsd: 0.4,
+      error: null,
+      post: null,
+      startedAt: '2026-09-07T04:00:00.000Z',
+    },
+    {
+      id: 5,
+      label: 'Citation ledger, Claude: skipped',
+      kind: 'citation',
+      status: 'skipped',
+      score: null,
+      costUsd: 0,
+      error: 'asked within the hour',
+      post: null,
+      startedAt: '2026-09-07T04:10:00.000Z',
+    },
   ];
 
   it('lists the posts with score and cost, the failures with their reason, and the next slot', () => {
@@ -230,7 +252,11 @@ describe('the weekly digest (BRD 10.2.4 step 9)', () => {
       base: 'https://b7r.sa',
       envOn: true,
     });
-    expect(text).toContain('2 post(s) written, 1 failure(s), 0.27 USD spent.');
+    // The ledger's batches are neither posts nor failures; their cost is the week's too.
+    expect(text).toContain('2 post(s) written, 1 failure(s), 0.67 USD spent.');
+    expect(text).toContain('Citation ledger:');
+    expect(text).toContain('- Citation ledger, OpenAI: 15 prompts, 6 cited (0.40 USD)');
+    expect(text).toContain('- Citation ledger, Claude: skipped (0.00 USD): asked within the hour');
     expect(text).toContain(
       'كيف تسعّر تيشيرتاً (generate, score 88, 0.12 USD): https://b7r.sa/blog/how-to-price',
     );

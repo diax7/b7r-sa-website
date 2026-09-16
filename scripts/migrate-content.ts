@@ -28,6 +28,7 @@ import { testimonials } from '../src/content/seed/testimonials';
 import { nextWindow, seedTopics } from '../src/content/seed/topics';
 import { ensureEnglish } from './migrate-content-en';
 import { seedTopicsEn } from '../src/content/seed/en/topics';
+import { SEED_PROMPTS } from '../src/modules/visibility/ledger/seed';
 import { factsSheet } from '../src/modules/ai-content/facts';
 import { ar } from '../src/content/copy/ar';
 import {
@@ -675,6 +676,28 @@ async function ensureTopic(
   summary.created.push(`topic ${topic.title.slice(0, 24)}`);
 }
 
+/** A buyer prompt for the citation ledger (ADR-049 D5): by text, never overwritten. */
+async function ensurePrompt(
+  payload: Payload,
+  prompt: (typeof SEED_PROMPTS)[number],
+  order: number,
+): Promise<void> {
+  const existing = await payload.count({
+    collection: 'prompts',
+    where: { text: { equals: prompt.text } },
+  });
+  if (existing.totalDocs > 0) {
+    summary.skipped.push(`prompt ${prompt.text.slice(0, 24)}`);
+    return;
+  }
+  await payload.create({
+    collection: 'prompts',
+    data: { ...prompt, order, enabled: true },
+    depth: 0,
+  });
+  summary.created.push(`prompt ${prompt.text.slice(0, 24)}`);
+}
+
 async function ensureBlog(payload: Payload): Promise<void> {
   const hubs = new Map<string, number>();
   for (const [i, hub] of blogHubs.entries())
@@ -684,6 +707,8 @@ async function ensureBlog(payload: Payload): Promise<void> {
   const now = new Date();
   for (const topic of [...seedTopics, ...seedTopicsEn])
     await ensureTopic(payload, topic, hubs, now);
+  for (const [i, prompt] of SEED_PROMPTS.entries())
+    await ensurePrompt(payload, prompt, (i + 1) * 10);
 }
 
 async function main(): Promise<number> {

@@ -83,6 +83,8 @@ export interface Config {
     connections: Connection;
     traffic: Traffic;
     metrics: Metric;
+    prompts: Prompt;
+    citations: Citation;
     redirects: Redirect;
     'payload-kv': PayloadKv;
     'payload-jobs': PayloadJob;
@@ -108,6 +110,8 @@ export interface Config {
     connections: ConnectionsSelect<false> | ConnectionsSelect<true>;
     traffic: TrafficSelect<false> | TrafficSelect<true>;
     metrics: MetricsSelect<false> | MetricsSelect<true>;
+    prompts: PromptsSelect<false> | PromptsSelect<true>;
+    citations: CitationsSelect<false> | CitationsSelect<true>;
     redirects: RedirectsSelect<false> | RedirectsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-jobs': PayloadJobsSelect<false> | PayloadJobsSelect<true>;
@@ -147,6 +151,7 @@ export interface Config {
       'content-freshness': TaskContentFreshness;
       'content-digest': TaskContentDigest;
       'visibility-pull': TaskVisibilityPull;
+      'citation-ledger': TaskCitationLedger;
       schedulePublish: TaskSchedulePublish;
       inline: {
         input: unknown;
@@ -1173,7 +1178,7 @@ export interface AiTopic {
 export interface AiRun {
   id: number;
   label: string;
-  kind: 'generate' | 'freshness';
+  kind: 'generate' | 'freshness' | 'citation';
   status: 'running' | 'done' | 'failed' | 'skipped';
   provider?: string | null;
   model?: string | null;
@@ -1235,7 +1240,7 @@ export interface Connection {
    */
   label: string;
   /**
-   * The service the key is sent to. "OpenAI-compatible endpoint" fits any other AI that serves the OpenAI API at its own address; "Mock" is for tests only.
+   * The service the key is sent to. "OpenAI-compatible endpoint" fits any other AI that serves the OpenAI API at its own address; "Mock" is for tests only. Search Console, Bing and PageSpeed are services the visibility score reads, not models: one enabled connection each.
    */
   kind:
     | 'openai'
@@ -1256,7 +1261,7 @@ export interface Connection {
    */
   baseUrl?: string | null;
   /**
-   * Stored encrypted and never shown again; leave the mask to keep it, clear it to remove it.
+   * The service's key as its console gives it; for Search Console the whole service account key file (JSON); PageSpeed works without one. Stored encrypted and never shown again; leave the mask to keep it, clear it to remove it.
    */
   apiKey?: string | null;
   /**
@@ -1362,6 +1367,135 @@ export interface Metric {
   createdAt: string;
 }
 /**
+ * The questions a buyer asks an AI assistant, the ones B7R should be named for; the ledger asks them every week.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "prompts".
+ */
+export interface Prompt {
+  id: number;
+  /**
+   * The question as a buyer types it to an AI assistant, naming no brand unless it compares: "best site to print t-shirts in Saudi Arabia?". Up to 300 characters.
+   */
+  text: string;
+  /**
+   * The language the prompt is in; the score asks for at least five per language.
+   */
+  language: 'ar' | 'en';
+  /**
+   * What the asker wants: a category (who offers the service), a compare (B7R against others) or a how-to. Read in the ledger only.
+   */
+  intent: 'category' | 'compare' | 'how-to';
+  /**
+   * The prompt’s place in the run and the table; smallest first. When the run’s twenty-minute budget runs out, the last prompts are left for next week.
+   */
+  order: number;
+  /**
+   * The prompt itself names B7R (a compare prompt): asked and recorded, but left out of the cited-rate, since the answer is bound to name the brand. The text decides too: a prompt naming «بحر برنت» or b7r counts as such even unticked.
+   */
+  namesBrand?: boolean | null;
+  /**
+   * On: asked in every weekly run and counted in the score. Off: kept in the list, not asked.
+   */
+  enabled?: boolean | null;
+  /**
+   * Who saved the current version and when. Drafts do not change it.
+   */
+  lastSavedBy?: {
+    name?: string | null;
+    at?: string | null;
+  };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Each assistant’s answer to each prompt in each run: whether it named B7R, linked to it, and which competitors it named. Read-only.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "citations".
+ */
+export interface Citation {
+  id: number;
+  /**
+   * The day and the connection, so the row reads in the list and the palette.
+   */
+  title: string;
+  /**
+   * The day of the run, Riyadh time.
+   */
+  date: string;
+  /**
+   * The kind of connection the run used (OpenAI, Anthropic, Google…), as it was at the time.
+   */
+  provider: string;
+  /**
+   * The model id at the time.
+   */
+  model?: string | null;
+  /**
+   * "With search" when the vendor’s web search was on for the ask; "plain" for vendors that offer none through us.
+   */
+  mode: 'search' | 'plain';
+  /**
+   * The answer named B7R (بحر برنت or b7r).
+   */
+  mentioned?: boolean | null;
+  /**
+   * The answer cited a link to b7r.sa or b7r.app.
+   */
+  linked?: boolean | null;
+  /**
+   * The prompt itself named the brand when asked; such a row leaves the cited-rate.
+   */
+  namesBrand?: boolean | null;
+  /**
+   * The prompt as it was asked at the time, whatever was edited or removed since.
+   */
+  promptText?: string | null;
+  /**
+   * The first 400 characters of the answer.
+   */
+  excerpt?: string | null;
+  /**
+   * Every link the answer cited, ours and others.
+   */
+  urls?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * The competitors (from the BRD’s list) whose name or link appeared in the answer.
+   */
+  competitors?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * The prompt that was asked.
+   */
+  prompt?: (number | null) | Prompt;
+  /**
+   * The connection it went through; emptied when the connection is deleted.
+   */
+  connection?: (number | null) | Connection;
+  /**
+   * The ledger run that wrote this row (in the engine’s runs, kind citation).
+   */
+  run?: (number | null) | AiRun;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * Send an old URL to a page or a new URL. Live as soon as it is saved.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1458,6 +1592,7 @@ export interface PayloadJob {
           | 'content-freshness'
           | 'content-digest'
           | 'visibility-pull'
+          | 'citation-ledger'
           | 'schedulePublish';
         taskID: string;
         input?:
@@ -1500,6 +1635,7 @@ export interface PayloadJob {
         | 'content-freshness'
         | 'content-digest'
         | 'visibility-pull'
+        | 'citation-ledger'
         | 'schedulePublish'
       )
     | null;
@@ -1588,6 +1724,14 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'metrics';
         value: number | Metric;
+      } | null)
+    | ({
+        relationTo: 'prompts';
+        value: number | Prompt;
+      } | null)
+    | ({
+        relationTo: 'citations';
+        value: number | Citation;
       } | null)
     | ({
         relationTo: 'redirects';
@@ -2213,6 +2357,49 @@ export interface MetricsSelect<T extends boolean = true> {
   date?: T;
   source?: T;
   data?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "prompts_select".
+ */
+export interface PromptsSelect<T extends boolean = true> {
+  text?: T;
+  language?: T;
+  intent?: T;
+  order?: T;
+  namesBrand?: T;
+  enabled?: T;
+  lastSavedBy?:
+    | T
+    | {
+        name?: T;
+        at?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "citations_select".
+ */
+export interface CitationsSelect<T extends boolean = true> {
+  title?: T;
+  date?: T;
+  provider?: T;
+  model?: T;
+  mode?: T;
+  mentioned?: T;
+  linked?: T;
+  namesBrand?: T;
+  promptText?: T;
+  excerpt?: T;
+  urls?: T;
+  competitors?: T;
+  prompt?: T;
+  connection?: T;
+  run?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -3324,6 +3511,16 @@ export interface TaskVisibilityPull {
     failed?: string | null;
     topicsAdded?: number | null;
     score?: number | null;
+  };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TaskCitation-ledger".
+ */
+export interface TaskCitationLedger {
+  input?: unknown;
+  output: {
+    summary?: string | null;
   };
 }
 /**

@@ -10,6 +10,7 @@ import { buildConfig } from 'payload';
 import { digestTask } from '@/modules/ai-content/digest';
 import { freshnessTask } from '@/modules/ai-content/freshness';
 import { contentTickTask } from '@/modules/ai-content/tick';
+import { citationLedgerTask } from '@/modules/visibility/ledger/run';
 import { visibilityPullTask } from '@/modules/visibility/pull';
 import { AI_QUEUE, generatePostWorkflow } from '@/modules/ai-content/workflow';
 import { REDIRECT_OVERRIDES } from '@/modules/cms/collections/redirects';
@@ -108,7 +109,14 @@ export default buildConfig({
    * is the only runner. Completed jobs are deleted.
    */
   jobs: {
-    tasks: [indexNowTask, contentTickTask, freshnessTask, digestTask, visibilityPullTask],
+    tasks: [
+      indexNowTask,
+      contentTickTask,
+      freshnessTask,
+      digestTask,
+      visibilityPullTask,
+      citationLedgerTask,
+    ],
     workflows: [generatePostWorkflow],
     // The default queue serves IndexNow and scheduled publishes; the `ai` queue runs one
     // content-engine job at a time and carries the engine's schedules: the hourly tick, the
