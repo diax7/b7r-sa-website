@@ -20,8 +20,8 @@ an audit, on the dashboard and on a page of its own.
   `robots.txt` unchanged (C-08 stays).
 - **Where.** A dashboard card (the last 7 days by channel) and a Traffic page under Visibility
   (7 / 30 / 90 days, the channels, the sources, the landing pages, the crawlers).
-- **Retention.** Daily counts (one row per day, kind, channel, source and page, with a count),
-  kept forever. No per-visit rows, no hour.
+- **Retention.** Daily counts (one row per day, kind, source and page, with a count; the
+  channel derived at read), kept forever. No per-visit rows, no hour.
 
 Earlier (2026-09-15): the counter is ours, not GA's; prompt tracking through Connections comes
 with project 3; the Visibility group is admin-only.
@@ -64,9 +64,11 @@ and `channelOf(source) → { channel, group }` at read time.
   `x`, `snapchat`, `facebook`, `linkedin`, `youtube`, `whatsapp`, `telegram`, `pinterest`,
   `reddit`, `social-other`; `referral`; `direct`.
 - Precedence at write time: a referrer host the table knows wins; otherwise a `utm_source`
-  token the table knows (ChatGPT appends `utm_source=chatgpt.com` to the links it shows,
-  Perplexity `utm_source=perplexity`, Copilot `utm_source=copilot`, as observed at the time of
-  writing; the table is data, one line per entry); otherwise the referrer host as it is; an
+  token the table knows, folded to its canonical host so the sources table keeps one row per
+  origin (ChatGPT appends `utm_source=chatgpt.com` to the links it shows, Perplexity
+  `utm_source=perplexity` which is stored as `perplexity.ai`, Copilot `utm_source=copilot`
+  as `copilot.microsoft.com`, as observed at the time of writing; the table is data, one line
+  per entry); otherwise the referrer host as it is; an
   unknown UTM token never overrides a known host, and with no referrer it is stored as the
   source (it reads as `referral` with the token as its name). `utm_medium` is not stored.
 - The app-link forms are folded (`android-app://com.google.android.googlequicksearchbox` is
@@ -157,8 +159,8 @@ needed), and on failure merges the snapshot back into the live map by addition, 
 that arrived during the write is lost and a database that is down loses nothing until the
 process dies. A ceiling of 5,000 keys: past it new keys are dropped with one warning (a
 database that stays down cannot grow the process). The timer is `unref()`ed and guarded on
-`globalThis` (dev HMR would otherwise start a second one); `SIGTERM` flushes once, so a
-deploy loses nothing and only a crash loses up to ten seconds. One container (ADR-033), so
+`globalThis` (dev HMR would otherwise start a second one); a `SIGTERM` flush races Next's
+own close and usually saves a deploy's last seconds; a crash still loses up to ten. One container (ADR-033), so
 the map is the whole truth between flushes. The flush is the only writer; the route handlers
 never wait for the database. No env variable: the interval is a constant, and the e2e polls
 up to 20 seconds.
@@ -249,7 +251,8 @@ above (the public custom view gated, document GETs only, `/` accepted, one `sour
 vocabulary with the channel derived at read, the swap-then-merge flush with a ceiling; the
 `Origin` requirement, `navigate`-only sends, the empty states and the bar colour, the bot
 table hygiene and the C-08 test, the `views` ripple, the collection's compliance list, the
-referrer bound).
+referrer bound). Round 2: 94, GO (n1 the SIGTERM wording, n2 the retention line, n3 the
+known UTM token folded to its host: all taken).
 
 ## PRs, evidence, acceptance
 
