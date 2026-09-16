@@ -171,7 +171,10 @@ export async function recentActivity(args: {
 }): Promise<RecentItem[]> {
   const { payload, req, user, permissions, i18n } = args;
   if (!user) return [];
-  const entities = flattenNav(await navGroups({ payload, permissions, user, i18n }));
+  // Views are pages of ours, not documents: nothing to list from them.
+  const entities = flattenNav(await navGroups({ payload, permissions, user, i18n })).filter(
+    (e) => e.type !== 'views',
+  );
   const items: RecentItem[] = [];
   await Promise.all(
     entities.map(async (entity) => {

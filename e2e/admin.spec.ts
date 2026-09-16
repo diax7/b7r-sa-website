@@ -1577,7 +1577,26 @@ test.describe('CMS admin', () => {
           })
         ).status(),
       ).toBe(403);
-      // The dashboard card shows the week for an admin.
+      // The Traffic page: a visitor is sent to the login with the way back; an editor sees the
+      // sentence; an admin sees the ranges, the tables and the honesty lines, and reaches it
+      // from the sidebar. The dashboard card links to it and shows the week.
+      await page.context().clearCookies();
+      await page.goto('/admin/traffic');
+      await expect(page).toHaveURL(/\/admin\/login\?redirect=%2Fadmin%2Ftraffic/);
+      const pageEditor = await createEditor(request, auth);
+      try {
+        expect((await page.request.post(`${API}/users/login`, { data: pageEditor })).status()).toBe(
+          200,
+        );
+        await page.goto('/admin/traffic');
+        await expect(page.locator('[data-admin-view-refused]')).toContainText(/Admins only/);
+        await expect(page.locator('[data-admin-traffic-page]')).toHaveCount(0);
+        await page.goto('/admin');
+        await expect(page.locator('#nav-view-traffic')).toHaveCount(0);
+      } finally {
+        await page.context().clearCookies();
+        await request.delete(`${API}/users/${pageEditor.id}`, { headers: auth });
+      }
       expect((await page.request.post(`${API}/users/login`, { data: ADMIN })).status()).toBe(200);
       await page.goto('/admin');
       const card = page.locator('[data-admin-traffic]');
@@ -1587,6 +1606,43 @@ test.describe('CMS admin', () => {
       );
       await expect(card.locator('[data-admin-traffic-groups] li')).toHaveCount(5);
       await expect(card).toContainText(/AI assistants/);
+      // The sidebar carries the page (a drawer at this width, so the address is typed).
+      await expect(page.locator('#nav-view-traffic')).toHaveAttribute('href', '/admin/traffic');
+      await page.goto('/admin/traffic');
+      const report = page.locator('[data-admin-traffic-page]');
+      await expect(report).toHaveAttribute('data-admin-traffic-page', '30');
+      await expect(page.locator('[data-admin-traffic-range] a[aria-current="page"]')).toHaveText(
+        /30 days/,
+      );
+      await expect(page.locator('[data-admin-traffic-section="channels"]')).toContainText(
+        /ChatGPT/,
+      );
+      await expect(page.locator('[data-admin-traffic-section="sources"]')).toContainText(
+        /chatgpt\.com/,
+      );
+      await expect(page.locator('[data-admin-traffic-section="pages"]')).toContainText(path);
+      await expect(page.locator('[data-admin-traffic-section="crawlers"]')).toContainText(/GPTBot/);
+      await expect(page.locator('footer')).toContainText(/not an audit/);
+      const { AxeBuilder } = await import('@axe-core/playwright');
+      const axe = await new AxeBuilder({ page })
+        .withTags(['wcag2a', 'wcag2aa'])
+        .include('[data-admin-traffic-page]')
+        .analyze();
+      expect(
+        axe.violations
+          .filter((v) => ['serious', 'critical'].includes(v.impact ?? ''))
+          .map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`),
+      ).toEqual([]);
+      await page.goto('/admin/traffic?days=7');
+      await expect(page.locator('[data-admin-traffic-page]')).toHaveAttribute(
+        'data-admin-traffic-page',
+        '7',
+      );
+      await page.goto('/admin/traffic?days=999');
+      await expect(page.locator('[data-admin-traffic-page]')).toHaveAttribute(
+        'data-admin-traffic-page',
+        '30',
+      );
     });
 
     test('connections (ADR-047): a key is stored masked, a test records its outcome, the limit and the guard hold; editors are refused', async ({

@@ -3,10 +3,13 @@ import { getTranslation } from '@payloadcms/translations';
 import { EntityType, groupNavItems } from '@payloadcms/ui/shared';
 import type { Payload, PayloadRequest, SanitizedPermissions, TypedUser } from 'payload';
 import { formatAdminURL, PREFERENCE_KEYS } from 'payload/shared';
+import { roleOf } from '@/modules/cms/access';
 import {
   ADMIN_GROUPS,
+  ADMIN_VIEWS,
   adminGroup,
   type AdminGroupKey,
+  type EntityType as NavEntityType,
   type CollectionSlug,
   type EntityRef,
   GROUP_ORDER,
@@ -19,7 +22,7 @@ import {
 
 /** One sidebar / palette entry: plain data, safe to hand to a client component. */
 export interface NavEntity {
-  type: 'collections' | 'globals';
+  type: NavEntityType;
   slug: string;
   label: string;
   href: string;
@@ -82,7 +85,11 @@ export async function navGroups(args: {
       .filter((g) => visible(g.admin.hidden))
       .map((entity) => ({ type: EntityType.global, entity }) as const),
   ];
-  const allowed = groupNavItems(entities, permissions ?? ({} as SanitizedPermissions), i18n)
+  const allowed: Array<Pick<NavEntity, 'type' | 'slug' | 'label' | 'href'>> = groupNavItems(
+    entities,
+    permissions ?? ({} as SanitizedPermissions),
+    i18n,
+  )
     .flatMap((group) => group.entities)
     .map((e) => ({
       type: (e.type === EntityType.collection ? 'collections' : 'globals') as NavEntity['type'],
@@ -93,6 +100,17 @@ export async function navGroups(args: {
         path: `/${e.type === EntityType.collection ? 'collections' : 'globals'}/${e.slug}`,
       }),
     }));
+  // Our own pages (ADR-048): Payload knows nothing of them; the registry's rule is admins only.
+  if (roleOf({ user } as never) === 'admin') {
+    for (const [slug, view] of Object.entries(ADMIN_VIEWS)) {
+      allowed.push({
+        type: 'views',
+        slug,
+        label: getTranslation(view.label, i18n),
+        href: formatAdminURL({ adminRoute, path: view.path }),
+      });
+    }
+  }
   const counts = withCounts
     ? await collectionCounts(
         payload,

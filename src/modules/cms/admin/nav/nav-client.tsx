@@ -344,7 +344,7 @@ function Entry({
   const anchor = (
     <Link
       href={entity.href}
-      id={`nav-${entity.type === 'globals' ? 'global-' : ''}${entity.slug}`}
+      id={`nav-${entity.type === 'globals' ? 'global-' : entity.type === 'views' ? 'view-' : ''}${entity.slug}`}
       aria-current={active ? 'page' : undefined}
       aria-label={entity.label}
       className={cn(secondary ? subLink : link, active && activeLink(hue))}

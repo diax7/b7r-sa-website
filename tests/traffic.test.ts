@@ -274,6 +274,7 @@ describe('traffic: the batcher (ADR-048)', () => {
   afterEach(() => {
     resetCounter();
     vi.restoreAllMocks();
+    vi.useRealTimers();
   });
 
   it('merges hits by day, kind, source and page, the day stamped in Riyadh when counted', () => {
@@ -336,7 +337,6 @@ describe('traffic: the batcher (ADR-048)', () => {
     expect(attempts).toBe(2);
     expect(quiet).toHaveBeenCalledTimes(1);
     expect(pending().length).toBe(FLUSH_AT + 50);
-    vi.useRealTimers();
   });
 
   it('drops new keys past the ceiling with one warning; a flush at 500 keys is asked for', async () => {

@@ -31,6 +31,7 @@ import { AfterLogin as AfterLogin_bdac64e67aac5daea220280b74983ba7 } from '@/mod
 import { LoginTurnstile as LoginTurnstile_db6d95f00869612066ec723d3905d627 } from '@/modules/cms/auth/login-turnstile'
 import { S3ClientUploadHandler as S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24 } from '@payloadcms/storage-s3/client'
 import { Dashboard as Dashboard_c477b09fcf64b52975dc67110214dcbd } from '@/modules/cms/admin/dashboard/dashboard'
+import { TrafficView as TrafficView_ece980c65bdb1bd2343083b745a033bb } from '@/modules/traffic/admin/traffic-view'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
 
 /** @type import('payload').ImportMap */
@@ -68,5 +69,6 @@ export const importMap = {
   "@/modules/cms/auth/login-turnstile#LoginTurnstile": LoginTurnstile_db6d95f00869612066ec723d3905d627,
   "@payloadcms/storage-s3/client#S3ClientUploadHandler": S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24,
   "@/modules/cms/admin/dashboard/dashboard#Dashboard": Dashboard_c477b09fcf64b52975dc67110214dcbd,
+  "@/modules/traffic/admin/traffic-view#TrafficView": TrafficView_ece980c65bdb1bd2343083b745a033bb,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1
 }

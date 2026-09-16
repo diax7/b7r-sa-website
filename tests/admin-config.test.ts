@@ -30,11 +30,14 @@ import {
 import {
   ADMIN_GROUPS,
   ADMIN_NAV,
+  ADMIN_VIEWS,
   COLLECTION_ICONS,
+  entityIcon,
   GLOBAL_ICONS,
   groupIcon,
   groupKey,
   navPlacement,
+  type ViewSlug,
 } from '@/modules/cms/admin/icons';
 import { Authors } from '@/modules/cms/collections/authors';
 import { Categories } from '@/modules/cms/collections/categories';
@@ -54,6 +57,7 @@ import { SiteSettings } from '@/modules/cms/globals/site-settings';
 import { AiSettings } from '@/modules/ai-content/settings';
 import { AiTopics } from '@/modules/ai-content/topics';
 import { COLLECTIONS, GLOBALS } from '@/modules/cms/entities';
+import { ADMIN_VIEW_COMPONENTS } from '@/modules/cms/admin/views/registry';
 import { Connections } from '@/modules/connections/collection';
 import { CONNECTION_DESCRIPTIONS } from '@/modules/connections/descriptions';
 import { Traffic } from '@/modules/traffic/collection';
@@ -145,6 +149,31 @@ describe('the sidebar registry (ADR-046)', () => {
       expect(ARABIC.test(shows?.ar ?? ''), 'shows.ar').toBe(true);
     });
   }
+  it('every custom view of ours is registered with Payload, placed, iconed and admins-only', () => {
+    expect(Object.keys(ADMIN_VIEW_COMPONENTS).toSorted()).toEqual(
+      Object.keys(ADMIN_VIEWS).toSorted(),
+    );
+    for (const [slug, view] of Object.entries(ADMIN_VIEWS)) {
+      const placement = navPlacement('views', slug);
+      expect(placement, slug).toBeDefined();
+      expect(ADMIN_VIEW_COMPONENTS[slug as ViewSlug].path).toBe(view.path);
+      expect(isIcon(view.icon), `${slug} icon`).toBe(true);
+      expect(view.icon, `${slug} icon repeats its group's`).not.toBe(
+        ADMIN_GROUPS[placement!.group].icon,
+      );
+      expect(ARABIC.test(view.label.ar), `${slug} label.ar`).toBe(true);
+      expect(entityIcon('views', slug)).toBe(view.icon);
+    }
+    // A collection may sit under a view; the pair share a group.
+    expect(navPlacement('collections', 'traffic')?.parent).toEqual({
+      type: 'views',
+      slug: 'traffic',
+    });
+    expect(navPlacement('collections', 'traffic')?.group).toBe(
+      navPlacement('views', 'traffic')?.group,
+    );
+  });
+
   it('every registry entry names a group of the five, and every group has an icon and a hue', () => {
     for (const p of [
       ...Object.values(ADMIN_NAV.collections),

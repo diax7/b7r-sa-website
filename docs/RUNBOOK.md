@@ -326,9 +326,11 @@ retry copy; `NEWSLETTER_TRANSPORT=mock` (tests only) keeps subscriptions in memo
 ## Traffic sources (ADR-048)
 
 - **What it is.** The site's own count of where visitors come from and what the AI crawlers
-  read: one row per day, kind, source and page under Visibility → Traffic, and a "Traffic,
-  last 7 days" card on the dashboard (admins). Nothing needs configuring: the beacon and the
-  crawler count are on in every environment.
+  read. Visibility → Traffic is the page: pick 7, 30 or 90 days; the channels with their
+  share, the top sources, the landing pages with the channel that brings most, and the
+  crawlers with what they read most; the rows themselves sit under it as "Counts". The
+  dashboard carries a "Traffic, last 7 days" card (admins). Nothing needs configuring: the
+  beacon and the crawler count are on in every environment.
 - **Reading it.** A landing's source is the referring site folded (`chatgpt.com`,
   `google.com`, `instagram.com`), a UTM token, or `direct`; the channel and its group (AI
   assistants, search, social, other sites, direct) are derived from the source when the card

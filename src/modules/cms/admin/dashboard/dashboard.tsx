@@ -50,7 +50,7 @@ export async function Dashboard(props: AdminViewServerProps) {
           <HealthCard report={health} />
         </div>
         <div className="grid gap-6 lg:grid-cols-2">
-          {traffic && <TrafficCard summary={traffic} href={`${adminRoute}/collections/traffic`} />}
+          {traffic && <TrafficCard summary={traffic} href={`${adminRoute}/traffic`} />}
           {engine && <EngineCard summary={engine} adminRoute={adminRoute} />}
         </div>
       </div>

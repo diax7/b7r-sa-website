@@ -19,6 +19,7 @@ import {
   PenLine,
   Plug,
   Radar,
+  Radio,
   Search,
   Settings2,
   Shield,
@@ -43,7 +44,9 @@ import type { Config } from '@/payload-types';
  */
 export type CollectionSlug = Exclude<keyof Config['collections'], `payload-${string}`>;
 export type GlobalSlug = Exclude<keyof Config['globals'], `payload-${string}`>;
-export type EntityType = 'collections' | 'globals';
+/** A page of our own in the panel (ADR-048): a report, not a document. */
+export type ViewSlug = 'traffic';
+export type EntityType = 'collections' | 'globals' | 'views';
 
 export const COLLECTION_ICONS: Record<CollectionSlug, LucideIcon> = {
   products: Shirt,
@@ -69,6 +72,20 @@ export const GLOBAL_ICONS: Record<GlobalSlug, LucideIcon> = {
   'site-settings': Settings2,
   'seo-defaults': Search,
   'ai-settings': SlidersHorizontal,
+};
+
+/**
+ * Our own pages in the panel (ADR-048): Payload registers each as a custom view at `path`
+ * (`admin.components.views`, from `ADMIN_VIEW_COMPONENTS` in `admin/views/registry.ts`),
+ * the sidebar and the palette list it like a global, and every one is for admins only, the
+ * view gating itself (a custom view with a `path` is public in Payload). A view's icon is a
+ * place, like a global's, and must not repeat its group's.
+ */
+export const ADMIN_VIEWS: Record<
+  ViewSlug,
+  { label: { ar: string; en: string }; path: `/${string}`; icon: LucideIcon }
+> = {
+  traffic: { label: { ar: 'مصادر الزيارات', en: 'Traffic' }, path: '/traffic', icon: Radio },
 };
 
 /**
@@ -136,7 +153,8 @@ export interface EntityRef {
 
 /**
  * Where an entity sits in the sidebar: its group, its order inside the group, an optional
- * parent (a secondary entry, indented under the parent) and an optional section.
+ * parent (a secondary entry, indented under the parent; a collection may sit under a view)
+ * and an optional section.
  */
 export interface NavPlacement {
   group: AdminGroupKey;
@@ -149,9 +167,12 @@ export interface NavPlacement {
 
 const POSTS: EntityRef = { type: 'collections', slug: 'posts' };
 
+const TRAFFIC_VIEW: EntityRef = { type: 'views', slug: 'traffic' };
+
 export const ADMIN_NAV: {
   collections: Record<CollectionSlug, NavPlacement>;
   globals: Record<GlobalSlug, NavPlacement>;
+  views: Record<ViewSlug, NavPlacement>;
 } = {
   collections: {
     pages: { group: 'site', order: 1 },
@@ -167,7 +188,7 @@ export const ADMIN_NAV: {
     'ai-topics': { group: 'blog', order: 10, section: 'engine' },
     'ai-runs': { group: 'blog', order: 11, section: 'engine' },
     redirects: { group: 'visibility', order: 1 },
-    traffic: { group: 'visibility', order: 2 },
+    traffic: { group: 'visibility', order: 3, parent: TRAFFIC_VIEW },
     users: { group: 'admin', order: 0 },
     connections: { group: 'admin', order: 1 },
   },
@@ -177,12 +198,15 @@ export const ADMIN_NAV: {
     'seo-defaults': { group: 'visibility', order: 0 },
     'ai-settings': { group: 'blog', order: 12, section: 'engine' },
   },
+  views: {
+    traffic: { group: 'visibility', order: 2 },
+  },
 };
 
 export function navPlacement(type: EntityType, slug: string): NavPlacement | undefined {
-  return type === 'collections'
-    ? ADMIN_NAV.collections[slug as CollectionSlug]
-    : ADMIN_NAV.globals[slug as GlobalSlug];
+  if (type === 'collections') return ADMIN_NAV.collections[slug as CollectionSlug];
+  if (type === 'globals') return ADMIN_NAV.globals[slug as GlobalSlug];
+  return ADMIN_NAV.views[slug as ViewSlug];
 }
 
 /** Payload groups entities by the rendered label, in the panel's language; back to the key. */
@@ -208,9 +232,9 @@ export function entityHue(type: EntityType, slug: string): Hue {
 }
 
 export function entityIcon(type: EntityType, slug: string): LucideIcon | undefined {
-  return type === 'collections'
-    ? COLLECTION_ICONS[slug as CollectionSlug]
-    : GLOBAL_ICONS[slug as GlobalSlug];
+  if (type === 'collections') return COLLECTION_ICONS[slug as CollectionSlug];
+  if (type === 'globals') return GLOBAL_ICONS[slug as GlobalSlug];
+  return ADMIN_VIEWS[slug as ViewSlug]?.icon;
 }
 
 export const ACTION_ICONS = { viewSite: Eye } as const;

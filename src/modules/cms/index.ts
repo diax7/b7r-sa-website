@@ -15,6 +15,7 @@ import { REDIRECT_OVERRIDES } from '@/modules/cms/collections/redirects';
 import { indexNowTask } from '@/modules/cms/jobs/indexnow';
 import { cmsEnv, isBuildPhase } from '@/lib/cms/env';
 import { COLLECTIONS, GLOBALS } from '@/modules/cms/entities';
+import { ADMIN_VIEW_COMPONENTS } from '@/modules/cms/admin/views/registry';
 import { migrations } from '@/migrations';
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -57,7 +58,10 @@ export default buildConfig({
       // The shell (ADR-039): sidebar with an icon per entity, header palette + site link.
       Nav: '@/modules/cms/admin/nav/nav#Nav',
       actions: ['@/modules/cms/admin/header/actions#HeaderActions'],
-      views: { dashboard: { Component: '@/modules/cms/admin/dashboard/dashboard#Dashboard' } },
+      views: {
+        dashboard: { Component: '@/modules/cms/admin/dashboard/dashboard#Dashboard' },
+        ...ADMIN_VIEW_COMPONENTS,
+      },
       // The Turnstile widget above the login form (ADR-034); one line under it (ADR-039).
       beforeLogin: ['@/modules/cms/auth/login-turnstile#LoginTurnstile'],
       afterLogin: ['@/modules/cms/admin/login/after-login#AfterLogin'],
