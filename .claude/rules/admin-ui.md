@@ -33,7 +33,8 @@ note), `check:rtl` and the admin e2e.
    with the 3–5 columns that answer "which one is this?"; `admin.listSearchableFields` on the
    title-like fields (the command palette searches the same fields).
 6. Every `checkbox` named `enabled` gets an `admin.description` that names the consequence on
-   the site and uses the `EnabledSwitch` widget.
+   the site and uses the `EnabledSwitch` widget. In a list, every checkbox reads as the
+   green / red `BoolCell` badge (`describeFields` sets it); never Payload's `true` / `false`.
 7. If the document has a public route, set `admin.preview` (signed draft-mode URL).
 8. Access rules decide visibility: never render an admin-only thing greyed-out for editors.
 
@@ -46,10 +47,13 @@ note), `check:rtl` and the admin e2e.
 11. A page of our own in the panel (a report, ADR-048) is a custom view: an entry in
    `ADMIN_VIEWS` (label, path, icon: a place, never the group's) and `ADMIN_NAV.views` in
    `icons.ts`, its component in `admin/views/registry.ts`, and the component's first lines
-   are `const refused = adminView(props, path); if (refused) return refused;`
-   (`admin/views/gate.tsx`): Payload renders a custom view with a `path` for anyone. Reads
-   inside run with the user's access. A module's admin folder is a `@source` of `admin.css`
-   and a `@source not` of `globals.css` (`tests/admin-css.test.ts`).
+   are `const refused = adminView(props, path, title); if (refused) return refused;`
+   (`admin/views/gate.tsx`): Payload renders a custom view with a `path` for anyone. **The
+   view renders inside `AdminShell`** (`admin/views/shell.tsx`: Payload's `DefaultTemplate`
+   with our sidebar, the header, the step nav, a `Gutter`); a custom view that returns bare
+   content stands outside the admin with no way back (the 2026-09-16 defect). Reads inside
+   run with the user's access. A module's admin folder is a `@source` of `admin.css` and a
+   `@source not` of `globals.css` (`tests/admin-css.test.ts`); the e2e asserts the shell.
 12. A visibility rule (ADR-049) is a pure function over the snapshot in
    `src/modules/visibility/rules/`, with its sentence and guide beside it; its weight lives in
    `rules/weights.ts`; a guide always links to the field that fixes the finding, in the

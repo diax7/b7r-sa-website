@@ -7,11 +7,14 @@ export interface SeedPrompt {
   namesBrand: boolean;
 }
 
+/** Every seeded prompt is asked daily (Dhia, 2026-09-16); the period is edited per prompt. */
+export const SEED_EVERY_DAYS = 1;
+
 /**
- * The first fifteen buyer prompts (ADR-049 D5): ten Arabic and five English, from the BRD's
- * category terms, as a buyer types them to an assistant. Seeded by `content:migrate` once,
- * by text; editable afterwards. The two compare prompts name the brand and leave the
- * cited-rate.
+ * The buyer prompts (ADR-049 D5): the category questions a buyer types to an assistant, from
+ * the BRD's category terms, and the brand's own questions (what B7R is, whether it is
+ * trusted, what it costs), which name the brand and leave the cited-rate but record what
+ * the engines say. Seeded by `content:migrate` once, by text; editable afterwards.
  */
 export const SEED_PROMPTS: SeedPrompt[] = [
   {
@@ -97,6 +100,39 @@ export const SEED_PROMPTS: SeedPrompt[] = [
     text: 'B7R Print vs Printful for a Saudi Shopify store: which is better?',
     language: 'en',
     intent: 'compare',
+    namesBrand: true,
+  },
+  // The brand's own questions: what the engines say when a buyer asks about B7R by name.
+  { text: 'ما هو بحر برنت؟', language: 'ar', intent: 'category', namesBrand: true },
+  {
+    text: 'هل بحر برنت موثوق؟ تجارب التجار معه',
+    language: 'ar',
+    intent: 'category',
+    namesBrand: true,
+  },
+  {
+    text: 'كم أسعار بحر برنت للطباعة عند الطلب؟',
+    language: 'ar',
+    intent: 'category',
+    namesBrand: true,
+  },
+  {
+    text: 'كيف أربط متجري في سلة مع بحر برنت؟',
+    language: 'ar',
+    intent: 'how-to',
+    namesBrand: true,
+  },
+  { text: 'What is B7R Print?', language: 'en', intent: 'category', namesBrand: true },
+  {
+    text: 'Is B7R Print legit? Reviews from merchants',
+    language: 'en',
+    intent: 'category',
+    namesBrand: true,
+  },
+  {
+    text: 'B7R Print pricing for print on demand in Saudi Arabia',
+    language: 'en',
+    intent: 'category',
     namesBrand: true,
   },
 ];

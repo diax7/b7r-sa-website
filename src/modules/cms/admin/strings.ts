@@ -121,6 +121,11 @@ export const adminStrings = {
     worksWith: 'Works: {model} answered. Recorded on the connection.',
     saveFirst: 'Save, then test.',
   },
+  cells: {
+    yesNo: ['Yes', 'No'] as const,
+    onOff: ['On', 'Off'] as const,
+    notYet: 'Not yet',
+  },
   views: {
     adminsOnlyTitle: 'Admins only',
     adminsOnly: 'This page is for administrators. Ask an admin if you need its numbers.',
@@ -181,10 +186,16 @@ export const adminStrings = {
     },
     ledger: {
       title: 'Citation ledger',
-      hint: 'Every enabled AI connection is asked every prompt each Monday; the last four weeks, on the prompts that do not name the brand.',
+      hint: 'Every morning each enabled AI connection is asked the prompts due on their period; the rates cover the last four weeks, on the prompts that do not name the brand.',
       runNow: 'Run now',
       queuing: 'Queuing',
-      queued: 'Queued: the answers land within minutes; reload to see them',
+      queued:
+        'Queued: every prompt, whatever its period; the answers land within minutes, reload to see them',
+      every: '(every {n} days)',
+      viewAnswer: 'View answer',
+      answerTitle: '{engine}, {date}',
+      answerHint: 'The answer as the engine gave it; the links it cited are listed under it.',
+      close: 'Close',
       empty:
         'No run yet. Add an AI connection under Admin, keep the prompts you want asked, then press Run now or wait for Monday.',
       prompts: 'The prompts',

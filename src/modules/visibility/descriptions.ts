@@ -55,8 +55,12 @@ export const PROMPT_DESCRIPTIONS: Described = {
     en: 'What the asker wants: a category (who offers the service), a compare (B7R against others) or a how-to. Read in the ledger only.',
   },
   order: {
-    ar: 'ترتيب السؤال في الجولة والجدول؛ الأصغر أولاً. عندما تنفد ميزانية الجولة (عشرون دقيقة) تُترك الأسئلة الأخيرة.',
-    en: 'The prompt’s place in the run and the table; smallest first. When the run’s twenty-minute budget runs out, the last prompts are left for next week.',
+    ar: 'ترتيب السؤال في الجولة والجدول؛ الأصغر أولاً. عندما تنفد ميزانية الجولة (عشرون دقيقة) تُترك الأسئلة الأخيرة إلى الجولة التالية.',
+    en: 'The prompt’s place in the run and the table; smallest first. When the run’s twenty-minute budget runs out, the last prompts wait for the next run.',
+  },
+  everyDays: {
+    ar: 'كل كم يوماً يُسأل هذا السؤال: 1 كل صباح، 7 كل أسبوع، 30 كل شهر. كل سؤال يومي يكلّف نحو 0.03 دولار لكل محرّك في اليوم، مع بحث الويب.',
+    en: 'How often this prompt is asked: 1 every morning, 7 weekly, 30 monthly. A daily prompt costs about $0.03 per engine per day with web search on.',
   },
   namesBrand: {
     ar: 'السؤال نفسه يذكر بحر برنت (سؤال مقارنة): يُسأل ويُسجَّل، لكنه لا يدخل في نسبة الاستشهاد، لأن الجواب سيذكر العلامة حتماً. النص يقرّر أيضاً: سؤال يذكر «بحر برنت» أو b7r يُعامل كذلك وإن لم يُعلَّم.',
@@ -107,8 +111,12 @@ export const CITATION_DESCRIPTIONS: Described = {
     en: 'The prompt itself named the brand when asked; such a row leaves the cited-rate.',
   },
   excerpt: {
-    ar: 'أول 400 حرف من الجواب.',
-    en: 'The first 400 characters of the answer.',
+    ar: 'أول 400 حرف من الجواب، للجدول والقائمة.',
+    en: 'The first 400 characters of the answer, for the table and the list.',
+  },
+  answer: {
+    ar: 'الجواب كاملاً كما جاء من المحرّك، بتنسيقه: العناوين والقوائم والروابط.',
+    en: 'The whole answer as the engine gave it, with its formatting: headings, lists, links.',
   },
   urls: {
     ar: 'كل الروابط التي استشهد بها الجواب، روابطنا وغيرها.',

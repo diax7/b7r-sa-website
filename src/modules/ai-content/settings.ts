@@ -5,7 +5,7 @@ import { requestLocale } from '@/lib/i18n';
 import { DEFAULT_IMAGE_STYLE, DEFAULT_STYLE } from '@/modules/ai-content/prompts/defaults';
 import { secretField } from '@/modules/cms/fields/secret-field';
 import { CONNECTIONS } from '@/modules/connections/collection';
-import { kindsThat } from '@/modules/connections/kinds';
+import { kindsThat, mockAllowed } from '@/modules/connections/kinds';
 import { globalComponents } from '@/modules/cms/admin/document/config';
 import { adminGroup } from '@/modules/cms/admin/icons';
 import { AI_SETTINGS_DESCRIPTIONS } from '@/modules/ai-content/descriptions';
@@ -87,7 +87,9 @@ export const AiSettings: GlobalConfig = {
                 name: 'connection',
                 type: 'relationship',
                 relationTo: CONNECTIONS,
-                filterOptions: { kind: { in: kindsThat('ai') } },
+                filterOptions: {
+                  kind: { in: kindsThat('ai').filter((k) => k !== 'mock' || mockAllowed()) },
+                },
                 label: { ar: 'الاتصال', en: 'Connection' },
               },
               {

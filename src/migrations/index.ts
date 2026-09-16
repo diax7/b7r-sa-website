@@ -19,6 +19,8 @@ import * as migration_20260916_094521_visibility_checklist from './20260916_0945
 import * as migration_20260916_102554_visibility_services from './20260916_102554_visibility_services';
 import * as migration_20260916_114303_visibility_ledger from './20260916_114303_visibility_ledger';
 import * as migration_20260916_124404_compare_block from './20260916_124404_compare_block';
+import * as migration_20260916_171315_prompt_period from './20260916_171315_prompt_period';
+import * as migration_20260916_180013_citation_answer from './20260916_180013_citation_answer';
 
 export const migrations = [
   {
@@ -124,6 +126,16 @@ export const migrations = [
   {
     up: migration_20260916_124404_compare_block.up,
     down: migration_20260916_124404_compare_block.down,
-    name: '20260916_124404_compare_block'
+    name: '20260916_124404_compare_block',
+  },
+  {
+    up: migration_20260916_171315_prompt_period.up,
+    down: migration_20260916_171315_prompt_period.down,
+    name: '20260916_171315_prompt_period',
+  },
+  {
+    up: migration_20260916_180013_citation_answer.up,
+    down: migration_20260916_180013_citation_answer.down,
+    name: '20260916_180013_citation_answer'
   },
 ];

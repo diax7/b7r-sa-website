@@ -61,7 +61,7 @@ export const ar = {
   breadcrumbs: {
     label: 'مسار الصفحة',
   },
-  // TODO(copy): the comparison block's fixed words (ADR-050), written under BRD 0.5; listed for Dhia.
+  // The comparison block's fixed words (BRD 4.18, ADR-050).
   compare: {
     caption: 'مقارنة بين {ours} و{theirs}',
     criterion: 'المعيار',

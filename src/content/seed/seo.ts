@@ -1,6 +1,6 @@
 import type { PageSeo } from '@/content/schema';
 
-/** BRD 4.16 rows, verbatim: the seed for the `seo-defaults` global (ADR-026); the comparison's row is TODO(copy) under BRD 0.5 (ADR-050). */
+/** BRD 4.16 rows, verbatim: the seed for the `seo-defaults` global (ADR-026). */
 export const seo: PageSeo[] = [
   {
     route: '/compare-printful',

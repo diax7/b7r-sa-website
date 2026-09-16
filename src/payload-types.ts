@@ -1454,9 +1454,13 @@ export interface Prompt {
    */
   intent: 'category' | 'compare' | 'how-to';
   /**
-   * The prompt’s place in the run and the table; smallest first. When the run’s twenty-minute budget runs out, the last prompts are left for next week.
+   * The prompt’s place in the run and the table; smallest first. When the run’s twenty-minute budget runs out, the last prompts wait for the next run.
    */
   order: number;
+  /**
+   * How often this prompt is asked: 1 every morning, 7 weekly, 30 monthly. A daily prompt costs about $0.03 per engine per day with web search on.
+   */
+  everyDays: number;
   /**
    * The prompt itself names B7R (a compare prompt): asked and recorded, but left out of the cited-rate, since the answer is bound to name the brand. The text decides too: a prompt naming «بحر برنت» or b7r counts as such even unticked.
    */
@@ -1520,9 +1524,27 @@ export interface Citation {
    */
   promptText?: string | null;
   /**
-   * The first 400 characters of the answer.
+   * The first 400 characters of the answer, for the table and the list.
    */
   excerpt?: string | null;
+  /**
+   * The whole answer as the engine gave it, with its formatting: headings, lists, links.
+   */
+  answer?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
   /**
    * Every link the answer cited, ours and others.
    */
@@ -2468,6 +2490,7 @@ export interface PromptsSelect<T extends boolean = true> {
   language?: T;
   intent?: T;
   order?: T;
+  everyDays?: T;
   namesBrand?: T;
   enabled?: T;
   lastSavedBy?:
@@ -2494,6 +2517,7 @@ export interface CitationsSelect<T extends boolean = true> {
   namesBrand?: T;
   promptText?: T;
   excerpt?: T;
+  answer?: T;
   urls?: T;
   competitors?: T;
   prompt?: T;
@@ -3617,7 +3641,9 @@ export interface TaskVisibilityPull {
  * via the `definition` "TaskCitation-ledger".
  */
 export interface TaskCitationLedger {
-  input?: unknown;
+  input: {
+    all?: boolean | null;
+  };
   output: {
     summary?: string | null;
   };

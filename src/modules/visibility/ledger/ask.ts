@@ -28,9 +28,11 @@ export interface Answer {
 export type Asker = (prompt: string) => Promise<Answer>;
 
 /**
- * How many searches the vendor bills for one answer. OpenAI and Anthropic emit a tool-call
- * part per server-side search; Google emits none for grounding (it lands in the metadata
- * and the sources) and bills per grounded prompt, so a grounded answer counts one.
+ * How many searches the vendor bills for one answer. Anthropic reports the number in its
+ * usage metadata (`server_tool_use.web_search_requests`; the tool-call parts over-count it);
+ * OpenAI emits a tool-call part per server-side search; Google emits none for grounding (it
+ * lands in the metadata and the sources) and bills per grounded prompt, so a grounded
+ * answer counts one.
  */
 export function searchesOf(
   kind: ConnectionSpec['kind'],
@@ -44,6 +46,13 @@ export function searchesOf(
     const grounded =
       result.sources.length > 0 || result.providerMetadata?.['google']?.['groundingMetadata'];
     return grounded ? 1 : 0;
+  }
+  if (kind === 'anthropic') {
+    const usage = result.providerMetadata?.['anthropic']?.['usage'] as
+      | { server_tool_use?: { web_search_requests?: number } }
+      | undefined;
+    const reported = usage?.server_tool_use?.web_search_requests;
+    if (typeof reported === 'number') return reported;
   }
   return result.steps.flatMap((step) => step.content).filter((part) => part.type === 'tool-call')
     .length;

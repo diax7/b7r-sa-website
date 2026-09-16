@@ -126,6 +126,12 @@ export const Citations: CollectionConfig = {
         admin: { readOnly: true },
       },
       {
+        name: 'answer',
+        type: 'richText',
+        label: { ar: 'الجواب كاملاً', en: 'The full answer' },
+        admin: { readOnly: true },
+      },
+      {
         name: 'urls',
         type: 'json',
         label: { ar: 'الروابط', en: 'URLs' },

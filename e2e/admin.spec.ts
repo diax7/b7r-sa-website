@@ -1487,7 +1487,14 @@ test.describe('CMS admin', () => {
       await page.goto('/admin/visibility?fresh=1');
       const report = page.locator('[data-admin-visibility-page]');
       await expect(report).toBeVisible();
-      await expect(page.locator('[data-admin-section]')).toHaveCount(6);
+      // Inside the admin shell: the sidebar with this page's own entry, the header, the step nav.
+      await expect(page.locator('nav #nav-view-visibility')).toHaveAttribute(
+        'href',
+        '/admin/visibility',
+      );
+      await expect(page.locator('.app-header')).toBeVisible();
+      await expect(page.locator('.step-nav')).toContainText('Visibility score');
+      await expect(report.locator('[data-admin-section]')).toHaveCount(6);
       await expect(page.locator('[data-admin-finding]')).toHaveCount(24);
       const before = Number(await report.getAttribute('data-admin-visibility-overall'));
       expect(before).toBeGreaterThan(0);
@@ -1510,18 +1517,16 @@ test.describe('CMS admin', () => {
       await expect(page.locator('[data-admin-finding="C1"]')).toContainText(
         production ? /production address/ : /noindex/,
       );
-      // The FAQ schema reads done from the seeded FAQ page (ADR-050); the comparison is a
-      // seeded draft, so E7 stays missing until Dhia publishes it; the checklist is missing
-      // with its five items.
+      // The FAQ schema and the comparison read done from the seeded pages (ADR-050, BRD 4.18);
+      // the checklist is missing with its five items.
       await expect(page.locator('[data-admin-finding="E6"]')).toHaveAttribute(
         'data-status',
         'done',
       );
       await expect(page.locator('[data-admin-finding="E7"]')).toHaveAttribute(
         'data-status',
-        'missing',
+        'done',
       );
-      await expect(page.locator('[data-admin-finding="E7"]')).toContainText(/seeded draft/);
       await expect(page.locator('[data-admin-finding="R1"]')).toHaveAttribute(
         'data-status',
         'missing',
@@ -1875,10 +1880,20 @@ test.describe('CMS admin', () => {
           'data-status',
           'done',
         );
-        await expect(page.locator('[data-admin-finding="P4"]')).toHaveAttribute(
-          'data-status',
-          'done',
+        // P4 has rows to read: done or next by the rate (real engines' rows may share the window).
+        expect(await page.locator('[data-admin-finding="P4"]').getAttribute('data-status')).toMatch(
+          /done|next/,
         );
+        // The whole answer opens in a dialog, formatted; the badge reads the verdict in words.
+        await expect(ledger.locator('[data-admin-cited="true"]').first()).toContainText(
+          'Named B7R',
+        );
+        await ledger.locator('[data-admin-answer-open]').first().click();
+        const dialog = page.locator('[data-admin-answer]');
+        await expect(dialog).toBeVisible();
+        await expect(dialog.locator('.prose')).toContainText(/بحر برنت|Printful/);
+        await page.keyboard.press('Escape');
+        await expect(dialog).toBeHidden();
         // A wrong batch can be removed: the rows and the run go, the prompts stay.
         const gone = await request.delete(`${API}/citations?where[run][equals]=${batch['id']}`, {
           headers: auth,
@@ -1897,11 +1912,18 @@ test.describe('CMS admin', () => {
           (await request.delete(`${API}/ai-runs/${batch['id']}`, { headers: auth })).status(),
         ).toBe(200);
       } finally {
+        // Whatever failed above, the mock leaves nothing behind: its rows, its runs, its row.
+        await request.delete(`${API}/citations?where[provider][equals]=mock&limit=0`, {
+          headers: auth,
+        });
+        await request.delete(`${API}/ai-runs?where[provider][equals]=mock&limit=0`, {
+          headers: auth,
+        });
         for (const id of ids) await request.delete(`${API}/connections/${id}`, { headers: auth });
       }
     });
 
-    test('the compare page (ADR-050): a published comparison renders its table and lists in both languages, passes axe, and E7 reads done; the seeded draft is a 404 with a preview', async ({
+    test('the compare page (ADR-050): the seeded comparison is live in both languages; a comparison of its own renders its table and lists, passes axe, and E7 reads done', async ({
       page,
       request,
     }) => {
@@ -1909,17 +1931,21 @@ test.describe('CMS admin', () => {
       const json = { ...auth, 'Content-Type': 'application/json' };
       const stamp = Date.now();
       const slug = `compare-e2e-${stamp}`;
-      // The seeded comparison is a draft: the public route answers 404, the preview renders it.
+      // The seeded comparison (BRD 4.18) is published: both routes answer with the block.
       const seeded = (await (
-        await request.get(`${API}/pages?where[slug][equals]=compare-printful&depth=0&draft=true`, {
+        await request.get(`${API}/pages?where[slug][equals]=compare-printful&depth=0`, {
           headers: auth,
         })
       ).json()) as {
         docs: Array<{ id: number; _status: string; blocks: Array<{ blockType: string }> }>;
       };
-      expect(seeded.docs[0]?._status).toBe('draft');
+      expect(seeded.docs[0]?._status).toBe('published');
       expect(seeded.docs[0]?.blocks[0]?.blockType).toBe('compare');
-      expect((await request.get('/compare-printful', { maxRedirects: 0 })).status()).toBe(404);
+      for (const path of ['/compare-printful', '/en/compare-printful']) {
+        const res = await request.get(path);
+        expect(res.status(), path).toBe(200);
+        expect(await res.text()).toContain('data-block="compare"');
+      }
       // A published comparison of its own, with the seeded block's shape.
       const comparison = {
         blockType: 'compare',
@@ -2188,6 +2214,10 @@ test.describe('CMS admin', () => {
       await page.goto('/admin/traffic');
       const report = page.locator('[data-admin-traffic-page]');
       await expect(report).toHaveAttribute('data-admin-traffic-page', '30');
+      // Inside the admin shell: the sidebar, the header, the step nav naming the page.
+      await expect(page.locator('nav #nav-view-traffic')).toHaveCount(1);
+      await expect(page.locator('.app-header')).toBeVisible();
+      await expect(page.locator('.step-nav')).toContainText('Traffic');
       await expect(page.locator('[data-admin-traffic-range] a[aria-current="page"]')).toHaveText(
         /30 days/,
       );

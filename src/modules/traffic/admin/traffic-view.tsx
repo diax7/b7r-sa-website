@@ -1,4 +1,4 @@
-import { Gutter, Link } from '@payloadcms/ui';
+import { Link } from '@payloadcms/ui';
 import type { AdminViewServerProps } from 'payload';
 import type { ReactNode } from 'react';
 import { Badge } from '@/components/shared/badge';
@@ -8,6 +8,7 @@ import { botByKey } from '@/lib/traffic/bots';
 import { ADMIN_VIEWS } from '@/modules/cms/admin/icons';
 import { adminStrings } from '@/modules/cms/admin/strings';
 import { adminView, viewUser } from '@/modules/cms/admin/views/gate';
+import { AdminShell } from '@/modules/cms/admin/views/shell';
 import { CHANNEL_GROUPS } from '@/modules/traffic/channels';
 import { type TrafficSummary, trafficSummary } from '@/modules/traffic/summary';
 
@@ -192,7 +193,7 @@ function Crawlers({ summary }: { summary: TrafficSummary }) {
  * to the login and shows an editor the sentence; the rows are read with the user's access.
  */
 export async function TrafficView(props: AdminViewServerProps) {
-  const refused = adminView(props, ADMIN_VIEWS.traffic.path);
+  const refused = adminView(props, ADMIN_VIEWS.traffic.path, s.page.title);
   if (refused) return refused;
   const days = rangeOf(props.searchParams?.['days']);
   const summary = await trafficSummary(props.payload, { days, user: viewUser(props) });
@@ -200,7 +201,7 @@ export async function TrafficView(props: AdminViewServerProps) {
   const base = `${adminRoute}${ADMIN_VIEWS.traffic.path}`;
   const top = summary.byChannel[0];
   return (
-    <Gutter>
+    <AdminShell props={props} title={s.page.title}>
       <div className="flex flex-col gap-8 pb-2" data-admin-ui="" data-admin-traffic-page={days}>
         <header className="flex flex-wrap items-end justify-between gap-4">
           <div className="flex flex-col gap-1">
@@ -272,6 +273,6 @@ export async function TrafficView(props: AdminViewServerProps) {
           ))}
         </footer>
       </div>
-    </Gutter>
+    </AdminShell>
   );
 }

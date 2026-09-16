@@ -1,8 +1,15 @@
+import { convertMarkdownToLexical, editorConfigFactory } from '@payloadcms/richtext-lexical';
 import type { Payload, TaskConfig } from 'payload';
+import { postBodyField } from '@/lib/cms/post-body';
 import { riyadh } from '@/lib/riyadh';
 import { addUsage, estimateCostUsd, type Usage, ZERO_USAGE } from '@/modules/ai-content/cost';
 import { AI_QUEUE } from '@/modules/ai-content/workflow';
-import { type ConnectionSpec, KINDS, kindsThat, mockAllowed } from '@/modules/connections/kinds';
+import {
+  type ConnectionSpec,
+  kindsThat,
+  mockAllowed,
+  searchFeeFor,
+} from '@/modules/connections/kinds';
 import { readConnection } from '@/modules/connections/read';
 import { safeMessage } from '@/modules/connections/safe-message';
 import { connectionSpend } from '@/modules/connections/spend';
@@ -14,12 +21,16 @@ export const CITATION_LEDGER = 'citation-ledger' as const;
 export const LEDGER_COOLDOWN_MS = 60 * 60_000;
 /** The batch stops asking after this and records the rest as not run. */
 export const LEDGER_BUDGET_MS = 20 * 60_000;
+/** An answer is kept whole up to this; 1,500 output tokens are well under it. */
+export const ANSWER_MAX_CHARS = 20_000;
 
 export interface LedgerPrompt {
   id: number;
   text: string;
   language: 'ar' | 'en';
   namesBrand: boolean;
+  /** Asked every this many days (1 = every morning). */
+  everyDays: number;
 }
 
 export interface LedgerConnectionResult {
@@ -41,7 +52,7 @@ export interface LedgerResult {
 /** What a connection's batch costs: the tokens at its rates plus the vendor's per-search fee. */
 export function batchCostUsd(spec: ConnectionSpec, usage: Usage, searches: number): number {
   const tokens = estimateCostUsd(usage, spec.rates);
-  return Math.round((tokens + searches * KINDS[spec.kind].searchFeeUsd) * 10_000) / 10_000;
+  return Math.round((tokens + searches * searchFeeFor(spec.kind, spec.model)) * 10_000) / 10_000;
 }
 
 /** The label the runs list shows: the outcome in one line, the failures and the leftovers named. */
@@ -71,7 +82,47 @@ async function enabledPrompts(payload: Payload): Promise<LedgerPrompt[]> {
     text: p.text,
     language: p.language,
     namesBrand: p.namesBrand === true || mentionsBrand(p.text),
+    everyDays: Math.max(1, Number(p.everyDays ?? 1)),
   }));
+}
+
+/** Whole days between two Riyadh day keys (`YYYY-MM-DD`). */
+export function daysBetween(from: string, to: string): number {
+  return Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / 86_400_000);
+}
+
+/**
+ * The prompts due for a connection today: never asked on it, or last asked at least the
+ * prompt's period ago. `lastAsked` is the newest citation day per prompt on that connection.
+ */
+export function duePrompts(
+  prompts: LedgerPrompt[],
+  lastAsked: ReadonlyMap<number, string>,
+  today: string,
+): LedgerPrompt[] {
+  return prompts.filter((p) => {
+    const last = lastAsked.get(p.id);
+    return last === undefined || daysBetween(last, today) >= p.everyDays;
+  });
+}
+
+/** The newest citation day per prompt on one connection. */
+async function lastAskedOn(payload: Payload, connectionId: number): Promise<Map<number, string>> {
+  const rows = await payload.find({
+    collection: 'citations',
+    where: { connection: { equals: connectionId } },
+    sort: '-date',
+    depth: 0,
+    pagination: false,
+    select: { prompt: true, date: true },
+    overrideAccess: true,
+  });
+  const last = new Map<number, string>();
+  for (const row of rows.docs) {
+    const id = typeof row.prompt === 'number' ? row.prompt : row.prompt?.id;
+    if (id !== undefined && !last.has(id)) last.set(id, row.date);
+  }
+  return last;
 }
 
 /** The reasons a connection is not asked this batch, checked before any call. */
@@ -138,6 +189,12 @@ async function askAll(args: {
   clock: () => number;
 }): Promise<LedgerConnectionResult> {
   const { payload, spec, prompts, ask, date, startedAt, clock } = args;
+  // The answer is kept whole, as rich text, so the page shows it as the engine formatted it
+  // (the posts' editor knows headings, lists and links; a config without the posts collection,
+  // the unit tests' fake, keeps the excerpt only).
+  const editorConfig = payload.collections?.['posts']
+    ? editorConfigFactory.fromField({ field: postBodyField(payload) })
+    : null;
   const run = await payload.create({
     collection: 'ai-runs',
     data: {
@@ -191,6 +248,12 @@ async function askAll(args: {
           namesBrand: prompt.namesBrand,
           promptText: prompt.text,
           excerpt: reading.excerpt,
+          answer: editorConfig
+            ? (convertMarkdownToLexical({
+                editorConfig,
+                markdown: answer.text.slice(0, ANSWER_MAX_CHARS),
+              }) as never)
+            : null,
           urls: reading.urls,
           competitors: reading.competitors,
           prompt: prompt.id,
@@ -228,21 +291,28 @@ async function askAll(args: {
 }
 
 /**
- * The weekly batch (ADR-049 D5): every enabled AI connection asks every enabled prompt, one
- * `citation` run per connection (the tokens, the searches and the cost summed), one
+ * The morning batch (ADR-049 D5): every enabled AI connection asks the enabled prompts due
+ * on it (each prompt on its own period; `all` asks every one, which is what "Run now" does),
+ * one `citation` run per connection (the tokens, the searches and the cost summed), one
  * `citations` row per prompt. A connection over its monthly limit, without a key, or asked
- * within the hour is skipped with a run that says why. The mock kind answers without a call
- * behind its gate. Runs on the `ai` queue, serial by ADR-033.
+ * within the hour is skipped with a run that says why; a connection with nothing due writes
+ * no row. The mock kind answers without a call behind its gate. Runs on the `ai` queue,
+ * serial by ADR-033.
  */
 export async function runLedger(
   payload: Payload,
-  options: { now?: Date; env?: Record<string, string | undefined>; clock?: () => number } = {},
+  options: {
+    now?: Date;
+    env?: Record<string, string | undefined>;
+    clock?: () => number;
+    all?: boolean;
+  } = {},
 ): Promise<LedgerResult> {
   const now = options.now ?? new Date();
   const env = options.env ?? process.env;
   const clock = options.clock ?? (() => Date.now());
   const date = riyadh(now).dateKey;
-  const prompts = await enabledPrompts(payload);
+  const every = await enabledPrompts(payload);
   const rows = await payload.find({
     collection: 'connections',
     where: { and: [{ enabled: { equals: true } }, { kind: { in: kindsThat('ai') } }] },
@@ -251,12 +321,27 @@ export async function runLedger(
     pagination: false,
     overrideAccess: true,
   });
-  const result: LedgerResult = { date, prompts: prompts.length, connections: [] };
+  const result: LedgerResult = { date, prompts: every.length, connections: [] };
   for (const row of rows.docs) {
     // Serial: one vendor at a time keeps the budget honest and the log readable.
     // oxlint-disable-next-line no-await-in-loop
     const spec = await readConnection(payload, row.id);
     if (!spec) continue;
+    // oxlint-disable-next-line no-await-in-loop
+    const lastAsked = options.all ? new Map<number, string>() : await lastAskedOn(payload, spec.id);
+    const prompts = duePrompts(every, lastAsked, date);
+    if (prompts.length === 0) {
+      result.connections.push({
+        connection: spec.label,
+        status: 'skipped',
+        reason: 'nothing due today',
+        asked: 0,
+        cited: 0,
+        notRun: 0,
+        costUsd: 0,
+      });
+      continue;
+    }
     // oxlint-disable-next-line no-await-in-loop
     const reason = await refusal(payload, spec, now, env);
     if (reason) {
@@ -287,17 +372,17 @@ export async function runLedger(
 }
 
 export const citationLedgerTask: TaskConfig<{
-  input: object;
+  input: { all?: boolean };
   output: { summary: string };
 }> = {
   slug: CITATION_LEDGER,
   label: 'Visibility: citation ledger',
-  // Monday 07:00 Riyadh on a UTC clock (Riyadh has no DST).
-  schedule: [{ cron: '0 4 * * 1', queue: AI_QUEUE }],
-  inputSchema: [],
+  // Every morning at 07:00 Riyadh on a UTC clock (Riyadh has no DST); each prompt on its period.
+  schedule: [{ cron: '0 4 * * *', queue: AI_QUEUE }],
+  inputSchema: [{ name: 'all', type: 'checkbox' }],
   outputSchema: [{ name: 'summary', type: 'text' }],
-  handler: async ({ req }) => {
-    const result = await runLedger(req.payload);
+  handler: async ({ input, req }) => {
+    const result = await runLedger(req.payload, { all: input.all === true });
     return {
       output: {
         summary: result.connections
@@ -311,7 +396,7 @@ export const citationLedgerTask: TaskConfig<{
   },
 };
 
-/** "Run now" on the page: one job, served by the `ai` queue within the minute. */
+/** "Run now" on the page: every enabled prompt whatever its period, served by the `ai` queue within the minute. */
 export function queueLedger(payload: Payload) {
-  return payload.jobs.queue({ task: CITATION_LEDGER, queue: AI_QUEUE, input: {} });
+  return payload.jobs.queue({ task: CITATION_LEDGER, queue: AI_QUEUE, input: { all: true } });
 }

@@ -9,10 +9,12 @@ import { bestMatch, citedRateOf, type CitationRow } from '@/modules/visibility/l
 import {
   batchCostUsd,
   batchLabel,
+  daysBetween,
+  duePrompts,
   LEDGER_BUDGET_MS,
   runLedger,
 } from '@/modules/visibility/ledger/run';
-import { SEED_PROMPTS } from '@/modules/visibility/ledger/seed';
+import { SEED_EVERY_DAYS, SEED_PROMPTS } from '@/modules/visibility/ledger/seed';
 
 const spec = (over: Record<string, unknown> = {}) => ({
   id: 1,
@@ -41,6 +43,7 @@ const citation = (over: Partial<CitationRow>): CitationRow => ({
   urls: [],
   competitors: [],
   excerpt: '',
+  answer: null,
   createdAt: '2026-09-14T04:00:00.000Z',
   ...over,
 });
@@ -51,6 +54,8 @@ function fakeLedgerPayload(args: {
   prompts?: Array<Record<string, unknown>>;
   runsWithinHour?: number;
   spentUsd?: number;
+  /** The citation rows already on the connection, newest first (the due check reads them). */
+  citations?: Array<{ prompt: number; date: string }>;
 }) {
   const created: Array<{ collection: string; data: Record<string, unknown> }> = [];
   const updated: Array<{ id: number; data: Record<string, unknown> }> = [];
@@ -62,6 +67,10 @@ function fakeLedgerPayload(args: {
       if (collection === 'prompts') return { docs: prompts, totalDocs: prompts.length };
       if (collection === 'connections')
         return { docs: args.connections, totalDocs: args.connections.length };
+      if (collection === 'citations') {
+        const docs = args.citations ?? [];
+        return { docs, totalDocs: docs.length };
+      }
       if (collection === 'ai-runs') {
         const docs = [{ costUsd: args.spentUsd ?? 0 }];
         return { docs, totalDocs: docs.length };
@@ -86,6 +95,15 @@ function fakeLedgerPayload(args: {
 /** The competitors an answer names, by name alone (no sources). */
 const byName = (text: string) =>
   readAnswer({ kind: 'deepseek', text, sources: [], raw: null }).competitors;
+
+/** A prompt of the ledger's shape with its period. */
+const prompt = (id: number, everyDays: number) => ({
+  id,
+  text: 'x',
+  language: 'ar' as const,
+  namesBrand: false,
+  everyDays,
+});
 
 describe('the brand matcher and the reader (ADR-049 D5)', () => {
   it('names B7R with an attached prefix, as b7r, as a host; never the sea', () => {
@@ -216,6 +234,15 @@ describe('the brand matcher and the reader (ADR-049 D5)', () => {
       }),
     ).toBe(1);
     expect(searchesOf('google', { steps: [{ content: [{ type: 'text' }] }], sources: [] })).toBe(0);
+    // Anthropic reports the real number; the tool-call parts over-count it.
+    expect(
+      searchesOf('anthropic', {
+        steps,
+        sources: [],
+        providerMetadata: { anthropic: { usage: { server_tool_use: { web_search_requests: 1 } } } },
+      }),
+    ).toBe(1);
+    expect(searchesOf('anthropic', { steps, sources: [] })).toBe(2);
   });
 
   it('the mock engine names B7R with a link on Arabic and two competitors on English', async () => {
@@ -239,6 +266,11 @@ describe('the cost, the labels, the tools (ADR-049 D5)', () => {
     expect(batchCostUsd(spec(), usage, 15)).toBe(0.75);
     expect(batchCostUsd(spec({ kind: 'google' }), usage, 15)).toBe(1.125);
     expect(batchCostUsd(spec({ kind: 'deepseek' }), usage, 15)).toBe(0.6);
+    // The fee follows the model family: the mini models search at $25 a thousand.
+    expect(batchCostUsd(spec({ model: 'gpt-4.1-mini' }), usage, 10)).toBe(0.85);
+    expect(batchCostUsd(spec({ kind: 'google', model: 'gemini-3-flash-preview' }), usage, 10)).toBe(
+      0.74,
+    );
     expect(KINDS.anthropic.searchFeeUsd).toBe(0.01);
     expect(KINDS['openai-compatible'].searchFeeUsd).toBe(0);
   });
@@ -308,14 +340,31 @@ describe('the ledger reading (ADR-049 D5)', () => {
     expect(bestMatch('hoodie riyadh', candidates)).toBeNull();
   });
 
-  it('seeds ten Arabic and five English prompts, two naming the brand', () => {
-    expect(SEED_PROMPTS.filter((p) => p.language === 'ar')).toHaveLength(10);
-    expect(SEED_PROMPTS.filter((p) => p.language === 'en')).toHaveLength(5);
-    expect(SEED_PROMPTS.filter((p) => p.namesBrand).map((p) => p.intent)).toEqual([
-      'compare',
-      'compare',
-    ]);
+  it('seeds fourteen Arabic and eight English prompts, nine naming the brand, all daily', () => {
+    expect(SEED_PROMPTS.filter((p) => p.language === 'ar')).toHaveLength(14);
+    expect(SEED_PROMPTS.filter((p) => p.language === 'en')).toHaveLength(8);
+    // The two compare prompts and the seven brand questions name B7R and leave the rate.
+    expect(SEED_PROMPTS.filter((p) => p.namesBrand)).toHaveLength(9);
     expect(SEED_PROMPTS.every((p) => p.namesBrand === mentionsBrand(p.text))).toBe(true);
+    expect(new Set(SEED_PROMPTS.map((p) => p.text)).size).toBe(SEED_PROMPTS.length);
+    expect(SEED_EVERY_DAYS).toBe(1);
+  });
+
+  it('asks a prompt again only when its period has passed, and never asked means due', () => {
+    expect(daysBetween('2026-09-10', '2026-09-16')).toBe(6);
+    expect(daysBetween('2026-09-16', '2026-09-16')).toBe(0);
+    const prompts = [prompt(1, 1), prompt(2, 7), prompt(3, 30), prompt(4, 1)];
+    const last = new Map([
+      [1, '2026-09-15'],
+      [2, '2026-09-10'],
+      [3, '2026-09-01'],
+    ]);
+    expect(duePrompts(prompts, last, '2026-09-16').map((p) => p.id)).toEqual([1, 4]);
+    expect(duePrompts(prompts, last, '2026-09-17').map((p) => p.id)).toEqual([1, 2, 4]);
+    expect(duePrompts(prompts, last, '2026-10-01').map((p) => p.id)).toEqual([1, 2, 3, 4]);
+    expect(
+      duePrompts(prompts, new Map([[1, '2026-09-16']]), '2026-09-16').map((p) => p.id),
+    ).toEqual([2, 3, 4]);
   });
 });
 
@@ -332,8 +381,8 @@ describe('the weekly batch (ADR-049 D5)', () => {
         connection: 'Mock',
         status: 'done',
         reason: null,
-        asked: 15,
-        cited: 10,
+        asked: 22,
+        cited: 14,
         notRun: 0,
         costUsd: 0,
       },
@@ -342,9 +391,9 @@ describe('the weekly batch (ADR-049 D5)', () => {
     const rows = created.filter((c) => c.collection === 'citations');
     expect(runs).toHaveLength(1);
     expect(runs[0]!.data).toMatchObject({ kind: 'citation', status: 'running', connection: 7 });
-    expect(rows).toHaveLength(15);
-    expect(rows.filter((r) => r.data['mentioned']).length).toBe(10);
-    expect(rows.filter((r) => r.data['namesBrand']).length).toBe(2);
+    expect(rows).toHaveLength(22);
+    expect(rows.filter((r) => r.data['mentioned']).length).toBe(14);
+    expect(rows.filter((r) => r.data['namesBrand']).length).toBe(9);
     expect(rows[0]!.data).toMatchObject({
       title: '2026-09-14 · Mock',
       date: '2026-09-14',
@@ -354,12 +403,40 @@ describe('the weekly batch (ADR-049 D5)', () => {
       run: 1,
     });
     expect(updated[0]!.data).toMatchObject({
-      label: 'Citation ledger, Mock: 15 prompts, 10 cited',
+      label: 'Citation ledger, Mock: 22 prompts, 14 cited',
       status: 'done',
-      tokensIn: 600,
-      tokensOut: 900,
+      tokensIn: 880,
+      tokensOut: 1320,
       costUsd: 0,
     });
+  });
+
+  it('a scheduled run asks only what is due and writes no row when nothing is; "Run now" asks everything', async () => {
+    const today = new Date('2026-09-16T04:00:00Z');
+    const asked = (citations: Array<{ prompt: number; date: string }>) =>
+      fakeLedgerPayload({ connections: [mock], citations });
+    // Every seeded prompt is daily and was asked this morning already: nothing due, no row.
+    const all = asked(SEED_PROMPTS.map((_, i) => ({ prompt: i + 1, date: '2026-09-16' })));
+    const idle = await runLedger(all.payload, { now: today, env });
+    expect(idle.connections).toEqual([
+      {
+        connection: 'Mock',
+        status: 'skipped',
+        reason: 'nothing due today',
+        asked: 0,
+        cited: 0,
+        notRun: 0,
+        costUsd: 0,
+      },
+    ]);
+    expect(all.created).toEqual([]);
+    // Asked yesterday: due again today; "Run now" asks whatever the day says.
+    const stale = asked(SEED_PROMPTS.map((_, i) => ({ prompt: i + 1, date: '2026-09-15' })));
+    expect((await runLedger(stale.payload, { now: today, env })).connections[0]?.asked).toBe(22);
+    const forced = asked(SEED_PROMPTS.map((_, i) => ({ prompt: i + 1, date: '2026-09-16' })));
+    expect(
+      (await runLedger(forced.payload, { now: today, env, all: true })).connections[0]?.asked,
+    ).toBe(22);
   });
 
   it('treats a prompt whose text names B7R as brand-naming whatever the box says', async () => {
@@ -417,9 +494,9 @@ describe('the weekly batch (ADR-049 D5)', () => {
       return t;
     };
     const result = await runLedger(payload, { env, clock });
-    expect(result.connections[0]).toMatchObject({ status: 'done', asked: 3, notRun: 12 });
+    expect(result.connections[0]).toMatchObject({ status: 'done', asked: 3, notRun: 19 });
     expect(created.filter((c) => c.collection === 'citations')).toHaveLength(3);
-    expect(updated[0]!.data['label']).toMatch(/3 prompts, 3 cited, 12 not run/);
+    expect(updated[0]!.data['label']).toMatch(/3 prompts, 3 cited, 19 not run/);
     expect(LEDGER_BUDGET_MS).toBe(20 * 60_000);
   });
 });

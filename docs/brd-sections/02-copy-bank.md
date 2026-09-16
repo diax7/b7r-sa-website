@@ -281,10 +281,51 @@ The English titles and descriptions (suffix ` | B7R Print`) are the `seo` rows o
 | Terms | الشروط والأحكام | شروط استخدام منصة بحر برنت. |
 | Shipping | الشحن والتوصيل | سياسة الشحن والتوصيل في بحر برنت داخل المملكة. |
 | Privacy | سياسة الخصوصية | كيف نجمع بياناتك ونحميها في بحر برنت. |
-
-*Amended 2026-09-16 (ADR-050): the compare page `/compare-printful` and its search title and description are seeded under §0.5 (`TODO(copy)`, listed in the PR) and await Dhia's approval; once approved they become §4.18 and a row here.*
+| Compare (Printful) | بحر برنت مقابل Printful لمتجر سعودي | مقارنة بالأرقام: الطباعة في جدة والتوصيل خلال 5 أيام مقابل الشحن من الخارج خلال أسابيع؛ الأسعار بالريال وربط سلة وزد. |
 
 ### 4.17 Transactional emails (Level 1, sent through Resend)
 
 - Contact notification to contact@b7r.sa: subject: رسالة جديدة من الموقع: {inquiryType}; body lists all fields, LTR-safe formatting for phone and email, plus a "رد عبر واتساب" link if the phone is Saudi.
 - Newsletter: no welcome email in Level 1; the address is added to a Resend audience named "b7r.sa newsletter".
+
+### 4.18 The compare page `/compare-printful` (ADR-050, approved by Dhia 2026-09-16)
+
+A comparison with Printful for a Saudi merchant, one `compare` block. The claims about Printful were read on its public pages on 2026-09-16 and are named on the page as text; the page links nowhere outside (§7.9). B7R’s side repeats §1.1 in words; when those facts change, the rows change the same day.
+
+| Field | Arabic |
+|---|---|
+| Title (H1) | بحر برنت مقابل Printful: أيهما أنسب لمتجر سعودي؟ |
+| Lead | مقارنة بالأرقام لتاجر يبيع في السعودية: من أين تُطبع القطعة، متى تصل، وكم تكلّف. |
+| Intro | الجدول يقارن ما يهم التاجر السعودي أولاً: مكان الطباعة، مدة التوصيل، الحد الأدنى، السعر بالريال، وربط المتجر. أرقام بحر برنت من الموقع نفسه؛ أرقام Printful من صفحاته العامة بتاريخ القراءة المذكور أسفل الجدول. |
+| Our column | بحر برنت |
+| Their column | Printful |
+| Row: أين تُطبع القطعة | جدة · خارج المملكة، بحسب المنتج |
+| Row: مدة التوصيل إلى الرياض أو جدة | حتى 5 أيام من استلام الطلب، شاملة الطباعة · من أسبوعين إلى أربعة أسابيع، شحناً دولياً |
+| Row: الرسوم الجمركية على عميلك | لا شيء: الشحن داخل المملكة · قد تُفرض عند الوصول ويدفعها المستلم |
+| Row: الحد الأدنى للطلب | قطعة واحدة · قطعة واحدة |
+| Row: تكلفة تيشيرت أساسي مطبوع | تبدأ من 45 ريالاً، السعر معلن · بالدولار، يُضاف إليها الشحن الدولي والضريبة عند الوصول |
+| Row: ربط المتجر | سلة وزد وشوبيفاي بضغطة · شوبيفاي ومتاجر عالمية؛ لا تطبيق لسلة أو زد |
+| Row: الفاتورة وضريبة القيمة المضافة | فاتورة سعودية بضريبة القيمة المضافة · فاتورة أجنبية بلا ضريبة سعودية |
+| Row: لغة الدعم | العربية على واتساب · بلا دعم عربي |
+| Best for 1 | تاجراً على سلة أو زد تريد أن يصل الطلب لعميلك خلال أيام لا أسابيع |
+| Best for 2 | تبدأ براندك بقطعة واحدة بلا مخزون ولا رأس مال |
+| Best for 3 | تريد فاتورة سعودية وسعراً بالريال معلناً قبل أن تبيع |
+| Not best for 1 | تبيع خارج السعودية أساساً، أو تريد كتالوجاً من مئات المنتجات |
+| Not best for 2 | تحتاج طلبية كبيرة بمئات القطع بسعر الجملة |
+| Closing | الخلاصة: لتاجر يبيع داخل السعودية، بحر برنت يطبع في جدة ويوصّل خلال 5 أيام باسمك وبفاتورة سعودية؛ Printful خيار لمن يبيع للخارج أو يريد كتالوجاً أوسع. جرّب بقطعة واحدة ورصيد ترحيبي 30 ريالاً. |
+
+The rows are written as "criterion | ours · theirs"; each cell is one string on the page.
+
+The block’s fixed words (`content/copy/ar.ts`, `compare`):
+
+| Key | Arabic |
+|---|---|
+| `caption` | مقارنة بين {ours} و{theirs} |
+| `criterion` | المعيار |
+| `bestFor` | الأنسب لك {ours} إذا كنت |
+| `notBestFor` | ليس {ours} الأنسب إذا كنت |
+| `asOf` | قُرئت صفحات {theirs} في |
+| `asOfTail` | ؛ الأرقام تتغير، وتاريخ القراءة يبقى صادقاً. |
+
+SEO row (§4.16): route `/compare-printful`, title «بحر برنت مقابل Printful لمتجر سعودي», description «مقارنة بالأرقام: الطباعة في جدة والتوصيل خلال 5 أيام مقابل الشحن من الخارج خلال أسابيع؛ الأسعار بالريال وربط سلة وزد.».
+

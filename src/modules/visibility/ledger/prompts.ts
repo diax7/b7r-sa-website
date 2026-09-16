@@ -11,10 +11,11 @@ export const PROMPT_INTENTS = ['category', 'compare', 'how-to'] as const;
 export type PromptIntent = (typeof PROMPT_INTENTS)[number];
 
 /**
- * The questions a buyer asks an assistant (ADR-049 D5): the ledger asks every enabled one to
- * every enabled AI connection each week and records who named B7R. A prompt that names the
- * brand itself (a compare prompt) is asked too but leaves the cited-rate's denominator.
- * Seeded with fifteen from the BRD's category terms; editable.
+ * The questions a buyer asks an assistant (ADR-049 D5): the ledger runs every morning and
+ * asks each enabled prompt to every enabled AI connection on the prompt's own period (every
+ * N days, 1 = daily), recording who named B7R. A prompt that names the brand itself (a
+ * compare prompt, "what is B7R Print?") is asked too but leaves the cited-rate's denominator.
+ * Seeded from the BRD's category terms plus the brand's own questions; editable.
  */
 export const Prompts: CollectionConfig = {
   slug: PROMPTS,
@@ -85,6 +86,15 @@ export const Prompts: CollectionConfig = {
             defaultValue: 100,
             min: 0,
             label: { ar: 'الترتيب', en: 'Order' },
+          },
+          {
+            name: 'everyDays',
+            type: 'number',
+            required: true,
+            defaultValue: 1,
+            min: 1,
+            max: 365,
+            label: { ar: 'كل (أيام)', en: 'Every (days)' },
           },
         ],
       },
