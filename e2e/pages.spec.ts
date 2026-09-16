@@ -130,7 +130,9 @@ test.describe('FAQ page (BRD 6.10)', () => {
     expect(faq['@id']).toBe('https://b7r.sa/faq#faq');
     expect(faq['inLanguage']).toBe('ar');
     const schemaQuestions = (faq['mainEntity'] as Array<{ name: string }>).map((q) => q.name);
-    const visible = await groups.getByRole('button').allTextContents();
+    // A group's accordion mounts near the viewport and replaces the static list: a question
+    // is a button once mounted and a term before, one of the two on any device.
+    const visible = await groups.locator('button, dt').allTextContents();
     expect(schemaQuestions).toEqual(visible.map((q) => q.trim()));
     expect(schemaQuestions.length).toBeGreaterThanOrEqual(15);
   });
