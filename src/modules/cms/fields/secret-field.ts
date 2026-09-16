@@ -153,6 +153,7 @@ export function secretField(
             stored: value,
             reveal: req?.context?.[DECRYPT_CONTEXT] === true,
             decrypt: (hash) => req.payload.decrypt(hash),
+            // A read carries the whole row, so `kind` is in `siblingData`: no stored fallback.
             ...(isAccount(siblingData, undefined) ? { mask: maskOfServiceAccount } : {}),
           }),
       ],

@@ -174,7 +174,7 @@ export async function pull(payload: Payload, now = new Date()): Promise<PullResu
         result.topicsAdded = await suggestTopics(payload, snapshot);
       } catch (error) {
         payload.logger.warn({
-          msg: `visibility pull: the topic suggestions failed: ${safeMessage(error, null)}`,
+          msg: `visibility pull: the topic suggestions failed: ${safeMessage(error, google.apiKey)}`,
         });
       }
     }
