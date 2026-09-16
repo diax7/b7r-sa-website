@@ -30,27 +30,28 @@ const TURNSTILE = 'https://challenges.cloudflare.com';
 const GA_HOSTS = ['https://*.google-analytics.com', 'https://*.analytics.google.com'];
 const GA_REGION = 'https://region1.google-analytics.com';
 /**
- * Where a Umami script and its events may live (ADR-052): Umami Cloud, or a Umami on a
- * b7r.sa subdomain. The admin's Umami field accepts only these, so the policy never blocks
- * a configured script; the policy is static (ADR-016) and cannot follow an arbitrary URL.
+ * Where a Umami script and its events may live (ADR-052): Umami Cloud (its script and its
+ * event gateway) or B7R's own Umami at umami.b7r.app (BRD 7.7). Exact hosts, never a
+ * wildcard: a dangling subdomain must not become script on the site's origin. The admin's
+ * Umami field accepts only these, so the policy never blocks a configured script; the policy
+ * is static (ADR-016) and cannot follow an arbitrary URL. Another self-hosted Umami is one
+ * line here.
  */
 export const UMAMI_HOSTS = [
   'https://cloud.umami.is',
   'https://api-gateway.umami.dev',
-  'https://*.b7r.sa',
+  'https://umami.b7r.app',
 ] as const;
+const UMAMI_SCRIPT_HOSTS = new Set(['cloud.umami.is', 'umami.b7r.app']);
 /** Whether a Umami script URL is one the policy admits (a root-relative path is `'self'`). */
 export function umamiSrcAllowed(src: string): boolean {
   if (/^\/[^/]/.test(src)) return true;
-  let host: string;
   try {
     const url = new URL(src);
-    if (url.protocol !== 'https:') return false;
-    host = url.host;
+    return url.protocol === 'https:' && UMAMI_SCRIPT_HOSTS.has(url.host);
   } catch {
     return false;
   }
-  return host === 'cloud.umami.is' || (host.endsWith('.b7r.sa') && host !== 'b7r.sa');
 }
 
 function unique(values: Array<string | undefined>): string[] {

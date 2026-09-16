@@ -12,7 +12,7 @@ b7r.sa to go live.
 | 3 | Final hero photos delivered and cropped, or placeholders accepted for launch | Dhia | open | `scripts/hero-crops.ts` re-crops from `resources/hero/` |
 | 4 | Resend domain `b7r.sa` verified (SPF, DKIM, DMARC); test contact email received at contact@b7r.sa | Dhia | open | `RESEND_API_KEY`, `RESEND_FROM`, `CONTACT_TO`, `RESEND_AUDIENCE_ID`; `/api/health` → `contact: live`, `newsletter: live` |
 | 5 | Turnstile keys set; a bot submission blocked; a human submission passes; the admin login shows the widget | Dhia | open | `NEXT_PUBLIC_TURNSTILE_SITE_KEY` + `TURNSTILE_SECRET_KEY`, required in production since the login gate (ADR-034): the app refuses to boot without them; `/api/health` → `turnstile: on` |
-| 6 | GA4 consent flow verified in DebugView; Umami receiving events (optional) | Dhia | open | The ids go in Site settings → Analytics (ADR-052); Umami on cloud.umami.is or a b7r.sa subdomain, or leave it empty |
+| 6 | GA4 consent flow verified in DebugView; Umami receiving events (optional) | Dhia | open | The ids go in Site settings → Analytics (ADR-052); Umami on cloud.umami.is or umami.b7r.app, or leave it empty |
 | 7 | Google and Bing verification tokens in SEO settings → Verification | Dhia | open | They become `<meta>` tags; the IndexNow key needs nothing (derived from the secret, served at `/indexnow/{key}.txt`) |
 | 8 | OG default and product images render in WhatsApp, X and LinkedIn previews | Dhia | open | Images exist (`pnpm og`); check after DNS |
 | 9 | Favicon set and manifest validated | *code* | done | `/favicon.ico`, `/icons/icon-192.png`, `/icons/icon-512.png`, `/manifest.webmanifest` |
@@ -46,7 +46,7 @@ b7r.sa to go live.
 | 22 | First deploy's data: the review database restored (`pg_dump` → `pg_restore`, `public/media/` copied to the bucket under `media/`), or the seed on an empty one (`pnpm migrate`, `pnpm content:migrate`, `pnpm admin:create`); sign in and change the password | Dhia + agent | open | ADR-026; RUNBOOK "Deploy" step 4; the seed refuses a non-empty database |
 | 23 | The app on the platform from the repo, build type `Dockerfile`, port 3000 or `PORT`, health check `/api/health`, one instance, the environment set before the first build | Dhia | open | RUNBOOK "Deploy"; a first build on the platform's temporary domain without `B7R_RUNTIME` and `NEXT_PUBLIC_SITE_URL` (noindex) is the rehearsal |
 | 24 | An editor account created for the second person; the editor seat verified (no users, no settings, no delete of published) | Dhia | open | `e2e/admin.spec.ts` proves the matrix in CI |
-| 25 | Backups: none of ours (Dhia, 2026-09-17); the platform's database snapshots are the backup; confirm they are on | Dhia | open | RUNBOOK "Backups" |
+| 25 | Backups: none of ours (Dhia, 2026-09-17). Confirm the platform's snapshot schedule and retention, restore one snapshot into a scratch database once, keep `PAYLOAD_SECRET` beside the database credentials in the password manager, turn on the bucket's versioning | Dhia | open | RUNBOOK "Backups": a backup that cannot be restored is not a backup |
 | 26 | English content present (a restored review database has it; a fresh seed gets it from `pnpm content:migrate`); `/en` answers 200 and the header shows the switch | Dhia | open | ADR-043, RUNBOOK "The English site" |
 
 ## Added 2026-09-17 (the light pre-launch check)

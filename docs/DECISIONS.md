@@ -1511,8 +1511,12 @@ switch like `SITE_ENGLISH` or a backup pipeline is not wanted. So:
 
 Two consequences worth their sentence. The content security policy is static (ADR-016) and
 used to take the Umami origin from the environment at build; it now admits Umami Cloud and
-any b7r.sa subdomain, and the admin's Umami field accepts only those (`umamiSrcAllowed`),
-so a configured script is never blocked; the CI stand-in on the site's own origin is
-`'self'`. The CI seeds its dummy analytics ids into the settings (`scripts/ci/analytics-ids.ts`)
+B7R's own umami.b7r.app (BRD 7.7), exact hosts and never a wildcard (a dangling subdomain
+must not become script on the site's origin), and the admin's Umami field accepts only those
+(`umamiSrcAllowed`), so a configured script is never blocked; the CI stand-in on the site's
+own origin is `'self'`. The derived IndexNow key is as strong as `PAYLOAD_SECRET`, and a
+weak secret is already the end of everything else. C2 of the visibility score reads the
+ping's own predicate (production runtime and a key) rather than the key alone, which is now
+always there. The CI seeds its dummy analytics ids into the settings (`scripts/ci/analytics-ids.ts`)
 instead of the environment. ADR-034's backup pipeline and ADR-043's English-off build are
 withdrawn by this decision; migration `20260916_230030_site_analytics`.

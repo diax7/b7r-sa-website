@@ -347,7 +347,7 @@ export const SiteSettings: GlobalConfig = {
                         validate: (value: unknown) =>
                           !value ||
                           umamiSrcAllowed(String(value)) ||
-                          'https://cloud.umami.is/script.js, or a Umami on a b7r.sa subdomain',
+                          'https://cloud.umami.is/script.js or https://umami.b7r.app/script.js',
                       },
                       {
                         name: 'umamiId',

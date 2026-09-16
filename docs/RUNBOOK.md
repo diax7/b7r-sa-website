@@ -280,9 +280,19 @@ password from a machine with the secrets: `pnpm payload …` is not needed, the
 ## Backups
 
 None of ours (Dhia, 2026-09-17): the platform's database snapshots are the backup, and
-media lives in the bucket. To move a database by hand: `pg_dump --format=custom` from the
-source, `pg_restore --no-owner --no-privileges` into a fresh database, `pnpm migrate`
-(a no-op when the dump is current), point `DATABASE_URL` at it.
+media lives in the bucket. Three things stay true whoever holds the backup:
+
+1. Confirm the platform's snapshot schedule and retention, and restore one snapshot into a
+   scratch database once before launch: a backup that cannot be restored is not a backup.
+2. A restore into a new environment needs the same `PAYLOAD_SECRET`, or every stored key
+   (Connections, ADR-047) is unreadable; the secret lives beside the database credentials
+   in the password manager.
+3. Media is outside the database snapshot: the bucket's versioning (or the provider's
+   object backup) is the media backup, or a deleted photo is gone.
+
+To move a database by hand: `pg_dump --format=custom` from the source, `pg_restore
+--no-owner --no-privileges` into a fresh database, `pnpm migrate` (a no-op when the dump is
+current), point `DATABASE_URL` at it.
 
 ## Contact form
 
@@ -327,7 +337,8 @@ retry copy; `NEWSLETTER_TRANSPORT=mock` (tests only) keeps subscriptions in memo
 
 Site settings → Analytics (ADR-052): the GA4 id turns on the consent card and GA4 (after
 «موافق»); the Umami script URL and website id load Umami on every page. The Umami script
-must be on cloud.umami.is or a b7r.sa subdomain (the security policy admits only these).
+must be on cloud.umami.is or umami.b7r.app (the security policy admits only these, exact
+hosts; another self-hosted Umami is one line in `UMAMI_HOSTS`).
 CI writes its dummy ids into the settings (`scripts/ci/analytics-ids.ts`), the Umami one at
 `/umami-test.js`, a recorder that never sends anything.
 

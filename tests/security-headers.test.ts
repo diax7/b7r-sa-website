@@ -32,9 +32,10 @@ describe('content security policy (BRD 8.10, ADR-016)', () => {
       'https://challenges.cloudflare.com',
       'https://cloud.umami.is',
       'https://api-gateway.umami.dev',
-      'https://*.b7r.sa',
+      'https://umami.b7r.app',
     ]);
     expect(csp).not.toContain("'unsafe-eval'");
+    expect(csp).not.toContain('*.b7r');
   });
 
   it('adds eval only for the dev server', () => {
@@ -52,7 +53,7 @@ describe('content security policy (BRD 8.10, ADR-016)', () => {
       'https://www.googletagmanager.com',
       'https://cloud.umami.is',
       'https://api-gateway.umami.dev',
-      'https://*.b7r.sa',
+      'https://umami.b7r.app',
     ]);
     // The tag's pixels: GA's documented CSP wants googletagmanager.com on img-src too.
     expect(directive(csp, 'img-src')).toEqual(
@@ -77,10 +78,11 @@ describe('content security policy (BRD 8.10, ADR-016)', () => {
     expect(directive(csp, 'media-src')).toEqual(["'self'"]);
   });
 
-  it('admits a Umami script on Umami Cloud or a b7r.sa subdomain, nothing else (ADR-052)', () => {
+  it('admits a Umami script on Umami Cloud or umami.b7r.app, nothing else (ADR-052)', () => {
     expect(umamiSrcAllowed('https://cloud.umami.is/script.js')).toBe(true);
-    expect(umamiSrcAllowed('https://umami.b7r.sa/script.js')).toBe(true);
+    expect(umamiSrcAllowed('https://umami.b7r.app/script.js')).toBe(true);
     expect(umamiSrcAllowed('/umami-test.js')).toBe(true);
+    expect(umamiSrcAllowed('https://analytics.b7r.sa/script.js')).toBe(false);
     expect(umamiSrcAllowed('https://b7r.sa/script.js')).toBe(false);
     expect(umamiSrcAllowed('http://cloud.umami.is/script.js')).toBe(false);
     expect(umamiSrcAllowed('https://analytics.example.com/script.js')).toBe(false);

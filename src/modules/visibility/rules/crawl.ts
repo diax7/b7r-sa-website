@@ -43,7 +43,7 @@ export function crawl(s: Snapshot): Finding[] {
       status: s.indexNow ? 'done' : 'missing',
       title: 'IndexNow is configured',
       guide:
-        'In production every publish is pinged to Bing and the engines that read IndexNow within the minute (ChatGPT Search leans on Bing); the key is derived from the server secret and served at /indexnow/{key}.txt.',
+        'On the production runtime (B7R_RUNTIME) every publish is pinged to Bing and the engines that read IndexNow within the minute (ChatGPT Search leans on Bing); the key is derived from the server secret and served at /indexnow/{key}.txt. A review or preview server never pings.',
     }),
     finding({
       key: 'C3',

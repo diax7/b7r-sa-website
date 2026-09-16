@@ -259,8 +259,8 @@ export const SITE_SETTINGS_DESCRIPTIONS: Described = {
     en: 'The Google Analytics 4 measurement id (starts with G-). Set, the cookie consent bar shows and GA loads after consent; empty means no tracking and no bar.',
   },
   'analytics.umamiSrc': {
-    ar: 'رابط سكربت Umami: على cloud.umami.is أو على نطاق فرعي من b7r.sa (سياسة الأمان تسمح بهذين فقط). يُحمَّل في كل صفحة عند تعبئته مع معرّف الموقع؛ لا يحتاج موافقة.',
-    en: 'The Umami script URL, on cloud.umami.is or on a b7r.sa subdomain (the security policy admits only these). Loads on every page when set together with the website id; needs no consent.',
+    ar: 'رابط سكربت Umami: على cloud.umami.is أو umami.b7r.app (سياسة الأمان تسمح بهذين فقط). يُحمَّل في كل صفحة عند تعبئته مع معرّف الموقع؛ لا يحتاج موافقة.',
+    en: 'The Umami script URL, on cloud.umami.is or umami.b7r.app (the security policy admits only these). Loads on every page when set together with the website id; needs no consent.',
   },
   'analytics.umamiId': {
     ar: 'معرّف الموقع في Umami (UUID). يعمل فقط مع رابط السكربت.',
