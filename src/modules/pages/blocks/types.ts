@@ -37,6 +37,7 @@ export const BLOCK_ANCHORS: Record<Block['blockType'], string> = {
   contact: 'contact',
   legalBody: 'legal',
   mediaBanner: 'banner',
+  compare: 'compare',
 };
 
 /** `faq`, then `faq-2`, `faq-3`… for repeated block types on one page. */

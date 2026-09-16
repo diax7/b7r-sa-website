@@ -7,6 +7,7 @@ import { type Locale, localePath } from '@/lib/i18n';
 import { JsonLd, jsonLd } from '@/modules/core';
 import { CtaRibbon } from '@/modules/core/cta-ribbon';
 import { rendererFor } from '@/modules/pages/blocks';
+import { faqItemsFor } from '@/modules/pages/blocks/faq-list';
 import {
   blockAnchors,
   type BlockComponent,
@@ -22,6 +23,19 @@ interface CmsPageProps {
 }
 
 const NO_EXTRA: ExtraRenderers = {};
+
+/** The one page whose questions are emitted as `FAQPage` (ADR-050): the FAQ page, not the how-it-works slice of the same entries. */
+export const FAQ_SCHEMA_SLUG = 'faq';
+
+/** The FAQ page's entries for its schema; empty elsewhere and on a page without the block. */
+export async function faqSchemaItems(
+  page: Pick<Page, 'slug' | 'blocks'>,
+  locale: Locale,
+): Promise<Array<{ question: string; answer: string }>> {
+  if (page.slug !== FAQ_SCHEMA_SLUG) return [];
+  const block = page.blocks.find((b) => b.blockType === 'faqList');
+  return block ? faqItemsFor(block, locale) : [];
+}
 
 /** Tones alternate over the blocks (BRD 3.4), the first section on surface. */
 export function blockTones(count: number): BlockTone[] {
@@ -39,7 +53,7 @@ export async function CmsPage({ slug, locale, renderers = NO_EXTRA }: CmsPagePro
   return <CmsPageBody page={page} locale={locale} renderers={renderers} />;
 }
 
-export function CmsPageBody({
+export async function CmsPageBody({
   page,
   locale,
   renderers = NO_EXTRA,
@@ -54,6 +68,7 @@ export function CmsPageBody({
   const tones = blockTones(page.blocks.length);
   const anchors = blockAnchors(page.blocks);
   const legal = page.blocks.find((b) => b.blockType === 'legalBody');
+  const faq = jsonLd.faqPage(base, locale, route, await faqSchemaItems(page, locale));
   return (
     <>
       <JsonLd
@@ -70,6 +85,7 @@ export function CmsPageBody({
             { name: productsPage.breadcrumbHome, path: localePath(locale, '/') },
             { name: page.title, path: localePath(locale, route) },
           ]),
+          ...(faq ? [faq] : []),
         ]}
       />
       {page.blocks.map((block, i) => {

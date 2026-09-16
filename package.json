@@ -26,6 +26,7 @@
     "content:migrate": "tsx scripts/migrate-content.ts",
     "admin:create": "tsx scripts/create-admin.ts",
     "visibility:pull": "tsx scripts/visibility-pull.ts",
+    "content:drafts": "tsx scripts/post-drafts.ts",
     "payload": "payload"
   },
   "dependencies": {

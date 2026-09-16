@@ -69,6 +69,8 @@ export const THRESHOLDS = {
   promptsMin: 5,
   /** A ledger run this recent counts as "running". */
   ledgerDays: 14,
+  /** A compare page's as-of date older than this reads next: the other side's pages change. */
+  compareAsOfDays: 180,
   /** Landings this recent count as "the counter is receiving". */
   landingDays: 30,
   /** PageSpeed mobile performance, the median of the last three snapshots. */

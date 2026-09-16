@@ -152,6 +152,7 @@ The admin's strings are interface copy (ADR-031): written by us, under the ux-ar
 | `DropdownMenu` | `ui/dropdown-menu.tsx` | Account menu, row actions. Icon before each item. |
 | `Switch` | `ui/switch.tsx` | `enabled` fields (the `EnabledSwitch` widget). Never for an immediate action. |
 | `Collapsible` | `ui/collapsible.tsx` | Nav groups; remembers its state in Payload preferences. |
+| `CompareBlock` | `modules/pages/blocks/compare.tsx` | A page block (ADR-050): a captioned table with scoped headers and a sticky criterion column, "best for" and "not best for", the read date; no link. Its fields are described in the pages' map. |
 | `Dialog` | `ui/dialog.tsx` | The command palette; confirmations. |
 | `Separator`, `Kbd` | `ui/separator.tsx`, `ui/kbd.tsx` | Group hairlines; key hints («Ctrl K»). |
 

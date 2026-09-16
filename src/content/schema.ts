@@ -304,6 +304,21 @@ export const BlockSchema = z.discriminatedUnion('blockType', [
     }),
   }),
   z.object({ ...blockId, blockType: z.literal('legalBody'), updatedAt: isoDate, body: nonEmpty }),
+  // A comparison (ADR-050): a criteria table, "best for" and "not best for", the date the other
+  // side's pages were read. No URL: external links only to the app, the profiles and Misk.
+  z.object({
+    ...blockId,
+    blockType: z.literal('compare'),
+    title: optionalText,
+    intro: optionalText,
+    ours: nonEmpty,
+    theirs: nonEmpty,
+    asOf: isoDate,
+    rows: z.array(z.object({ criterion: nonEmpty, ours: nonEmpty, theirs: nonEmpty })).min(3),
+    bestFor: z.array(nonEmpty).min(1),
+    notBestFor: z.array(nonEmpty).min(1),
+    closing: optionalText,
+  }),
   z.object({
     ...blockId,
     blockType: z.literal('mediaBanner'),
@@ -338,6 +353,8 @@ export const PageSchema = z.object({
   }),
   /** Sitemap `lastModified`: the legal body's date when there is one, else the document's. */
   updatedAt: isoDate,
+  /** Seeded unpublished (ADR-050): the public route answers 404 until an admin publishes it. */
+  draft: z.literal(true).optional(),
 });
 export type Page = z.infer<typeof PageSchema>;
 

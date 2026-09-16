@@ -1,5 +1,6 @@
 import type { Block } from '@/content/schema';
 import { CardsBlock } from '@/modules/pages/blocks/cards';
+import { CompareBlock } from '@/modules/pages/blocks/compare';
 import { FaqListBlock } from '@/modules/pages/blocks/faq-list';
 import { LegalBodyBlock } from '@/modules/pages/blocks/legal-body';
 import { MediaBannerBlock } from '@/modules/pages/blocks/media-banner';
@@ -21,6 +22,7 @@ const OWN: ExtraRenderers = {
   miskCredential: MiskCredentialBlock,
   legalBody: LegalBodyBlock,
   mediaBanner: MediaBannerBlock,
+  compare: CompareBlock,
 };
 
 export function rendererFor<T extends Block['blockType']>(

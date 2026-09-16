@@ -18,6 +18,7 @@ import * as migration_20260916_070828_traffic from './20260916_070828_traffic';
 import * as migration_20260916_094521_visibility_checklist from './20260916_094521_visibility_checklist';
 import * as migration_20260916_102554_visibility_services from './20260916_102554_visibility_services';
 import * as migration_20260916_114303_visibility_ledger from './20260916_114303_visibility_ledger';
+import * as migration_20260916_124404_compare_block from './20260916_124404_compare_block';
 
 export const migrations = [
   {
@@ -118,6 +119,11 @@ export const migrations = [
   {
     up: migration_20260916_114303_visibility_ledger.up,
     down: migration_20260916_114303_visibility_ledger.down,
-    name: '20260916_114303_visibility_ledger'
+    name: '20260916_114303_visibility_ledger',
+  },
+  {
+    up: migration_20260916_124404_compare_block.up,
+    down: migration_20260916_124404_compare_block.down,
+    name: '20260916_124404_compare_block'
   },
 ];

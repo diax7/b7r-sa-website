@@ -61,6 +61,15 @@ export const ar = {
   breadcrumbs: {
     label: 'مسار الصفحة',
   },
+  // TODO(copy): the comparison block's fixed words (ADR-050), written under BRD 0.5; listed for Dhia.
+  compare: {
+    caption: 'مقارنة بين {ours} و{theirs}',
+    criterion: 'المعيار',
+    bestFor: 'الأنسب لك {ours} إذا كنت',
+    notBestFor: 'ليس {ours} الأنسب إذا كنت',
+    asOf: 'قُرئت صفحات {theirs} في',
+    asOfTail: '؛ الأرقام تتغير، وتاريخ القراءة يبقى صادقاً.',
+  },
   faq: {
     groupsNav: 'أقسام الأسئلة',
     /** The group names as the page shows them; the select values (Appendix D) are the keys. */

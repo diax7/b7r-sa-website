@@ -180,6 +180,42 @@ export function webPage(
   };
 }
 
+/** A markdown link or emphasis flattened to its text: the answers are plain text already. */
+function plainText(text: string): string {
+  return text
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
+    .replace(/[*_`]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/**
+ * The FAQ page's questions as `FAQPage` (ADR-050, BRD 7.4 and 7.10 amended): the visible
+ * entries, in order, each a `Question` with its `Answer` as plain text. Google dropped the
+ * rich result; the answer engines read the schema. Nothing when there is no entry.
+ */
+export function faqPage(
+  base: string,
+  locale: Locale,
+  route: string,
+  items: ReadonlyArray<{ question: string; answer: string }>,
+): JsonLdNode | null {
+  if (items.length === 0) return null;
+  const path = localePath(locale, route);
+  return {
+    '@type': 'FAQPage',
+    '@id': `${absoluteUrl(base, path)}#faq`,
+    url: absoluteUrl(base, path),
+    inLanguage: languageTag(locale),
+    isPartOf: { '@id': `${absoluteUrl(base, path)}#webpage` },
+    mainEntity: items.map((item) => ({
+      '@type': 'Question',
+      name: plainText(item.question),
+      acceptedAnswer: { '@type': 'Answer', text: plainText(item.answer) },
+    })),
+  };
+}
+
 export function person(base: string, locale: Locale, author: AuthorForSchema): JsonLdNode {
   const url = `${base}${localePath(locale, `/author/${author.slug}`)}`;
   return {

@@ -163,6 +163,9 @@ test.describe('the English site (Level 5a, ADR-043)', () => {
     expect(html).toContain('Merchant cost');
     const faq = await (await request.get('/en/faq')).text();
     expect(faq).toContain('"inLanguage":"en"');
+    // The English FAQ page carries its own FAQPage node (ADR-050), the English questions.
+    expect(faq).toContain('"@id":"https://b7r.sa/en/faq#faq"');
+    expect(faq).toMatch(/"@type":"Question","name":"[^"]*\?"/);
     expect(faq).toContain('"@id":"https://b7r.sa/en/faq#webpage"');
     const home = await (await request.get('/en')).text();
     expect(home).toContain('<title>B7R Print: print on demand in Saudi Arabia</title>');

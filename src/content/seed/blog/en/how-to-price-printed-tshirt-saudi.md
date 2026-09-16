@@ -1,6 +1,6 @@
 A price is not a number you pick out of thin air, and it is not the most the market will bear. A good price covers your cost, leaves you a profit worth the effort, and still convinces your customer when they compare.
 
-## Start from the base cost
+## What does a printed T-shirt cost in Saudi Arabia?
 
 At B7R Print the base cost of [the essential T-shirt](/en/products/tee-essential) is SAR 45, the oversized T-shirt SAR 55 and the hoodie SAR 95. That cost covers the product, the print and the packaging; it does not cover shipping and tax. Write it down first, because everything above it is your profit.
 

@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { Container } from '@/components/shared/container';
 import { Section } from '@/components/shared/section';
 import { SectionHeader } from '@/components/shared/section-header';
-import type { FaqItem } from '@/content/schema';
+import type { BlockOf, FaqItem } from '@/content/schema';
 import { copyFor } from '@/content/copy';
 import { getFaqs, getHomeFaqs, getSiteSettings } from '@/lib/cms';
 import { type Locale, localePath } from '@/lib/i18n';
@@ -11,6 +11,22 @@ import { FaqAccordionLoader, FaqStaticList } from '@/modules/core';
 import type { BlockProps } from '@/modules/pages/blocks/types';
 
 type Item = { question: string; answer: string };
+
+/**
+ * The entries a `faqList` block shows, in its order (the `home` slice or every group): the
+ * schema on the FAQ page reads the same list, so it can never drift from the visible text.
+ */
+export async function faqItemsFor(
+  block: Pick<BlockOf<'faqList'>, 'selection' | 'offset' | 'limit'>,
+  locale: Locale,
+): Promise<Item[]> {
+  if (block.selection === 'home') {
+    return (await getHomeFaqs(locale))
+      .slice(block.offset, block.limit ? block.offset + block.limit : undefined)
+      .map((f) => ({ question: f.question, answer: f.answer }));
+  }
+  return (await getFaqs(locale)).map((f) => ({ question: f.question, answer: f.answer }));
+}
 
 /**
  * Appendix D groups in first-appearance order, each with an id for the in-page nav; `names`
@@ -68,10 +84,7 @@ export async function FaqListBlock({
   const padding = first ? 'pt-10 md:pt-16' : undefined;
   const messages = copyFor(locale);
   if (block.selection === 'home') {
-    const entries = await getHomeFaqs(locale);
-    const items = entries
-      .slice(block.offset, block.limit ? block.offset + block.limit : undefined)
-      .map((f) => ({ question: f.question, answer: f.answer }));
+    const items = await faqItemsFor(block, locale);
     const title = heading?.title ?? block.title;
     return (
       <Section

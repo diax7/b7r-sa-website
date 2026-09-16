@@ -196,5 +196,86 @@ export const terms = legalPage('terms', 'الشروط والأحكام');
 export const shipping = legalPage('shipping', 'الشحن والتوصيل');
 export const privacy = legalPage('privacy', 'سياسة الخصوصية');
 
-/** The seven, in the navigation's order. */
-export const pages: Page[] = [howItWorks, about, contact, faq, terms, shipping, privacy];
+/**
+ * The comparison page (ADR-050, E7): B7R against Printful for a Saudi merchant, seeded as a
+ * draft until Dhia approves the facts. TODO(copy): the Arabic is written under BRD 0.5 and
+ * listed for his review; the claims about Printful are its public pages read on 2026-09-16
+ * (the help centre's shipping and pricing pages, the integrations directory), named on the
+ * page as text, never linked (BRD 7.9). BRD 1.2 states the positioning the rows expand.
+ */
+export const comparePrintful: Page = {
+  slug: 'compare-printful',
+  title: 'بحر برنت مقابل Printful: أيهما أنسب لمتجر سعودي؟',
+  lead: 'مقارنة بالأرقام لتاجر يبيع في السعودية: من أين تُطبع القطعة، متى تصل، وكم تكلّف.',
+  draft: true,
+  blocks: [
+    {
+      id: 'compare-1',
+      blockType: 'compare',
+      intro:
+        'الجدول يقارن ما يهم التاجر السعودي أولاً: مكان الطباعة، مدة التوصيل، الحد الأدنى، السعر بالريال، وربط المتجر. أرقام بحر برنت من الموقع نفسه؛ أرقام Printful من صفحاته العامة بتاريخ القراءة المذكور أسفل الجدول.',
+      ours: 'بحر برنت',
+      theirs: 'Printful',
+      asOf: '2026-09-16',
+      rows: [
+        {
+          criterion: 'أين تُطبع القطعة',
+          ours: 'جدة',
+          theirs: 'أوروبا أو أمريكا الشمالية، بحسب المنتج',
+        },
+        {
+          criterion: 'مدة التوصيل إلى الرياض أو جدة',
+          ours: 'حتى 5 أيام من استلام الطلب، شاملة الطباعة',
+          theirs: 'من أسبوعين إلى أربعة أسابيع، شحناً دولياً',
+        },
+        {
+          criterion: 'الرسوم الجمركية على عميلك',
+          ours: 'لا شيء: الشحن داخل المملكة',
+          theirs: 'قد تُفرض عند الوصول ويدفعها المستلم',
+        },
+        { criterion: 'الحد الأدنى للطلب', ours: 'قطعة واحدة', theirs: 'قطعة واحدة' },
+        {
+          criterion: 'تكلفة تيشيرت أساسي مطبوع',
+          ours: 'تبدأ من 45 ريالاً، السعر معلن',
+          theirs: 'بالدولار، يُضاف إليها الشحن الدولي والضريبة عند الوصول',
+        },
+        {
+          criterion: 'ربط المتجر',
+          ours: 'سلة وزد وشوبيفاي بضغطة',
+          theirs: 'شوبيفاي ومتاجر عالمية؛ لا تطبيق لسلة أو زد',
+        },
+        {
+          criterion: 'الفاتورة وضريبة القيمة المضافة',
+          ours: 'فاتورة سعودية بضريبة القيمة المضافة',
+          theirs: 'فاتورة أجنبية بلا ضريبة سعودية',
+        },
+        { criterion: 'لغة الدعم', ours: 'العربية على واتساب', theirs: 'الإنجليزية' },
+      ],
+      bestFor: [
+        'تاجراً على سلة أو زد تريد أن يصل الطلب لعميلك خلال أيام لا أسابيع',
+        'تبدأ براندك بقطعة واحدة بلا مخزون ولا رأس مال',
+        'تريد فاتورة سعودية وسعراً بالريال معلناً قبل أن تبيع',
+      ],
+      notBestFor: [
+        'تبيع خارج السعودية أساساً، أو تريد كتالوجاً من مئات المنتجات',
+        'تحتاج طلبية كبيرة بمئات القطع بسعر الجملة',
+      ],
+      closing:
+        'الخلاصة: لتاجر يبيع داخل السعودية، بحر برنت يطبع في جدة ويوصّل خلال 5 أيام باسمك وبفاتورة سعودية؛ Printful خيار لمن يبيع للخارج أو يريد كتالوجاً أوسع. جرّب بقطعة واحدة ورصيد ترحيبي 30 ريالاً.',
+    },
+  ],
+  seo: seoFor('compare-printful'),
+  updatedAt: '2026-09-16',
+};
+
+/** The seven, in the navigation's order, and the comparison (a draft). */
+export const pages: Page[] = [
+  howItWorks,
+  about,
+  contact,
+  faq,
+  terms,
+  shipping,
+  privacy,
+  comparePrintful,
+];

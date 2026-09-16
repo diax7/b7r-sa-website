@@ -122,9 +122,17 @@ test.describe('FAQ page (BRD 6.10)', () => {
     await expect(trigger).toHaveAttribute('aria-expanded', 'true');
     const wa = page.locator('a[data-track="whatsapp_click"][data-location="contact"]');
     await expect(wa).toHaveAttribute('href', 'https://wa.me/966501699572');
-    // No FAQPage schema (rich results discontinued).
-    const graph = await page.locator('script[type="application/ld+json"]').textContent();
-    expect(graph).not.toContain('FAQPage');
+    // FAQPage JSON-LD (ADR-050): the visible questions, in order, and nothing else.
+    const graph = JSON.parse(
+      (await page.locator('script[type="application/ld+json"]').textContent()) ?? '{}',
+    ) as { '@graph': Array<Record<string, unknown>> };
+    const faq = graph['@graph'].find((n) => n['@type'] === 'FAQPage')!;
+    expect(faq['@id']).toBe('https://b7r.sa/faq#faq');
+    expect(faq['inLanguage']).toBe('ar');
+    const schemaQuestions = (faq['mainEntity'] as Array<{ name: string }>).map((q) => q.name);
+    const visible = await groups.getByRole('button').allTextContents();
+    expect(schemaQuestions).toEqual(visible.map((q) => q.trim()));
+    expect(schemaQuestions.length).toBeGreaterThanOrEqual(15);
   });
 });
 

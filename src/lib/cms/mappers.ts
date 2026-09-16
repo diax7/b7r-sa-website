@@ -352,6 +352,20 @@ function toBlock(block: BlockDoc, where: string, index: number): Block {
         profit: block.profit,
         exampleLine: block.exampleLine,
       };
+    case 'compare':
+      return {
+        id,
+        blockType: 'compare',
+        ...optional(block.title),
+        ...(block.intro ? { intro: block.intro } : {}),
+        ours: block.ours,
+        theirs: block.theirs,
+        asOf: String(block.asOf).slice(0, 10),
+        rows: block.rows.map((r) => ({ criterion: r.criterion, ours: r.ours, theirs: r.theirs })),
+        bestFor: block.bestFor.map((b) => b.text),
+        notBestFor: block.notBestFor.map((b) => b.text),
+        ...(block.closing ? { closing: block.closing } : {}),
+      };
     case 'faqList':
       return {
         id,

@@ -94,7 +94,7 @@ export function emitted(s: Snapshot): Emitted[] {
 
 /** Extractability (ADR-049 E1 to E7): what an engine can lift from a page as an answer. */
 export function extractability(s: Snapshot): Finding[] {
-  const { titleMax, descriptionMax, answerWords, faqMin } = THRESHOLDS;
+  const { titleMax, descriptionMax, answerWords, faqMin, compareAsOfDays } = THRESHOLDS;
   const titles = emitted(s).map((e) => ({
     ok:
       has(e.title) &&
@@ -127,7 +127,13 @@ export function extractability(s: Snapshot): Finding[] {
     label: locale === 'ar' ? 'Arabic' : 'English',
     href: `${s.adminRoute}/collections/faqs`,
   }));
-  const compare = s.pages.some((p) => /^(compare|vs)(-|$)/.test(p.slug));
+  const faqPage = s.pages.find((p) => p.slug === 'faq');
+  const faqSchema = faqPage?.blocks.some((b) => b.type === 'faqList') ?? false;
+  const compare = s.pages.find((p) => /^(compare|vs)(-|$)/.test(p.slug));
+  const asOf = compare?.blocks.find((b) => b.type === 'compare')?.asOf ?? null;
+  const stale =
+    asOf !== null &&
+    new Date(s.at).getTime() - new Date(asOf).getTime() > compareAsOfDays * 86_400_000;
   return [
     prorata({
       key: 'E1',
@@ -170,18 +176,22 @@ export function extractability(s: Snapshot): Finding[] {
     finding({
       key: 'E6',
       section: 'extractability',
-      status: 'missing',
+      status: faqSchema ? 'done' : 'missing',
       title: 'FAQPage schema on the FAQ page',
-      guide:
-        'The visible questions repeated as FAQPage JSON-LD so an engine reads them as Q&A. Ships with the GEO content (project 4); nothing to do in the admin.',
+      guide: faqPage
+        ? 'The FAQ page has no FAQ section: the schema is emitted from that section, so an engine reads the questions as Q&A only while the section is there. Site → Pages → FAQ.'
+        : 'The FAQ page is not published: its questions are emitted as FAQPage JSON-LD only while it is. Site → Pages → FAQ, publish.',
+      ...(faqPage ? { href: editHref(s.adminRoute, 'pages', faqPage.id) } : {}),
     }),
     finding({
       key: 'E7',
       section: 'extractability',
-      status: compare ? 'done' : 'missing',
-      title: 'A compare page exists',
-      guide:
-        'A page whose slug starts with "compare" or "vs" (B7R vs Printful for Saudi merchants), with a table and "best for / not best for": the page type assistants cite most. Ships with the GEO content (project 4).',
+      status: compare ? (stale ? 'next' : 'done') : 'missing',
+      title: 'A compare page exists and its facts are recent',
+      guide: compare
+        ? `The comparison's "as of" date is older than ${compareAsOfDays} days: re-read the other side's pages, correct the rows that changed, and set the date. Site → Pages.`
+        : 'A page whose slug starts with "compare" or "vs" (B7R vs Printful for Saudi merchants), with a table and "best for / not best for": the page type assistants cite most. Publish the seeded draft under Site → Pages once its facts are approved.',
+      ...(compare ? { href: editHref(s.adminRoute, 'pages', compare.id) } : {}),
     }),
   ];
 }

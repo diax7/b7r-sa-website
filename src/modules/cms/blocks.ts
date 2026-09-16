@@ -343,6 +343,69 @@ export const MediaBannerBlock: Block = {
   ],
 };
 
+const list = (name: string, label: { ar: string; en: string }): Field => ({
+  name,
+  type: 'array',
+  required: true,
+  minRows: 1,
+  label,
+  labels: { singular: { ar: 'بند', en: 'Item' }, plural: { ar: 'بنود', en: 'Items' } },
+  fields: [text('text', { ar: 'النص', en: 'Text' })],
+});
+
+/** A comparison table (ADR-050): B7R against one other service, with the date its pages were read. */
+export const CompareBlock: Block = {
+  slug: 'compare',
+  labels: {
+    singular: { ar: 'مقارنة', en: 'Comparison' },
+    plural: { ar: 'مقارنات', en: 'Comparisons' },
+  },
+  fields: [
+    text('title', { ar: 'العنوان (اختياري)', en: 'Title (optional)' }, false),
+    textarea('intro', { ar: 'المقدمة (اختياري)', en: 'Intro (optional)' }, false),
+    {
+      type: 'row',
+      fields: [
+        text('ours', { ar: 'عمودنا', en: 'Our column' }),
+        text('theirs', { ar: 'عمود الطرف الآخر', en: 'Their column' }),
+        {
+          name: 'asOf',
+          type: 'date',
+          required: true,
+          label: { ar: 'تاريخ القراءة', en: 'Read on' },
+          admin: { date: { pickerAppearance: 'dayOnly' } },
+        },
+      ],
+    },
+    {
+      name: 'rows',
+      type: 'array',
+      required: true,
+      minRows: 3,
+      label: { ar: 'الصفوف', en: 'Rows' },
+      labels: { singular: { ar: 'صف', en: 'Row' }, plural: { ar: 'صفوف', en: 'Rows' } },
+      fields: [
+        text('criterion', { ar: 'المعيار', en: 'Criterion' }),
+        {
+          type: 'row',
+          fields: [
+            text('ours', { ar: 'عندنا', en: 'Ours' }),
+            text('theirs', { ar: 'عندهم', en: 'Theirs' }),
+          ],
+        },
+      ],
+    },
+    {
+      type: 'row',
+      fields: [
+        list('bestFor', { ar: 'الأنسب لـ', en: 'Best for' }),
+        list('notBestFor', { ar: 'ليس الأنسب لـ', en: 'Not best for' }),
+      ],
+    },
+    textarea('closing', { ar: 'الخاتمة (اختياري)', en: 'Closing (optional)' }, false),
+  ],
+};
+
 export const PAGE_BLOCKS: Block[] = [
   RichTextBlock,
   StoryBlock,
@@ -354,6 +417,7 @@ export const PAGE_BLOCKS: Block[] = [
   ContactBlock,
   LegalBodyBlock,
   MediaBannerBlock,
+  CompareBlock,
 ];
 
 export { FAQ_SELECTIONS };

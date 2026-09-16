@@ -60,6 +60,14 @@ export const en: SiteCopy = {
   breadcrumbs: {
     label: 'Page path',
   },
+  compare: {
+    caption: '{ours} compared with {theirs}',
+    criterion: 'Criterion',
+    bestFor: '{ours} is best for you if',
+    notBestFor: '{ours} is not the best fit if',
+    asOf: "{theirs}'s pages were read on",
+    asOfTail: '; the numbers change, the read date stays true.',
+  },
   faq: {
     groupsNav: 'Question groups',
     /** The group names as the page shows them; the select values (Appendix D) are the keys. */

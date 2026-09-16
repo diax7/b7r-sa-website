@@ -19,6 +19,73 @@ export const legalEn = (slug: 'terms' | 'shipping' | 'privacy'): string =>
   readFileSync(join(process.cwd(), 'src', 'content', 'seed', 'legal', 'en', `${slug}.md`), 'utf8');
 
 export const pagesEn: Record<string, PageEn> = {
+  // The comparison (ADR-050): a draft until Dhia approves; the Printful claims read 2026-09-16.
+  'compare-printful': {
+    title: 'B7R Print vs Printful: which fits a Saudi store?',
+    lead: 'A comparison in numbers for a merchant selling in Saudi Arabia: where the piece is printed, when it arrives, what it costs.',
+    blocks: [
+      {
+        intro:
+          "The table compares what a Saudi merchant asks first: where it is printed, how long delivery takes, the minimum, the price in riyals, and the store connection. B7R's numbers are this site's; Printful's are its public pages at the read date under the table.",
+        ours: 'B7R Print',
+        theirs: 'Printful',
+        rows: [
+          {
+            criterion: 'Where the piece is printed',
+            ours: 'Jeddah',
+            theirs: 'Europe or North America, by product',
+          },
+          {
+            criterion: 'Delivery to Riyadh or Jeddah',
+            ours: 'Up to 5 days from the order, printing included',
+            theirs: 'Two to four weeks, shipped internationally',
+          },
+          {
+            criterion: 'Customs on your customer',
+            ours: 'None: shipped within the Kingdom',
+            theirs: 'May be charged on arrival, paid by the recipient',
+          },
+          { criterion: 'Minimum order', ours: 'One piece', theirs: 'One piece' },
+          {
+            criterion: 'Cost of a printed basic T-shirt',
+            ours: 'From SAR 45, the price published',
+            theirs: 'In dollars, plus international shipping and tax on arrival',
+          },
+          {
+            criterion: 'Store connection',
+            ours: 'Salla, Zid and Shopify in one click',
+            theirs: 'Shopify and global platforms; no Salla or Zid app',
+          },
+          {
+            criterion: 'Invoice and VAT',
+            ours: 'A Saudi invoice with VAT',
+            theirs: 'A foreign invoice without Saudi VAT',
+          },
+          { criterion: 'Support language', ours: 'Arabic on WhatsApp', theirs: 'English' },
+        ],
+        bestFor: [
+          {
+            text: 'a Salla or Zid merchant who wants the order at the customer in days, not weeks',
+          },
+          { text: 'starting a brand from one piece with no stock and no capital' },
+          { text: 'you want a Saudi invoice and a riyal price published before you sell' },
+        ],
+        notBestFor: [
+          {
+            text: 'you sell mainly outside Saudi Arabia, or want a catalogue of hundreds of products',
+          },
+          { text: 'you need a large run of hundreds of pieces at a wholesale price' },
+        ],
+        closing:
+          'The verdict: for a merchant selling inside Saudi Arabia, B7R prints in Jeddah and delivers within 5 days under your brand with a Saudi invoice; Printful is the choice for selling abroad or a wider catalogue. Try it with one piece and SAR 30 of welcome credit.',
+      },
+    ],
+    seo: {
+      title: 'B7R Print vs Printful for a Saudi store',
+      description:
+        'A comparison in numbers: printed in Jeddah and delivered within 5 days against weeks of shipping from abroad; riyal prices, Salla and Zid connections.',
+    },
+  },
   'how-it-works': {
     title: 'How does print on demand work with B7R?',
     lead: 'A business model that lets you sell custom products without printing or storing them.',

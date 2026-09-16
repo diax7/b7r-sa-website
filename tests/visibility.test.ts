@@ -11,7 +11,14 @@ import {
   measurement,
   signals,
 } from '@/modules/visibility/rules/rest';
-import { isQuestion, openingWords, prorata } from '@/modules/visibility/rules/shared';
+import {
+  isQuestion,
+  openingWords,
+  prorata,
+  words as wordCount,
+} from '@/modules/visibility/rules/shared';
+import { blogPostBody, blogPosts } from '@/content/seed/blog';
+import { blogPostBodyEn } from '@/content/seed/en/blog';
 import { ITEMS, SECTIONS, THRESHOLDS } from '@/modules/visibility/rules/weights';
 import { findings, scoreOf } from '@/modules/visibility/score';
 import type { Snapshot } from '@/modules/visibility/types';
@@ -58,6 +65,7 @@ function filled(overrides: Partial<Snapshot> = {}): Snapshot {
         id: 1,
         slug: 'about',
         title: { ar: 'من نحن', en: 'About' },
+        blocks: [{ type: 'story', asOf: null }],
         seo: {
           title: { ar: 'من نحن', en: 'About B7R' },
           description: {
@@ -335,6 +343,7 @@ describe('the visibility score: the rules (ADR-049)', () => {
             id: 8,
             slug: 'compare-printful',
             title: { ar: 'مقارنة' },
+            blocks: [{ type: 'compare', asOf: '2026-09-16' }],
             seo: { title: { ar: 'مقارنة' }, description: { ar: 'مقارنة بين بحر برنت وبرينتفل.' } },
           },
         ],
@@ -354,6 +363,39 @@ describe('the visibility score: the rules (ADR-049)', () => {
     expect(by(bad, 'E4').status).toBe('missing');
     expect(by(bad, 'E5')).toMatchObject({ status: 'missing', count: { done: 0, total: 2 } });
     expect(by(bad, 'E7').status).toBe('done');
+    // E6 reads the FAQ page's section; E7 the compare page's as-of date (ADR-050).
+    const geo = (pages: Snapshot['pages'], at = '2026-09-16T10:00:00.000Z') =>
+      extractability(filled({ pages, at }));
+    const faqPage = {
+      id: 9,
+      slug: 'faq',
+      title: { ar: 'الأسئلة الشائعة' },
+      blocks: [{ type: 'faqList', asOf: null }],
+      seo: { title: { ar: 'الأسئلة' }, description: { ar: 'كل ما تحتاج معرفته قبل أن تبدأ.' } },
+    };
+    expect(by(geo([faqPage]), 'E6')).toMatchObject({
+      status: 'done',
+      href: '/admin/collections/pages/9',
+    });
+    expect(by(geo([{ ...faqPage, blocks: [] }]), 'E6')).toMatchObject({
+      status: 'missing',
+      guide: expect.stringMatching(/no FAQ section/),
+    });
+    expect(by(geo([]), 'E6').guide).toMatch(/not published/);
+    const compare = s.pages[0]!;
+    const comparePage = {
+      ...compare,
+      id: 8,
+      slug: 'compare-printful',
+      blocks: [{ type: 'compare', asOf: '2026-03-01' }],
+    };
+    expect(by(geo([comparePage]), 'E7')).toMatchObject({
+      status: 'next',
+      guide: expect.stringMatching(/older than 180 days/),
+      href: '/admin/collections/pages/8',
+    });
+    expect(by(geo([comparePage], '2026-08-27T00:00:00.000Z'), 'E7').status).toBe('done');
+    expect(by(geo([{ ...comparePage, blocks: [] }]), 'E7').status).toBe('done');
   });
 
   it('reads an opening and a question heading the way the rule says', () => {
@@ -369,6 +411,28 @@ describe('the visibility score: the rules (ADR-049)', () => {
     expect(isQuestion('What does it cost', 'en')).toBe(true);
     expect(isQuestion('Pricing', 'en')).toBe(false);
     expect(isQuestion('Pricing?', 'en')).toBe(true);
+  });
+
+  it('the seeded posts open with a 40 to 80-word answer and carry a question heading (ADR-050)', () => {
+    const { answerWords } = THRESHOLDS;
+    for (const slug of blogPosts.map((p) => p.slug)) {
+      const ar = blogPostBody(slug);
+      const en = blogPostBodyEn(slug);
+      for (const [locale, markdown] of [
+        ['ar', ar],
+        ['en', en],
+      ] as const) {
+        const opening = markdown.split(/\n\s*\n/)[0] ?? '';
+        const n = wordCount(opening.replace(/\[([^\]]+)\]\([^)]*\)/g, '$1'));
+        expect(n, `${slug} (${locale}) opening`).toBeGreaterThanOrEqual(answerWords.min);
+        expect(n, `${slug} (${locale}) opening`).toBeLessThanOrEqual(answerWords.max);
+        const headings = markdown.split('\n').filter((l) => l.startsWith('## '));
+        expect(
+          headings.some((h) => isQuestion(h.slice(3), locale)),
+          `${slug} (${locale}) question heading`,
+        ).toBe(true);
+      }
+    }
   });
 
   it('corroboration and measurement: the checklist, the landings, the prompts, the ledger', () => {

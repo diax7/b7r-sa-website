@@ -4,6 +4,7 @@ import { site } from '@/content/seed/site';
 import {
   blogPosting,
   collectionPage,
+  faqPage,
   profilePage,
   breadcrumbs,
   graph,
@@ -36,6 +37,9 @@ const REQUIRED: Record<string, string[]> = {
   ItemList: ['itemListElement'],
   Product: ['name', 'description', 'image', 'brand', 'material', 'offers'],
   WebPage: ['url', 'name', 'description', 'inLanguage'],
+  FAQPage: ['url', 'inLanguage', 'mainEntity'],
+  Question: ['name', 'acceptedAnswer'],
+  Answer: ['text'],
   BlogPosting: [
     'headline',
     'description',
@@ -112,6 +116,35 @@ describe('JSON-LD builders (BRD 7.4)', () => {
       { '@type': 'ListItem', position: 1, name: 'الرئيسية', item: BASE },
       { '@type': 'ListItem', position: 2, name: 'المنتجات', item: `${BASE}/products` },
     ]);
+  });
+
+  it('the FAQ page: the visible questions as FAQPage, answers as plain text, nothing when empty (ADR-050)', () => {
+    const node = faqPage(BASE, 'ar', '/faq', [
+      {
+        question: 'كم أحتاج لأبدأ؟',
+        answer: 'لا شيء: **30 ريالاً** رصيد ترحيبي، انظر [الأسعار](/products).',
+      },
+      { question: 'هل أحتاج سجلاً تجارياً؟', answer: 'لا.' },
+    ])!;
+    expectRequired(node);
+    expect(node['@id']).toBe(`${BASE}/faq#faq`);
+    expect(node['isPartOf']).toEqual({ '@id': `${BASE}/faq#webpage` });
+    expect(node['inLanguage']).toBe('ar');
+    const questions = node['mainEntity'] as Array<Record<string, unknown>>;
+    expect(questions).toHaveLength(2);
+    for (const q of questions) {
+      expectRequired(q);
+      expectRequired(q['acceptedAnswer'] as Record<string, unknown>);
+    }
+    expect(questions[0]).toEqual({
+      '@type': 'Question',
+      name: 'كم أحتاج لأبدأ؟',
+      acceptedAnswer: { '@type': 'Answer', text: 'لا شيء: 30 ريالاً رصيد ترحيبي، انظر الأسعار.' },
+    });
+    expect(faqPage(BASE, 'en', '/faq', [{ question: 'Q?', answer: 'A.' }])?.['url']).toBe(
+      `${BASE}/en/faq`,
+    );
+    expect(faqPage(BASE, 'ar', '/faq', [])).toBeNull();
   });
 
   it('pages and posts', () => {

@@ -13,7 +13,7 @@ import { ar } from '@/content/copy/ar';
 import { en } from '@/content/copy/en';
 import { blogAuthor, blogHubs, blogPosts } from '@/content/seed/blog';
 import { seo } from '@/content/seed/seo';
-import { pages } from '@/content/seed/pages';
+import { comparePrintful, pages } from '@/content/seed/pages';
 import { products } from '@/content/seed/products';
 import { site } from '@/content/seed/site';
 
@@ -29,7 +29,26 @@ const {
 } = ar;
 const messages = ar;
 
+const ARABIC = /[؀-ۿ]/;
+
+function collectStrings(value: unknown, out: string[] = []): string[] {
+  if (typeof value === 'string') {
+    if (ARABIC.test(value)) out.push(value);
+  } else if (Array.isArray(value)) {
+    for (const v of value) collectStrings(v, out);
+  } else if (value && typeof value === 'object') {
+    for (const v of Object.values(value)) collectStrings(v, out);
+  }
+  return out;
+}
+
 const TODO_COPY = new Set<string>([
+  // The comparison block's fixed words, the comparison page and its BRD 4.16 row (ADR-050,
+  // project 4), written under BRD 0.5 and listed for Dhia in the PR; they move into the BRD
+  // as 4.18 once approved.
+  ...Object.values(messages.compare),
+  ...collectStrings(comparePrintful),
+  ...collectStrings(seo.find((r) => r.route === '/compare-printful')),
   // Designer upload target and its remove control (design review 2026-09-13, Appendix G).
   messages.designer.uploadPrompt,
   messages.designer.remove,
@@ -63,19 +82,6 @@ const brd = readFileSync(join(process.cwd(), 'B7R-WEBSITE-MASTER-BRD.md'), 'utf8
   /\s+/g,
   ' ',
 );
-
-const ARABIC = /[؀-ۿ]/;
-
-function collectStrings(value: unknown, out: string[] = []): string[] {
-  if (typeof value === 'string') {
-    if (ARABIC.test(value)) out.push(value);
-  } else if (Array.isArray(value)) {
-    for (const v of value) collectStrings(v, out);
-  } else if (value && typeof value === 'object') {
-    for (const v of Object.values(value)) collectStrings(v, out);
-  }
-  return out;
-}
 
 // testimonials.ts is not checked: its three sample cards are agent-written on Dhia's
 // instruction (ADR-023) and stay `placeholder: true` until Dhia publishes them.
@@ -129,6 +135,7 @@ const sources: Record<string, unknown> = {
     blocks: p.blocks.filter((b) => b.blockType !== 'legalBody'),
   })),
   'seo.ts': [seo, ar.seo.product, ar.seo.merchantCostNote],
+  'copy/ar.ts (compare)': [ar.compare],
   // Post titles and hub names are BRD 4.13; excerpts, takeaways and bodies are agent-written
   // samples listed for Dhia (ADR-018), so only the BRD fields are checked here.
   'copy/ar.ts (blog)': [blogCopy],

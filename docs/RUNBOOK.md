@@ -388,6 +388,27 @@ retry copy; `NEWSLETTER_TRANSPORT=mock` (tests only) keeps subscriptions in memo
   that died mid-way (the container restarted) leaves a `running` run in Blog → Runs and
   keeps its connection out of the ledger for an hour; delete the run to ask again sooner.
 
+## The GEO content (ADR-050)
+
+- **The FAQ schema.** `/faq` and `/en/faq` carry a `FAQPage` node built from the page's own FAQ
+  section: edit the questions under Catalogue → FAQ and the schema follows; nothing to set.
+  E6 on the Score page reads done while the FAQ page is published with its section.
+- **The compare page.** Site → Pages → «بحر برنت مقابل Printful» is seeded as a draft in both
+  languages with the claims about Printful read from its public pages on 16 September 2026
+  (named on the page as text; the site links to no competitor). Read it in the preview, correct
+  what you know better, then Publish: the route `/compare-printful` goes live at once and E7
+  reads done. Every six months, re-read Printful's shipping, pricing and integrations pages,
+  fix the rows that changed and set "Read on" to that day: after 180 days E7 turns amber with
+  that guide. A second comparison is a new page with a slug starting with `compare-`.
+- **The rewrites.** The three Level 1 posts have drafts (Blog → Posts, the draft bar) with an
+  answer-first opening and a question heading, in both languages, and shorter English search
+  titles; the live text stays until you publish each draft. After a change to the seed's
+  bodies, `pnpm content:drafts` rewrites the drafts; a fresh database seeds the new text.
+- **The off-site kit.** `docs/OFF-SITE-KIT.md`: the LinkedIn company and founder copy, the
+  walkthrough script, the pinned X post and ten places for a first mention, drafted for your
+  review. Post, tick the box under Visibility → Off-site checklist, and add the profile's
+  address under Site settings → the profiles.
+
 ## Traffic sources (ADR-048)
 
 - **What it is.** The site's own count of where visitors come from and what the AI crawlers

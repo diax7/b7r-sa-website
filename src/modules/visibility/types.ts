@@ -101,7 +101,8 @@ export interface Snapshot {
   titleTemplate: Loc;
   /** The code-owned routes' titles and descriptions from the search defaults. */
   routes: Array<{ route: string; title: Loc; description: Loc }>;
-  pages: SnapshotDoc[];
+  /** Every published page with the types of its blocks and, for a compare block, its as-of date (E6, E7). */
+  pages: Array<SnapshotDoc & { blocks: Array<{ type: string; asOf: string | null }> }>;
   products: SnapshotProduct[];
   posts: SnapshotPost[];
   hubs: SnapshotDoc[];

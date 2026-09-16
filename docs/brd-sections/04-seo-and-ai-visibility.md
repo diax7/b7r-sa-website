@@ -59,7 +59,8 @@ Training crawlers (`GPTBot`, `ClaudeBot`, `Google-Extended`, `CCBot`, `Meta-Exte
 | Home | `OnlineStore` (name بحر برنت, alternateName B7R Print, url, logo ≥ 112 px, `sameAs` [X, Instagram, TikTok], `address` {addressLocality: جدة, addressRegion: منطقة مكة المكرمة, addressCountry: SA}, `contactPoint` {telephone +966501699572, contactType "customer support", availableLanguage ar}, `hasMerchantReturnPolicy` per Appendix B (no returns on custom goods; reprint or refund on B7R error within 10 days), `hasShippingService`/`shippingDetails` {shippingDestination SA, transitTime max 5 days}) + `WebSite` (name, alternateName, url) |
 | Products listing | `ItemList` of the five product URLs + `BreadcrumbList` |
 | Product | `Product` (name, description, image[], brand "بحر برنت", material, `offers`: `Offer` {price = base cost, priceCurrency "SAR", availability InStock, url, `priceSpecification` note "تكلفة للتاجر"}) + `BreadcrumbList` |
-| How it works, About, Contact, FAQ, Legal | `WebPage` + `BreadcrumbList` (no FAQPage, no HowTo: rich results discontinued) |
+| How it works, About, Contact, Legal, the compare page | `WebPage` + `BreadcrumbList` (no HowTo: rich results discontinued) |
+| FAQ | `WebPage` + `BreadcrumbList` + `FAQPage` (the visible questions, in order; ADR-050, amended 2026-09-16) |
 | Blog post | `BlogPosting` (headline, description, image, datePublished, dateModified, inLanguage ar, author `Person` {name ضياء, url /about}, publisher `Organization`) + `BreadcrumbList` |
 
 `inLanguage` follows the document's locale, `contactPoint.availableLanguage` and `WebSite.inLanguage` list both languages (Level 5, ADR-043). Validate with Google's Rich Results Test and the Schema.org validator in CI where possible (at least a JSON parse + required-fields unit test).
@@ -95,12 +96,14 @@ The key is served at `/indexnow/{INDEXNOW_KEY}.txt` by `app/indexnow/[key]/route
 - One `<h1>` per page, semantic H2/H3 hierarchy, headings in Arabic.
 - Every page ≥ 150 words of real Arabic text excluding nav/footer (home reaches this through the sections; legal pages through their bodies).
 - Both phrasings appear naturally: "الطباعة عند الطلب" (primary) and "طباعة حسب الطلب" once in the home meta description or how-it-works intro.
-- Internal links as in §5.3. External links only to b7r.app, the social profiles, and Misk (nofollow not needed).
+- Internal links as in §5.3. External links only to b7r.app, the social profiles, and Misk (nofollow not needed). *The compare page (ADR-050) names its sources as text and links nowhere outside.*
 - Visible publish and update dates on posts and legal pages, matching JSON-LD.
 - Author identity: ضياء, مؤسس بحر برنت, linked to `/about` (Level 3 adds an author page).
 
 ### 7.10 Explicitly not done
 
 `FAQPage`/`HowTo`/`SearchAction` schema, `Speakable`, Google Business Profile (no customer-facing premises), `LocalBusiness` schema (use `OnlineStore`).
+
+*Amended 2026-09-16 (ADR-050, project 4): `FAQPage` is done after all, on the FAQ page only and in both languages, generated from the page's own FAQ section so it never drifts from the visible questions; Google dropped the rich result, the answer engines read the schema. `HowTo`, `SearchAction`, `Speakable`, Google Business Profile and `LocalBusiness` stay out.*
 
 *Amended 2026-09-14 (Level 5c, ADR-043): `llms.txt` is done after all, one per language (`/llms.txt`, `/en/llms.txt`), generated from the CMS (site settings, the SEO defaults' titles and descriptions, the pages, the catalogue with cost and suggested price, the published posts with excerpts) and regenerated with the listings on publish. The measured effect is still thin; the cost is one route per language.*
