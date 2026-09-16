@@ -1,6 +1,8 @@
 import type { Payload, TypedUser } from 'payload';
 import { fold } from '@/lib/arabic-fold';
 import { riyadh } from '@/lib/riyadh';
+import { mentionsBrand } from '@/modules/visibility/ledger/read-answer';
+import { editHref } from '@/modules/visibility/rules/shared';
 
 /** The ledger's window on the page and in the score: the last four weeks. */
 export const LEDGER_WINDOW_DAYS = 28;
@@ -25,8 +27,11 @@ export interface CitationRow {
 export interface EngineRate {
   connection: number;
   label: string;
+  /** The window's rows on the non-brand prompts, and how many named B7R. */
   runs: number;
   mentioned: number;
+  /** Over every row, the compare prompts included: a link is the outcome that matters there. */
+  rows: number;
   linked: number;
 }
 
@@ -115,6 +120,24 @@ export async function lastLedgerRunAt(payload: Payload, access: Access): Promise
   return found.docs[0]?.finishedAt ?? null;
 }
 
+/** A document read with `locale: 'all'` as one candidate per language it has a title in. */
+function titled(
+  doc: { id: number; title?: unknown; slug?: unknown },
+  collection: 'posts' | 'pages',
+  adminRoute: string,
+): Array<{ title: string; label: string; href: string }> {
+  const titles =
+    typeof doc.title === 'object' && doc.title
+      ? (doc.title as Record<string, unknown>)
+      : { ar: doc.title };
+  return (['ar', 'en'] as const).flatMap((locale) => {
+    const title = titles[locale];
+    return typeof title === 'string' && title
+      ? [{ title, label: title, href: editHref(adminRoute, collection, doc.id, locale) }]
+      : [];
+  });
+}
+
 /** The page or post whose title shares the most words with the prompt (after folding); null when none shares any. */
 export function bestMatch(
   prompt: string,
@@ -165,6 +188,7 @@ export async function ledgerReading(
       collection: 'posts',
       where: { _status: { equals: 'published' } },
       depth: 0,
+      locale: 'all',
       pagination: false,
       select: { title: true, slug: true },
       ...access,
@@ -173,6 +197,7 @@ export async function ledgerReading(
       collection: 'pages',
       where: { _status: { equals: 'published' } },
       depth: 0,
+      locale: 'all',
       pagination: false,
       select: { title: true, slug: true },
       ...access,
@@ -181,30 +206,27 @@ export async function ledgerReading(
   const labels = new Map(connections.docs.map((c) => [c.id, c.label]));
   const engines = new Map<number, EngineRate>();
   for (const row of rows) {
-    if (row.connection === null || row.namesBrand) continue;
+    if (row.connection === null) continue;
     const engine = engines.get(row.connection) ?? {
       connection: row.connection,
       label: labels.get(row.connection) ?? row.provider,
       runs: 0,
       mentioned: 0,
+      rows: 0,
       linked: 0,
     };
-    engine.runs += 1;
-    if (row.mentioned) engine.mentioned += 1;
+    engine.rows += 1;
     if (row.linked) engine.linked += 1;
+    if (!row.namesBrand) {
+      engine.runs += 1;
+      if (row.mentioned) engine.mentioned += 1;
+    }
     engines.set(row.connection, engine);
   }
+  // A candidate per language: the English prompt finds the English title and its edit form.
   const candidates = [
-    ...posts.docs.map((p) => ({
-      title: String(p.title ?? ''),
-      label: String(p.title ?? p.slug),
-      href: `${adminRoute}/collections/posts/${p.id}`,
-    })),
-    ...pages.docs.map((p) => ({
-      title: String(p.title ?? ''),
-      label: String(p.title ?? p.slug),
-      href: `${adminRoute}/collections/pages/${p.id}`,
-    })),
+    ...posts.docs.flatMap((p) => titled(p, 'posts', adminRoute)),
+    ...pages.docs.flatMap((p) => titled(p, 'pages', adminRoute)),
   ];
   const promptRows: PromptRow[] = prompts.docs.map((p) => {
     const latest: Record<number, CitationRow> = {};
@@ -214,13 +236,14 @@ export async function ledgerReading(
     }
     const answered = Object.values(latest);
     const uncited = answered.length > 0 && answered.every((r) => !r.mentioned);
+    const namesBrand = p.namesBrand === true || mentionsBrand(p.text);
     return {
       id: p.id,
       text: p.text,
       language: p.language,
-      namesBrand: p.namesBrand === true,
+      namesBrand,
       latest,
-      fix: uncited && !p.namesBrand ? bestMatch(p.text, candidates) : null,
+      fix: uncited && !namesBrand ? bestMatch(p.text, candidates) : null,
     };
   });
   const named = new Map<string, number>();

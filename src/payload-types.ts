@@ -1391,7 +1391,7 @@ export interface Prompt {
    */
   order: number;
   /**
-   * The prompt itself names B7R (a compare prompt): asked and recorded, but left out of the cited-rate, since the answer is bound to name the brand.
+   * The prompt itself names B7R (a compare prompt): asked and recorded, but left out of the cited-rate, since the answer is bound to name the brand. The text decides too: a prompt naming «بحر برنت» or b7r counts as such even unticked.
    */
   namesBrand?: boolean | null;
   /**
@@ -1416,6 +1416,10 @@ export interface Prompt {
  */
 export interface Citation {
   id: number;
+  /**
+   * The day and the connection, so the row reads in the list and the palette.
+   */
+  title: string;
   /**
    * The day of the run, Riyadh time.
    */
@@ -1444,6 +1448,10 @@ export interface Citation {
    * The prompt itself named the brand when asked; such a row leaves the cited-rate.
    */
   namesBrand?: boolean | null;
+  /**
+   * The prompt as it was asked at the time, whatever was edited or removed since.
+   */
+  promptText?: string | null;
   /**
    * The first 400 characters of the answer.
    */
@@ -2377,6 +2385,7 @@ export interface PromptsSelect<T extends boolean = true> {
  * via the `definition` "citations_select".
  */
 export interface CitationsSelect<T extends boolean = true> {
+  title?: T;
   date?: T;
   provider?: T;
   model?: T;
@@ -2384,6 +2393,7 @@ export interface CitationsSelect<T extends boolean = true> {
   mentioned?: T;
   linked?: T;
   namesBrand?: T;
+  promptText?: T;
   excerpt?: T;
   urls?: T;
   competitors?: T;

@@ -7,7 +7,7 @@ import { readConnection } from '@/modules/connections/read';
 import { safeMessage } from '@/modules/connections/safe-message';
 import { connectionSpend } from '@/modules/connections/spend';
 import { type Asker, mockAsker, sdkAsker } from '@/modules/visibility/ledger/ask';
-import { readAnswer } from '@/modules/visibility/ledger/read-answer';
+import { mentionsBrand, readAnswer } from '@/modules/visibility/ledger/read-answer';
 
 export const CITATION_LEDGER = 'citation-ledger' as const;
 /** A connection is asked once an hour at most: a double "Run now" costs one batch. */
@@ -44,15 +44,16 @@ export function batchCostUsd(spec: ConnectionSpec, usage: Usage, searches: numbe
   return Math.round((tokens + searches * KINDS[spec.kind].searchFeeUsd) * 10_000) / 10_000;
 }
 
-/** The label the runs list shows: the outcome in one line. */
+/** The label the runs list shows: the outcome in one line, the failures and the leftovers named. */
 export function batchLabel(args: {
   label: string;
   asked: number;
   cited: number;
+  failed?: number;
   notRun: number;
 }): string {
-  const { label, asked, cited, notRun } = args;
-  return `Citation ledger, ${label}: ${asked} prompt${asked === 1 ? '' : 's'}, ${cited} cited${notRun ? `, ${notRun} not run` : ''}`;
+  const { label, asked, cited, failed = 0, notRun } = args;
+  return `Citation ledger, ${label}: ${asked} prompt${asked === 1 ? '' : 's'}, ${cited} cited${failed ? `, ${failed} failed` : ''}${notRun ? `, ${notRun} not run` : ''}`;
 }
 
 async function enabledPrompts(payload: Payload): Promise<LedgerPrompt[]> {
@@ -64,11 +65,12 @@ async function enabledPrompts(payload: Payload): Promise<LedgerPrompt[]> {
     pagination: false,
     overrideAccess: true,
   });
+  // The text decides too: a prompt naming B7R leaves the rate whether or not the box is ticked.
   return found.docs.map((p) => ({
     id: p.id,
     text: p.text,
     language: p.language,
-    namesBrand: p.namesBrand === true,
+    namesBrand: p.namesBrand === true || mentionsBrand(p.text),
   }));
 }
 
@@ -179,6 +181,7 @@ async function askAll(args: {
       await payload.create({
         collection: 'citations',
         data: {
+          title: `${date} · ${spec.label}`,
           date,
           provider: spec.kind,
           model: spec.model,
@@ -186,6 +189,7 @@ async function askAll(args: {
           mentioned: reading.mentioned,
           linked: reading.linked,
           namesBrand: prompt.namesBrand,
+          promptText: prompt.text,
           excerpt: reading.excerpt,
           urls: reading.urls,
           competitors: reading.competitors,
@@ -207,7 +211,7 @@ async function askAll(args: {
     collection: 'ai-runs',
     id: run.id,
     data: {
-      label: batchLabel({ label: spec.label, asked, cited, notRun }),
+      label: batchLabel({ label: spec.label, asked, cited, failed: errors.length, notRun }),
       status,
       tokensIn: usage.inputTokens,
       tokensOut: usage.outputTokens,

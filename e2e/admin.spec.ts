@@ -1823,11 +1823,14 @@ test.describe('CMS admin', () => {
         ).json()) as {
           totalDocs: number;
           docs: Array<{
+            id: number;
             mentioned: boolean;
             linked: boolean;
             namesBrand: boolean;
             mode: string;
             provider: string;
+            promptText: string;
+            title: string;
           }>;
         };
         expect(rows.totalDocs).toBe(seeded.totalDocs);
@@ -1838,6 +1841,9 @@ test.describe('CMS admin', () => {
           seeded.docs.filter((p) => p.namesBrand).length,
         );
         expect(rows.docs.every((r) => r.provider === 'mock' && r.mode === 'plain')).toBe(true);
+        // The row keeps what was asked and reads in the list by day and connection.
+        expect(rows.docs.every((r) => r.promptText.length > 0)).toBe(true);
+        expect(rows.docs[0]!.title).toMatch(/^\d{4}-\d{2}-\d{2} · Mock, ledger e2e$/);
         expect(rows.docs.filter((r) => r.linked).length).toBe(
           rows.docs.filter((r) => r.mentioned).length,
         );
@@ -1866,6 +1872,23 @@ test.describe('CMS admin', () => {
           'data-status',
           'done',
         );
+        // A wrong batch can be removed: the rows and the run go, the prompts stay.
+        const gone = await request.delete(`${API}/citations?where[run][equals]=${batch['id']}`, {
+          headers: auth,
+        });
+        expect(gone.status()).toBe(200);
+        expect(
+          (
+            (await (
+              await request.get(`${API}/citations?limit=0&where[run][equals]=${batch['id']}`, {
+                headers: auth,
+              })
+            ).json()) as { totalDocs: number }
+          ).totalDocs,
+        ).toBe(0);
+        expect(
+          (await request.delete(`${API}/ai-runs/${batch['id']}`, { headers: auth })).status(),
+        ).toBe(200);
       } finally {
         for (const id of ids) await request.delete(`${API}/connections/${id}`, { headers: auth });
       }

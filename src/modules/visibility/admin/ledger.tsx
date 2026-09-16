@@ -72,7 +72,7 @@ export function Ledger({ reading, adminRoute }: { reading: LedgerReading; adminR
                   {s.rateLine
                     .replace('{cited}', String(e.mentioned))
                     .replace('{runs}', String(e.runs))
-                    .replace('{linked}', pct(e.linked, e.runs) || '0%')}
+                    .replace('{linked}', pct(e.linked, e.rows) || '0%')}
                 </span>
               </div>
             ))}

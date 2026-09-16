@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { costTodayOf } from '@/modules/ai-content/caps';
 import { KINDS } from '@/modules/connections/kinds';
 import { searchTool } from '@/modules/connections/model';
-import { mockAsker } from '@/modules/visibility/ledger/ask';
+import { mockAsker, searchesOf } from '@/modules/visibility/ledger/ask';
 import { citedUrls, mentionsBrand, readAnswer } from '@/modules/visibility/ledger/read-answer';
 import { bestMatch, citedRateOf, type CitationRow } from '@/modules/visibility/ledger/reading';
 import {
@@ -82,6 +82,10 @@ function fakeLedgerPayload(args: {
   } as unknown as Payload;
   return { payload, created, updated };
 }
+
+/** The competitors an answer names, by name alone (no sources). */
+const byName = (text: string) =>
+  readAnswer({ kind: 'deepseek', text, sources: [], raw: null }).competitors;
 
 describe('the brand matcher and the reader (ADR-049 D5)', () => {
   it('names B7R with an attached prefix, as b7r, as a host; never the sea', () => {
@@ -167,6 +171,15 @@ describe('the brand matcher and the reader (ADR-049 D5)', () => {
     expect(reading.linked).toBe(true);
     expect(reading.competitors).toEqual(['merch.amazon.com', 'printful.com']);
     expect(reading.excerpt).toHaveLength(400);
+    // By name on word boundaries: "merchant" is not Merch by Amazon, "springboard" is not Spring.
+    expect(byName('A merchant needs a springboard; try Gelato or Redbubble.')).toEqual([
+      'gelato.com',
+      'redbubble.com',
+    ]);
+    expect(
+      byName('Merch by Amazon pays royalties; Printify prints; برنتفل يشحن من أوروبا'),
+    ).toEqual(['printful.com', 'printify.com', 'merch.amazon.com']);
+    expect(byName('the printfulness of it')).toEqual([]);
     const none = readAnswer({
       kind: 'deepseek',
       text: 'Try local printers.',
@@ -180,6 +193,29 @@ describe('the brand matcher and the reader (ADR-049 D5)', () => {
       competitors: [],
       excerpt: 'Try local printers.',
     });
+  });
+
+  it('counts the searches per vendor: tool calls for OpenAI and Anthropic, one grounded prompt for Google', () => {
+    const steps = [
+      { content: [{ type: 'tool-call' }, { type: 'tool-result' }, { type: 'text' }] },
+      { content: [{ type: 'tool-call' }, { type: 'text' }] },
+    ];
+    expect(searchesOf('openai', { steps, sources: [] })).toBe(2);
+    expect(searchesOf('anthropic', { steps: [{ content: [{ type: 'text' }] }], sources: [] })).toBe(
+      0,
+    );
+    // Google emits no tool-call part for grounding: the sources or the metadata say it grounded.
+    expect(searchesOf('google', { steps: [{ content: [{ type: 'text' }] }], sources: [{}] })).toBe(
+      1,
+    );
+    expect(
+      searchesOf('google', {
+        steps: [{ content: [{ type: 'text' }] }],
+        sources: [],
+        providerMetadata: { google: { groundingMetadata: { webSearchQueries: ['x'] } } },
+      }),
+    ).toBe(1);
+    expect(searchesOf('google', { steps: [{ content: [{ type: 'text' }] }], sources: [] })).toBe(0);
   });
 
   it('the mock engine names B7R with a link on Arabic and two competitors on English', async () => {
@@ -207,12 +243,12 @@ describe('the cost, the labels, the tools (ADR-049 D5)', () => {
     expect(KINDS['openai-compatible'].searchFeeUsd).toBe(0);
   });
 
-  it('labels a batch in one line', () => {
+  it('labels a batch in one line, the failures and the leftovers named', () => {
     expect(batchLabel({ label: 'OpenAI', asked: 15, cited: 6, notRun: 0 })).toBe(
       'Citation ledger, OpenAI: 15 prompts, 6 cited',
     );
-    expect(batchLabel({ label: 'Claude', asked: 1, cited: 0, notRun: 14 })).toBe(
-      'Citation ledger, Claude: 1 prompt, 0 cited, 14 not run',
+    expect(batchLabel({ label: 'Claude', asked: 1, cited: 0, failed: 2, notRun: 12 })).toBe(
+      'Citation ledger, Claude: 1 prompt, 0 cited, 2 failed, 12 not run',
     );
   });
 
@@ -254,17 +290,22 @@ describe('the ledger reading (ADR-049 D5)', () => {
     ).toEqual({ runs: 2, cited: 1 });
   });
 
-  it('points an uncited prompt at the page whose title shares the most words', () => {
+  it('points an uncited prompt at the page whose title shares the most words, in either language', () => {
     const candidates = [
       { title: 'كيف تسعّر تيشيرتاً مطبوعاً في السعودية', label: 'التسعير', href: '/p/1' },
       { title: 'الطباعة عند الطلب في السعودية: أمثلة', label: 'الطباعة', href: '/p/2' },
+      { title: 'Print on demand in Saudi Arabia: examples', label: 'POD', href: '/p/2?locale=en' },
       { title: 'About', label: 'About', href: '/p/3' },
     ];
     expect(bestMatch('أفضل موقع طباعة على الطلب في السعودية؟', candidates)).toEqual({
       label: 'الطباعة',
       href: '/p/2',
     });
-    expect(bestMatch('hoodie printing riyadh', candidates)).toBeNull();
+    expect(bestMatch('Best print on demand service in Saudi Arabia?', candidates)).toEqual({
+      label: 'POD',
+      href: '/p/2?locale=en',
+    });
+    expect(bestMatch('hoodie riyadh', candidates)).toBeNull();
   });
 
   it('seeds ten Arabic and five English prompts, two naming the brand', () => {
@@ -305,9 +346,11 @@ describe('the weekly batch (ADR-049 D5)', () => {
     expect(rows.filter((r) => r.data['mentioned']).length).toBe(10);
     expect(rows.filter((r) => r.data['namesBrand']).length).toBe(2);
     expect(rows[0]!.data).toMatchObject({
+      title: '2026-09-14 · Mock',
       date: '2026-09-14',
       provider: 'mock',
       mode: 'plain',
+      promptText: SEED_PROMPTS[0]!.text,
       run: 1,
     });
     expect(updated[0]!.data).toMatchObject({
@@ -317,6 +360,20 @@ describe('the weekly batch (ADR-049 D5)', () => {
       tokensOut: 900,
       costUsd: 0,
     });
+  });
+
+  it('treats a prompt whose text names B7R as brand-naming whatever the box says', async () => {
+    const { payload, created } = fakeLedgerPayload({
+      connections: [mock],
+      prompts: [
+        { id: 1, text: 'بحر برنت أم Printful؟', language: 'ar', namesBrand: false, enabled: true },
+        { id: 2, text: 'Is b7r.sa legit?', language: 'en', namesBrand: false, enabled: true },
+        { id: 3, text: 'أين أطبع هودي؟', language: 'ar', namesBrand: false, enabled: true },
+      ],
+    });
+    await runLedger(payload, { env });
+    const rows = created.filter((c) => c.collection === 'citations');
+    expect(rows.map((r) => r.data['namesBrand'])).toEqual([true, true, false]);
   });
 
   it('skips a connection over its limit, asked within the hour, without a key, or the mock outside its gate', async () => {

@@ -59,8 +59,8 @@ export const PROMPT_DESCRIPTIONS: Described = {
     en: 'The prompt’s place in the run and the table; smallest first. When the run’s twenty-minute budget runs out, the last prompts are left for next week.',
   },
   namesBrand: {
-    ar: 'السؤال نفسه يذكر بحر برنت (سؤال مقارنة): يُسأل ويُسجَّل، لكنه لا يدخل في نسبة الاستشهاد، لأن الجواب سيذكر العلامة حتماً.',
-    en: 'The prompt itself names B7R (a compare prompt): asked and recorded, but left out of the cited-rate, since the answer is bound to name the brand.',
+    ar: 'السؤال نفسه يذكر بحر برنت (سؤال مقارنة): يُسأل ويُسجَّل، لكنه لا يدخل في نسبة الاستشهاد، لأن الجواب سيذكر العلامة حتماً. النص يقرّر أيضاً: سؤال يذكر «بحر برنت» أو b7r يُعامل كذلك وإن لم يُعلَّم.',
+    en: 'The prompt itself names B7R (a compare prompt): asked and recorded, but left out of the cited-rate, since the answer is bound to name the brand. The text decides too: a prompt naming «بحر برنت» or b7r counts as such even unticked.',
   },
   enabled: {
     ar: 'مفعّل: يُسأل في كل جولة أسبوعية ويُعدّ في الدرجة. معطّل: يبقى في القائمة ولا يُسأل.',
@@ -70,6 +70,14 @@ export const PROMPT_DESCRIPTIONS: Described = {
 
 /** The citation rows: what each column holds (ADR-049 D5). Read-only. */
 export const CITATION_DESCRIPTIONS: Described = {
+  title: {
+    ar: 'اليوم والاتصال، ليُقرأ الصف في القائمة ولوحة البحث.',
+    en: 'The day and the connection, so the row reads in the list and the palette.',
+  },
+  promptText: {
+    ar: 'نص السؤال كما طُرح وقتها، وإن عُدّل السؤال أو حُذف لاحقاً.',
+    en: 'The prompt as it was asked at the time, whatever was edited or removed since.',
+  },
   date: {
     ar: 'يوم الجولة بتوقيت الرياض.',
     en: 'The day of the run, Riyadh time.',

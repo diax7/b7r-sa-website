@@ -383,6 +383,10 @@ retry copy; `NEWSLETTER_TRANSPORT=mock` (tests only) keeps subscriptions in memo
 - **Reading a red row.** A prompt no engine names B7R on carries "improve the answer block
   of" with a link to the page or post whose title is closest: make its opening paragraph
   answer that question in 40 to 80 words (E3), and let the next Monday tell.
+- **A wrong batch.** Citations can be deleted by an admin (a test connection, a mis-set
+  model): the rows leave the four-week window the score reads; the prompts stay. A batch
+  that died mid-way (the container restarted) leaves a `running` run in Blog → Runs and
+  keeps its connection out of the ledger for an hour; delete the run to ask again sooner.
 
 ## Traffic sources (ADR-048)
 

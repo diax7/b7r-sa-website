@@ -1361,6 +1361,11 @@ per-prompt table with an engine per column (a check or a cross with its `aria-la
 run"), the latest answers as collapsible excerpts, the competitors named most, and for a
 prompt no engine names B7R on, the page or post whose title shares the most words, to
 improve. M2, M3 and P4 read the prompts, the last finished run and the window's rows.
-**Rejected:** one run per prompt (seventy-five rows a week in the runs list); a system prompt
-that names B7R (the answer would name it back); counting a brand-naming prompt in the rate.
-BRD §7.7's quarterly manual check is this ledger, weekly.
+The text decides `namesBrand` too (a prompt naming «بحر برنت» or `b7r` leaves the rate even
+unticked); the competitors are matched by name on word boundaries ("merchant" is not Merch by
+Amazon); Google's grounding fee counts one per grounded prompt, since its provider emits no
+tool-call part; a compatible endpoint that hands citations in its body reads as "with search";
+a citation row keeps the prompt's text and carries a day-and-connection title; admins may
+delete a wrong batch. **Rejected:** one run per prompt (seventy-five rows a week in the runs
+list); a system prompt that names B7R (the answer would name it back); counting a brand-naming
+prompt in the rate. BRD §7.7's quarterly manual check is this ledger, weekly.

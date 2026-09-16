@@ -11,9 +11,10 @@ const never = () => false;
 
 /**
  * The citation ledger (ADR-049 D5): one row per prompt, per connection, per batch, written
- * by the weekly run and read-only for everyone else. `connection` and `prompt` are links
- * (a deleted row nulls them, as `ai-runs` does); `provider`, `model` and `namesBrand` stay
- * as values, so a row still says what was asked of whom after an edit.
+ * by the weekly run; admins may delete a wrong batch (a test connection, a mis-set model)
+ * so it leaves the four-week window the score reads. `connection` and `prompt` are links
+ * (a deleted row nulls them, as `ai-runs` does); `provider`, `model`, `promptText` and
+ * `namesBrand` stay as values, so a row still says what was asked of whom after an edit.
  */
 export const Citations: CollectionConfig = {
   slug: CITATIONS,
@@ -22,9 +23,9 @@ export const Citations: CollectionConfig = {
     plural: { ar: 'سجل الاستشهادات', en: 'Citations' },
   },
   admin: {
-    useAsTitle: 'excerpt',
-    defaultColumns: ['date', 'provider', 'prompt', 'mentioned', 'linked'],
-    listSearchableFields: ['excerpt', 'provider', 'model'],
+    useAsTitle: 'title',
+    defaultColumns: ['title', 'promptText', 'mentioned', 'linked', 'mode'],
+    listSearchableFields: ['title', 'promptText', 'excerpt'],
     group: adminGroup('visibility'),
     components: collectionComponents(CITATIONS, { localized: false }),
     custom: {
@@ -39,10 +40,17 @@ export const Citations: CollectionConfig = {
       en: 'Each assistant’s answer to each prompt in each run: whether it named B7R, linked to it, and which competitors it named. Read-only.',
     },
   },
-  access: { read: isAdmin, create: never, update: never, delete: never },
+  access: { read: isAdmin, create: never, update: never, delete: isAdmin },
   defaultSort: '-createdAt',
   fields: describeFields(
     [
+      {
+        name: 'title',
+        type: 'text',
+        required: true,
+        label: { ar: 'العنوان', en: 'Title' },
+        admin: { readOnly: true },
+      },
       {
         type: 'row',
         fields: [
@@ -104,6 +112,12 @@ export const Citations: CollectionConfig = {
             admin: { readOnly: true },
           },
         ],
+      },
+      {
+        name: 'promptText',
+        type: 'textarea',
+        label: { ar: 'نص السؤال', en: 'Prompt text' },
+        admin: { readOnly: true },
       },
       {
         name: 'excerpt',

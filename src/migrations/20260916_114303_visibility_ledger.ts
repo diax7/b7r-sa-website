@@ -2,7 +2,8 @@ import { type MigrateDownArgs, type MigrateUpArgs, sql } from '@payloadcms/db-po
 
 /**
  * The citation ledger (ADR-049 PR 3c): the `prompts` and `citations` tables, the `citation`
- * run kind on `ai-runs`, the weekly job's task slug.
+ * run kind on `ai-runs`, the weekly job's task slug. The DOWN drops the lock constraints
+ * before the tables (the generator had them after `DROP TABLE CASCADE`, which fails).
  */
 export async function up({ db }: MigrateUpArgs): Promise<void> {
   await db.execute(sql`
@@ -28,6 +29,7 @@ export async function up({ db }: MigrateUpArgs): Promise<void> {
   
   CREATE TABLE "citations" (
   	"id" serial PRIMARY KEY NOT NULL,
+  	"title" varchar NOT NULL,
   	"date" varchar NOT NULL,
   	"provider" varchar NOT NULL,
   	"model" varchar,
@@ -35,6 +37,7 @@ export async function up({ db }: MigrateUpArgs): Promise<void> {
   	"mentioned" boolean DEFAULT false,
   	"linked" boolean DEFAULT false,
   	"names_brand" boolean DEFAULT false,
+  	"prompt_text" varchar,
   	"excerpt" varchar,
   	"urls" jsonb,
   	"competitors" jsonb,
@@ -67,11 +70,11 @@ export async function down({ db }: MigrateDownArgs): Promise<void> {
   await db.execute(sql`
    ALTER TABLE "prompts" DISABLE ROW LEVEL SECURITY;
   ALTER TABLE "citations" DISABLE ROW LEVEL SECURITY;
+  ALTER TABLE "payload_locked_documents_rels" DROP CONSTRAINT "payload_locked_documents_rels_prompts_fk";
+  ALTER TABLE "payload_locked_documents_rels" DROP CONSTRAINT "payload_locked_documents_rels_citations_fk";
   DROP TABLE "prompts" CASCADE;
   DROP TABLE "citations" CASCADE;
-  ALTER TABLE "payload_locked_documents_rels" DROP CONSTRAINT "payload_locked_documents_rels_prompts_fk";
   
-  ALTER TABLE "payload_locked_documents_rels" DROP CONSTRAINT "payload_locked_documents_rels_citations_fk";
   
   ALTER TABLE "ai_runs" ALTER COLUMN "kind" SET DATA TYPE text;
   ALTER TABLE "ai_runs" ALTER COLUMN "kind" SET DEFAULT 'generate'::text;

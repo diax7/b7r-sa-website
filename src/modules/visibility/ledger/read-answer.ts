@@ -55,8 +55,22 @@ function competitorOf(host: string | null): string | null {
   return COMPETITOR_HOSTS.find((c) => host === c || host.endsWith(`.${c}`)) ?? null;
 }
 
+/**
+ * The competitors as an answer names them (BRD 2.3), on word boundaries: "merchant" is not
+ * Merch by Amazon and "springboard" is not Spring; Spring has no safe name and is found by
+ * host only.
+ */
+const COMPETITOR_NAMES: Array<[RegExp, (typeof COMPETITOR_HOSTS)[number]]> = [
+  [/\bprintful\b|برنتفل|برينتفول/u, 'printful.com'],
+  [/\bprintify\b|برنتفاي|برينتيفاي/u, 'printify.com'],
+  [/\bgelato\b|جيلاتو/u, 'gelato.com'],
+  [/\bteespring\b/u, 'teespring.com'],
+  [/\bredbubble\b|ريدبابل/u, 'redbubble.com'],
+  [/\b(?:merch by amazon|amazon merch)\b/u, 'merch.amazon.com'],
+];
+
 /** Perplexity's chat body carries `citations` (URLs) and, newer, `search_results[].url`. */
-function rawUrls(raw: unknown): string[] {
+export function rawUrls(raw: unknown): string[] {
   const body = (raw ?? {}) as { citations?: unknown; search_results?: unknown };
   const out: string[] = [];
   if (Array.isArray(body.citations)) {
@@ -116,10 +130,7 @@ export function readAnswer(args: {
     if (c) named.add(c);
   }
   const folded = fold(args.text);
-  for (const c of COMPETITOR_HOSTS) {
-    const name = c.split('.')[0]!;
-    if (name.length >= 5 && folded.includes(name)) named.add(c);
-  }
+  for (const [pattern, host] of COMPETITOR_NAMES) if (pattern.test(folded)) named.add(host);
   return {
     mentioned: mentionsBrand(args.text),
     linked: hosts.some(isOurHost),

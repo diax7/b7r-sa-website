@@ -2,7 +2,7 @@ import { generateText } from 'ai';
 import type { Usage } from '@/modules/ai-content/cost';
 import type { ConnectionSpec } from '@/modules/connections/kinds';
 import { languageModel, searchTool } from '@/modules/connections/model';
-import type { AnswerSource } from '@/modules/visibility/ledger/read-answer';
+import { type AnswerSource, rawUrls } from '@/modules/visibility/ledger/read-answer';
 
 /**
  * One prompt to one engine (ADR-049 D5), as a buyer would type it: no system prompt naming
@@ -27,6 +27,28 @@ export interface Answer {
 
 export type Asker = (prompt: string) => Promise<Answer>;
 
+/**
+ * How many searches the vendor bills for one answer. OpenAI and Anthropic emit a tool-call
+ * part per server-side search; Google emits none for grounding (it lands in the metadata
+ * and the sources) and bills per grounded prompt, so a grounded answer counts one.
+ */
+export function searchesOf(
+  kind: ConnectionSpec['kind'],
+  result: {
+    steps: Array<{ content: Array<{ type: string }> }>;
+    sources: unknown[];
+    providerMetadata?: Record<string, Record<string, unknown>> | undefined;
+  },
+): number {
+  if (kind === 'google') {
+    const grounded =
+      result.sources.length > 0 || result.providerMetadata?.['google']?.['groundingMetadata'];
+    return grounded ? 1 : 0;
+  }
+  return result.steps.flatMap((step) => step.content).filter((part) => part.type === 'tool-call')
+    .length;
+}
+
 export function sdkAsker(spec: ConnectionSpec & { apiKey: string }): Asker {
   const model = languageModel({
     kind: spec.kind,
@@ -43,20 +65,20 @@ export function sdkAsker(spec: ConnectionSpec & { apiKey: string }): Asker {
       maxOutputTokens: ASK_MAX_OUTPUT_TOKENS,
       abortSignal: AbortSignal.timeout(ASK_TIMEOUT_MS),
     });
-    const searches = result.steps
-      .flatMap((step) => step.content)
-      .filter((part) => part.type === 'tool-call').length;
+    const searches = searchesOf(spec.kind, result);
+    const raw = result.response.body;
     return {
       text: result.text,
       sources: result.sources.flatMap((s) =>
         s.sourceType === 'url' ? [{ url: s.url, title: s.title ?? null }] : [],
       ),
-      raw: result.response.body,
+      raw,
       usage: {
         inputTokens: result.usage.inputTokens ?? 0,
         outputTokens: result.usage.outputTokens ?? 0,
       },
-      mode: tools ? 'search' : 'plain',
+      // A compatible endpoint that searches on its own (Perplexity) hands citations in the body.
+      mode: tools || rawUrls(raw).length > 0 ? 'search' : 'plain',
       searches,
     };
   };
