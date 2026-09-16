@@ -35,6 +35,8 @@ export interface EngineRate {
   /** Over every row, the compare prompts included: a link is the outcome that matters there. */
   rows: number;
   linked: number;
+  /** The connection's monthly limit in USD; null means none, the one brake on a daily cadence. */
+  monthlyLimitUsd: number | null;
 }
 
 export interface PromptRow {
@@ -215,6 +217,7 @@ export async function ledgerReading(
     }),
   ]);
   const labels = new Map(connections.docs.map((c) => [c.id, c.label]));
+  const limits = new Map(connections.docs.map((c) => [c.id, c.monthlyLimitUsd ?? null]));
   const engines = new Map<number, EngineRate>();
   for (const row of rows) {
     if (row.connection === null) continue;
@@ -225,6 +228,7 @@ export async function ledgerReading(
       mentioned: 0,
       rows: 0,
       linked: 0,
+      monthlyLimitUsd: limits.get(row.connection) ?? null,
     };
     engine.rows += 1;
     if (row.linked) engine.linked += 1;

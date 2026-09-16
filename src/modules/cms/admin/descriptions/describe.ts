@@ -11,7 +11,10 @@ export type Described = Record<string, { ar: string; en: string }>;
  * it unless the map names it. `applied` collects the keys used, so
  * `tests/admin-config.test.ts` can refuse a key that names nothing.
  */
-/** The list cell for every checkbox (design system: green yes, red no). */
+/**
+ * The list cell for every checkbox (design system: green yes, red no). `describeFields` sets
+ * it beside the descriptions: the one pass every collection's fields go through.
+ */
 export const BOOL_CELL = '@/modules/cms/admin/fields/bool-cell#BoolCell';
 
 export function describeFields(

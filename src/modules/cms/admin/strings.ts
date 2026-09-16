@@ -196,6 +196,7 @@ export const adminStrings = {
       answerTitle: '{engine}, {date}',
       answerHint: 'The answer as the engine gave it; the links it cited are listed under it.',
       close: 'Close',
+      noLimit: 'No monthly limit',
       empty:
         'No run yet. Add an AI connection under Admin, keep the prompts you want asked, then press Run now or wait for Monday.',
       prompts: 'The prompts',

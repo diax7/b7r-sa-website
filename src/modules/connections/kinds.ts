@@ -157,7 +157,10 @@ export const MODEL_RATES: Record<string, { input: number; output: number }> = {
 export function ratesForModel(model: string): { input: number; output: number } | null {
   const id = model.trim().toLowerCase();
   if (MODEL_RATES[id]) return MODEL_RATES[id];
-  const known = Object.keys(MODEL_RATES).find((k) => id.startsWith(`${k}-`));
+  // The longest family wins: `gpt-4.1-mini-2025-04-14` is the mini, not `gpt-4.1`.
+  const known = Object.keys(MODEL_RATES)
+    .filter((k) => id.startsWith(`${k}-`))
+    .toSorted((a, b) => b.length - a.length)[0];
   return known ? MODEL_RATES[known]! : null;
 }
 

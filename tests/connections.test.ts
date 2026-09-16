@@ -247,6 +247,31 @@ describe('connections (ADR-047)', () => {
       inputPerMillionUsd: 1,
       outputPerMillionUsd: 5,
     });
+    // The admin form posts every field: a model change with the row's own rates untouched
+    // takes the known ones; a rate the admin edited in the same save wins.
+    const form = (model: string, rates: [number, number], original: Record<string, unknown>) =>
+      fill({
+        data: {
+          kind: original['kind'],
+          model,
+          inputPerMillionUsd: rates[0],
+          outputPerMillionUsd: rates[1],
+        },
+        originalDoc: original,
+        operation: 'update',
+        req: {} as never,
+        context: {},
+        collection: Connections as never,
+      } as never);
+    const row = { kind: 'openai', model: 'gpt-4.1', inputPerMillionUsd: 2, outputPerMillionUsd: 8 };
+    expect(await form('gpt-4.1-mini', [2, 8], row)).toMatchObject({
+      inputPerMillionUsd: 0.4,
+      outputPerMillionUsd: 1.6,
+    });
+    expect(await form('gpt-4.1-mini', [2, 9], row)).toMatchObject({
+      inputPerMillionUsd: 2,
+      outputPerMillionUsd: 9,
+    });
     // Unknown: the rates are left as they are; the same model again: untouched.
     expect(await change('my-fine-tune', { kind: 'openai', model: 'gpt-4.1' })).toEqual({
       model: 'my-fine-tune',
@@ -264,6 +289,13 @@ describe('connections (ADR-047)', () => {
     } as never);
     expect(created).toMatchObject({ inputPerMillionUsd: 0.3, outputPerMillionUsd: 2.5 });
     expect(ratesForModel('GEMINI-3.1-PRO-PREVIEW')).toEqual({ input: 2, output: 12 });
+    // The longest family wins: a dated mini id is the mini, not its parent.
+    expect(ratesForModel('gpt-4.1-mini-2025-04-14')).toEqual({ input: 0.4, output: 1.6 });
+    expect(ratesForModel('gpt-5-mini-2025-08-07')).toEqual({ input: 0.25, output: 2 });
+    expect(ratesForModel('gemini-2.5-flash-lite-preview-06-17')).toEqual({
+      input: 0.1,
+      output: 0.4,
+    });
     expect(ratesForModel('nope')).toBeNull();
     expect(searchFeeFor('openai', 'gpt-4.1')).toBe(0.01);
     expect(searchFeeFor('openai', 'gpt-4.1-mini')).toBe(0.025);

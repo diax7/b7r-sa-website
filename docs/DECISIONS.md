@@ -1392,7 +1392,11 @@ published prices for the likely models and a row takes them when its model is se
 rates stay editable); the search fee is by model family (`searchFeeFor`: OpenAI's mini and
 nano models search at $25 a thousand, Gemini 3 grounds at $14); Anthropic's search count is
 read from its usage metadata rather than the tool-call parts, which over-count, and its tool
-is capped at one search a prompt (three read 20,000 input tokens an answer). The two custom
+is capped at one search a prompt (three read 20,000 input tokens an answer). An answer's links
+are sanitised three times over: Lexical's markdown transformer and link node refuse a
+`javascript:` URL at conversion, and the dialog renders through `safeHref` like the site's
+prose. A model change from the admin form arrives with every field, so "untouched rates" means
+equal to the row's, not absent; the longest model family wins the rate lookup. The two custom
 views (Traffic, the Score page) render inside Payload's `DefaultTemplate` through
 `AdminShell` with the step nav: they had rendered bare, with no sidebar and no way back, a
 defect he reported.

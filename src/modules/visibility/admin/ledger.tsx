@@ -91,6 +91,11 @@ export function Ledger({ reading, adminRoute }: { reading: LedgerReading; adminR
                     .replace('{runs}', String(e.runs))
                     .replace('{linked}', pct(e.linked, e.rows) || '0%')}
                 </span>
+                {e.monthlyLimitUsd === null && (
+                  <Badge tone="warning" className="self-start" data-admin-no-limit="">
+                    {s.noLimit}
+                  </Badge>
+                )}
               </div>
             ))}
           </div>

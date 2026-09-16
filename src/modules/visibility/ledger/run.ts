@@ -106,11 +106,20 @@ export function duePrompts(
   });
 }
 
-/** The newest citation day per prompt on one connection. */
-async function lastAskedOn(payload: Payload, connectionId: number): Promise<Map<number, string>> {
+const emptyMap = async () => new Map<number, string>();
+
+/** The newest citation day per prompt on one connection, within the longest period (365 days). */
+async function lastAskedOn(
+  payload: Payload,
+  connectionId: number,
+  today: string,
+): Promise<Map<number, string>> {
+  const since = riyadh(new Date(Date.parse(`${today}T12:00:00Z`) - 365 * 86_400_000)).dateKey;
   const rows = await payload.find({
     collection: 'citations',
-    where: { connection: { equals: connectionId } },
+    where: {
+      and: [{ connection: { equals: connectionId } }, { date: { greater_than_equal: since } }],
+    },
     sort: '-date',
     depth: 0,
     pagination: false,
@@ -327,8 +336,9 @@ export async function runLedger(
     // oxlint-disable-next-line no-await-in-loop
     const spec = await readConnection(payload, row.id);
     if (!spec) continue;
+    // "Run now" (`all`) asks everything; the morning run asks what the connection is due.
     // oxlint-disable-next-line no-await-in-loop
-    const lastAsked = options.all ? new Map<number, string>() : await lastAskedOn(payload, spec.id);
+    const lastAsked = await (options.all ? emptyMap() : lastAskedOn(payload, spec.id, date));
     const prompts = duePrompts(every, lastAsked, date);
     if (prompts.length === 0) {
       result.connections.push({

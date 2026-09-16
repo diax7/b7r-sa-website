@@ -41,10 +41,17 @@ const fillFromKind: CollectionBeforeValidateHook = ({ data, originalDoc, operati
     if (sent && empty) data[name] = value;
   };
   // A model sent as a known one (a new row, or a change) brings its own rates unless the
-  // save sent rates too; the rates stay editable. A refilled empty model is not a change.
+  // save changed a rate too; the rates stay editable. The admin form posts every field, so
+  // "untouched" means equal to what the row had, not absent. A refilled empty model is not a
+  // change.
   const sent = typeof data['model'] === 'string' && data['model'] !== '' ? data['model'] : '';
   const known = sent && sent !== originalDoc?.['model'] ? ratesForModel(sent) : null;
-  if (known && !data['inputPerMillionUsd'] && !data['outputPerMillionUsd']) {
+  const untouched = (name: string) =>
+    data[name] === undefined ||
+    data[name] === null ||
+    data[name] === '' ||
+    data[name] === originalDoc?.[name];
+  if (known && untouched('inputPerMillionUsd') && untouched('outputPerMillionUsd')) {
     data['inputPerMillionUsd'] = known.input;
     data['outputPerMillionUsd'] = known.output;
   }

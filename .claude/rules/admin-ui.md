@@ -26,7 +26,7 @@ note), `check:rtl` and the admin e2e.
    `src/modules/cms/admin/descriptions/*.ts` (engine fields in
    `src/modules/ai-content/descriptions.ts`, connections in
    `src/modules/connections/descriptions.ts`), applied by `describeFields()` on the config's
-   `fields`; `tests/admin-config.test.ts` refuses a field without both languages and a map
+   `fields` (the same pass gives every checkbox its list cell, rule 6); `tests/admin-config.test.ts` refuses a field without both languages and a map
    key that names no field. A form with more than one screen of fields is tabs, one per
    section of the site in site order (named tabs where a group existed: same columns).
 5. `admin.useAsTitle` (collections) on the field an editor recognises; `admin.defaultColumns`

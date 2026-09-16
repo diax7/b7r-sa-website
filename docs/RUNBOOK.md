@@ -386,7 +386,10 @@ retry copy; `NEWSLETTER_TRANSPORT=mock` (tests only) keeps subscriptions in memo
   published search fee; the bill is on the vendor's usage page. The rates follow the model
   for the known ones (`MODEL_RATES`: picking `gpt-4.1-mini` on an OpenAI row brings its own
   price); check them once against the vendor's page after you change a model. The levers, in
-  order: the period (a prompt every 7 days costs a seventh), one search a prompt on Claude
+  order: **a monthly limit on every AI connection** (Admin → Connections → the limit; the
+  ledger skips a connection at its limit, and a row without one has no brake, which the
+  engine's card says in amber), the period (a prompt every 7 days costs a seventh), one
+  search a prompt on Claude
   (the setting since 2026-09-16), a cheaper model (`gpt-4.1-mini`, `gemini-2.5-flash`,
   `claude-haiku-4-5`), fewer prompts. All 22 daily on those three models is about $1 to $1.5
   a day; the seven brand prompts daily and the fifteen category prompts weekly is about
