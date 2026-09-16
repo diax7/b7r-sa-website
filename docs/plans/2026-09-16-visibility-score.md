@@ -84,9 +84,9 @@ ADR-049 quotes; a change is one reviewed line.
 | | facts | | Robots names the AI bots (C-08); sitemap; `llms.txt` and `en/llms.txt`; canonicals and reciprocal hreflang. |
 | Extractability (30) | E1 Titles and descriptions | 6 | On every published page, product, post and hub, in each language it exists in, the title and description the page emits (the `metadata.ts` derivation, template included) are within 70 and 155 characters and not empty (pro-rata over document-languages). |
 | | E2 English alt text | 4 | Every photo a published document uses has an English alt (the Arabic is required; pro-rata over media rows). |
-| | E3 Answer-first posts | 6 | The first paragraph node of every published post, `plainText` split on whitespace, is 40 to 80 words in the language read (pro-rata). |
-| | E4 A question heading | 4 | Every published post has an h2 (`headings()`) that ends in «؟» or `?` or starts with an interrogative (كيف، ما، ماذا، هل، لماذا، متى، أين، كم؛ how, what, why, when, where, which, can, does) (pro-rata). |
-| | E5 The FAQ | 3 | 5 to 12 published FAQ entries per language (pro-rata over the two languages). |
+| | E3 Answer-first posts | 6 | The first paragraph node of every published post, `plainText` split on whitespace, is 40 to 80 words, per document-language as E1 (pro-rata). |
+| | E4 A question heading | 4 | Every published post, per document-language, has an h2 (`headings()`) that ends in «؟» or `?` or starts with an interrogative (كيف، ما، ماذا، هل، لماذا، متى، أين، كم؛ how, what, why, when, where, which, can, does) (pro-rata). |
+| | E5 The FAQ | 3 | At least five published FAQ entries per language (pro-rata over the two languages; no ceiling: the seed's sixteen are the BRD's own). |
 | | E6 `FAQPage` JSON-LD | 4 | Emitted on the FAQ page (a code fact once project 4 ships it; `missing` until then with the guide naming project 4). |
 | | E7 A compare page | 3 | A published page whose slug starts with `compare` or `vs` (project 4; `missing` until then). |
 | | facts | | Takeaways, covers, internal links (the publish rules); product photos, prices, sizes; the delivery days and the price prefix on every product page. |
@@ -102,8 +102,9 @@ ADR-049 quotes; a change is one reviewed line.
 
 The overall percentage is the sum of `earned` over 100. **Site-only** is `earned / possible`
 over the items minus C3, C4, M3 and P1 to P4 (those need a service or an assistant), as a
-percentage. A filled production site with no service connected scores about 70; that floor
-and the two percentages are what the page explains in one line.
+percentage. A filled production site with no service connected scores about 70, and until
+project 4 ships E6 and E7 the ceiling is 93; that floor, that ceiling and the two percentages
+are what the page explains in one line.
 
 ### D2. The Score page and the card (PR 3a)
 
@@ -151,6 +152,8 @@ and the two percentages are what the page explains in one line.
   Console lists the account's sites and checks the property (`sc-domain:b7r.sa` or the URL
   prefix from the site URL) is among them (20 s); Bing calls `GetUserSites` (20 s); PageSpeed
   runs one mobile audit of the home page (90 s). "Verified" in C3/C4 means this test passed.
+  The in-memory Google token is keyed by the key's `private_key_id`, so a re-pasted key never
+  reuses the old key's token.
 
 ### D4. The pulls and the `metrics` snapshots (PR 3b)
 
@@ -247,9 +250,9 @@ and the two percentages are what the page explains in one line.
   site-only set is what the ADR says; the reader per engine and the brand matcher (the
   attached prefixes, the false positive «بحر من الخيارات», a brand-naming prompt); the JWT
   flow with a generated key; the pulls' parsers on recorded responses; the e2e: the page for
-  the three roles with axe; the score moving on a change that can happen (blank a used
-  photo's English alt through the API, recompute, E2 lists the media row and the percentage
-  drops; restore, recompute); the non-production C1 finding on the review server; a mock AI
+  the three roles with axe; the score moving on a change that can happen (null an author's
+  photo through the API, recompute, I4 lists the author and the percentage drops by the
+  pro-rata share; restore, recompute); the non-production C1 finding on the review server; a mock AI
   connection's ledger run writing `citations` rows and one `citation` run; "Pull now"
   refused without a service and rate-limited; the dashboard card.
 
@@ -282,4 +285,5 @@ per-kind Test timeouts and partial PSI rows, the PSI median, the per-kind mask a
 validation, the search fee, the topic bounds, the checklist in 3a, the three definitions,
 the reuse list, the batch budget, the compliance list; the group order, the status colours,
 the icons with labels, the tool keys, `server-only`, the locale in the link, the thresholds,
-the links as text).
+the links as text). Round 2: 93, GO (m1 the e2e scenario on an author's photo, m2 E5 without
+a ceiling, n1 the token keyed by `private_key_id`, n2 E3/E4 per document-language: taken).
