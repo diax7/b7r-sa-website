@@ -14,9 +14,9 @@ The wording is a draft under BRD §0.5: read it as your own voice and change wha
 
 **Name:** B7R Print · بحر برنت
 **Tagline (120 characters):** الطباعة عند الطلب في السعودية: اطبع في جدة، وصِل خلال 5 أيام، وبِع باسمك.
-**Website:** https://b7r.sa · **Industry:** Printing services · **Company size:** 2 to 10 ·
-**Headquarters:** Jeddah, Saudi Arabia · **Founded:** 2026 · **Specialties:** print on demand,
-white-label fulfilment, Salla, Zid, Shopify
+**Website:** https://b7r.sa · **Industry:** Printing services · **Company size:** [confirm:
+2 to 10?] · **Headquarters:** Jeddah, Saudi Arabia · **Founded:** [confirm: the year] ·
+**Specialties:** print on demand, white-label fulfilment, Salla, Zid, Shopify
 
 **About (Arabic, paste first):**
 
@@ -59,7 +59,7 @@ within five days under the merchant's brand, no stock and no minimum. I write ab
 a local product in a market that was served from abroad, and about the pricing and profit
 numbers nobody publishes. Misk Launchpad, cohort 9 (2026).
 
-**Experience entry:** B7R Print · Founder · 2026 to present · Jeddah. "A vertically
+**Experience entry:** B7R Print · Founder · [confirm: the start year] to present · Jeddah. "A vertically
 integrated print-on-demand fulfilment platform: merchants publish designs to Salla, Zid and
 Shopify; we print, pack and ship under their brand."
 

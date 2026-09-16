@@ -33,7 +33,7 @@ export const pagesEn: Record<string, PageEn> = {
           {
             criterion: 'Where the piece is printed',
             ours: 'Jeddah',
-            theirs: 'Europe or North America, by product',
+            theirs: 'Outside the Kingdom, by product',
           },
           {
             criterion: 'Delivery to Riyadh or Jeddah',
@@ -61,7 +61,11 @@ export const pagesEn: Record<string, PageEn> = {
             ours: 'A Saudi invoice with VAT',
             theirs: 'A foreign invoice without Saudi VAT',
           },
-          { criterion: 'Support language', ours: 'Arabic on WhatsApp', theirs: 'English' },
+          {
+            criterion: 'Support language',
+            ours: 'Arabic on WhatsApp',
+            theirs: 'No Arabic support',
+          },
         ],
         bestFor: [
           {

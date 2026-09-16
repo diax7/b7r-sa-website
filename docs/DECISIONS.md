@@ -1415,8 +1415,14 @@ directly. A unit test holds every seeded body, in both languages, to the opening
 question heading through the rules' own helpers. (4) `docs/OFF-SITE-KIT.md`, headed a draft for
 Dhia's review: the LinkedIn company and founder copy in both languages, a three-minute
 walkthrough script, the pinned X post and ten places for a first mention; he posts and ticks
-the five boxes. **Rejected:** `FAQPage` on every page with a `faqList` block (duplicate
+the five boxes. The table's amounts are prose («45 ريالاً», «30 ريالاً»), the form BRD §0.4.5 allows where §4
+spells it: the row is a sentence a reader and an engine quote, not a price position, so the
+`SarAmount` glyph rule of the catalogue does not apply; §4.18 carries the amounts in that form
+once approved. B7R's side of the table repeats the settings' facts (the base cost, the five
+days, the welcome credit) as words; a change to those settings is a change to this page too,
+which the RUNBOOK says. **Rejected:** `FAQPage` on every page with a `faqList` block (duplicate
 questions); a stacked-card table mode (the sticky-column table reads at 400 px); a warning the
 block forces on a stale `asOf` (a rule with points instead); linking to Printful's pages as
-sources; a second compare page before the first is cited; `HowTo` and `Speakable`.
+sources; a `price` cell type rendering `SarAmount` in the table (block growth for one row); a
+second compare page before the first is cited; `HowTo` and `Speakable`.
 

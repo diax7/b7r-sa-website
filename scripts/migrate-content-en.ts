@@ -33,8 +33,11 @@ const CONTEXT = { disableRevalidate: true };
 
 type Row = Record<string, unknown> & { id?: string | null };
 
-/** Original rows with the English values laid over them, by position; ids kept. */
-function merged<T extends Row>(
+/**
+ * Original rows with the English values laid over them, by position; ids kept. A patch longer
+ * than the original adds nothing: a row exists in a language only when the Arabic has it.
+ */
+export function merged<T extends Row>(
   rows: T[] | null | undefined,
   english: Array<Record<string, unknown>>,
 ): T[] {

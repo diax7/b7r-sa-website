@@ -2,7 +2,9 @@
  * Writes the seed's bodies of the three Level 1 posts, in both languages, as DRAFTS of the
  * published posts (ADR-050): the live text stays until an admin reads the draft in the admin
  * and publishes it. The English search title rides along when the seed names one. Run it
- * after a rewrite of `src/content/seed/blog/*.md`; a post the seed does not know is left alone.
+ * after a rewrite of `src/content/seed/blog/*.md`; a post the seed does not know is left alone,
+ * and a post whose newest version is an editor's own draft (newer than what is published) is
+ * skipped with a warning, unless `--force`: the script never overwrites work in progress.
  */
 import nextEnv from '@next/env';
 import { convertMarkdownToLexical, editorConfigFactory } from '@payloadcms/richtext-lexical';
@@ -10,12 +12,15 @@ import { getPayload } from 'payload';
 
 nextEnv.loadEnvConfig(process.cwd());
 
+const force = process.argv.includes('--force');
+
 async function main(): Promise<number> {
   // Imported after the env files are loaded: the config reads DATABASE_URL and the secret at import.
   const { default: config } = await import('../src/payload.config');
   const { blogPostBody, blogPosts } = await import('../src/content/seed/blog');
   const { blogPostBodyEn, blogPostsEn } = await import('../src/content/seed/en/blog');
   const { postBodyField } = await import('../src/lib/cms/post-body');
+  const { plainText } = await import('../src/lib/lexical');
   const payload = await getPayload({ config });
   const editorConfig = editorConfigFactory.fromField({ field: postBodyField(payload) });
   const context = { disableRevalidate: true };
@@ -34,6 +39,29 @@ async function main(): Promise<number> {
       continue;
     }
     const ar = convertMarkdownToLexical({ editorConfig, markdown: blogPostBody(seed.slug) });
+    // A draft that is neither the published text nor the seed's is someone's work in progress
+    // (a draft carries no saved-by stamp): left alone unless forced.
+    const published = await payload.findByID({
+      collection: 'posts',
+      id: post.id,
+      locale: 'ar',
+      depth: 0,
+      draft: false,
+    });
+    // Compared as text: Payload normalises a saved state (ids, versions, formats).
+    const text = (body: unknown) =>
+      plainText(body as never)
+        .replace(/\s+/g, ' ')
+        .trim();
+    const isDraft = post._status === 'draft';
+    const isOurs = text(post.body) === text(ar);
+    const isLive = text(post.body) === text(published.body);
+    if (isDraft && !isOurs && !isLive && !force) {
+      console.warn(
+        `content:drafts: ${seed.slug} has a draft that is not the seed's text; left alone (pass --force to replace it).`,
+      );
+      continue;
+    }
     await payload.update({
       collection: 'posts',
       id: post.id,

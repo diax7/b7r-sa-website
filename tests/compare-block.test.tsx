@@ -6,6 +6,7 @@ import { pagesEn } from '@/content/seed/en/pages';
 import { toPage } from '@/lib/cms/mappers';
 import { CompareBlock } from '@/modules/pages/blocks/compare';
 import type { Page as PageDoc } from '@/payload-types';
+import { merged } from '../scripts/migrate-content-en';
 
 const block = comparePrintful.blocks[0] as BlockOf<'compare'>;
 
@@ -54,6 +55,28 @@ describe('the compare block (ADR-050)', () => {
     expect(english.rows).toHaveLength(block.rows.length);
     expect(english.bestFor).toHaveLength(block.bestFor.length);
     expect(english.notBestFor).toHaveLength(block.notBestFor.length);
+  });
+
+  it('lays the English rows over the Arabic ones by position, ids kept, a longer patch adding nothing', () => {
+    const rows = [
+      { id: 'r0', criterion: 'أين', ours: 'جدة', theirs: 'خارج' },
+      { id: 'r1', criterion: 'متى', ours: '5 أيام', theirs: 'أسابيع' },
+    ];
+    expect(
+      merged(rows, [
+        { criterion: 'Where', ours: 'Jeddah', theirs: 'Abroad' },
+        { criterion: 'When', ours: '5 days', theirs: 'Weeks' },
+        { criterion: 'Extra', ours: 'x', theirs: 'y' },
+      ]),
+    ).toEqual([
+      { id: 'r0', criterion: 'Where', ours: 'Jeddah', theirs: 'Abroad' },
+      { id: 'r1', criterion: 'When', ours: '5 days', theirs: 'Weeks' },
+    ]);
+    expect(merged(rows, [{ ours: 'Jeddah' }])).toEqual([
+      { id: 'r0', criterion: 'أين', ours: 'Jeddah', theirs: 'خارج' },
+      rows[1],
+    ]);
+    expect(merged(undefined, [{ ours: 'x' }])).toEqual([]);
   });
 
   it('maps the Payload rows back onto the contract, a draft only through the preview', () => {

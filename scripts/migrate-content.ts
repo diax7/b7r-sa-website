@@ -477,7 +477,7 @@ async function blockData(payload: Payload, block: Block): Promise<Record<string,
     case 'compare':
       return {
         ...rest,
-        asOf: `${block.asOf}T00:00:00.000Z`,
+        asOf: `${block.asOf}T12:00:00.000Z`,
         bestFor: block.bestFor.map((text) => ({ text })),
         notBestFor: block.notBestFor.map((text) => ({ text })),
       };

@@ -399,7 +399,9 @@ retry copy; `NEWSLETTER_TRANSPORT=mock` (tests only) keeps subscriptions in memo
   what you know better, then Publish: the route `/compare-printful` goes live at once and E7
   reads done. Every six months, re-read Printful's shipping, pricing and integrations pages,
   fix the rows that changed and set "Read on" to that day: after 180 days E7 turns amber with
-  that guide. A second comparison is a new page with a slug starting with `compare-`.
+  that guide. B7R's side of the table is written in words (the base cost, the five days, the
+  welcome credit): when those settings change, change the rows the same day; nothing
+  regenerates them. A second comparison is a new page with a slug starting with `compare-`.
 - **The rewrites.** The three Level 1 posts have drafts (Blog → Posts, the draft bar) with an
   answer-first opening and a question heading, in both languages, and shorter English search
   titles; the live text stays until you publish each draft. After a change to the seed's
