@@ -1,4 +1,5 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 /**
@@ -20,15 +21,12 @@ describe('admin CSS stays out of the site (ADR-039)', () => {
     expect(scanned.length).toBeGreaterThan(0);
     for (const folder of scanned) expect(excluded, folder).toContain(folder);
   });
-  it('every module admin folder is scanned by admin.css', () => {
+  it('every module admin folder on disk is scanned by admin.css (a new module joins on its commit)', () => {
     const scanned = sources(admin, false);
-    for (const folder of [
-      'modules/cms/admin',
-      'modules/ai-content/admin',
-      'modules/connections/admin',
-      'modules/traffic/admin',
-    ]) {
-      expect(scanned, folder).toContain(folder);
-    }
+    const onDisk = readdirSync('src/modules', { withFileTypes: true })
+      .filter((d) => d.isDirectory() && existsSync(join('src/modules', d.name, 'admin')))
+      .map((d) => `modules/${d.name}/admin`);
+    expect(onDisk.length).toBeGreaterThanOrEqual(4);
+    for (const folder of onDisk) expect(scanned, folder).toContain(folder);
   });
 });
