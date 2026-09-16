@@ -38,6 +38,35 @@ function fakePayload(docs: Array<{ costUsd?: number | null }>) {
   return { payload, calls };
 }
 
+describe('the mock kind in the picker', () => {
+  const row = Connections.fields.find((f) => f.type === 'row') as {
+    fields: Array<Record<string, unknown>>;
+  };
+  const kind = row.fields.find((f) => f['name'] === 'kind') as {
+    options: Array<{ value: string }>;
+    filterOptions: (args: { options: Array<{ value: string }> }) => Array<{ value: string }>;
+  };
+
+  it('lists every kind in `options`, so the generated type never depends on the environment', () => {
+    expect(kind.options.map((o) => o.value)).toEqual([...CONNECTION_KINDS]);
+  });
+
+  it('shows and accepts the mock only where AI_CONTENT_MOCK=1', () => {
+    const before = process.env['AI_CONTENT_MOCK'];
+    try {
+      process.env['AI_CONTENT_MOCK'] = '1';
+      expect(kind.filterOptions({ options: kind.options }).map((o) => o.value)).toContain('mock');
+      delete process.env['AI_CONTENT_MOCK'];
+      const shown = kind.filterOptions({ options: kind.options }).map((o) => o.value);
+      expect(shown).not.toContain('mock');
+      expect(shown).toHaveLength(CONNECTION_KINDS.length - 1);
+    } finally {
+      if (before === undefined) delete process.env['AI_CONTENT_MOCK'];
+      else process.env['AI_CONTENT_MOCK'] = before;
+    }
+  });
+});
+
 describe('connections (ADR-047)', () => {
   it('knows nine kinds, six that speak AI and three services, each with what a new row gets', () => {
     expect(CONNECTION_KINDS).toEqual([

@@ -171,12 +171,16 @@ export const Connections: CollectionConfig = {
             type: 'select',
             required: true,
             defaultValue: 'openai',
-            // The mock kind is for the tests and the review server: the picker shows it only
-            // where AI_CONTENT_MOCK=1, never in production.
-            options: CONNECTION_KINDS.filter((k) => k !== 'mock' || mockAllowed()).map((value) => ({
-              value,
-              label: KINDS[value].label,
-            })),
+            options: CONNECTION_KINDS.map((value) => ({ value, label: KINDS[value].label })),
+            // The mock kind is for the tests and the review server: the picker shows it, and
+            // a save accepts it, only where AI_CONTENT_MOCK=1, never in production. Filtered
+            // here rather than in `options`, which the generated types read: Payload
+            // regenerates `payload-types.ts` on every init outside production, so a filtered
+            // list would type the union by whoever ran last.
+            filterOptions: ({ options }) =>
+              options.filter(
+                (o) => (typeof o === 'string' ? o : o.value) !== 'mock' || mockAllowed(),
+              ),
             label: { ar: 'الخدمة', en: 'Service' },
           },
           {

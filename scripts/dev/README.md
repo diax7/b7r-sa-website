@@ -4,6 +4,7 @@
 - `lh.sh [out.json]`, build with the production origin, serve, run one mobile Lighthouse, print scores.
 - `shot.mjs <url> <out.png> [desktop|mobile] [full|view]`, screenshot.
 - `clip.mjs <url> <out.png> <selector> [scale]`, screenshot one element.
+- `hero-shots.mjs <out dir> [file.css]`, the hero at 1920, 2560 and 3440 px (Arabic and English) with an optional stylesheet injected, plus the hero's box and the fetched image width on stdout (the ADR-051 study).
 - `hover.mjs <url> <out.png> <hoverSelector> <shotSelector>`, rest + hover screenshots.
 - `designer-shot.mjs <url> <out.png> [desktop|mobile]`, screenshot the designer after it hydrates.
 - `menu.mjs <url> <out.png>`, screenshot the open mobile menu.
