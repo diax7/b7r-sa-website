@@ -125,14 +125,17 @@ export function isCategoryQuery(query: string): boolean {
 export function signals(s: Snapshot): Finding[] {
   const { pagespeed, cited } = THRESHOLDS;
   const connections = `${s.adminRoute}/collections/connections`;
-  // The median of the last three snapshots per URL, then the worst URL decides.
+  // The median of the last three snapshots per URL (a night that failed a URL is left out
+  // for that URL), then the worst URL decides.
   const last = s.pagespeed.slice(-3);
-  const urls = last[0]?.mobilePerformance.length ?? 0;
-  const perUrl = Array.from({ length: urls }, (_, i) =>
-    median(
-      last.map((snap) => snap.mobilePerformance[i]).filter((n): n is number => n !== undefined),
-    ),
-  ).filter((n): n is number => n !== null);
+  const urls = new Set(last.flatMap((snap) => Object.keys(snap.mobilePerformance)));
+  const perUrl = [...urls]
+    .map((url) =>
+      median(
+        last.map((snap) => snap.mobilePerformance[url]).filter((n): n is number => n !== undefined),
+      ),
+    )
+    .filter((n): n is number => n !== null);
   const worst = perUrl.length ? Math.min(...perUrl) : null;
   const rate = s.citedRate && s.citedRate.runs > 0 ? s.citedRate.cited / s.citedRate.runs : null;
   const top = s.searchConsole?.topQueries.slice(0, 10) ?? [];

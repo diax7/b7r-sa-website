@@ -19,6 +19,7 @@ import { SiteSettings } from '@/modules/cms/globals/site-settings';
 import { Connections } from '@/modules/connections/collection';
 import { Traffic } from '@/modules/traffic/collection';
 import { VisibilityChecklist } from '@/modules/visibility/checklist';
+import { Metrics } from '@/modules/visibility/metrics';
 
 /**
  * Every collection and global the panel serves, in one list the Payload config and
@@ -41,6 +42,7 @@ export const COLLECTIONS: CollectionConfig[] = [
   AiRuns,
   Connections,
   Traffic,
+  Metrics,
 ];
 
 export const GLOBALS: GlobalConfig[] = [

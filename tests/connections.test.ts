@@ -33,7 +33,7 @@ function fakePayload(docs: Array<{ costUsd?: number | null }>) {
 }
 
 describe('connections (ADR-047)', () => {
-  it('knows six kinds, each with the model and rates a new row gets', () => {
+  it('knows nine kinds, six that speak AI and three services, each with what a new row gets', () => {
     expect(CONNECTION_KINDS).toEqual([
       'openai',
       'anthropic',
@@ -41,6 +41,9 @@ describe('connections (ADR-047)', () => {
       'deepseek',
       'openai-compatible',
       'mock',
+      'google-search-console',
+      'bing-webmaster',
+      'pagespeed',
     ]);
     expect(isConnectionKind('openai-compatible')).toBe(true);
     expect(isConnectionKind('perplexity')).toBe(false);

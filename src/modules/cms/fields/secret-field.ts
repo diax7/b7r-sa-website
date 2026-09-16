@@ -1,4 +1,5 @@
-import type { Field, FieldHookArgs } from 'payload';
+import { type Field, type FieldHookArgs, ValidationError } from 'payload';
+import { parseServiceAccount } from '@/lib/service-account';
 
 /**
  * A secret text field (ADR-042, ADR-047): stored encrypted with Payload's `encrypt` (derived from
@@ -21,6 +22,14 @@ export function maskOf(plain: string): string {
   return `${MASK_PREFIX}${plain.slice(-4)}`;
 }
 
+/** The mask a service account reads back as: the account's e-mail tail, so Dhia knows which one. */
+export function maskOfServiceAccount(plain: string): string {
+  const key = parseServiceAccount(plain);
+  return typeof key === 'string'
+    ? `${MASK_PREFIX}????`
+    : `${MASK_PREFIX}${key.clientEmail.slice(key.clientEmail.indexOf('@'))}`;
+}
+
 /** What to store, given what the form sent and what is stored (pure, unit-tested). */
 export function nextStoredValue(args: {
   incoming: unknown;
@@ -40,8 +49,10 @@ export function readValue(args: {
   stored: unknown;
   reveal: boolean;
   decrypt: (hash: string) => string;
+  /** How to mask this row's secret (a service account shows its e-mail tail). */
+  mask?: (plain: string) => string;
 }): string | null {
-  const { stored, reveal, decrypt } = args;
+  const { stored, reveal, decrypt, mask = maskOf } = args;
   if (typeof stored !== 'string' || !stored) return null;
   let plain: string;
   try {
@@ -50,7 +61,7 @@ export function readValue(args: {
     // A key encrypted under another secret: unreadable, shown as such.
     return reveal ? null : `${MASK_PREFIX}????`;
   }
-  return reveal ? plain : maskOf(plain);
+  return reveal ? plain : mask(plain);
 }
 
 /** The value as stored, straight from the database row (no `afterRead`), or null. */
@@ -73,7 +84,37 @@ async function storedValue(args: FieldHookArgs): Promise<unknown> {
   );
 }
 
-export function secretField(name: string, label: { ar: string; en: string }): Field {
+/** The reason a new value is not a service account key, or null when it is (or is no new value). */
+export function serviceAccountProblem(value: unknown): string | null {
+  if (typeof value !== 'string' || value === '' || isMask(value)) return null;
+  const key = parseServiceAccount(value);
+  return typeof key === 'string' ? `Service account key: ${key}` : null;
+}
+
+type Row = Record<string, unknown>;
+
+/**
+ * A secret field. `options.serviceAccountWhen(siblingData, storedSiblings)` names the rows
+ * whose secret is a service account's JSON key (the stored siblings answer for a partial
+ * update that omits the deciding field): those are checked at save (a bad paste fails in the
+ * form, on the field) and mask as the account's e-mail tail. The check lives in the
+ * `beforeChange` hook rather than `validate`: Payload runs a field's hooks first and
+ * validates what they return, which here is the ciphertext.
+ */
+export function secretField(
+  name: string,
+  label: { ar: string; en: string },
+  options: {
+    serviceAccountWhen?: (siblingData: Row, storedSiblings: Row | undefined) => boolean;
+  } = {},
+): Field {
+  const isAccount = (siblingData: unknown, stored: unknown) =>
+    Boolean(
+      options.serviceAccountWhen?.(
+        (siblingData ?? {}) as Row,
+        (stored ?? undefined) as Row | undefined,
+      ),
+    );
   return {
     name,
     type: 'text',
@@ -86,20 +127,34 @@ export function secretField(name: string, label: { ar: string; en: string }): Fi
     },
     hooks: {
       beforeChange: [
-        async (args) =>
-          nextStoredValue({
+        async (args) => {
+          const problem = isAccount(args.siblingData, args.previousSiblingDoc)
+            ? serviceAccountProblem(args.value)
+            : null;
+          if (problem) {
+            throw new ValidationError({
+              ...(args.collection ? { collection: args.collection.slug } : {}),
+              ...(args.global ? { global: args.global.slug } : {}),
+              errors: [{ label, message: problem, path: args.path.join('.') }],
+              req: args.req,
+            });
+          }
+          return nextStoredValue({
             incoming: args.value,
             previous:
               args.value === undefined || isMask(args.value) ? await storedValue(args) : null,
             encrypt: (plain) => args.req.payload.encrypt(plain),
-          }),
+          });
+        },
       ],
       afterRead: [
-        ({ value, req }) =>
+        ({ value, req, siblingData }) =>
           readValue({
             stored: value,
             reveal: req?.context?.[DECRYPT_CONTEXT] === true,
             decrypt: (hash) => req.payload.decrypt(hash),
+            // A read carries the whole row, so `kind` is in `siblingData`: no stored fallback.
+            ...(isAccount(siblingData, undefined) ? { mask: maskOfServiceAccount } : {}),
           }),
       ],
     },

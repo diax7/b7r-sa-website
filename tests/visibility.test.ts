@@ -398,23 +398,30 @@ describe('the visibility score: the rules (ADR-049)', () => {
     expect(by(none, 'P1').guide).toMatch(/Connect PageSpeed/);
     const good = signals(
       filled({
+        // Keyed by URL: the night that failed /p is left out for /p, not shifted onto /blog.
         pagespeed: [
-          { date: '2026-09-14', mobilePerformance: [95, 91, 60, 93, 92] },
-          { date: '2026-09-15', mobilePerformance: [94, 92, 91, 93, 92] },
-          { date: '2026-09-16', mobilePerformance: [96, 90, 92, 93, 92] },
+          {
+            date: '2026-09-14',
+            mobilePerformance: { '/': 95, '/products': 91, '/blog': 60, '/p': 93 },
+          },
+          {
+            date: '2026-09-15',
+            mobilePerformance: { '/': 94, '/products': 92, '/blog': 91, '/p': 93 },
+          },
+          { date: '2026-09-16', mobilePerformance: { '/': 96, '/products': 90, '/blog': 92 } },
         ],
         searchConsole: { impressions: 120, topQueries: ['بحر برنت', 'طباعة على الطلب السعودية'] },
         citedRate: { runs: 40, cited: 21 },
       }),
     );
-    // The third URL's one bad night is outvoted by its median (91).
+    // /blog's one bad night is outvoted by its median (91); /p reads its two good nights.
     expect(by(good, 'P1').status).toBe('done');
     expect(by(good, 'P2').status).toBe('done');
     expect(by(good, 'P3').status).toBe('done');
     expect(by(good, 'P4').status).toBe('done');
     const weak = signals(
       filled({
-        pagespeed: [{ date: '2026-09-16', mobilePerformance: [85, 90, 90, 90, 90] }],
+        pagespeed: [{ date: '2026-09-16', mobilePerformance: { '/': 85, '/products': 90 } }],
         searchConsole: { impressions: 3, topQueries: ['بحر برنت', 'b7r print'] },
         citedRate: { runs: 20, cited: 3 },
       }),

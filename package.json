@@ -25,6 +25,7 @@
     "migrate:status": "payload migrate:status",
     "content:migrate": "tsx scripts/migrate-content.ts",
     "admin:create": "tsx scripts/create-admin.ts",
+    "visibility:pull": "tsx scripts/visibility-pull.ts",
     "payload": "payload"
   },
   "dependencies": {

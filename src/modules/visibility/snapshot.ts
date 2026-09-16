@@ -5,7 +5,10 @@ import { indexNowKey } from '@/lib/indexnow';
 import { PUBLISHED } from '@/lib/cms/read';
 import { localeEnabledWith } from '@/lib/cms/locale-enabled';
 import { riyadh } from '@/lib/riyadh';
+import { latestMetrics } from '@/modules/visibility/metrics';
 import { CHECKLIST_ITEMS } from '@/modules/visibility/rules/rest';
+import type { PageSpeedSnapshot } from '@/modules/visibility/services/pagespeed';
+import type { SearchConsoleSnapshot } from '@/modules/visibility/services/search-console';
 import type {
   Loc,
   Snapshot,
@@ -195,6 +198,10 @@ export async function buildSnapshot(
         usedBy: [...new Set(used.get(m['id'] as number) ?? [])],
       }))
     : [];
+  const [pagespeed, searchConsole] = await Promise.all([
+    latestMetrics<PageSpeedSnapshot>(payload, 'pagespeed', 3),
+    latestMetrics<SearchConsoleSnapshot>(payload, 'search-console', 1),
+  ]);
   const landings = await payload.count({
     collection: 'traffic',
     where: {
@@ -244,7 +251,21 @@ export async function buildSnapshot(
     prompts: [],
     lastLedgerRunAt: null,
     citedRate: null,
-    pagespeed: [],
-    searchConsole: null,
+    pagespeed: pagespeed
+      .map((row) => ({
+        date: row.date,
+        mobilePerformance: Object.fromEntries(
+          row.data.audits
+            .filter((a) => a.strategy === 'mobile' && a.scores.performance !== null)
+            .map((a) => [a.url, a.scores.performance!]),
+        ),
+      }))
+      .toReversed(),
+    searchConsole: searchConsole[0]
+      ? {
+          impressions: searchConsole[0].data.totals.impressions,
+          topQueries: searchConsole[0].data.queries.map((q) => q.key),
+        }
+      : null,
   };
 }

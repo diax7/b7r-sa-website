@@ -12,7 +12,12 @@ import { savedByField, stampSavedBy } from '@/modules/cms/fields/saved-by';
 import { secretField } from '@/modules/cms/fields/secret-field';
 import { Refused } from '@/modules/cms/refused';
 import { CONNECTION_DESCRIPTIONS } from '@/modules/connections/descriptions';
-import { CONNECTION_KINDS, isConnectionKind, KINDS } from '@/modules/connections/kinds';
+import {
+  CONNECTION_KINDS,
+  isConnectionKind,
+  isServiceKind,
+  KINDS,
+} from '@/modules/connections/kinds';
 import { spendFor } from '@/modules/connections/spend';
 
 export const CONNECTIONS = 'connections' as const;
@@ -36,6 +41,33 @@ const fillFromKind: CollectionBeforeValidateHook = ({ data, originalDoc, operati
   fill('model', info.defaultModel);
   fill('inputPerMillionUsd', info.rates.input);
   fill('outputPerMillionUsd', info.rates.output);
+  return data;
+};
+
+/** One enabled connection per service kind, so the nightly pull never has to choose (ADR-049). */
+const oneServicePerKind: CollectionBeforeValidateHook = async ({ data, originalDoc, req }) => {
+  if (!data) return data;
+  const kind = data['kind'] ?? originalDoc?.['kind'];
+  const enabled = (data['enabled'] ?? originalDoc?.['enabled']) !== false;
+  if (!enabled || !isServiceKind(kind)) return data;
+  const others = await req.payload.find({
+    collection: 'connections',
+    where: {
+      and: [
+        { kind: { equals: kind } },
+        { enabled: { equals: true } },
+        ...(originalDoc?.['id'] !== undefined ? [{ id: { not_equals: originalDoc['id'] } }] : []),
+      ],
+    },
+    depth: 0,
+    limit: 1,
+    overrideAccess: true,
+  });
+  if (others.totalDocs > 0) {
+    throw new Refused(
+      `One connection of the kind "${KINDS[kind as keyof typeof KINDS].label.en}" may be on at a time; switch the other off first`,
+    );
+  }
   return data;
 };
 
@@ -102,7 +134,7 @@ export const Connections: CollectionConfig = {
   },
   access: { read: isAdmin, create: isAdmin, update: isAdmin, delete: isAdmin },
   hooks: {
-    beforeValidate: [fillFromKind],
+    beforeValidate: [fillFromKind, oneServicePerKind],
     beforeChange: [stampSavedBy],
     beforeDelete: [keepTheEnginesConnection],
   },
@@ -129,6 +161,7 @@ export const Connections: CollectionConfig = {
             name: 'model',
             type: 'text',
             label: { ar: 'معرّف النموذج', en: 'Model id' },
+            admin: { condition: (data) => !isServiceKind(data?.['kind']) },
           },
         ],
       },
@@ -142,9 +175,19 @@ export const Connections: CollectionConfig = {
           (typeof value === 'string' && HTTPS.test(value)) ||
           'An https:// address',
       },
-      secretField('apiKey', { ar: 'مفتاح API', en: 'API key' }),
+      secretField(
+        'apiKey',
+        { ar: 'المفتاح', en: 'Key' },
+        {
+          // A partial update carries no `kind`: the stored row says which.
+          serviceAccountWhen: (sibling, stored) =>
+            KINDS[(sibling['kind'] ?? stored?.['kind']) as keyof typeof KINDS]?.secret ===
+            'serviceAccount',
+        },
+      ),
       {
         type: 'row',
+        admin: { condition: (data) => !isServiceKind(data?.['kind']) },
         fields: [
           {
             name: 'inputPerMillionUsd',

@@ -1,12 +1,21 @@
 import { generateText } from 'ai';
 import type { Payload } from 'payload';
 import { createRateLimiter } from '@/lib/rate-limit';
-import { type ConnectionSpec, mockAllowed } from '@/modules/connections/kinds';
+import {
+  type ConnectionKind,
+  type ConnectionSpec,
+  KINDS,
+  mockAllowed,
+} from '@/modules/connections/kinds';
 import { languageModel } from '@/modules/connections/model';
 import { readConnection } from '@/modules/connections/read';
 import { safeMessage } from '@/modules/connections/safe-message';
 
 export const TEST_TIMEOUT_MS = 20_000;
+
+/** A service kind's test (ADR-049): the secret in, a sentence out, or a throw. */
+export type ServiceTest = (secret: string | null) => Promise<string>;
+export type ServiceTests = Partial<Record<ConnectionKind, ServiceTest>>;
 /**
  * The reply's size: OpenAI's Responses API (the `openai` kind) refuses fewer than 16 output
  * tokens; 32 leaves a thinking model room for one word and keeps the cost of a test bounded.
@@ -19,8 +28,20 @@ export type TestResult =
   | { ok: true; message: string }
   | { ok: false; message: string; status: 400 | 404 | 429 | 502 };
 
-/** One short call (32 output tokens, 20 s, no retry): a reply of any kind is a working connection. */
-async function ping(spec: ConnectionSpec): Promise<string> {
+/**
+ * One short call: for an AI kind 32 output tokens, 20 s, no retry, a reply of any kind is a
+ * working connection; for a service kind, the call its client makes (handed in by the route,
+ * since the visibility module owns the clients and depends on this one), with that kind's own
+ * timeout.
+ */
+async function ping(spec: ConnectionSpec, services: ServiceTests): Promise<string> {
+  if (KINDS[spec.kind].speaks === 'service') {
+    const test = services[spec.kind];
+    if (!test) throw new Error(`no test for the kind ${spec.kind}`);
+    if (!spec.apiKey && spec.kind !== 'pagespeed')
+      throw new Error('no key saved on this connection');
+    return test(spec.apiKey);
+  }
   if (spec.kind === 'mock') {
     if (!mockAllowed()) throw new Error('the mock kind needs AI_CONTENT_MOCK=1');
     return 'mock';
@@ -48,7 +69,11 @@ async function ping(spec: ConnectionSpec): Promise<string> {
  * `lastTestOk`, `lastTestMessage` (the model id on success, the vendor's message on failure).
  * A Test is not a run: nothing lands in `ai-runs` and nothing counts against the limit.
  */
-export async function testConnection(payload: Payload, id: number): Promise<TestResult> {
+export async function testConnection(
+  payload: Payload,
+  id: number,
+  services: ServiceTests = {},
+): Promise<TestResult> {
   if (!limiter.hit(`connection:${id}`).allowed) {
     return { ok: false, status: 429, message: 'Tested a moment ago; wait ten seconds' };
   }
@@ -56,7 +81,7 @@ export async function testConnection(payload: Payload, id: number): Promise<Test
   if (!spec) return { ok: false, status: 404, message: 'No such connection' };
   let result: TestResult;
   try {
-    result = { ok: true, message: await ping(spec) };
+    result = { ok: true, message: await ping(spec, services) };
   } catch (error) {
     result = { ok: false, status: 502, message: safeMessage(error, spec.apiKey) };
   }

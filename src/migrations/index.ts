@@ -16,6 +16,7 @@ import * as migration_20260915_143152_menus_into_site_settings from './20260915_
 import * as migration_20260915_165626_connections from './20260915_165626_connections';
 import * as migration_20260916_070828_traffic from './20260916_070828_traffic';
 import * as migration_20260916_094521_visibility_checklist from './20260916_094521_visibility_checklist';
+import * as migration_20260916_102554_visibility_services from './20260916_102554_visibility_services';
 
 export const migrations = [
   {
@@ -106,6 +107,11 @@ export const migrations = [
   {
     up: migration_20260916_094521_visibility_checklist.up,
     down: migration_20260916_094521_visibility_checklist.down,
-    name: '20260916_094521_visibility_checklist'
+    name: '20260916_094521_visibility_checklist',
+  },
+  {
+    up: migration_20260916_102554_visibility_services.up,
+    down: migration_20260916_102554_visibility_services.down,
+    name: '20260916_102554_visibility_services'
   },
 ];

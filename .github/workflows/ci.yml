@@ -104,6 +104,11 @@ jobs:
       - name: Seed content and the first admin (integration check)
         run: bash scripts/ci/seed-check.sh
 
+      # The visibility pull twice the same day writes one row per source, replaced, not
+      # doubled (ADR-049): the upsert proven against the real schema, no service connected.
+      - name: Visibility pull (integration check)
+        run: pnpm visibility:pull --check
+
       # A backup that cannot be restored is not a backup (ADR-034): dump the seeded database
       # the way scripts/backup.sh does, restore into a scratch database, count the documents.
       - name: Restore rehearsal

@@ -118,6 +118,6 @@ export interface Snapshot {
   /** Over four weeks, on the non-brand prompts: runs and how many named B7R. */
   citedRate: { runs: number; cited: number } | null;
   /** Project 3b: the latest snapshots; null until they exist. */
-  pagespeed: Array<{ date: string; mobilePerformance: number[] }>;
+  pagespeed: Array<{ date: string; mobilePerformance: Record<string, number> }>;
   searchConsole: { impressions: number; topQueries: string[] } | null;
 }

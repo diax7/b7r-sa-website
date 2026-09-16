@@ -1292,3 +1292,39 @@ answer engines (project 4's ADR amends §7.10; Google dropping the rich result w
 was "not done"); Google Business Profile stays not done (no premises); §7.7's quarterly manual
 prompt check is replaced by the ledger (PR 3c). **Next:** PR 3b the three service kinds, the
 nightly pulls and the `metrics` snapshots; PR 3c the prompts and the citation ledger.
+
+**Decision, PR 3b (2026-09-16): the services.** Three Connection kinds that speak to a service
+rather than a model (`speaks: 'service'` in `KINDS`; the engine's picker filters them out):
+Google Search Console by a service account's JSON key file, Bing Webmaster Tools by its API
+key, PageSpeed Insights by an optional API key (the public quota without one). One enabled
+connection per service kind (`oneServicePerKind`, a `Refused`), so the pull never chooses. The
+secret field takes the kind into account: a service-account row's paste is checked at save
+(`parseServiceAccount`: the file's `type`, `client_email`, `private_key`) and refused on the
+field as a `ValidationError` from the `beforeChange` hook, since Payload runs a field's hooks
+before its `validate` and would validate the ciphertext; it reads back masked as the account's
+e-mail tail (`••••@…iam.gserviceaccount.com`) so Dhia knows which account. Google's token comes
+from the JWT-bearer flow signed with Web Crypto RS256 (`lib/google-jwt.ts`, forty lines, no
+`google-auth-library`; the token cached in memory by key id for its hour). The Test per kind
+(`SERVICE_TESTS`, handed to `testConnection` by the route since the visibility module depends
+on connections, not the reverse): Search Console lists the account's properties and checks the
+domain property `sc-domain:b7r.sa` is among them; Bing lists the key's sites; PageSpeed runs one
+mobile audit of the home page (90 s). **The pull** (`visibility-pull`, 04:00 Riyadh on the `ai`
+queue, serial by ADR-033; "Pull now" on the page through `POST /api/visibility/pull`,
+`adminOnly`, one per ten minutes; `pnpm visibility:pull` from a shell): Search Console's
+28-day window ending three days back (totals, the top 25 queries, pages and countries), Bing's
+last 28 days and top queries (`GetRankAndTrafficStats`, `GetQueryStats`), PageSpeed for `/`,
+`/products`, the first product, `/blog` and the newest post on mobile and desktop, one URL at
+a time with 90 s each and a partial row rather than none; then the day's score row. Every row
+is an upsert by `(date, source)` (a unique index and `ON CONFLICT DO UPDATE`), so a second pull
+the same day replaces the day's rows; `pnpm visibility:pull --check` proves it against the
+database in CI. A service whose pull fails writes no row and is named once in the log; the
+page shows the last good snapshot with its date. The top Search Console queries feed the
+engine's backlog (`ai-topics`, `source: 'searchConsole'`, BRD 11.4): non-brand, ≥ 50
+impressions, ≤ 100 characters, one per keyword, the hub with the most word overlap, priority by
+impressions. **The page** gains the outside signals as facts (one panel each with the
+snapshot's date, "Connect" when no connection exists, a waiting sentence when one does and no
+pull has run) and "up N points since <date>" from the oldest of the last eight score rows. The
+`metrics` collection is "Snapshots" under the Score page, read-only, admin-only. **Rejected:**
+GA4 (BRD 11.4's second source): Search Console and the site's own counter (ADR-048) answer the
+same questions without a consented-sessions gap; `google-auth-library` (a dependency for one
+signature); storing the score only on the page (no history to say "up 6 points").

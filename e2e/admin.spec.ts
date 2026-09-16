@@ -1577,6 +1577,169 @@ test.describe('CMS admin', () => {
       );
     });
 
+    test('the visibility services (ADR-049 3b): one service connection per kind, the key validated and masked by kind, "Pull now" once per ten minutes, the snapshot row, the page', async ({
+      page,
+      request,
+    }) => {
+      // The `ai` queue serves the pull within the minute; the poll below waits up to 150 s.
+      test.setTimeout(240_000);
+      const auth = await login(request, ADMIN);
+      const json = { ...auth, 'Content-Type': 'application/json' };
+      const today = riyadh(new Date()).dateKey;
+      const ids: number[] = [];
+      const scoreRow = async () => {
+        const res = await request.get(
+          `${API}/metrics?depth=0&limit=5&where[source][equals]=score&where[date][equals]=${today}`,
+          { headers: auth },
+        );
+        return ((await res.json()) as { docs: Array<Record<string, unknown>> }).docs;
+      };
+      try {
+        // A PageSpeed connection needs no key; a second enabled one of the kind is refused, a
+        // disabled one is not.
+        const psi = await request.post(`${API}/connections`, {
+          headers: json,
+          data: { label: 'PageSpeed, e2e', kind: 'pagespeed' },
+        });
+        expect(psi.status()).toBe(201);
+        const psiDoc = ((await psi.json()) as { doc: Record<string, unknown> }).doc;
+        ids.push(psiDoc['id'] as number);
+        expect(psiDoc['apiKey']).toBeNull();
+        expect(psiDoc['model']).toBe('');
+        const second = await request.post(`${API}/connections`, {
+          headers: json,
+          data: { label: 'PageSpeed, e2e (second)', kind: 'pagespeed' },
+        });
+        expect(second.status()).toBe(400);
+        expect(await second.text()).toMatch(/One connection of the kind .*PageSpeed Insights/);
+        const off = await request.post(`${API}/connections`, {
+          headers: json,
+          data: { label: 'PageSpeed, e2e (off)', kind: 'pagespeed', enabled: false },
+        });
+        expect(off.status()).toBe(201);
+        ids.push(((await off.json()) as { doc: { id: number } }).doc.id);
+        // A Search Console row takes a service account key file, nothing else, and masks as
+        // the account's e-mail.
+        const bad = await request.post(`${API}/connections`, {
+          headers: json,
+          data: { label: 'Search Console, e2e', kind: 'google-search-console', apiKey: 'sk-x' },
+        });
+        expect(bad.status()).toBe(400);
+        expect(await bad.text()).toMatch(/Service account key: not JSON/);
+        const { generateKeyPairSync } = await import('node:crypto');
+        const { privateKey } = generateKeyPairSync('rsa', { modulusLength: 2048 });
+        const keyFile = JSON.stringify({
+          type: 'service_account',
+          client_email: 'seo-e2e@b7r-e2e.iam.gserviceaccount.com',
+          private_key: privateKey.export({ type: 'pkcs8', format: 'pem' }),
+          private_key_id: 'e2e',
+        });
+        const google = await request.post(`${API}/connections`, {
+          headers: json,
+          data: { label: 'Search Console, e2e', kind: 'google-search-console', apiKey: keyFile },
+        });
+        expect(google.status()).toBe(201);
+        const googleDoc = ((await google.json()) as { doc: Record<string, unknown> }).doc;
+        ids.push(googleDoc['id'] as number);
+        expect(googleDoc['apiKey']).toBe('••••@b7r-e2e.iam.gserviceaccount.com');
+        // A partial update carries no kind; the stored row still says the key is a key file.
+        const partial = await request.patch(`${API}/connections/${googleDoc['id']}`, {
+          headers: json,
+          data: { apiKey: 'sk-x' },
+        });
+        expect(partial.status()).toBe(400);
+        expect(await partial.text()).toMatch(/Service account key: not JSON/);
+        // The page: the three panels, PageSpeed and Search Console connected without a
+        // snapshot yet, Bing with its Connect link; the Snapshots entry under the Score.
+        expect((await page.request.post(`${API}/users/login`, { data: ADMIN })).status()).toBe(200);
+        await page.goto('/admin/visibility?fresh=1');
+        const signals = page.locator('[data-admin-visibility-signals]');
+        await expect(signals).toBeVisible();
+        await expect(signals.locator('[data-admin-signal="PageSpeed"]')).toHaveAttribute(
+          'data-signal-state',
+          'waiting',
+        );
+        await expect(signals.locator('[data-admin-signal="Search Console"]')).toHaveAttribute(
+          'data-signal-state',
+          'waiting',
+        );
+        const bing = signals.locator('[data-admin-signal="Bing Webmaster"]');
+        await expect(bing).toHaveAttribute('data-signal-state', 'absent');
+        await expect(bing.locator('a', { hasText: 'Connect' })).toHaveAttribute(
+          'href',
+          '/admin/collections/connections',
+        );
+        // The two service rows go before the pull, so the job hits no outside service from
+        // here: the score row is what it writes.
+        for (const id of ids.splice(0)) {
+          expect(
+            (await request.delete(`${API}/connections/${id}`, { headers: auth })).status(),
+          ).toBe(200);
+        }
+        // "Pull now": an outsider is refused; the button queues the job once; a second call
+        // within ten minutes is told to wait.
+        expect(
+          (
+            await request.post('/api/visibility/pull', {
+              headers: { 'Content-Type': 'application/json' },
+              data: {},
+            })
+          ).status(),
+        ).toBe(403);
+        const before = (await scoreRow())[0]?.['updatedAt'] as string | undefined;
+        await page.locator('[data-admin-action="visibility-pull"]').click();
+        await expect(page.locator('[data-admin-action-result="done"]')).toHaveText(/Queued/);
+        const again = await request.post('/api/visibility/pull', { headers: json, data: {} });
+        expect(again.status()).toBe(429);
+        expect(Number(again.headers()['retry-after'])).toBeGreaterThan(0);
+        // The `ai` queue serves it within the minute: one score row for today, replaced
+        // rather than doubled when the day already had one.
+        await expect
+          .poll(
+            async () => {
+              const rows = await scoreRow();
+              const stamp = rows[0]?.['updatedAt'] as string | undefined;
+              return rows.length === 1 && stamp !== undefined && stamp !== before;
+            },
+            { intervals: [2_000, 5_000], timeout: 150_000 },
+          )
+          .toBe(true);
+        const row = (await scoreRow())[0]!;
+        const data = row['data'] as { overall: number; siteOnly: number; sections: object };
+        expect(data.overall).toBeGreaterThan(0);
+        expect(data.siteOnly).toBeGreaterThanOrEqual(data.overall);
+        expect(Object.keys(data.sections).toSorted()).toEqual([
+          'corroboration',
+          'crawl',
+          'extractability',
+          'identity',
+          'measurement',
+          'signals',
+        ]);
+        // Snapshots are read-only and admin-only.
+        expect((await request.post(`${API}/metrics`, { headers: json, data: row })).status()).toBe(
+          403,
+        );
+        const editor = await createEditor(request, auth);
+        try {
+          const editorAuth = await login(request, editor);
+          expect((await request.get(`${API}/metrics`, { headers: editorAuth })).status()).toBe(403);
+        } finally {
+          await request.delete(`${API}/users/${editor.id}`, { headers: auth });
+        }
+        expect((await request.get(`${API}/metrics`)).status()).toBe(403);
+        // Snapshots sit under the Score page in the sidebar.
+        await page.goto('/admin');
+        await expect(page.locator('#nav-metrics')).toHaveAttribute(
+          'href',
+          '/admin/collections/metrics',
+        );
+        await expect(page.locator('#nav-metrics')).toHaveAttribute('data-admin-entry', 'secondary');
+      } finally {
+        for (const id of ids) await request.delete(`${API}/connections/${id}`, { headers: auth });
+      }
+    });
+
     test('traffic (ADR-048): landings and crawls are counted by day, source and page; the beacon fires once; outsiders and editors are refused', async ({
       page,
       request,

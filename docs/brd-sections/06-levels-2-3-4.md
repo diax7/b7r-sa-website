@@ -190,6 +190,8 @@ An admin page under Visibility and a dashboard card: how compliant the site is w
 
 What the site guarantees by construction (required fields, publish rules, the generated files) is listed as facts and earns no points. A rule over documents is pro-rata. The site-only percentage leaves out the four outside items and the two verifications. The services and the ledger follow in the same project (§11.4).
 
+*Amended 2026-09-16 (ADR-049, PR 3b): the outside services are Connection rows (Google Search Console by a service account key file, Bing Webmaster Tools by its API key, PageSpeed Insights with or without a key), one enabled per kind, each with a Test. A nightly pull (04:00 Riyadh) writes one snapshot per service and the day's score into `metrics` ("Snapshots" under the Score page), one row per day and source, a second pull the same day replacing it; "Pull now" on the page and `pnpm visibility:pull` run it by hand. The page shows the latest snapshot per service with its date and "up N points since <date>". The ledger follows in PR 3c.*
+
 ### 10.3 Acceptance (Level 3)
 
 1. Manual posts: an editor writes, previews, schedules, and publishes a post; hub pages, RSS, sitemap, IndexNow, and related posts update.
@@ -228,6 +230,8 @@ What the site guarantees by construction (required fields, publish rules, the ge
 - A nightly job caches results into a `metrics` collection; the admin "التحليلات" view renders charts (recharts) from the cache so the admin never waits on Google APIs.
 
 *Amended 2026-09-16 (ADR-048, Dhia's decision): the referrer part of the Umami pull is replaced by the site's own counter: a `traffic` collection of daily rows (day, kind, source, page, hits) fed by a first-party landing beacon and by the proxy's count of known AI and search crawlers; the channel (ChatGPT, Gemini, Claude, Perplexity, Copilot, Google, Bing, the social networks, other sites, direct) is derived at read. Nothing identifies a visitor. Shown on the dashboard card and, next, on a Traffic page under Visibility. Umami's visitors and page views stay "if ever"; GA4 stays for consented sessions; Search Console, Bing and PageSpeed come with the visibility score.*
+
+*Amended 2026-09-16 (ADR-049, PR 3b): Search Console is connected by a service account's key file pasted into a Connection row (no `GOOGLE_SERVICE_ACCOUNT_JSON` variable), Bing Webmaster Tools by its key and PageSpeed Insights with or without one; the nightly job pulls them into `metrics` (one row per day and source) together with the day's visibility score, and the Score page reads the snapshots; there is no separate "التحليلات" view or charts. The top Search Console queries create `ai-topics` suggestions (`source: searchConsole`) as written. GA4 is dropped: Search Console and the site's own counter answer the same questions.*
 
 ### 11.5 Acceptance (Level 4)
 

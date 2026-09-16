@@ -82,6 +82,7 @@ export interface Config {
     'ai-runs': AiRun;
     connections: Connection;
     traffic: Traffic;
+    metrics: Metric;
     redirects: Redirect;
     'payload-kv': PayloadKv;
     'payload-jobs': PayloadJob;
@@ -106,6 +107,7 @@ export interface Config {
     'ai-runs': AiRunsSelect<false> | AiRunsSelect<true>;
     connections: ConnectionsSelect<false> | ConnectionsSelect<true>;
     traffic: TrafficSelect<false> | TrafficSelect<true>;
+    metrics: MetricsSelect<false> | MetricsSelect<true>;
     redirects: RedirectsSelect<false> | RedirectsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-jobs': PayloadJobsSelect<false> | PayloadJobsSelect<true>;
@@ -144,6 +146,7 @@ export interface Config {
       'content-tick': TaskContentTick;
       'content-freshness': TaskContentFreshness;
       'content-digest': TaskContentDigest;
+      'visibility-pull': TaskVisibilityPull;
       schedulePublish: TaskSchedulePublish;
       inline: {
         input: unknown;
@@ -1234,7 +1237,16 @@ export interface Connection {
   /**
    * The service the key is sent to. "OpenAI-compatible endpoint" fits any other AI that serves the OpenAI API at its own address; "Mock" is for tests only.
    */
-  kind: 'openai' | 'anthropic' | 'google' | 'deepseek' | 'openai-compatible' | 'mock';
+  kind:
+    | 'openai'
+    | 'anthropic'
+    | 'google'
+    | 'deepseek'
+    | 'openai-compatible'
+    | 'mock'
+    | 'google-search-console'
+    | 'bing-webmaster'
+    | 'pagespeed';
   /**
    * The model id exactly as the service docs write it: gpt-4.1, claude-sonnet-4-5, gemini-2.5-pro, deepseek-chat. Empty on save: the usual model of the service.
    */
@@ -1315,6 +1327,37 @@ export interface Traffic {
    * The page the visitor landed on or the bot read, without a query string: /, /products/hoodie, /en/blog/…, or llms.txt.
    */
   path: string;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * A nightly snapshot from Search Console, Bing and PageSpeed, and that day’s visibility score. Read-only.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "metrics".
+ */
+export interface Metric {
+  id: number;
+  /**
+   * The day in Riyadh time the snapshot was taken; one row per day and source, and a second pull the same day replaces it.
+   */
+  date: string;
+  /**
+   * The service it came from: Search Console, Bing or PageSpeed, or "Score" for that day’s visibility score.
+   */
+  source: 'search-console' | 'bing' | 'pagespeed' | 'score';
+  /**
+   * The service's answer as it came: the totals and the top queries and pages, the performance scores per page, or the sections' percentages.
+   */
+  data:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1409,7 +1452,13 @@ export interface PayloadJob {
         executedAt: string;
         completedAt: string;
         taskSlug:
-          'inline' | 'indexnow-ping' | 'content-tick' | 'content-freshness' | 'content-digest' | 'schedulePublish';
+          | 'inline'
+          | 'indexnow-ping'
+          | 'content-tick'
+          | 'content-freshness'
+          | 'content-digest'
+          | 'visibility-pull'
+          | 'schedulePublish';
         taskID: string;
         input?:
           | {
@@ -1444,7 +1493,16 @@ export interface PayloadJob {
     | null;
   workflowSlug?: 'generatePost' | null;
   taskSlug?:
-    ('inline' | 'indexnow-ping' | 'content-tick' | 'content-freshness' | 'content-digest' | 'schedulePublish') | null;
+    | (
+        | 'inline'
+        | 'indexnow-ping'
+        | 'content-tick'
+        | 'content-freshness'
+        | 'content-digest'
+        | 'visibility-pull'
+        | 'schedulePublish'
+      )
+    | null;
   queue?: string | null;
   waitUntil?: string | null;
   processing?: boolean | null;
@@ -1526,6 +1584,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'traffic';
         value: number | Traffic;
+      } | null)
+    | ({
+        relationTo: 'metrics';
+        value: number | Metric;
       } | null)
     | ({
         relationTo: 'redirects';
@@ -2140,6 +2202,17 @@ export interface TrafficSelect<T extends boolean = true> {
   hits?: T;
   source?: T;
   path?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "metrics_select".
+ */
+export interface MetricsSelect<T extends boolean = true> {
+  date?: T;
+  source?: T;
+  data?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -3238,6 +3311,19 @@ export interface TaskContentDigest {
     sent?: boolean | null;
     deleted?: number | null;
     reason?: string | null;
+  };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TaskVisibility-pull".
+ */
+export interface TaskVisibilityPull {
+  input?: unknown;
+  output: {
+    pulled?: string | null;
+    failed?: string | null;
+    topicsAdded?: number | null;
+    score?: number | null;
   };
 }
 /**

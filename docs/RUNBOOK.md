@@ -343,6 +343,30 @@ retry copy; `NEWSLETTER_TRANSPORT=mock` (tests only) keeps subscriptions in memo
   counts. Tick a box once the thing exists; the score moves at once.
 - **Changing a weight or a threshold.** One line in `src/modules/visibility/rules/weights.ts`
   (the table ADR-049 quotes); the unit test holds the sums.
+- **Connecting Search Console.** Google Cloud console → a project → IAM → Service accounts →
+  Create (any name) → Keys → Add key → JSON: a file downloads once. Search Console → the
+  `b7r.sa` domain property → Settings → Users and permissions → Add user: the account's
+  e-mail (`…@…iam.gserviceaccount.com`), Full. Then Admin → Connections → Create: the service
+  "Google Search Console", paste the whole file into Key, Save, Test. The Test lists the
+  account's properties and checks ours is among them; the key reads back as `••••@…`, the
+  account's e-mail tail. Enable the Search Console API on the project if the Test says 403.
+- **Connecting Bing.** Bing Webmaster Tools → Settings → API access → generate the key
+  (the site must be verified there first; import it from Search Console in one click). Admin
+  → Connections → Create: "Bing Webmaster Tools", the key, Save, Test (lists the key's sites).
+- **Connecting PageSpeed.** Admin → Connections → Create: "PageSpeed Insights", no key needed
+  (the public quota is a few hundred runs a day; the pull uses ten). A key from Google Cloud
+  (APIs → PageSpeed Insights API → Credentials) lifts the quota. Test runs one mobile audit of
+  the home page and takes up to a minute and a half.
+- **The pull.** Every night at 04:00 Riyadh the `ai` queue pulls each connected service and
+  writes one snapshot row per source for the day, then the day's score; a second pull the
+  same day replaces the day's rows. "Pull now" on the Score page queues it once (one per ten
+  minutes); `pnpm visibility:pull` runs it from a shell and exits 1 when a service failed
+  (`--check` runs it twice and proves the replacement, the CI integration check). The rows sit
+  under the Score page as "Snapshots" (read-only). A service that fails writes no row and is
+  named once in the log; the page keeps the last good snapshot with its date.
+- **The topics it suggests.** Search Console's queries with fifty impressions or more that do
+  not name the brand become backlog topics (`source: searchConsole`) for the engine to write,
+  one per keyword, under the hub whose name and description share the most words.
 
 ## Traffic sources (ADR-048)
 
