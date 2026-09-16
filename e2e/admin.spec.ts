@@ -1498,10 +1498,13 @@ test.describe('CMS admin', () => {
           .getAttribute('data-admin-visibility-site-only'),
       );
       expect(siteOnly).toBeGreaterThanOrEqual(before);
-      // The review server is not the production address: C1 says so, in red.
+      // C1 follows the host: CI builds with the production origin (done), the review server
+      // does not (missing, in red, and the guide says why: noindex).
+      const robots = await (await request.get('/robots.txt')).text();
+      const production = robots.includes('Sitemap: https://b7r.sa/sitemap.xml');
       await expect(page.locator('[data-admin-finding="C1"]')).toHaveAttribute(
         'data-status',
-        'missing',
+        production ? 'done' : 'missing',
       );
       await expect(page.locator('[data-admin-finding="C1"]')).toContainText(/noindex/);
       // Project 4's items read as missing with their guide; the checklist as missing with its five items.
