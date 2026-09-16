@@ -45,6 +45,12 @@ Every interface string of the English site, key for key with the Arabic bank of 
 | `gallery.front` | Front view |
 | `gallery.back` | Back view |
 | `breadcrumbs.label` | Page path |
+| `compare.caption` | {ours} compared with {theirs} |
+| `compare.criterion` | Criterion |
+| `compare.bestFor` | {ours} is best for you if |
+| `compare.notBestFor` | {ours} is not the best fit if |
+| `compare.asOf` | {theirs}'s pages were read on |
+| `compare.asOfTail` | ; the numbers change, the read date stays true. |
 | `faq.groupsNav` | Question groups |
 | `faq.groups.البداية` | Getting started |
 | `faq.groups.الأسعار والربح` | Prices and profit |

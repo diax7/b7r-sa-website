@@ -122,9 +122,19 @@ test.describe('FAQ page (BRD 6.10)', () => {
     await expect(trigger).toHaveAttribute('aria-expanded', 'true');
     const wa = page.locator('a[data-track="whatsapp_click"][data-location="contact"]');
     await expect(wa).toHaveAttribute('href', 'https://wa.me/966501699572');
-    // No FAQPage schema (rich results discontinued).
-    const graph = await page.locator('script[type="application/ld+json"]').textContent();
-    expect(graph).not.toContain('FAQPage');
+    // FAQPage JSON-LD (ADR-050): the visible questions, in order, and nothing else.
+    const graph = JSON.parse(
+      (await page.locator('script[type="application/ld+json"]').textContent()) ?? '{}',
+    ) as { '@graph': Array<Record<string, unknown>> };
+    const faq = graph['@graph'].find((n) => n['@type'] === 'FAQPage')!;
+    expect(faq['@id']).toBe('https://b7r.sa/faq#faq');
+    expect(faq['inLanguage']).toBe('ar');
+    const schemaQuestions = (faq['mainEntity'] as Array<{ name: string }>).map((q) => q.name);
+    // A group's accordion mounts near the viewport and replaces the static list: a question
+    // is a button once mounted and a term before, one of the two on any device.
+    const visible = await groups.locator('button, dt').allTextContents();
+    expect(schemaQuestions).toEqual(visible.map((q) => q.trim()));
+    expect(schemaQuestions.length).toBeGreaterThanOrEqual(15);
   });
 });
 
@@ -237,8 +247,10 @@ test.describe('blog (BRD 6.11, 10.1)', () => {
     await expect(page.locator('h1')).toHaveText(
       'ما هي الطباعة عند الطلب؟ شرح مبسط بالأمثلة السعودية',
     );
+    // The reading time is one minute on the live text, two once the answer-first draft is
+    // published (ADR-050): a fresh database seeds the longer opening directly.
     await expect(page.locator('article header')).toContainText(
-      'كتبه ضياء · 13 سبتمبر 2026 · دقيقة قراءة',
+      /كتبه ضياء · 13 سبتمبر 2026 · دقيق(ة|تا) قراءة/,
     );
     await expect(page.locator('[aria-labelledby="post-takeaways-title"] li')).toHaveCount(3);
     // CTA sits after the second H2 and before the third.

@@ -33,8 +33,11 @@ const CONTEXT = { disableRevalidate: true };
 
 type Row = Record<string, unknown> & { id?: string | null };
 
-/** Original rows with the English values laid over them, by position; ids kept. */
-function merged<T extends Row>(
+/**
+ * Original rows with the English values laid over them, by position; ids kept. A patch longer
+ * than the original adds nothing: a row exists in a language only when the Arabic has it.
+ */
+export function merged<T extends Row>(
   rows: T[] | null | undefined,
   english: Array<Record<string, unknown>>,
 ): T[] {
@@ -363,23 +366,28 @@ export async function ensureEnglish(payload: Payload): Promise<EnglishSummary> {
         continue;
       }
       const blocks = (ar.blocks ?? []).map((block, i) => {
-        const patch = english.blocks[i] ?? {};
-        const { items, booking, ...fields } = patch as {
-          items?: Array<Record<string, unknown>>;
-          booking?: Record<string, unknown>;
-        } & Record<string, unknown>;
-        const original = block as unknown as Row & { items?: Row[]; booking?: Row };
-        return {
-          ...original,
-          ...fields,
-          ...(items ? { items: merged(original.items, items) } : {}),
-          ...(booking ? { booking: { ...original.booking, ...booking } } : {}),
-        };
+        const patch = (english.blocks[i] ?? {}) as Record<string, unknown>;
+        const original = block as unknown as Row;
+        // An array of rows (items, rows, bestFor, notBestFor) is merged by position so the
+        // rows keep their ids across locales; a group (booking) is merged by key.
+        const row: Row = { ...original };
+        for (const [key, value] of Object.entries(patch)) {
+          if (Array.isArray(value)) {
+            row[key] = merged(original[key] as Row[] | undefined, value as Row[]);
+          } else if (value && typeof value === 'object') {
+            row[key] = { ...(original[key] as Row | undefined), ...(value as Row) };
+          } else {
+            row[key] = value;
+          }
+        }
+        return row;
       });
       await payload.update({
         collection: 'pages',
         id: ar.id,
         locale: 'en',
+        // A page seeded as a draft stays one: an update without `draft` publishes it.
+        draft: ar._status === 'draft',
         data: {
           title: english.title,
           ...(english.lead ? { lead: english.lead } : {}),
@@ -454,6 +462,7 @@ export async function ensureEnglish(payload: Payload): Promise<EnglishSummary> {
           // A localised array keeps rows per language: new rows, never the Arabic ids.
           takeaways: english.takeaways.map((text) => ({ text })),
           body: body as never,
+          ...(english.seoTitle ? { seo: { ...ar.seo, title: english.seoTitle } } : {}),
         },
         context: CONTEXT,
       });

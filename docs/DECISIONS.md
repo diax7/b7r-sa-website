@@ -1369,3 +1369,60 @@ a citation row keeps the prompt's text and carries a day-and-connection title; a
 delete a wrong batch. **Rejected:** one run per prompt (seventy-five rows a week in the runs
 list); a system prompt that names B7R (the answer would name it back); counting a brand-naming
 prompt in the rate. BRD §7.7's quarterly manual check is this ledger, weekly.
+
+## ADR-050: The GEO content: FAQPage schema, the compare page, answer-first openings, the off-site kit (2026-09-16)
+
+**Context.** Project 4 of Dhia's 2026-09-15 programme: the content the visibility score
+(ADR-049) says is missing on the site's side. On the review server the score read 49 with E6
+(`FAQPage` JSON-LD, which BRD §7.10 listed as "explicitly not done"), E7 (no compare page), E3
+(two Arabic posts opening with a story), E4 (two posts without a question heading) and E1 (two
+English search titles over 70 characters) open; the rest of the open items are Dhia's side.
+Interview (2026-09-16): B7R vs Printful with the facts drafted from Printful's public pages and
+dated, the page a draft until Dhia approves; `FAQPage` on the FAQ page only; the rewrites
+drafted for his approval; the off-site kit drafted for him. Plan
+`docs/plans/2026-09-16-geo-content.md` (CTO 92 GO). **Decision.** (1) `jsonLd.faqPage()` emits a
+`FAQPage` node (`@id <url>#faq`, `inLanguage`, one `Question` per entry with its `Answer` as
+plain text) on the page whose slug is `faq`, in both languages, from the same items its
+`faqList` block renders (`faqItemsFor`), so the schema cannot drift from the visible questions.
+The gate is the slug, not "any page with the block": `how-it-works` carries a slice of the same
+questions, and the same questions as `FAQPage` on two pages is what the schema guidelines warn
+against. BRD §7.10 amended: `FAQPage` returns for the answer engines (Google dropped the rich
+result; the assistants read the schema); `HowTo`, `SearchAction`, `Speakable`, Google Business
+Profile and `LocalBusiness` stay out. E6 becomes a rule (done while the published FAQ page
+carries its FAQ section) with its 4 points: an editor can unpublish the page, so it can move.
+(2) A `compare` block (schema, Payload config, mapper, seed converter, renderer): `ours`,
+`theirs`, `asOf` (the day the other side's pages were read, shown under the table as text),
+three rows or more of criterion / ours / theirs, `bestFor` and `notBestFor` lists, an intro and
+a closing; rendered as a captioned table with scoped headers, the criterion column sticky in an
+`overflow-x-auto` container, then the two lists. **No link leaves the page** (BRD §7.9: external
+links only to b7r.app, the profiles and Misk): the sources are named as text and listed in the
+PR. The page `compare-printful` (a top-level slug: the `[slug]` route and the proxy's live
+allowlist need nothing; E7 reads `compare`/`vs` slugs) is seeded in both languages as a
+**draft** (the seed's `Page.draft`, honoured on the Arabic create and on the English update,
+since an update without `draft` publishes a versioned document): the public route answers 404
+and the preview renders it until Dhia publishes it. Its Arabic copy is written under BRD §0.5
+(`TODO(copy)`, `TODO_COPY` in the verbatim test, listed in the PR); once approved it moves into
+the BRD as §4.18 and the SEO row into §4.16. E7 reads `next` once the block's `asOf` is older
+than 180 days (`THRESHOLDS.compareAsOfDays`), with the guide to re-read and re-date: the as-of
+date carries points, not a block constraint. (3) The three Level 1 posts' seed bodies rewritten
+where the rules said: the pricing post and the print-on-demand post open with a 40 to 80-word
+answer, the pricing post gains «كم تكلفة تيشيرت مطبوع في السعودية؟» and its English form "What
+does a printed T-shirt cost in Saudi Arabia?" as H2s; the two English search titles over 70
+characters get a `seoTitle` in the seed. `pnpm content:drafts` (`scripts/post-drafts.ts`)
+writes the seed's bodies as **drafts** of the published posts in both languages, the live text
+unchanged until Dhia publishes the draft in the admin; a fresh database seeds the new text
+directly. A unit test holds every seeded body, in both languages, to the opening and the
+question heading through the rules' own helpers. (4) `docs/OFF-SITE-KIT.md`, headed a draft for
+Dhia's review: the LinkedIn company and founder copy in both languages, a three-minute
+walkthrough script, the pinned X post and ten places for a first mention; he posts and ticks
+the five boxes. The table's amounts are prose («45 ريالاً», «30 ريالاً»), the form BRD §0.4.5 allows where §4
+spells it: the row is a sentence a reader and an engine quote, not a price position, so the
+`SarAmount` glyph rule of the catalogue does not apply; §4.18 carries the amounts in that form
+once approved. B7R's side of the table repeats the settings' facts (the base cost, the five
+days, the welcome credit) as words; a change to those settings is a change to this page too,
+which the RUNBOOK says. **Rejected:** `FAQPage` on every page with a `faqList` block (duplicate
+questions); a stacked-card table mode (the sticky-column table reads at 400 px); a warning the
+block forces on a stale `asOf` (a rule with points instead); linking to Printful's pages as
+sources; a `price` cell type rendering `SarAmount` in the table (block growth for one row); a
+second compare page before the first is cited; `HowTo` and `Speakable`.
+

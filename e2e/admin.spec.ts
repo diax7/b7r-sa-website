@@ -1510,11 +1510,18 @@ test.describe('CMS admin', () => {
       await expect(page.locator('[data-admin-finding="C1"]')).toContainText(
         production ? /production address/ : /noindex/,
       );
-      // Project 4's items read as missing with their guide; the checklist as missing with its five items.
+      // The FAQ schema reads done from the seeded FAQ page (ADR-050); the comparison is a
+      // seeded draft, so E7 stays missing until Dhia publishes it; the checklist is missing
+      // with its five items.
       await expect(page.locator('[data-admin-finding="E6"]')).toHaveAttribute(
+        'data-status',
+        'done',
+      );
+      await expect(page.locator('[data-admin-finding="E7"]')).toHaveAttribute(
         'data-status',
         'missing',
       );
+      await expect(page.locator('[data-admin-finding="E7"]')).toContainText(/seeded draft/);
       await expect(page.locator('[data-admin-finding="R1"]')).toHaveAttribute(
         'data-status',
         'missing',
@@ -1891,6 +1898,130 @@ test.describe('CMS admin', () => {
         ).toBe(200);
       } finally {
         for (const id of ids) await request.delete(`${API}/connections/${id}`, { headers: auth });
+      }
+    });
+
+    test('the compare page (ADR-050): a published comparison renders its table and lists in both languages, passes axe, and E7 reads done; the seeded draft is a 404 with a preview', async ({
+      page,
+      request,
+    }) => {
+      const auth = await login(request, ADMIN);
+      const json = { ...auth, 'Content-Type': 'application/json' };
+      const stamp = Date.now();
+      const slug = `compare-e2e-${stamp}`;
+      // The seeded comparison is a draft: the public route answers 404, the preview renders it.
+      const seeded = (await (
+        await request.get(`${API}/pages?where[slug][equals]=compare-printful&depth=0&draft=true`, {
+          headers: auth,
+        })
+      ).json()) as {
+        docs: Array<{ id: number; _status: string; blocks: Array<{ blockType: string }> }>;
+      };
+      expect(seeded.docs[0]?._status).toBe('draft');
+      expect(seeded.docs[0]?.blocks[0]?.blockType).toBe('compare');
+      expect((await request.get('/compare-printful', { maxRedirects: 0 })).status()).toBe(404);
+      // A published comparison of its own, with the seeded block's shape.
+      const comparison = {
+        blockType: 'compare',
+        intro: 'مقارنة للاختبار.',
+        ours: 'بحر برنت',
+        theirs: 'Printful',
+        asOf: '2026-09-16T00:00:00.000Z',
+        rows: [
+          { criterion: 'أين تُطبع القطعة', ours: 'جدة', theirs: 'أوروبا' },
+          { criterion: 'مدة التوصيل', ours: 'حتى 5 أيام', theirs: 'أسبوعان إلى أربعة' },
+          { criterion: 'الحد الأدنى', ours: 'قطعة واحدة', theirs: 'قطعة واحدة' },
+        ],
+        bestFor: [{ text: 'تاجراً على سلة أو زد' }],
+        notBestFor: [{ text: 'طلبيات كبيرة' }],
+        closing: 'الخلاصة للاختبار.',
+      };
+      const created = await request.post(`${API}/pages`, {
+        headers: json,
+        data: {
+          slug,
+          title: `مقارنة الاختبار ${stamp}`,
+          blocks: [comparison],
+          seo: { title: 'مقارنة الاختبار', description: 'مقارنة للاختبار بين بحر برنت وغيره.' },
+          _status: 'published',
+        },
+      });
+      expect(created.status(), await created.text()).toBe(201);
+      const id = ((await created.json()) as { doc: { id: number } }).doc.id;
+      try {
+        // The proxy's allowlist of published slugs refreshes within seconds (ADR-032).
+        await expect.poll(async () => (await request.get(`/${slug}`)).status(), POLL).toBe(200);
+        await page.goto(`/${slug}`);
+        const section = page.locator('[data-block="compare"]');
+        await expect(section).toBeVisible();
+        await expect(section.locator('h1')).toHaveText(`مقارنة الاختبار ${stamp}`);
+        await expect(section.locator('tbody th[scope="row"]')).toHaveCount(3);
+        await expect(section.locator('thead th').nth(1)).toHaveText('بحر برنت');
+        await expect(section.locator('[data-compare-list="best"] li')).toHaveCount(1);
+        await expect(section.locator('[data-compare-list="not"] li')).toHaveCount(1);
+        await expect(section.locator('time')).toHaveAttribute('datetime', '2026-09-16');
+        // No link leaves the site from the block (BRD 7.9).
+        await expect(section.locator('a')).toHaveCount(0);
+        const { AxeBuilder } = await import('@axe-core/playwright');
+        const axe = await new AxeBuilder({ page })
+          .withTags(['wcag2a', 'wcag2aa'])
+          .include('[data-block="compare"]')
+          .analyze();
+        expect(
+          axe.violations
+            .filter((v) => ['serious', 'critical'].includes(v.impact ?? ''))
+            .map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`),
+        ).toEqual([]);
+        // The English form of the same page renders the same table.
+        await request.patch(`${API}/pages/${id}?locale=en`, {
+          headers: json,
+          data: {
+            title: `Test comparison ${stamp}`,
+            blocks: [
+              {
+                ...comparison,
+                intro: 'A test comparison.',
+                ours: 'B7R Print',
+                rows: [
+                  { criterion: 'Printed where', ours: 'Jeddah', theirs: 'Europe' },
+                  { criterion: 'Delivery', ours: 'Up to 5 days', theirs: 'Two to four weeks' },
+                  { criterion: 'Minimum', ours: 'One piece', theirs: 'One piece' },
+                ],
+                bestFor: [{ text: 'a Salla or Zid merchant' }],
+                notBestFor: [{ text: 'large runs' }],
+                closing: 'The verdict, for the test.',
+              },
+            ],
+            seo: { title: 'Test comparison', description: 'A test comparison of B7R Print.' },
+          },
+        });
+        await expect
+          .poll(
+            async () => (await (await request.get(`/en/${slug}`)).text()).includes('B7R Print'),
+            POLL,
+          )
+          .toBe(true);
+        await page.goto(`/en/${slug}`);
+        await expect(page.locator('[data-block="compare"] thead th').nth(1)).toHaveText(
+          'B7R Print',
+        );
+        await expect(page.locator('[data-block="compare"] tbody th').first()).toHaveText(
+          'Printed where',
+        );
+        // E7 reads done while a compare page is published (and E6 from the FAQ page).
+        expect((await page.request.post(`${API}/users/login`, { data: ADMIN })).status()).toBe(200);
+        await page.goto('/admin/visibility?fresh=1');
+        await expect(page.locator('[data-admin-finding="E7"]')).toHaveAttribute(
+          'data-status',
+          'done',
+        );
+        await expect(page.locator('[data-admin-finding="E6"]')).toHaveAttribute(
+          'data-status',
+          'done',
+        );
+      } finally {
+        await request.delete(`${API}/pages/${id}`, { headers: auth });
+        await page.goto('/admin/visibility?fresh=1');
       }
     });
 

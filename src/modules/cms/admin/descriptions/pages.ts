@@ -102,6 +102,62 @@ export const PAGE_DESCRIPTIONS: Described = {
     ar: 'سطر المثال تحت المعادلة بأرقام حقيقية من الكتالوج: «تيشيرت بـ 89 ريالاً…».',
     en: 'The worked example under the equation, with real catalogue numbers: "A tee at 89 SAR…".',
   },
+  'blocks.compare.title': {
+    ar: 'عنوان القسم؛ على الصفحة التي يفتحها يكون عنوان الصفحة نفسه.',
+    en: 'The section heading; on the page it opens, the page title itself.',
+  },
+  'blocks.compare.intro': {
+    ar: 'فقرة قبل الجدول تقول لمن هذه المقارنة ومتى قُرئت صفحات الطرف الآخر.',
+    en: 'A paragraph before the table saying who the comparison is for and when the other side’s pages were read.',
+  },
+  'blocks.compare.ours': {
+    ar: 'اسم عمودنا في الجدول: «بحر برنت».',
+    en: 'Our column’s name in the table: "B7R Print".',
+  },
+  'blocks.compare.theirs': {
+    ar: 'اسم الطرف الآخر كما يعرفه القارئ: «Printful». بلا رابط: الموقع لا يربط إلى المنافسين.',
+    en: 'The other side’s name as a reader knows it: "Printful". No link: the site never links to a competitor.',
+  },
+  'blocks.compare.asOf': {
+    ar: 'اليوم الذي قُرئت فيه صفحات الطرف الآخر؛ يظهر تحت الجدول. بعد 180 يوماً تطلب درجة الظهور قراءة جديدة.',
+    en: 'The day the other side’s pages were read; shown under the table. After 180 days the visibility score asks for a fresh read.',
+  },
+  'blocks.compare.rows': {
+    ar: 'صفوف الجدول بترتيبها: المعيار ثم ما عندنا وما عندهم. ثلاثة على الأقل؛ كل ادعاء عن الطرف الآخر يمكن التحقق منه على صفحاته.',
+    en: 'The table’s rows in order: the criterion, then ours and theirs. Three at least; every claim about the other side is one a reader can check on its pages.',
+  },
+  'blocks.compare.rows.criterion': {
+    ar: 'ما تُقارَن عليه: «من أين يُشحن»، «الحد الأدنى للطلب».',
+    en: 'What is compared: "ships from", "minimum order".',
+  },
+  'blocks.compare.rows.ours': {
+    ar: 'ما عندنا لهذا المعيار، بالأرقام حيث أمكن: «جدة، حتى 5 أيام».',
+    en: 'Ours for this criterion, in numbers where possible: "Jeddah, up to 5 days".',
+  },
+  'blocks.compare.rows.theirs': {
+    ar: 'ما عندهم لهذا المعيار كما تقوله صفحاتهم بتاريخ القراءة.',
+    en: 'Theirs for this criterion as its pages say at the read date.',
+  },
+  'blocks.compare.bestFor': {
+    ar: 'من يناسبه بحر برنت أكثر: بند لكل حالة، بالإيجاب.',
+    en: 'Who B7R suits best: one item per case, in the affirmative.',
+  },
+  'blocks.compare.bestFor.text': {
+    ar: 'حالة واحدة: «تاجر على سلة أو زد يريد التوصيل خلال أيام».',
+    en: 'One case: "a Salla or Zid merchant who wants delivery in days".',
+  },
+  'blocks.compare.notBestFor': {
+    ar: 'من لا يناسبه بحر برنت: ما يجعل الصفحة صادقة، والمساعدون يستشهدون بالصادق.',
+    en: 'Who B7R does not suit: what makes the page honest, and the assistants cite the honest.',
+  },
+  'blocks.compare.notBestFor.text': {
+    ar: 'حالة واحدة: «طلبيات كبيرة بمئات القطع».',
+    en: 'One case: "large runs of hundreds of pieces".',
+  },
+  'blocks.compare.closing': {
+    ar: 'فقرة ختامية قبل شريط الدعوة: الخلاصة في جملتين.',
+    en: 'A closing paragraph before the CTA ribbon: the verdict in two sentences.',
+  },
   'blocks.faqList.selection': {
     ar: 'أي الأسئلة تُعرض: كل الأسئلة مجمّعة (صفحة الأسئلة)، أو أسئلة الرئيسية فقط.',
     en: 'Which entries show: all of them, grouped (the FAQ page), or the home entries only.',

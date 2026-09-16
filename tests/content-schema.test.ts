@@ -70,8 +70,8 @@ describe('content contract (BRD 8.4)', () => {
       expect(routes).toContain(r);
     }
   });
-  it('seed/pages.ts: the seven designed pages, legal bodies from Appendix B', () => {
-    expectValid('pages.ts', z.array(PageSchema).length(7), pages);
+  it('seed/pages.ts: the seven designed pages, legal bodies from Appendix B, the comparison as a draft', () => {
+    expectValid('pages.ts', z.array(PageSchema).length(8), pages);
     expect(pages.map((p) => p.slug)).toEqual([
       'how-it-works',
       'about',
@@ -80,7 +80,17 @@ describe('content contract (BRD 8.4)', () => {
       'terms',
       'shipping',
       'privacy',
+      'compare-printful',
     ]);
+    // The comparison (ADR-050): a draft, one compare block, eight rows, no URL anywhere.
+    const compare = pages.find((p) => p.slug === 'compare-printful')!;
+    expect(compare.draft).toBe(true);
+    expect(pages.filter((p) => p.draft)).toHaveLength(1);
+    const block = compare.blocks[0]!;
+    if (block.blockType !== 'compare') throw new Error('a compare block');
+    expect(block.rows).toHaveLength(8);
+    expect(block.asOf).toBe('2026-09-16');
+    expect(JSON.stringify(compare)).not.toMatch(/https?:\/\//);
     for (const slug of ['terms', 'shipping', 'privacy']) {
       const body = pages.find((p) => p.slug === slug)?.blocks[0];
       expect(body?.blockType).toBe('legalBody');

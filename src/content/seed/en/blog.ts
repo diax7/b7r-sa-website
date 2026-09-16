@@ -62,11 +62,14 @@ export interface PostEn {
   title: string;
   excerpt: string;
   takeaways: [string, string, string];
+  /** A search title when the post title plus the template would pass 70 characters (E1). */
+  seoTitle?: string;
 }
 
 export const blogPostsEn: Record<string, PostEn> = {
   'start-clothing-brand-saudi-no-factory-no-stock': {
     title: 'Start a clothing brand in Saudi Arabia with no factory and no stock',
+    seoTitle: 'Start a clothing brand in Saudi Arabia, no stock',
     excerpt:
       'Three things are enough to start: a name, one design and a store. The rest happens after the first order.',
     takeaways: [
@@ -77,6 +80,7 @@ export const blogPostsEn: Record<string, PostEn> = {
   },
   'what-is-print-on-demand-saudi-examples': {
     title: 'What is print on demand? A plain explanation with Saudi examples',
+    seoTitle: 'What is print on demand? Saudi examples',
     excerpt:
       'No piece is printed until your customer buys it. A full example from the order to the shipment.',
     takeaways: [

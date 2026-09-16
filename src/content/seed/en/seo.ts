@@ -26,6 +26,11 @@ export const seoEn = {
       title: 'Contact us',
       description: 'Message us on WhatsApp or by email, or book a free 30-minute consultation.',
     },
+    '/compare-printful': {
+      title: 'B7R Print vs Printful for a Saudi store',
+      description:
+        'A comparison in numbers: printed in Jeddah and delivered within 5 days against weeks of shipping from abroad; riyal prices, Salla and Zid connections.',
+    },
     '/faq': {
       title: 'Print on demand: frequently asked questions',
       description:

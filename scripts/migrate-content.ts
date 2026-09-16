@@ -474,6 +474,13 @@ async function blockData(payload: Payload, block: Block): Promise<Record<string,
       return { ...rest, media: await ensureMedia(payload, block.media.src, block.media.alt) };
     case 'legalBody':
       return { ...rest, updatedAt: `${block.updatedAt}T00:00:00.000Z` };
+    case 'compare':
+      return {
+        ...rest,
+        asOf: `${block.asOf}T12:00:00.000Z`,
+        bestFor: block.bestFor.map((text) => ({ text })),
+        notBestFor: block.notBestFor.map((text) => ({ text })),
+      };
     default:
       return rest;
   }
@@ -508,11 +515,11 @@ async function ensurePage(payload: Payload, page: Page): Promise<void> {
         description: page.seo.description,
         ...(ogImage ? { ogImage } : {}),
       },
-      _status: 'published',
+      _status: page.draft ? 'draft' : 'published',
     },
     context: CONTEXT,
   });
-  summary.created.push(`page ${page.slug}`);
+  summary.created.push(`page ${page.slug}${page.draft ? ' (draft)' : ''}`);
 }
 
 /** Alt text for a hub or post cover (agent-written, Appendix G): the photo, not the topic. */
@@ -735,7 +742,8 @@ async function main(): Promise<number> {
   await ensureGlobals(payload);
   await ensureHome(payload);
   for (const page of pages) {
-    if (!(RESERVED_PAGE_SLUGS as readonly string[]).includes(page.slug)) {
+    // The seven designed pages, and a page seeded as a draft for an admin to publish (ADR-050).
+    if (!(RESERVED_PAGE_SLUGS as readonly string[]).includes(page.slug) && !page.draft) {
       throw new Error(`seed pages: ${page.slug} is not one of the seven designed pages`);
     }
     await ensurePage(payload, page);

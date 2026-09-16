@@ -282,6 +282,8 @@ The English titles and descriptions (suffix ` | B7R Print`) are the `seo` rows o
 | Shipping | الشحن والتوصيل | سياسة الشحن والتوصيل في بحر برنت داخل المملكة. |
 | Privacy | سياسة الخصوصية | كيف نجمع بياناتك ونحميها في بحر برنت. |
 
+*Amended 2026-09-16 (ADR-050): the compare page `/compare-printful` and its search title and description are seeded under §0.5 (`TODO(copy)`, listed in the PR) and await Dhia's approval; once approved they become §4.18 and a row here.*
+
 ### 4.17 Transactional emails (Level 1, sent through Resend)
 
 - Contact notification to contact@b7r.sa: subject: رسالة جديدة من الموقع: {inquiryType}; body lists all fields, LTR-safe formatting for phone and email, plus a "رد عبر واتساب" link if the phone is Saudi.

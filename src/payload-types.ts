@@ -706,6 +706,73 @@ export interface Page {
         blockName?: string | null;
         blockType: 'mediaBanner';
       }
+    | {
+        /**
+         * The section heading; on the page it opens, the page title itself.
+         */
+        title?: string | null;
+        /**
+         * A paragraph before the table saying who the comparison is for and when the other side’s pages were read.
+         */
+        intro?: string | null;
+        /**
+         * Our column’s name in the table: "B7R Print".
+         */
+        ours: string;
+        /**
+         * The other side’s name as a reader knows it: "Printful". No link: the site never links to a competitor.
+         */
+        theirs: string;
+        /**
+         * The day the other side’s pages were read; shown under the table. After 180 days the visibility score asks for a fresh read.
+         */
+        asOf: string;
+        /**
+         * The table’s rows in order: the criterion, then ours and theirs. Three at least; every claim about the other side is one a reader can check on its pages.
+         */
+        rows: {
+          /**
+           * What is compared: "ships from", "minimum order".
+           */
+          criterion: string;
+          /**
+           * Ours for this criterion, in numbers where possible: "Jeddah, up to 5 days".
+           */
+          ours: string;
+          /**
+           * Theirs for this criterion as its pages say at the read date.
+           */
+          theirs: string;
+          id?: string | null;
+        }[];
+        /**
+         * Who B7R suits best: one item per case, in the affirmative.
+         */
+        bestFor: {
+          /**
+           * One case: "a Salla or Zid merchant who wants delivery in days".
+           */
+          text: string;
+          id?: string | null;
+        }[];
+        /**
+         * Who B7R does not suit: what makes the page honest, and the assistants cite the honest.
+         */
+        notBestFor: {
+          /**
+           * One case: "large runs of hundreds of pieces".
+           */
+          text: string;
+          id?: string | null;
+        }[];
+        /**
+         * A closing paragraph before the CTA ribbon: the verdict in two sentences.
+         */
+        closing?: string | null;
+        id?: string | null;
+        blockName?: string | null;
+        blockType: 'compare';
+      }
   )[];
   /**
    * What search engines and shares see: the title and description in the Google result, the image when the link is shared.
@@ -2058,6 +2125,38 @@ export interface PagesSelect<T extends boolean = true> {
           | {
               media?: T;
               caption?: T;
+              id?: T;
+              blockName?: T;
+            };
+        compare?:
+          | T
+          | {
+              title?: T;
+              intro?: T;
+              ours?: T;
+              theirs?: T;
+              asOf?: T;
+              rows?:
+                | T
+                | {
+                    criterion?: T;
+                    ours?: T;
+                    theirs?: T;
+                    id?: T;
+                  };
+              bestFor?:
+                | T
+                | {
+                    text?: T;
+                    id?: T;
+                  };
+              notBestFor?:
+                | T
+                | {
+                    text?: T;
+                    id?: T;
+                  };
+              closing?: T;
               id?: T;
               blockName?: T;
             };

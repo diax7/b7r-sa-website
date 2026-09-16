@@ -1,7 +1,14 @@
 import type { PageSeo } from '@/content/schema';
 
-/** BRD 4.16 rows, verbatim: the seed for the `seo-defaults` global (ADR-026). */
+/** BRD 4.16 rows, verbatim: the seed for the `seo-defaults` global (ADR-026); the comparison's row is TODO(copy) under BRD 0.5 (ADR-050). */
 export const seo: PageSeo[] = [
+  {
+    route: '/compare-printful',
+    title: 'بحر برنت مقابل Printful لمتجر سعودي',
+    description:
+      'مقارنة بالأرقام: الطباعة في جدة والتوصيل خلال 5 أيام مقابل الشحن من الخارج خلال أسابيع؛ الأسعار بالريال وربط سلة وزد.',
+    updatedAt: '2026-09-16',
+  },
   {
     route: '/',
     title: 'بحر برنت: منصة الطباعة عند الطلب في السعودية',

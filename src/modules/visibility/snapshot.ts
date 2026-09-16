@@ -146,7 +146,7 @@ export async function buildSnapshot(
       author: idOf(p['author']),
     };
   });
-  const pageRows: SnapshotDoc[] = pages.map((p) => {
+  const pageRows: Snapshot['pages'] = pages.map((p) => {
     const title = locOf(p['title']);
     // The blocks' photos: the story's, the cards' art, the steps' icons, the media banner's.
     for (const block of (p['blocks'] as Row[] | undefined) ?? []) {
@@ -159,6 +159,10 @@ export async function buildSnapshot(
       id: p['id'] as number,
       slug: String(p['slug']),
       title,
+      blocks: ((p['blocks'] as Row[] | undefined) ?? []).map((block) => ({
+        type: String(block['blockType'] ?? ''),
+        asOf: typeof block['asOf'] === 'string' ? block['asOf'] : null,
+      })),
       seo: {
         title: locOf(group(p['seo'])['title']),
         description: locOf(group(p['seo'])['description']),

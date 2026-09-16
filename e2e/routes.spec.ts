@@ -63,7 +63,8 @@ test.describe('routes (BRD 5.1, 7.1, 7.4)', () => {
       'BlogPosting',
       'BreadcrumbList',
     ]);
-    expect(await types('/faq')).toEqual(['WebPage', 'BreadcrumbList']);
+    // The FAQ page adds FAQPage (ADR-050).
+    expect(await types('/faq')).toEqual(['WebPage', 'BreadcrumbList', 'FAQPage']);
   });
 });
 
