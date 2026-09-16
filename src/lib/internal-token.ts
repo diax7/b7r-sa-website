@@ -1,0 +1,48 @@
+/**
+ * A token for calls the site makes to itself over loopback (ADR-048: the proxy reporting a
+ * crawler to `/api/traffic/crawl`). The proxy and a route handler are separate module graphs,
+ * so a boot-time random cannot be shared; both derive the same HMAC-SHA256 of the purpose
+ * under `PAYLOAD_SECRET` through Web Crypto, which runs in either bundle. The token never
+ * leaves the container: the loopback address is the only place it is sent.
+ */
+export const INTERNAL_HEADER = 'x-b7r-internal';
+/** The purpose the proxy's crawl reports are signed for (ADR-048). */
+export const CRAWL_TOKEN_PURPOSE = 'traffic-crawl';
+
+const cache = new Map<string, Promise<string>>();
+
+async function derive(purpose: string, secret: string): Promise<string> {
+  const enc = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    'raw',
+    enc.encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign'],
+  );
+  const mac = await crypto.subtle.sign('HMAC', key, enc.encode(purpose));
+  return Array.from(new Uint8Array(mac), (b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+/** The token for a purpose, derived once per process; throws when there is no secret to derive from. */
+export function internalToken(
+  purpose: string,
+  secret: string | undefined = process.env['PAYLOAD_SECRET'],
+): Promise<string> {
+  if (!secret) return Promise.reject(new Error('internalToken: PAYLOAD_SECRET is not set'));
+  const key = `${purpose}\n${secret}`;
+  let pending = cache.get(key);
+  if (!pending) {
+    pending = derive(purpose, secret);
+    cache.set(key, pending);
+  }
+  return pending;
+}
+
+/** Constant-time equality of two hex tokens (a length mismatch answers false at once). */
+export function sameToken(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}

@@ -52,14 +52,7 @@ export const gonePrefixes = [
   '/wp-json',
 ];
 
-/**
- * The `config.matcher` for `src/proxy.ts`, in path-to-regexp form. Next reads that array
- * statically, so `proxy.ts` repeats it as literals; `tests/redirects.test.ts` asserts the two
- * lists are identical.
- */
-export const GONE_MATCHER = [...goneExact, ...gonePrefixes.map((p) => `${p}/:path*`)];
-
-/** Mirrors `GONE_MATCHER` at runtime; the proxy's matcher is a build-time filter only. */
+/** The retired URLs at runtime; the proxy runs on every page request (ADR-048) and asks here. */
 export function isGone(pathname: string): boolean {
   const path = pathname.length > 1 && pathname.endsWith('/') ? pathname.slice(0, -1) : pathname;
   if (goneExact.includes(path)) return true;

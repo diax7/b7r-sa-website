@@ -14,6 +14,7 @@ import * as migration_20260914_135821_engine_language from './20260914_135821_en
 import * as migration_20260914_170855_hero_photos_per_locale_overlay_no_login from './20260914_170855_hero_photos_per_locale_overlay_no_login';
 import * as migration_20260915_143152_menus_into_site_settings from './20260915_143152_menus_into_site_settings';
 import * as migration_20260915_165626_connections from './20260915_165626_connections';
+import * as migration_20260916_070828_traffic from './20260916_070828_traffic';
 
 export const migrations = [
   {
@@ -95,5 +96,10 @@ export const migrations = [
     up: migration_20260915_165626_connections.up,
     down: migration_20260915_165626_connections.down,
     name: '20260915_165626_connections',
+  },
+  {
+    up: migration_20260916_070828_traffic.up,
+    down: migration_20260916_070828_traffic.down,
+    name: '20260916_070828_traffic'
   },
 ];

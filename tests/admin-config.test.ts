@@ -1,6 +1,6 @@
 import type { CollectionConfig, Field, GlobalConfig } from 'payload';
 import { describe, expect, it } from 'vitest';
-import { isAbandonedDraft, titleOf } from '@/modules/cms/admin/dashboard/data';
+import { isAbandonedDraft, savesByPeople, titleOf } from '@/modules/cms/admin/dashboard/data';
 import { ENTITY_HEADER_PATH, LOCALE_NOTE_PATH } from '@/modules/cms/admin/document/config';
 import {
   AUTHOR_DESCRIPTIONS,
@@ -52,8 +52,12 @@ import { Home } from '@/modules/cms/globals/home';
 import { SeoDefaults } from '@/modules/cms/globals/seo-defaults';
 import { SiteSettings } from '@/modules/cms/globals/site-settings';
 import { AiSettings } from '@/modules/ai-content/settings';
-import { AiRuns } from '@/modules/ai-content/runs';
 import { AiTopics } from '@/modules/ai-content/topics';
+import { COLLECTIONS, GLOBALS } from '@/modules/cms/entities';
+import { Connections } from '@/modules/connections/collection';
+import { CONNECTION_DESCRIPTIONS } from '@/modules/connections/descriptions';
+import { Traffic } from '@/modules/traffic/collection';
+import { TRAFFIC_DESCRIPTIONS } from '@/modules/traffic/descriptions';
 
 /**
  * The admin design system's "future things" guarantee (ADR-039, `.claude/rules/admin-ui.md`):
@@ -61,17 +65,11 @@ import { AiTopics } from '@/modules/ai-content/topics';
  * Arabic description, a title field and list columns, and has an icon in the registry.
  */
 const collections: CollectionConfig[] = [
-  Users,
-  Media,
-  Products,
-  Pages,
-  Faqs,
-  Testimonials,
-  Integrations,
+  ...COLLECTIONS,
   // The plugin builds the collection; its overrides carry the admin shape.
   { ...REDIRECT_OVERRIDES, slug: 'redirects', fields: [] } as unknown as CollectionConfig,
 ];
-const globals: GlobalConfig[] = [Home, SiteSettings, SeoDefaults];
+const globals: GlobalConfig[] = GLOBALS;
 
 const ARABIC = /[؀-ۿ]/;
 /** lucide icons are `forwardRef` exotic components: objects with a `render`. */
@@ -116,8 +114,8 @@ describe('admin config shape (ADR-039)', () => {
  * "shows on" sentence in both languages.
  */
 describe('the sidebar registry (ADR-046)', () => {
-  const everyCollection = [...collections, Authors, Categories, Posts, Tags, AiTopics, AiRuns];
-  const everyGlobal = [...globals, AiSettings];
+  const everyCollection = collections;
+  const everyGlobal = globals;
   for (const c of everyCollection) {
     it(`collection ${c.slug}: placed, grouped as the config says, header registered`, () => {
       const placement = navPlacement('collections', c.slug);
@@ -211,7 +209,11 @@ function describedFields(fields: Field[], path = ''): Array<{ path: string; ok: 
   return out;
 }
 
-/** Every named field path of a config, the way the description maps address them. */
+/**
+ * Every named field path of a config, the way the description maps address them. A read-only
+ * or hidden field is a real field (its description still renders under it), so a map may name
+ * it; only the rule of four words leaves it out.
+ */
 function fieldPaths(fields: Field[], path = ''): string[] {
   const out: string[] = [];
   for (const f of fields) {
@@ -231,10 +233,6 @@ function fieldPaths(fields: Field[], path = ''): string[] {
       continue;
     }
     if (!('name' in f) || !f.name) continue;
-    const admin = (f as { admin?: Record<string, unknown> }).admin ?? {};
-    if (admin['hidden'] === true || admin['readOnly'] === true || admin['disabled'] === true) {
-      continue;
-    }
     const name = `${path}${f.name}`;
     out.push(name);
     if ('fields' in f && Array.isArray(f.fields)) out.push(...fieldPaths(f.fields, `${name}.`));
@@ -263,6 +261,8 @@ describe('the description maps name real fields (ADR-046)', () => {
     [SeoDefaults, SEO_DEFAULTS_DESCRIPTIONS],
     [AiSettings, AI_SETTINGS_DESCRIPTIONS],
     [AiTopics, AI_TOPICS_DESCRIPTIONS],
+    [Connections, CONNECTION_DESCRIPTIONS],
+    [Traffic, TRAFFIC_DESCRIPTIONS],
   ];
   for (const [c, map] of maps) {
     it(`${c.slug}: every key of its map is a field`, () => {
@@ -275,14 +275,7 @@ describe('the description maps name real fields (ADR-046)', () => {
 describe('every field says what it does on the site (ADR-046)', () => {
   const configs: Array<{ slug: string; fields: Field[] }> = [
     ...collections.filter((c) => c.slug !== 'redirects'),
-    Authors,
-    Categories,
-    Posts,
-    Tags,
-    AiTopics,
-    AiRuns,
     ...globals,
-    AiSettings,
   ];
   for (const c of configs) {
     it(`${c.slug}: a two-language description of four words or more on every field`, () => {
@@ -307,21 +300,13 @@ function hasLocalized(fields: Field[]): boolean {
 const NOTE = LOCALE_NOTE_PATH;
 
 describe('the locale note (ADR-044): every document with per-language fields carries it', () => {
-  const allCollections = [
-    ...collections.filter((c) => c.slug !== 'redirects'),
-    Authors,
-    Categories,
-    Posts,
-    Tags,
-    AiTopics,
-  ];
-  for (const c of allCollections) {
+  for (const c of collections.filter((entity) => entity.slug !== 'redirects')) {
     it(`collection ${c.slug}`, () => {
       const registered = c.admin?.components?.edit?.beforeDocumentControls ?? [];
       expect(registered.includes(NOTE)).toBe(hasLocalized(c.fields));
     });
   }
-  for (const g of [...globals, AiSettings]) {
+  for (const g of globals) {
     it(`global ${g.slug}`, () => {
       const registered = g.admin?.components?.elements?.beforeDocumentControls ?? [];
       expect(registered.includes(NOTE)).toBe(hasLocalized(g.fields));
@@ -344,5 +329,15 @@ describe('dashboard recent list: a title for every row', () => {
     expect(isAbandonedDraft({ _status: 'draft' }, 'A draft in progress')).toBe(false);
     expect(isAbandonedDraft({ _status: 'draft', lastSavedBy: { name: 'Dhia' } }, '')).toBe(false);
     expect(isAbandonedDraft({ _status: 'published' }, '')).toBe(false);
+  });
+
+  it('lists what a person saves: a collection without the saved-by stamp is written by a machine', () => {
+    const people = collections.filter(savesByPeople).map((c) => c.slug);
+    expect(people).toContain('pages');
+    expect(people).toContain('connections');
+    expect(people).not.toContain('traffic');
+    expect(people).not.toContain('ai-runs');
+    // Users carry no stamp (Payload's auth collection); their saves are not "content" either.
+    expect(people).not.toContain('users');
   });
 });

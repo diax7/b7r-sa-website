@@ -1,5 +1,6 @@
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
 import { signPreview } from '../src/lib/preview-token';
+import { riyadh } from '../src/lib/riyadh';
 import {
   ADMIN,
   API,
@@ -1445,6 +1446,147 @@ test.describe('CMS admin', () => {
       await expect
         .poll(async () => (await request.get(`/en/blog/${slug}`)).status(), POLL)
         .toBe(404);
+    });
+
+    test('traffic (ADR-048): landings and crawls are counted by day, source and page; the beacon fires once; outsiders and editors are refused', async ({
+      page,
+      request,
+    }) => {
+      const auth = await login(request, ADMIN);
+      // The request fixture resolves paths against the base URL; the beacon's Origin must match it.
+      const origin = new URL((await request.get('/api/health')).url()).origin;
+      const site = {
+        'Content-Type': 'application/json',
+        Origin: origin,
+        'User-Agent': 'Mozilla/5.0 Chrome/129.0',
+      };
+      const today = riyadh(new Date()).dateKey;
+      const rowsOf = async (where: Record<string, string>) => {
+        const query = Object.entries({ ...where, date: today })
+          .map(([k, v]) => `where[${k}][equals]=${encodeURIComponent(v)}`)
+          .join('&');
+        const res = await request.get(`${API}/traffic?limit=50&depth=0&${query}`, {
+          headers: auth,
+        });
+        return ((await res.json()) as { docs: Array<{ hits: number }> }).docs;
+      };
+      const hitsOf = async (where: Record<string, string>) =>
+        (await rowsOf(where)).reduce((n, r) => n + r.hits, 0);
+      // A stamp makes this run's page its own row.
+      const path = `/blog/e2e-${Date.now()}`;
+      const chatgptBefore = await hitsOf({ kind: 'landing', source: 'chatgpt.com', path });
+      // Two landings, one by referrer and one by the token ChatGPT appends: one row, two hits.
+      for (const body of [
+        { path, referrer: 'https://chatgpt.com/c/abc', utmSource: '' },
+        { path, referrer: '', utmSource: 'chatgpt.com' },
+      ]) {
+        expect(
+          (await request.post('/api/traffic/landing', { headers: site, data: body })).status(),
+        ).toBe(204);
+      }
+      // A bot that runs scripts sends nothing worth storing; the crawler counter saw it already.
+      expect(
+        (
+          await request.post('/api/traffic/landing', {
+            headers: { ...site, 'User-Agent': 'Mozilla/5.0 (compatible; GPTBot/1.2)' },
+            data: { path, referrer: 'https://bot-check.example.com/', utmSource: '' },
+          })
+        ).status(),
+      ).toBe(204);
+      // A foreign origin, no origin at all, and a body that is not a landing.
+      expect(
+        (
+          await request.post('/api/traffic/landing', {
+            headers: { ...site, Origin: 'https://evil.example.com' },
+            data: { path, referrer: '', utmSource: '' },
+          })
+        ).status(),
+      ).toBe(403);
+      expect(
+        (
+          await request.post('/api/traffic/landing', {
+            headers: { 'Content-Type': 'application/json', 'User-Agent': site['User-Agent'] },
+            data: { path, referrer: '', utmSource: '' },
+          })
+        ).status(),
+      ).toBe(403);
+      expect(
+        (
+          await request.post('/api/traffic/landing', {
+            headers: site,
+            data: { path: 'https://evil.example.com/', referrer: '', utmSource: '' },
+          })
+        ).status(),
+      ).toBe(400);
+      // A crawler's document GET of a page and of llms.txt is counted by the proxy; a crawl
+      // report without the internal token is refused.
+      const bot = {
+        'User-Agent': 'Mozilla/5.0 (compatible; GPTBot/1.2; +https://openai.com/gptbot)',
+      };
+      expect((await request.get(path, { headers: bot })).status()).toBe(404);
+      expect((await request.get('/llms.txt', { headers: bot })).status()).toBe(200);
+      expect(
+        (
+          await request.post('/api/traffic/crawl', {
+            headers: { 'Content-Type': 'application/json' },
+            data: { bot: 'gptbot', path },
+          })
+        ).status(),
+      ).toBe(403);
+      // The client beacon: a page opened from ChatGPT posts once; a move inside the site posts nothing.
+      const posts: string[] = [];
+      page.on('request', (r) => {
+        if (r.url().endsWith('/api/traffic/landing') && r.method() === 'POST')
+          posts.push(r.postData() ?? '');
+      });
+      await page.goto('/products', { referer: 'https://chatgpt.com/' });
+      await expect.poll(() => posts.length, { timeout: 10_000 }).toBe(1);
+      expect(posts[0]).toContain('"referrer":"https://chatgpt.com/"');
+      await page.locator('main a[href^="/products/"]').first().click();
+      await page.waitForURL(/\/products\/[^/]+$/);
+      await page.waitForTimeout(1_500);
+      expect(posts).toHaveLength(1);
+      // The batcher lands within its ten seconds: the rows say so.
+      await expect
+        .poll(() => hitsOf({ kind: 'landing', source: 'chatgpt.com', path }), { timeout: 25_000 })
+        .toBe(chatgptBefore + 2);
+      expect(await rowsOf({ kind: 'landing', source: 'bot-check.example.com' })).toEqual([]);
+      expect(await hitsOf({ kind: 'crawl', source: 'gptbot', path })).toBeGreaterThanOrEqual(1);
+      expect(
+        await hitsOf({ kind: 'crawl', source: 'gptbot', path: '/llms.txt' }),
+      ).toBeGreaterThanOrEqual(1);
+      // Editors cannot read the count; the rows cannot be written through the API.
+      const editor = await createEditor(request, auth);
+      try {
+        const editorAuth = await login(request, editor);
+        expect((await request.get(`${API}/traffic`, { headers: editorAuth })).status()).toBe(403);
+      } finally {
+        await request.delete(`${API}/users/${editor.id}`, { headers: auth });
+      }
+      expect(
+        (
+          await request.post(`${API}/traffic`, {
+            headers: { ...auth, 'Content-Type': 'application/json' },
+            data: {
+              date: today,
+              kind: 'landing',
+              source: 'forged.example.com',
+              path: '/',
+              hits: 99,
+            },
+          })
+        ).status(),
+      ).toBe(403);
+      // The dashboard card shows the week for an admin.
+      expect((await page.request.post(`${API}/users/login`, { data: ADMIN })).status()).toBe(200);
+      await page.goto('/admin');
+      const card = page.locator('[data-admin-traffic]');
+      await expect(card).toBeVisible();
+      expect(Number(await card.getAttribute('data-admin-traffic-landings'))).toBeGreaterThanOrEqual(
+        2,
+      );
+      await expect(card.locator('[data-admin-traffic-groups] li')).toHaveCount(5);
+      await expect(card).toContainText(/AI assistants/);
     });
 
     test('connections (ADR-047): a key is stored masked, a test records its outcome, the limit and the guard hold; editors are refused', async ({

@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import {
-  GONE_MATCHER,
   goneExact,
   gonePrefixes,
   isGone,
@@ -78,9 +77,10 @@ describe('410 list (BRD 5.2, ADR-017)', () => {
     for (const path of live) expect(isGone(path), path).toBe(false);
   });
 
-  it('keeps the proxy matcher identical to the map (plus the slug matcher, B0)', () => {
-    expect(proxyConfig.matcher.slice(0, GONE_MATCHER.length)).toEqual(GONE_MATCHER);
-    expect(GONE_MATCHER).toHaveLength(goneExact.length + gonePrefixes.length);
+  it('the one proxy matcher covers every retired URL (ADR-048), and the map is complete', () => {
+    const re = new RegExp(`^${proxyConfig.matcher[0]!.replace('/(', '/(?:')}$`);
+    for (const path of GONE) expect(re.test(path), path).toBe(true);
+    expect(GONE).toHaveLength(goneExact.length + gonePrefixes.length);
   });
 
   it('answers 410 with a cached Arabic HTML body and passes the code-owned routes', async () => {

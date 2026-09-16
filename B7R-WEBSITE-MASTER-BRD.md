@@ -881,6 +881,7 @@ Component `NewsletterForm` used in the footer and blog. `POST /api/newsletter` v
 - **Umami** loads on every page (script from `NEXT_PUBLIC_UMAMI_SRC` with `data-website-id`), cookieless, no consent needed.
 - **GA4** (`NEXT_PUBLIC_GA_ID`) loads only after consent. Implement Consent Mode v2: an inline `beforeInteractive` script sets `gtag('consent','default',{ analytics_storage:'denied', ad_storage:'denied', ad_user_data:'denied', ad_personalization:'denied' })`; on "موافق" set a first-party cookie `b7r_consent=granted` (180 days), call `gtag('consent','update',{ analytics_storage:'granted' })` and inject the GA script via `@next/third-parties`; on "رفض" set `b7r_consent=denied` and never load GA. On later visits respect the cookie; no bar.
 - **ConsentBar:** small card fixed at the bottom **end** (in RTL the end edge is the left, so it never collides with the WhatsApp button, which sits at the physical right), `inset-block-end: 24px; inset-inline-end: 24px`, max-width 420 px, radius 13 px, shadow-popover, text (§4.7) + two buttons (موافق primary md, رفض ghost md) + the privacy link. Appears 800 ms after load with a 200 ms rise. Never blocks scrolling or content. On mobile it is full-width and sits above the WhatsApp button with 88 px bottom clearance.
+- **Landing beacon (ADR-048, 2026-09-16):** one first-party POST when a visitor lands from another site or from nowhere (the page, the referrer, `utm_source`; nothing on a move between our pages, nothing on a reload; no cookie, no storage, no identifier, no IP stored) feeds the site's own traffic count in the admin. Cookieless, no consent needed.
 - **Event helper:** `track(name, props)` sends to Umami always and to GA4 when granted. Events: `cta_click{location}`, `whatsapp_click{location}`, `designer_*`, `calculator_change`, `contact_submit`, `newsletter_submit`, `product_view`, `faq_open`, `outbound_app_click` (any link to b7r.app). (`video_play` retired 2026-09-13, ADR-037.)
 
 ### 6.17 Mobile rules summary
@@ -1368,6 +1369,8 @@ Vercel AI SDK provider registry: `openai`, `deepseek`, optional `anthropic` and 
 
 *Amended 2026-09-14 (ADR-042): the group is "AI content" with Engine settings, Topics and Runs; the monitoring numbers (posts this month, average score, failures, cost, next slot, latest runs) are a card on the dashboard for admins rather than a separate view. Amended 2026-09-15 (ADR-046): the three entries are the "Content engine" section inside the Blog group of the reshaped sidebar (Site · Catalogue · Blog · Visibility · Admin), in the Blog hue.*
 
+*Amended 2026-09-16 (ADR-048): the dashboard carries a "Traffic, last 7 days" card for admins: landings by group (AI assistants, search, social, other sites, direct), the top channel and the crawler reads, from the site's own count (§11.4).*
+
 ### 10.3 Acceptance (Level 3)
 
 1. Manual posts: an editor writes, previews, schedules, and publishes a post; hub pages, RSS, sitemap, IndexNow, and related posts update.
@@ -1404,6 +1407,8 @@ Vercel AI SDK provider registry: `openai`, `deepseek`, optional `anthropic` and 
 - **GA4** second: Analytics Data API via a Google service account (`GOOGLE_SERVICE_ACCOUNT_JSON` env, base64) for sessions by channel (including "AI Assistants"), key events, landing pages.
 - **Search Console** third: Search Analytics API with the same service account (added as a property user): clicks, impressions, CTR, position by page and query; the top queries feed `ai-topics` suggestions (source `searchConsole`).
 - A nightly job caches results into a `metrics` collection; the admin "التحليلات" view renders charts (recharts) from the cache so the admin never waits on Google APIs.
+
+*Amended 2026-09-16 (ADR-048, Dhia's decision): the referrer part of the Umami pull is replaced by the site's own counter: a `traffic` collection of daily rows (day, kind, source, page, hits) fed by a first-party landing beacon and by the proxy's count of known AI and search crawlers; the channel (ChatGPT, Gemini, Claude, Perplexity, Copilot, Google, Bing, the social networks, other sites, direct) is derived at read. Nothing identifies a visitor. Shown on the dashboard card and, next, on a Traffic page under Visibility. Umami's visitors and page views stay "if ever"; GA4 stays for consented sessions; Search Console, Bing and PageSpeed come with the visibility score.*
 
 ### 11.5 Acceptance (Level 4)
 

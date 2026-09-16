@@ -173,6 +173,8 @@ Vercel AI SDK provider registry: `openai`, `deepseek`, optional `anthropic` and 
 
 *Amended 2026-09-14 (ADR-042): the group is "AI content" with Engine settings, Topics and Runs; the monitoring numbers (posts this month, average score, failures, cost, next slot, latest runs) are a card on the dashboard for admins rather than a separate view. Amended 2026-09-15 (ADR-046): the three entries are the "Content engine" section inside the Blog group of the reshaped sidebar (Site · Catalogue · Blog · Visibility · Admin), in the Blog hue.*
 
+*Amended 2026-09-16 (ADR-048): the dashboard carries a "Traffic, last 7 days" card for admins: landings by group (AI assistants, search, social, other sites, direct), the top channel and the crawler reads, from the site's own count (§11.4).*
+
 ### 10.3 Acceptance (Level 3)
 
 1. Manual posts: an editor writes, previews, schedules, and publishes a post; hub pages, RSS, sitemap, IndexNow, and related posts update.
@@ -209,6 +211,8 @@ Vercel AI SDK provider registry: `openai`, `deepseek`, optional `anthropic` and 
 - **GA4** second: Analytics Data API via a Google service account (`GOOGLE_SERVICE_ACCOUNT_JSON` env, base64) for sessions by channel (including "AI Assistants"), key events, landing pages.
 - **Search Console** third: Search Analytics API with the same service account (added as a property user): clicks, impressions, CTR, position by page and query; the top queries feed `ai-topics` suggestions (source `searchConsole`).
 - A nightly job caches results into a `metrics` collection; the admin "التحليلات" view renders charts (recharts) from the cache so the admin never waits on Google APIs.
+
+*Amended 2026-09-16 (ADR-048, Dhia's decision): the referrer part of the Umami pull is replaced by the site's own counter: a `traffic` collection of daily rows (day, kind, source, page, hits) fed by a first-party landing beacon and by the proxy's count of known AI and search crawlers; the channel (ChatGPT, Gemini, Claude, Perplexity, Copilot, Google, Bing, the social networks, other sites, direct) is derived at read. Nothing identifies a visitor. Shown on the dashboard card and, next, on a Traffic page under Visibility. Umami's visitors and page views stay "if ever"; GA4 stays for consented sessions; Search Console, Bing and PageSpeed come with the visibility score.*
 
 ### 11.5 Acceptance (Level 4)
 

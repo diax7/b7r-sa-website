@@ -1,0 +1,173 @@
+import { type PostgresAdapter, sql } from '@payloadcms/db-postgres';
+import type { Payload } from 'payload';
+import { riyadh } from '@/lib/riyadh';
+
+/**
+ * The in-memory batcher (ADR-048). `count()` stamps the Riyadh date at that moment and adds
+ * one to a map keyed by the four index columns; every ten seconds (or at 500 keys) the map is
+ * swapped for a fresh one and the snapshot written in one multi-row upsert, so a count that
+ * lands during the write is never lost; a failed write merges the snapshot back by addition.
+ * One container (ADR-033): the map is the whole truth between flushes. A SIGTERM flush races
+ * Next's own close and usually saves a deploy's last seconds; a crash loses up to ten.
+ */
+export type TrafficKind = 'landing' | 'crawl';
+
+export interface TrafficRow {
+  date: string;
+  kind: TrafficKind;
+  source: string;
+  path: string;
+  hits: number;
+}
+
+export const FLUSH_MS = 10_000;
+export const FLUSH_AT = 500;
+/** Past this many keys new ones are dropped with one warning: a database that stays down cannot grow the process. */
+export const KEY_CEILING = 5_000;
+
+interface State {
+  map: Map<string, TrafficRow>;
+  timer: ReturnType<typeof setInterval> | null;
+  /** The one SIGTERM listener, added on the first start and kept across resets. */
+  onTerm: (() => void) | null;
+  warned: boolean;
+  flushing: Promise<void> | null;
+  getPayload: (() => Promise<Payload>) | null;
+  /** After a failed write the size-triggered flush waits for the timer, and the log for a minute. */
+  holdUntil: number;
+  lastErrorAt: number;
+}
+
+const ERROR_LOG_EVERY_MS = 60_000;
+
+const KEY = '__b7rTraffic';
+
+/** The state on `globalThis`: dev HMR reloads the module and must not start a second timer. */
+function state(): State {
+  const g = globalThis as typeof globalThis & { [KEY]?: State };
+  g[KEY] ??= {
+    map: new Map(),
+    timer: null,
+    onTerm: null,
+    warned: false,
+    flushing: null,
+    getPayload: null,
+    holdUntil: 0,
+    lastErrorAt: 0,
+  };
+  return g[KEY];
+}
+
+/** The four columns joined by a newline, which none of them can contain. */
+function keyOf(row: Omit<TrafficRow, 'hits'>): string {
+  return `${row.date}\n${row.kind}\n${row.source}\n${row.path}`;
+}
+
+function add(map: Map<string, TrafficRow>, row: TrafficRow, limit: number): boolean {
+  const key = keyOf(row);
+  const existing = map.get(key);
+  if (existing) {
+    existing.hits += row.hits;
+    return true;
+  }
+  if (map.size >= limit) return false;
+  map.set(key, { ...row });
+  return true;
+}
+
+/** One more hit for the row, dated now in Riyadh. */
+export function count(
+  row: { kind: TrafficKind; source: string; path: string },
+  now = new Date(),
+): void {
+  const s = state();
+  const ok = add(s.map, { ...row, date: riyadh(now).dateKey, hits: 1 }, KEY_CEILING);
+  if (!ok && !s.warned) {
+    s.warned = true;
+    console.warn(
+      `traffic: ${KEY_CEILING} rows waiting and the flush is not landing; dropping new keys`,
+    );
+  }
+  if (s.map.size >= FLUSH_AT && now.getTime() >= s.holdUntil) void flush();
+}
+
+/** The rows waiting to be written (a snapshot, for the tests). */
+export function pending(): TrafficRow[] {
+  return [...state().map.values()].map((r) => ({ ...r }));
+}
+
+/** Writes the given rows: one statement, an upsert per row on the compound unique index. */
+export async function upsertRows(payload: Payload, rows: TrafficRow[]): Promise<void> {
+  if (rows.length === 0) return;
+  const { drizzle } = payload.db as unknown as Pick<PostgresAdapter, 'drizzle'>;
+  const values = rows.map(
+    (r) =>
+      sql`(${r.date}, ${r.kind}::"enum_traffic_kind", ${r.source}, ${r.path}, ${r.hits}, now(), now())`,
+  );
+  await drizzle.execute(sql`
+    INSERT INTO "traffic" ("date", "kind", "source", "path", "hits", "updated_at", "created_at")
+    VALUES ${sql.join(values, sql`, `)}
+    ON CONFLICT ("date", "kind", "source", "path")
+    DO UPDATE SET "hits" = "traffic"."hits" + excluded."hits", "updated_at" = now();`);
+}
+
+/**
+ * Swap, write, and on failure merge back. Concurrent calls share one flight; a call during a
+ * flight waits for it and then flushes what arrived meanwhile.
+ */
+export async function flush(getPayload = state().getPayload): Promise<void> {
+  const s = state();
+  // A call during a flight waits for it, then for any flight a waiter ahead of it started.
+  // oxlint-disable-next-line no-await-in-loop
+  while (s.flushing) await s.flushing;
+  if (s.map.size === 0 || !getPayload) return;
+  const snapshot = s.map;
+  s.map = new Map();
+  s.warned = false;
+  s.flushing = (async () => {
+    try {
+      const payload = await getPayload();
+      await upsertRows(payload, [...snapshot.values()]);
+    } catch (error) {
+      for (const row of snapshot.values()) add(s.map, row, Number.POSITIVE_INFINITY);
+      const now = Date.now();
+      s.holdUntil = now + FLUSH_MS;
+      if (now - s.lastErrorAt >= ERROR_LOG_EVERY_MS) {
+        s.lastErrorAt = now;
+        console.error('traffic: flush failed, rows kept for the next one:', error);
+      }
+    } finally {
+      s.flushing = null;
+    }
+  })();
+  await s.flushing;
+}
+
+/**
+ * Starts the ten-second flush once per process (the route handlers call this on their first
+ * count); the timer never keeps the process alive, and SIGTERM flushes once more.
+ */
+export function startFlusher(getPayload: () => Promise<Payload>): void {
+  const s = state();
+  s.getPayload = getPayload;
+  if (s.timer) return;
+  s.timer = setInterval(() => void flush(), FLUSH_MS);
+  s.timer.unref();
+  if (!s.onTerm) {
+    s.onTerm = () => void flush();
+    process.once('SIGTERM', s.onTerm);
+  }
+}
+
+/** For the tests: forget everything, including the timer. */
+export function resetCounter(): void {
+  const s = state();
+  if (s.timer) clearInterval(s.timer);
+  s.map = new Map();
+  s.timer = null;
+  s.warned = false;
+  s.flushing = null;
+  s.getPayload = null;
+  s.holdUntil = 0;
+  s.lastErrorAt = 0;
+}

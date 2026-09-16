@@ -7,31 +7,14 @@ import { lexicalEditor } from '@payloadcms/richtext-lexical';
 import { s3Storage } from '@payloadcms/storage-s3';
 import { en } from '@payloadcms/translations/languages/en';
 import { buildConfig } from 'payload';
-import { AiRuns } from '@/modules/ai-content/runs';
-import { AiSettings } from '@/modules/ai-content/settings';
-import { AiTopics } from '@/modules/ai-content/topics';
 import { digestTask } from '@/modules/ai-content/digest';
 import { freshnessTask } from '@/modules/ai-content/freshness';
 import { contentTickTask } from '@/modules/ai-content/tick';
 import { AI_QUEUE, generatePostWorkflow } from '@/modules/ai-content/workflow';
-import { Authors } from '@/modules/cms/collections/authors';
-import { Categories } from '@/modules/cms/collections/categories';
-import { Faqs } from '@/modules/cms/collections/faqs';
-import { Integrations } from '@/modules/cms/collections/integrations';
-import { Media } from '@/modules/cms/collections/media';
-import { Pages } from '@/modules/cms/collections/pages';
-import { Posts } from '@/modules/cms/collections/posts';
-import { Products } from '@/modules/cms/collections/products';
-import { Tags } from '@/modules/cms/collections/tags';
 import { REDIRECT_OVERRIDES } from '@/modules/cms/collections/redirects';
 import { indexNowTask } from '@/modules/cms/jobs/indexnow';
-import { Testimonials } from '@/modules/cms/collections/testimonials';
-import { Users } from '@/modules/cms/collections/users';
-import { Connections } from '@/modules/connections/collection';
 import { cmsEnv, isBuildPhase } from '@/lib/cms/env';
-import { Home } from '@/modules/cms/globals/home';
-import { SeoDefaults } from '@/modules/cms/globals/seo-defaults';
-import { SiteSettings } from '@/modules/cms/globals/site-settings';
+import { COLLECTIONS, GLOBALS } from '@/modules/cms/entities';
 import { migrations } from '@/migrations';
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -57,7 +40,7 @@ export default buildConfig({
     ValidationError: 'info',
   },
   admin: {
-    user: Users.slug,
+    user: 'users',
     // Dark only (Dhia, 2026-09-13; ADR-039): the panel keeps Payload's dark greys.
     theme: 'dark',
     // The default avatar fetches gravatar.com with a hash of the user's email (ADR-028).
@@ -105,23 +88,8 @@ export default buildConfig({
         }),
       }
     : {}),
-  collections: [
-    Users,
-    Media,
-    Products,
-    Pages,
-    Faqs,
-    Testimonials,
-    Integrations,
-    Posts,
-    Categories,
-    Authors,
-    Tags,
-    AiTopics,
-    AiRuns,
-    Connections,
-  ],
-  globals: [Home, SiteSettings, SeoDefaults, AiSettings],
+  collections: COLLECTIONS,
+  globals: GLOBALS,
   db: postgresAdapter({
     pool: { connectionString: env.databaseUrl },
     push: false,

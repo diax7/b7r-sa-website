@@ -81,6 +81,7 @@ export interface Config {
     'ai-topics': AiTopic;
     'ai-runs': AiRun;
     connections: Connection;
+    traffic: Traffic;
     redirects: Redirect;
     'payload-kv': PayloadKv;
     'payload-jobs': PayloadJob;
@@ -104,6 +105,7 @@ export interface Config {
     'ai-topics': AiTopicsSelect<false> | AiTopicsSelect<true>;
     'ai-runs': AiRunsSelect<false> | AiRunsSelect<true>;
     connections: ConnectionsSelect<false> | ConnectionsSelect<true>;
+    traffic: TrafficSelect<false> | TrafficSelect<true>;
     redirects: RedirectsSelect<false> | RedirectsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-jobs': PayloadJobsSelect<false> | PayloadJobsSelect<true>;
@@ -1284,6 +1286,37 @@ export interface Connection {
   createdAt: string;
 }
 /**
+ * Where visitors come from and what the AI crawlers read: the site's own daily count, no cookies, no IP addresses. Read-only.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "traffic".
+ */
+export interface Traffic {
+  id: number;
+  /**
+   * The day in Riyadh time the landings or crawls happened; one row per day, source and page.
+   */
+  date: string;
+  /**
+   * "Landing": a visitor arriving from another site or directly. "Crawl": an AI or search bot reading the page.
+   */
+  kind: 'landing' | 'crawl';
+  /**
+   * How many landings or reads that day for this source and page.
+   */
+  hits: number;
+  /**
+   * For a landing: the referring site with www and app links folded (chatgpt.com, google.com), or "direct". For a crawl: the bot (gptbot). The channel is derived from it at read.
+   */
+  source: string;
+  /**
+   * The page the visitor landed on or the bot read, without a query string: /, /products/hoodie, /en/blog/…, or llms.txt.
+   */
+  path: string;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * Send an old URL to a page or a new URL. Live as soon as it is saved.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1487,6 +1520,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'connections';
         value: number | Connection;
+      } | null)
+    | ({
+        relationTo: 'traffic';
+        value: number | Traffic;
       } | null)
     | ({
         relationTo: 'redirects';
@@ -2088,6 +2125,19 @@ export interface ConnectionsSelect<T extends boolean = true> {
         name?: T;
         at?: T;
       };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "traffic_select".
+ */
+export interface TrafficSelect<T extends boolean = true> {
+  date?: T;
+  kind?: T;
+  hits?: T;
+  source?: T;
+  path?: T;
   updatedAt?: T;
   createdAt?: T;
 }

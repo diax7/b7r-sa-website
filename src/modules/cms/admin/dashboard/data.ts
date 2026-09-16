@@ -2,7 +2,7 @@ import { getTranslation } from '@payloadcms/translations';
 import type { I18nClient } from '@payloadcms/translations';
 import type { LucideIcon } from 'lucide-react';
 import { CirclePlus } from 'lucide-react';
-import type { Payload, PayloadRequest, SanitizedPermissions, TypedUser } from 'payload';
+import type { Field, Payload, PayloadRequest, SanitizedPermissions, TypedUser } from 'payload';
 import { formatAdminURL } from 'payload/shared';
 import {
   ACTION_ICONS,
@@ -26,6 +26,15 @@ export interface QuickAction {
   icon: LucideIcon;
   hue: Hue;
   external?: boolean;
+}
+
+/**
+ * "Latest changes" lists what a person saves: a collection without the `lastSavedBy` stamp is
+ * written by a machine (the runs log, the traffic count, whose upsert touches `updatedAt` every
+ * ten seconds) and stays out. Views are not entities and never reach here.
+ */
+export function savesByPeople(collection: { fields: Field[] }): boolean {
+  return collection.fields.some((f) => 'name' in f && f.name === SAVED_BY);
 }
 
 /** The actions this user may take, in the order an editor needs them. */
@@ -190,7 +199,7 @@ export async function recentActivity(args: {
           return;
         }
         const collection = payload.config.collections.find((c) => c.slug === entity.slug);
-        if (!collection) return;
+        if (!collection || !savesByPeople(collection)) return;
         const titleField = collection.admin.useAsTitle || 'id';
         const { docs } = await payload.find({
           collection: entity.slug as Parameters<Payload['find']>[0]['collection'],
