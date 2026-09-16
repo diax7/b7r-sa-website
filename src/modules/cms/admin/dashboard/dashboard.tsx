@@ -9,6 +9,8 @@ import { RecentActivity } from '@/modules/cms/admin/dashboard/recent-activity';
 import { adminStrings } from '@/modules/cms/admin/strings';
 import { TrafficCard } from '@/modules/traffic/admin/traffic-card';
 import { trafficSummary } from '@/modules/traffic/summary';
+import { VisibilityCard } from '@/modules/visibility/admin/visibility-card';
+import { reading } from '@/modules/visibility/reading';
 
 const s = adminStrings.dashboard;
 
@@ -25,11 +27,13 @@ export async function Dashboard(props: AdminViewServerProps) {
   // The engine and traffic cards are for admins (the settings global and the count are theirs alone).
   const engineAllowed = permissions?.globals?.['ai-settings']?.read === true;
   const trafficAllowed = permissions?.collections?.['traffic']?.read === true;
-  const [health, recent, engine, traffic] = await Promise.all([
+  const scoreAllowed = permissions?.globals?.['visibility-checklist']?.read === true;
+  const [health, recent, engine, traffic, score] = await Promise.all([
     healthReport(),
     recentActivity({ payload, req, user, permissions, i18n }),
     engineAllowed ? engineSummary(payload) : Promise.resolve(null),
     trafficAllowed ? trafficSummary(payload, { days: 7 }) : Promise.resolve(null),
+    scoreAllowed ? reading(payload, { user: user ?? null }) : Promise.resolve(null),
   ]);
   const name = String(user?.['name'] ?? user?.email ?? '');
   const [before, after] = s.greeting.split('{name}');
@@ -50,6 +54,7 @@ export async function Dashboard(props: AdminViewServerProps) {
           <HealthCard report={health} />
         </div>
         <div className="grid gap-6 lg:grid-cols-2">
+          {score && <VisibilityCard score={score.score} href={`${adminRoute}/visibility`} />}
           {traffic && <TrafficCard summary={traffic} href={`${adminRoute}/traffic`} />}
           {engine && <EngineCard summary={engine} adminRoute={adminRoute} />}
         </div>

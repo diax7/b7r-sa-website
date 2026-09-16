@@ -50,6 +50,10 @@ note), `check:rtl` and the admin e2e.
    (`admin/views/gate.tsx`): Payload renders a custom view with a `path` for anyone. Reads
    inside run with the user's access. A module's admin folder is a `@source` of `admin.css`
    and a `@source not` of `globals.css` (`tests/admin-css.test.ts`).
+12. A visibility rule (ADR-049) is a pure function over the snapshot in
+   `src/modules/visibility/rules/`, with its sentence and guide beside it; its weight lives in
+   `rules/weights.ts`; a guide always links to the field that fixes the finding, in the
+   locale that is missing; a thing the site guarantees by construction is a fact, not a rule.
 
 ## Adding an admin component
 

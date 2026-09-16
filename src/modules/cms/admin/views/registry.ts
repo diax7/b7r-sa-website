@@ -15,4 +15,9 @@ export const ADMIN_VIEW_COMPONENTS: Record<
     path: '/traffic',
     exact: true,
   },
+  visibility: {
+    Component: '@/modules/visibility/admin/visibility-view#VisibilityView',
+    path: '/visibility',
+    exact: true,
+  },
 };

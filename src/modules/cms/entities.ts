@@ -18,6 +18,7 @@ import { SeoDefaults } from '@/modules/cms/globals/seo-defaults';
 import { SiteSettings } from '@/modules/cms/globals/site-settings';
 import { Connections } from '@/modules/connections/collection';
 import { Traffic } from '@/modules/traffic/collection';
+import { VisibilityChecklist } from '@/modules/visibility/checklist';
 
 /**
  * Every collection and global the panel serves, in one list the Payload config and
@@ -42,4 +43,10 @@ export const COLLECTIONS: CollectionConfig[] = [
   Traffic,
 ];
 
-export const GLOBALS: GlobalConfig[] = [Home, SiteSettings, SeoDefaults, AiSettings];
+export const GLOBALS: GlobalConfig[] = [
+  Home,
+  SiteSettings,
+  SeoDefaults,
+  AiSettings,
+  VisibilityChecklist,
+];

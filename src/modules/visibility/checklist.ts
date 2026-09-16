@@ -1,0 +1,56 @@
+import type { Field, GlobalConfig } from 'payload';
+import { hiddenUnlessAdmin, isAdmin } from '@/modules/cms/access';
+import { describeFields } from '@/modules/cms/admin/descriptions/describe';
+import { globalComponents } from '@/modules/cms/admin/document/config';
+import { adminGroup } from '@/modules/cms/admin/icons';
+import { savedByField, stampSavedByGlobal } from '@/modules/cms/fields/saved-by';
+import { CHECKLIST_DESCRIPTIONS } from '@/modules/visibility/descriptions';
+import { CHECKLIST_ITEMS } from '@/modules/visibility/rules/rest';
+
+export const CHECKLIST = 'visibility-checklist' as const;
+
+const LABELS: Record<(typeof CHECKLIST_ITEMS)[number]['key'], { ar: string; en: string }> = {
+  linkedinCompany: { ar: 'صفحة الشركة على LinkedIn', en: 'LinkedIn company page' },
+  linkedinFounder: { ar: 'حساب المؤسس على LinkedIn', en: 'LinkedIn founder profile' },
+  youtube: { ar: 'قناة YouTube بشرح واحد', en: 'YouTube channel with a walkthrough' },
+  xProfile: { ar: 'حساب X بمنشور مثبّت', en: 'X profile with a pinned demo' },
+  firstMention: { ar: 'أول ذكر من طرف ثالث', en: 'A first third-party mention' },
+};
+
+/**
+ * The off-site work the score cannot see (ADR-049 R1): five boxes an admin ticks once the
+ * thing exists. Each box's description says what counts. Admins only, under the Score page.
+ */
+export const VisibilityChecklist: GlobalConfig = {
+  slug: CHECKLIST,
+  label: { ar: 'قائمة الحضور الخارجي', en: 'Off-site checklist' },
+  admin: {
+    components: globalComponents(CHECKLIST, { localized: false }),
+    group: adminGroup('visibility'),
+    custom: {
+      shows: {
+        ar: 'لا يظهر في الموقع: ما أُنجز خارج الموقع ليقرأه محرّكو الإجابة',
+        en: 'nowhere on the site: what was done off-site for the answer engines to read',
+      },
+    },
+    hidden: hiddenUnlessAdmin,
+    description: {
+      ar: 'ما يقوله الآخرون عن العلامة: خمسة أعمال خارج الموقع تُعلَّم هنا عند إنجازها، وتدخل في درجة الظهور.',
+      en: 'What others say about the brand: five pieces of off-site work, ticked here once done, counted in the visibility score.',
+    },
+  },
+  access: { read: isAdmin, update: isAdmin },
+  hooks: { beforeChange: [stampSavedByGlobal] },
+  fields: describeFields(
+    [
+      ...CHECKLIST_ITEMS.map((item): Field => ({
+        name: item.key,
+        type: 'checkbox',
+        defaultValue: false,
+        label: LABELS[item.key],
+      })),
+      savedByField,
+    ],
+    CHECKLIST_DESCRIPTIONS,
+  ),
+};

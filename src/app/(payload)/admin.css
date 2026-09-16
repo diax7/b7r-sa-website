@@ -17,6 +17,7 @@
 @source '../../modules/ai-content/admin';
 @source '../../modules/connections/admin';
 @source '../../modules/traffic/admin';
+@source '../../modules/visibility/admin';
 @source '../../components';
 
 @theme inline {
