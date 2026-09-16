@@ -1506,7 +1506,10 @@ test.describe('CMS admin', () => {
         'data-status',
         production ? 'done' : 'missing',
       );
-      await expect(page.locator('[data-admin-finding="C1"]')).toContainText(/noindex/);
+      // A done item shows no guide; an open one says why.
+      await expect(page.locator('[data-admin-finding="C1"]')).toContainText(
+        production ? /production address/ : /noindex/,
+      );
       // Project 4's items read as missing with their guide; the checklist as missing with its five items.
       await expect(page.locator('[data-admin-finding="E6"]')).toHaveAttribute(
         'data-status',
