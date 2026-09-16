@@ -70,7 +70,7 @@ describe('content contract (BRD 8.4)', () => {
       expect(routes).toContain(r);
     }
   });
-  it('seed/pages.ts: the seven designed pages, legal bodies from Appendix B, the comparison as a draft', () => {
+  it('seed/pages.ts: the seven designed pages, legal bodies from Appendix B, the comparison (BRD 4.18)', () => {
     expectValid('pages.ts', z.array(PageSchema).length(8), pages);
     expect(pages.map((p) => p.slug)).toEqual([
       'how-it-works',
@@ -82,10 +82,10 @@ describe('content contract (BRD 8.4)', () => {
       'privacy',
       'compare-printful',
     ]);
-    // The comparison (ADR-050): a draft, one compare block, eight rows, no URL anywhere.
+    // The comparison (ADR-050, approved 2026-09-16): published, one compare block, eight
+    // rows, no URL anywhere.
     const compare = pages.find((p) => p.slug === 'compare-printful')!;
-    expect(compare.draft).toBe(true);
-    expect(pages.filter((p) => p.draft)).toHaveLength(1);
+    expect(pages.filter((p) => p.draft)).toHaveLength(0);
     const block = compare.blocks[0]!;
     if (block.blockType !== 'compare') throw new Error('a compare block');
     expect(block.rows).toHaveLength(8);

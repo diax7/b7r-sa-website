@@ -1370,6 +1370,37 @@ delete a wrong batch. **Rejected:** one run per prompt (seventy-five rows a week
 list); a system prompt that names B7R (the answer would name it back); counting a brand-naming
 prompt in the rate. BRD §7.7's quarterly manual check is this ledger, weekly.
 
+**Amended 2026-09-16 (Dhia): a period per prompt, the brand's own questions, the mock out of
+the picker.** Each prompt carries `everyDays` (1 to 365, seeded 1: every prompt daily, his
+call); the job runs every morning at 07:00 Riyadh and asks a connection the prompts due on it
+(never asked, or last asked at least the period ago, by the newest citation day per prompt on
+that connection); a connection with nothing due writes no row; "Run now" asks every enabled
+prompt whatever its period (`input.all`). Seven prompts that name the brand join the seed («ما
+هو بحر برنت؟», "Is B7R Print legit?", the prices, the Salla link): they leave the cited-rate
+as the compare prompts do and record what the engines say about B7R by name. The cost note on
+the page's period field: about $0.03 per engine per day for a daily prompt with web search
+on; each connection's monthly limit is the guard. The mock kind stays in code for the tests
+and shows in the Connections picker and the engine's picker only where `AI_CONTENT_MOCK=1`
+(the tests, the review server), never in production; the Mock rows on the review database
+were removed at his request. **The same day, from the first real batch:** a citation row keeps
+the whole answer as rich text (`answer`, the posts' editor's conversion of the markdown, up
+to 20,000 characters) and the ledger table opens it in a dialog, formatted, with the links
+it cited; the verdict in a cell is a green or red badge in words, and every checkbox in
+every list is such a badge (`BoolCell` through `describeFields`, never Payload's `true` /
+`false` pill). The cost estimate follows the model: `MODEL_RATES` names the vendors'
+published prices for the likely models and a row takes them when its model is sent (the
+rates stay editable); the search fee is by model family (`searchFeeFor`: OpenAI's mini and
+nano models search at $25 a thousand, Gemini 3 grounds at $14); Anthropic's search count is
+read from its usage metadata rather than the tool-call parts, which over-count, and its tool
+is capped at one search a prompt (three read 20,000 input tokens an answer). An answer's links
+are sanitised three times over: Lexical's markdown transformer and link node refuse a
+`javascript:` URL at conversion, and the dialog renders through `safeHref` like the site's
+prose. A model change from the admin form arrives with every field, so "untouched rates" means
+equal to the row's, not absent; the longest model family wins the rate lookup. The two custom
+views (Traffic, the Score page) render inside Payload's `DefaultTemplate` through
+`AdminShell` with the step nav: they had rendered bare, with no sidebar and no way back, a
+defect he reported.
+
 ## ADR-050: The GEO content: FAQPage schema, the compare page, answer-first openings, the off-site kit (2026-09-16)
 
 **Context.** Project 4 of Dhia's 2026-09-15 programme: the content the visibility score
@@ -1401,8 +1432,9 @@ allowlist need nothing; E7 reads `compare`/`vs` slugs) is seeded in both languag
 **draft** (the seed's `Page.draft`, honoured on the Arabic create and on the English update,
 since an update without `draft` publishes a versioned document): the public route answers 404
 and the preview renders it until Dhia publishes it. Its Arabic copy is written under BRD §0.5
-(`TODO(copy)`, `TODO_COPY` in the verbatim test, listed in the PR); once approved it moves into
-the BRD as §4.18 and the SEO row into §4.16. E7 reads `next` once the block's `asOf` is older
+(`TODO(copy)`, `TODO_COPY` in the verbatim test, listed in the PR); Dhia approved it on
+2026-09-16, it is BRD §4.18 with its SEO row in §4.16, the markers are gone, and the page is
+seeded published (it was published on the review server the same day). E7 reads `next` once the block's `asOf` is older
 than 180 days (`THRESHOLDS.compareAsOfDays`), with the guide to re-read and re-date: the as-of
 date carries points, not a block constraint. (3) The three Level 1 posts' seed bodies rewritten
 where the rules said: the pricing post and the print-on-demand post open with a 40 to 80-word

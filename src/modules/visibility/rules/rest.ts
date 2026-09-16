@@ -88,7 +88,7 @@ export function measurement(s: Snapshot): Finding[] {
       status: ledgerRecent ? 'done' : s.lastLedgerRunAt ? 'next' : 'missing',
       title: `The citation ledger ran in the last ${ledgerDays} days`,
       guide:
-        'The weekly run asks every enabled AI connection every prompt and records who named B7R. Needs an AI connection under Admin → Connections; "Run now" on this page starts one.',
+        'The morning run asks every enabled AI connection the prompts due on their period and records who named B7R. Needs an AI connection under Admin → Connections; "Run now" on this page asks every prompt at once.',
     }),
   ];
 }

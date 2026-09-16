@@ -1,4 +1,4 @@
-import { Gutter, Link } from '@payloadcms/ui';
+import { Link } from '@payloadcms/ui';
 import { Check, ChevronRight, CircleAlert, CircleX, type LucideIcon } from 'lucide-react';
 import type { AdminViewServerProps } from 'payload';
 import { Icon } from '@/components/shared/icon';
@@ -7,6 +7,7 @@ import { ADMIN_VIEWS } from '@/modules/cms/admin/icons';
 import { adminStrings } from '@/modules/cms/admin/strings';
 import { relativeTime } from '@/modules/cms/admin/dashboard/relative-time';
 import { adminView, viewUser } from '@/modules/cms/admin/views/gate';
+import { AdminShell } from '@/modules/cms/admin/views/shell';
 import { Ledger } from '@/modules/visibility/admin/ledger';
 import { Ring } from '@/modules/visibility/admin/ring';
 import { Signals } from '@/modules/visibility/admin/signals';
@@ -155,7 +156,7 @@ function SectionCard({ section }: { section: SectionScore }) {
  * only; the reads run with the user's access. "Recompute" bypasses the minute's cache.
  */
 export async function VisibilityView(props: AdminViewServerProps) {
-  const refused = adminView(props, ADMIN_VIEWS.visibility.path);
+  const refused = adminView(props, ADMIN_VIEWS.visibility.path, s.page.title);
   if (refused) return refused;
   const fresh = props.searchParams?.['fresh'] !== undefined;
   const { score, at } = await reading(props.payload, { user: viewUser(props), fresh });
@@ -173,7 +174,7 @@ export async function VisibilityView(props: AdminViewServerProps) {
         .replace('{date}', trend.since.date)
     : null;
   return (
-    <Gutter>
+    <AdminShell props={props} title={s.page.title}>
       <div
         className="flex flex-col gap-8 pb-2"
         data-admin-ui=""
@@ -221,6 +222,6 @@ export async function VisibilityView(props: AdminViewServerProps) {
           <p>{s.page.howSiteOnly}</p>
         </footer>
       </div>
-    </Gutter>
+    </AdminShell>
   );
 }

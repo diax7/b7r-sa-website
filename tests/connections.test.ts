@@ -1,7 +1,13 @@
 import type { Payload } from 'payload';
 import { describe, expect, it } from 'vitest';
 import { Connections } from '@/modules/connections/collection';
-import { CONNECTION_KINDS, isConnectionKind, KINDS } from '@/modules/connections/kinds';
+import {
+  CONNECTION_KINDS,
+  isConnectionKind,
+  KINDS,
+  ratesForModel,
+  searchFeeFor,
+} from '@/modules/connections/kinds';
 import { languageModel } from '@/modules/connections/model';
 import { toConnectionSpec } from '@/modules/connections/read';
 import { connectionSpend } from '@/modules/connections/spend';
@@ -214,6 +220,88 @@ describe('connections (ADR-047)', () => {
       collection: Connections as never,
     } as never);
     expect(updated).toEqual({ model: 'deepseek-chat' });
+  });
+
+  it('brings a known model its own rates when the model changes; an unknown one keeps the rates the row has', async () => {
+    const fill = Connections.hooks!.beforeValidate![0]!;
+    const change = (model: string, original: Record<string, unknown>) =>
+      fill({
+        data: { model },
+        originalDoc: original,
+        operation: 'update',
+        req: {} as never,
+        context: {},
+        collection: Connections as never,
+      } as never);
+    // gpt-4.1's rates were on the row; the mini is a fifth of the price.
+    expect(
+      await change('gpt-4.1-mini', {
+        kind: 'openai',
+        model: 'gpt-4.1',
+        inputPerMillionUsd: 2,
+        outputPerMillionUsd: 8,
+      }),
+    ).toEqual({ model: 'gpt-4.1-mini', inputPerMillionUsd: 0.4, outputPerMillionUsd: 1.6 });
+    expect(await change('claude-haiku-4-5-20251001', { kind: 'anthropic', model: 'x' })).toEqual({
+      model: 'claude-haiku-4-5-20251001',
+      inputPerMillionUsd: 1,
+      outputPerMillionUsd: 5,
+    });
+    // The admin form posts every field: a model change with the row's own rates untouched
+    // takes the known ones; a rate the admin edited in the same save wins.
+    const form = (model: string, rates: [number, number], original: Record<string, unknown>) =>
+      fill({
+        data: {
+          kind: original['kind'],
+          model,
+          inputPerMillionUsd: rates[0],
+          outputPerMillionUsd: rates[1],
+        },
+        originalDoc: original,
+        operation: 'update',
+        req: {} as never,
+        context: {},
+        collection: Connections as never,
+      } as never);
+    const row = { kind: 'openai', model: 'gpt-4.1', inputPerMillionUsd: 2, outputPerMillionUsd: 8 };
+    expect(await form('gpt-4.1-mini', [2, 8], row)).toMatchObject({
+      inputPerMillionUsd: 0.4,
+      outputPerMillionUsd: 1.6,
+    });
+    expect(await form('gpt-4.1-mini', [2, 9], row)).toMatchObject({
+      inputPerMillionUsd: 2,
+      outputPerMillionUsd: 9,
+    });
+    // Unknown: the rates are left as they are; the same model again: untouched.
+    expect(await change('my-fine-tune', { kind: 'openai', model: 'gpt-4.1' })).toEqual({
+      model: 'my-fine-tune',
+    });
+    expect(await change('gpt-4.1-mini', { kind: 'openai', model: 'gpt-4.1-mini' })).toEqual({
+      model: 'gpt-4.1-mini',
+    });
+    // A new row with a known model and no rates sent takes the model's, not the kind's.
+    const created = await fill({
+      data: { label: 'B', kind: 'google', model: 'gemini-2.5-flash' },
+      operation: 'create',
+      req: {} as never,
+      context: {},
+      collection: Connections as never,
+    } as never);
+    expect(created).toMatchObject({ inputPerMillionUsd: 0.3, outputPerMillionUsd: 2.5 });
+    expect(ratesForModel('GEMINI-3.1-PRO-PREVIEW')).toEqual({ input: 2, output: 12 });
+    // The longest family wins: a dated mini id is the mini, not its parent.
+    expect(ratesForModel('gpt-4.1-mini-2025-04-14')).toEqual({ input: 0.4, output: 1.6 });
+    expect(ratesForModel('gpt-5-mini-2025-08-07')).toEqual({ input: 0.25, output: 2 });
+    expect(ratesForModel('gemini-2.5-flash-lite-preview-06-17')).toEqual({
+      input: 0.1,
+      output: 0.4,
+    });
+    expect(ratesForModel('nope')).toBeNull();
+    expect(searchFeeFor('openai', 'gpt-4.1')).toBe(0.01);
+    expect(searchFeeFor('openai', 'gpt-4.1-mini')).toBe(0.025);
+    expect(searchFeeFor('google', 'gemini-2.5-pro')).toBe(0.035);
+    expect(searchFeeFor('google', 'gemini-3-flash-preview')).toBe(0.014);
+    expect(searchFeeFor('deepseek', 'deepseek-chat')).toBe(0);
   });
 
   it('refuses to delete the connection the engine settings name', async () => {

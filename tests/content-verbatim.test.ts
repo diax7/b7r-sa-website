@@ -13,7 +13,7 @@ import { ar } from '@/content/copy/ar';
 import { en } from '@/content/copy/en';
 import { blogAuthor, blogHubs, blogPosts } from '@/content/seed/blog';
 import { seo } from '@/content/seed/seo';
-import { comparePrintful, pages } from '@/content/seed/pages';
+import { pages } from '@/content/seed/pages';
 import { products } from '@/content/seed/products';
 import { site } from '@/content/seed/site';
 
@@ -43,12 +43,6 @@ function collectStrings(value: unknown, out: string[] = []): string[] {
 }
 
 const TODO_COPY = new Set<string>([
-  // The comparison block's fixed words, the comparison page and its BRD 4.16 row (ADR-050,
-  // project 4), written under BRD 0.5 and listed for Dhia in the PR; they move into the BRD
-  // as 4.18 once approved.
-  ...Object.values(messages.compare),
-  ...collectStrings(comparePrintful),
-  ...collectStrings(seo.find((r) => r.route === '/compare-printful')),
   // Designer upload target and its remove control (design review 2026-09-13, Appendix G).
   messages.designer.uploadPrompt,
   messages.designer.remove,

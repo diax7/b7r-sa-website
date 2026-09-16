@@ -146,14 +146,14 @@ The admin's strings are interface copy (ADR-031): written by us, under the ux-ar
 |---|---|---|
 | `Button` | `shared/button.tsx` | `primary` only for the one main action; `secondary`/`ghost`/`link` variants are blue text → **not** on dark; use `variant="inverse"` for a white-on-blue exception. |
 | `Card` | `shared/card.tsx` | Dashboard tiles and sections. `hoverable` for tiles that are links. |
-| `Badge` | `shared/badge.tsx` | Status: `success` (live, running), `warning` (off, console), `error` (failed), `muted` (n/a). |
+| `Badge` | `shared/badge.tsx` | Status: `success` (live, running), `warning` (off, console), `error` (failed), `muted` (n/a). Every checkbox in a list renders as one (`BoolCell`, set by `describeFields`): green Yes / On, red No / Off, never Payload's `true` / `false` pill. |
 | `Icon` | `shared/icon.tsx` | Every icon. |
 | `Tooltip` | `ui/tooltip.tsx` | Icon-only buttons and truncated titles. Not for essential information. |
 | `DropdownMenu` | `ui/dropdown-menu.tsx` | Account menu, row actions. Icon before each item. |
 | `Switch` | `ui/switch.tsx` | `enabled` fields (the `EnabledSwitch` widget). Never for an immediate action. |
 | `Collapsible` | `ui/collapsible.tsx` | Nav groups; remembers its state in Payload preferences. |
 | `CompareBlock` | `modules/pages/blocks/compare.tsx` | A page block (ADR-050): a captioned table with scoped headers and a sticky criterion column, "best for" and "not best for", the read date; no link. Its fields are described in the pages' map. |
-| `Dialog` | `ui/dialog.tsx` | The command palette; confirmations. |
+| `Dialog` | `ui/dialog.tsx` | The command palette; confirmations; an engine's whole answer from the ledger table (`AnswerDialog`, the answer as prose with the links it cited). |
 | `Separator`, `Kbd` | `ui/separator.tsx`, `ui/kbd.tsx` | Group hairlines; key hints («Ctrl K»). |
 
 Payload's own elements (buttons, fields, pills, toasts) are themed in `admin.css` under

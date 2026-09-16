@@ -1,8 +1,12 @@
 import { Link } from '@payloadcms/ui';
 import { Check, Link2, X } from 'lucide-react';
+import { Badge } from '@/components/shared/badge';
 import { Icon } from '@/components/shared/icon';
+import type { LexicalState } from '@/lib/lexical';
+import { LexicalProse } from '@/modules/core/rich-text/lexical-prose';
 import { cn } from '@/lib/cn';
 import { adminStrings } from '@/modules/cms/admin/strings';
+import { AnswerDialog } from '@/modules/visibility/admin/answer-dialog';
 import { RunLedger } from '@/modules/visibility/admin/run-ledger-action';
 import type { CitationRow, LedgerReading } from '@/modules/visibility/ledger/reading';
 
@@ -12,20 +16,33 @@ const th = 'py-1 pe-3 text-start text-caption font-medium text-text-muted';
 const td = 'py-2 pe-3 align-top text-small text-text';
 const pct = (n: number, of: number) => (of > 0 ? `${Math.round((n / of) * 100)}%` : '');
 
-function Cell({ row }: { row: CitationRow | undefined }) {
+/** One engine's answer to one prompt: the verdict as a coloured badge, the link mark, and the whole answer behind "View answer". */
+function Cell({ row, engine }: { row: CitationRow | undefined; engine: string }) {
   if (!row) return <span className="text-caption text-text-muted">{s.notRun}</span>;
   return (
-    <span className="inline-flex items-center gap-1" data-admin-cited={row.mentioned}>
-      <Icon
-        icon={row.mentioned ? Check : X}
-        size={16}
-        className={row.mentioned ? 'text-success' : 'text-error'}
-        aria-label={row.mentioned ? s.cited : s.uncited}
-      />
-      {row.linked && (
-        <Icon icon={Link2} size={14} className="text-text-muted" aria-label={s.linked} />
+    <div className="flex flex-col items-start gap-1" data-admin-cited={row.mentioned}>
+      <span className="inline-flex items-center gap-1">
+        <Badge tone={row.mentioned ? 'success' : 'error'} className="gap-1">
+          <Icon icon={row.mentioned ? Check : X} size={12} />
+          {row.mentioned ? s.cited : s.uncited}
+        </Badge>
+        {row.linked && (
+          <Icon icon={Link2} size={14} className="text-success" aria-label={s.linked} />
+        )}
+      </span>
+      {row.answer ? (
+        <AnswerDialog
+          title={s.answerTitle.replace('{engine}', engine).replace('{date}', row.date)}
+          urls={row.urls}
+        >
+          <LexicalProse data={row.answer as LexicalState} locale="ar" />
+        </AnswerDialog>
+      ) : (
+        <span className="text-caption text-text-muted" dir="auto">
+          {row.excerpt}
+        </span>
       )}
-    </span>
+    </div>
   );
 }
 
@@ -74,6 +91,11 @@ export function Ledger({ reading, adminRoute }: { reading: LedgerReading; adminR
                     .replace('{runs}', String(e.runs))
                     .replace('{linked}', pct(e.linked, e.rows) || '0%')}
                 </span>
+                {e.monthlyLimitUsd === null && (
+                  <Badge tone="warning" className="self-start" data-admin-no-limit="">
+                    {s.noLimit}
+                  </Badge>
+                )}
               </div>
             ))}
           </div>
@@ -91,7 +113,6 @@ export function Ledger({ reading, adminRoute }: { reading: LedgerReading; adminR
               </thead>
               <tbody className="divide-y divide-border">
                 {reading.prompts.map((p) => {
-                  const answers = Object.values(p.latest);
                   return (
                     <tr key={p.id} data-admin-ledger-prompt={p.id}>
                       <td className={td}>
@@ -100,6 +121,11 @@ export function Ledger({ reading, adminRoute }: { reading: LedgerReading; adminR
                             {p.text}
                             {p.namesBrand && (
                               <span className="ms-2 text-caption text-text-muted">{s.brand}</span>
+                            )}
+                            {p.everyDays > 1 && (
+                              <span className="ms-2 text-caption text-text-muted">
+                                {s.every.replace('{n}', String(p.everyDays))}
+                              </span>
                             )}
                           </span>
                           {p.fix && (
@@ -114,30 +140,11 @@ export function Ledger({ reading, adminRoute }: { reading: LedgerReading; adminR
                               </Link>
                             </span>
                           )}
-                          {answers.length > 0 && (
-                            <details className="text-caption text-text-muted">
-                              <summary className="cursor-pointer">{s.excerpts}</summary>
-                              <ul className="mt-1 flex flex-col gap-1">
-                                {answers.map((a) => (
-                                  <li key={a.id} dir="auto">
-                                    <span className="font-medium">
-                                      {engines.find((e) => e.connection === a.connection)?.label ??
-                                        a.provider}
-                                      {' · '}
-                                      <span className="tabular-nums">{a.date}</span>
-                                      {': '}
-                                    </span>
-                                    {a.excerpt}
-                                  </li>
-                                ))}
-                              </ul>
-                            </details>
-                          )}
                         </div>
                       </td>
                       {engines.map((e) => (
                         <td key={e.connection} className={td}>
-                          <Cell row={p.latest[e.connection]} />
+                          <Cell row={p.latest[e.connection]} engine={e.label} />
                         </td>
                       ))}
                     </tr>

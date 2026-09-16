@@ -197,17 +197,16 @@ export const shipping = legalPage('shipping', 'الشحن والتوصيل');
 export const privacy = legalPage('privacy', 'سياسة الخصوصية');
 
 /**
- * The comparison page (ADR-050, E7): B7R against Printful for a Saudi merchant, seeded as a
- * draft until Dhia approves the facts. TODO(copy): the Arabic is written under BRD 0.5 and
- * listed for his review; the claims about Printful are its public pages read on 2026-09-16
- * (the help centre's shipping and pricing pages, the integrations directory), named on the
- * page as text, never linked (BRD 7.9). BRD 1.2 states the positioning the rows expand.
+ * The comparison page (ADR-050, E7, BRD 4.18): B7R against Printful for a Saudi merchant,
+ * approved by Dhia on 2026-09-16 and seeded published. The claims about Printful are its
+ * public pages read on 2026-09-16 (the help centre's shipping and pricing pages, the
+ * integrations directory), named on the page as text, never linked (BRD 7.9). BRD 1.2 states
+ * the positioning the rows expand.
  */
 export const comparePrintful: Page = {
   slug: 'compare-printful',
   title: 'بحر برنت مقابل Printful: أيهما أنسب لمتجر سعودي؟',
   lead: 'مقارنة بالأرقام لتاجر يبيع في السعودية: من أين تُطبع القطعة، متى تصل، وكم تكلّف.',
-  draft: true,
   blocks: [
     {
       id: 'compare-1',
@@ -268,7 +267,7 @@ export const comparePrintful: Page = {
   updatedAt: '2026-09-16',
 };
 
-/** The seven, in the navigation's order, and the comparison (a draft). */
+/** The seven, in the navigation's order, and the comparison. */
 export const pages: Page[] = [
   howItWorks,
   about,

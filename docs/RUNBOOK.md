@@ -368,18 +368,41 @@ retry copy; `NEWSLETTER_TRANSPORT=mock` (tests only) keeps subscriptions in memo
   not name the brand become backlog topics (`source: searchConsole`) for the engine to write,
   one per keyword, under the hub whose name and description share the most words.
 - **The citation ledger.** Visibility → Prompts holds the questions a buyer asks an
-  assistant (fifteen seeded; add, edit or switch off; a prompt that names the brand is
-  ticked "Names the brand" and stays out of the rate). Every Monday at 07:00 Riyadh, every
-  enabled AI connection under Admin → Connections is asked every enabled prompt with the
-  vendor's web search on (OpenAI, Anthropic, Google; DeepSeek and a compatible endpoint are
-  asked plain), and the Score page's ledger shows who named B7R, who linked, and the
-  competitors named most; the rows sit under the page as Citations. "Run now" on the page
-  starts a batch (one per ten minutes; a connection asked within the hour is skipped).
-- **What it costs.** An estimate: fifteen prompts on one engine is about 15 × 1,500 output
-  tokens plus the vendor's search fee (OpenAI and Anthropic $0.01 a search, Google $0.035),
-  so $0.30 to $0.80 a week per engine, $2 to $4 for five. Each connection's monthly limit
-  guards it; the engine's daily cost cap does not count it (that cap guards the writing).
-  One `citation` run per connection per week lands in Blog → Runs with the cost.
+  assistant (twenty-two seeded: fifteen category questions and seven about B7R by name; add,
+  edit or switch off; a prompt that names the brand is ticked "Names the brand" and stays out
+  of the rate). Each prompt has a period, "Every (days)": 1 asks it every morning, 7 weekly,
+  30 monthly; the seed sets 1 on all. Every morning at 07:00 Riyadh, every enabled AI
+  connection under Admin → Connections is asked the prompts due on it, with the vendor's web
+  search on (OpenAI, Anthropic, Google; DeepSeek and a compatible endpoint are asked plain),
+  and the Score page's ledger shows who named B7R, who linked, and the competitors named
+  most; the rows sit under the page as Citations. "Run now" on the page asks every enabled
+  prompt whatever its period (one per ten minutes; a connection asked within the hour is
+  skipped).
+- **What it costs, measured.** The first real batch (2026-09-16, 22 prompts, web search on):
+  OpenAI `gpt-4.1-mini` about $0.22, Google `gemini-3.1-pro-preview` about $0.40, Anthropic
+  `claude-sonnet-4-5` $2.78 with three searches a prompt (the pages a search finds are fed to
+  the model as input: 20,000 tokens an answer). The number on a run is an **estimate**: the
+  tokens the vendor reported at the rates saved on the connection, plus the vendor's
+  published search fee; the bill is on the vendor's usage page. The rates follow the model
+  for the known ones (`MODEL_RATES`: picking `gpt-4.1-mini` on an OpenAI row brings its own
+  price); check them once against the vendor's page after you change a model. The levers, in
+  order: **a monthly limit on every AI connection** (Admin → Connections → the limit; the
+  ledger skips a connection at its limit, and a row without one has no brake, which the
+  engine's card says in amber), the period (a prompt every 7 days costs a seventh), one
+  search a prompt on Claude
+  (the setting since 2026-09-16), a cheaper model (`gpt-4.1-mini`, `gemini-2.5-flash`,
+  `claude-haiku-4-5`), fewer prompts. All 22 daily on those three models is about $1 to $1.5
+  a day; the seven brand prompts daily and the fifteen category prompts weekly is about
+  $0.50 a day. Each connection's monthly limit stops it at your number (Admin → Connections
+  → the limit; set one on every connection); the engine's daily cost cap does not count the
+  ledger (that cap guards the writing). One `citation` run per connection per morning lands
+  in Blog → Runs with its estimate.
+- **OpenRouter and the like.** An "OpenAI-compatible endpoint" connection reaches any model
+  through one key (`https://openrouter.ai/api/v1`, the model as `openai/gpt-4.1-mini`), at the
+  vendors' token prices plus the broker's fee: no cheaper per token. The ledger asks such a
+  connection plain, without the vendor's own web search, so it does not measure what ChatGPT,
+  Gemini or Claude answer with search on, which is the ledger's question; it fits the writing
+  engine, where any capable model will do.
 - **Reading a red row.** A prompt no engine names B7R on carries "improve the answer block
   of" with a link to the page or post whose title is closest: make its opening paragraph
   answer that question in 40 to 80 words (E3), and let the next Monday tell.
@@ -448,6 +471,10 @@ ignore when 2.0.2 ships.
 
 ## The content engine (BRD 10.2, ADR-042, ADR-047)
 
+- **The mock.** The kind "Mock (tests only)" shows in the pickers only where the environment
+  carries `AI_CONTENT_MOCK=1` (CI and the review server, for the automated tests); take that
+  line out of `.env.local` to hide it on the review server too (the engine's and the ledger's
+  end-to-end tests then run on CI only).
 - **Keys.** Admin → Connections → Create: a name, the service (OpenAI, Anthropic, Google,
   DeepSeek, or "OpenAI-compatible endpoint" with the service's `https://` address for any
   other AI that serves the OpenAI API), the key, the model id (empty: the service's usual

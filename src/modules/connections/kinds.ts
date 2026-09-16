@@ -126,6 +126,57 @@ export const KINDS: Record<ConnectionKind, KindInfo> = {
   },
 };
 
+/**
+ * The vendors' published prices per million tokens for the models a connection is likely to
+ * name (2026-09-16), so the estimate follows the model, not only the kind: picking
+ * `gpt-4.1-mini` on an OpenAI row costs a fifth of `gpt-4.1`. A model not listed keeps the
+ * rates the row has; the rates stay editable.
+ */
+export const MODEL_RATES: Record<string, { input: number; output: number }> = {
+  'gpt-4.1': { input: 2, output: 8 },
+  'gpt-4.1-mini': { input: 0.4, output: 1.6 },
+  'gpt-4.1-nano': { input: 0.1, output: 0.4 },
+  'gpt-4o': { input: 2.5, output: 10 },
+  'gpt-4o-mini': { input: 0.15, output: 0.6 },
+  'gpt-5': { input: 1.25, output: 10 },
+  'gpt-5-mini': { input: 0.25, output: 2 },
+  'gpt-5-nano': { input: 0.05, output: 0.4 },
+  'claude-sonnet-4-5': { input: 3, output: 15 },
+  'claude-opus-4-1': { input: 15, output: 75 },
+  'claude-haiku-4-5': { input: 1, output: 5 },
+  'gemini-2.5-pro': { input: 1.25, output: 10 },
+  'gemini-2.5-flash': { input: 0.3, output: 2.5 },
+  'gemini-2.5-flash-lite': { input: 0.1, output: 0.4 },
+  'gemini-3.1-pro-preview': { input: 2, output: 12 },
+  'gemini-3-flash-preview': { input: 0.5, output: 3 },
+  'deepseek-chat': { input: 0.27, output: 1.1 },
+  'deepseek-reasoner': { input: 0.55, output: 2.19 },
+};
+
+/** The known rates of a model id, exact or by its dated variant (`claude-sonnet-4-5-20250929`). */
+export function ratesForModel(model: string): { input: number; output: number } | null {
+  const id = model.trim().toLowerCase();
+  if (MODEL_RATES[id]) return MODEL_RATES[id];
+  // The longest family wins: `gpt-4.1-mini-2025-04-14` is the mini, not `gpt-4.1`.
+  const known = Object.keys(MODEL_RATES)
+    .filter((k) => id.startsWith(`${k}-`))
+    .toSorted((a, b) => b.length - a.length)[0];
+  return known ? MODEL_RATES[known]! : null;
+}
+
+/**
+ * What the vendor charges per web search beyond tokens, by model family (2026-09-16):
+ * OpenAI $10 per thousand calls on the full models and $25 on the mini and nano ones;
+ * Anthropic $10 per thousand searches; Google $35 per thousand grounded prompts on Gemini
+ * 2.5 and $14 on Gemini 3. Zero where the kind offers no search through us.
+ */
+export function searchFeeFor(kind: ConnectionKind, model: string): number {
+  const id = model.toLowerCase();
+  if (kind === 'openai') return /mini|nano/.test(id) ? 0.025 : 0.01;
+  if (kind === 'google') return /gemini-3/.test(id) ? 0.014 : 0.035;
+  return KINDS[kind].searchFeeUsd;
+}
+
 /** The kinds that speak a given way, for the picker's filter and the jobs. */
 export function kindsThat(speaks: Speaks): ConnectionKind[] {
   return CONNECTION_KINDS.filter((k) => KINDS[k].speaks === speaks);

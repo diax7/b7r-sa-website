@@ -28,11 +28,10 @@ import { testimonials } from '../src/content/seed/testimonials';
 import { nextWindow, seedTopics } from '../src/content/seed/topics';
 import { ensureEnglish } from './migrate-content-en';
 import { seedTopicsEn } from '../src/content/seed/en/topics';
-import { SEED_PROMPTS } from '../src/modules/visibility/ledger/seed';
+import { SEED_EVERY_DAYS, SEED_PROMPTS } from '../src/modules/visibility/ledger/seed';
 import { factsSheet } from '../src/modules/ai-content/facts';
 import { ar } from '../src/content/copy/ar';
 import {
-  RESERVED_PAGE_SLUGS,
   type Block,
   type BlogAuthor,
   type BlogHub,
@@ -699,7 +698,7 @@ async function ensurePrompt(
   }
   await payload.create({
     collection: 'prompts',
-    data: { ...prompt, order, enabled: true },
+    data: { ...prompt, order, everyDays: SEED_EVERY_DAYS, enabled: true },
     depth: 0,
   });
   summary.created.push(`prompt ${prompt.text.slice(0, 24)}`);
@@ -742,9 +741,10 @@ async function main(): Promise<number> {
   await ensureGlobals(payload);
   await ensureHome(payload);
   for (const page of pages) {
-    // The seven designed pages, and a page seeded as a draft for an admin to publish (ADR-050).
-    if (!(RESERVED_PAGE_SLUGS as readonly string[]).includes(page.slug) && !page.draft) {
-      throw new Error(`seed pages: ${page.slug} is not one of the seven designed pages`);
+    // A seeded slug is a designed page (its route folder is in code) or a plain `/[slug]`
+    // page (the comparison, ADR-050); a code-owned route can never be a page.
+    if (CODE_ROUTES.has(`/${page.slug}`)) {
+      throw new Error(`seed pages: /${page.slug} is a code route, not a page`);
     }
     await ensurePage(payload, page);
   }

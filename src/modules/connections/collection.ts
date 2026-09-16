@@ -17,6 +17,8 @@ import {
   isConnectionKind,
   isServiceKind,
   KINDS,
+  mockAllowed,
+  ratesForModel,
 } from '@/modules/connections/kinds';
 import { spendFor } from '@/modules/connections/spend';
 
@@ -38,6 +40,21 @@ const fillFromKind: CollectionBeforeValidateHook = ({ data, originalDoc, operati
     const empty = data[name] === undefined || data[name] === null || data[name] === '';
     if (sent && empty) data[name] = value;
   };
+  // A model sent as a known one (a new row, or a change) brings its own rates unless the
+  // save changed a rate too; the rates stay editable. The admin form posts every field, so
+  // "untouched" means equal to what the row had, not absent. A refilled empty model is not a
+  // change.
+  const sent = typeof data['model'] === 'string' && data['model'] !== '' ? data['model'] : '';
+  const known = sent && sent !== originalDoc?.['model'] ? ratesForModel(sent) : null;
+  const untouched = (name: string) =>
+    data[name] === undefined ||
+    data[name] === null ||
+    data[name] === '' ||
+    data[name] === originalDoc?.[name];
+  if (known && untouched('inputPerMillionUsd') && untouched('outputPerMillionUsd')) {
+    data['inputPerMillionUsd'] = known.input;
+    data['outputPerMillionUsd'] = known.output;
+  }
   fill('model', info.defaultModel);
   fill('inputPerMillionUsd', info.rates.input);
   fill('outputPerMillionUsd', info.rates.output);
@@ -154,7 +171,12 @@ export const Connections: CollectionConfig = {
             type: 'select',
             required: true,
             defaultValue: 'openai',
-            options: CONNECTION_KINDS.map((value) => ({ value, label: KINDS[value].label })),
+            // The mock kind is for the tests and the review server: the picker shows it only
+            // where AI_CONTENT_MOCK=1, never in production.
+            options: CONNECTION_KINDS.filter((k) => k !== 'mock' || mockAllowed()).map((value) => ({
+              value,
+              label: KINDS[value].label,
+            })),
             label: { ar: 'الخدمة', en: 'Service' },
           },
           {

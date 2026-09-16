@@ -57,9 +57,12 @@ export function searchTool(spec: Pick<ModelSpec, 'kind' | 'apiKey'>): Record<str
       return { web_search: createOpenAI({ apiKey }).tools.webSearch({ userLocation: SAUDI }) };
     case 'anthropic':
       return {
+        // One search per prompt: each search's pages land in the context as input tokens
+        // (three searches read 20,000 tokens an answer on 2026-09-16), and a buyer's first
+        // answer comes from one search too.
         web_search: createAnthropic({ apiKey }).tools.webSearch_20260209({
           userLocation: SAUDI,
-          maxUses: 3,
+          maxUses: 1,
         }),
       };
     case 'google':
