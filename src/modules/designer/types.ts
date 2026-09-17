@@ -16,6 +16,8 @@ export interface DesignerCopy {
   monthlyLabel: string;
   negativeWarning: string;
   cta: string;
+  /** The sheen on the CTA (ADR-054), the site's switch. */
+  ctaShiny: boolean;
   fileError: string;
   canvasLabel: string;
   productGroupAria: string;
@@ -29,7 +31,7 @@ export interface DesignerCopy {
 }
 
 /** The interface strings of the designer (ADR-031) from a locale's bank; `cta` comes from the CMS. */
-export function designerCopy(copy: SiteCopy, cta: string): DesignerCopy {
+export function designerCopy(copy: SiteCopy, cta: string, ctaShiny = false): DesignerCopy {
   const d = copy.designer;
   return {
     groups: { product: d.productGroup },
@@ -45,6 +47,7 @@ export function designerCopy(copy: SiteCopy, cta: string): DesignerCopy {
     negativeWarning: d.negativeWarning,
     fileError: d.fileError,
     cta,
+    ctaShiny,
     canvasLabel: d.canvasLabel,
     productGroupAria: d.productGroupLabel,
     sellInputAria: d.sellPriceInput,

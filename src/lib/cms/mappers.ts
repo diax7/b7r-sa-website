@@ -118,6 +118,7 @@ export function toSiteSettings(doc: SiteSetting): SiteSettings {
     },
     ...(doc.bookingUrl ? { bookingUrl: doc.bookingUrl } : {}),
     legalEntity: doc.legalEntity,
+    ctaShiny: Boolean(doc.ctaShiny),
     analytics: {
       ...(doc.analytics?.gaId ? { gaId: doc.analytics.gaId } : {}),
       ...(doc.analytics?.umamiSrc && doc.analytics?.umamiId
@@ -148,7 +149,6 @@ export function toNavigation(doc: SiteSetting, locale: Locale): Navigation {
     primary: (menu.primary ?? []).map(navItem(locale)),
     policies: (menu.policies ?? []).map(navItem(locale)),
     ctaLabel: menu.ctaLabel,
-    ctaShiny: Boolean(menu.ctaShiny),
     skipLinkLabel: menu.skipLinkLabel,
     menuOpenLabel: menu.menuOpenLabel,
     menuCloseLabel: menu.menuCloseLabel,

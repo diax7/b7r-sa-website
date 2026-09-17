@@ -111,7 +111,12 @@ export async function ProductPage({ product, locale }: { product: Product; local
                 </div>
               </dl>
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                <Button asChild size="lg" id={PRIMARY_CTA_ID}>
+                <Button
+                  asChild
+                  size="lg"
+                  id={PRIMARY_CTA_ID}
+                  variant={site.ctaShiny ? 'shiny' : 'primary'}
+                >
                   <a href={registerHref} data-track="cta_click" data-location="product">
                     {copy.primaryCta}
                   </a>
@@ -178,6 +183,7 @@ export async function ProductPage({ product, locale }: { product: Product; local
 
       <CtaRibbon locale={locale} topTone={relatedTone} page={`product-${product.slug}`} />
       <ProductStickyBar
+        shiny={site.ctaShiny}
         slug={product.slug}
         pricePrefix={copy.pricePrefix}
         baseCost={product.baseCost}

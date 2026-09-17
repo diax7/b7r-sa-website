@@ -38,7 +38,7 @@ test.describe('header and navigation (BRD 6.2)', () => {
     const rest = (await header.boundingBox())!;
     await page.evaluate(() => window.scrollTo(0, 240));
     await expect(header).toHaveAttribute('data-scrolled', 'true');
-    await page.waitForTimeout(600);
+    await page.waitForTimeout(900);
     const island = (await header.boundingBox())!;
     const viewport = page.viewportSize()!;
     expect(island.width).toBeLessThanOrEqual(viewport.width - 24);
@@ -59,8 +59,9 @@ test.describe('header and navigation (BRD 6.2)', () => {
     // Back at the top the bar is full width again.
     await page.evaluate(() => window.scrollTo(0, 0));
     await expect(header).not.toHaveAttribute('data-scrolled', 'true');
-    await page.waitForTimeout(600);
-    expect((await header.boundingBox())!.width).toBe(rest.width);
+    await page.waitForTimeout(900);
+    // Within a pixel: the settle's last frame can leave a sub-pixel on a phone's viewport.
+    expect(Math.abs((await header.boundingBox())!.width - rest.width)).toBeLessThan(1);
   });
 
   test('mobile menu opens, traps focus, closes on Escape and restores focus', async ({

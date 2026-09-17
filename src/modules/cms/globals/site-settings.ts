@@ -104,18 +104,7 @@ const menu: NamedTab = {
         },
       },
     },
-    {
-      name: 'ctaShiny',
-      type: 'checkbox',
-      defaultValue: false,
-      label: { ar: 'زر لامع', en: 'Shiny button' },
-      admin: {
-        description: {
-          ar: 'يمنح الزر لمعة بلوني العلامة تتحرك عند المرور ووميضاً خفيفاً كل بضع ثوانٍ؛ بلا تعبئة يبقى الزر الأزرق الكلاسيكي.',
-          en: "Gives the button a sheen in the brand's two blues that slides on hover and a light glint every few seconds; unticked keeps the classic blue button.",
-        },
-      },
-    },
+
     {
       type: 'row',
       fields: [
@@ -217,6 +206,12 @@ export const SiteSettings: GlobalConfig = {
                 required: true,
                 localized: true,
                 label: { ar: 'الشعار النصي', en: 'Tagline' },
+              },
+              {
+                name: 'ctaShiny',
+                type: 'checkbox',
+                defaultValue: false,
+                label: { ar: 'أزرار لامعة', en: 'Shiny buttons' },
               },
             ],
           },

@@ -28,6 +28,8 @@ export const SiteSettingsSchema = z.object({
   delivery: z.object({ maxDays: z.int().positive(), origin: nonEmpty, region: nonEmpty }),
   bookingUrl: z.url().optional(),
   legalEntity: nonEmpty,
+  /** Every main CTA button with the brand's sheen (ADR-054); the admin's switch, site-wide. */
+  ctaShiny: z.boolean().default(false),
   /** The analytics ids (ADR-052): GA loads after consent when `gaId` is set; Umami when both of its values are. */
   analytics: z.object({
     gaId: z.string().optional(),
@@ -47,8 +49,6 @@ export const NavigationSchema = z.object({
   primary: z.array(NavItemSchema).length(6),
   policies: z.array(NavItemSchema).length(4),
   ctaLabel: nonEmpty,
-  /** The header button with the brand's sheen (ADR-054); the admin's switch. */
-  ctaShiny: z.boolean().default(false),
   skipLinkLabel: nonEmpty,
   menuOpenLabel: nonEmpty,
   menuCloseLabel: nonEmpty,

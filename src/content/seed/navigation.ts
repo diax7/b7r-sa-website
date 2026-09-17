@@ -17,7 +17,6 @@ export const navigation: Navigation = {
     { label: 'الأسئلة الشائعة', href: '/faq' },
   ],
   ctaLabel: 'ابدأ براندك مجانًا',
-  ctaShiny: false,
   skipLinkLabel: 'تخطَّ إلى المحتوى',
   menuOpenLabel: 'فتح القائمة',
   menuCloseLabel: 'إغلاق القائمة',

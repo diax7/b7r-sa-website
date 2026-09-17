@@ -63,7 +63,7 @@ export async function BlogPostPage({ post, locale }: { post: Post; locale: Local
         <p className="text-h4 text-text">{blogCopy.inPostCta.title}</p>
         <p className="text-body text-text-muted">{blogCopy.inPostCta.text}</p>
       </div>
-      <Button asChild trailingArrow={false}>
+      <Button asChild trailingArrow={false} variant={site.ctaShiny ? 'shiny' : 'primary'}>
         <a
           href={registerUrl(env.appUrl, { campaign: 'ribbon', content: `post-${post.slug}` })}
           data-track="cta_click"

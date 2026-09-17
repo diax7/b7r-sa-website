@@ -695,7 +695,8 @@ test.describe('CMS admin', () => {
     test.setTimeout(120_000);
     const auth = await login(request, admin);
     type Settings = {
-      menu: { primary: unknown[]; policies: unknown[]; ctaLabel: string; ctaShiny?: boolean };
+      menu: { primary: unknown[]; policies: unknown[]; ctaLabel: string };
+      ctaShiny?: boolean;
     };
     const en = (await (
       await request.get(`${API}/globals/site-settings?locale=en`, { headers: auth })
@@ -716,7 +717,7 @@ test.describe('CMS admin', () => {
     const save = (ctaLabel: string, ctaShiny = false) =>
       request.post(`${API}/globals/site-settings?locale=en`, {
         headers: auth,
-        data: { menu: { ...en.menu, ctaLabel, ctaShiny } },
+        data: { menu: { ...en.menu, ctaLabel }, ctaShiny },
       });
     const poll = { intervals: [1_000, 2_000, 3_000] };
     // The shiny switch (ADR-054) rides along: the header's button carries data-shiny.
@@ -727,7 +728,7 @@ test.describe('CMS admin', () => {
         .poll(shows(request, '/en', 'data-shiny="true"'), { ...poll, timeout: 15_000 })
         .toBe(true);
     } finally {
-      expect((await save(en.menu.ctaLabel, Boolean(en.menu.ctaShiny))).status()).toBe(200);
+      expect((await save(en.menu.ctaLabel, Boolean(en.ctaShiny))).status()).toBe(200);
     }
     await expect.poll(shows(request, '/en', stamp), { ...poll, timeout: 15_000 }).toBe(false);
   });

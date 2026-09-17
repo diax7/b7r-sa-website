@@ -3,7 +3,7 @@ import { Button } from '@/components/shared/button';
 import { Container } from '@/components/shared/container';
 import { Section, type SectionTone } from '@/components/shared/section';
 import { copyFor } from '@/content/copy';
-import { getHome } from '@/lib/cms';
+import { getHome, getSiteSettings } from '@/lib/cms';
 import type { Locale } from '@/lib/i18n';
 import { env } from '@/lib/env';
 import { registerUrl } from '@/lib/utm';
@@ -25,7 +25,7 @@ export async function VideoSection({
   locale: Locale;
   tone?: SectionTone;
 }) {
-  const { video, hero } = await getHome(locale);
+  const [{ video, hero }, site] = await Promise.all([getHome(locale), getSiteSettings(locale)]);
   const posterAlt = copyFor(locale).media.videoPosterAlt;
   if (!video.enabled) return null;
   return (
@@ -40,7 +40,7 @@ export async function VideoSection({
             {video.title}
           </h2>
           <p className="lead max-w-[36rem] text-white/85">{video.lead}</p>
-          <Button asChild size="lg">
+          <Button asChild size="lg" variant={site.ctaShiny ? 'shiny' : 'primary'}>
             <a
               href={registerUrl(env.appUrl, { campaign: 'video' })}
               data-track="cta_click"

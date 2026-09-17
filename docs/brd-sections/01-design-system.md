@@ -31,7 +31,7 @@ All three brand blues are sampled from `logo.png`. Two darker shades are derived
 | `--color-error` | `#D90000` | Validation errors, negative profit |
 | `--color-whatsapp` | `#25D366` | The WhatsApp widget button only |
 
-Rules: primary text on white and white text on primary both pass AA. Never place accent-coloured small text on white. Never introduce purple, pink, teal, magenta, orange, or gradients between hues. A single flat colour per surface. The only permitted gradient is a white-to-transparent overlay on hero photos for legibility (§6.4.1). *Amended 2026-09-17 (Dhia, ADR-054): one more, between the brand's own two blues: the header button's sheen (`Button` variant `shiny`), on only when the admin's "Shiny button" switch beside the button's text is ticked.*
+Rules: primary text on white and white text on primary both pass AA. Never place accent-coloured small text on white. Never introduce purple, pink, teal, magenta, orange, or gradients between hues. A single flat colour per surface. The only permitted gradient is a white-to-transparent overlay on hero photos for legibility (§6.4.1). *Amended 2026-09-17 (Dhia, ADR-054): one more, between the brand's own two blues: the main call-to-action buttons' sheen (`Button` variants `shiny` and, on the primary ribbon, `inverseShiny`), on only when the admin's site-wide "Shiny buttons" switch (Site settings → Brand) is ticked.*
 
 ### 3.3 Typography
 
@@ -116,7 +116,7 @@ Amended 2026-09-13 (ADR-037): the marketing video in §6.4.5 is the second conti
 
 ### 3.10 Component inventory (build these once, reuse everywhere)
 
-`Button` (variants primary, secondary [white with primary border], ghost, link, shiny [the sheen, ADR-054, admin switch]; sizes md 44 px, lg 52 px; optional trailing arrow icon mirrored in RTL; loading state) · `Chip` (pill, optional check icon) · `Badge` (tint background, 10% colour rule: `bg-{color}/10 text-{color} border-{color}/20`) · `Card` · `SectionHeader` (eyebrow + H2 + lead, start-aligned) · `Accordion` (single-open, chevron rotates, `aria-expanded`) · `Input`, `Textarea`, `Select`, `Stepper` (numeric with +/−), `Slider` · `Dialog` · `Toast` · `SarAmount` (§3.11) · `ProductCard` · `WaveDivider` · `CtaRibbon` · `WhatsAppWidget` · `ConsentBar` · `VideoPlayer` · `Breadcrumbs` · `Icon` (RTL-aware Lucide wrapper) · `Container`, `Section`.
+`Button` (variants primary, secondary [white with primary border], ghost, link, shiny and inverseShiny [the sheen, ADR-054, the site-wide admin switch]; sizes md 44 px, lg 52 px; optional trailing arrow icon mirrored in RTL; loading state) · `Chip` (pill, optional check icon) · `Badge` (tint background, 10% colour rule: `bg-{color}/10 text-{color} border-{color}/20`) · `Card` · `SectionHeader` (eyebrow + H2 + lead, start-aligned) · `Accordion` (single-open, chevron rotates, `aria-expanded`) · `Input`, `Textarea`, `Select`, `Stepper` (numeric with +/−), `Slider` · `Dialog` · `Toast` · `SarAmount` (§3.11) · `ProductCard` · `WaveDivider` · `CtaRibbon` · `WhatsAppWidget` · `ConsentBar` · `VideoPlayer` · `Breadcrumbs` · `Icon` (RTL-aware Lucide wrapper) · `Container`, `Section`.
 
 Use shadcn/ui primitives (Radix) for Accordion, Dialog, Select, Slider, Toast, and Tabs; restyle them to these tokens. Do not ship shadcn's default look.
 

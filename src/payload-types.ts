@@ -2661,7 +2661,7 @@ export interface Home {
       color: string;
     };
     /**
-     * The blue button under the slides; opens the app's sign-up.
+     * The blue button under the slides; opens the app's sign-up. Shiny or classic: Site settings, Brand, Shiny buttons.
      */
     primaryCta: string;
     /**
@@ -2725,7 +2725,7 @@ export interface Home {
      */
     lead: string;
     /**
-     * The button at the end of the designer; opens the app's sign-up.
+     * The button at the end of the designer; opens the app's sign-up. Shiny or classic: Site settings, Brand, Shiny buttons.
      */
     cta: string;
   };
@@ -2863,7 +2863,7 @@ export interface Home {
      */
     lead: string;
     /**
-     * The ribbon's button; opens the app's sign-up.
+     * The ribbon's button; opens the app's sign-up. Shiny or classic: Site settings, Brand, Shiny buttons.
      */
     button: string;
   };
@@ -2898,6 +2898,10 @@ export interface SiteSetting {
    * The one-line definition: under the logo in the footer, the first line of llms.txt, the web app manifest, and the engine's facts sheet. The same sentence everywhere.
    */
   tagline: string;
+  /**
+   * Gives every main call-to-action button on the site (the header, the phone menu, the slides, the video, the ribbon, the product page, the designer, the posts) a sheen in the brand's two blues that slides on hover and a light glint every few seconds; unticked keeps the classic blue buttons.
+   */
+  ctaShiny?: boolean | null;
   /**
    * How to reach us: the footer, the contact page, the WhatsApp widget and the organisation data.
    */
@@ -2977,10 +2981,6 @@ export interface SiteSetting {
      * The blue button in the header and in the phone menu.
      */
     ctaLabel: string;
-    /**
-     * Gives the button a sheen in the brand's two blues that slides on hover and a light glint every few seconds; unticked keeps the classic blue button.
-     */
-    ctaShiny?: boolean | null;
     /**
      * The link a keyboard user sees on the first Tab, jumping past the header to the content.
      */
@@ -3409,6 +3409,7 @@ export interface SiteSettingsSelect<T extends boolean = true> {
   brandName?: T;
   brandNameLatin?: T;
   tagline?: T;
+  ctaShiny?: T;
   contact?:
     | T
     | {
@@ -3444,7 +3445,6 @@ export interface SiteSettingsSelect<T extends boolean = true> {
               id?: T;
             };
         ctaLabel?: T;
-        ctaShiny?: T;
         skipLinkLabel?: T;
         menuOpenLabel?: T;
         menuCloseLabel?: T;

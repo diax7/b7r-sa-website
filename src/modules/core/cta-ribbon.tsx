@@ -1,6 +1,7 @@
 import { Button } from '@/components/shared/button';
 import { Container } from '@/components/shared/container';
-import { getHome } from '@/lib/cms';
+import { getHome, getSiteSettings } from '@/lib/cms';
+import { cn } from '@/lib/cn';
 import { env } from '@/lib/env';
 import type { Locale } from '@/lib/i18n';
 import { registerUrl } from '@/lib/utm';
@@ -19,7 +20,8 @@ interface CtaRibbonProps {
  * waves: the section above flows in from the top, the navy footer rises from the bottom.
  */
 export async function CtaRibbon({ locale, topTone, page }: CtaRibbonProps) {
-  const { title, lead, button } = (await getHome(locale)).ribbon;
+  const [{ ribbon }, site] = await Promise.all([getHome(locale), getSiteSettings(locale)]);
+  const { title, lead, button } = ribbon;
   return (
     <section aria-labelledby="cta-ribbon-title" className="relative bg-primary text-white">
       <WaveDivider fill={topTone} position="top" />
@@ -28,7 +30,12 @@ export async function CtaRibbon({ locale, topTone, page }: CtaRibbonProps) {
           {title}
         </h2>
         <p className="lead max-w-xl text-white/85">{lead}</p>
-        <Button asChild variant="inverse" size="lg" className="mt-2 shadow-popover">
+        <Button
+          asChild
+          variant={site.ctaShiny ? 'inverseShiny' : 'inverse'}
+          size="lg"
+          className={cn('mt-2', !site.ctaShiny && 'shadow-popover')}
+        >
           <a
             href={registerUrl(env.appUrl, { campaign: 'ribbon', content: page })}
             data-track="cta_click"

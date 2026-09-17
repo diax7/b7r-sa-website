@@ -1561,9 +1561,14 @@ colours, font and radius rather than the reference's. `Button` gains the variant
 soft blue glow, a light inner rim, and a glint of light crossing the face every 4.5 s at
 rest, from the start edge in both writing directions; none of the motion under reduced
 motion. The design system's gradient rule is amended for this one case (two blues, same
-hue). The site settings' menu group gets `ctaShiny` (a checkbox under the CTA label, off by
-default; migration `20260917_192112_cta_shiny`); the header and the phone menu render the variant
-from it, with `data-shiny` for the tests. The classic button stays the default. The label
+hue). His second look: the switch must cover every place a call-to-action button stands,
+not the header alone, and the glow was too strong. So the switch is site-wide, `ctaShiny`
+on the site settings' Brand tab (off by default; migration `20260917_192112_cta_shiny`), and
+every main CTA reads it: the header, the phone menu, the hero, the video, the ribbon (as
+`inverseShiny`, the same sheen in white and the accent tint on the primary ribbon), the
+product page and its sticky bar, the designer's three buttons, the post's in-post CTA. The
+glow is 10 px at 22% (14 px at 32% on hover). The CTA text fields say where the switch is.
+The header carries `data-shiny` for the tests. The classic buttons stay the default. The label
 never sits on the accent itself: the visible window is 36% of a 280% gradient, so under the
 centred label the blue is about #006dc0 at rest (5.3:1 with white) and #0067bb on hover
 (5.6:1); the lighter band falls at the padded edges where there is no text, and the label

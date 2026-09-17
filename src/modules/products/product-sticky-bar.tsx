@@ -12,6 +12,8 @@ interface ProductStickyBarProps {
   baseCost: number;
   cta: string;
   href: string;
+  /** The sheen on the button (ADR-054), the site's switch. */
+  shiny?: boolean;
   /** Selector of the in-page primary CTA; the bar shows while that element is off screen. */
   watch: string;
 }
@@ -27,6 +29,7 @@ export function ProductStickyBar({
   baseCost,
   cta,
   href,
+  shiny,
   watch,
 }: ProductStickyBarProps) {
   const [visible, setVisible] = useState(false);
@@ -70,7 +73,7 @@ export function ProductStickyBar({
         <span className="text-caption text-text-muted">{pricePrefix}</span>
         <SarAmount value={baseCost} className="text-h4 text-text" />
       </p>
-      <Button asChild size="md">
+      <Button asChild size="md" variant={shiny ? 'shiny' : 'primary'}>
         <a href={href} tabIndex={visible ? 0 : -1} data-track="cta_click" data-location="product">
           {cta}
         </a>

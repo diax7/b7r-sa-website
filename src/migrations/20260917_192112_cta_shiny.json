@@ -18392,8 +18392,8 @@
           "primaryKey": false,
           "notNull": true
         },
-        "menu_cta_shiny": {
-          "name": "menu_cta_shiny",
+        "cta_shiny": {
+          "name": "cta_shiny",
           "type": "boolean",
           "primaryKey": false,
           "notNull": false,

@@ -1,7 +1,7 @@
 import { getImageProps } from 'next/image';
 import { preload } from 'react-dom';
 import { copyFor } from '@/content/copy';
-import { getHome } from '@/lib/cms';
+import { getHome, getSiteSettings } from '@/lib/cms';
 import { env } from '@/lib/env';
 import { type Locale, localePath } from '@/lib/i18n';
 import { registerUrl } from '@/lib/utm';
@@ -26,7 +26,7 @@ function imageSet(desktopSrc: string, mobileSrc: string): HeroImageSet {
  * `getImageProps` alone emits none. React 19 hoists the <link>s into <head>.
  */
 export async function Hero({ locale }: { locale: Locale }) {
-  const { hero } = await getHome(locale);
+  const [{ hero }, site] = await Promise.all([getHome(locale), getSiteSettings(locale)]);
   const messages = copyFor(locale);
   const images = hero.slides.map((s) => imageSet(s.imageDesktop, s.imageMobile));
   const first = images[0];
@@ -69,6 +69,7 @@ export async function Hero({ locale }: { locale: Locale }) {
         overlay={hero.overlay}
         copy={{
           primaryCta: hero.primaryCta,
+          primaryShiny: site.ctaShiny,
           primaryHref: registerUrl(env.appUrl, { campaign: 'hero' }),
           secondaryCta: hero.secondaryCta,
           secondaryHref: localePath(locale, '/products'),

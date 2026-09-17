@@ -33,6 +33,8 @@ export interface HeroCarouselProps {
   overlay: { enabled: boolean; color: string };
   copy: {
     primaryCta: string;
+    /** The sheen on the primary button (ADR-054), the site's switch. */
+    primaryShiny: boolean;
     primaryHref: string;
     secondaryCta: string;
     secondaryHref: string;
@@ -212,7 +214,12 @@ export function HeroCarousel({ slides, images, overlay, copy }: HeroCarouselProp
           </div>
 
           <div className="flex w-full flex-col items-stretch gap-4 sm:flex-row sm:items-center sm:gap-6">
-            <Button asChild size="lg" className="shadow-card-hover">
+            <Button
+              asChild
+              size="lg"
+              variant={copy.primaryShiny ? 'shiny' : 'primary'}
+              className={cn(!copy.primaryShiny && 'shadow-card-hover')}
+            >
               <a href={copy.primaryHref} data-track="cta_click" data-location="hero">
                 {copy.primaryCta}
               </a>

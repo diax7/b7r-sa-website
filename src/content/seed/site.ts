@@ -19,6 +19,7 @@ export const site: SiteSettings = {
   offer: { welcomeCredit: 30 },
   delivery: { maxDays: 5, origin: 'جدة', region: 'منطقة مكة المكرمة' },
   legalEntity: 'B7R Print Company',
+  ctaShiny: false,
   // The analytics ids are entered in the admin (ADR-052); none in the seed.
   analytics: {},
 };

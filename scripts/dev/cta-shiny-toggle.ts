@@ -10,11 +10,10 @@ async function main(): Promise<void> {
   const { default: config } = await import('../../src/payload.config');
   const payload = await getPayload({ config });
   const on = process.argv[2] !== 'off';
-  const site = await payload.findGlobal({ slug: 'site-settings', depth: 0, locale: 'ar' });
   await payload.updateGlobal({
     slug: 'site-settings',
     locale: 'ar',
-    data: { menu: { ...site.menu, ctaShiny: on } },
+    data: { ctaShiny: on },
   });
   console.log(`cta-shiny-toggle: ${on ? 'on' : 'off'}`);
 }

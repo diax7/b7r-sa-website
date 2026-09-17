@@ -118,14 +118,14 @@ export function Header({ navigation, site, locale, locales, copy }: ShellData) {
               {/* One CTA for both layouts: compact on phones, the full button on desktop. */}
               <Button
                 asChild
-                variant={navigation.ctaShiny ? 'shiny' : 'primary'}
+                variant={site.ctaShiny ? 'shiny' : 'primary'}
                 className="h-10 px-4 text-small lg:h-11 lg:px-5 lg:text-button"
               >
                 <a
                   href={registerUrl(env.appUrl, { campaign: 'header' })}
                   data-track="cta_click"
                   data-location="header"
-                  data-shiny={navigation.ctaShiny || undefined}
+                  data-shiny={site.ctaShiny || undefined}
                 >
                   {navigation.ctaLabel}
                 </a>
