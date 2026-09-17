@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { expect, test } from '@playwright/test';
 
 test.describe('machine files (BRD 7.2, 7.3, 7.5, 7.6)', () => {
@@ -76,7 +77,9 @@ test.describe('machine files (BRD 7.2, 7.3, 7.5, 7.6)', () => {
     }
   });
 
-  test('the IndexNow key route is a 404 for any name while the key is unset', async ({
+  // The key is derived from PAYLOAD_SECRET (ADR-052): its file answers, any other name is a
+  // 404, and health says "off" because a ping happens only on the production runtime.
+  test('the IndexNow key file answers at the derived name only; health says off outside production', async ({
     request,
   }) => {
     const health = (await (await request.get('/api/health')).json()) as { indexnow: string };
@@ -85,6 +88,12 @@ test.describe('machine files (BRD 7.2, 7.3, 7.5, 7.6)', () => {
     expect((await request.get('/indexnow/a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4.txt')).status()).toBe(
       404,
     );
+    const secret = process.env['PAYLOAD_SECRET'];
+    test.skip(!secret, 'the derived key needs the secret in the test process');
+    const key = createHash('sha256').update(`indexnow:${secret}`).digest('hex').slice(0, 32);
+    const file = await request.get(`/indexnow/${key}.txt`);
+    expect(file.status()).toBe(200);
+    expect(await file.text()).toBe(key);
   });
 
   test('every page carries OG, Twitter and canonical tags; the home page an absolute title', async ({

@@ -116,7 +116,7 @@ describe('contact email (BRD 4.17)', () => {
 
 describe('contact transport selection', () => {
   it('is off without configuration', async () => {
-    const t = getContactTransport();
+    const t = getContactTransport('contact@b7r.sa');
     expect(t.kind).toBe('off');
     await expect(t.send({ ...valid, phone: '966501699572' })).resolves.toEqual({
       ok: false,

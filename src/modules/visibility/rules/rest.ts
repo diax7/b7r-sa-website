@@ -99,7 +99,7 @@ export function measurementFacts(s: Snapshot): Fact[] {
       section: 'measurement',
       text: s.gaConfigured
         ? 'GA4 is configured and loads after consent; its numbers live in Google’s UI.'
-        : 'GA4 is not configured (NEXT_PUBLIC_GA_ID); the site’s own count does not need it.',
+        : 'GA4 is not configured (Site settings → Analytics); the site’s own count does not need it.',
     },
   ];
 }

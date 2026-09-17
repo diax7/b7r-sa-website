@@ -1,5 +1,5 @@
 import 'server-only';
-import { isProductionRuntime } from '@/lib/cms/env';
+import { DEFAULT_FROM, isProductionRuntime } from '@/lib/cms/env';
 
 /**
  * Server-only environment (BRD 8.5). Read lazily so a missing key surfaces as a clear
@@ -28,9 +28,8 @@ export function newsletterEnv(): NewsletterEnv {
 
 export interface ContactEnv {
   resendApiKey: string | undefined;
-  /** `بحر برنت <no-reply@b7r.sa>` */
-  resendFrom: string | undefined;
-  contactTo: string | undefined;
+  /** The sender, on the Resend-verified domain: `RESEND_FROM` or `DEFAULT_FROM`. */
+  resendFrom: string;
   turnstileSecretKey: string | undefined;
   /** `mock` keeps messages in memory for tests, only ever honoured without a key. */
   transportOverride: string | undefined;
@@ -39,46 +38,24 @@ export interface ContactEnv {
 export function contactEnv(): ContactEnv {
   return {
     resendApiKey: process.env.RESEND_API_KEY || undefined,
-    resendFrom: process.env['RESEND_FROM'] || undefined,
-    contactTo: process.env['CONTACT_TO'] || undefined,
+    resendFrom: process.env['RESEND_FROM'] || DEFAULT_FROM,
     turnstileSecretKey: process.env['TURNSTILE_SECRET_KEY'] || undefined,
     transportOverride: process.env['CONTACT_TRANSPORT'] || undefined,
   };
 }
 
-/** Cal.com link for the booking card; empty until Dhia creates it (BRD 6.9). */
-export function bookingUrl(): string | undefined {
-  return process.env['BOOKING_URL'] || undefined;
-}
-
-/** Search Console and Bing verification tokens (BRD 7.3). */
-export function verificationTokens(): { google?: string; bing?: string } {
-  const google = process.env['GOOGLE_SITE_VERIFICATION'];
-  const bing = process.env['BING_SITE_VERIFICATION'];
-  return { ...(google ? { google } : {}), ...(bing ? { bing } : {}) };
-}
-
 /**
- * BRD 8.5 "required in prod", extended by the CMS set (BRD 9.2) and the Turnstile pair: with
- * the admin login gated by it (ADR-034), a production boot without the keys would run the
- * login open.
+ * Required in production (BRD 8.5, ADR-052): the origin, the database, the secret, the media
+ * bucket, the e-mail key and audience, and the Turnstile pair (with the admin login gated by
+ * it, ADR-034, a production boot without the keys would run the login open). Nothing a
+ * person at B7R changes is here: that lives in the admin.
  */
 export const PRODUCTION_REQUIRED_ENV = [
   'NEXT_PUBLIC_SITE_URL',
-  'NEXT_PUBLIC_APP_URL',
-  'NEXT_PUBLIC_WHATSAPP',
-  'NEXT_PUBLIC_GA_ID',
-  'NEXT_PUBLIC_UMAMI_SRC',
-  'NEXT_PUBLIC_UMAMI_ID',
   'RESEND_API_KEY',
-  'RESEND_FROM',
-  'CONTACT_TO',
   'RESEND_AUDIENCE_ID',
-  'INDEXNOW_KEY',
   'NEXT_PUBLIC_TURNSTILE_SITE_KEY',
   'TURNSTILE_SECRET_KEY',
-  'GOOGLE_SITE_VERIFICATION',
-  'BING_SITE_VERIFICATION',
   'DATABASE_URL',
   'PAYLOAD_SECRET',
   'PAYLOAD_PUBLIC_SERVER_URL',
@@ -94,7 +71,7 @@ export const PAYLOAD_SECRET_MIN_LENGTH = 32;
 
 export type RawEnv = Record<string, string | undefined>;
 
-export { isProductionRuntime };
+export { DEFAULT_FROM, isProductionRuntime };
 
 export function missingProductionEnv(raw: RawEnv = process.env): string[] {
   return PRODUCTION_REQUIRED_ENV.filter((name) => !raw[name]);
@@ -107,14 +84,8 @@ export function missingProductionEnv(raw: RawEnv = process.env): string[] {
 export function assertProductionEnv(raw: RawEnv = process.env): void {
   if (!isProductionRuntime(raw)) return;
   const problems = missingProductionEnv(raw).map((name) => `${name} is required in production`);
-  // The transport overrides, the content engine's mock provider and the English-off switch
-  // exist for tests only.
-  for (const name of [
-    'NEWSLETTER_TRANSPORT',
-    'CONTACT_TRANSPORT',
-    'AI_CONTENT_MOCK',
-    'SITE_ENGLISH',
-  ]) {
+  // The transport overrides and the content engine's mock provider exist for tests only.
+  for (const name of ['NEWSLETTER_TRANSPORT', 'CONTACT_TRANSPORT', 'AI_CONTENT_MOCK']) {
     if (raw[name]) problems.push(`${name} must not be set in production`);
   }
   if (raw['NEXT_PUBLIC_SITE_URL'] && raw['NEXT_PUBLIC_SITE_URL'] !== 'https://b7r.sa') {

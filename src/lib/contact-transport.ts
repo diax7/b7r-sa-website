@@ -119,13 +119,14 @@ function liveTransport(apiKey: string, from: string, to: string): ContactTranspo
 }
 
 /**
- * Picks the contact transport (BRD 6.9, ADR-015 rule): live with a Resend key, `from` and
- * `to`; mock only when `CONTACT_TRANSPORT=mock` AND no key exists; otherwise off (503).
+ * Picks the contact transport (BRD 6.9, ADR-015 rule): live with a Resend key and the
+ * recipient from the site settings (the contact e-mail, ADR-052); mock only when
+ * `CONTACT_TRANSPORT=mock` AND no key exists; otherwise off (503).
  */
-export function getContactTransport(): ContactTransport {
+export function getContactTransport(to: string | undefined): ContactTransport {
   const env = contactEnv();
-  if (env.resendApiKey && env.resendFrom && env.contactTo) {
-    return liveTransport(env.resendApiKey, env.resendFrom, env.contactTo);
+  if (env.resendApiKey && to) {
+    return liveTransport(env.resendApiKey, env.resendFrom, to);
   }
   if (env.transportOverride === 'mock' && !env.resendApiKey) return mockTransport();
   return {

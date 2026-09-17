@@ -874,7 +874,7 @@ Amended 2026-09-13 (Dhia's design review, same copy): the lifestyle photo sits b
 
 **Form:** fields per §4.11; `Select` for the inquiry type; client validation with zod, messages from §4.11 under the fields, `aria-invalid`; honeypot input (visually hidden, named `website`); Cloudflare Turnstile widget rendered above the submit button when `NEXT_PUBLIC_TURNSTILE_SITE_KEY` is set (invisible mode); submit posts JSON to `POST /api/contact`. Button shows "جارٍ الإرسال" with a spinner while pending; on success replace the form body with a success card (check icon, §4.11 text, a "راسلنا على واتساب" secondary link); on failure show the failure text above the button and keep the input values.
 
-**API `POST /api/contact`:** validates with the same zod schema; rejects if the honeypot is filled (returns 200 to fool bots); verifies Turnstile server-side when configured; rate-limits 5 requests per IP per 10 minutes (in-memory map; note the single-instance assumption); sends the email through Resend (§4.17) to `CONTACT_TO`; returns `{ ok: true }` or `{ ok: false, error }` with 400/429/500. Never logs message bodies in production.
+**API `POST /api/contact`:** validates with the same zod schema; rejects if the honeypot is filled (returns 200 to fool bots); verifies Turnstile server-side when configured; rate-limits 5 requests per IP per 10 minutes (in-memory map; note the single-instance assumption); sends the email through Resend (§4.17) to the contact address in the site settings (amended 2026-09-17, ADR-052); returns `{ ok: true }` or `{ ok: false, error }` with 400/429/500. Never logs message bodies in production.
 
 **Booking card:** button opens `BOOKING_URL` in a new tab when set; otherwise opens WhatsApp with the §4.11 prefilled message. Level 4 replaces this with an inline Cal.com embed.
 
@@ -1003,7 +1003,7 @@ Training crawlers (`GPTBot`, `ClaudeBot`, `Google-Extended`, `CCBot`, `Meta-Exte
 - Twitter card `summary_large_image`, `site: @b7rprint`.
 - `robots: { index, follow, 'max-image-preview': 'large' }`; `noindex` on 404 and on any non-production host.
 - Icons: `favicon.ico` (32), `icon.svg` if available else PNG 192/512, `apple-touch-icon` 180, `manifest.webmanifest` (name "بحر برنت", `lang: ar`, `dir: rtl`, `theme_color: #0058B0`, `background_color: #FFFFFF`, display `browser`; one manifest per origin, in the default language, ADR-043).
-- Verification meta tags from env: `GOOGLE_SITE_VERIFICATION`, `BING_SITE_VERIFICATION`.
+- Verification meta tags from the SEO settings in the admin (`verification.google`, `verification.bing`; amended 2026-09-17, ADR-052).
 
 ### 7.4 Structured data (JSON-LD, rendered in the page component, one `<script type="application/ld+json">` per page)
 
@@ -1167,20 +1167,23 @@ A unit test parses every content file against its schema; the build fails on dri
 
 ### 8.5 Environment variables
 
+*Amended 2026-09-17 (Dhia, ADR-052): the environment holds what is technical (origins, the database, the storage, the API keys, the runtime switches). Everything a person at B7R changes lives in the admin: the WhatsApp number and the contact address (site settings, Contact), the booking link (site settings, Numbers), the analytics ids (site settings, Analytics), the search engine verification tokens (SEO settings). The English-off switch and the backups are gone.*
+
 | Name | Purpose | Required in prod |
 |---|---|---|
 | `NEXT_PUBLIC_SITE_URL` | `https://b7r.sa`; anything else triggers noindex | yes |
-| `NEXT_PUBLIC_APP_URL` | `https://b7r.app` | yes |
-| `NEXT_PUBLIC_WHATSAPP` | `966501699572` | yes |
-| `NEXT_PUBLIC_GA_ID` | `G-JPB02M7C49` | yes |
-| `NEXT_PUBLIC_UMAMI_SRC`, `NEXT_PUBLIC_UMAMI_ID` | Umami script URL and website id | yes |
-| `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` | Contact form anti-spam; the admin login gate (ADR-034) | yes (amended 2026-09-13: required in production since the login is gated by it) |
-| `RESEND_API_KEY`, `RESEND_FROM` (`بحر برنت <no-reply@b7r.sa>`), `CONTACT_TO` (`contact@b7r.sa`), `RESEND_AUDIENCE_ID` | Email | yes |
-| `BOOKING_URL` | Cal.com link; empty until Dhia creates it | no |
-| `INDEXNOW_KEY` | 32-char hex | yes |
-| `GOOGLE_SITE_VERIFICATION`, `BING_SITE_VERIFICATION` | Meta tags | yes |
+| `PAYLOAD_PUBLIC_SERVER_URL` | Payload's origin, the same as the site's | yes |
+| `NEXT_PUBLIC_APP_URL` | The merchant app; defaults to `https://b7r.app` | no |
+| `DATABASE_URL`, `PAYLOAD_SECRET` | Postgres; the session and key-encryption secret (32+ characters) | yes |
+| `S3_BUCKET`, `S3_REGION`, `S3_ENDPOINT`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` (`S3_PUBLIC_URL` when a CDN fronts the bucket) | Media | yes |
+| `RESEND_API_KEY`, `RESEND_AUDIENCE_ID` | E-mail (the contact form, the newsletter, the admin's password reset) | yes |
+| `RESEND_FROM` | The sender on the verified domain; defaults to `بحر برنت <no-reply@b7r.sa>` | no |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` | The forms' anti-spam and the admin login gate (ADR-034) | yes |
+| `INDEXNOW_KEY` | Optional; derived from `PAYLOAD_SECRET` when unset | no |
+| `B7R_RUNTIME` | `production` only in the production app: the start-up assertion (ADR-021) | yes |
+| `AI_CONTENT_ENABLED` | The content engine's kill switch (`false` stops every run) | no |
 
-Secrets never reach the client; only `NEXT_PUBLIC_*` do. `.env.example` lists all with comments. Validate at startup with zod (`lib/env.ts`) and fail fast.
+Secrets never reach the client; only `NEXT_PUBLIC_*` do. `.env.example` lists all with comments. Validated at startup (`lib/env.ts`, `lib/env-server.ts`) and fails fast.
 
 ### 8.6 Hosting on CranL and deployment
 
@@ -1247,7 +1250,7 @@ Give Dhia and an editor a WordPress-like, Arabic, right-to-left admin at `https:
 
 ### 9.2 Infrastructure additions
 
-- CranL managed **Postgres** in the same project; connection string in `DATABASE_URL`. Daily automated snapshots (CranL) plus a weekly `pg_dump` to the S3 bucket by a job.
+- CranL managed **Postgres** in the same project; connection string in `DATABASE_URL`. The platform's automated snapshots are the backup (amended 2026-09-17, Dhia: no backup job, no backup bucket, no restore rehearsal in CI).
 - CranL **S3 bucket** for media through `@payloadcms/storage-s3`; public read for images; served through the CDN zone. Original uploads are kept; Payload generates sizes (thumbnail 400, card 800, hero 1920, og 1200 × 630) with focal-point cropping.
 - New env vars: `DATABASE_URL`, `PAYLOAD_SECRET` (≥ 32 random bytes), `S3_BUCKET`, `S3_REGION`, `S3_ENDPOINT`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `PAYLOAD_PUBLIC_SERVER_URL` (+ `S3_PUBLIC_URL` when objects are served from a host other than the endpoint). All of them join the production-required set asserted at start (§8.5); `PAYLOAD_PUBLIC_SERVER_URL` must equal the site origin.
 - Migrations are SQL files under `src/migrations/` run by the deploy workflow before the image is built and again by Payload at start-up; they are additive so the running image keeps serving during a release. Because every page is prerendered from the database, `next build` needs `DATABASE_URL` and `PAYLOAD_SECRET`: the image is built in GitHub Actions with BuildKit secrets and pushed to GHCR, and CranL pulls it (amended 2026-09-13, ADR-025).

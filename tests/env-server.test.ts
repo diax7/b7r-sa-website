@@ -30,9 +30,25 @@ describe('production env gate (BRD 8.5)', () => {
   });
 
   it('throws naming every missing variable', () => {
-    const { RESEND_API_KEY: _a, INDEXNOW_KEY: _b, ...partial } = prod;
-    expect(missingProductionEnv(partial)).toEqual(['RESEND_API_KEY', 'INDEXNOW_KEY']);
-    expect(() => assertProductionEnv(partial)).toThrow(/RESEND_API_KEY[\s\S]*INDEXNOW_KEY/);
+    const { RESEND_API_KEY: _a, RESEND_AUDIENCE_ID: _b, ...partial } = prod;
+    expect(missingProductionEnv(partial)).toEqual(['RESEND_API_KEY', 'RESEND_AUDIENCE_ID']);
+    expect(() => assertProductionEnv(partial)).toThrow(/RESEND_API_KEY[\s\S]*RESEND_AUDIENCE_ID/);
+  });
+
+  it('asks for nothing a person at B7R changes in the admin (ADR-052)', () => {
+    for (const name of [
+      'NEXT_PUBLIC_WHATSAPP',
+      'NEXT_PUBLIC_GA_ID',
+      'NEXT_PUBLIC_UMAMI_SRC',
+      'CONTACT_TO',
+      'RESEND_FROM',
+      'BOOKING_URL',
+      'GOOGLE_SITE_VERIFICATION',
+      'INDEXNOW_KEY',
+      'NEXT_PUBLIC_APP_URL',
+    ]) {
+      expect(PRODUCTION_REQUIRED_ENV).not.toContain(name);
+    }
   });
 
   it('refuses test transports and a non-canonical origin in production', () => {
@@ -41,8 +57,6 @@ describe('production env gate (BRD 8.5)', () => {
     );
     // The content engine's mock provider is for tests only (ADR-042).
     expect(() => assertProductionEnv({ ...prod, AI_CONTENT_MOCK: '1' })).toThrow(/AI_CONTENT_MOCK/);
-    // The English-off switch proves a build before the English seed; never a production state (ADR-043).
-    expect(() => assertProductionEnv({ ...prod, SITE_ENGLISH: 'off' })).toThrow(/SITE_ENGLISH/);
     expect(() =>
       assertProductionEnv({ ...prod, NEXT_PUBLIC_SITE_URL: 'https://preview.b7r.sa' }),
     ).toThrow(/must be https:\/\/b7r\.sa/);
@@ -86,9 +100,13 @@ describe('the admin e-mail adapter (ADR-034)', async () => {
     expect(parseFrom(undefined)).toBeUndefined();
   });
 
-  it('is on only with a key and a valid sender', () => {
+  it('is on with a key; the sender defaults to the brand on its own domain (ADR-052)', () => {
     expect(cmsEnv(base).email).toBeUndefined();
-    expect(cmsEnv({ ...base, RESEND_API_KEY: 're_x' }).email).toBeUndefined();
+    expect(cmsEnv({ ...base, RESEND_API_KEY: 're_x' }).email).toEqual({
+      apiKey: 're_x',
+      fromName: 'بحر برنت',
+      fromAddress: 'no-reply@b7r.sa',
+    });
     expect(
       cmsEnv({ ...base, RESEND_API_KEY: 're_x', RESEND_FROM: 'بحر برنت <a@b7r.sa>' }).email,
     ).toEqual({

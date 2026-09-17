@@ -6,9 +6,9 @@ import {
   contentSecurityPolicy,
   FONT_CACHE,
   headerRoutes,
-  originOf,
   PAGE_ROUTE_SOURCE,
   securityHeaders,
+  umamiSrcAllowed,
 } from '@/lib/security-headers';
 
 function directive(csp: string, name: string): string[] {
@@ -18,21 +18,24 @@ function directive(csp: string, name: string): string[] {
 }
 
 describe('content security policy (BRD 8.10, ADR-016)', () => {
-  const csp = contentSecurityPolicy({ umamiOrigin: 'https://umami.b7r.app' });
+  const csp = contentSecurityPolicy();
 
   it('allows inline styles: next/image fill and the motion primitives emit style attributes', () => {
     expect(directive(csp, 'style-src')).toEqual(["'self'", "'unsafe-inline'"]);
   });
 
-  it('allows the three script origins plus inline, never eval in production', () => {
+  it('allows the script origins plus inline, never eval in production', () => {
     expect(directive(csp, 'script-src')).toEqual([
       "'self'",
       "'unsafe-inline'",
       'https://www.googletagmanager.com',
       'https://challenges.cloudflare.com',
+      'https://cloud.umami.is',
+      'https://api-gateway.umami.dev',
       'https://umami.b7r.app',
     ]);
     expect(csp).not.toContain("'unsafe-eval'");
+    expect(csp).not.toContain('*.b7r');
   });
 
   it('adds eval only for the dev server', () => {
@@ -48,6 +51,8 @@ describe('content security policy (BRD 8.10, ADR-016)', () => {
       'https://*.analytics.google.com',
       'https://region1.google-analytics.com',
       'https://www.googletagmanager.com',
+      'https://cloud.umami.is',
+      'https://api-gateway.umami.dev',
       'https://umami.b7r.app',
     ]);
     // The tag's pixels: GA's documented CSP wants googletagmanager.com on img-src too.
@@ -73,9 +78,15 @@ describe('content security policy (BRD 8.10, ADR-016)', () => {
     expect(directive(csp, 'media-src')).toEqual(["'self'"]);
   });
 
-  it('does not repeat an Umami origin that is already self', () => {
-    const local = contentSecurityPolicy({ umamiOrigin: undefined });
-    expect(directive(local, 'connect-src')).toHaveLength(5);
+  it('admits a Umami script on Umami Cloud or umami.b7r.app, nothing else (ADR-052)', () => {
+    expect(umamiSrcAllowed('https://cloud.umami.is/script.js')).toBe(true);
+    expect(umamiSrcAllowed('https://umami.b7r.app/script.js')).toBe(true);
+    expect(umamiSrcAllowed('/umami-test.js')).toBe(true);
+    expect(umamiSrcAllowed('https://analytics.b7r.sa/script.js')).toBe(false);
+    expect(umamiSrcAllowed('https://b7r.sa/script.js')).toBe(false);
+    expect(umamiSrcAllowed('http://cloud.umami.is/script.js')).toBe(false);
+    expect(umamiSrcAllowed('https://analytics.example.com/script.js')).toBe(false);
+    expect(umamiSrcAllowed('not a url')).toBe(false);
   });
 });
 
@@ -161,15 +172,6 @@ describe('admin headers (ADR-028)', () => {
     expect(routes.indexOf(adminRoutes[0]!)).toBeGreaterThan(
       routes.findIndex((r) => r.source === '/(.*)'),
     );
-  });
-});
-
-describe('originOf', () => {
-  it('reduces a script URL to its origin and ignores junk', () => {
-    expect(originOf('https://umami.b7r.app/script.js')).toBe('https://umami.b7r.app');
-    expect(originOf('http://localhost:3004/umami-test.js')).toBe('http://localhost:3004');
-    expect(originOf('')).toBeUndefined();
-    expect(originOf('nope')).toBeUndefined();
   });
 });
 

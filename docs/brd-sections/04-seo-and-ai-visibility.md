@@ -50,7 +50,7 @@ Training crawlers (`GPTBot`, `ClaudeBot`, `Google-Extended`, `CCBot`, `Meta-Exte
 - Twitter card `summary_large_image`, `site: @b7rprint`.
 - `robots: { index, follow, 'max-image-preview': 'large' }`; `noindex` on 404 and on any non-production host.
 - Icons: `favicon.ico` (32), `icon.svg` if available else PNG 192/512, `apple-touch-icon` 180, `manifest.webmanifest` (name "بحر برنت", `lang: ar`, `dir: rtl`, `theme_color: #0058B0`, `background_color: #FFFFFF`, display `browser`; one manifest per origin, in the default language, ADR-043).
-- Verification meta tags from env: `GOOGLE_SITE_VERIFICATION`, `BING_SITE_VERIFICATION`.
+- Verification meta tags from the SEO settings in the admin (`verification.google`, `verification.bing`; amended 2026-09-17, ADR-052).
 
 ### 7.4 Structured data (JSON-LD, rendered in the page component, one `<script type="application/ld+json">` per page)
 

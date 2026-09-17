@@ -102,20 +102,23 @@ A unit test parses every content file against its schema; the build fails on dri
 
 ### 8.5 Environment variables
 
+*Amended 2026-09-17 (Dhia, ADR-052): the environment holds what is technical (origins, the database, the storage, the API keys, the runtime switches). Everything a person at B7R changes lives in the admin: the WhatsApp number and the contact address (site settings, Contact), the booking link (site settings, Numbers), the analytics ids (site settings, Analytics), the search engine verification tokens (SEO settings). The English-off switch and the backups are gone.*
+
 | Name | Purpose | Required in prod |
 |---|---|---|
 | `NEXT_PUBLIC_SITE_URL` | `https://b7r.sa`; anything else triggers noindex | yes |
-| `NEXT_PUBLIC_APP_URL` | `https://b7r.app` | yes |
-| `NEXT_PUBLIC_WHATSAPP` | `966501699572` | yes |
-| `NEXT_PUBLIC_GA_ID` | `G-JPB02M7C49` | yes |
-| `NEXT_PUBLIC_UMAMI_SRC`, `NEXT_PUBLIC_UMAMI_ID` | Umami script URL and website id | yes |
-| `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` | Contact form anti-spam; the admin login gate (ADR-034) | yes (amended 2026-09-13: required in production since the login is gated by it) |
-| `RESEND_API_KEY`, `RESEND_FROM` (`بحر برنت <no-reply@b7r.sa>`), `CONTACT_TO` (`contact@b7r.sa`), `RESEND_AUDIENCE_ID` | Email | yes |
-| `BOOKING_URL` | Cal.com link; empty until Dhia creates it | no |
-| `INDEXNOW_KEY` | 32-char hex | yes |
-| `GOOGLE_SITE_VERIFICATION`, `BING_SITE_VERIFICATION` | Meta tags | yes |
+| `PAYLOAD_PUBLIC_SERVER_URL` | Payload's origin, the same as the site's | yes |
+| `NEXT_PUBLIC_APP_URL` | The merchant app; defaults to `https://b7r.app` | no |
+| `DATABASE_URL`, `PAYLOAD_SECRET` | Postgres; the session and key-encryption secret (32+ characters) | yes |
+| `S3_BUCKET`, `S3_REGION`, `S3_ENDPOINT`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` (`S3_PUBLIC_URL` when a CDN fronts the bucket) | Media | yes |
+| `RESEND_API_KEY`, `RESEND_AUDIENCE_ID` | E-mail (the contact form, the newsletter, the admin's password reset) | yes |
+| `RESEND_FROM` | The sender on the verified domain; defaults to `بحر برنت <no-reply@b7r.sa>` | no |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` | The forms' anti-spam and the admin login gate (ADR-034) | yes |
+| `INDEXNOW_KEY` | Optional; derived from `PAYLOAD_SECRET` when unset | no |
+| `B7R_RUNTIME` | `production` only in the production app: the start-up assertion (ADR-021) | yes |
+| `AI_CONTENT_ENABLED` | The content engine's kill switch (`false` stops every run) | no |
 
-Secrets never reach the client; only `NEXT_PUBLIC_*` do. `.env.example` lists all with comments. Validate at startup with zod (`lib/env.ts`) and fail fast.
+Secrets never reach the client; only `NEXT_PUBLIC_*` do. `.env.example` lists all with comments. Validated at startup (`lib/env.ts`, `lib/env-server.ts`) and fails fast.
 
 ### 8.6 Hosting on CranL and deployment
 

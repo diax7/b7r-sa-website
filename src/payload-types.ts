@@ -3014,6 +3014,20 @@ export interface SiteSetting {
    * Read by nothing on the site today: the footer's copyright line and the legal pages carry their own fixed text. Kept for the day they read it.
    */
   legalEntity: string;
+  analytics?: {
+    /**
+     * The Google Analytics 4 measurement id (starts with G-). Set, the cookie consent bar shows and GA loads after consent; empty means no tracking and no bar.
+     */
+    gaId?: string | null;
+    /**
+     * The Umami script URL (from the site's settings in Umami). Loads on every page when set together with the website id; needs no consent.
+     */
+    umamiSrc?: string | null;
+    /**
+     * The Umami website id (a UUID). Works only together with the script URL.
+     */
+    umamiId?: string | null;
+  };
   /**
    * Who saved the current version and when. Drafts do not change it.
    */
@@ -3433,6 +3447,13 @@ export interface SiteSettingsSelect<T extends boolean = true> {
   deliveryRegion?: T;
   bookingUrl?: T;
   legalEntity?: T;
+  analytics?:
+    | T
+    | {
+        gaId?: T;
+        umamiSrc?: T;
+        umamiId?: T;
+      };
   lastSavedBy?:
     | T
     | {

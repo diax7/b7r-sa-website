@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getContactTransport } from '@/lib/contact-transport';
+import { getSiteSettings } from '@/lib/cms';
 import { contactEnv } from '@/lib/env-server';
 import { clientIp, createRateLimiter } from '@/lib/rate-limit';
 import { acceptsJsonFrom } from '@/lib/request-guards';
@@ -47,7 +48,9 @@ export async function POST(req: Request) {
   }
 
   const { name, phone, email, inquiry, message, locale } = parsed.data;
-  const result = await getContactTransport().send({
+  // The recipient is the contact address in the site settings (ADR-052).
+  const to = (await getSiteSettings('ar')).contact.email;
+  const result = await getContactTransport(to).send({
     name,
     phone,
     email,

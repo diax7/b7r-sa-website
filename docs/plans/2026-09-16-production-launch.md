@@ -65,31 +65,26 @@ it).
 - Not done, on purpose: a staging environment, CDN rules, GlitchTip, HSTS preload, the deep
   audit (later, when there is time and budget for it).
 
-## 4. Accounts and keys (you; each one is a required variable, the app refuses to boot without it)
+## 4. Accounts and keys (you; the technical set, ADR-052)
 
 `B7R_RUNTIME=production` makes the server assert this set at start (ADR-021), so a missing
 value is a failed health check, never a half-working site. `/api/health` reports each
-integration's state; the value to look for is in the last column.
+integration's state. Everything else (the WhatsApp number, the contact address, the
+analytics ids, the verification tokens, the booking link) is entered in the admin.
 
 | What | Variable(s) | Where to get it | Health |
 |---|---|---|---|
 | Canonical origin | `NEXT_PUBLIC_SITE_URL`, `PAYLOAD_PUBLIC_SERVER_URL` = `https://b7r.sa` | n/a; anything else makes the site noindex | |
-| Merchant app, WhatsApp | `NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_WHATSAPP` | `https://b7r.app`, `966501699572` | |
-| E-mail (contact form, newsletter, password reset) | `RESEND_API_KEY`, `RESEND_FROM`, `CONTACT_TO`, `RESEND_AUDIENCE_ID` | resend.com: verify the domain `b7r.sa` (SPF, DKIM, DMARC records at your DNS host), create an audience | `contact: live`, `newsletter: live`, `email: resend` |
+| Database | `DATABASE_URL` | the platform's Postgres (§5) | `db: ok` |
+| Admin sessions and key encryption | `PAYLOAD_SECRET` | `openssl rand -base64 48`, generated once, stored only on the platform | |
+| Media | `S3_BUCKET`, `S3_REGION` (`auto`), `S3_ENDPOINT`, `S3_PUBLIC_URL`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` | the platform's bucket `b7r-media` with public read and its credentials | `media: s3` |
+| E-mail (contact form, newsletter, password reset) | `RESEND_API_KEY`, `RESEND_AUDIENCE_ID` | resend.com: verify the domain `b7r.sa` (SPF, DKIM, DMARC records at your DNS host), create an audience | `contact: live`, `newsletter: live`, `email: resend` |
 | Bot gate (forms, admin login) | `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` | Cloudflare dashboard → Turnstile → a widget for the hostname `b7r.sa` | `turnstile: on` |
-| Analytics | `NEXT_PUBLIC_GA_ID` (`G-JPB02M7C49`), `NEXT_PUBLIC_UMAMI_SRC`, `NEXT_PUBLIC_UMAMI_ID` | GA4 property; Umami (cloud.umami.is or your own instance). Umami is in the required set: if you will not run one, say so and I make it optional in the same PR | |
-| Search engines | `INDEXNOW_KEY` (any 8–128 chars, letters and digits), `GOOGLE_SITE_VERIFICATION`, `BING_SITE_VERIFICATION` | you invent the IndexNow key; the two tokens come from Search Console and Bing Webmaster Tools ("HTML tag" method: the `content` value) | `indexnow: on` |
-| Booking (optional) | `BOOKING_URL` | a Cal.com link; empty = WhatsApp fallback | |
-| Database | `DATABASE_URL` | CranL Postgres (§5) | `db: ok` |
-| Admin sessions and key encryption | `PAYLOAD_SECRET` | `openssl rand -base64 48`, generated once, stored only in CranL | |
-| Media | `S3_BUCKET`, `S3_REGION` (`auto`), `S3_ENDPOINT`, `S3_PUBLIC_URL`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` | CranL bucket `b7r-media` with public read and its credentials (Pro plan: one bucket) | `media: s3` |
-| Backups | `BACKUP_S3_*` (five) | a **second, private** bucket with its own key pair; CranL Pro allows one bucket, so this one lives elsewhere (Cloudflare R2, Backblaze B2) or on Enterprise | |
-| Production switch | `B7R_RUNTIME=production` | set only on the CranL app, never anywhere else | |
+| Production switch | `B7R_RUNTIME=production` | set only on the production app, never anywhere else | |
 
-Never set in production: `AI_CONTENT_MOCK`, `SITE_ENGLISH`, `NEWSLETTER_TRANSPORT`,
-`CONTACT_TRANSPORT`, `IMAGES_ALLOW_LOCAL_IP` (the server refuses the first four anyway).
-`AI_CONTENT_ENABLED` stays unset until Level 4 has your go; the engine is off in the
-settings today.
+Never set in production: `AI_CONTENT_MOCK`, `NEWSLETTER_TRANSPORT`, `CONTACT_TRANSPORT`,
+`IMAGES_ALLOW_LOCAL_IP` (the server refuses the first three anyway). `AI_CONTENT_ENABLED`
+stays unset until Level 4 has your go; the engine is off in the settings today.
 
 ## 5. CranL (you, with the values above)
 

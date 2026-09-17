@@ -2,8 +2,10 @@
  * IndexNow (BRD 7.6): the key is served at `/indexnow/{key}.txt` and every submission names
  * that `keyLocation`, so the key never has to sit at the site root. Level 1 submits from a
  * GitHub Actions step after a production deploy (`scripts/indexnow.ts`); Level 2 moves it to
- * a publish hook. Server only: the key is a secret.
+ * a publish hook. Server only.
  */
+import { createHash } from 'node:crypto';
+
 export const INDEXNOW_ENDPOINT = 'https://api.indexnow.org/indexnow';
 
 /** IndexNow keys are 8–128 characters of `a-zA-Z0-9-`. */
@@ -13,9 +15,17 @@ export function isValidIndexNowKey(key: string): boolean {
   return KEY_PATTERN.test(key);
 }
 
+/**
+ * The site's IndexNow key: `INDEXNOW_KEY` when set, else 32 hex characters derived from
+ * `PAYLOAD_SECRET` (ADR-052: one variable fewer; the key is public by design, served at
+ * `/indexnow/{key}.txt`, and a hash reveals nothing of the secret). None without either.
+ */
 export function indexNowKey(): string | undefined {
   const key = process.env['INDEXNOW_KEY'] || undefined;
-  return key && isValidIndexNowKey(key) ? key : undefined;
+  if (key) return isValidIndexNowKey(key) ? key : undefined;
+  const secret = process.env['PAYLOAD_SECRET'];
+  if (!secret) return undefined;
+  return createHash('sha256').update(`indexnow:${secret}`).digest('hex').slice(0, 32);
 }
 
 export function keyFileName(key: string): string {

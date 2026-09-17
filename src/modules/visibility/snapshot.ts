@@ -1,7 +1,7 @@
 import type { Payload, TypedUser } from 'payload';
 import { type LexicalNode, walk } from '@/lib/lexical';
 import { env } from '@/lib/env';
-import { indexNowKey } from '@/lib/indexnow';
+import { shouldPing } from '@/modules/cms/jobs/indexnow';
 import { PUBLISHED } from '@/lib/cms/read';
 import { localeEnabledWith } from '@/lib/cms/locale-enabled';
 import { riyadh } from '@/lib/riyadh';
@@ -225,8 +225,9 @@ export async function buildSnapshot(
     adminRoute: payload.config.routes.admin,
     isProductionSite: env.isProductionSite,
     englishOn,
-    indexNow: Boolean(indexNowKey()),
-    gaConfigured: Boolean(env.gaId),
+    // The ping's own predicate (ADR-052): the key alone is always there now.
+    indexNow: shouldPing(),
+    gaConfigured: Boolean((site['analytics'] as Row | undefined)?.['gaId']),
     site: {
       tagline: locOf(site['tagline']),
       social: {

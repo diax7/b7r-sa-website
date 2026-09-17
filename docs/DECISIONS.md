@@ -497,6 +497,8 @@ private `b7r-backups` bucket and asserts that an outsider gets 403 on the object
 listing, and that the script refuses the media bucket. LAUNCH-CHECKLIST 25 carries the CI
 evidence; the once-off rehearsal from a CranL snapshot stays Dhia's.
 
+*Amended 2026-09-17 (ADR-052): the backup workflow, the script and the restore rehearsal were removed at Dhia's instruction; the platform's snapshots are the backup.*
+
 ## ADR-035: Product cards carry a colour state; the gallery is one photo with a toggle (2026-09-13)
 
 Dhia's design review: cards show two colours, hovering a swatch previews it, clicking makes
@@ -1486,3 +1488,35 @@ the preload, so the 1920 px candidate is the one fetched. A first version made t
 rounded card under the header with a height cap; Dhia refused it as over-engineering and it
 was removed the same day. `e2e/home-hero.spec.ts` asserts the width, the centring and the
 fetched width at 2560 and 3440.
+
+## ADR-052: The environment is technical; settings live in the admin (2026-09-17)
+
+Dhia, at the first deploy, on the variable list: "the environment is only technical things
+like APIs and DB things"; anything a person at B7R changes belongs in the admin, and a
+switch like `SITE_ENGLISH` or a backup pipeline is not wanted. So:
+
+- Gone from the environment: `NEXT_PUBLIC_WHATSAPP` (the site already read the settings'
+  WhatsApp number; the variable was dead), `CONTACT_TO` (the contact form now sends to the
+  settings' contact address), `BOOKING_URL` (the settings' booking link, no fallback),
+  `GOOGLE_SITE_VERIFICATION` and `BING_SITE_VERIFICATION` (the SEO settings' verification
+  group, which existed and was never read), `NEXT_PUBLIC_GA_ID`, `NEXT_PUBLIC_UMAMI_SRC`
+  and `NEXT_PUBLIC_UMAMI_ID` (a new Analytics tab on the site settings), `SITE_ENGLISH`
+  (the switch and its CI build), `BACKUP_S3_*` (the weekly workflow, the script and the
+  restore rehearsal: the platform's snapshots are the backup).
+- Optional now: `NEXT_PUBLIC_APP_URL` (defaults to the app), `RESEND_FROM` (defaults to the
+  brand on its own domain), `INDEXNOW_KEY` (derived from `PAYLOAD_SECRET` when unset; the
+  key is public by design and a hash reveals nothing).
+- Required in production: the origin, the database, the secret, the bucket, the Resend key
+  and audience, the Turnstile pair. Thirteen values, all technical.
+
+Two consequences worth their sentence. The content security policy is static (ADR-016) and
+used to take the Umami origin from the environment at build; it now admits Umami Cloud and
+B7R's own umami.b7r.app (BRD 7.7), exact hosts and never a wildcard (a dangling subdomain
+must not become script on the site's origin), and the admin's Umami field accepts only those
+(`umamiSrcAllowed`), so a configured script is never blocked; the CI stand-in on the site's
+own origin is `'self'`. The derived IndexNow key is as strong as `PAYLOAD_SECRET`, and a
+weak secret is already the end of everything else. C2 of the visibility score reads the
+ping's own predicate (production runtime and a key) rather than the key alone, which is now
+always there. The CI seeds its dummy analytics ids into the settings (`scripts/ci/analytics-ids.ts`)
+instead of the environment. ADR-034's backup pipeline and ADR-043's English-off build are
+withdrawn by this decision; migration `20260916_230030_site_analytics`.

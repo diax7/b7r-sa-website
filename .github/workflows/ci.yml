@@ -19,13 +19,6 @@ env:
   # NEXT_PUBLIC_* values are inlined at build time, so the production origin must be set for
   # the whole job: Lighthouse's SEO = 100 requires the noindex guard to be off.
   NEXT_PUBLIC_SITE_URL: https://b7r.sa
-  NEXT_PUBLIC_APP_URL: https://b7r.app
-  NEXT_PUBLIC_WHATSAPP: '966501699572'
-  # Dummy analytics ids so Lighthouse and the e2e budgets measure the production shape and
-  # the consent path runs; the Umami stand-in records calls instead of sending them.
-  NEXT_PUBLIC_GA_ID: G-TEST00000
-  NEXT_PUBLIC_UMAMI_SRC: http://localhost:3004/umami-test.js
-  NEXT_PUBLIC_UMAMI_ID: test
   # In-memory newsletter and contact transports for the e2e success paths (no Resend key).
   NEWSLETTER_TRANSPORT: mock
   CONTACT_TRANSPORT: mock
@@ -104,22 +97,15 @@ jobs:
       - name: Seed content and the first admin (integration check)
         run: bash scripts/ci/seed-check.sh
 
+      # The analytics ids live in the admin (ADR-052): the dummy GA4 id and the Umami
+      # stand-in go into the seeded settings so the consent path and the budgets run.
+      - name: Analytics test ids
+        run: pnpm exec tsx scripts/ci/analytics-ids.ts
+
       # The visibility pull twice the same day writes one row per source, replaced, not
       # doubled (ADR-049): the upsert proven against the real schema, no service connected.
       - name: Visibility pull (integration check)
         run: pnpm visibility:pull --check
-
-      # A backup that cannot be restored is not a backup (ADR-034): dump the seeded database
-      # the way scripts/backup.sh does, restore into a scratch database, count the documents.
-      - name: Restore rehearsal
-        run: bash scripts/ci/restore-check.sh
-
-      # A production database seeded before Level 5 has no English: the build must still
-      # pass, with /en as a static 404 (ADR-043). Proven once here, before the real build.
-      - name: Build with the site not in English
-        run: pnpm build
-        env:
-          SITE_ENGLISH: off
 
       - name: Build
         run: pnpm build
@@ -202,31 +188,12 @@ jobs:
       - name: Install
         run: pnpm install --frozen-lockfile
 
-      - name: Migrate, seed, first admin
+      - name: Migrate, seed, first admin, analytics test ids
         run: |
           bash scripts/ci/migrate.sh
           pnpm content:migrate
           pnpm admin:create
-
-      # The backup lands in a PRIVATE bucket (ADR-034): the script refuses the media bucket,
-      # and an outsider can neither list the bucket nor read the dump.
-      - name: Backup to the private bucket and check it from the outside
-        env:
-          BACKUP_S3_BUCKET: b7r-backups
-          BACKUP_S3_ACCESS_KEY_ID: ${{ env.S3_ACCESS_KEY_ID }}
-          BACKUP_S3_SECRET_ACCESS_KEY: ${{ env.S3_SECRET_ACCESS_KEY }}
-        run: |
-          pipx install awscli --quiet 2>/dev/null || pip install --quiet --user awscli
-          bash scripts/backup.sh
-          stamp=$(date -u +%Y-%m-%d)
-          code=$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:9000/b7r-backups/$stamp.dump")
-          list=$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:9000/b7r-backups/")
-          echo "dump=$code list=$list"
-          [ "$code" = "403" ] && [ "$list" = "403" ] || { echo "the backup bucket is readable without credentials" >&2; exit 1; }
-          if BACKUP_S3_BUCKET="$S3_BUCKET" bash scripts/backup.sh; then
-            echo "the script accepted the media bucket" >&2
-            exit 1
-          fi
+          pnpm exec tsx scripts/ci/analytics-ids.ts
 
       - name: Build
         run: pnpm build

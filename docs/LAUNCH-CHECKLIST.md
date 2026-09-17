@@ -12,8 +12,8 @@ b7r.sa to go live.
 | 3 | Final hero photos delivered and cropped, or placeholders accepted for launch | Dhia | open | `scripts/hero-crops.ts` re-crops from `resources/hero/` |
 | 4 | Resend domain `b7r.sa` verified (SPF, DKIM, DMARC); test contact email received at contact@b7r.sa | Dhia | open | `RESEND_API_KEY`, `RESEND_FROM`, `CONTACT_TO`, `RESEND_AUDIENCE_ID`; `/api/health` → `contact: live`, `newsletter: live` |
 | 5 | Turnstile keys set; a bot submission blocked; a human submission passes; the admin login shows the widget | Dhia | open | `NEXT_PUBLIC_TURNSTILE_SITE_KEY` + `TURNSTILE_SECRET_KEY`, required in production since the login gate (ADR-034): the app refuses to boot without them; `/api/health` → `turnstile: on` |
-| 6 | GA4 consent flow verified in DebugView; Umami receiving events | Dhia | open | Code done (1b); needs the real ids and the Umami site |
-| 7 | `INDEXNOW_KEY` file live; Google and Bing verification tokens set | Dhia | open | Served at `/indexnow/{key}.txt`; tokens become `<meta>` tags |
+| 6 | GA4 consent flow verified in DebugView; Umami receiving events (optional) | Dhia | open | The ids go in Site settings → Analytics (ADR-052); Umami on cloud.umami.is or umami.b7r.app, or leave it empty |
+| 7 | Google and Bing verification tokens in SEO settings → Verification | Dhia | open | They become `<meta>` tags; the IndexNow key needs nothing (derived from the secret, served at `/indexnow/{key}.txt`) |
 | 8 | OG default and product images render in WhatsApp, X and LinkedIn previews | Dhia | open | Images exist (`pnpm og`); check after DNS |
 | 9 | Favicon set and manifest validated | *code* | done | `/favicon.ico`, `/icons/icon-192.png`, `/icons/icon-512.png`, `/manifest.webmanifest` |
 | 10 | All §5.2 redirects tested against the live old URL list | *code* / Dhia | done locally | `e2e/redirects.spec.ts` covers every entry; re-run `curl -I` on the live host after DNS |
@@ -31,7 +31,7 @@ b7r.sa to go live.
 
 | # | Item | Owner | Status |
 |---|---|---|---|
-| 15 | Search Console: the `https://b7r.sa/` property stays (its HTML-tag token in `GOOGLE_SITE_VERIFICATION`), a Domain property added by DNS TXT, the old WordPress sitemap removed, `sitemap.xml` submitted, generative AI control on Include, request indexing for `/` | Dhia | open |
+| 15 | Search Console: the `https://b7r.sa/` property stays (its HTML-tag token in SEO settings → Verification), a Domain property added by DNS TXT, the old WordPress sitemap removed, `sitemap.xml` submitted, generative AI control on Include, request indexing for `/` | Dhia | open |
 | 16 | Bing Webmaster Tools: verified, sitemap submitted, IndexNow ping for all URLs (`scripts/indexnow.ts`) | Dhia | open |
 | 17 | Link checker on the live site: zero 404s, zero mixed content | Dhia | open |
 | 18 | `robots.txt`, `sitemap.xml`, canonicals and JSON-LD verified on the live domain with the Rich Results Test | Dhia | open |
@@ -46,14 +46,14 @@ b7r.sa to go live.
 | 22 | First deploy's data: the review database restored (`pg_dump` → `pg_restore`, `public/media/` copied to the bucket under `media/`), or the seed on an empty one (`pnpm migrate`, `pnpm content:migrate`, `pnpm admin:create`); sign in and change the password | Dhia + agent | open | ADR-026; RUNBOOK "Deploy" step 4; the seed refuses a non-empty database |
 | 23 | The app on the platform from the repo, build type `Dockerfile`, port 3000 or `PORT`, health check `/api/health`, one instance, the environment set before the first build | Dhia | open | RUNBOOK "Deploy"; a first build on the platform's temporary domain without `B7R_RUNTIME` and `NEXT_PUBLIC_SITE_URL` (noindex) is the rehearsal |
 | 24 | An editor account created for the second person; the editor seat verified (no users, no settings, no delete of published) | Dhia | open | `e2e/admin.spec.ts` proves the matrix in CI |
-| 25 | Backup restore rehearsed once from a platform snapshot into a scratch database; the weekly `Backup` workflow needs the five `BACKUP_S3_*` secrets on a second, private bucket and a database the GitHub runner can reach | Dhia | open | BRD 9.8 (6); CI rehearses a restore of the seeded database every run (`scripts/ci/restore-check.sh`), ADR-034 |
+| 25 | Backups: none of ours (Dhia, 2026-09-17). Confirm the platform's snapshot schedule and retention, restore one snapshot into a scratch database once, keep `PAYLOAD_SECRET` beside the database credentials in the password manager, turn on the bucket's versioning | Dhia | open | RUNBOOK "Backups": a backup that cannot be restored is not a backup |
 | 26 | English content present (a restored review database has it; a fresh seed gets it from `pnpm content:migrate`); `/en` answers 200 and the header shows the switch | Dhia | open | ADR-043, RUNBOOK "The English site" |
 
 ## Added 2026-09-17 (the light pre-launch check)
 
 | # | Item | Owner | Status | Notes |
 |---|---|---|---|---|
-| 27 | Umami: a site on cloud.umami.is or your own instance, or say so and the two variables leave the required set | Dhia | open | `NEXT_PUBLIC_UMAMI_SRC`, `NEXT_PUBLIC_UMAMI_ID` are asserted at start with `B7R_RUNTIME=production` |
+| 27 | The admin, after the restore: WhatsApp number and contact address checked (Site settings → Contact), the analytics ids entered (Analytics), the verification tokens (SEO settings); nothing of this is in the environment any more (ADR-052) | Dhia | open | `.env.example` is the whole technical list |
 | 28 | A monthly limit on every AI connection; the prompts' periods set; the Mock connection and its citations removed before the dump | Dhia | open | RUNBOOK "The citation ledger"; the Anthropic row has no limit today |
 | 29 | The hero never grows wider than its photo; white on both sides beyond 1920 px (ADR-051) | *code* | done | `e2e/home-hero.spec.ts` at 2560 and 3440 |
 | 30 | The image builds where the platform builds from the repository (build args, migration inside the build) | *code* | done | Dockerfile, ADR-025 amended; the first build-arg build on 2026-09-17 found a production-only type error (the mock kind and the generated types), fixed the same day |

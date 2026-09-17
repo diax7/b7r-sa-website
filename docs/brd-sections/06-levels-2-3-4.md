@@ -6,7 +6,7 @@ Give Dhia and an editor a WordPress-like, Arabic, right-to-left admin at `https:
 
 ### 9.2 Infrastructure additions
 
-- CranL managed **Postgres** in the same project; connection string in `DATABASE_URL`. Daily automated snapshots (CranL) plus a weekly `pg_dump` to the S3 bucket by a job.
+- CranL managed **Postgres** in the same project; connection string in `DATABASE_URL`. The platform's automated snapshots are the backup (amended 2026-09-17, Dhia: no backup job, no backup bucket, no restore rehearsal in CI).
 - CranL **S3 bucket** for media through `@payloadcms/storage-s3`; public read for images; served through the CDN zone. Original uploads are kept; Payload generates sizes (thumbnail 400, card 800, hero 1920, og 1200 × 630) with focal-point cropping.
 - New env vars: `DATABASE_URL`, `PAYLOAD_SECRET` (≥ 32 random bytes), `S3_BUCKET`, `S3_REGION`, `S3_ENDPOINT`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `PAYLOAD_PUBLIC_SERVER_URL` (+ `S3_PUBLIC_URL` when objects are served from a host other than the endpoint). All of them join the production-required set asserted at start (§8.5); `PAYLOAD_PUBLIC_SERVER_URL` must equal the site origin.
 - Migrations are SQL files under `src/migrations/` run by the deploy workflow before the image is built and again by Payload at start-up; they are additive so the running image keeps serving during a release. Because every page is prerendered from the database, `next build` needs `DATABASE_URL` and `PAYLOAD_SECRET`: the image is built in GitHub Actions with BuildKit secrets and pushed to GHCR, and CranL pulls it (amended 2026-09-13, ADR-025).

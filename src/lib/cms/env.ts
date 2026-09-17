@@ -32,6 +32,9 @@ export function isProductionRuntime(
   return raw['B7R_RUNTIME'] === 'production';
 }
 
+/** The sender when `RESEND_FROM` is unset: the brand on its own domain (the one Resend verifies). */
+export const DEFAULT_FROM = 'بحر برنت <no-reply@b7r.sa>';
+
 export function cmsEnv(raw: Record<string, string | undefined> = process.env): CmsEnv {
   const bucket = raw['S3_BUCKET'];
   const endpoint = raw['S3_ENDPOINT'];
@@ -49,7 +52,7 @@ export function cmsEnv(raw: Record<string, string | undefined> = process.env): C
           ),
         }
       : undefined;
-  const from = parseFrom(raw['RESEND_FROM']);
+  const from = parseFrom(raw['RESEND_FROM'] || DEFAULT_FROM);
   const email =
     raw['RESEND_API_KEY'] && from ? { apiKey: raw['RESEND_API_KEY'], ...from } : undefined;
   return {

@@ -3,7 +3,7 @@ import { withPayload } from '@payloadcms/next/withPayload';
 import { createRequire } from 'node:module';
 import { redirectRules } from './src/lib/redirects';
 import { s3PublicOrigin, s3RemotePatterns } from './src/lib/image-url';
-import { headerRoutes, originOf } from './src/lib/security-headers';
+import { headerRoutes } from './src/lib/security-headers';
 
 const require = createRequire(import.meta.url);
 const { version } = require('./package.json') as { version: string };
@@ -37,7 +37,6 @@ const nextConfig: NextConfig = {
   // BRD 8.10 headers and 5.2 redirects live in src/lib so they are unit-tested as data.
   async headers() {
     return headerRoutes({
-      umamiOrigin: originOf(process.env.NEXT_PUBLIC_UMAMI_SRC),
       mediaOrigin: s3PublicOrigin(),
       allowEval: process.env.NODE_ENV === 'development',
     });

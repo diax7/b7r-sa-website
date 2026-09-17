@@ -1,6 +1,7 @@
 import type { Field, GlobalConfig, NamedTab } from 'payload';
 import { hiddenUnlessAdmin, isAdmin } from '@/modules/cms/access';
 import { revalidateGlobal } from '@/modules/cms/hooks/revalidate';
+import { umamiSrcAllowed } from '@/lib/security-headers';
 import { savedByField, stampSavedByGlobal } from '@/modules/cms/fields/saved-by';
 import { globalComponents } from '@/modules/cms/admin/document/config';
 import { adminGroup } from '@/modules/cms/admin/icons';
@@ -318,6 +319,44 @@ export const SiteSettings: GlobalConfig = {
                 type: 'text',
                 required: true,
                 label: { ar: 'الكيان القانوني', en: 'Legal entity' },
+              },
+            ],
+          },
+          {
+            label: { ar: 'التحليلات', en: 'Analytics' },
+            fields: [
+              {
+                name: 'analytics',
+                type: 'group',
+                label: { ar: 'التحليلات', en: 'Analytics' },
+                fields: [
+                  {
+                    name: 'gaId',
+                    type: 'text',
+                    label: { ar: 'معرّف القياس في Google Analytics', en: 'GA4 measurement id' },
+                    validate: (value: unknown) =>
+                      !value || /^G-[A-Z0-9]{4,}$/.test(String(value)) || 'G-XXXXXXXXXX',
+                  },
+                  {
+                    type: 'row',
+                    fields: [
+                      {
+                        name: 'umamiSrc',
+                        type: 'text',
+                        label: { ar: 'رابط سكربت Umami', en: 'Umami script URL' },
+                        validate: (value: unknown) =>
+                          !value ||
+                          umamiSrcAllowed(String(value)) ||
+                          'https://cloud.umami.is/script.js or https://umami.b7r.app/script.js',
+                      },
+                      {
+                        name: 'umamiId',
+                        type: 'text',
+                        label: { ar: 'معرّف الموقع في Umami', en: 'Umami website id' },
+                      },
+                    ],
+                  },
+                ],
               },
             ],
           },
