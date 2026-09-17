@@ -643,7 +643,7 @@ test.describe('CMS admin', () => {
     const adminAuth = await login(request, admin);
     const refused = await request.post(`${API}/users`, {
       headers: adminAuth,
-      data: { email: 'short@b7r.sa', password: 'abc123def', name: 'x', role: 'editor' },
+      data: { email: 'short@b7r.sa', password: 'abc123d', name: 'x', role: 'editor' },
     });
     expect(refused.status()).toBe(400);
     expect(await refused.text()).toContain('too short');

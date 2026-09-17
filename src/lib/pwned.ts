@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 
-export const PASSWORD_MIN_LENGTH = 12;
+export const PASSWORD_MIN_LENGTH = 8;
 const RANGE_URL = 'https://api.pwnedpasswords.com/range/';
 
 /**
