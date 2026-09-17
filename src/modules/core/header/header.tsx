@@ -82,7 +82,7 @@ export function Header({ navigation, site, locale, locales, copy }: ShellData) {
                 priority
                 className={cn(
                   'w-auto transition-[height] duration-(--duration-base) ease-(--ease-standard)',
-                  scrolled ? 'h-7 lg:h-8' : 'h-8 lg:h-11',
+                  scrolled ? 'h-8 lg:h-9' : 'h-8 lg:h-11',
                 )}
               />
             </Link>
@@ -119,7 +119,7 @@ export function Header({ navigation, site, locale, locales, copy }: ShellData) {
               <Button
                 asChild
                 variant={navigation.ctaShiny ? 'shiny' : 'primary'}
-                className="h-9 px-4 text-small lg:h-11 lg:px-5 lg:text-button"
+                className="h-10 px-4 text-small lg:h-11 lg:px-5 lg:text-button"
               >
                 <a
                   href={registerUrl(env.appUrl, { campaign: 'header' })}

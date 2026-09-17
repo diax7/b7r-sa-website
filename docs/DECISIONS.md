@@ -1538,11 +1538,14 @@ island, with one change: the same capsule on top on phones too, holding the logo
 and the burger, nothing at the bottom of the screen.
 
 The rule (BRD 6.2 amended): at rest the header is the full-width bar it was; past the 24 px
-sentinel it settles into a capsule 10 px below the top edge, 800 px wide at most on desktop
-and the viewport minus 24 px on phones, 56 / 52 px tall, solid white, a hairline, a
-blue-tinted lift, no blur. The motion is one settle curve (`--ease-settle`,
-`cubic-bezier(.32,.72,0,1)`) over 480 ms on the width, the radius, the offset and the inner
-padding, with the colours on the standard curve, and none under reduced motion. The sticky
+sentinel it settles into a capsule 12 px below the top edge, 880 px wide at most on desktop
+and the viewport minus 24 px on phones, 64 / 58 px tall, solid white, a hairline, a
+blue-tinted lift, no blur, with the brand's 13 px corner (his first look: the pill read as
+off-brand and too light; the corner is now the buttons' own, the bar heavier, the links at
+16 px). The motion is one soft curve (`--ease-settle`, `cubic-bezier(.22,.61,.36,1)`) over
+720 ms on the width, the height, the radius, the offset and the inner padding (his second
+look: 480 ms felt rushed), with the colours on the standard curve, and none under reduced
+motion. The sticky
 wrapper keeps reserving the rest height, so the change never shifts the page. One CTA
 element serves both layouts (compact on phones), so the e2e's single-element locator holds.
 `e2e/header-menu.spec.ts` asserts the capsule's geometry on both layouts and the absence of

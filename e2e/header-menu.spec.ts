@@ -45,8 +45,8 @@ test.describe('header and navigation (BRD 6.2)', () => {
     expect(island.width).toBeLessThan(rest.width);
     expect(Math.abs(island.x + island.width / 2 - viewport.width / 2)).toBeLessThan(2);
     expect(island.y).toBeGreaterThanOrEqual(8);
-    expect(island.height).toBe(isMobile ? 52 : 56);
-    await expect(header).toHaveCSS('border-top-left-radius', '999px');
+    expect(island.height).toBe(isMobile ? 58 : 64);
+    await expect(header).toHaveCSS('border-top-left-radius', '13px');
     await expect(header).toHaveCSS('backdrop-filter', 'none');
     // The three things on a phone: the logo, the button and the burger; six links on desktop.
     await expect(header.locator('a[data-location="header"]')).toBeVisible();
