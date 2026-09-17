@@ -109,18 +109,27 @@ name. Local uploads (`public/media`) are not copied into the image.
 
 ## Deploy (the platform builds from the repository)
 
-The image is built from the `Dockerfile` at the root, and the build needs the production
-database and the Payload secret (ADR-025): it migrates the database, then prerenders every
-page from it. Any platform that builds a Dockerfile from the GitHub repository and hands the
-app's environment variables to the build works the same way: CranL (build type
-`Dockerfile`), Koyeb, Render, Qovery, or a custom host running `docker build --build-arg`.
-Verified 2026-09-17 with a build-arg build against the compose database (no secret mounts).
+The build needs the production database and the Payload secret (ADR-025): it migrates the
+database, then prerenders every page from it. Two builds exist, one per kind of platform:
+
+- **Railpack (CranL, "Automatic" build type; also Railway).** `railpack.json` at the root:
+  the build step runs `scripts/ci/migrate.sh`, `pnpm run build`, then
+  `scripts/standalone-assets.mjs` (copies `.next/static` and `/public` into
+  `.next/standalone`); the start command is `node scripts/start.mjs` (the standalone server
+  bound to `0.0.0.0` on `PORT`, default 3000). CranL hands the app's environment to Railpack
+  builds (proven 2026-09-17) but not to Dockerfile builds, so on CranL the app is created
+  with **Automatic**, never Dockerfile; the type cannot be changed afterwards.
+- **Dockerfile (a platform that builds a Dockerfile and passes the environment as build
+  args, Koyeb, Render, Qovery, or `docker build --build-arg` by hand; CI's image).** The
+  build stage takes the database and the secret from a BuildKit secret or a build arg and
+  does the same three things. Verified 2026-09-17 against the compose database.
 
 1. Provision: Postgres 16 (a database `b7r`, TLS, a connection string the platform's
    builder can reach: the external one, not an internal-only host) and an S3-compatible
    bucket `b7r-media` with public read; note the values for the matrix below. Region
    Saudi Arabia or the nearest MENA region.
-2. The application from `diax7/b7r-sa-website`, branch `main`, build type `Dockerfile`,
+2. The application from `diax7/b7r-sa-website`, branch `main`, build type **Automatic**
+   (Railpack) on CranL, `Dockerfile` elsewhere,
    port 3000 (or set `PORT`; `server.js` and the health check follow it), health check
    `GET /api/health` (`ok` is the liveness signal; `db`, `media`, `newsletter`, `contact`,
    `turnstile`, `indexnow`, `jobs` are reported), **one instance** (the job queue runs inside

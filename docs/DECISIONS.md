@@ -240,7 +240,13 @@ neither. So the image builds wherever a platform builds a Dockerfile from the re
 hands the app's environment to the build (CranL, Koyeb, Render, Qovery), and the GitHub
 workflow is only for a platform that deploys a registry image. A build arg is consumed in the
 build stage only; the runner stage is assembled from that stage's files, so neither value
-reaches the image that runs. The migrate step left the workflow: one place migrates. The
+reaches the image that runs. The migrate step left the workflow: one place migrates. On
+CranL itself the Dockerfile path is dead: its Dockerfile builds get no variables at all (the
+build stopped on purpose with every value empty, 2026-09-17), while its Railpack builds
+("Automatic") do get them (a build there passed the variable check and stopped only on the
+database that did not exist yet). So `railpack.json` carries the same three steps for
+Railpack (migrate, build, assemble the standalone folder) and `scripts/start.mjs` starts the
+standalone server on `0.0.0.0`; CranL's app is created with the Automatic build type. The
 first such build failed to type-check: outside `NODE_ENV=production` Payload regenerates
 `payload-types.ts` on every init, and the Connections picker filtered the mock kind out
 of its `options` by `AI_CONTENT_MOCK`, so the union lost `'mock'` and `state.ts` no longer
