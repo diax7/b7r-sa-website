@@ -148,6 +148,7 @@ export function toNavigation(doc: SiteSetting, locale: Locale): Navigation {
     primary: (menu.primary ?? []).map(navItem(locale)),
     policies: (menu.policies ?? []).map(navItem(locale)),
     ctaLabel: menu.ctaLabel,
+    ctaShiny: Boolean(menu.ctaShiny),
     skipLinkLabel: menu.skipLinkLabel,
     menuOpenLabel: menu.menuOpenLabel,
     menuCloseLabel: menu.menuCloseLabel,

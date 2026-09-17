@@ -115,6 +115,7 @@ const menuDoc: SiteSetting['menu'] = {
   primary: navigation.primary.map((i) => ({ ...i, matchPrefix: i.matchPrefix ?? null })),
   policies: navigation.policies.map((i) => ({ ...i, matchPrefix: null })),
   ctaLabel: navigation.ctaLabel,
+  ctaShiny: navigation.ctaShiny,
   skipLinkLabel: navigation.skipLinkLabel,
   menuOpenLabel: navigation.menuOpenLabel,
   menuCloseLabel: navigation.menuCloseLabel,

@@ -22,6 +22,7 @@ import * as migration_20260916_124404_compare_block from './20260916_124404_comp
 import * as migration_20260916_171315_prompt_period from './20260916_171315_prompt_period';
 import * as migration_20260916_180013_citation_answer from './20260916_180013_citation_answer';
 import * as migration_20260916_230030_site_analytics from './20260916_230030_site_analytics';
+import * as migration_20260917_192112_cta_shiny from './20260917_192112_cta_shiny';
 
 export const migrations = [
   {
@@ -142,6 +143,11 @@ export const migrations = [
   {
     up: migration_20260916_230030_site_analytics.up,
     down: migration_20260916_230030_site_analytics.down,
-    name: '20260916_230030_site_analytics'
+    name: '20260916_230030_site_analytics',
+  },
+  {
+    up: migration_20260917_192112_cta_shiny.up,
+    down: migration_20260917_192112_cta_shiny.down,
+    name: '20260917_192112_cta_shiny'
   },
 ];

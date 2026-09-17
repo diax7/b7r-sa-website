@@ -130,11 +130,12 @@ export function MobileMenu({
           </ul>
         </nav>
         <div className="mt-8 flex flex-col gap-6 border-t border-border px-4 pt-8 sm:px-6">
-          <Button asChild size="lg" fullWidth>
+          <Button asChild size="lg" fullWidth variant={navigation.ctaShiny ? 'shiny' : 'primary'}>
             <a
               href={registerUrl(env.appUrl, { campaign: 'menu' })}
               data-track="cta_click"
               data-location="menu"
+              data-shiny={navigation.ctaShiny || undefined}
             >
               {navigation.ctaLabel}
             </a>

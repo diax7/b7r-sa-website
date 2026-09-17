@@ -47,6 +47,8 @@ export const NavigationSchema = z.object({
   primary: z.array(NavItemSchema).length(6),
   policies: z.array(NavItemSchema).length(4),
   ctaLabel: nonEmpty,
+  /** The header button with the brand's sheen (ADR-054); the admin's switch. */
+  ctaShiny: z.boolean().default(false),
   skipLinkLabel: nonEmpty,
   menuOpenLabel: nonEmpty,
   menuCloseLabel: nonEmpty,

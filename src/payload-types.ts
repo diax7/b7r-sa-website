@@ -2978,6 +2978,10 @@ export interface SiteSetting {
      */
     ctaLabel: string;
     /**
+     * Gives the button a sheen in the brand's two blues that slides on hover and a light glint every few seconds; unticked keeps the classic blue button.
+     */
+    ctaShiny?: boolean | null;
+    /**
      * The link a keyboard user sees on the first Tab, jumping past the header to the content.
      */
     skipLinkLabel: string;
@@ -3014,13 +3018,16 @@ export interface SiteSetting {
    * Read by nothing on the site today: the footer's copyright line and the legal pages carry their own fixed text. Kept for the day they read it.
    */
   legalEntity: string;
+  /**
+   * The measurement tools: Google Analytics 4 (after the visitor consents) and Umami (no consent needed). Leave empty for a site with no tracking.
+   */
   analytics?: {
     /**
      * The Google Analytics 4 measurement id (starts with G-). Set, the cookie consent bar shows and GA loads after consent; empty means no tracking and no bar.
      */
     gaId?: string | null;
     /**
-     * The Umami script URL (from the site's settings in Umami). Loads on every page when set together with the website id; needs no consent.
+     * The Umami script URL, on cloud.umami.is or umami.b7r.app (the security policy admits only these). Loads on every page when set together with the website id; needs no consent.
      */
     umamiSrc?: string | null;
     /**
@@ -3437,6 +3444,7 @@ export interface SiteSettingsSelect<T extends boolean = true> {
               id?: T;
             };
         ctaLabel?: T;
+        ctaShiny?: T;
         skipLinkLabel?: T;
         menuOpenLabel?: T;
         menuCloseLabel?: T;

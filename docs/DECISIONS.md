@@ -1528,3 +1528,36 @@ ping's own predicate (production runtime and a key) rather than the key alone, w
 always there. The CI seeds its dummy analytics ids into the settings (`scripts/ci/analytics-ids.ts`)
 instead of the environment. ADR-034's backup pipeline and ADR-043's English-off build are
 withdrawn by this decision; migration `20260916_230030_site_analytics`.
+
+## ADR-053: The island header (2026-09-17)
+
+Dhia, on the sticky header: the blurred, shrinking bar is "typical, like every AI website".
+Four working studies were made (the island, a side rail, a hide-on-scroll bar with a
+full-screen curtain menu, a solid brand ribbon with a section indicator); he chose the
+island, with one change: the same capsule on top on phones too, holding the logo, the button
+and the burger, nothing at the bottom of the screen.
+
+The rule (BRD 6.2 amended): at rest the header is the full-width bar it was; past the 24 px
+sentinel it settles into a capsule 10 px below the top edge, 800 px wide at most on desktop
+and the viewport minus 24 px on phones, 56 / 52 px tall, solid white, a hairline, a
+blue-tinted lift, no blur. The motion is one settle curve (`--ease-settle`,
+`cubic-bezier(.32,.72,0,1)`) over 480 ms on the width, the radius, the offset and the inner
+padding, with the colours on the standard curve, and none under reduced motion. The sticky
+wrapper keeps reserving the rest height, so the change never shifts the page. One CTA
+element serves both layouts (compact on phones), so the e2e's single-element locator holds.
+`e2e/header-menu.spec.ts` asserts the capsule's geometry on both layouts and the absence of
+a backdrop filter.
+
+## ADR-054: The shiny CTA, an admin switch (2026-09-17)
+
+Dhia wants a second look for the header's button, chosen from the admin beside the button's
+text: "shiny, with this little animation and hovering", from a reference component, in our
+colours, font and radius rather than the reference's. `Button` gains the variant `shiny`
+(`.btn-shiny` in `globals.css`): the primary button with a gradient of the brand's two blues
+(`--color-primary` to `--color-accent` and back) that slides across on hover over 700 ms, a
+soft blue glow, a light inner rim, and a glint of light crossing the face every 4.5 s at
+rest, from the start edge in both writing directions; none of the motion under reduced
+motion. The design system's gradient rule is amended for this one case (two blues, same
+hue). The site settings' menu group gets `ctaShiny` (a checkbox under the CTA label, off by
+default; migration `20260917_192112_cta_shiny`); the header and the phone menu render the variant
+from it, with `data-shiny` for the tests. The classic button stays the default.
