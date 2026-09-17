@@ -18,7 +18,9 @@ for (const id of ['c1', 'c2', 'c3', 'c4']) {
   if (id === 'c2') await page.hover('#c2 .rail');
   if (id === 'c3') {
     // The bar hides on the way down; a step back up brings it back, then the menu opens.
-    await page.evaluate(() => { for (const p of document.querySelectorAll('#c3 .page')) p.scrollTop = 360; });
+    await page.evaluate(() => {
+      for (const p of document.querySelectorAll('#c3 .page')) p.scrollTop = 360;
+    });
     await page.waitForTimeout(500);
     await page.click('#c3 .laptop [data-open]');
   }
