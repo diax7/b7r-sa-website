@@ -277,6 +277,8 @@ all go through it. Lockout is 5 attempts / 15 minutes, sessions 8 hours, cookies
 (`beforeLogin` widget → cookie → `hooks.beforeLogin` verification) and its origin is already
 in the admin CSP.
 
+*Amended 2026-09-17 (Dhia): the minimum is 8 characters, not 12; the breach check, the five-attempt lock and the Turnstile gate stay.*
+
 ## ADR-028: The admin has its own headers (2026-09-13)
 
 `/admin/*` and `/api/payload/*` answer with `X-Robots-Tag: noindex, nofollow`,

@@ -12,7 +12,7 @@ import { describeFields } from '@/modules/cms/admin/descriptions/describe';
 const LOCK_MINUTES = 15;
 
 const PASSWORD_MESSAGES = {
-  too_short: 'The password is too short: at least 12 characters.',
+  too_short: 'The password is too short: at least 8 characters.',
   breached: 'That password appears in known breaches; choose another.',
 } as const;
 
