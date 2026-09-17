@@ -1,0 +1,15 @@
+{
+  "$schema": "https://schema.railpack.com",
+  "steps": {
+    "build": {
+      "commands": [
+        "bash scripts/ci/migrate.sh",
+        "pnpm run build",
+        "node scripts/standalone-assets.mjs"
+      ]
+    }
+  },
+  "deploy": {
+    "startCommand": "node scripts/start.mjs"
+  }
+}
