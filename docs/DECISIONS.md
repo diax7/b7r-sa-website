@@ -1560,4 +1560,11 @@ rest, from the start edge in both writing directions; none of the motion under r
 motion. The design system's gradient rule is amended for this one case (two blues, same
 hue). The site settings' menu group gets `ctaShiny` (a checkbox under the CTA label, off by
 default; migration `20260917_192112_cta_shiny`); the header and the phone menu render the variant
-from it, with `data-shiny` for the tests. The classic button stays the default.
+from it, with `data-shiny` for the tests. The classic button stays the default. The label
+never sits on the accent itself: the visible window is 36% of a 280% gradient, so under the
+centred label the blue is about #006dc0 at rest (5.3:1 with white) and #0067bb on hover
+(5.6:1); the lighter band falls at the padded edges where there is no text, and the label
+crosses the accent only during the 700 ms slide. The stops and the 280% size are what
+make this true; a later "more shine" edit must re-check the numbers. The glint is the
+site's third continuous animation after ADR-037's two, transform-only and off under
+reduced motion.

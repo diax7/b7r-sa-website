@@ -1,4 +1,5 @@
 // Flip the header's shiny switch on the local database (a design look; the admin does the same).
+// Review server only: never point it at production, the admin's switch is the way there.
 //   pnpm exec tsx scripts/dev/cta-shiny-toggle.ts on|off
 import nextEnv from '@next/env';
 import { getPayload } from 'payload';
