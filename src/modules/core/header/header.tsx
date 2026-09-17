@@ -17,10 +17,12 @@ import { LanguageSwitch } from '@/modules/core/header/language-switch';
 import { MobileMenuTrigger } from '@/modules/core/header/mobile-menu-trigger';
 
 /**
- * Sticky header (BRD 6.2, ADR-044). A 24 px sentinel at the top of the document drives the
- * scrolled state; the outer wrapper reserves `--header-h` so the inner shrink never shifts
- * layout. Transparent over the hero at the top of `/` only. Desktop: logo, nav, the language
- * switch, the CTA; phones: logo and burger (the switch sits in the menu's top bar).
+ * The island header (BRD 6.2 amended 2026-09-17, ADR-053). A 24 px sentinel at the top of
+ * the document drives the scrolled state; the outer wrapper reserves the rest height so the
+ * change never shifts layout. At rest a full-width bar, transparent over the hero at the top
+ * of `/` only; scrolled, the bar settles into a white capsule below the top edge (the CSS in
+ * `globals.css`, `.header-bar`). Desktop: logo, nav, the language switch, the CTA; phones:
+ * logo, the CTA and the burger (the switch sits in the menu's top bar).
  */
 export interface ShellData {
   navigation: Navigation;
@@ -65,13 +67,11 @@ export function Header({ navigation, site, locale, locales, copy }: ShellData) {
           data-scrolled={scrolled || undefined}
           data-transparent={transparent || undefined}
           className={cn(
-            'flex h-(--header-h-mobile) items-center transition-[height,background-color,box-shadow] duration-(--duration-base) ease-(--ease-standard) lg:h-(--header-h)',
+            'header-bar flex items-center',
             transparent ? 'bg-transparent' : 'bg-surface',
-            scrolled &&
-              'h-(--header-h-scrolled) bg-surface/85 shadow-header backdrop-blur-[12px] lg:h-(--header-h-scrolled)',
           )}
         >
-          <Container className="flex items-center justify-between gap-6">
+          <Container className="header-inner flex items-center justify-between gap-4 lg:gap-6">
             <Link href={home} className="shrink-0 rounded-inner" aria-label={site.brandName}>
               <Image
                 src="/images/logo/logo-header.png"
@@ -82,13 +82,13 @@ export function Header({ navigation, site, locale, locales, copy }: ShellData) {
                 priority
                 className={cn(
                   'w-auto transition-[height] duration-(--duration-base) ease-(--ease-standard)',
-                  scrolled ? 'h-7 lg:h-8' : 'h-8 lg:h-11',
+                  scrolled ? 'h-8 lg:h-9' : 'h-8 lg:h-11',
                 )}
               />
             </Link>
 
             <nav aria-label={copy.a11y.mainNavigation} className="hidden lg:block">
-              <ul className="flex items-center gap-8">
+              <ul className="header-nav flex items-center gap-8">
                 {navigation.primary.map((item) => {
                   const active = isActive(pathname, item);
                   return (
@@ -109,29 +109,36 @@ export function Header({ navigation, site, locale, locales, copy }: ShellData) {
               </ul>
             </nav>
 
-            <div className="hidden items-center gap-5 lg:flex">
+            <div className="flex items-center gap-1 lg:gap-5">
               {switchable && (
-                <LanguageSwitch locale={locale} ariaLabel={copy.a11y.switchLanguage} />
+                <div className="hidden lg:block">
+                  <LanguageSwitch locale={locale} ariaLabel={copy.a11y.switchLanguage} />
+                </div>
               )}
-              <Button asChild>
+              {/* One CTA for both layouts: compact on phones, the full button on desktop. */}
+              <Button
+                asChild
+                variant={site.ctaShiny ? 'shiny' : 'primary'}
+                className="h-10 px-4 text-small lg:h-11 lg:px-5 lg:text-button"
+              >
                 <a
                   href={registerUrl(env.appUrl, { campaign: 'header' })}
                   data-track="cta_click"
                   data-location="header"
+                  data-shiny={site.ctaShiny || undefined}
                 >
                   {navigation.ctaLabel}
                 </a>
               </Button>
+              <MobileMenuTrigger
+                pathname={pathname}
+                navigation={navigation}
+                site={site}
+                locale={locale}
+                switchable={switchable}
+                copy={copy}
+              />
             </div>
-
-            <MobileMenuTrigger
-              pathname={pathname}
-              navigation={navigation}
-              site={site}
-              locale={locale}
-              switchable={switchable}
-              copy={copy}
-            />
           </Container>
         </header>
       </div>

@@ -1528,3 +1528,51 @@ ping's own predicate (production runtime and a key) rather than the key alone, w
 always there. The CI seeds its dummy analytics ids into the settings (`scripts/ci/analytics-ids.ts`)
 instead of the environment. ADR-034's backup pipeline and ADR-043's English-off build are
 withdrawn by this decision; migration `20260916_230030_site_analytics`.
+
+## ADR-053: The island header (2026-09-17)
+
+Dhia, on the sticky header: the blurred, shrinking bar is "typical, like every AI website".
+Four working studies were made (the island, a side rail, a hide-on-scroll bar with a
+full-screen curtain menu, a solid brand ribbon with a section indicator); he chose the
+island, with one change: the same capsule on top on phones too, holding the logo, the button
+and the burger, nothing at the bottom of the screen.
+
+The rule (BRD 6.2 amended): at rest the header is the full-width bar it was; past the 24 px
+sentinel it settles into a capsule 12 px below the top edge, 880 px wide at most on desktop
+and the viewport minus 24 px on phones, 64 / 58 px tall, solid white, a hairline, a
+blue-tinted lift, no blur, with the brand's 13 px corner (his first look: the pill read as
+off-brand and too light; the corner is now the buttons' own, the bar heavier, the links at
+16 px). The motion is one soft curve (`--ease-settle`, `cubic-bezier(.22,.61,.36,1)`) over
+720 ms on the width, the height, the radius, the offset and the inner padding (his second
+look: 480 ms felt rushed), with the colours on the standard curve, and none under reduced
+motion. The sticky
+wrapper keeps reserving the rest height, so the change never shifts the page. One CTA
+element serves both layouts (compact on phones), so the e2e's single-element locator holds.
+`e2e/header-menu.spec.ts` asserts the capsule's geometry on both layouts and the absence of
+a backdrop filter.
+
+## ADR-054: The shiny CTA, an admin switch (2026-09-17)
+
+Dhia wants a second look for the header's button, chosen from the admin beside the button's
+text: "shiny, with this little animation and hovering", from a reference component, in our
+colours, font and radius rather than the reference's. `Button` gains the variant `shiny`
+(`.btn-shiny` in `globals.css`): the primary button with a gradient of the brand's two blues
+(`--color-primary` to `--color-accent` and back) that slides across on hover over 700 ms, a
+soft blue glow, a light inner rim, and a glint of light crossing the face every 4.5 s at
+rest, from the start edge in both writing directions; none of the motion under reduced
+motion. The design system's gradient rule is amended for this one case (two blues, same
+hue). His second look: the switch must cover every place a call-to-action button stands,
+not the header alone, and the glow was too strong. So the switch is site-wide, `ctaShiny`
+on the site settings' Brand tab (off by default; migration `20260917_192112_cta_shiny`), and
+every main CTA reads it: the header, the phone menu, the hero, the video, the ribbon (as
+`inverseShiny`, the same sheen in white and the accent tint on the primary ribbon), the
+product page and its sticky bar, the designer's three buttons, the post's in-post CTA. The
+glow is 10 px at 22% (14 px at 32% on hover). The CTA text fields say where the switch is.
+The header carries `data-shiny` for the tests. The classic buttons stay the default. The label
+never sits on the accent itself: the visible window is 36% of a 280% gradient, so under the
+centred label the blue is about #006dc0 at rest (5.3:1 with white) and #0067bb on hover
+(5.6:1); the lighter band falls at the padded edges where there is no text, and the label
+crosses the accent only during the 700 ms slide. The stops and the 280% size are what
+make this true; a later "more shine" edit must re-check the numbers. The glint is the
+site's third continuous animation after ADR-037's two, transform-only and off under
+reduced motion.

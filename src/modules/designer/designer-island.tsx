@@ -322,6 +322,7 @@ export function DesignerIsland({
               monthlyLabel: copy.monthlyLabel,
               negativeWarning: copy.negativeWarning,
               cta: copy.cta,
+              ctaShiny: copy.ctaShiny,
             }}
           />
         </div>
@@ -345,7 +346,7 @@ export function DesignerIsland({
             className={cn('text-h4', state.belowCost ? 'text-error' : 'text-text')}
           />
         </div>
-        <Button asChild size="md">
+        <Button asChild size="md" variant={copy.ctaShiny ? 'shiny' : 'primary'}>
           <a
             href={ctaHref}
             tabIndex={stickyVisible ? 0 : -1}

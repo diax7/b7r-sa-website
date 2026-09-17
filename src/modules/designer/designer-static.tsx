@@ -142,7 +142,7 @@ export function DesignerStatic({ products, product, copy, ctaHref }: DesignerSta
               </dd>
             </div>
           </dl>
-          <Button asChild size="lg" fullWidth>
+          <Button asChild size="lg" fullWidth variant={copy.ctaShiny ? 'shiny' : 'primary'}>
             <a href={ctaHref} data-track="cta_click" data-location="designer">
               {designer.cta}
             </a>

@@ -53,6 +53,7 @@ interface ResultsCardProps {
     monthlyLabel: string;
     negativeWarning: string;
     cta: string;
+    ctaShiny: boolean;
   };
 }
 
@@ -100,7 +101,7 @@ export function ResultsCard({
           {copy.negativeWarning}
         </p>
       )}
-      <Button asChild size="lg" fullWidth>
+      <Button asChild size="lg" fullWidth variant={copy.ctaShiny ? 'shiny' : 'primary'}>
         <a href={ctaHref} data-track="cta_click" data-location="designer">
           {copy.cta}
         </a>

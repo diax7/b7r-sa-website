@@ -2661,7 +2661,7 @@ export interface Home {
       color: string;
     };
     /**
-     * The blue button under the slides; opens the app's sign-up.
+     * The blue button under the slides; opens the app's sign-up. Shiny or classic: Site settings, Brand, Shiny buttons.
      */
     primaryCta: string;
     /**
@@ -2725,7 +2725,7 @@ export interface Home {
      */
     lead: string;
     /**
-     * The button at the end of the designer; opens the app's sign-up.
+     * The button at the end of the designer; opens the app's sign-up. Shiny or classic: Site settings, Brand, Shiny buttons.
      */
     cta: string;
   };
@@ -2863,7 +2863,7 @@ export interface Home {
      */
     lead: string;
     /**
-     * The ribbon's button; opens the app's sign-up.
+     * The ribbon's button; opens the app's sign-up. Shiny or classic: Site settings, Brand, Shiny buttons.
      */
     button: string;
   };
@@ -2898,6 +2898,10 @@ export interface SiteSetting {
    * The one-line definition: under the logo in the footer, the first line of llms.txt, the web app manifest, and the engine's facts sheet. The same sentence everywhere.
    */
   tagline: string;
+  /**
+   * Gives every main call-to-action button on the site (the header, the phone menu, the slides, the video, the ribbon, the product page, the designer, the posts) a sheen in the brand's two blues that slides on hover and a light glint every few seconds; unticked keeps the classic blue buttons.
+   */
+  ctaShiny?: boolean | null;
   /**
    * How to reach us: the footer, the contact page, the WhatsApp widget and the organisation data.
    */
@@ -3014,13 +3018,16 @@ export interface SiteSetting {
    * Read by nothing on the site today: the footer's copyright line and the legal pages carry their own fixed text. Kept for the day they read it.
    */
   legalEntity: string;
+  /**
+   * The measurement tools: Google Analytics 4 (after the visitor consents) and Umami (no consent needed). Leave empty for a site with no tracking.
+   */
   analytics?: {
     /**
      * The Google Analytics 4 measurement id (starts with G-). Set, the cookie consent bar shows and GA loads after consent; empty means no tracking and no bar.
      */
     gaId?: string | null;
     /**
-     * The Umami script URL (from the site's settings in Umami). Loads on every page when set together with the website id; needs no consent.
+     * The Umami script URL, on cloud.umami.is or umami.b7r.app (the security policy admits only these). Loads on every page when set together with the website id; needs no consent.
      */
     umamiSrc?: string | null;
     /**
@@ -3402,6 +3409,7 @@ export interface SiteSettingsSelect<T extends boolean = true> {
   brandName?: T;
   brandNameLatin?: T;
   tagline?: T;
+  ctaShiny?: T;
   contact?:
     | T
     | {

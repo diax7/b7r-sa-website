@@ -21,6 +21,10 @@ const button = cva(
         link: 'bg-transparent text-primary underline-offset-4 hover:underline',
         /** White button on the primary ribbon (BRD 6.3.1). */
         inverse: 'bg-white text-primary hover:bg-accent-tint',
+        /** The primary button with the brand's sheen (ADR-054); the admin switches it on. */
+        shiny: 'btn-shiny text-white',
+        /** The inverse button with a white sheen, for the primary ribbon (ADR-054). */
+        inverseShiny: 'btn-shiny btn-shiny-inverse text-primary',
       },
       size: {
         md: 'h-11 px-5 text-button',

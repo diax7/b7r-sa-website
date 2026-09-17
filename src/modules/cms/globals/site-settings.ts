@@ -104,6 +104,7 @@ const menu: NamedTab = {
         },
       },
     },
+
     {
       type: 'row',
       fields: [
@@ -205,6 +206,12 @@ export const SiteSettings: GlobalConfig = {
                 required: true,
                 localized: true,
                 label: { ar: 'الشعار النصي', en: 'Tagline' },
+              },
+              {
+                name: 'ctaShiny',
+                type: 'checkbox',
+                defaultValue: false,
+                label: { ar: 'أزرار لامعة', en: 'Shiny buttons' },
               },
             ],
           },

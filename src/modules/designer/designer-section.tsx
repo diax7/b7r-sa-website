@@ -2,7 +2,7 @@ import { Container } from '@/components/shared/container';
 import { Section } from '@/components/shared/section';
 import { SectionHeader } from '@/components/shared/section-header';
 import { copyFor } from '@/content/copy';
-import { getHome, getProduct, getProducts } from '@/lib/cms';
+import { getHome, getProduct, getProducts, getSiteSettings } from '@/lib/cms';
 import { env } from '@/lib/env';
 import type { Locale } from '@/lib/i18n';
 import { registerUrl } from '@/lib/utm';
@@ -18,11 +18,15 @@ const DEFAULT_SLUG = 'tee-essential';
  * island replaces the preview when the section nears the viewport.
  */
 export async function DesignerSection({ locale }: { locale: Locale }) {
-  const [{ designer }, products] = await Promise.all([getHome(locale), getProducts(locale)]);
+  const [{ designer }, products, site] = await Promise.all([
+    getHome(locale),
+    getProducts(locale),
+    getSiteSettings(locale),
+  ]);
   const product = (await getProduct(locale, DEFAULT_SLUG)) ?? products[0];
   if (!product) throw new Error('No products for the designer');
 
-  const copy = designerCopy(copyFor(locale), designer.cta);
+  const copy = designerCopy(copyFor(locale), designer.cta, site.ctaShiny);
 
   const registerTemplate = registerUrl(env.appUrl, { campaign: 'designer', product: '__SLUG__' });
   const fallback = (

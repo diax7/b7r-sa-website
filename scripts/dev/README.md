@@ -14,3 +14,7 @@
 Local Playwright runs use four workers (`playwright.config.ts`): eight starved the emulated
 WebKit projects (taps landed late, a stepper click was lost) and the interaction tests flaked.
 CI keeps Playwright's default. Do not raise the cap to save a minute.
+- `island-shots.mjs <out dir>`, the header at rest and scrolled on desktop and iPhone (ADR-053); `cta-shot.mjs <out dir>`, the header CTA at rest and hovered.
+- `cta-shiny-toggle.ts on|off`, the header's shiny switch on the local database (ADR-054).
+- `prelaunch-clean.ts`, before dumping the review database for production: the Mock connection and its citations, the failed jobs, the CI analytics ids. `media-to-bucket.mjs <env file>`, copies `public/media` into the production bucket under `media/`.
+- `shot-studies.mjs <html> <out dir>`, one look at a design-studies page.

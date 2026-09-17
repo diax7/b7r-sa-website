@@ -29,6 +29,41 @@ test.describe('header and navigation (BRD 6.2)', () => {
     expect((await page.locator('header').boundingBox())!.height).toBe(88);
   });
 
+  test('past the sentinel the header settles into the island: narrower than the page, a capsule, no blur (ADR-053)', async ({
+    page,
+    isMobile,
+  }) => {
+    await page.goto('/');
+    const header = page.locator('header');
+    const rest = (await header.boundingBox())!;
+    await page.evaluate(() => window.scrollTo(0, 240));
+    await expect(header).toHaveAttribute('data-scrolled', 'true');
+    await page.waitForTimeout(900);
+    const island = (await header.boundingBox())!;
+    const viewport = page.viewportSize()!;
+    expect(island.width).toBeLessThanOrEqual(viewport.width - 24);
+    expect(island.width).toBeLessThan(rest.width);
+    expect(Math.abs(island.x + island.width / 2 - viewport.width / 2)).toBeLessThan(2);
+    expect(island.y).toBeGreaterThanOrEqual(8);
+    expect(island.height).toBe(isMobile ? 58 : 64);
+    await expect(header).toHaveCSS('border-top-left-radius', '13px');
+    await expect(header).toHaveCSS('backdrop-filter', 'none');
+    // The three things on a phone: the logo, the button and the burger; six links on desktop.
+    await expect(header.locator('a[data-location="header"]')).toBeVisible();
+    if (isMobile) {
+      await expect(page.getByTestId('menu-open')).toBeVisible();
+      await expect(header.locator('nav')).toBeHidden();
+    } else {
+      await expect(header.locator('nav a')).toHaveCount(6);
+    }
+    // Back at the top the bar is full width again.
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await expect(header).not.toHaveAttribute('data-scrolled', 'true');
+    await page.waitForTimeout(900);
+    // Within a pixel: the settle's last frame can leave a sub-pixel on a phone's viewport.
+    expect(Math.abs((await header.boundingBox())!.width - rest.width)).toBeLessThan(1);
+  });
+
   test('mobile menu opens, traps focus, closes on Escape and restores focus', async ({
     page,
     isMobile,

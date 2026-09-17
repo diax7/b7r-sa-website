@@ -15,8 +15,8 @@ export const HOME_DESCRIPTIONS: Described = {
     en: 'The line under the headline on the slide. One row on a desktop: up to 10 words.',
   },
   'hero.primaryCta': {
-    ar: 'نص الزر الأزرق تحت الشرائح؛ يفتح تسجيل حساب في التطبيق.',
-    en: "The blue button under the slides; opens the app's sign-up.",
+    ar: 'نص الزر الأزرق تحت الشرائح؛ يفتح تسجيل حساب في التطبيق. لامع أو كلاسيكي: إعدادات الموقع ← العلامة ← أزرار لامعة.',
+    en: "The blue button under the slides; opens the app's sign-up. Shiny or classic: Site settings, Brand, Shiny buttons.",
   },
   'hero.secondaryCta': {
     ar: 'نص الرابط بجانب الزر؛ يفتح صفحة المنتجات.',
@@ -63,8 +63,8 @@ export const HOME_DESCRIPTIONS: Described = {
     en: "The line under the designer's heading: what a visitor does here.",
   },
   'designer.cta': {
-    ar: 'نص الزر في نهاية المصمّم؛ يفتح تسجيل حساب في التطبيق.',
-    en: "The button at the end of the designer; opens the app's sign-up.",
+    ar: 'نص الزر في نهاية المصمّم؛ يفتح تسجيل حساب في التطبيق. لامع أو كلاسيكي: إعدادات الموقع ← العلامة ← أزرار لامعة.',
+    en: "The button at the end of the designer; opens the app's sign-up. Shiny or classic: Site settings, Brand, Shiny buttons.",
   },
   'steps.eyebrow': {
     ar: 'الكلمة الصغيرة فوق عنوان الخطوات الثلاث.',
@@ -159,8 +159,8 @@ export const HOME_DESCRIPTIONS: Described = {
     en: "The line under the ribbon's heading.",
   },
   'ribbon.button': {
-    ar: 'نص زر شريط الدعوة؛ يفتح تسجيل حساب في التطبيق.',
-    en: "The ribbon's button; opens the app's sign-up.",
+    ar: 'نص زر شريط الدعوة؛ يفتح تسجيل حساب في التطبيق. لامع أو كلاسيكي: إعدادات الموقع ← العلامة ← أزرار لامعة.',
+    en: "The ribbon's button; opens the app's sign-up. Shiny or classic: Site settings, Brand, Shiny buttons.",
   },
 };
 
@@ -265,6 +265,10 @@ export const SITE_SETTINGS_DESCRIPTIONS: Described = {
   'analytics.umamiId': {
     ar: 'معرّف الموقع في Umami (UUID). يعمل فقط مع رابط السكربت.',
     en: 'The Umami website id (a UUID). Works only together with the script URL.',
+  },
+  ctaShiny: {
+    ar: 'يمنح كل أزرار الدعوة الرئيسية في الموقع (الترويسة، قائمة الجوال، الشرائح، الفيديو، شريط الدعوة، صفحة المنتج، المصمّم، المقالات) لمعة بلوني العلامة تتحرك عند المرور ووميضاً خفيفاً كل بضع ثوانٍ؛ بلا تعبئة تبقى الأزرار الزرقاء الكلاسيكية.',
+    en: "Gives every main call-to-action button on the site (the header, the phone menu, the slides, the video, the ribbon, the product page, the designer, the posts) a sheen in the brand's two blues that slides on hover and a light glint every few seconds; unticked keeps the classic blue buttons.",
   },
   legalEntity: {
     ar: 'لا يقرؤه الموقع اليوم: سطر الحقوق في التذييل والصفحات القانونية نصّها ثابت في الكود. محفوظ لليوم الذي يُقرأ فيه.',
