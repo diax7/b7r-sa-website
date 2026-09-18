@@ -26,9 +26,12 @@ const nextConfig: NextConfig = {
   },
   images: {
     formats: ['image/avif', 'image/webp'],
-    // 3840 lets a 2x screen at 1920 ask for a full-width photo once the 3000 px photographs
-    // land (ADR-029, amended 2026-09-19); `PHOTO_MAX_WIDTH` in src/lib/photo.ts is this value.
-    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 2560, 3840],
+    // 1536 is the 2x candidate of the 760 px reading column (a blog cover, ADR-029 amended
+    // 2026-09-19): without it that column fetched the 1920 rendition, twice the bytes (120 KB
+    // against 60 KB for the pricing cover) for pixels the box never shows. 3840 lets a 2x
+    // screen at 1920 ask for a full-width photo once the 3000 px photographs land;
+    // `PHOTO_MAX_WIDTH` in src/lib/photo.ts is this value.
+    deviceSizes: [640, 750, 828, 1080, 1200, 1536, 1920, 2048, 2560, 3840],
     // 75 is Next's default (logos, icons, badges), 82 the designer's mock-up (`optimizedSrc`),
     // 90 every photo (`PHOTO_QUALITY`): one lossy encode over a q92 source.
     qualities: [75, 82, 90],
