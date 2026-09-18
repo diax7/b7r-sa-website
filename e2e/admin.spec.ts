@@ -1226,6 +1226,146 @@ test.describe('CMS admin', () => {
       expect(restore.status()).toBe(200);
     });
 
+    // Side-by-side bilingual editing (ADR-057): a localized text field shows both languages,
+    // one Save writes both through the second write of the apply hook, and the rest of the
+    // document is untouched.
+    test('a page title edited in both languages is written by one Publish (ADR-057)', async ({
+      page,
+      request,
+    }) => {
+      test.setTimeout(150_000);
+      const auth = await login(request, ADMIN);
+      const slug = 'bilingual-e2e';
+      const created = await request.post(`${API}/pages?locale=ar`, {
+        headers: auth,
+        data: {
+          title: 'صفحة ثنائية اللغة',
+          slug,
+          blocks: [{ blockType: 'richText', title: 'المقدمة', content: paragraph('فقرة.') }],
+          seo: { title: 'صفحة ثنائية اللغة', description: 'وصف للاختبار.' },
+          _status: 'published',
+        },
+      });
+      expect(created.status()).toBe(201);
+      const id = ((await created.json()) as { doc: { id: number } }).doc.id;
+      const both = async () => {
+        const res = await request.get(`${API}/pages/${id}?locale=all&depth=0`, { headers: auth });
+        expect(res.status()).toBe(200);
+        return (await res.json()) as {
+          title: { ar?: string; en?: string };
+          lead?: { ar?: string; en?: string };
+          seo: { title: { ar?: string; en?: string } };
+          translations?: unknown;
+        };
+      };
+      try {
+        // The English side starts empty for the title and the meta title.
+        const english = await request.patch(`${API}/pages/${id}?locale=en`, {
+          headers: auth,
+          data: {
+            title: 'Bilingual page',
+            seo: { title: 'Bilingual page', description: 'For the test.' },
+          },
+        });
+        expect(english.status()).toBe(200);
+        await page.goto('/admin/login');
+        await page.locator('#field-email').fill(admin.email);
+        await page.locator('#field-password').fill(admin.password);
+        await page.locator('form button[type="submit"]').first().click();
+        await page.waitForURL((u) => !u.pathname.endsWith('/login'));
+        await page.goto(`/admin/collections/pages/${id}?locale=ar`);
+        // The note says what is side by side; the title carries both inputs, the English one
+        // tagged EN and prefilled from the stored English.
+        await expect(page.locator('[data-admin-locale-note="ar"]')).toContainText(
+          'one Save writes both',
+        );
+        const pair = page.locator('[data-admin-bilingual="title"]');
+        await expect(pair.locator('[data-admin-locale-tag="en"]')).toHaveText('EN');
+        const arabic = page.locator('#field-title');
+        const other = page.locator('#field-translations__en__title');
+        await expect(other).toHaveValue('Bilingual page');
+        // Rich text stays on the switch: the block's body has no pair.
+        expect(await page.locator('[data-admin-bilingual^="blocks."]').count()).toBe(0);
+        await arabic.fill('صفحة ثنائية اللغة (محدّثة)');
+        await other.fill('Bilingual page (updated)');
+        await page.locator('#action-save').click();
+        await expect(page.locator('.payload-toast-container')).toContainText(
+          /updated successfully/i,
+        );
+        await expect
+          .poll(async () => (await both()).title, POLL)
+          .toEqual({ ar: 'صفحة ثنائية اللغة (محدّثة)', en: 'Bilingual page (updated)' });
+        const doc = await both();
+        // The pending JSON is cleared by the second write; the untouched fields keep both languages.
+        expect(doc.translations ?? null).toBeNull();
+        expect(doc.seo.title).toEqual({ ar: 'صفحة ثنائية اللغة', en: 'Bilingual page' });
+        // After the save the English input shows the applied text, not the old prefill.
+        await expect(other).toHaveValue('Bilingual page (updated)');
+        // Blanking a required English field is refused with the field and the language named,
+        // and the Arabic change of the same save does not land either.
+        await other.fill('');
+        await arabic.fill('لا تُحفظ');
+        await page.locator('#action-save').click();
+        await expect(page.locator('.payload-toast-container')).toContainText(/Title.*in English/);
+        expect((await both()).title).toEqual({
+          ar: 'صفحة ثنائية اللغة (محدّثة)',
+          en: 'Bilingual page (updated)',
+        });
+      } finally {
+        expect((await request.delete(`${API}/pages/${id}`, { headers: auth })).status()).toBe(200);
+      }
+    });
+
+    test("the site settings' tagline edited in both languages is written by one Save (ADR-057)", async ({
+      page,
+      request,
+    }) => {
+      test.setTimeout(120_000);
+      const auth = await login(request, ADMIN);
+      const both = async () => {
+        const res = await request.get(`${API}/globals/site-settings?locale=all&depth=0`, {
+          headers: auth,
+        });
+        expect(res.status()).toBe(200);
+        return (await res.json()) as {
+          tagline: { ar?: string; en?: string };
+          translations?: unknown;
+        };
+      };
+      const before = (await both()).tagline;
+      const restore = async (locale: 'ar' | 'en') =>
+        request.post(`${API}/globals/site-settings?locale=${locale}`, {
+          headers: auth,
+          data: { tagline: before[locale] },
+        });
+      try {
+        await page.goto('/admin/login');
+        await page.locator('#field-email').fill(admin.email);
+        await page.locator('#field-password').fill(admin.password);
+        await page.locator('form button[type="submit"]').first().click();
+        await page.waitForURL((u) => !u.pathname.endsWith('/login'));
+        await page.goto('/admin/globals/site-settings?locale=ar');
+        const arabic = page.locator('#field-tagline');
+        const other = page.locator('#field-translations__en__tagline');
+        await expect(other).toHaveValue(before.en ?? '');
+        const stamp = Date.now();
+        await arabic.fill(`شعار الاختبار ${stamp}`);
+        await other.fill(`Tagline e2e ${stamp}`);
+        await page.locator('#action-save').click();
+        await expect(page.locator('.payload-toast-container')).toContainText(
+          /updated successfully/i,
+        );
+        await expect
+          .poll(async () => (await both()).tagline, POLL)
+          .toEqual({ ar: `شعار الاختبار ${stamp}`, en: `Tagline e2e ${stamp}` });
+        expect((await both()).translations ?? null).toBeNull();
+      } finally {
+        expect((await restore('ar')).status()).toBe(200);
+        expect((await restore('en')).status()).toBe(200);
+      }
+      expect((await both()).tagline).toEqual(before);
+    });
+
     test('two blocks of one type on a page get distinct ids and pass axe', async ({
       page,
       request,
