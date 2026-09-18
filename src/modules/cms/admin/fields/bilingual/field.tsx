@@ -27,12 +27,13 @@ import type {
 } from 'payload';
 import { type CSSProperties, type ReactNode, useEffect, useState } from 'react';
 import {
+  isLightEntry,
   keyOfPath,
+  type PendingEntries,
   readKey,
   reconcile,
   textOf,
   TRANSLATIONS,
-  type TranslationEntries,
   type Translations,
 } from '@/modules/cms/fields/bilingual';
 import { useOtherLocale } from '@/modules/cms/admin/fields/bilingual/other-locale';
@@ -96,9 +97,10 @@ function Bilingual(props: Props) {
   // entry before the fresh read lands, so for that round trip the typed text stands for what
   // is stored (the old text must not show, and a keystroke meanwhile must not lose its base).
   const [remembered, setRemembered] = useState<string | null>(null);
-  const mine: TranslationEntries = other ? (translations?.[other.code] ?? {}) : {};
+  // The branch holds the twins' bases too (a rich text's, a photo's); they ride untouched.
+  const mine: PendingEntries = other ? (translations?.[other.code] ?? {}) : {};
   const entry = key === null ? undefined : mine[key];
-  const typed = entry ? textOf(entry.value) : null;
+  const typed = isLightEntry(entry) ? textOf(entry.value) : null;
   const stale = stored.status === 'ready' && stored.stale === true;
   if (typed !== null && typed !== remembered) setRemembered(typed);
   if (typed === null && !stale && remembered !== null) setRemembered(null);

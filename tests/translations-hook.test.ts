@@ -12,7 +12,9 @@ import {
   translationsField,
   translationsProblem,
   type Translations,
+  twinField,
 } from '@/modules/cms/fields/bilingual';
+import { hashOf } from '@/modules/cms/fields/twins';
 import {
   applyGlobalTranslations,
   applyTranslations,
@@ -31,9 +33,23 @@ import {
 type Doc = Record<string, unknown>;
 type Hook = (args: unknown) => Promise<Doc>;
 
+const body: Field = { name: 'body', type: 'richText', localized: true };
+const content: Field = { name: 'content', type: 'richText', localized: true };
+const image: Field = { name: 'image', type: 'upload', relationTo: 'media', localized: true };
 const fields: Field[] = [
   { name: 'title', type: 'text', localized: true, required: true },
   { name: 'slug', type: 'text' },
+  body,
+  twinField(body as Extract<Field, { type: 'richText' }>),
+  {
+    name: 'slides',
+    type: 'array',
+    fields: [
+      { name: 'caption', type: 'text', localized: true },
+      image,
+      twinField(image as Extract<Field, { type: 'upload' }>),
+    ],
+  },
   {
     type: 'tabs',
     tabs: [
@@ -55,7 +71,16 @@ const fields: Field[] = [
   {
     name: 'blocks',
     type: 'blocks',
-    blocks: [{ slug: 'cards', fields: [{ name: 'title', type: 'text', localized: true }] }],
+    blocks: [
+      {
+        slug: 'cards',
+        fields: [
+          { name: 'title', type: 'text', localized: true },
+          content,
+          twinField(content as Extract<Field, { type: 'richText' }>),
+        ],
+      },
+    ],
   },
 ];
 const collection = { slug: 'pages', fields } as unknown as CollectionConfig;
@@ -103,9 +128,10 @@ function fake(opts: Fake = {}) {
 
 const pending = (entries: Translations['en']): Translations => ({ en: entries });
 
-function save(doc: Doc, req: PayloadRequest) {
+function save(doc: Doc, req: PayloadRequest, data?: Doc) {
   return (applyTranslations as unknown as Hook)({
     doc,
+    data,
     previousDoc: doc,
     operation: 'update',
     req,
@@ -113,6 +139,10 @@ function save(doc: Doc, req: PayloadRequest) {
     context: req.context,
   });
 }
+
+const paragraph = (text: string) => ({ root: { children: [{ type: 'paragraph', text }] } });
+const oldEn = paragraph('Old English.');
+const newEn = paragraph('New English.');
 
 describe('the apply (ADR-057): one Save writes the other language too', () => {
   it('a changed value is written in the other locale, the JSON cleared in the same write', async () => {
@@ -319,9 +349,10 @@ describe('the apply (ADR-057): one Save writes the other language too', () => {
         data: {
           blocks: [
             // The document's order and shared fields, the English by id, the write on top;
-            // the untouched row keeps its stored English, never the Arabic.
-            { id: 'b2', blockType: 'cards', blockName: 'second', title: 'Two' },
-            { id: 'b1', blockType: 'cards', title: 'One' },
+            // the untouched row keeps its stored English, never the Arabic; a localized
+            // subfield the stored row lacks (the rich text) is null.
+            { id: 'b2', blockType: 'cards', blockName: 'second', title: 'Two', content: null },
+            { id: 'b1', blockType: 'cards', title: 'One', content: null },
           ],
           translations: null,
         },
@@ -366,6 +397,193 @@ describe('the apply (ADR-057): one Save writes the other language too', () => {
   });
 });
 
+describe('the twins (PR B): a rich text or a photo in English rides the same save', () => {
+  it('a rich-text twin that differs from its base is written on the original key; the response shows it with a fresh base', async () => {
+    const { req, update } = fake({ stored: { title: 'Old', body: oldEn } });
+    // The field stored null on the main write; the value comes from the request's data.
+    const doc = {
+      id: 7,
+      _status: 'published',
+      body: { root: 'ar' },
+      bodyTwin: null,
+      translations: { en: { body: { base: hashOf(oldEn) } } },
+    };
+    const result = await save(doc, req, { bodyTwin: newEn, title: 'عنوان' });
+    expect(update).toHaveBeenCalledWith(
+      expect.objectContaining({ locale: 'en', data: { body: newEn, translations: null } }),
+    );
+    expect(result['bodyTwin']).toEqual(newEn);
+    expect(result['translations']).toEqual({ en: { body: { base: hashOf(newEn) } } });
+  });
+
+  it('a twin equal to its base makes no write; the response still shows the English and its base', async () => {
+    const { req, update } = fake({ stored: { title: 'Old', body: oldEn } });
+    const doc = {
+      id: 7,
+      bodyTwin: null,
+      translations: { en: { body: { base: hashOf(oldEn) }, title: { value: 'Old', base: 'Old' } } },
+    };
+    const result = await save(doc, req, { bodyTwin: oldEn });
+    expect(update).not.toHaveBeenCalled();
+    expect(result['bodyTwin']).toEqual(oldEn);
+    // Nothing written: the JSON keeps its light entries, the twin base refreshed beside them.
+    expect(result['translations']).toEqual({
+      en: { body: { base: hashOf(oldEn) }, title: { value: 'Old', base: 'Old' } },
+    });
+  });
+
+  it('a stale twin base (the English changed since the read) is skipped: the stored English wins and is shown', async () => {
+    const theirs = paragraph('Theirs.');
+    const { req, update } = fake({ stored: { title: 'Old', body: theirs } });
+    const doc = { id: 7, bodyTwin: null, translations: { en: { body: { base: hashOf(oldEn) } } } };
+    const result = await save(doc, req, { bodyTwin: newEn });
+    expect(update).not.toHaveBeenCalled();
+    expect(result['bodyTwin']).toEqual(theirs);
+    expect(result['translations']).toEqual({ en: { body: { base: hashOf(theirs) } } });
+  });
+
+  it('a first English over none applies (base null); a twin the request did not send is left alone', async () => {
+    const { req, update } = fake({ stored: { title: 'Old', body: null } });
+    const doc = { id: 7, bodyTwin: null, translations: { en: { body: { base: null } } } };
+    await save(doc, req, { bodyTwin: newEn });
+    expect(update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: { body: newEn, translations: null } }),
+    );
+    const rest = fake({ stored: { title: 'Old', body: null } });
+    expect(await save(doc, rest.req, { title: 'x' })).toBe(doc);
+    expect(rest.update).not.toHaveBeenCalled();
+  });
+
+  it('a block row twin by id sends the whole list: the English of the untouched row kept, the twin null in every row', async () => {
+    const { req, update } = fake({
+      stored: {
+        title: 'Old',
+        blocks: [
+          { id: 'b1', blockType: 'cards', title: 'One', content: oldEn, contentTwin: null },
+          { id: 'b2', blockType: 'cards', title: null, content: null, contentTwin: null },
+        ],
+      },
+    });
+    const doc = {
+      id: 7,
+      _status: 'published',
+      blocks: [
+        {
+          id: 'b2',
+          blockType: 'cards',
+          title: 'اثنان',
+          content: { root: 'ar2' },
+          contentTwin: null,
+        },
+        {
+          id: 'b1',
+          blockType: 'cards',
+          title: 'واحد',
+          content: { root: 'ar1' },
+          contentTwin: null,
+        },
+      ],
+      translations: {
+        en: { 'blocks.b1.content': { base: hashOf(oldEn) }, 'blocks.b2.content': { base: null } },
+      },
+    };
+    const data = {
+      blocks: [
+        { id: 'b2', blockType: 'cards', contentTwin: newEn },
+        { id: 'b1', blockType: 'cards', contentTwin: oldEn },
+      ],
+    };
+    const result = await save(doc, req, data);
+    expect(update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        locale: 'en',
+        data: {
+          blocks: [
+            { id: 'b2', blockType: 'cards', title: null, content: newEn, contentTwin: null },
+            { id: 'b1', blockType: 'cards', title: 'One', content: oldEn, contentTwin: null },
+          ],
+          translations: null,
+        },
+      }),
+    );
+    const rows = result['blocks'] as Doc[];
+    expect(rows[0]!['contentTwin']).toEqual(newEn);
+    expect(rows[1]!['contentTwin']).toEqual(oldEn);
+    expect(result['translations']).toEqual({
+      en: {
+        'blocks.b2.content': { base: hashOf(newEn) },
+        'blocks.b1.content': { base: hashOf(oldEn) },
+      },
+    });
+  });
+
+  it('an upload twin by id: the English photo lands on the slide, a cleared one is written as null', async () => {
+    const { req, update } = fake({
+      stored: {
+        title: 'Old',
+        slides: [
+          { id: 's1', caption: 'First', image: 13, imageTwin: null },
+          { id: 's2', caption: 'Second', image: 14, imageTwin: null },
+        ],
+      },
+    });
+    const doc = {
+      id: 7,
+      slides: [
+        { id: 's1', caption: 'أول', image: 3, imageTwin: null },
+        { id: 's2', caption: 'ثانٍ', image: 4, imageTwin: null },
+      ],
+      translations: {
+        en: { 'slides.s1.image': { base: '13' }, 'slides.s2.image': { base: '14' } },
+      },
+    };
+    const data = {
+      slides: [
+        { id: 's1', imageTwin: 31 },
+        { id: 's2', imageTwin: null },
+      ],
+    };
+    const result = await save(doc, req, data);
+    expect(update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: {
+          slides: [
+            { id: 's1', caption: 'First', image: 31, imageTwin: null },
+            { id: 's2', caption: 'Second', image: null, imageTwin: null },
+          ],
+          translations: null,
+        },
+      }),
+    );
+    const slides = result['slides'] as Doc[];
+    expect(slides.map((r) => r['imageTwin'])).toEqual([31, null]);
+    expect(result['translations']).toEqual({
+      en: { 'slides.s1.image': { base: '31' }, 'slides.s2.image': { base: null } },
+    });
+  });
+
+  it('the twins pair with a save from the default locale only: saving in English ignores them', async () => {
+    const { req, update } = fake({ locale: 'en', stored: { title: 'قديم', body: null } });
+    const doc = { id: 7, bodyTwin: null, translations: { ar: { body: { base: null } } } };
+    expect(await save(doc, req, { bodyTwin: newEn })).toBe(doc);
+    expect(update).not.toHaveBeenCalled();
+  });
+
+  it('a light entry and a twin apply in one write; the response drops the light entries and keeps the twin bases', async () => {
+    const { req, update } = fake({ stored: { title: 'Old', body: oldEn } });
+    const doc = {
+      id: 7,
+      bodyTwin: null,
+      translations: { en: { title: { value: 'New', base: 'Old' }, body: { base: hashOf(oldEn) } } },
+    };
+    const result = await save(doc, req, { bodyTwin: newEn });
+    expect(update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: { title: 'New', body: newEn, translations: null } }),
+    );
+    expect(result['translations']).toEqual({ en: { body: { base: hashOf(newEn) } } });
+  });
+});
+
 describe('the request is put back after the other locale is written', () => {
   it("locale, fallback locale, context and depth return to the request's own, after a throw too", async () => {
     const req = {
@@ -401,6 +619,7 @@ describe('the pure pieces', () => {
       'title',
       'seo.title',
       'seo.description',
+      'slides.caption',
       'blocks.cards.title',
     ]);
     const more: Field[] = [
@@ -437,6 +656,8 @@ describe('the pure pieces', () => {
       widget: false,
       inRow: true,
     });
+    // A rich text or an upload without a twin after it is on nobody's list.
+    expect(shape.twins).toEqual({});
   });
 
   it('entriesOf keeps well-formed entries of the asked locale only', () => {
