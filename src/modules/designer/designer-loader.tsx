@@ -1,13 +1,12 @@
 'use client';
 
-import dynamic from 'next/dynamic';
-import { useEffect, useState, type ReactNode } from 'react';
-import { NearViewport } from '@/modules/core';
+import { lazy, useEffect, useState, type ReactNode } from 'react';
+import { NearViewport } from '@/modules/core/lazy-mount';
 import type { DesignerIslandProps } from '@/modules/designer/designer-island';
 
-const DesignerIsland = dynamic(
-  () => import('@/modules/designer/designer-island').then((m) => m.DesignerIsland),
-  { ssr: false },
+// `NearViewport` keeps the static designer on screen while the Konva chunk downloads.
+const DesignerIsland = lazy(() =>
+  import('@/modules/designer/designer-island').then((m) => ({ default: m.DesignerIsland })),
 );
 
 function readDeepLink(products: DesignerIslandProps['products']): {

@@ -1,11 +1,10 @@
 'use client';
 
-import dynamic from 'next/dynamic';
-import { NearViewport } from '@/modules/core';
+import { lazy } from 'react';
+import { NearViewport } from '@/modules/core/lazy-mount';
 
-const VideoLoop = dynamic(
-  () => import('@/modules/home/video/video-loop').then((m) => m.VideoLoop),
-  { ssr: false },
+const VideoLoop = lazy(() =>
+  import('@/modules/home/video/video-loop').then((m) => ({ default: m.VideoLoop })),
 );
 
 interface VideoLoopLoaderProps {
