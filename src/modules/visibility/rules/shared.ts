@@ -21,8 +21,8 @@ export function same(text: string): Text {
 
 /** The language a document is judged in, as a listed document names it. */
 export const LANGUAGE_NAMES: Record<Locale, Text> = {
-  ar: { en: 'Arabic', ar: 'بالعربية' },
-  en: { en: 'English', ar: 'بالإنجليزية' },
+  ar: { en: 'Arabic', ar: 'العربية' },
+  en: { en: 'English', ar: 'الإنجليزية' },
 };
 
 export type DocKind = 'page' | 'product' | 'post' | 'hub' | 'author';
@@ -37,7 +37,7 @@ const KIND_NAMES: Record<DocKind, Text> = {
 
 /**
  * How a finding names a listed document: its title, then in brackets its kind and the
- * language judged, whichever apply ("Hoodie (product, English)", «هودي (منتج، بالإنجليزية)»).
+ * language judged, whichever apply ("Hoodie (product, English)", «هودي (منتج، الإنجليزية)»).
  */
 export function docLabel(title: string, kind?: DocKind, locale?: Locale): Text {
   const tags = (language: keyof Text) =>

@@ -210,7 +210,7 @@ describe('the visibility score: the rules (ADR-049)', () => {
     const labelled = (en: string) => titles.find((e) => e.label.en === en);
     expect(labelled('/ (Arabic)')?.title).toBe('بحر برنت: طباعة عند الطلب');
     expect(labelled('هودي (product, Arabic)')?.title).toBe('هودي للطباعة عند الطلب | بحر برنت');
-    expect(labelled('هودي (product, Arabic)')?.label.ar).toBe('هودي (منتج، بالعربية)');
+    expect(labelled('هودي (product, Arabic)')?.label.ar).toBe('هودي (منتج، العربية)');
     expect(labelled('Hoodie (product, English)')?.description).toContain('89');
     expect(
       titles.find((e) => e.label.en.startsWith('كيف تبدأ') && e.label.en.endsWith('(post, Arabic)'))
@@ -254,7 +254,7 @@ describe('the visibility score: the rules (ADR-049)', () => {
       }),
     );
     expect(by(bad, 'E1').items?.[0]).toEqual({
-      label: { en: '/ (Arabic)', ar: '/ (بالعربية)' },
+      label: { en: '/ (Arabic)', ar: '/ (العربية)' },
       href: '/admin/globals/seo-defaults',
     });
     expect(by(bad, 'E2')).toMatchObject({
