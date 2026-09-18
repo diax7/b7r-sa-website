@@ -15,6 +15,9 @@ const head = 'border-b-2 border-border px-4 py-3 text-start text-small font-medi
  */
 export function CompareBlock({ block, locale, tone, anchor, heading }: BlockProps<'compare'>) {
   const Heading = heading ? 'h1' : 'h2';
+  // The two lists sit one level under the block's own heading, so the outline never skips a
+  // level: H2 under the page's H1, H3 under a later block's H2 (site audit 2026-09-18, item 5).
+  const ListHeading = heading ? 'h2' : 'h3';
   const messages = copyFor(locale).compare;
   const title = heading?.title ?? block.title;
   return (
@@ -76,7 +79,9 @@ export function CompareBlock({ block, locale, tone, anchor, heading }: BlockProp
             className="flex flex-col gap-3 rounded-lg bg-accent-tint p-6"
             data-compare-list="best"
           >
-            <h3 className="text-h4 text-text">{messages.bestFor.replace('{ours}', block.ours)}</h3>
+            <ListHeading className="text-h4 text-text">
+              {messages.bestFor.replace('{ours}', block.ours)}
+            </ListHeading>
             <ul className="flex list-disc flex-col gap-2 ps-5 text-body text-text">
               {block.bestFor.map((item) => (
                 <li key={item}>{item}</li>
@@ -87,9 +92,9 @@ export function CompareBlock({ block, locale, tone, anchor, heading }: BlockProp
             className="flex flex-col gap-3 rounded-lg border border-border p-6"
             data-compare-list="not"
           >
-            <h3 className="text-h4 text-text">
+            <ListHeading className="text-h4 text-text">
               {messages.notBestFor.replace('{ours}', block.ours)}
-            </h3>
+            </ListHeading>
             <ul className="flex list-disc flex-col gap-2 ps-5 text-body text-text-muted">
               {block.notBestFor.map((item) => (
                 <li key={item}>{item}</li>
