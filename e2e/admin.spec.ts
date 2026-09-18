@@ -552,6 +552,7 @@ test.describe('CMS admin', () => {
   test("the admin in Arabic (ADR-056): the account view switches the panel, it reads right-to-left in our strings and Payload's, the content locale stays put, axe is clean, English comes back", async ({
     page,
     request,
+    baseURL,
   }) => {
     test.setTimeout(120_000);
     await page.setViewportSize({ width: 1600, height: 1000 });
@@ -569,6 +570,13 @@ test.describe('CMS admin', () => {
     const languageCookie = async () =>
       (await page.context().cookies()).find((c) => c.name === 'payload-lng')?.value;
     try {
+      // An Arabic browser with no choice saved opens the Arabic panel at the login page.
+      const arabicBrowser = await page.context().browser()!.newContext({ locale: 'ar-SA' });
+      const loginPage = await arabicBrowser.newPage();
+      await loginPage.goto('/admin/login');
+      await expect(loginPage.locator('html')).toHaveAttribute('lang', 'ar');
+      await expect(loginPage.locator('html')).toHaveAttribute('dir', /rtl/i);
+      await arabicBrowser.close();
       await pickLanguage('العربية');
       await expect(html).toHaveAttribute('dir', /rtl/i);
       await expect(html).toHaveAttribute('lang', 'ar');
@@ -670,11 +678,7 @@ test.describe('CMS admin', () => {
       await expect(page.locator('[data-admin-dashboard] h1')).toContainText('Welcome');
     } finally {
       // Whatever happened above, the context leaves the panel in English for the next test.
-      await page
-        .context()
-        .addCookies([
-          { name: 'payload-lng', value: 'en', url: new URL(page.url()).origin, path: '/' },
-        ]);
+      await page.context().addCookies([{ name: 'payload-lng', value: 'en', url: baseURL! }]);
     }
   });
 

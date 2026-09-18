@@ -1599,10 +1599,12 @@ the panel now reads in English or in Arabic, per person.
 **The switch is Payload's.** `i18n.supportedLanguages` is `{ en, ar }` with `en` the
 fallback. Payload resolves the language per request from its `payload-lng` cookie (set for a
 year by the account view's language select through a server action, then a refresh), else
-the browser's `Accept-Language`, else the fallback; it sets `lang` and `dir` on `<html>`
-itself (`dir="RTL"` for Arabic, from its `rtlLanguages`), and every label and description the
-configs carry as `{ ar, en }` already followed `i18n.language`. Nothing of ours stores the
-choice.
+the browser's `Accept-Language`, else the fallback (so an Arabic browser opens the Arabic
+panel at the login page before anyone chooses, which the e2e asserts from a fresh Arabic
+context; the admin suite's own browser is English for that reason); it sets `lang` and `dir`
+on `<html>` itself (`dir="RTL"` for Arabic, from its `rtlLanguages`), and every label and
+description the configs carry as `{ ar, en }` already followed `i18n.language`. Nothing of
+ours stores the choice.
 
 **Two axes, never one control.** The UI language (the cookie, the account view) and the
 content locale (the AR / EN pills, `html[data-content-locale]`, `?locale=`, the user's
