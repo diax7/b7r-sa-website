@@ -37,6 +37,36 @@ test.describe('WhatsApp widget (BRD 6.15)', () => {
     await expect(panel).not.toContainText(/متصل|دقائق|ساعات/);
   });
 
+  test('opens the panel above the consent card, never over its buttons', async ({ page }) => {
+    // Both widgets dock at the same corner; on a phone the open panel used to cover the
+    // card's accept and decline buttons (site audit 2026-09-18, item 6).
+    await page.goto('/');
+    const bar = page.getByTestId('consent-bar');
+    await expect(bar).toBeVisible({ timeout: 5000 });
+    const button = page.getByTestId('whatsapp-button');
+    await expect(button).toBeVisible({ timeout: 5000 });
+    const before = (await button.boundingBox())!;
+    await button.click();
+    const panel = page.getByTestId('whatsapp-panel');
+    await expect(panel).toBeVisible();
+    await page.waitForTimeout(400);
+    const card = (await bar.boundingBox())!;
+    const panelBox = (await panel.boundingBox())!;
+    expect(panelBox.y + panelBox.height).toBeLessThanOrEqual(card.y + 1);
+    const after = (await button.boundingBox())!;
+    expect(Math.abs(after.y + after.height / 2 - (before.y + before.height / 2))).toBeLessThan(1);
+    // A decision removes the card; the panel returns to just above the button.
+    await page.getByTestId('consent-accept').click();
+    await expect(bar).toHaveCount(0);
+    await button.click();
+    await expect(panel).toBeVisible();
+    await page.waitForTimeout(400);
+    const reopened = (await panel.boundingBox())!;
+    const gap = (await button.boundingBox())!.y - (reopened.y + reopened.height);
+    expect(gap).toBeGreaterThanOrEqual(8);
+    expect(gap).toBeLessThanOrEqual(24);
+  });
+
   test('lifts above the designer results bar on phones', async ({ page, isMobile }) => {
     test.skip(!isMobile, 'mobile only');
     await page.goto('/');

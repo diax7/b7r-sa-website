@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { type RefObject, useEffect, useLayoutEffect } from 'react';
 
 /** Height of the sticky bottom bars (designer results, product CTA) on phones. */
 export const BOTTOM_DOCK_HEIGHT = '72px';
@@ -25,4 +25,30 @@ export function useBottomDock(visible: boolean) {
       root.style.removeProperty('--bottom-dock');
     };
   }, [visible]);
+}
+
+/**
+ * Publishes the consent card's top edge as `--consent-top` while the card is shown: its
+ * height above the widgets' base line (the viewport's bottom edge plus `--bottom-dock`), so
+ * the WhatsApp panel opens above the card instead of over its buttons on a phone (site audit
+ * 2026-09-18, item 6). Re-measured when the card's size changes (text wrap, breakpoint).
+ */
+export function useConsentDock(card: RefObject<HTMLElement | null>, visible: boolean) {
+  useLayoutEffect(() => {
+    const el = card.current;
+    if (!el || !visible) return;
+    const root = document.documentElement;
+    const apply = () => {
+      const dock = Number.parseFloat(getComputedStyle(root).getPropertyValue('--bottom-dock')) || 0;
+      const bottom = Number.parseFloat(getComputedStyle(el).bottom) || 0;
+      root.style.setProperty('--consent-top', `${Math.round(bottom - dock + el.offsetHeight)}px`);
+    };
+    apply();
+    const observer = new ResizeObserver(apply);
+    observer.observe(el);
+    return () => {
+      observer.disconnect();
+      root.style.removeProperty('--consent-top');
+    };
+  }, [card, visible]);
 }
