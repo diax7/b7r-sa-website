@@ -43,7 +43,11 @@ export async function HubPage({ hub, locale, page }: { hub: Hub; locale: Locale;
           />
           <HubChips hubs={hubs} locale={locale} allLabel={blogCopy.allHubs} active={hub.slug} />
           {listing.posts.length > 0 ? (
-            <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3" data-post-grid="">
+            <ul
+              className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3"
+              data-reveal-stagger=""
+              data-post-grid=""
+            >
               {listing.posts.map((post, i) => (
                 <li key={post.slug}>
                   <PostCard post={post} locale={locale} priority={i === 0} />

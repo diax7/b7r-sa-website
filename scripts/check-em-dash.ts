@@ -11,7 +11,7 @@ const EM_DASH = String.fromCharCode(0x2014);
 
 const ROOTS = ['src', 'e2e', 'tests', 'scripts', 'docs', 'specs', '.claude', '.github'];
 const ROOT_FILES = ['README.md', 'CLAUDE.md', 'B7R-WEBSITE-MASTER-BRD.md'];
-const SKIP_DIRS = new Set(['node_modules', '.next', 'dist', 'migrations']);
+const SKIP_DIRS = new Set(['node_modules', '.next', 'dist', 'migrations', 'worktrees']);
 const TEXT = /\.(tsx?|css|md|json|ya?ml|sh)$/;
 
 export interface Violation {
