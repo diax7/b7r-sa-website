@@ -4,22 +4,29 @@ import { goneHtml } from '@/lib/gone-page';
 import { CRAWL_TOKEN_PURPOSE, INTERNAL_HEADER, internalToken } from '@/lib/internal-token';
 import { createSlugCache, SLUG_SHAPE } from '@/lib/page-slugs';
 import { isGone } from '@/lib/redirects';
-import { isEnglishPath, localeSlug, NOT_FOUND_PREFIX } from '@/lib/site-routes';
+import { ADMIN_PREFIX, isEnglishPath, localeSlug, NOT_FOUND_PREFIX } from '@/lib/site-routes';
 import { crawlOf } from '@/lib/traffic/crawl';
 
 /**
- * Three jobs (BRD 5.2, ADR-017, ADR-032, ADR-048). Retired WordPress URLs answer 410 Gone
- * (`next.config` redirects cannot emit 410). Unknown top-level URLs are rewritten to a path
- * no route matches, so Next renders `global-not-found` server-side with status 404 and the
- * URL unchanged, without this the `/[slug]` route would answer them from a bare document
- * (ADR-024). The allowlist is the published pages, read from the loopback address (never the
- * public origin) and cached in-process for 20 s with stale-while-revalidate; when it cannot
- * be read the request passes through (fail open). A request carrying Next's draft cookie
- * passes through too: an editor previewing an unpublished page (ADR-039) is not on the
- * allowlist yet. And a known crawler's document GET of a page or a machine file is reported
+ * Four jobs (BRD 5.2, ADR-017, ADR-032, ADR-048, ADR-057). Retired WordPress URLs answer
+ * 410 Gone (`next.config` redirects cannot emit 410). Unknown top-level URLs are rewritten
+ * to a path no route matches, so Next renders `global-not-found` server-side with status 404
+ * and the URL unchanged, without this the `/[slug]` route would answer them from a bare
+ * document (ADR-024). The allowlist is the published pages, read from the loopback address
+ * (never the public origin) and cached in-process for 20 s with stale-while-revalidate; when
+ * it cannot be read the request passes through (fail open). A request carrying Next's draft
+ * cookie passes through too: an editor previewing an unpublished page (ADR-039) is not on
+ * the allowlist yet. A known crawler's document GET of a page or a machine file is reported
  * to the traffic counter over the same loopback, fire-and-forget, once the proxy has let the
  * request through (a retired URL and a slug the proxy itself turns away are not "what they
- * read"). The matcher is one pattern (`PROXY_MATCHER`): every page request passes here.
+ * read"). And an admin URL carrying `?locale=` is redirected to the same URL without it
+ * before Payload sees it (`stripAdminLocale`): the panel edits both languages in one form
+ * and has no locale switch (ADR-057, PR C), while Payload's own page would write the query's
+ * locale into the person's persistent `locale` preference (`getRequestLocale` in
+ * `@payloadcms/next`) and read it back on every admin request after, so an old English link
+ * would leave them in the English view with no way back. The REST API, outside the matcher,
+ * keeps `?locale=`. The matcher is one pattern (`PROXY_MATCHER`): every page request and
+ * every admin request passes here.
  */
 const SLUGS_TTL_MS = 20_000;
 const CRAWL_LOG_EVERY_MS = 60_000;
@@ -70,8 +77,19 @@ function allowlist(path: string) {
 /** The Arabic pages, and the English ones with the "is the site in English" flag (ADR-043). */
 const slugs = { ar: allowlist('/api/pages/slugs'), en: allowlist('/api/pages/slugs/en') };
 
+/** An admin URL with `?locale=`: a 307 to the same URL without it; any other admin URL passes. */
+function stripAdminLocale(url: URL): Response | undefined {
+  if (!url.searchParams.has('locale')) return undefined;
+  const clean = new URL(url);
+  clean.searchParams.delete('locale');
+  return NextResponse.redirect(clean, 307);
+}
+
 export async function proxy(request: Request, event?: NextFetchEvent) {
   const url = new URL(request.url);
+  if (url.pathname === ADMIN_PREFIX || url.pathname.startsWith(`${ADMIN_PREFIX}/`)) {
+    return stripAdminLocale(url);
+  }
   if (isGone(url.pathname)) {
     return new Response(goneHtml(), {
       status: 410,
@@ -107,5 +125,5 @@ export async function proxy(request: Request, event?: NextFetchEvent) {
 export const config = {
   // A literal: Next reads `config` statically. `tests/site-routes.test.ts` keeps it equal to
   // `PROXY_MATCHER` in `lib/site-routes.ts`.
-  matcher: ['/((?!(?:api|admin|_next|media|images|fonts|og|video)(?:/|$)).*)'],
+  matcher: ['/((?!(?:api|_next|media|images|fonts|og|video)(?:/|$)).*)'],
 };

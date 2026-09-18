@@ -17,6 +17,7 @@ import { AI_QUEUE, generatePostWorkflow } from '@/modules/ai-content/workflow';
 import { REDIRECT_OVERRIDES } from '@/modules/cms/collections/redirects';
 import { indexNowTask } from '@/modules/cms/jobs/indexnow';
 import { cmsEnv, isBuildPhase } from '@/lib/cms/env';
+import { ADMIN_PREFIX } from '@/lib/site-routes';
 import { COLLECTIONS, GLOBALS } from '@/modules/cms/entities';
 import { payloadArabic } from '@/modules/cms/admin/payload-ar';
 import { ADMIN_VIEW_COMPONENTS } from '@/modules/cms/admin/views/registry';
@@ -34,7 +35,7 @@ const env = cmsEnv();
 export default buildConfig({
   serverURL: env.serverUrl,
   secret: env.secret,
-  routes: { admin: '/admin', api: '/api/payload' },
+  routes: { admin: ADMIN_PREFIX, api: '/api/payload' },
   graphQL: { disable: true },
   telemetry: false,
   // Expected client-side outcomes (a refused edit, a wrong password, a bad form) are not

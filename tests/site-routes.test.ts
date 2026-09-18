@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { RESERVED_PAGE_SLUGS } from '@/content/schema';
 import { createSlugCache, SLUG_SHAPE } from '@/lib/page-slugs';
 import {
+  ADMIN_PREFIX,
   CODE_TOP_LEVEL,
   isEnglishPath,
   localeSlug,
@@ -12,7 +13,7 @@ import {
   topLevelSlug,
 } from '@/lib/site-routes';
 import { FORBIDDEN_PAGE_SLUGS, pageSlugProblem } from '@/modules/cms/collections/pages';
-import { config as proxyConfig } from '@/proxy';
+import { config as proxyConfig, proxy } from '@/proxy';
 
 /** The route folders of a root layout: every one must be a code-owned segment the proxy leaves alone. */
 function routeFolders(...group: string[]): string[] {
@@ -28,20 +29,51 @@ describe('B0: the proxy and the (site) routes agree on the code-owned segments (
   it('every (site) folder is in CODE_TOP_LEVEL, and the proxy matches every page request', () => {
     for (const folder of siteFolders()) expect(CODE_TOP_LEVEL, folder).toContain(folder);
     expect(proxyConfig.matcher).toEqual([PROXY_MATCHER]);
-    // The one pattern: pages and machine files in, the API, the admin and the assets out.
+    // The one pattern: pages, machine files and the admin in; the API and the assets out.
     const re = new RegExp(`^${PROXY_MATCHER.replace('/(', '/(?:')}$`);
-    for (const path of ['/', '/en', '/products/hoodie', '/creators', '/llms.txt', '/wp-admin/x']) {
+    for (const path of [
+      '/',
+      '/en',
+      '/products/hoodie',
+      '/creators',
+      '/llms.txt',
+      '/wp-admin/x',
+      '/admin',
+      '/admin/login',
+    ]) {
       expect(re.test(path), path).toBe(true);
     }
     for (const path of [
       '/api/health',
-      '/admin',
-      '/admin/login',
+      '/api/payload/pages/1',
       '/_next/static/a.js',
       '/media/x.jpg',
     ]) {
       expect(re.test(path), path).toBe(false);
     }
+  });
+
+  it('the admin drops a stray ?locale= with a 307 to the same URL and passes every other admin request (ADR-057, PR C)', async () => {
+    const stray = await proxy(
+      new Request(`https://b7r.sa${ADMIN_PREFIX}/collections/pages/1?locale=en&foo=bar`),
+    );
+    expect(stray?.status).toBe(307);
+    expect(stray?.headers.get('location')).toBe(
+      `https://b7r.sa${ADMIN_PREFIX}/collections/pages/1?foo=bar`,
+    );
+    const root = await proxy(new Request(`https://b7r.sa${ADMIN_PREFIX}?locale=ar`));
+    expect(root?.status).toBe(307);
+    expect(root?.headers.get('location')).toBe(`https://b7r.sa${ADMIN_PREFIX}`);
+    for (const path of [
+      ADMIN_PREFIX,
+      `${ADMIN_PREFIX}/collections/pages/1`,
+      `${ADMIN_PREFIX}/login?redirect=%2Fadmin`,
+    ]) {
+      expect(await proxy(new Request(`https://b7r.sa${path}`)), path).toBeUndefined();
+    }
+    // A site path that merely starts with the letters is not the admin (a code-owned one
+    // here, so the allowlist is never read).
+    expect(await proxy(new Request('https://b7r.sa/admin-tools/x?locale=en'))).toBeUndefined();
   });
 
   it('the English root layout mirrors every Arabic route folder (ADR-043)', () => {

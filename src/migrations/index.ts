@@ -26,6 +26,7 @@ import * as migration_20260917_192112_cta_shiny from './20260917_192112_cta_shin
 import * as migration_20260918_033852_translations from './20260918_033852_translations';
 import * as migration_20260918_114349_takeaways_rows_shared from './20260918_114349_takeaways_rows_shared';
 import * as migration_20260918_131849_heavy_twins from './20260918_131849_heavy_twins';
+import * as migration_20260918_142817_purge_locale_preference from './20260918_142817_purge_locale_preference';
 
 export const migrations = [
   {
@@ -167,5 +168,10 @@ export const migrations = [
     up: migration_20260918_131849_heavy_twins.up,
     down: migration_20260918_131849_heavy_twins.down,
     name: '20260918_131849_heavy_twins',
+  },
+  {
+    up: migration_20260918_142817_purge_locale_preference.up,
+    down: migration_20260918_142817_purge_locale_preference.down,
+    name: '20260918_142817_purge_locale_preference',
   },
 ];
