@@ -80,6 +80,38 @@ Criteria: the admin e2e green in English and Arabic; axe zero serious on every a
 surface; `tests/admin-config.test.ts` green (descriptions in both languages on every
 field); the design system doc and the admin rules updated; the CTO's GO per PR.
 
+### Phase 2 design, settled with the CTO (memo of 2026-09-18)
+
+- **Side-by-side editing: approach A.** For every localized text, textarea and select field
+  a custom Field component renders the current locale's field beside an input for the other
+  locale; the other locale's edits live in a hidden non-localized `translations` JSON on the
+  document (`{ path: { value, base } }`, prefilled from the other locale read with
+  `draft: true`); a collection/global `afterChange` hook applies them with a second
+  `payload.update({ locale: other, req, draft: data._status === 'draft' })` and clears the
+  JSON in the same write, guarded by a context flag against re-entry, skipped on autosave
+  (a Save or Publish applies), applying a path only when `value !== base` and `base` still
+  equals what is stored; a validation error in the other locale rolls the whole save back and
+  names the field and the language. Rich text, arrays and blocks stay on the locale switch,
+  whose note says which fields are side by side. Payload 3.89 has no all-locales write
+  (`beforeChange/promise.js` keeps the stored value for every locale but `req.locale`), so
+  the second update is the mechanism. Tests: the apply's table (changed, unchanged, stale
+  base, a required blank) and an e2e editing both languages of a page in one Save.
+- **The Arabic admin.** ADR-039's "English panel" is reversed and recorded; the UI language
+  (Payload `i18n`, the account menu) and the content locale (the pills, `data-content-locale`)
+  never share a control. Digits stay Western: one formatter with `-u-nu-latn`, tested.
+  `adminStrings` typed as `{ en, ar }` pairs (a missing language is a type error); a unit test
+  applies the ux-araby rules to the Arabic strings; the admin e2e runs once in Arabic
+  (`html[dir="rtl"]`, the shell, a list, an edit view, both views, axe). Payload's own `ar`
+  translations are community work: the worst few overridden through `i18n.translations`
+  and the fact recorded.
+- **The sidebar.** Group state stays in Payload's `nav` preference (per user, server-side);
+  ADR-046's hues and the active entry on its tint stay (Cloudflare's single grey is the part
+  not to copy); "chevron at the end" and "collapse at the bottom start" are logical
+  positions; the rail with tooltips exists; the drawer under 1440 px stays Payload's.
+- **Dashboard numbers.** Every figure has a reader already except "drafts waiting", which
+  needs `findVersions` with `latest: true` per collection: budgeted as the one non-trivial
+  query, linked to the list filtered on `_status`.
+
 ## Phase 3: The AI spend
 
 - [ ] Prompts' periods weekly (the seed default and the rows on the review and production
@@ -103,3 +135,4 @@ changed on both databases by a script that prints what it changed; no ledger run
 ## Status log
 
 - 2026-09-18 02:30 UTC: programme written; Phase 0 agents launched.
+- 2026-09-18 02:50 UTC: the CTO's memo on Phase 2 recorded above; `site/reveal` (ADR-055) committed, its e2e waits for the review server.
