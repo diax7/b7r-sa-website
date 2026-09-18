@@ -354,8 +354,8 @@ CI writes its dummy ids into the settings (`scripts/ci/analytics-ids.ts`), the U
 ## The visibility score (ADR-049)
 
 - **Where.** Visibility → Visibility score (`/admin/visibility`), admins; the same number on
-  the dashboard card. "Recompute" re-reads everything now (the page keeps a reading for a
-  minute).
+  the dashboard's score tile, with its trend. "Recompute" re-reads everything now (the page
+  keeps a reading for a minute).
 - **Reading it.** Six sections, each with a bar and its items in the order next, missing, done.
   An item over documents says "4 of 5" and lists what is left, each a link into the field in
   the language that is missing. "The site guarantees" under a section lists what cannot be
@@ -473,7 +473,8 @@ CI writes its dummy ids into the settings (`scripts/ci/analytics-ids.ts`), the U
   read. Visibility → Traffic is the page: pick 7, 30 or 90 days; the channels with their
   share, the top sources, the landing pages with the channel that brings most, and the
   crawlers with what they read most; the rows themselves sit under it as "Counts". The
-  dashboard carries a "Traffic, last 7 days" card (admins). Nothing needs configuring: the
+  dashboard carries the visits tile and the "Where visits come from" section over the
+  dashboard's own 7 / 30 / 90 day range (admins, ADR-059). Nothing needs configuring: the
   beacon and the crawler count are on in every environment.
 - **Reading it.** A landing's source is the referring site folded (`chatgpt.com`,
   `google.com`, `instagram.com`), a UTM token, or `direct`; the channel and its group (AI
