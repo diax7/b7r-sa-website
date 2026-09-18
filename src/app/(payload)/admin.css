@@ -402,8 +402,9 @@
      span's own text (an em dash and the name) is hidden from sight and from readers; the
      pill is drawn by ::after and always reads AR, since the panel edits the default locale
      and nothing else (ADR-057, PR C: no locale switch, no `?locale=` on a panel URL). The
-     same pill, as `.admin-locale-tag`, marks the English input beside a bilingual field,
-     and the EN pill of a heavy field's twin below. */
+     same pill, as `.admin-locale-tag` (`LocaleTag`), marks the English input beside a
+     bilingual field and each language of a read-only fact that has two (the post's
+     warnings and reading time), and the EN pill of a heavy field's twin below. */
   .field-label .localized {
     display: inline-grid;
     vertical-align: 2px;
@@ -416,7 +417,7 @@
     margin-inline-start: 8px;
   }
   .field-label .localized::after,
-  .field-label .admin-locale-tag,
+  .admin-locale-tag,
   .admin-twin > .field-label::after,
   .admin-twin > .rich-text-lexical__label-row > .field-label::after {
     visibility: visible;

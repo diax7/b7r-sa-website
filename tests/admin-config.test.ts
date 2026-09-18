@@ -59,7 +59,7 @@ import { Faqs } from '@/modules/cms/collections/faqs';
 import { Integrations } from '@/modules/cms/collections/integrations';
 import { Media } from '@/modules/cms/collections/media';
 import { Pages } from '@/modules/cms/collections/pages';
-import { POST_FEATURES, Posts } from '@/modules/cms/collections/posts';
+import { POST_FEATURES, Posts, WARNINGS_FIELD } from '@/modules/cms/collections/posts';
 import { Products } from '@/modules/cms/collections/products';
 import { REDIRECT_OVERRIDES } from '@/modules/cms/collections/redirects';
 import { Tags } from '@/modules/cms/collections/tags';
@@ -962,14 +962,15 @@ describe('side-by-side bilingual editing (ADR-057)', () => {
 
   /**
    * The census gate of PR C (`docs/plans/2026-09-18-no-locale-switch.md`): the locale switch
-   * may go only when nothing an editor types depends on it. Every localized field across the
-   * 23 configs is either paired (a light field wearing `BilingualField`, a heavy field followed
-   * by its `<name>Twin` with the same editor or collection) or one of the post's two computed
-   * facts (`warnings`, the one list localized as a whole, and `readingMinutes`), which the
-   * post's own `beforeChange` hook writes for the language of each write and nobody edits.
-   * Anything else is listed by name so the failure says what remains.
+   * may go only when every localized field shows both languages. Across the 23 configs each
+   * one is a light field wearing `BilingualField`, a heavy field followed by its `<name>Twin`
+   * with the same editor or collection, or a read-only fact whose widget shows the other
+   * language under the open one (`ReadOnlyLine`, `WarningsField`: the post's `readingMinutes`
+   * and `warnings`, the one list localized as a whole, both written by the post's own
+   * `beforeChange` for the language of each write). Anything else is listed by name so the
+   * failure says what remains.
    */
-  it('the census gate (PR C): 129 localized fields paired, 55 of them inside rows, the four heavy ones by their twins; the two computed facts of the post are the only ones without a pair; no list is localized as a whole but the warnings', () => {
+  it('the census gate (PR C): 131 localized fields show both languages, 125 light ones paired (55 inside rows), the four heavy ones by their twins, the two facts of the post by their widgets; nothing remains; no list is localized as a whole but the warnings', () => {
     const placed = configs.flatMap((c) =>
       everyField(c.fields).map((p) => ({ ...p, slug: c.slug })),
     );
@@ -996,21 +997,22 @@ describe('side-by-side bilingual editing (ADR-057)', () => {
     expect(twinPaths(Pages.fields)).toEqual(['blocks.richText.content']);
     expect(twinPaths(Posts.fields)).toEqual(['body']);
     expect(twinPaths(Home.fields)).toEqual(['hero.slides.imageDesktop', 'hero.slides.imageMobile']);
-    // What remains: the two computed facts, read-only, and nothing else. A new localized
-    // field that lands here is a field an editor could only reach through a locale switch
-    // that no longer exists (a heavy field without its twin, a light field with a widget of
-    // its own, a hasMany, a relationship, a list localized as a whole).
-    const paired = new Set([...pairedLight, ...pairedHeavy]);
-    const remaining = localized.filter((p) => !paired.has(p));
-    expect(remaining.map((p) => `${placedName(p)} (${p.field.type})`)).toEqual([
-      'posts.warnings (array)',
-      'posts.readingMinutes (number)',
+    // The read-only facts: their widgets show the other language under the open one.
+    const pairedFacts = localized.filter(
+      (p) =>
+        (p.field as { admin?: { readOnly?: boolean } }).admin?.readOnly === true &&
+        [READ_ONLY_LINE, WARNINGS_FIELD].includes(String(widgetOf(p.field))),
+    );
+    expect(pairedFacts.map((p) => `${placedName(p)} (${String(widgetOf(p.field))})`)).toEqual([
+      `posts.warnings (${WARNINGS_FIELD})`,
+      `posts.readingMinutes (${READ_ONLY_LINE})`,
     ]);
-    for (const p of remaining) {
-      expect((p.field as { admin?: { readOnly?: boolean } }).admin?.readOnly, placedName(p)).toBe(
-        true,
-      );
-    }
+    // Nothing remains. A localized field that lands here has no place that shows its other
+    // language (a heavy field without its twin, a light field with a widget of its own, a
+    // hasMany, a relationship, a list localized as a whole), and no switch reaches it.
+    const paired = new Set([...pairedLight, ...pairedHeavy, ...pairedFacts]);
+    const remaining = localized.filter((p) => !paired.has(p));
+    expect(remaining.map((p) => `${placedName(p)} (${p.field.type})`)).toEqual([]);
     const wholeLists = placed
       .filter(
         (p) =>

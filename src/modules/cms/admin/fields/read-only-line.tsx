@@ -1,7 +1,7 @@
 'use client';
 
 import { getTranslation } from '@payloadcms/translations';
-import { useField, useTranslation } from '@payloadcms/ui';
+import { useField, useLocale, useTranslation } from '@payloadcms/ui';
 import type {
   CheckboxFieldClient,
   DateFieldClient,
@@ -13,10 +13,15 @@ import type {
   TextareaFieldClient,
   TextFieldClient,
 } from 'payload';
-import { useId } from 'react';
+import { type ReactNode, useId } from 'react';
 import { formatDate, formatDateTime, formatNumber } from '@/modules/cms/admin/format';
 import { FieldShell } from '@/modules/cms/admin/fields/field-shell';
+import { LocaleTag } from '@/modules/cms/admin/fields/bilingual/locale-tag';
+import { OtherValue } from '@/modules/cms/admin/fields/bilingual/other-value';
+import { useOtherLanguage } from '@/modules/cms/admin/fields/bilingual/use-other-language';
 import { type AdminStrings, adminStringsFor } from '@/modules/cms/admin/strings';
+import { useAdminStrings } from '@/modules/cms/admin/use-admin-strings';
+import { readKey } from '@/modules/cms/fields/bilingual';
 
 type Option = string | { value: string; label: StaticLabel | string };
 type Translate = (label: StaticLabel | string) => string;
@@ -100,7 +105,10 @@ export function readOnlyText(
  * the description as on every widget, the value as words in the UI language (ADR-056), never
  * a disabled input, a date picker with a clear button or a greyed checkbox.
  * `describeFields()` attaches it to every read-only scalar field, so a log row (a run, a
- * citation, a count) reads as a card and the connection's sidebar as a summary.
+ * citation, a count) reads as a card and the connection's sidebar as a summary. A localized
+ * one (the post's reading time, a computed fact) shows both languages (ADR-057): the open
+ * language's line under its pill, the other language's under its own from the shared read
+ * every bilingual widget uses; a field that is not localized pays no read.
  */
 export function ReadOnlyLine({ field, path }: { field: ScalarField; path: string }) {
   const id = useId();
@@ -109,18 +117,63 @@ export function ReadOnlyLine({ field, path }: { field: ScalarField; path: string
   const text = readOnlyText(field, value, i18n.language, (label) =>
     typeof label === 'string' ? label : getTranslation(label, i18n),
   );
+  const line = text !== null && (
+    <span
+      dir="auto"
+      aria-labelledby={`${id}-label`}
+      className="text-small break-words text-text"
+      data-admin-read-only={field.name}
+    >
+      {text}
+    </span>
+  );
   return (
     <FieldShell field={field} labelId={`${id}-label`} descriptionId={`${id}-desc`}>
-      {text !== null && (
-        <span
-          dir="auto"
-          aria-labelledby={`${id}-label`}
-          className="text-small break-words text-text"
-          data-admin-read-only={field.name}
-        >
-          {text}
-        </span>
-      )}
+      {field.localized ? <BothLanguages field={field} path={path} line={line} /> : line}
     </FieldShell>
+  );
+}
+
+/**
+ * The open language's line under its pill, then the other language's from the shared read;
+ * a language with no value yet (a post without its English body) reads "Empty".
+ */
+function BothLanguages({
+  field,
+  path,
+  line,
+}: {
+  field: ScalarField;
+  path: string;
+  line: ReactNode;
+}) {
+  const { i18n } = useTranslation();
+  const { code } = useLocale();
+  const { other, stored } = useOtherLanguage();
+  const empty = (
+    <span className="text-small text-text-muted">{useAdminStrings().bilingual.empty}</span>
+  );
+  if (!other) return line;
+  const translate = (label: StaticLabel | string) =>
+    typeof label === 'string' ? label : getTranslation(label, i18n);
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex items-start gap-2">
+        <LocaleTag code={code} />
+        {line || empty}
+      </div>
+      <OtherValue other={other} stored={stored} hook={field.name}>
+        {(doc) => {
+          const text = readOnlyText(field, readKey(doc, path), i18n.language, translate);
+          return text === null ? (
+            empty
+          ) : (
+            <span dir="auto" className="text-small break-words text-text">
+              {text}
+            </span>
+          );
+        }}
+      </OtherValue>
+    </div>
   );
 }

@@ -108,6 +108,12 @@ async function defaultAuthor({ req }: { req: PayloadRequest }): Promise<number |
 
 const EDITED_FIELDS = ['title', 'excerpt', 'body', 'takeaways'] as const;
 
+/**
+ * The post's editorial warnings in the sidebar: a computed fact per language, both shown
+ * (ADR-057). The one list localized as a whole in the configs, and read-only.
+ */
+export const WARNINGS_FIELD = '@/modules/cms/admin/fields/warnings-field#WarningsField';
+
 /** The post's body, per language; its English is the twin right under it (ADR-057, PR B). */
 const body: RichTextField = {
   name: 'body',
@@ -420,7 +426,7 @@ export const Posts: CollectionConfig = {
             label: { ar: 'تنبيهات التحرير', en: 'Editorial warnings' },
             admin: {
               readOnly: true,
-              components: { Field: '@/modules/cms/admin/fields/warnings-field#WarningsField' },
+              components: { Field: WARNINGS_FIELD },
             },
             fields: [{ name: 'text', type: 'text' }],
           },

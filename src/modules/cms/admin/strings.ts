@@ -103,6 +103,10 @@ export const adminStrings = {
     loading: 'Loading {language}…',
     /** The other language's input when the read failed: what happened, then the way out. */
     failed: 'The {language} text could not be loaded. Reload the page to edit it.',
+    /** A read-only fact's other language when the read failed (nothing to edit). */
+    unavailable: 'The {language} value could not be loaded. Reload the page.',
+    /** A read-only fact one language has no value for yet (a post without its English body). */
+    empty: 'Empty',
   },
   engine: {
     generateNow: 'Generate now',
@@ -579,6 +583,8 @@ export const adminStringsAr: AdminStrings = {
     languages: { ar: 'العربية', en: 'الإنجليزية' },
     loading: 'تحميل {language}…',
     failed: 'تعذّر تحميل نص اللغة {language}. أعد تحميل الصفحة لتحريره.',
+    unavailable: 'تعذّر تحميل قيمة اللغة {language}. أعد تحميل الصفحة.',
+    empty: 'فارغ',
   },
   engine: {
     generateNow: 'ولّد الآن',
