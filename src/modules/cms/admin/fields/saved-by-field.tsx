@@ -5,11 +5,9 @@ import { History } from 'lucide-react';
 import type { GroupFieldClientComponent } from 'payload';
 import { useId } from 'react';
 import { Icon } from '@/components/shared/icon';
-import { relativeTime } from '@/modules/cms/admin/dashboard/relative-time';
 import { FieldShell } from '@/modules/cms/admin/fields/field-shell';
-import { adminStrings } from '@/modules/cms/admin/strings';
-
-const s = adminStrings.savedBy;
+import { relativeTime } from '@/modules/cms/admin/format';
+import { useAdminLanguage, useAdminStrings } from '@/modules/cms/admin/use-admin-strings';
 
 /**
  * The `lastSavedBy` snapshot as one line ("by Dhia · 2 hours ago") instead of two read-only
@@ -18,6 +16,8 @@ const s = adminStrings.savedBy;
  * global) shows nothing.
  */
 export const SavedByField: GroupFieldClientComponent = ({ field, path }) => {
+  const s = useAdminStrings().savedBy;
+  const { language } = useAdminLanguage();
   const id = useId();
   const { id: docId, globalSlug } = useDocumentInfo();
   const name = useFormFields(([fields]) => fields[`${path}.name`]?.value);
@@ -39,7 +39,7 @@ export const SavedByField: GroupFieldClientComponent = ({ field, path }) => {
             {savedAt && (
               <>
                 {' · '}
-                <time dateTime={savedAt}>{relativeTime(savedAt)}</time>
+                <time dateTime={savedAt}>{relativeTime(savedAt, language)}</time>
               </>
             )}
           </span>

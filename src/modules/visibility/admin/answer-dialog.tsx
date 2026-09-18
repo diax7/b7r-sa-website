@@ -11,9 +11,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { adminStrings } from '@/modules/cms/admin/strings';
-
-const s = adminStrings.visibility.ledger;
+import { useAdminStrings } from '@/modules/cms/admin/use-admin-strings';
 
 /**
  * "View answer" on a ledger cell: the engine's whole answer in a dialog, rendered on the
@@ -29,6 +27,7 @@ export function AnswerDialog({
   urls: string[];
   children: ReactNode;
 }) {
+  const s = useAdminStrings().visibility.ledger;
   return (
     <Dialog>
       <DialogTrigger

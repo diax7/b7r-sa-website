@@ -3,10 +3,8 @@ import type { ReactNode } from 'react';
 import { redirect } from 'next/navigation';
 import { formatAdminURL } from 'payload/shared';
 import { roleOf } from '@/modules/cms/access';
-import { adminStrings } from '@/modules/cms/admin/strings';
+import { adminStringsFor } from '@/modules/cms/admin/strings';
 import { AdminShell } from '@/modules/cms/admin/views/shell';
-
-const s = adminStrings.views;
 
 /**
  * The gate every custom view of ours passes first (ADR-048). Payload 3 renders a custom view
@@ -30,7 +28,7 @@ export function adminView(
   }
   return roleOf(props.initPageResult.req) === 'admin' ? null : (
     <AdminShell props={props} title={title}>
-      <AdminsOnly />
+      <AdminsOnly language={viewLanguage(props)} />
     </AdminShell>
   );
 }
@@ -40,8 +38,14 @@ export function viewUser(props: AdminViewServerProps): TypedUser | null {
   return props.initPageResult.req.user ?? null;
 }
 
+/** The UI language Payload resolved for the request behind a custom view (ADR-056). */
+export function viewLanguage(props: AdminViewServerProps): string {
+  return props.initPageResult.req.i18n.language;
+}
+
 /** What a signed-in editor sees on an admins-only page. */
-function AdminsOnly() {
+function AdminsOnly({ language }: { language: string }) {
+  const s = adminStringsFor(language).views;
   return (
     <div className="flex flex-col gap-2 py-8" data-admin-ui="" data-admin-view-refused="">
       <h1 className="text-h3 text-text">{s.adminsOnlyTitle}</h1>

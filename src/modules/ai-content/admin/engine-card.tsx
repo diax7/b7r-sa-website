@@ -11,10 +11,15 @@ import {
   type EngineState,
   engineState,
 } from '@/modules/ai-content/state';
-import { relativeTime } from '@/modules/cms/admin/dashboard/relative-time';
-import { adminStrings } from '@/modules/cms/admin/strings';
+import { relativeTime } from '@/modules/cms/admin/format';
+import { type AdminStrings, adminStringsFor } from '@/modules/cms/admin/strings';
 
-const s = adminStrings.engine.card;
+/** When the engine next writes: a fact, worded by the card in the UI language. */
+export type NextSlot =
+  | { kind: 'off' }
+  | { kind: 'noConnection' }
+  | { kind: 'soon' }
+  | { kind: 'today' | 'done'; hour: number };
 
 export interface EngineSummary {
   state: EngineState;
@@ -23,7 +28,7 @@ export interface EngineSummary {
   averageScore: number | null;
   failures: number;
   costUsd: number;
-  nextSlot: string;
+  nextSlot: NextSlot;
   recent: Array<{ id: number; label: string; status: string; score: number | null; at: string }>;
 }
 
@@ -68,12 +73,12 @@ export async function engineSummary(payload: Payload, now = new Date()): Promise
   ]);
   const done = monthRuns.docs.filter((r) => r.status === 'done');
   const scores = done.map((r) => r.score).filter((n): n is number => typeof n === 'number');
-  let nextSlot: string = s.nextSlotOff;
-  if (state === 'noConnection' || state === 'connectionOff') nextSlot = s.nextSlotNoConnection;
+  let nextSlot: NextSlot = { kind: 'off' };
+  if (state === 'noConnection' || state === 'connectionOff') nextSlot = { kind: 'noConnection' };
   else if (state !== 'off') {
-    if (today.totalDocs >= postsPerDay) nextSlot = s.nextSlotDone.replace('{hour}', String(hour));
-    else if (riyadh(now).hour < hour) nextSlot = s.nextSlotToday.replace('{hour}', String(hour));
-    else nextSlot = s.nextSlotSoon;
+    if (today.totalDocs >= postsPerDay) nextSlot = { kind: 'done', hour };
+    else if (riyadh(now).hour < hour) nextSlot = { kind: 'today', hour };
+    else nextSlot = { kind: 'soon' };
   }
   return {
     state,
@@ -111,14 +116,25 @@ function stat(label: string, value: string) {
   );
 }
 
+function nextSlotText(slot: NextSlot, s: AdminStrings['engine']['card']): string {
+  if (slot.kind === 'off') return s.nextSlotOff;
+  if (slot.kind === 'noConnection') return s.nextSlotNoConnection;
+  if (slot.kind === 'soon') return s.nextSlotSoon;
+  const template = slot.kind === 'done' ? s.nextSlotDone : s.nextSlotToday;
+  return template.replace('{hour}', String(slot.hour));
+}
+
 /** The "Content engine" card on the dashboard (admins): the monitoring §10.2.7 asks for. */
 export function EngineCard({
   summary,
   adminRoute,
+  language,
 }: {
   summary: EngineSummary;
   adminRoute: string;
+  language: string;
 }) {
+  const s = adminStringsFor(language).engine.card;
   const stateTone = ENGINE_STATE_TONE[summary.state];
   const stateLabel = s.state[summary.state];
   const c = summary.connection;
@@ -142,7 +158,8 @@ export function EngineCard({
         {stat(s.cost, `$${summary.costUsd.toFixed(2)}`)}
       </div>
       <p className="text-small text-text-muted">
-        <span className="font-medium text-text">{s.nextSlot}:</span> {summary.nextSlot}
+        <span className="font-medium text-text">{s.nextSlot}:</span>{' '}
+        {nextSlotText(summary.nextSlot, s)}
       </p>
       <p className="text-small text-text-muted" data-admin-engine-connection={c ? c.id : 'none'}>
         <span className="font-medium text-text">{s.connection}:</span>{' '}
@@ -176,15 +193,18 @@ export function EngineCard({
                 href={`${adminRoute}/collections/ai-runs/${run.id}`}
                 className="flex items-center gap-3 py-2 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-accent/40"
               >
-                <Badge tone={STATUS_TONE[run.status as keyof typeof STATUS_TONE] ?? 'muted'}>
-                  {run.status}
+                <Badge
+                  tone={STATUS_TONE[run.status as keyof typeof STATUS_TONE] ?? 'muted'}
+                  data-admin-run-status={run.status}
+                >
+                  {s.runStatus[run.status] ?? run.status}
                 </Badge>
                 <span className="min-w-0 flex-1 truncate text-small text-text">{run.label}</span>
                 {run.score !== null && (
                   <span className="text-caption text-text-muted">{run.score}</span>
                 )}
                 <time dateTime={run.at} className="shrink-0 text-caption text-text-muted">
-                  {relativeTime(run.at)}
+                  {relativeTime(run.at, language)}
                 </time>
               </Link>
             </li>

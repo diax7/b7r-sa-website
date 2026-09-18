@@ -13,27 +13,30 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { initials } from '@/modules/cms/admin/account/initials';
-import { adminStrings } from '@/modules/cms/admin/strings';
-
-const s = adminStrings.account;
+import { useAdminStrings } from '@/modules/cms/admin/use-admin-strings';
 
 /**
  * The account block at the foot of the sidebar: who is signed in, and where to go from here.
  * In the icon rail the CSS hides the name and e-mail (`data-rail-hide`); the avatar keeps the
  * menu. `compact` only widens the accessible label once the client knows it is a rail.
+ * `direction` is the document's: Radix reads no `dir` from the page, so the menu's start
+ * alignment and arrow keys would ignore an Arabic panel without it.
  */
 export function AccountMenu({
   account,
   adminRoute,
   compact = false,
+  direction,
 }: {
   account: { name: string; email: string; role: string };
   adminRoute: string;
   compact?: boolean;
+  direction: 'ltr' | 'rtl';
 }) {
+  const s = useAdminStrings().account;
   const role = s.roles[account.role] ?? account.role;
   return (
-    <DropdownMenu>
+    <DropdownMenu dir={direction}>
       <DropdownMenuTrigger
         className="flex w-full items-center gap-2.5 rounded-inner p-2 text-start transition-colors duration-(--duration-fast) hover:bg-accent-tint focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-accent/40 data-[state=open]:bg-accent-tint"
         aria-label={compact ? `${s.menu}: ${account.name}` : s.menu}

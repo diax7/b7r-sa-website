@@ -4,6 +4,7 @@ import { type LucideIcon, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import { Icon } from '@/components/shared/icon';
 import { cn } from '@/lib/cn';
+import { useAdminStrings } from '@/modules/cms/admin/use-admin-strings';
 
 type State =
   | { kind: 'idle' }
@@ -41,6 +42,7 @@ export function ApiAction({
   /** A reason the action cannot run now, shown in place of the button's outcome. */
   disabled?: string;
 }) {
+  const { serverAnswered } = useAdminStrings().common;
   const [state, setState] = useState<State>({ kind: 'idle' });
   async function act() {
     setState({ kind: 'busy' });
@@ -54,7 +56,10 @@ export function ApiAction({
       const json = (await res.json().catch(() => ({}))) as Record<string, unknown>;
       if (!res.ok) {
         const error = typeof json['error'] === 'string' ? json['error'] : null;
-        setState({ kind: 'error', text: error ?? `The server answered ${res.status}` });
+        setState({
+          kind: 'error',
+          text: error ?? serverAnswered.replace('{status}', String(res.status)),
+        });
         return;
       }
       setState({ kind: 'done', text: done ? done(json) : doneLabel });

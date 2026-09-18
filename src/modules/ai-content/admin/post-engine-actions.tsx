@@ -4,9 +4,7 @@ import { useAuth, useDocumentInfo, useFormFields } from '@payloadcms/ui';
 import { RefreshCw } from 'lucide-react';
 import type { UIFieldClientComponent } from 'payload';
 import { ApiAction } from '@/modules/cms/admin/api-action';
-import { adminStrings } from '@/modules/cms/admin/strings';
-
-const s = adminStrings.engine;
+import { useAdminStrings } from '@/modules/cms/admin/use-admin-strings';
 
 /**
  * "Regenerate" on an engine post (BRD 10.2.5), for admins: a new run from the post's topic
@@ -14,6 +12,7 @@ const s = adminStrings.engine;
  * status bar. Nothing on a hand-written post.
  */
 export const PostEngineActions: UIFieldClientComponent = () => {
+  const s = useAdminStrings().engine;
   const { id } = useDocumentInfo();
   const { user } = useAuth();
   const origin = useFormFields(([fields]) => fields['origin']?.value);
