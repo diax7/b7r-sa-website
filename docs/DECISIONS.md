@@ -1623,7 +1623,10 @@ hooks after it and the response still need the request's own. **The three guard 
 along in the draft version until a real save, and survive a reload. (2) An entry applies
 only when the editor changed it (`value !== base`) and the other locale still holds `base`
 at apply time (read first): a stale prefill loses nothing, the stored edit wins, and the
-client drops the entry the next time it reads the other locale. (3) A refusal in the other
+client drops the entry the next time it reads the other locale. When entries exist but none
+applies (all stale), that save makes no second write and the row's JSON is not cleared: the
+base check keeps the entries inert and the client's reconcile drops them on the next open,
+so a stale entry lives in the row until the next applying save. (3) A refusal in the other
 locale fails the whole save: the second write throws, the transaction rolls back (Payload's
 nested operation kills it), and the editor reads a `Refused` naming each field and the
 language ("Title in English: This field is required."); a collection's own rule (a post's
@@ -1632,7 +1635,12 @@ publish rules) is prefixed with the language. The second write runs the hook aga
 language as they would on the locale switch (the revalidation pings the other language's
 URLs, which did change). Only paths `bilingualPaths()` names are ever written: the JSON
 comes from the client, so `_status`, a slug, a secret or a row inside a block cannot be
-smuggled through it. **Known limits, as on the switch.** A draft save skips validation, so
+smuggled through it; and the row stores whatever a signed-in user sends, so the field's
+`validate` refuses more than 200 entries or 64 KB serialised, with the reason in the panel's
+language. A bilingual Save leaves two version rows, one per language write, so the history
+is measured in language writes and the cap doubles: `maxPerDoc` 50 on products, pages and
+posts (was 25), 20 on testimonials (was 10), `max` 50 on the home page (was 25).
+**Known limits, as on the switch.** A draft save skips validation, so
 a blanked required English text lands in the draft and a later Publish from Arabic does not
 re-validate English (Payload validates the request's locale only); the English site's gate
 (a document reaches it when its title-like field has an English value, ADR-043) is the net.
