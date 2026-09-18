@@ -813,8 +813,13 @@ test.describe('CMS admin', () => {
     // section's switch lives in its tab (ADR-046), which Payload opens only on a click (a
     // remembered tab is a per-user preference, never assumed).
     await page.goto('/admin/globals/home');
-    await page.locator('.tabs-field__tab-button', { hasText: 'Three steps' }).click();
     const stepsSwitch = page.locator('[data-admin-switch="steps.enabled"]');
+    // Payload restores the remembered tab from the user's preferences after the first render,
+    // which can undo a click that landed before it; click until the tab's content is there.
+    await expect(async () => {
+      await page.locator('.tabs-field__tab-button', { hasText: 'Three steps' }).click();
+      await expect(stepsSwitch).toBeVisible({ timeout: 2000 });
+    }).toPass({ timeout: 20_000 });
     await expect(stepsSwitch).toHaveAttribute('role', 'switch');
     await expect(stepsSwitch).toHaveAttribute('aria-checked', 'true');
     await expect(
@@ -2155,7 +2160,10 @@ test.describe('CMS admin', () => {
         }).toPass({ timeout: 30_000 });
         const key = `hero.slides.${first.id}.subline`;
         const pair = page.locator(`[data-admin-bilingual="${key}"]`);
-        await expect(pair.locator('[data-admin-locale-tag="en"]')).toHaveText('EN');
+        // The slides' rows (their photos and twins) render after the tab flips on a busy machine.
+        await expect(pair.locator('[data-admin-locale-tag="en"]')).toHaveText('EN', {
+          timeout: 15_000,
+        });
         const arabic = page.locator('#field-hero__slides__0__subline');
         const other = page.locator(`#field-translations__en__${key.replace(/\./g, '__')}`);
         await expect(other).toHaveValue(String(before.en.hero.slides[0]!.subline ?? ''), {
