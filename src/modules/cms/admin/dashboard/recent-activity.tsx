@@ -4,14 +4,13 @@ import { Badge } from '@/components/shared/badge';
 import { Card } from '@/components/shared/card';
 import { Icon } from '@/components/shared/icon';
 import type { RecentItem } from '@/modules/cms/admin/dashboard/data';
-import { relativeTime } from '@/modules/cms/admin/dashboard/relative-time';
+import { relativeTime } from '@/modules/cms/admin/format';
 import { HUE_CLASSES } from '@/modules/cms/admin/icons';
-import { adminStrings } from '@/modules/cms/admin/strings';
-
-const s = adminStrings.dashboard.recent;
+import { adminStringsFor } from '@/modules/cms/admin/strings';
 
 /** The latest saves across the panel: who, what, when, one click (no reload) to open. */
-export function RecentActivity({ items }: { items: RecentItem[] }) {
+export function RecentActivity({ items, language }: { items: RecentItem[]; language: string }) {
+  const s = adminStringsFor(language).dashboard.recent;
   return (
     <Card className="flex flex-col gap-4 p-5" data-admin-recent="">
       <h2 className="flex items-center gap-2 text-h4 text-text">
@@ -49,7 +48,7 @@ export function RecentActivity({ items }: { items: RecentItem[] }) {
                   </span>
                 </span>
                 <time dateTime={item.updatedAt} className="shrink-0 text-caption text-text-muted">
-                  {relativeTime(item.updatedAt)}
+                  {relativeTime(item.updatedAt, language)}
                 </time>
               </Link>
             </li>

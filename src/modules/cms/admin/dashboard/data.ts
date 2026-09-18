@@ -13,10 +13,8 @@ import {
   type Hue,
 } from '@/modules/cms/admin/icons';
 import { flattenNav, navGroups } from '@/modules/cms/admin/nav/groups';
-import { adminStrings } from '@/modules/cms/admin/strings';
+import { adminStringsFor } from '@/modules/cms/admin/strings';
 import { SAVED_BY } from '@/modules/cms/fields/saved-by';
-
-const s = adminStrings.dashboard;
 
 export interface QuickAction {
   key: string;
@@ -37,12 +35,14 @@ export function savesByPeople(collection: { fields: Field[] }): boolean {
   return collection.fields.some((f) => 'name' in f && f.name === SAVED_BY);
 }
 
-/** The actions this user may take, in the order an editor needs them. */
+/** The actions this user may take, in the order an editor needs them, in the UI language. */
 export function quickActions(args: {
   permissions: SanitizedPermissions | undefined;
   adminRoute: string;
+  language: string;
 }): QuickAction[] {
-  const { permissions, adminRoute } = args;
+  const { permissions, adminRoute, language } = args;
+  const s = adminStringsFor(language).dashboard;
   // Sanitized permissions hold `true` for an allowed operation (or an object with `permission`
   // before sanitising); both read as allowed here.
   const can = (kind: 'collections' | 'globals', slug: string, op: 'create' | 'update') => {
@@ -136,12 +136,14 @@ function savedByName(doc: Doc): string | null {
   return typeof snapshot?.name === 'string' && snapshot.name ? snapshot.name : null;
 }
 
-/** A document may have no title yet (a draft in progress); the list view says the same. */
-const UNTITLED = 'Untitled';
+/** A document may have no title yet (a draft in progress): a number or a non-blank string is one. */
+export function hasTitle(value: unknown): boolean {
+  return typeof value === 'number' || (typeof value === 'string' && value.trim() !== '');
+}
 
-export function titleOf(value: unknown): string {
-  if (typeof value === 'number') return String(value);
-  return typeof value === 'string' && value.trim() ? value : UNTITLED;
+/** The title as the list shows it, or the "Untitled" of the UI language (`common.untitled`). */
+export function titleOf(value: unknown, untitled: string): string {
+  return hasTitle(value) ? String(value) : untitled;
 }
 
 /**
@@ -150,7 +152,7 @@ export function titleOf(value: unknown): string {
  * listing.
  */
 export function isAbandonedDraft(doc: Doc, title: unknown): boolean {
-  return doc['_status'] === 'draft' && titleOf(title) === UNTITLED && savedByName(doc) === null;
+  return doc['_status'] === 'draft' && !hasTitle(title) && savedByName(doc) === null;
 }
 
 function statusOf(doc: Doc): RecentItem['status'] {
@@ -171,6 +173,7 @@ export async function recentActivity(args: {
 }): Promise<RecentItem[]> {
   const { payload, req, user, permissions, i18n } = args;
   if (!user) return [];
+  const { untitled } = adminStringsFor(i18n.language).common;
   // Views are pages of ours, not documents: nothing to list from them.
   const entities = flattenNav(await navGroups({ payload, permissions, user, i18n })).filter(
     (e) => e.type !== 'views',
@@ -218,7 +221,7 @@ export async function recentActivity(args: {
           items.push({
             key: `c-${entity.slug}-${String(raw.id)}`,
             href: `${entity.href}/${String(raw.id)}`,
-            title: titleOf(raw[titleField]),
+            title: titleOf(raw[titleField], untitled),
             entity: getTranslation(collection.labels.singular, i18n),
             icon: entityIcon('collections', entity.slug),
             hue: entityHue('collections', entity.slug),

@@ -3,16 +3,17 @@
 import { useLocale } from '@payloadcms/ui';
 import { Languages } from 'lucide-react';
 import { Icon } from '@/components/shared/icon';
-import { adminStrings } from '@/modules/cms/admin/strings';
-
-const s = adminStrings.locale;
+import { useAdminStrings } from '@/modules/cms/admin/use-admin-strings';
 
 /**
  * One line before the document controls of a document with per-language fields (ADR-044):
  * which language is open and what the AR/EN pill on a field label means. The pill itself is
- * `admin.css` on Payload's localized label suffix.
+ * `admin.css` on Payload's localized label suffix. Two axes meet here (ADR-056): `code` is
+ * the CONTENT locale (which language of the document is open) and picks the sentence; the
+ * strings tree is the UI language and decides what language the sentence is written in.
  */
 export function LocaleNote() {
+  const s = useAdminStrings().locale;
   const { code } = useLocale();
   const editing = s.editing[code] ?? s.editing['ar'];
   const legend = s.legend[code] ?? s.legend['ar'];

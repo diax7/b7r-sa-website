@@ -44,8 +44,15 @@ export default defineConfig({
       // The admin suite publishes, drafts and switches sections off: it runs alone, after the
       // device projects, so a mutation never overlaps a public assertion on another worker.
       // A red device project skips it (Playwright dependencies): fix the public failure first.
+      // The panel speaks the browser's language until the account page sets it (ADR-056), so
+      // this browser is English: the suite reads English, the Arabic test switches through
+      // the account page, and a fresh Arabic-browser context asserts the default.
       name: 'cms',
-      use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 } },
+      use: {
+        ...devices['Desktop Chrome'],
+        viewport: { width: 1280, height: 800 },
+        locale: 'en-US',
+      },
       testMatch: CMS_SPECS,
       dependencies: ['desktop-chrome', 'pixel-7', 'iphone-15'],
     },

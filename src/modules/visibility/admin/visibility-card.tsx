@@ -2,11 +2,10 @@ import { Link } from '@payloadcms/ui';
 import { Card } from '@/components/shared/card';
 import { Icon } from '@/components/shared/icon';
 import { ADMIN_VIEWS } from '@/modules/cms/admin/icons';
-import { adminStrings } from '@/modules/cms/admin/strings';
+import { adminStringsFor } from '@/modules/cms/admin/strings';
 import { Ring } from '@/modules/visibility/admin/ring';
 import type { Score } from '@/modules/visibility/score';
 
-const s = adminStrings.visibility;
 const ScoreIcon = ADMIN_VIEWS.visibility.icon;
 
 /**
@@ -14,7 +13,16 @@ const ScoreIcon = ADMIN_VIEWS.visibility.icon;
  * and the three findings that weigh most among what is next or missing, each a link to the
  * page. No empty state: the rules always answer.
  */
-export function VisibilityCard({ score, href }: { score: Score; href: string }) {
+export function VisibilityCard({
+  score,
+  href,
+  language,
+}: {
+  score: Score;
+  href: string;
+  language: string;
+}) {
+  const s = adminStringsFor(language).visibility;
   const top = score.findings
     .filter((f) => f.status !== 'done')
     .toSorted((a, b) => b.weight - b.earned - (a.weight - a.earned))

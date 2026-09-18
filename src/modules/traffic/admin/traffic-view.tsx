@@ -5,17 +5,25 @@ import { Badge } from '@/components/shared/badge';
 import { Icon } from '@/components/shared/icon';
 import { cn } from '@/lib/cn';
 import { botByKey } from '@/lib/traffic/bots';
+import { formatNumber } from '@/modules/cms/admin/format';
 import { ADMIN_VIEWS } from '@/modules/cms/admin/icons';
-import { adminStrings } from '@/modules/cms/admin/strings';
-import { adminView, viewUser } from '@/modules/cms/admin/views/gate';
+import { type AdminStrings, adminStringsFor } from '@/modules/cms/admin/strings';
+import { adminView, viewLanguage, viewUser } from '@/modules/cms/admin/views/gate';
 import { AdminShell } from '@/modules/cms/admin/views/shell';
+import { channelLabel } from '@/modules/traffic/admin/traffic-card';
 import { CHANNEL_GROUPS } from '@/modules/traffic/channels';
 import { type TrafficSummary, trafficSummary } from '@/modules/traffic/summary';
 
-const s = adminStrings.traffic;
 const RANGES = [7, 30, 90] as const;
 const TOP = 20;
 const TrafficIcon = ADMIN_VIEWS.traffic.icon;
+
+/** What every table of the page needs: the numbers, the strings of the UI language, its code. */
+interface TableProps {
+  summary: TrafficSummary;
+  s: AdminStrings['traffic'];
+  language: string;
+}
 
 function rangeOf(raw: string | string[] | undefined): (typeof RANGES)[number] {
   const n = Number(Array.isArray(raw) ? raw[0] : raw);
@@ -45,11 +53,13 @@ const num = 'text-end tabular-nums';
 function Section({
   title,
   empty,
+  emptyText,
   children,
   hook,
 }: {
   title: string;
   empty: boolean;
+  emptyText: string;
   children: ReactNode;
   hook: string;
 }) {
@@ -62,7 +72,7 @@ function Section({
           data-admin-traffic-empty=""
         >
           <Icon icon={TrafficIcon} size={16} className="text-pink" />
-          {s.page.empty}
+          {emptyText}
         </p>
       ) : (
         <div className="overflow-x-auto rounded-base border border-border">
@@ -73,9 +83,14 @@ function Section({
   );
 }
 
-function Channels({ summary }: { summary: TrafficSummary }) {
+function Channels({ summary, s, language }: TableProps) {
   return (
-    <Section title={s.page.channels} empty={summary.byChannel.length === 0} hook="channels">
+    <Section
+      title={s.page.channels}
+      empty={summary.byChannel.length === 0}
+      emptyText={s.page.empty}
+      hook="channels"
+    >
       <thead className="bg-surface-2">
         <tr>
           <th className={th}>{s.page.channel}</th>
@@ -88,14 +103,17 @@ function Channels({ summary }: { summary: TrafficSummary }) {
       <tbody className="divide-y divide-border">
         {summary.byChannel.map((c) => (
           <tr key={c.channel.key}>
-            <td className={td}>{c.channel.label}</td>
+            <td className={td}>{channelLabel(c.channel, s)}</td>
             <td className={td}>{s.groups[c.channel.group]}</td>
-            <td className={cn(td, num)}>{c.hits}</td>
+            <td className={cn(td, num)}>{formatNumber(c.hits, language)}</td>
             <td className={td}>
               <Bar percent={share(c.hits, summary.landings)} />
             </td>
+            {/* Day keys are shown as they are (design system §5); the pair reads left to right. */}
             <td className={cn(td, 'text-text-muted tabular-nums')}>
-              {c.firstDay === c.lastDay ? c.firstDay : `${c.firstDay} → ${c.lastDay}`}
+              <span dir="ltr">
+                {c.firstDay === c.lastDay ? c.firstDay : `${c.firstDay} → ${c.lastDay}`}
+              </span>
             </td>
           </tr>
         ))}
@@ -104,9 +122,14 @@ function Channels({ summary }: { summary: TrafficSummary }) {
   );
 }
 
-function Sources({ summary }: { summary: TrafficSummary }) {
+function Sources({ summary, s, language }: TableProps) {
   return (
-    <Section title={s.page.sources} empty={summary.bySource.length === 0} hook="sources">
+    <Section
+      title={s.page.sources}
+      empty={summary.bySource.length === 0}
+      emptyText={s.page.empty}
+      hook="sources"
+    >
       <thead className="bg-surface-2">
         <tr>
           <th className={th}>{s.page.source}</th>
@@ -120,8 +143,8 @@ function Sources({ summary }: { summary: TrafficSummary }) {
             <td className={cn(td, 'font-mono text-caption')} dir="ltr">
               {r.source}
             </td>
-            <td className={td}>{r.channel.label}</td>
-            <td className={cn(td, num)}>{r.hits}</td>
+            <td className={td}>{channelLabel(r.channel, s)}</td>
+            <td className={cn(td, num)}>{formatNumber(r.hits, language)}</td>
           </tr>
         ))}
       </tbody>
@@ -129,9 +152,14 @@ function Sources({ summary }: { summary: TrafficSummary }) {
   );
 }
 
-function Pages({ summary }: { summary: TrafficSummary }) {
+function Pages({ summary, s, language }: TableProps) {
   return (
-    <Section title={s.page.pages} empty={summary.byPath.length === 0} hook="pages">
+    <Section
+      title={s.page.pages}
+      empty={summary.byPath.length === 0}
+      emptyText={s.page.empty}
+      hook="pages"
+    >
       <thead className="bg-surface-2">
         <tr>
           <th className={th}>{s.page.pageCol}</th>
@@ -145,8 +173,8 @@ function Pages({ summary }: { summary: TrafficSummary }) {
             <td className={cn(td, 'font-mono text-caption')} dir="ltr">
               {r.path}
             </td>
-            <td className={cn(td, num)}>{r.hits}</td>
-            <td className={td}>{r.top.label}</td>
+            <td className={cn(td, num)}>{formatNumber(r.hits, language)}</td>
+            <td className={td}>{channelLabel(r.top, s)}</td>
           </tr>
         ))}
       </tbody>
@@ -154,9 +182,14 @@ function Pages({ summary }: { summary: TrafficSummary }) {
   );
 }
 
-function Crawlers({ summary }: { summary: TrafficSummary }) {
+function Crawlers({ summary, s, language }: TableProps) {
   return (
-    <Section title={s.page.crawlers} empty={summary.byBot.length === 0} hook="crawlers">
+    <Section
+      title={s.page.crawlers}
+      empty={summary.byBot.length === 0}
+      emptyText={s.page.empty}
+      hook="crawlers"
+    >
       <thead className="bg-surface-2">
         <tr>
           <th className={th}>{s.page.bot}</th>
@@ -174,7 +207,7 @@ function Crawlers({ summary }: { summary: TrafficSummary }) {
               <td className={td}>{bot?.token ?? b.bot}</td>
               <td className={td}>{s.families[b.family]}</td>
               <td className={td}>{bot ? <Badge tone="muted">{s.roles[bot.role]}</Badge> : ''}</td>
-              <td className={cn(td, num)}>{b.hits}</td>
+              <td className={cn(td, num)}>{formatNumber(b.hits, language)}</td>
               <td className={cn(td, 'font-mono text-caption')} dir="ltr">
                 {b.paths.map((p) => `${p.path} (${p.hits})`).join(', ')}
               </td>
@@ -193,6 +226,8 @@ function Crawlers({ summary }: { summary: TrafficSummary }) {
  * to the login and shows an editor the sentence; the rows are read with the user's access.
  */
 export async function TrafficView(props: AdminViewServerProps) {
+  const language = viewLanguage(props);
+  const s = adminStringsFor(language).traffic;
   const refused = adminView(props, ADMIN_VIEWS.traffic.path, s.page.title);
   if (refused) return refused;
   const days = rangeOf(props.searchParams?.['days']);
@@ -200,6 +235,7 @@ export async function TrafficView(props: AdminViewServerProps) {
   const adminRoute = props.payload.config.routes.admin;
   const base = `${adminRoute}${ADMIN_VIEWS.traffic.path}`;
   const top = summary.byChannel[0];
+  const tables: TableProps = { summary, s, language };
   return (
     <AdminShell props={props} title={s.page.title}>
       <div className="flex flex-col gap-8 pb-2" data-admin-ui="" data-admin-traffic-page={days}>
@@ -209,9 +245,7 @@ export async function TrafficView(props: AdminViewServerProps) {
               <Icon icon={TrafficIcon} size={24} className="text-pink" />
               {s.page.title}
             </h1>
-            <p className="text-small text-text-muted">
-              {s.page.intro.replace('{days}', String(days)).replace('{since}', summary.since)}
-            </p>
+            <p className="text-small text-text-muted">{s.page.intro(days, summary.since)}</p>
           </div>
           <nav aria-label={s.page.range} className="flex gap-2" data-admin-traffic-range="">
             {RANGES.map((r) => (
@@ -226,16 +260,16 @@ export async function TrafficView(props: AdminViewServerProps) {
                     : 'border-border text-text-muted hover:text-text',
                 )}
               >
-                {s.page.days.replace('{n}', String(r))}
+                {s.page.days(r)}
               </Link>
             ))}
           </nav>
         </header>
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4" data-admin-traffic-totals="">
           {[
-            [s.card.landings, String(summary.landings)],
-            [s.card.topChannel, top ? top.channel.label : ''],
-            [s.card.crawls, String(summary.crawls)],
+            [s.card.landings, formatNumber(summary.landings, language)],
+            [s.card.topChannel, top ? channelLabel(top.channel, s) : ''],
+            [s.card.crawls, formatNumber(summary.crawls, language)],
             [s.page.aiShare, `${share(summary.byGroup.ai, summary.landings)}%`],
           ].map(([label, value]) => (
             <div key={label} className="flex flex-col gap-0.5">
@@ -258,15 +292,15 @@ export async function TrafficView(props: AdminViewServerProps) {
                 />
               </span>
               <span className="text-end text-text-muted tabular-nums">
-                {summary.byGroup[group]}
+                {formatNumber(summary.byGroup[group], language)}
               </span>
             </li>
           ))}
         </ul>
-        <Channels summary={summary} />
-        <Sources summary={summary} />
-        <Pages summary={summary} />
-        <Crawlers summary={summary} />
+        <Channels {...tables} />
+        <Sources {...tables} />
+        <Pages {...tables} />
+        <Crawlers {...tables} />
         <footer className="flex flex-col gap-1 border-t border-border pt-4 text-caption text-text-muted">
           {s.page.honesty.map((line) => (
             <p key={line}>{line}</p>

@@ -2,12 +2,11 @@
 
 import { RefreshCw } from 'lucide-react';
 import { ApiAction } from '@/modules/cms/admin/api-action';
-import { adminStrings } from '@/modules/cms/admin/strings';
-
-const s = adminStrings.visibility.signals;
+import { useAdminStrings } from '@/modules/cms/admin/use-admin-strings';
 
 /** "Pull now" on the Score page (ADR-049 D4): queues the nightly pull once, admins only. */
 export function PullNow() {
+  const s = useAdminStrings().visibility.signals;
   return (
     <ApiAction
       label={s.pullNow}

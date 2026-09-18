@@ -5,6 +5,7 @@ import { resendAdapter } from '@payloadcms/email-resend';
 import { redirectsPlugin } from '@payloadcms/plugin-redirects';
 import { lexicalEditor } from '@payloadcms/richtext-lexical';
 import { s3Storage } from '@payloadcms/storage-s3';
+import { ar } from '@payloadcms/translations/languages/ar';
 import { en } from '@payloadcms/translations/languages/en';
 import { buildConfig } from 'payload';
 import { digestTask } from '@/modules/ai-content/digest';
@@ -17,6 +18,7 @@ import { REDIRECT_OVERRIDES } from '@/modules/cms/collections/redirects';
 import { indexNowTask } from '@/modules/cms/jobs/indexnow';
 import { cmsEnv, isBuildPhase } from '@/lib/cms/env';
 import { COLLECTIONS, GLOBALS } from '@/modules/cms/entities';
+import { payloadArabic } from '@/modules/cms/admin/payload-ar';
 import { ADMIN_VIEW_COMPONENTS } from '@/modules/cms/admin/views/registry';
 import { migrations } from '@/migrations';
 
@@ -24,9 +26,10 @@ const dirname = path.dirname(fileURLToPath(import.meta.url));
 const env = cmsEnv();
 
 /**
- * Payload configuration (BRD 9.3). Admin at /admin in Arabic RTL, REST at /api/payload,
- * GraphQL off, SQL migrations only (`push: false`), run at container start except during
- * `next build` (ADR-025). S3 storage when configured, local disk otherwise (ADR-029).
+ * Payload configuration (BRD 9.3). Admin at /admin in English or Arabic (RTL) per person
+ * (ADR-056), REST at /api/payload, GraphQL off, SQL migrations only (`push: false`), run at
+ * container start except during `next build` (ADR-025). S3 storage when configured, local
+ * disk otherwise (ADR-029).
  */
 export default buildConfig({
   serverURL: env.serverUrl,
@@ -70,10 +73,23 @@ export default buildConfig({
     },
     importMap: { baseDir: path.resolve(dirname, '../..') },
   },
-  // The panel is English for everyone (Dhia, 2026-09-13; ADR-039): one UI language, so a
-  // browser's Accept-Language cannot switch it. The content locale (`localization`) is a
-  // separate setting and stays Arabic-first.
-  i18n: { supportedLanguages: { en }, fallbackLanguage: 'en' },
+  /**
+   * The panel's UI language (ADR-056, reversing ADR-039's English-only panel): English or
+   * Arabic, chosen per person in the account view's language select and kept in Payload's
+   * `payload-lng` cookie for a year (a browser that asks for Arabic gets it before choosing;
+   * anything else falls back to English). Payload sets `dir="rtl"` on `<html>` for Arabic
+   * by itself (`rtlLanguages`). Payload's own `ar` pack is community work; `payloadArabic`
+   * is ours merged on top. Our strings live in `admin/strings.ts`, both languages.
+   *
+   * The content locale (`localization` below, the AR / EN pills, `?locale=`) is a different
+   * axis: it says which language of a document is being edited and never follows the UI
+   * language, nor the other way round.
+   */
+  i18n: {
+    supportedLanguages: { en, ar },
+    fallbackLanguage: 'en',
+    translations: { ar: payloadArabic },
+  },
   localization: {
     locales: [
       { code: 'ar', label: 'العربية', rtl: true },
