@@ -331,10 +331,12 @@ Payload gives a new file a new name.
 `pnpm lhci` runs eleven URLs on Ubuntu CI: the five BRD 8.7 URLs and `/en`,
 `/en/products/tee-essential` at the 0.9 performance gate (`/contact` at `warn`, ADR-014), and
 four CMS routes (`/how-it-works`, `/faq`, `/privacy`, `/en/compare-printful`) at a `warn`
-floor of 0.85 (BRD §7.8, amended 2026-09-18 after the site audit's item 12: what those
-routes ship before the paint is React DOM and the app router, 116 KB gzip of a 168 KB first
-paint, so 85 to 90 is the framework's floor, not a regression). Accessibility, best practices,
-SEO and CLS are `error` on all eleven. On Windows use `bash scripts/dev/lh-all.sh` (builds
+floor of 0.85 (BRD §7.8, amended 2026-09-18 after the site audit's item 12). Why 85: 140
+of a CMS page's 164 KB of first-paint JavaScript is React DOM and the app router, which the
+site cannot shed; the floor is theirs, not ours, and 85 to 90 there is not a regression (the
+analyzer's numbers are in `docs/audits/2026-09-18-site.md`, "After the fixes"; do not spend
+a day looking for the missing points in our 24 KB). Accessibility, best practices, SEO and
+CLS are `error` on all eleven. On Windows use `bash scripts/dev/lh-all.sh` (builds
 with the production origin, warms the `next/image` cache, prints the four scores per URL;
 pass every public route as arguments for the launch-checklist pass, row 38). Expect ±3 points
 around the threshold on `/` and the product pages: the simulated LCP floor is the React
