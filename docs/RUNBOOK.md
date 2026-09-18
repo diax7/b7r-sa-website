@@ -328,11 +328,17 @@ Payload gives a new file a new name.
 
 ## Lighthouse
 
-`pnpm lhci` runs the five BRD 8.7 URLs on Ubuntu CI. On Windows use
-`bash scripts/dev/lh-all.sh` (builds with the production origin, warms the `next/image` cache,
-prints the four scores per URL). Expect ±3 points around the 0.9 performance threshold on `/`
-and the product pages: the simulated LCP floor is the React runtime (ADR-014), and the first
-transform of each image costs a point on a cold server.
+`pnpm lhci` runs eleven URLs on Ubuntu CI: the five BRD 8.7 URLs and `/en`,
+`/en/products/tee-essential` at the 0.9 performance gate (`/contact` at `warn`, ADR-014), and
+four CMS routes (`/how-it-works`, `/faq`, `/privacy`, `/en/compare-printful`) at a `warn`
+floor of 0.85 (BRD §7.8, amended 2026-09-18 after the site audit's item 12: what those
+routes ship before the paint is React DOM and the app router, 116 KB gzip of a 168 KB first
+paint, so 85 to 90 is the framework's floor, not a regression). Accessibility, best practices,
+SEO and CLS are `error` on all eleven. On Windows use `bash scripts/dev/lh-all.sh` (builds
+with the production origin, warms the `next/image` cache, prints the four scores per URL;
+pass every public route as arguments for the launch-checklist pass, row 38). Expect ±3 points
+around the threshold on `/` and the product pages: the simulated LCP floor is the React
+runtime (ADR-014), and the first transform of each image costs a point on a cold server.
 
 ## Video poster
 

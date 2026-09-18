@@ -1045,6 +1045,8 @@ The key is served at `/indexnow/{INDEXNOW_KEY}.txt` by `app/indexnow/[key]/route
 | Third-party scripts | Umami ≤ 5 kB; GA only after consent; Turnstile only on `/contact` |
 | Lighthouse CI thresholds | Performance 90, Accessibility 95, Best Practices 95, SEO 100 (mobile, throttled) |
 
+*Amended 2026-09-18 (site audit item 12, the CTO's settlement): performance 90 is the gate on the seven LHCI URLs (`/`, `/products`, `/products/tee-essential`, `/contact` at warn, `/blog/{sample}`, `/en`, `/en/products/tee-essential`); every other route carries a floor of 85, asserted as a warn on four of them in CI (`/how-it-works`, `/faq`, `/privacy`, `/en/compare-printful`) and on all of them by the launch-checklist `lh-all` pass, because what a CMS page ships before its paint is React DOM and the app router (116 KB gzip of 168) and the simulated LCP floor is theirs (ADR-014). Accessibility, best practices, SEO and CLS keep their thresholds on every route.*
+
 ### 7.9 Content requirements that affect ranking (Level 1)
 
 - One `<h1>` per page, semantic H2/H3 hierarchy, headings in Arabic.
