@@ -6,11 +6,13 @@ import { Section, type SectionTone } from '@/components/shared/section';
 import { SectionHeader } from '@/components/shared/section-header';
 import { getHome, getHomeFaqs } from '@/lib/cms';
 import { type Locale, localePath } from '@/lib/i18n';
-import { FaqAccordion } from '@/modules/core';
+import { FaqAccordionLoader } from '@/modules/core/faq/faq-accordion-loader';
+import { FaqClosedList } from '@/modules/core/faq/faq-closed-list';
 
 /**
- * Home FAQ (BRD 6.4.9): header + link at the start, accordion at the end. The accordion is
- * server-rendered closed with every answer in the DOM (crawlers, no layout shift on mount).
+ * Home FAQ (BRD 6.4.9): header + link at the start, accordion at the end. The rows are
+ * server-rendered closed with every answer in the DOM (crawlers); the accordion island mounts
+ * near the viewport over the same boxes (no layout shift, nothing in the first-paint JS).
  */
 export async function HomeFaq({ locale, tone = 'ground' }: { locale: Locale; tone?: SectionTone }) {
   const [{ faq }, homeFaq] = await Promise.all([getHome(locale), getHomeFaqs(locale)]);
@@ -30,7 +32,7 @@ export async function HomeFaq({ locale, tone = 'ground' }: { locale: Locale; ton
             <Icon icon={ArrowRight} size={18} />
           </Link>
         </div>
-        <FaqAccordion items={items} />
+        <FaqAccordionLoader items={items} fallback={<FaqClosedList items={items} />} />
       </Container>
     </Section>
   );
