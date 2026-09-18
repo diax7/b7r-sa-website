@@ -242,6 +242,8 @@ test.describe('CMS admin', () => {
       .first()
       .click();
     await page.waitForURL(/\/admin\/collections\/products\/\d+/);
+    // The slug sits in the Basics tab (the product's tabs run in site order, photos first).
+    await page.locator('.tabs-field__tab-button', { hasText: 'Basics' }).click();
     await expect(page.locator('#field-slug')).toHaveValue(/\w+/);
     // The pages editor: the About document opens with its blocks in place, and a rich-text
     // block's Lexical editor follows the text it holds (`unicode-bidi: plaintext`, ADR-039), so
@@ -986,10 +988,11 @@ test.describe('CMS admin', () => {
     const strip = page.locator('.tabs-field__tabs-wrap').first();
     const scrollable = await strip.evaluate((el) => el.scrollWidth > el.clientWidth + 8);
     expect(scrollable, 'the tab strip overflows into a scroller').toBe(true);
+    // The strip scrolls smoothly, so the position is read once the scroll has moved.
     await strip.evaluate((el) => {
       el.scrollLeft = el.scrollWidth;
     });
-    expect(await strip.evaluate((el) => el.scrollLeft)).toBeGreaterThan(0);
+    await expect.poll(() => strip.evaluate((el) => el.scrollLeft)).toBeGreaterThan(0);
     const active = page.locator('.tabs-field__tab-button--active').first();
     await expect(active).toHaveCSS('color', 'rgb(0, 152, 224)');
     await active.scrollIntoViewIfNeeded();
@@ -2360,7 +2363,7 @@ test.describe('CMS admin', () => {
             .map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`),
         ).toEqual([]);
         // The English form of the same page renders the same table.
-        await request.patch(`${API}/pages/${id}?locale=en`, {
+        const english = await request.patch(`${API}/pages/${id}?locale=en`, {
           headers: json,
           data: {
             title: `Test comparison ${stamp}`,
@@ -2382,6 +2385,7 @@ test.describe('CMS admin', () => {
             seo: { title: 'Test comparison', description: 'A test comparison of B7R Print.' },
           },
         });
+        expect(english.status(), await english.text()).toBe(200);
         await expect
           .poll(
             async () => (await (await request.get(`/en/${slug}`)).text()).includes('B7R Print'),
