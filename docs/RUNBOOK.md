@@ -362,7 +362,12 @@ retry copy; `NEWSLETTER_TRANSPORT=mock` (tests only) keeps subscriptions in memo
 Site settings → Analytics (ADR-052): the GA4 id turns on the consent card and GA4 (after
 «موافق»); the Umami script URL and website id load Umami on every page. The Umami script
 must be on cloud.umami.is or umami.b7r.app (the security policy admits only these, exact
-hosts; another self-hosted Umami is one line in `UMAMI_HOSTS`).
+hosts; another self-hosted Umami is one line in `UMAMI_HOSTS`). Umami Cloud's script sends
+its events to `gateway.umami.is` (before 2026, `api-gateway.umami.dev`); both are in the
+policy. When the dashboard reads zero while the script loads, run
+`node scripts/dev/analytics-probe.mjs`: a real browser visits, accepts the card and lists
+every request to Umami and GA4 with its status; a `connect-src` refusal in its output means
+Umami moved its gateway again, and the fix is that one line.
 CI writes its dummy ids into the settings (`scripts/ci/analytics-ids.ts`), the Umami one at
 `/umami-test.js`, a recorder that never sends anything.
 

@@ -559,33 +559,47 @@
   /* ----------------------------------------------------------------------------------------
      The locale note in the document controls (audit 2026-09-18, 3.1). It is a
      `beforeDocumentControls` slot, so it lives inside Payload's controls row beside Preview
-     and Publish. That row has a fixed height, and on a phone it scrolls sideways; a note that
-     wrapped painted over the status line and the Publish button. The note shrinks first on a
-     desktop (`min-width: 0` on the row lets it), and under Payload's `m` breakpoint the row
-     wraps: the buttons keep the first line, the note takes a full line under them, and the
+     and Publish. That row has a fixed height and scrolls sideways (Payload's wrapper is a
+     horizontal scroller), so a note on the same line never shrinks: it pushed Save and Publish
+     past the right edge of a 1440 px screen (2026-09-18, found on the temporary domain). The
+     note therefore takes a full line under the buttons at every width: the buttons keep the
+     first line, the note the second, truncating with the full text in its `title`, and the
      wrapper grows with it. `:has` keeps every document without a note as Payload lays it out.
      ---------------------------------------------------------------------------------------- */
   .doc-controls__controls {
     min-width: 0;
   }
-  @media (max-width: 1024px) {
-    .doc-controls__controls-wrapper:has([data-admin-locale-note]) {
-      height: auto;
-      min-height: var(--doc-controls-height);
-      align-items: flex-start;
-    }
-    .doc-controls__controls-wrapper:has([data-admin-locale-note]) .doc-controls__popup {
-      margin-block-start: 10px;
-    }
-    .doc-controls__controls:has([data-admin-locale-note]) {
-      flex-wrap: wrap;
-      row-gap: 6px;
-      padding-block: 8px;
-    }
-    .doc-controls__controls [data-admin-locale-note] {
-      flex: 1 1 100%;
-      order: 1;
-    }
+  /* The bar and its wrapper grow by the note's line; the controls wrapper takes the free
+     space so the note can use it, and `min-width: 0` stops the note's sentence from sizing
+     it (a flex child's `min-width: auto` is its content's width, which pushed the buttons
+     off the screen). */
+  .doc-controls:has([data-admin-locale-note]),
+  .doc-controls__wrapper:has([data-admin-locale-note]),
+  .doc-controls__controls-wrapper:has([data-admin-locale-note]) {
+    height: auto;
+    min-height: var(--doc-controls-height);
+  }
+  .doc-controls__controls-wrapper:has([data-admin-locale-note]) {
+    align-items: flex-start;
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  .doc-controls__controls-wrapper:has([data-admin-locale-note]) .doc-controls__popup {
+    margin-block-start: 10px;
+  }
+  .doc-controls__controls:has([data-admin-locale-note]) {
+    flex: 1 1 auto;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    row-gap: 6px;
+    padding-block: 8px;
+  }
+  .doc-controls__controls [data-admin-locale-note] {
+    flex: 1 1 100%;
+    order: 1;
+    max-width: 100%;
+    /* The note's intrinsic width is zero: it never claims room, it fills what is left. */
+    contain: inline-size;
   }
 
   /* ----------------------------------------------------------------------------------------
