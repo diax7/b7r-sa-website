@@ -15,8 +15,8 @@ export const CONNECTION_DESCRIPTIONS: Described = {
     en: "The service's key as its console gives it; for Search Console the whole service account key file (JSON); PageSpeed works without one. Stored encrypted and never shown again; leave the mask to keep it, clear it to remove it.",
   },
   model: {
-    ar: 'معرّف النموذج كما تكتبه وثائق الخدمة حرفياً: gpt-4.1، claude-sonnet-4-5، gemini-2.5-pro، deepseek-chat. فارغ عند الحفظ: النموذج المعتاد للخدمة.',
-    en: 'The model id exactly as the service docs write it: gpt-4.1, claude-sonnet-4-5, gemini-2.5-pro, deepseek-chat. Empty on save: the usual model of the service.',
+    ar: 'معرّف النموذج كما تكتبه وثائق الخدمة حرفياً: gpt-4.1-mini، claude-haiku-4-5، gemini-3-flash-preview، deepseek-chat. فارغ عند الحفظ: النموذج المعتاد للخدمة.',
+    en: 'The model id exactly as the service docs write it: gpt-4.1-mini, claude-haiku-4-5, gemini-3-flash-preview, deepseek-chat. Empty on save: the usual model of the service, the cheap one.',
   },
   baseUrl: {
     ar: 'عنوان الخدمة المتوافقة، بـ https:// وبلا مسار الدردشة: https://api.example.com/v1.',
