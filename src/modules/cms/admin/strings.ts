@@ -107,8 +107,8 @@ export const adminStrings = {
       string
     >,
     legend: {
-      ar: 'A field tagged AR has its English beside it: type the English next to the Arabic, one Save writes both. Rich text, lists and blocks stay per language: switch the locale at the top to edit their English. Fields without a tag are shared.',
-      en: 'A field tagged EN has its Arabic beside it: type the Arabic next to the English, one Save writes both. Rich text, lists and blocks stay per language: switch the locale at the top to edit their Arabic. Fields without a tag are shared.',
+      ar: 'A field tagged AR has its English beside it, inside lists and blocks too: type the English next to the Arabic, one Save writes both. Rich text and images stay per language: switch the locale at the top to edit their English. Fields without a tag are shared.',
+      en: 'A field tagged EN has its Arabic beside it, inside lists and blocks too: type the Arabic next to the English, one Save writes both. Rich text and images stay per language: switch the locale at the top to edit their Arabic. Fields without a tag are shared.',
     } as Record<string, string>,
   },
   bilingual: {
@@ -593,8 +593,8 @@ export const adminStringsAr: AdminStrings = {
   locale: {
     editing: { ar: 'تحرير المحتوى العربي.', en: 'تحرير المحتوى الإنجليزي.' },
     legend: {
-      ar: 'الحقل المعلَّم AR إلى جانبه نصه الإنجليزي: اكتب الإنجليزية بجانب العربية، وحفظ واحد يكتب اللغتين. النص المنسّق والقوائم والأقسام لكل لغة على حدة: بدّل اللغة من أعلى الصفحة لتحرير الإنجليزية فيها. الحقول بلا علامة مشتركة بين اللغتين.',
-      en: 'الحقل المعلَّم EN إلى جانبه نصه العربي: اكتب العربية بجانب الإنجليزية، وحفظ واحد يكتب اللغتين. النص المنسّق والقوائم والأقسام لكل لغة على حدة: بدّل اللغة من أعلى الصفحة لتحرير العربية فيها. الحقول بلا علامة مشتركة بين اللغتين.',
+      ar: 'الحقل المعلَّم AR إلى جانبه نصه الإنجليزي، داخل القوائم والأقسام أيضاً: اكتب الإنجليزية بجانب العربية، وحفظ واحد يكتب اللغتين. النص المنسّق والصور لكل لغة على حدة: بدّل اللغة من أعلى الصفحة لتحرير الإنجليزية فيها. الحقول بلا علامة مشتركة بين اللغتين.',
+      en: 'الحقل المعلَّم EN إلى جانبه نصه العربي، داخل القوائم والأقسام أيضاً: اكتب العربية بجانب الإنجليزية، وحفظ واحد يكتب اللغتين. النص المنسّق والصور لكل لغة على حدة: بدّل اللغة من أعلى الصفحة لتحرير العربية فيها. الحقول بلا علامة مشتركة بين اللغتين.',
     },
   },
   bilingual: {

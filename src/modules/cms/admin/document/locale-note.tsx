@@ -8,8 +8,8 @@ import { useAdminStrings } from '@/modules/cms/admin/use-admin-strings';
 /**
  * A compact pill in the document controls of a document with per-language fields (ADR-044,
  * the sentences by ADR-057): which language is open, that a tagged text field has the other
- * language beside it and one Save writes both, and that rich text, lists and blocks stay on
- * the locale switch. One line that never wraps: on a desktop it sits before the Preview and
+ * language beside it, inside lists and blocks too, and one Save writes both, and that rich
+ * text and images stay on the locale switch. One line that never wraps: on a desktop it sits before the Preview and
  * Publish buttons and shrinks with an ellipsis before anything else does; on a phone
  * `admin.css` moves it to its own line under the buttons, so it never covers the status line
  * or the Publish button. The full sentence stays in `title`. The tag on a field label itself

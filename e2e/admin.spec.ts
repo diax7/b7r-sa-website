@@ -269,7 +269,8 @@ test.describe('CMS admin', () => {
     expect(aboutId).toBeDefined();
     await page.goto(`/admin/collections/pages/${aboutId}`);
     await expect(page.locator('#field-slug')).toHaveValue('about');
-    await expect(page.getByRole('textbox', { name: /Story heading/ })).toHaveValue(/حكاية/);
+    // The Arabic input; its English twin follows it in the same block (ADR-057, PR A).
+    await expect(page.getByRole('textbox', { name: /Story heading/ }).first()).toHaveValue(/حكاية/);
     await page.goto('/admin/collections/pages/create');
     await page.getByRole('button', { name: /أضف قسم|Add Section/ }).click();
     await page
@@ -1868,8 +1869,12 @@ test.describe('CMS admin', () => {
         const other = page.locator('#field-translations__en__title');
         // The twin's first read lands after the form; a loaded runner needs the longer wait.
         await expect(other).toHaveValue('Bilingual page', { timeout: 15_000 });
-        // Rich text stays on the switch: the block's body has no pair.
-        expect(await page.locator('[data-admin-bilingual^="blocks."]').count()).toBe(0);
+        // The block's title is a bilingual row field (PR A), keyed by the block's id; its rich
+        // text body stays on the switch, so the block carries exactly one pair.
+        await expect(page.locator('[data-admin-bilingual^="blocks."]')).toHaveCount(1);
+        await expect(
+          page.locator(`[data-admin-bilingual="blocks.${blockId}.title"]`),
+        ).toBeVisible();
         await arabic.fill('صفحة ثنائية اللغة (محدّثة)');
         await other.fill('Bilingual page (updated)');
         await page.locator('#action-save').click();
@@ -1953,6 +1958,245 @@ test.describe('CMS admin', () => {
         expect((await restore('en')).status()).toBe(200);
       }
       expect((await both()).tagline).toEqual(before);
+    });
+
+    // Bilingual rows (ADR-057, PR A): a localized text inside an array or a blocks row has its
+    // other language beside it too, keyed by the row's id; one Publish writes both, a row
+    // added on the same save lands with its English, and a row moved keeps its English.
+    test("a comparison row's text edited in both languages, a row added with its English, a row moved: one Publish (ADR-057, PR A)", async ({
+      page,
+      request,
+    }) => {
+      test.setTimeout(180_000);
+      const auth = await login(request, ADMIN);
+      const stamp = Date.now();
+      const slug = `bilingual-rows-e2e-${stamp}`;
+      const created = await request.post(`${API}/pages?locale=ar`, {
+        headers: auth,
+        data: {
+          title: 'صفحة الصفوف',
+          slug,
+          blocks: [
+            {
+              blockType: 'compare',
+              ours: 'بحر برنت',
+              theirs: 'الطرف الآخر',
+              asOf: '2026-09-16T00:00:00.000Z',
+              rows: [
+                { criterion: 'المعيار الأول', ours: 'عندنا 1', theirs: 'عندهم 1' },
+                { criterion: 'المعيار الثاني', ours: 'عندنا 2', theirs: 'عندهم 2' },
+                { criterion: 'المعيار الثالث', ours: 'عندنا 3', theirs: 'عندهم 3' },
+              ],
+              bestFor: [{ text: 'تاجر صغير' }],
+              notBestFor: [{ text: 'طلبيات كبيرة' }],
+            },
+          ],
+          seo: { title: 'صفحة الصفوف', description: 'وصف للاختبار.' },
+          _status: 'published',
+        },
+      });
+      expect(created.status(), await created.text()).toBe(201);
+      type Row = { id: string; criterion: unknown; ours: unknown; theirs: unknown };
+      type CompareBlock = {
+        id: string;
+        rows: Row[];
+        bestFor: Array<{ id: string }>;
+        notBestFor: Array<{ id: string }>;
+      };
+      const createdDoc = ((await created.json()) as { doc: { id: number; blocks: CompareBlock[] } })
+        .doc;
+      const id = createdDoc.id;
+      const compare = createdDoc.blocks[0]!;
+      const [r1, r2, r3] = compare.rows as [Row, Row, Row];
+      const both = async () => {
+        const res = await request.get(`${API}/pages/${id}?locale=all&depth=0`, { headers: auth });
+        expect(res.status()).toBe(200);
+        return (await res.json()) as { blocks: CompareBlock[]; translations?: unknown };
+      };
+      try {
+        // The English side of every required field, on the same rows by id: a published page
+        // validates the whole English document on a write.
+        const english = await request.patch(`${API}/pages/${id}?locale=en`, {
+          headers: auth,
+          data: {
+            title: 'Rows page',
+            seo: { title: 'Rows page', description: 'For the test.' },
+            blocks: [
+              {
+                id: compare.id,
+                blockType: 'compare',
+                ours: 'B7R Print',
+                theirs: 'The other side',
+                asOf: '2026-09-16T00:00:00.000Z',
+                rows: [
+                  { id: r1.id, criterion: 'First criterion', ours: 'Ours 1', theirs: 'Theirs 1' },
+                  { id: r2.id, criterion: 'Second criterion', ours: 'Ours 2', theirs: 'Theirs 2' },
+                  { id: r3.id, criterion: 'Third criterion', ours: 'Ours 3', theirs: 'Theirs 3' },
+                ],
+                bestFor: [{ id: compare.bestFor[0]!.id, text: 'A small merchant' }],
+                notBestFor: [{ id: compare.notBestFor[0]!.id, text: 'Large orders' }],
+              },
+            ],
+          },
+        });
+        expect(english.status(), await english.text()).toBe(200);
+        await page.goto('/admin/login');
+        await page.locator('#field-email').fill(admin.email);
+        await page.locator('#field-password').fill(admin.password);
+        await page.locator('form button[type="submit"]').first().click();
+        await page.waitForURL((u) => !u.pathname.endsWith('/login'));
+        await page.goto(`/admin/collections/pages/${id}?locale=ar`);
+        await page.locator('.tabs-field__tab-button', { hasText: 'Content' }).click();
+        // The note says lists and blocks are side by side too.
+        await expect(page.locator('[data-admin-locale-note="ar"]')).toContainText(
+          'inside lists and blocks too',
+        );
+        // The first row's criterion: the pair is keyed by the row's id, the English prefilled.
+        const key = (row: string, name: string) => `blocks.${compare.id}.rows.${row}.${name}`;
+        const twin = (row: string, name: string) =>
+          page.locator(`#field-translations__en__${key(row, name).replace(/\./g, '__')}`);
+        const pair = page.locator(`[data-admin-bilingual="${key(r1.id, 'criterion')}"]`);
+        await expect(pair.locator('[data-admin-locale-tag="en"]')).toHaveText('EN');
+        await expect(twin(r1.id, 'criterion')).toHaveValue('First criterion', { timeout: 15_000 });
+        await page.locator('#field-blocks__0__rows__0__criterion').fill('المعيار الأول (محدّث)');
+        await twin(r1.id, 'criterion').fill('First criterion (updated)');
+        // A fourth row, both languages typed before any save: its English rides on the id the
+        // form gave the row.
+        await page.locator('#field-blocks__0__rows .array-field__add-row').first().click();
+        const fourth = page.locator('#field-blocks__0__rows__3__criterion');
+        await expect(fourth).toBeVisible();
+        await fourth.fill('المعيار الرابع');
+        await page.locator('#field-blocks__0__rows__3__ours').fill('عندنا 4');
+        await page.locator('#field-blocks__0__rows__3__theirs').fill('عندهم 4');
+        const newRowPairs = page.locator(
+          `[data-admin-bilingual^="blocks.${compare.id}.rows."]:not([data-admin-bilingual*=".${r1.id}."]):not([data-admin-bilingual*=".${r2.id}."]):not([data-admin-bilingual*=".${r3.id}."])`,
+        );
+        await expect(newRowPairs).toHaveCount(3);
+        const newRowId = (await newRowPairs.first().getAttribute('data-admin-bilingual'))!.split(
+          '.',
+        )[3]!;
+        expect(newRowId).toMatch(/^[0-9a-f]{24}$/);
+        await twin(newRowId, 'criterion').fill('Fourth criterion');
+        await twin(newRowId, 'ours').fill('Ours 4');
+        await twin(newRowId, 'theirs').fill('Theirs 4');
+        // The new row moves above the third with the keyboard (dnd-kit's sortable): the
+        // pending English follows the id, not the index.
+        const handle = page
+          .locator('#field-blocks__0__rows .array-field__row')
+          .nth(3)
+          .locator('.collapsible__drag');
+        await handle.focus();
+        await page.keyboard.press('Space');
+        await page.waitForTimeout(300);
+        await page.keyboard.press('ArrowUp');
+        await page.waitForTimeout(300);
+        await page.keyboard.press('Space');
+        await expect(page.locator('#field-blocks__0__rows__2__criterion')).toHaveValue(
+          'المعيار الرابع',
+        );
+        await page.locator('#action-save').click();
+        await expect(page.locator('.payload-toast-container')).toContainText(
+          /updated successfully/i,
+        );
+        await expect
+          .poll(async () => (await both()).blocks[0]!.rows.map((r) => r.id), POLL)
+          .toEqual([r1.id, r2.id, newRowId, r3.id]);
+        const doc = await both();
+        const rows = doc.blocks[0]!.rows;
+        expect(rows[0]!.criterion).toEqual({
+          ar: 'المعيار الأول (محدّث)',
+          en: 'First criterion (updated)',
+        });
+        expect(rows[1]!.criterion).toEqual({ ar: 'المعيار الثاني', en: 'Second criterion' });
+        expect(rows[2]).toMatchObject({
+          criterion: { ar: 'المعيار الرابع', en: 'Fourth criterion' },
+          ours: { ar: 'عندنا 4', en: 'Ours 4' },
+          theirs: { ar: 'عندهم 4', en: 'Theirs 4' },
+        });
+        expect(rows[3]!.criterion).toEqual({ ar: 'المعيار الثالث', en: 'Third criterion' });
+        expect(rows[3]!.ours).toEqual({ ar: 'عندنا 3', en: 'Ours 3' });
+        expect(doc.translations ?? null).toBeNull();
+        // After the save the English inputs show what was written, on the rows' new indices.
+        await expect(twin(newRowId, 'criterion')).toHaveValue('Fourth criterion');
+        await expect(twin(r1.id, 'criterion')).toHaveValue('First criterion (updated)');
+      } finally {
+        expect((await request.delete(`${API}/pages/${id}`, { headers: auth })).status()).toBe(200);
+      }
+    });
+
+    test("a hero slide's line edited in both languages is written by one Publish of the home page (ADR-057, PR A)", async ({
+      page,
+      request,
+    }) => {
+      test.setTimeout(150_000);
+      const auth = await login(request, ADMIN);
+      type Slide = { id: string; subline: unknown };
+      const inLocale = async (locale: string) => {
+        const res = await request.get(`${API}/globals/home?locale=${locale}&depth=0&draft=true`, {
+          headers: auth,
+        });
+        expect(res.status()).toBe(200);
+        return (await res.json()) as { hero: { slides: Slide[] } };
+      };
+      const before = { ar: await inLocale('ar'), en: await inLocale('en') };
+      const first = before.ar.hero.slides[0]!;
+      const restore = (locale: 'ar' | 'en') =>
+        request.post(`${API}/globals/home?locale=${locale}`, {
+          headers: auth,
+          data: { hero: { slides: before[locale].hero.slides }, _status: 'published' },
+        });
+      try {
+        await page.goto('/admin/login');
+        await page.locator('#field-email').fill(admin.email);
+        await page.locator('#field-password').fill(admin.password);
+        await page.locator('form button[type="submit"]').first().click();
+        await page.waitForURL((u) => !u.pathname.endsWith('/login'));
+        await page.goto('/admin/globals/home?locale=ar');
+        // The biggest form: Payload restores the last active tab from the user's preferences
+        // after the first render and can undo an early click, so the tab is clicked until it
+        // stays active.
+        const tab = page.locator('.tabs-field__tab-button', { hasText: 'Opening slides' });
+        await expect(async () => {
+          await tab.click();
+          await expect(tab).toHaveClass(/--active/, { timeout: 2_000 });
+        }).toPass({ timeout: 30_000 });
+        const key = `hero.slides.${first.id}.subline`;
+        const pair = page.locator(`[data-admin-bilingual="${key}"]`);
+        await expect(pair.locator('[data-admin-locale-tag="en"]')).toHaveText('EN');
+        const arabic = page.locator('#field-hero__slides__0__subline');
+        const other = page.locator(`#field-translations__en__${key.replace(/\./g, '__')}`);
+        await expect(other).toHaveValue(String(before.en.hero.slides[0]!.subline ?? ''), {
+          timeout: 15_000,
+        });
+        const stamp = Date.now();
+        await arabic.fill(`سطر الاختبار ${stamp}`);
+        await other.fill(`Test line ${stamp}`);
+        await page.locator('#action-save').click();
+        await expect(page.locator('.payload-toast-container')).toContainText(
+          /updated successfully/i,
+        );
+        const all = async () => {
+          const res = await request.get(`${API}/globals/home?locale=all&depth=0`, {
+            headers: auth,
+          });
+          expect(res.status()).toBe(200);
+          return (await res.json()) as { hero: { slides: Slide[] }; translations?: unknown };
+        };
+        await expect
+          .poll(async () => (await all()).hero.slides[0]!.subline, POLL)
+          .toEqual({ ar: `سطر الاختبار ${stamp}`, en: `Test line ${stamp}` });
+        const doc = await all();
+        // The other slides keep both languages and their ids; the pending JSON is cleared.
+        expect(doc.hero.slides.map((s) => s.id)).toEqual(before.ar.hero.slides.map((s) => s.id));
+        expect(doc.hero.slides[1]!.subline).toEqual({
+          ar: before.ar.hero.slides[1]!.subline,
+          en: before.en.hero.slides[1]!.subline,
+        });
+        expect(doc.translations ?? null).toBeNull();
+      } finally {
+        expect((await restore('ar')).status()).toBe(200);
+        expect((await restore('en')).status()).toBe(200);
+      }
     });
 
     test('two blocks of one type on a page get distinct ids and pass axe', async ({
@@ -2140,12 +2384,15 @@ test.describe('CMS admin', () => {
         // The English values, judged by the English rules: Arabic prose is the warning there,
         // the reading time follows the English pace, and the pair links both ways.
         const englishTitle = `Test post ${stamp}`;
+        // The takeaway rows are shared and their text per language (ADR-057, PR A): the
+        // English rides on the Arabic rows' ids; a row without an id would replace them.
+        const rows = doc['takeaways'] as Array<{ id: string }>;
         const enSaved = await request.patch(`${API}/posts/${id}?locale=en`, {
           headers: auth,
           data: {
             title: englishTitle,
             excerpt: 'A short excerpt for the test.',
-            takeaways: [{ text: 'First' }, { text: 'Second' }, { text: 'Third' }],
+            takeaways: ['First', 'Second', 'Third'].map((text, i) => ({ id: rows[i]!.id, text })),
             body: englishBody(),
           },
         });
@@ -2168,12 +2415,17 @@ test.describe('CMS admin', () => {
         await expect
           .poll(async () => (await request.get('/en/feed.xml')).text(), POLL)
           .toContain(englishTitle);
-        // The Arabic version kept its own warnings and reading time.
+        // The Arabic version kept its own warnings, reading time and takeaways.
         const arDoc = (await (
           await request.get(`${API}/posts/${id}?locale=ar&depth=0`, { headers: auth })
         ).json()) as Record<string, unknown>;
         expect(arDoc['warnings'] ?? []).toEqual([]);
         expect(arDoc['title']).toBe(title);
+        expect((arDoc['takeaways'] as Array<{ text: string }>).map((r) => r.text)).toEqual([
+          'أولاً',
+          'ثانياً',
+          'ثالثاً',
+        ]);
       } finally {
         expect((await request.delete(`${API}/posts/${id}`, { headers: auth })).status()).toBe(200);
       }

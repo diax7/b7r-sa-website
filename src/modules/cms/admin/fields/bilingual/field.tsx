@@ -2,6 +2,7 @@
 
 import { getTranslation } from '@payloadcms/translations';
 import {
+  NumberField,
   SelectField,
   SelectInput,
   TextareaField,
@@ -11,11 +12,13 @@ import {
   useConfig,
   useDocumentInfo,
   useField,
+  useFormFields,
   useLocale,
   useTranslation,
   withCondition,
 } from '@payloadcms/ui';
 import type {
+  NumberFieldClientProps,
   OptionObject,
   SelectFieldClientProps,
   StaticLabel,
@@ -24,8 +27,9 @@ import type {
 } from 'payload';
 import { type CSSProperties, type ReactNode, useEffect, useState } from 'react';
 import {
+  keyOfPath,
+  readKey,
   reconcile,
-  readPath,
   textOf,
   TRANSLATIONS,
   type TranslationEntries,
@@ -34,7 +38,11 @@ import {
 import { useOtherLocale } from '@/modules/cms/admin/fields/bilingual/other-locale';
 import { useAdminStrings } from '@/modules/cms/admin/use-admin-strings';
 
-type Props = SelectFieldClientProps | TextareaFieldClientProps | TextFieldClientProps;
+type Props =
+  | NumberFieldClientProps
+  | SelectFieldClientProps
+  | TextareaFieldClientProps
+  | TextFieldClientProps;
 type ClientField = Props['field'];
 
 interface LocaleInfo {
@@ -43,13 +51,15 @@ interface LocaleInfo {
 }
 
 /**
- * A localized text, textarea or select field in both languages at once (ADR-057): Payload's
- * own field for the open locale, and beside it the same input for the other locale, tagged
- * with its code. The other locale's stored text is read once per document
+ * A localized text, textarea, select or number field in both languages at once (ADR-057):
+ * Payload's own field for the open locale, and beside it the same input for the other
+ * locale, tagged with its code. The other locale's stored text is read once per document
  * (`useOtherLocale`); what the editor types there waits in the hidden `translations` field
  * as `{ value, base }` until a Save or Publish, when the entity's hook writes it in that
- * locale. The root carries no `data-admin-ui`: it hosts Payload's inputs, which the shell's
- * element reset would strip; `data-admin-bilingual` is the hook for the e2e.
+ * locale. Inside a row the entry is keyed by the row's id from the form state, never by the
+ * index (`hero.slides.<id>.headline`), so it follows the row when rows are reordered. The
+ * root carries no `data-admin-ui`: it hosts Payload's inputs, which the shell's element
+ * reset would strip; `data-admin-bilingual` (the key) is the hook for the e2e.
  */
 function Bilingual(props: Props) {
   const { field, path, readOnly } = props;
@@ -59,6 +69,7 @@ function Bilingual(props: Props) {
   const strings = useAdminStrings().bilingual;
   const info = useDocumentInfo();
   const other = otherOf(config.localization, locale.code);
+  const key = useFormFields(([fields]) => keyOfPath(path, (rowPath) => fields[rowPath]?.value));
   const pending = useField<Translations | null>({ path: TRANSLATIONS });
   const stored = useOtherLocale({
     apiRoute: config.routes.api,
@@ -76,7 +87,7 @@ function Bilingual(props: Props) {
   // it never marks the form modified on its own.
   useEffect(() => {
     if (!other || stored.status !== 'ready' || !translations) return;
-    const kept = reconcile(translations[other.code] ?? {}, (at) => readPath(stored.doc, at));
+    const kept = reconcile(translations[other.code] ?? {}, (at) => readKey(stored.doc, at));
     const next = Object.keys(kept).length > 0 ? { [other.code]: kept } : null;
     if (JSON.stringify(next) !== JSON.stringify(translations)) setTranslations(next, true);
   }, [other, stored, translations, setTranslations]);
@@ -86,27 +97,27 @@ function Bilingual(props: Props) {
   // is stored (the old text must not show, and a keystroke meanwhile must not lose its base).
   const [remembered, setRemembered] = useState<string | null>(null);
   const mine: TranslationEntries = other ? (translations?.[other.code] ?? {}) : {};
-  const entry = mine[path];
+  const entry = key === null ? undefined : mine[key];
   const typed = entry ? textOf(entry.value) : null;
   const stale = stored.status === 'ready' && stored.stale === true;
   if (typed !== null && typed !== remembered) setRemembered(typed);
   if (typed === null && !stale && remembered !== null) setRemembered(null);
   const standIn = typed === null && stale ? remembered : null;
-  const current = standIn ?? textOf(readPath(stored.doc, path));
+  const current = standIn ?? (key === null ? '' : textOf(readKey(stored.doc, key)));
   const shown = typed ?? current;
 
-  if (!other) return <Current {...props} />;
+  if (!other || key === null) return <Current {...props} />;
   const setShown = (value: string | null) => {
     const rest = { ...mine };
-    if (textOf(value) === current) delete rest[path];
-    else rest[path] = { value, base: current === '' ? null : current };
+    if (textOf(value) === current) delete rest[key];
+    else rest[key] = { value, base: current === '' ? null : current };
     setTranslations(Object.keys(rest).length > 0 ? { [other.code]: rest } : null);
   };
   const off = Boolean(readOnly) || Boolean(field.admin?.readOnly) || stored.status !== 'ready';
   const otherName = strings.languages[other.code] ?? other.code;
-  const otherPath = `${TRANSLATIONS}.${other.code}.${path}`;
+  const otherPath = `${TRANSLATIONS}.${other.code}.${key}`;
   return (
-    <div className="@container" data-admin-bilingual={path} style={width(field)}>
+    <div className="@container" data-admin-bilingual={key} style={width(field)}>
       <div className="grid gap-x-6 @lg:grid-cols-2">
         <Current {...props} />
         <Other
@@ -143,6 +154,7 @@ function Current(props: Props) {
     return <TextareaField {...(props as TextareaFieldClientProps)} />;
   }
   if (props.field.type === 'select') return <SelectField {...(props as SelectFieldClientProps)} />;
+  if (props.field.type === 'number') return <NumberField {...(props as NumberFieldClientProps)} />;
   return <TextField {...(props as TextFieldClientProps)} />;
 }
 
@@ -206,6 +218,20 @@ function Other({
       />
     );
   }
+  if (field.type === 'number') {
+    return (
+      <NumberTwin
+        field={field}
+        path={path}
+        value={value}
+        onChange={onChange}
+        readOnly={readOnly}
+        placeholder={placeholder}
+        error={shared.Error}
+        label={label}
+      />
+    );
+  }
   return (
     <TextInput
       {...shared}
@@ -217,7 +243,70 @@ function Other({
   );
 }
 
-/** A select has no `rtl` setting; a text or textarea may force it either way. */
+interface NumberTwinProps {
+  field: NumberFieldClientProps['field'];
+  path: string;
+  value: string;
+  onChange: (value: string | null) => void;
+  readOnly: boolean;
+  placeholder: string;
+  error: ReactNode;
+  label: ReactNode;
+}
+
+/**
+ * The other locale's number: Payload's own markup for a number field (`@payloadcms/ui`
+ * exports the field, not its input), so it takes Payload's input styles and error state.
+ * The digits travel as text in the JSON; Payload parses them on the write.
+ */
+function NumberTwin({
+  field,
+  path,
+  value,
+  onChange,
+  readOnly,
+  placeholder,
+  error,
+  label,
+}: NumberTwinProps) {
+  const classes = ['field-type', 'number', error && 'error', readOnly && 'read-only'];
+  return (
+    <div className={classes.filter(Boolean).join(' ')}>
+      {label}
+      <div className="field-type__wrap">
+        {error}
+        <div>
+          <input
+            id={`field-${path.replace(/\./g, '__')}`}
+            name={path}
+            type="number"
+            disabled={readOnly}
+            value={value}
+            placeholder={placeholder}
+            {...boundsOf(field)}
+            onChange={(e) => onChange(e.target.value === '' ? null : e.target.value)}
+            onWheel={(e) => (e.target as HTMLInputElement).blur()}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function boundsOf(field: NumberFieldClientProps['field']): {
+  min?: number;
+  max?: number;
+  step?: number;
+} {
+  const step = (field.admin as { step?: number } | undefined)?.step;
+  return {
+    ...(typeof field.min === 'number' ? { min: field.min } : {}),
+    ...(typeof field.max === 'number' ? { max: field.max } : {}),
+    ...(typeof step === 'number' ? { step } : {}),
+  };
+}
+
+/** A select or a number has no `rtl` setting; a text or textarea may force it either way. */
 function rtlOf(field: ClientField, other: LocaleInfo): boolean {
   const forced = (field.admin as { rtl?: boolean } | undefined)?.rtl;
   return forced === true || (forced !== false && other.rtl === true);

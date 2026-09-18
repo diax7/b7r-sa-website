@@ -21,6 +21,7 @@ import {
   JSON_VIEW_CELL,
   JSON_VIEW_FIELD,
   READ_ONLY_LINE,
+  SHARED_ROWS_NOTE,
 } from '@/modules/cms/admin/descriptions/describe';
 import { PAGE_DESCRIPTIONS } from '@/modules/cms/admin/descriptions/pages';
 import {
@@ -734,20 +735,22 @@ describe('read-only scalars render as ReadOnlyLine (audit 2026-09-18)', () => {
 });
 
 /**
- * Side-by-side bilingual editing (ADR-057): `describeFields` renders every localized text,
- * textarea and select field with `BilingualField` and adds the hidden `translations` JSON to
- * a config that has any; such a config lists the apply hook after its own. Fields inside
- * arrays and blocks, rich text, uploads and relationships stay on the locale switch.
+ * Side-by-side bilingual editing (ADR-057): `describeFields` renders every localized light
+ * field (text, textarea, select, number) with `BilingualField`, outside a list and inside
+ * the rows of arrays and blocks alike (PR A), and adds the hidden `translations` JSON to a
+ * config that has any; such a config lists the apply hook after its own. Rich text, uploads
+ * and relationships stay on the locale switch, and so does a list that is localized as a
+ * whole (its rows are per language and cannot be paired).
  */
-type Placed = { path: string; field: Field; inList: boolean };
+type Placed = { path: string; field: Field; inList: boolean; inLocalizedList: boolean };
 
-function everyField(fields: Field[], path = '', inList = false): Placed[] {
+function everyField(fields: Field[], path = '', inList = false, inLocalized = false): Placed[] {
   const out: Placed[] = [];
   for (const f of fields) {
     if (f.type === 'tabs') {
       for (const t of f.tabs) {
         const next = 'name' in t && t.name ? `${path}${t.name}.` : path;
-        out.push(...everyField(t.fields, next, inList));
+        out.push(...everyField(t.fields, next, inList, inLocalized));
       }
       continue;
     }
@@ -757,17 +760,22 @@ function everyField(fields: Field[], path = '', inList = false): Placed[] {
       f.type === 'collapsible' ||
       (f.type === 'group' && !('name' in f && f.name))
     ) {
-      out.push(...everyField(f.fields, path, inList));
+      out.push(...everyField(f.fields, path, inList, inLocalized));
       continue;
     }
     if (!('name' in f) || !f.name) continue;
     const name = `${path}${f.name}`;
-    out.push({ path: name, field: f, inList });
-    const list = inList || f.type === 'array' || f.type === 'blocks';
-    if ('fields' in f && Array.isArray(f.fields))
-      out.push(...everyField(f.fields, `${name}.`, list));
+    out.push({ path: name, field: f, inList, inLocalizedList: inLocalized });
+    const isList = f.type === 'array' || f.type === 'blocks';
+    const list = inList || isList;
+    const localized = inLocalized || (isList && (f as { localized?: boolean }).localized === true);
+    if ('fields' in f && Array.isArray(f.fields)) {
+      out.push(...everyField(f.fields, `${name}.`, list, localized));
+    }
     if ('blocks' in f) {
-      for (const b of f.blocks) out.push(...everyField(b.fields, `${name}.${b.slug}.`, list));
+      for (const b of f.blocks) {
+        out.push(...everyField(b.fields, `${name}.${b.slug}.`, list, localized));
+      }
     }
   }
   return out;
@@ -775,19 +783,38 @@ function everyField(fields: Field[], path = '', inList = false): Placed[] {
 
 const widgetOf = (f: Field) =>
   (f as { admin?: { components?: { Field?: unknown } } }).admin?.components?.Field;
+const descriptionOf = (f: Field | undefined) =>
+  (f as { admin?: { description?: { ar?: string; en?: string } } } | undefined)?.admin?.description;
+const LIGHT = ['text', 'textarea', 'select', 'number'];
+
+/** A localized light field an editor can type in: what the rule says must be bilingual. */
+function editableLight(p: Placed): boolean {
+  const f = p.field as { localized?: boolean; hasMany?: boolean; admin?: Record<string, unknown> };
+  const admin = f.admin ?? {};
+  return (
+    LIGHT.includes(p.field.type) &&
+    f.localized === true &&
+    !f.hasMany &&
+    !admin['hidden'] &&
+    !admin['readOnly'] &&
+    !admin['disabled'] &&
+    !p.inLocalizedList
+  );
+}
 
 describe('side-by-side bilingual editing (ADR-057)', () => {
-  it('describeFields attaches the component to localized text, textarea and select only, outside lists', () => {
+  it('describeFields attaches the component to localized light fields, inside rows and blocks too; a list localized as a whole stays out', () => {
     const fields: Field[] = [
       { name: 'title', type: 'text', localized: true },
       { name: 'excerpt', type: 'textarea', localized: true },
       { name: 'kind', type: 'select', localized: true, options: ['a'] },
+      { name: 'stock', type: 'number', localized: true },
       { name: 'slug', type: 'text' },
       { name: 'body', type: 'richText', localized: true },
       { name: 'cover', type: 'upload', relationTo: 'media', localized: true },
       { name: 'hub', type: 'relationship', relationTo: 'categories', localized: true },
       {
-        name: 'takeaways',
+        name: 'warnings',
         type: 'array',
         localized: true,
         fields: [{ name: 'text', type: 'text' }],
@@ -796,19 +823,55 @@ describe('side-by-side bilingual editing (ADR-057)', () => {
       {
         name: 'blocks',
         type: 'blocks',
-        blocks: [{ slug: 'cards', fields: [{ name: 'title', type: 'text', localized: true }] }],
+        blocks: [
+          {
+            slug: 'cards',
+            fields: [
+              { name: 'title', type: 'text', localized: true },
+              { name: 'content', type: 'richText', localized: true },
+              {
+                name: 'rows',
+                type: 'array',
+                fields: [{ name: 'question', type: 'text', localized: true }],
+              },
+            ],
+          },
+        ],
       },
       { name: 'seo', type: 'group', fields: [{ name: 'title', type: 'text', localized: true }] },
     ];
     const described = describeFields(fields, {});
-    const attached = everyField(described)
-      .filter((p) => widgetOf(p.field) === BILINGUAL_FIELD)
-      .map((p) => p.path);
-    expect(attached).toEqual(['title', 'excerpt', 'kind', 'seo.title']);
+    const placed = everyField(described);
+    const attached = placed.filter((p) => widgetOf(p.field) === BILINGUAL_FIELD).map((p) => p.path);
+    expect(attached).toEqual([
+      'title',
+      'excerpt',
+      'kind',
+      'stock',
+      'items.text',
+      'blocks.cards.title',
+      'blocks.cards.rows.question',
+      'seo.title',
+    ]);
     expect(described.at(-1)).toMatchObject({
       name: TRANSLATIONS,
       type: 'json',
       admin: { hidden: true },
+    });
+    // A list whose rows are bilingual says what duplicating a row does; the other lists do not.
+    const noteOn = (path: string) => descriptionOf(placed.find((p) => p.path === path)?.field)?.en;
+    expect(noteOn('items')).toBe(SHARED_ROWS_NOTE.en);
+    expect(noteOn('blocks')).toBe(SHARED_ROWS_NOTE.en);
+    expect(noteOn('blocks.cards.rows')).toBe(SHARED_ROWS_NOTE.en);
+    expect(noteOn('warnings')).toBeUndefined();
+    // The note follows the map's own sentence on the list.
+    const [withOwn] = describeFields(
+      [{ name: 'items', type: 'array', fields: [{ name: 'text', type: 'text', localized: true }] }],
+      { items: { ar: 'قائمة النقاط في الصفحة.', en: 'The list of points on the page.' } },
+    );
+    expect(descriptionOf(withOwn)).toEqual({
+      ar: `قائمة النقاط في الصفحة. ${SHARED_ROWS_NOTE.ar}`,
+      en: `The list of points on the page. ${SHARED_ROWS_NOTE.en}`,
     });
     // A config without a localized text carries neither the component nor the JSON.
     const plain = describeFields([{ name: 'slug', type: 'text' }], {});
@@ -825,10 +888,16 @@ describe('side-by-side bilingual editing (ADR-057)', () => {
       const attached = placed.filter((p) => widgetOf(p.field) === BILINGUAL_FIELD);
       expect(attached.map((p) => p.path).toSorted()).toEqual(bilingualPaths(c.fields).toSorted());
       for (const p of attached) {
-        expect(['text', 'textarea', 'select'], p.path).toContain(p.field.type);
+        expect(LIGHT, p.path).toContain(p.field.type);
         expect((p.field as { localized?: boolean }).localized, p.path).toBe(true);
-        expect(p.inList, p.path).toBe(false);
+        expect(p.inLocalizedList, p.path).toBe(false);
       }
+      // The rule the other way round: every editable localized light field is bilingual,
+      // inside rows too, unless it has a widget of its own.
+      const owed = placed
+        .filter((p) => editableLight(p) && widgetOf(p.field) === undefined)
+        .map((p) => p.path);
+      expect(owed).toEqual([]);
       const carried = placed.some((p) => p.path === TRANSLATIONS);
       expect(carried).toBe(attached.length > 0);
       const hooks = c.hooks?.afterChange ?? [];
@@ -836,6 +905,37 @@ describe('side-by-side bilingual editing (ADR-057)', () => {
       expect(hooked, 'applyTranslations in hooks.afterChange').toBe(carried);
     });
   }
+
+  it('the census (PR A): 55 localized light fields inside rows are bilingual; rich text and uploads in rows stay on the switch', () => {
+    const placed = configs.flatMap((c) =>
+      everyField(c.fields).map((p) => ({ ...p, slug: c.slug })),
+    );
+    const inRows = placed.filter((p) => p.inList && widgetOf(p.field) === BILINGUAL_FIELD);
+    expect(inRows.length).toBe(55);
+    const heavy = placed
+      .filter(
+        (p) =>
+          p.inList &&
+          !p.inLocalizedList &&
+          (p.field as { localized?: boolean }).localized === true &&
+          !LIGHT.includes(p.field.type),
+      )
+      .map((p) => `${p.slug}.${p.path}`);
+    expect(heavy).toEqual([
+      'pages.blocks.richText.content',
+      'home.hero.slides.imageDesktop',
+      'home.hero.slides.imageMobile',
+    ]);
+    // The lists localized as a whole: only the post's computed warnings (a fact, read-only).
+    const wholeLists = placed
+      .filter(
+        (p) =>
+          (p.field.type === 'array' || p.field.type === 'blocks') &&
+          (p.field as { localized?: boolean }).localized === true,
+      )
+      .map((p) => `${p.slug}.${p.path}`);
+    expect(wholeLists).toEqual(['posts.warnings']);
+  });
 });
 
 describe('dashboard recent list: a title for every row', () => {

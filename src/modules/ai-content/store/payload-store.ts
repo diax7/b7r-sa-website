@@ -399,13 +399,26 @@ export function payloadStore(payload: Payload): Store {
     },
 
     async replacePost(id, post, locale) {
+      // The takeaway rows are shared and their text per language (ADR-057, PR A): the new
+      // text lands on the existing rows by id, so the other language's text stays.
+      const current = await payload.findByID({
+        collection: 'posts',
+        id,
+        depth: 0,
+        locale,
+        overrideAccess: true,
+      });
+      const rowIds = (current.takeaways ?? []).map((row) => row.id);
       const doc = await payload.update({
         collection: 'posts',
         id,
         data: {
           title: post.title,
           excerpt: post.excerpt,
-          takeaways: post.takeaways.map((text) => ({ text })),
+          takeaways: post.takeaways.map((text, i) => {
+            const rowId = rowIds[i];
+            return rowId ? { id: rowId, text } : { text };
+          }),
           body: post.body as unknown as Post['body'],
           seo: post.seo,
           contentUpdatedAt: post.publishedAt,

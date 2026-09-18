@@ -459,8 +459,12 @@ export async function ensureEnglish(payload: Payload): Promise<EnglishSummary> {
         data: {
           title: english.title,
           excerpt: english.excerpt,
-          // A localised array keeps rows per language: new rows, never the Arabic ids.
-          takeaways: english.takeaways.map((text) => ({ text })),
+          // The rows are shared and the text per language (ADR-057, PR A): the English
+          // text rides on the Arabic row of the same position, by its id.
+          takeaways: english.takeaways.map((text, i) => {
+            const id = ar.takeaways?.[i]?.id;
+            return id ? { id, text } : { text };
+          }),
           body: body as never,
           ...(english.seoTitle ? { seo: { ...ar.seo, title: english.seoTitle } } : {}),
         },

@@ -290,10 +290,11 @@ export const Posts: CollectionConfig = {
                 },
               },
               {
+                // The rows are shared and the text is per language (ADR-057, PR A): a row
+                // edited in both languages at once, never a second list on the switch.
                 name: 'takeaways',
                 type: 'array',
                 required: true,
-                localized: true,
                 minRows: TAKEAWAYS,
                 maxRows: TAKEAWAYS,
                 label: { ar: 'أهم النقاط (ثلاث)', en: 'Key takeaways (three)' },
@@ -306,6 +307,7 @@ export const Posts: CollectionConfig = {
                     name: 'text',
                     type: 'text',
                     required: true,
+                    localized: true,
                     label: { ar: 'النقطة', en: 'Takeaway' },
                   },
                 ],

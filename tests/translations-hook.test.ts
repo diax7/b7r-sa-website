@@ -6,6 +6,7 @@ import {
   nestPaths,
   plannedWrites,
   reconcile,
+  shapeOf,
   TRANSLATIONS_MAX_BYTES,
   TRANSLATIONS_MAX_ENTRIES,
   translationsField,
@@ -277,8 +278,10 @@ describe('the apply (ADR-057): one Save writes the other language too', () => {
     });
     const doc = {
       id: 7,
+      blocks: [{ id: 'b1', blockType: 'cards', title: 'عنوان' }],
       translations: pending({
         'seo.title': { value: 'New meta', base: 'Old meta' },
+        // An index, not a row id: the client never sends one, and it resolves to nothing.
         'blocks.0.title': { value: 'x', base: null },
         _status: { value: 'published', base: 'draft' },
         slug: { value: 'hacked', base: null },
@@ -288,6 +291,53 @@ describe('the apply (ADR-057): one Save writes the other language too', () => {
     expect(update).toHaveBeenCalledWith(
       expect.objectContaining({ data: { seo: { title: 'New meta' }, translations: null } }),
     );
+  });
+
+  it('an entry inside a blocks row sends the whole list in the other locale, rows by id (PR A)', async () => {
+    const { req, update } = fake({
+      stored: {
+        title: 'Old',
+        blocks: [
+          { id: 'b1', blockType: 'cards', title: 'One' },
+          { id: 'b2', blockType: 'cards', title: null },
+        ],
+      },
+    });
+    const doc = {
+      id: 7,
+      _status: 'published',
+      blocks: [
+        { id: 'b2', blockType: 'cards', title: 'اثنان', blockName: 'second' },
+        { id: 'b1', blockType: 'cards', title: 'واحد' },
+      ],
+      translations: pending({ 'blocks.b2.title': { value: 'Two', base: null } }),
+    };
+    await save(doc, req);
+    expect(update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        locale: 'en',
+        data: {
+          blocks: [
+            // The document's order and shared fields, the English by id, the write on top;
+            // the untouched row keeps its stored English, never the Arabic.
+            { id: 'b2', blockType: 'cards', blockName: 'second', title: 'Two' },
+            { id: 'b1', blockType: 'cards', title: 'One' },
+          ],
+          translations: null,
+        },
+      }),
+    );
+  });
+
+  it('a row entry the document has no row for makes no write at all', async () => {
+    const { req, update } = fake({ stored: { blocks: [] } });
+    const doc = {
+      id: 7,
+      blocks: [{ id: 'b1', blockType: 'cards', title: 'واحد' }],
+      translations: pending({ 'blocks.made-up.title': { value: 'x', base: null } }),
+    };
+    expect(await save(doc, req)).toBe(doc);
+    expect(update).not.toHaveBeenCalled();
   });
 
   it('a global goes through updateGlobal, read through findGlobal', async () => {
@@ -346,8 +396,13 @@ describe('the request is put back after the other locale is written', () => {
 });
 
 describe('the pure pieces', () => {
-  it('bilingualPaths: localized text, textarea and select through tabs and groups; nothing under blocks or arrays', () => {
-    expect(bilingualPaths(fields)).toEqual(['title', 'seo.title', 'seo.description']);
+  it('bilingualPaths: localized light fields through tabs and groups, and inside the rows of arrays and blocks', () => {
+    expect(bilingualPaths(fields)).toEqual([
+      'title',
+      'seo.title',
+      'seo.description',
+      'blocks.cards.title',
+    ]);
     const more: Field[] = [
       { name: 'kind', type: 'select', localized: true, options: ['a', 'b'] },
       { name: 'many', type: 'select', localized: true, hasMany: true, options: ['a'] },
@@ -367,7 +422,21 @@ describe('the pure pieces', () => {
       },
       { type: 'row', fields: [{ name: 'inRow', type: 'textarea', localized: true }] },
     ];
-    expect(bilingualPaths(more)).toEqual(['kind', 'box.line', 'hero.cta', 'inRow']);
+    // Per shape the leaves come first, then the groups, then the lists, each in config order.
+    expect(bilingualPaths(more)).toEqual(['kind', 'inRow', 'box.line', 'hero.cta', 'items.text']);
+    const shape = shapeOf(more);
+    expect(Object.keys(shape.lists)).toEqual(['items']);
+    expect(shape.localized).toEqual({
+      kind: true,
+      many: false,
+      tags: false,
+      body: false,
+      cover: false,
+      hub: false,
+      hidden: false,
+      widget: false,
+      inRow: true,
+    });
   });
 
   it('entriesOf keeps well-formed entries of the asked locale only', () => {
@@ -400,8 +469,12 @@ describe('the pure pieces', () => {
       fromEmpty: undefined,
       outside: null,
     };
-    const allowed = new Set(Object.keys(entries).filter((k) => k !== 'outside'));
-    expect(plannedWrites(entries, allowed, (p) => stored[p])).toEqual([
+    const shape = shapeOf(
+      Object.keys(entries)
+        .filter((k) => k !== 'outside')
+        .map((name): Field => ({ name, type: 'text', localized: true })),
+    );
+    expect(plannedWrites(entries, shape, {}, stored)).toEqual([
       ['changed', 'New'],
       ['blanked', null],
       ['fromEmpty', 'First'],
