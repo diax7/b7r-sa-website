@@ -195,7 +195,14 @@ export async function ledgerReading(
       pagination: false,
       ...access,
     }),
-    payload.find({ collection: 'connections', depth: 0, pagination: false, ...access }),
+    // The label and the limit only: the spend's virtual fields would each cost a query per row.
+    payload.find({
+      collection: 'connections',
+      depth: 0,
+      pagination: false,
+      select: { label: true, monthlyLimitUsd: true },
+      ...access,
+    }),
     lastLedgerRunAt(payload, access),
     payload.find({
       collection: 'posts',
