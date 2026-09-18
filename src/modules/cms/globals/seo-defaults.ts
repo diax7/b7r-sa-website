@@ -1,6 +1,7 @@
 import type { GlobalConfig } from 'payload';
 import { adminField, hiddenUnlessAdmin, isAdmin } from '@/modules/cms/access';
 import { revalidateGlobal } from '@/modules/cms/hooks/revalidate';
+import { applyGlobalTranslations } from '@/modules/cms/hooks/translations';
 import { savedByField, stampSavedByGlobal } from '@/modules/cms/fields/saved-by';
 import { globalComponents } from '@/modules/cms/admin/document/config';
 import { adminGroup } from '@/modules/cms/admin/icons';
@@ -27,7 +28,10 @@ export const SeoDefaults: GlobalConfig = {
     },
   },
   access: { read: () => true, update: isAdmin },
-  hooks: { beforeChange: [stampSavedByGlobal], afterChange: [revalidateGlobal] },
+  hooks: {
+    beforeChange: [stampSavedByGlobal],
+    afterChange: [revalidateGlobal, applyGlobalTranslations],
+  },
   fields: describeFields(
     [
       {

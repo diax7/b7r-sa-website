@@ -1,6 +1,7 @@
 import type { Field, GlobalConfig } from 'payload';
 import { isEditorOrAdmin } from '@/modules/cms/access';
 import { revalidateGlobal } from '@/modules/cms/hooks/revalidate';
+import { applyGlobalTranslations } from '@/modules/cms/hooks/translations';
 import { savedByField, stampSavedByGlobal } from '@/modules/cms/fields/saved-by';
 import { previewUrl } from '@/lib/preview-token';
 import { HERO_CHIPS_MAX, HERO_OVERLAY_DEFAULT, HEX_COLOR } from '@/content/schema';
@@ -69,11 +70,14 @@ export const Home: GlobalConfig = {
       en: 'The home page, section by section. Drafts are free; publishing is live within seconds.',
     },
   },
-  versions: { drafts: { autosave: { interval: 1500 }, schedulePublish: true }, max: 25 },
+  versions: { drafts: { autosave: { interval: 1500 }, schedulePublish: true }, max: 50 },
   // Drafts sit next to the published copy: the REST read is for signed-in staff; the site
   // reads through the Local API with `draft: false`.
   access: { read: isEditorOrAdmin, update: isEditorOrAdmin },
-  hooks: { beforeChange: [stampSavedByGlobal], afterChange: [revalidateGlobal] },
+  hooks: {
+    beforeChange: [stampSavedByGlobal],
+    afterChange: [revalidateGlobal, applyGlobalTranslations],
+  },
   fields: describeFields(
     [
       // One tab per section of the home page, in site order (ADR-046). A named tab stores
