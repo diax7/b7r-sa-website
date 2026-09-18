@@ -3,15 +3,16 @@ import type { Section } from '@/modules/visibility/types';
 /**
  * The score's one table (ADR-049, quoted there): every item, its section and its weight;
  * the weights of a section sum to the section's, the sections to 100. A change here is one
- * reviewed line. `siteOnly` names the items that need no outside service or assistant.
+ * reviewed line. `siteOnly` names the items that need no outside service or assistant. A
+ * section's name in the panel is `visibility.sections` in the admin strings.
  */
-export const SECTIONS: Array<{ key: Section; weight: number; label: string }> = [
-  { key: 'identity', weight: 15, label: 'Identity' },
-  { key: 'crawl', weight: 20, label: 'Crawl access' },
-  { key: 'extractability', weight: 30, label: 'Extractability' },
-  { key: 'corroboration', weight: 10, label: 'Corroboration' },
-  { key: 'measurement', weight: 10, label: 'Measurement' },
-  { key: 'signals', weight: 15, label: 'Outside signals' },
+export const SECTIONS: Array<{ key: Section; weight: number }> = [
+  { key: 'identity', weight: 15 },
+  { key: 'crawl', weight: 20 },
+  { key: 'extractability', weight: 30 },
+  { key: 'corroboration', weight: 10 },
+  { key: 'measurement', weight: 10 },
+  { key: 'signals', weight: 15 },
 ];
 
 export interface ItemSpec {

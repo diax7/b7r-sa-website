@@ -11,14 +11,15 @@ const ScoreIcon = ADMIN_VIEWS.visibility.icon;
 /**
  * The "Visibility score" card on the dashboard (ADR-049, admins): the ring, the two numbers,
  * and the three findings that weigh most among what is next or missing, each a link to the
- * page. No empty state: the rules always answer.
+ * page. No empty state: the rules always answer. The score comes from `reading()` with its
+ * sentences already in one language.
  */
 export function VisibilityCard({
   score,
   href,
   language,
 }: {
-  score: Score;
+  score: Score<string>;
   href: string;
   language: string;
 }) {
