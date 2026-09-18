@@ -1,6 +1,7 @@
 import type { Field, GlobalConfig, NamedTab } from 'payload';
 import { hiddenUnlessAdmin, isAdmin } from '@/modules/cms/access';
 import { revalidateGlobal } from '@/modules/cms/hooks/revalidate';
+import { applyGlobalTranslations } from '@/modules/cms/hooks/translations';
 import { umamiSrcAllowed } from '@/lib/security-headers';
 import { savedByField, stampSavedByGlobal } from '@/modules/cms/fields/saved-by';
 import { globalComponents } from '@/modules/cms/admin/document/config';
@@ -172,7 +173,10 @@ export const SiteSettings: GlobalConfig = {
     },
   },
   access: { read: () => true, update: isAdmin },
-  hooks: { beforeChange: [stampSavedByGlobal], afterChange: [revalidateGlobal] },
+  hooks: {
+    beforeChange: [stampSavedByGlobal],
+    afterChange: [revalidateGlobal, applyGlobalTranslations],
+  },
   fields: describeFields(
     [
       // Five tabs (ADR-046): the menus are a named tab storing under `menu.*`.

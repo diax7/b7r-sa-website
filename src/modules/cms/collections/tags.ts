@@ -3,6 +3,7 @@ import { isEditorOrAdmin } from '@/modules/cms/access';
 import { Refused } from '@/modules/cms/refused';
 import { SLUG_PATTERN } from '@/modules/cms/collections/pages';
 import { savedByField, stampSavedBy } from '@/modules/cms/fields/saved-by';
+import { applyTranslations } from '@/modules/cms/hooks/translations';
 import { collectionComponents } from '@/modules/cms/admin/document/config';
 import { adminGroup } from '@/modules/cms/admin/icons';
 import { TAG_DESCRIPTIONS } from '@/modules/cms/admin/descriptions/blog';
@@ -40,6 +41,7 @@ export const Tags: CollectionConfig = {
   },
   hooks: {
     beforeChange: [stampSavedBy],
+    afterChange: [applyTranslations],
     beforeValidate: [
       ({ data }) => {
         const slug = data?.['slug'];

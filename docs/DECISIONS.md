@@ -1689,6 +1689,87 @@ Not done here: the visibility rules' sentences (`modules/visibility/rules/*`, so
 titles, guides and facts) are still English inside the Arabic Score page; they are the
 rules' own text (ADR-049) and a decision for the text review of Phase 2.
 
+## ADR-057: Side-by-side bilingual editing (2026-09-18)
+
+Dhia's brief, from the pre-launch programme (Phase 2): "I do not want to edit English and
+Arabic separately by switching the page language. Put the Arabic and English sections side
+by side so both are visible at the same time." Settled with the CTO before code as
+**approach A**: no change to how Payload stores or validates a locale, a custom field on top.
+**What is side by side.** Every localized `text`, `textarea` and `select` field that holds
+one value and sits outside an array or a blocks field: `describeFields()`, the one pass every
+config's fields go through (ADR-046), renders it with `BilingualField`
+(`modules/cms/admin/fields/bilingual/*`), Payload's own field for the open locale beside the
+same input for the other locale, tagged with the other code by the same pill ADR-044 draws
+on localized labels (`.admin-locale-tag` shares the declarations in `admin.css`). In a row
+the pair takes the full line unless the config gives the field a width; under 32 rem of
+container width the two stack. Seventy fields across fourteen collections and globals (the
+home page's 28, the site settings' 8, the products' 7, the pages' and the posts' 4 each, the
+engine settings' 4, and so on) became bilingual with no config edit. **What stays on the
+switch.** Rich text (Lexical), arrays and blocks (their rows are shared and their text per
+language, ADR-044), uploads and relationships, a `hasMany` text or select, and a localized
+field that has a widget of its own; the locale note before the document controls now says
+so in words ("A field tagged AR has its English beside it: type the English next to the
+Arabic, one Save writes both. Rich text, lists and blocks stay per language: switch the
+locale at the top to edit their English. Fields without a tag are shared."). **Why a second
+write.** Payload 3.89 writes one locale per request: `beforeChange/promise.js` keeps the
+stored value for every locale but `req.locale`, and there is no all-locales write. So the
+other language's edits wait in `translations`, a hidden non-localized JSON on the same
+document (`admin.hidden`, out of the description maps, a `Diff` component that renders
+nothing keeps it out of the versions view, read by signed-in staff only), shaped
+`{ [otherLocale]: { [fieldPath]: { value, base } } }` where `base` is what the other locale
+held when the editor started (read once per document view through the REST API in the other
+locale, `fallback-locale=none` so an empty English reads as empty, `draft=true`, and again
+after every save, by a small store shared by every bilingual field on the page). The locale
+key is not decoration: a session that typed English while editing Arabic, autosaved, then
+switched the locale must never write that English into the Arabic; the hook applies only the
+entries of the locale that is not being saved. The collection's and the global's
+`afterChange` hook (`hooks/translations.ts`, listed after the entity's own hooks) applies
+them with `payload.update({ locale: other, req, draft: doc._status === 'draft' })`
+(`updateGlobal` for a global), with `translations: null` in the same write (non-localized,
+so it rides along; no third write), inside the same transaction because it carries `req`,
+with `overrideAccess: false` so the second write is exactly what the editor could do
+themselves. Payload's `createLocalReq` writes `locale`, `fallbackLocale`, `context` and
+`query.depth` onto the `req` it is handed, so the hook puts them back in a `finally`; the
+hooks after it and the response still need the request's own. **The three guard rails.**
+(1) A Save or Publish applies; an autosave (`?autosave=true`) never does: the entries ride
+along in the draft version until a real save, and survive a reload. (2) An entry applies
+only when the editor changed it (`value !== base`) and the other locale still holds `base`
+at apply time (read first): a stale prefill loses nothing, the stored edit wins, and the
+client drops the entry the next time it reads the other locale. When entries exist but none
+applies (all stale), that save makes no second write and the row's JSON is not cleared: the
+base check keeps the entries inert and the client's reconcile drops them on the next open,
+so a stale entry lives in the row until the next applying save. (3) A refusal in the other
+locale fails the whole save: the second write throws, the transaction rolls back (Payload's
+nested operation kills it), and the editor reads a `Refused` naming each field and the
+language ("Title in English: This field is required."); a collection's own rule (a post's
+publish rules) is prefixed with the language. The second write runs the hook again with
+`context.skipTranslations`, which returns at once; the entity's other hooks run for the other
+language as they would on the locale switch (the revalidation pings the other language's
+URLs, which did change). Only paths `bilingualPaths()` names are ever written: the JSON
+comes from the client, so `_status`, a slug, a secret or a row inside a block cannot be
+smuggled through it; and the row stores whatever a signed-in user sends, so the field's
+`validate` refuses more than 200 entries or 64 KB serialised, with the reason in the panel's
+language. A bilingual Save leaves two version rows, one per language write, so the history
+is measured in language writes and the cap doubles: `maxPerDoc` 50 on products, pages and
+posts (was 25), 20 on testimonials (was 10), `max` 50 on the home page (was 25).
+**Known limits, as on the switch.** A draft save skips validation, so
+a blanked required English text lands in the draft and a later Publish from Arabic does not
+re-validate English (Payload validates the request's locale only); the English site's gate
+(a document reaches it when its title-like field has an English value, ADR-043) is the net.
+Touching any English field on a Publish validates the whole English document, exactly as a
+Publish from the English locale does: an English side half filled fails with the fields
+named. **Tests.** `tests/translations-hook.test.ts` (the apply's table: changed, unchanged,
+stale, a required blank, a collection's refusal, an autosave, a draft, the re-entry guard,
+the locale key, a nested path and a smuggled one, a global, the request put back after a
+throw); `tests/admin-config.test.ts` (the component sits on exactly the bilingual paths of
+every config, never on rich text, arrays, blocks, uploads or relationships; the JSON and the
+hook go together; the hidden field needs no description); two e2e in `e2e/admin.spec.ts`
+(a page's title and the site settings' tagline in both languages in one Save, read back
+with `?locale=all`, the refusal of a blanked English title). Migration
+`20260918_033852_translations`: one nullable `jsonb` on the fourteen tables and the five
+version tables. The bilingual root carries no `data-admin-ui`: it hosts Payload's inputs,
+which the shell's element reset would strip; `data-admin-bilingual` is the e2e hook.
+
 ## ADR-059: The dashboard: what matters at a glance (2026-09-18)
 
 **Context.** The admin audit (`docs/audits/2026-09-18-admin.md`, §5) found the dashboard a
