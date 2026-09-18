@@ -95,7 +95,7 @@ export const CITATION_DESCRIPTIONS: Described = {
     en: 'The model id at the time.',
   },
   mode: {
-    ar: '«مفعّل» عندما كان بحث الويب الخاص بالمزوّد مفعّلاً في السؤال؛ «معطّل» للمزوّدين الذين لا يقدّمونه عبرنا.',
+    ar: '«مفعّل» عندما كان بحث ويب المزوّد مفعّلاً في السؤال؛ «معطّل» للمزوّدين الذين لا يقدّمونه عبرنا.',
     en: '"On" when the vendor’s web search was on for the ask; "off" for vendors that offer none through us.',
   },
   mentioned: {

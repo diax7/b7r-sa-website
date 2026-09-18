@@ -478,6 +478,11 @@
     scrollbar-width: thin;
     scroll-behavior: smooth;
   }
+  @media (prefers-reduced-motion: reduce) {
+    .tabs-field__tabs-wrap {
+      scroll-behavior: auto;
+    }
+  }
   .tabs-field__tabs {
     flex-shrink: 0;
   }

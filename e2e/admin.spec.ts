@@ -2844,6 +2844,57 @@ test.describe('CMS admin', () => {
       expect(['on', 'off']).toContain(health.jobs);
     });
 
+    test('a log row reads its JSON (audit 2026-09-18, 2.1): a run and a citation open without a page error and show the JsonView block', async ({
+      page,
+      request,
+    }) => {
+      const auth = await login(request, ADMIN);
+      expect((await page.request.post(`${API}/users/login`, { data: ADMIN })).status()).toBe(200);
+      await page.setViewportSize({ width: 1440, height: 1000 });
+      // Payload's own JSON field loaded Monaco from a CDN the admin CSP refuses: two page
+      // errors on every run, snapshot and citation page, and an empty field. Ours is a <pre>.
+      const errors: string[] = [];
+      page.on('pageerror', (e) => errors.push(e.message));
+      const rows: Array<{ slug: string; field: string; query: string }> = [
+        // A finished post run carries its steps; a citation-ledger run carries none.
+        {
+          slug: 'ai-runs',
+          field: 'steps',
+          query: 'where[kind][not_equals]=citation&where[status][in]=done,failed',
+        },
+        { slug: 'citations', field: 'urls', query: '' },
+        { slug: 'metrics', field: 'data', query: '' },
+      ];
+      let opened = 0;
+      for (const { slug, field, query } of rows) {
+        const list = (await (
+          await request.get(`${API}/${slug}?limit=1&sort=-createdAt&depth=0&${query}`, {
+            headers: auth,
+          })
+        ).json()) as { docs: Array<{ id: number }> };
+        const id = list.docs[0]?.id;
+        if (id === undefined) {
+          // The engine and ledger tests delete their rows; a fresh database has none.
+          test.info().annotations.push({
+            type: 'skipped part',
+            description: `no ${slug} row on the database`,
+          });
+          continue;
+        }
+        await page.goto(`/admin/collections/${slug}/${id}`);
+        const jsonView = page.locator(`[data-admin-json-view="${field}"]`);
+        await expect(jsonView, `${slug}.${field}`).toBeVisible();
+        expect(
+          (await jsonView.textContent())?.trim().length ?? 0,
+          `${slug}.${field}`,
+        ).toBeGreaterThan(0);
+        await expect(page.locator('.monaco-editor'), `${slug}: no Monaco`).toHaveCount(0);
+        opened += 1;
+      }
+      expect(errors, 'page errors').toEqual([]);
+      test.info().annotations.push({ type: 'opened', description: `${opened} of ${rows.length}` });
+    });
+
     test('an outsider reads the FAQ and published testimonials, never the home drafts', async ({
       request,
     }) => {
