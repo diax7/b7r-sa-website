@@ -365,6 +365,146 @@ describe('the document chrome (audit 2026-09-18)', () => {
 });
 
 /**
+ * No raw code in a select (admin audit 2026-09-18, 2.2): every option of every select and
+ * radio names its value in both languages. A brand name (Salla, Bing) is written the same in
+ * both; anything else carries Arabic script in `ar`; and `en` equal to the stored value is raw
+ * code unless the Arabic side proves it a word (Workflow).
+ */
+describe('every select option carries both labels (audit 2026-09-18)', () => {
+  const entities = [...collections.filter((c) => c.slug !== 'redirects'), ...globals];
+  for (const c of entities) {
+    const selects = walkFields(c.fields).filter(
+      ({ field }) => field.type === 'select' || field.type === 'radio',
+    );
+    if (selects.length === 0) continue;
+    it(`${c.slug}: ${selects.map((s) => s.path).join(', ')}`, () => {
+      for (const { path, field } of selects) {
+        const options = (field as { options: Array<string | { value: string; label: unknown }> })
+          .options;
+        for (const option of options) {
+          const value = typeof option === 'string' ? option : option.value;
+          const label = typeof option === 'string' ? null : option.label;
+          const where = `${c.slug}.${path} = ${value}`;
+          expect(label, where).toEqual(expect.objectContaining({ ar: expect.any(String) }));
+          const { ar, en } = label as { ar: string; en: string };
+          expect(en, where).toBeTruthy();
+          expect(ARABIC.test(ar) || ar === en, `${where}: ar is Arabic or a brand name`).toBe(true);
+          // The stored value as the English label is raw code, unless the Arabic proves a word.
+          expect(en !== value || ARABIC.test(ar), `${where}: en is the raw value`).toBe(true);
+        }
+      }
+    });
+  }
+});
+
+/**
+ * The words the audit found colliding or raw (2.4, 2.7, 2.8, and the strings table): one
+ * word per thing, in both languages.
+ */
+describe('vocabulary (audit 2026-09-18)', () => {
+  const labelOf = (config: { fields: Field[] }, path: string) =>
+    walkFields(config.fields).find((f) => f.path === path)?.field as
+      | { label?: { ar: string; en: string } }
+      | undefined;
+  it('a FAQ entry belongs to a «مجموعة», never a «قسم» (that is a blog hub)', () => {
+    expect(labelOf(Faqs, 'group')?.label).toEqual({ ar: 'المجموعة', en: 'Group' });
+    expect(labelOf(Faqs, 'order')?.label?.ar).toContain('المجموعة');
+    expect(labelOf(Categories, 'name')?.label?.ar).toBe('الاسم');
+    expect(Categories.labels?.singular).toEqual({ ar: 'قسم', en: 'Hub' });
+  });
+  it('the engine caps posts, the connection caps dollars', () => {
+    expect(labelOf(AiSettings, 'maxPostsPerMonth')?.label?.ar).toBe('الحد الشهري للمقالات');
+    expect(labelOf(Connections, 'monthlyLimitUsd')?.label?.ar).toBe('الحد الشهري (دولار)');
+  });
+  it('"Connected stores" everywhere the site section is named', () => {
+    expect(Integrations.labels?.plural).toEqual({ ar: 'المتاجر المتصلة', en: 'Connected stores' });
+    const tabs = (Home.fields[0] as { type: 'tabs'; tabs: Array<{ label: unknown }> }).tabs;
+    expect(tabs.map((t) => t.label)).toContainEqual({
+      ar: 'المتاجر المتصلة',
+      en: 'Connected stores',
+    });
+  });
+  it('the image library is called Images, and tags say the site reads none', () => {
+    expect(Media.labels).toEqual({
+      singular: { ar: 'صورة', en: 'Image' },
+      plural: { ar: 'الصور', en: 'Images' },
+    });
+    const shows = Tags.admin?.custom?.['shows'] as { en: string };
+    expect(shows.en).toMatch(/nowhere on the site/);
+    expect((Tags.admin?.description as { en: string } | undefined)?.en).toMatch(/reads none/);
+  });
+  it('the map wins, so an inline description where the map names the field is refused', () => {
+    expect(() =>
+      describeFields(
+        [{ name: 'a', type: 'text', admin: { description: { ar: 'قديم', en: 'old' } } }],
+        { a: { ar: 'جديد', en: 'new' } },
+      ),
+    ).toThrow(/inline admin.description/);
+    const [kept] = describeFields(
+      [{ name: 'a', type: 'text', admin: { description: { ar: 'قديم', en: 'old' } } }],
+      {},
+    );
+    expect((kept as { admin: { description: unknown } }).admin.description).toEqual({
+      ar: 'قديم',
+      en: 'old',
+    });
+  });
+});
+
+/**
+ * Validation messages read in the panel's language (audit 2026-09-18, 2.6): the same rule,
+ * refused in Arabic for an Arabic panel and in English otherwise.
+ */
+describe('validation messages in both languages (audit 2026-09-18)', () => {
+  type Validate = (
+    value: unknown,
+    args: { req: { i18n?: { language?: string }; locale?: string }; siblingData: unknown },
+  ) => true | string;
+  const validateOf = (config: { fields: Field[] }, path: string): Validate => {
+    const field = walkFields(config.fields).find((f) => f.path === path)?.field as
+      | { validate?: Validate }
+      | undefined;
+    if (!field?.validate) throw new Error(`${path}: no validate`);
+    return field.validate;
+  };
+  const ar = { req: { i18n: { language: 'ar' } }, siblingData: {} };
+  const en = { req: { i18n: { language: 'en' } }, siblingData: {} };
+  const cases: Array<[string, { fields: Field[] }, string, unknown, unknown]> = [
+    ['products.slug', Products, 'slug', 'Bad Slug', {}],
+    ['products.suggestedPrice', Products, 'suggestedPrice', 5, { baseCost: 10 }],
+    ['products.colors.hex', Products, 'colors.hex', 'red', {}],
+    ['home.hero.overlay.color', Home, 'hero.overlay.color', 'blue', {}],
+    ['home.productStrip.products', Home, 'productStrip.products', [1, 2], {}],
+    ['site-settings.menu.primary.href', SiteSettings, 'menu.primary.href', 'products', {}],
+    ['site-settings.analytics.gaId', SiteSettings, 'analytics.gaId', 'UA-1', {}],
+    ['seo-defaults.routes.route', SeoDefaults, 'routes.route', 'products', {}],
+    ['authors.sameAs.url', Authors, 'sameAs.url', 'http://x.com', {}],
+    ['media.alt', Media, 'alt', 'ab', {}],
+    ['connections.baseUrl', Connections, 'baseUrl', 'ftp://x', { kind: 'openai-compatible' }],
+  ];
+  for (const [name, config, path, bad, siblingData] of cases) {
+    it(name, () => {
+      const validate = validateOf(config, path);
+      const refusedAr = validate(bad, { ...ar, siblingData });
+      const refusedEn = validate(bad, { ...en, siblingData });
+      expect(typeof refusedAr, 'refused').toBe('string');
+      expect(ARABIC.test(String(refusedAr)), `Arabic: ${refusedAr}`).toBe(true);
+      expect(typeof refusedEn, 'refused').toBe('string');
+      expect(ARABIC.test(String(refusedEn)), `English: ${refusedEn}`).toBe(false);
+      expect(refusedAr).not.toBe(refusedEn);
+    });
+  }
+  it('an unknown or missing panel language reads English', () => {
+    const validate = validateOf(Products, 'slug');
+    expect(validate('Bad', { req: {}, siblingData: {} })).toMatch(/Lowercase/);
+    expect(validate('Bad', { req: { i18n: { language: 'fr' } }, siblingData: {} })).toMatch(
+      /Lowercase/,
+    );
+    expect(validate('good-slug', ar)).toBe(true);
+  });
+});
+
+/**
  * Read-only JSON reads as our block (admin audit 2026-09-18, 2.1): Payload's JSON editor
  * loads Monaco from a CDN the admin CSP refuses, so every read-only JSON field of a log row
  * (the runs' rubric, steps and outline, the snapshots' data, the citations' links) carries

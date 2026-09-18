@@ -98,12 +98,6 @@ export const Users: CollectionConfig = {
           { label: { ar: 'محرر', en: 'Editor' }, value: 'editor' },
         ],
         access: { update: adminField },
-        admin: {
-          description: {
-            ar: 'المدير يملك كل الصلاحيات. المحرر يعدّل المحتوى فقط ولا يرى المستخدمين أو الإعدادات.',
-            en: 'Admins can do everything; editors edit content only.',
-          },
-        },
       },
     ],
     USER_DESCRIPTIONS,

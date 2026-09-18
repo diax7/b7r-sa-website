@@ -34,6 +34,10 @@ export const AI_SETTINGS_DESCRIPTIONS: Described = {
     ar: 'ادعاءات لا يجوز أن يقدّمها المحرّك (شهادات، أرقام غير مثبتة)، سطر لكل ادعاء.',
     en: 'Claims the engine may never make (certifications, unproven numbers), one per line.',
   },
+  'images.pexelsKey': {
+    ar: 'مفتاح Pexels لبحث صور الغلاف عندما يكون مصدر الغلاف «صورة من Pexels». يُحفظ مشفّراً ولا يُعرض مرة أخرى؛ اتركه كما هو للإبقاء عليه، أو امسحه لإزالته.',
+    en: 'The Pexels key for the cover search when the cover source is "A stock photo (Pexels)". Stored encrypted and never shown again; leave the mask to keep it, clear it to remove it.',
+  },
   'images.imageStyle': {
     ar: 'كلمات تُضاف إلى البحث عن صورة الغلاف من Pexels: «استوديو، خلفية بيضاء». فارغ يبحث بعنوان المقال فقط.',
     en: 'Words appended to the Pexels search for a cover: "studio, white background". Empty searches by the title alone.',
@@ -116,7 +120,7 @@ export const AI_TOPICS_DESCRIPTIONS: Described = {
   },
   status: {
     ar: 'أين الموضوع في الدورة: في القائمة، مجدول، يُكتب الآن، منشور، فشل، مرفوض.',
-    en: 'Where the topic is in the cycle: backlog, scheduled, generating, published, failed, rejected.',
+    en: 'Where the topic is in the cycle: in the backlog, scheduled, being written, published, failed, rejected.',
   },
   source: {
     ar: 'من أين جاء الموضوع: القائمة الأولى، مُضاف يدوياً، أو من Search Console.',

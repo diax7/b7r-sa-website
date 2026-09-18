@@ -3,6 +3,7 @@ import { isAdmin, isEditorOrAdmin } from '@/modules/cms/access';
 import { Refused } from '@/modules/cms/refused';
 import { SLUG_PATTERN } from '@/modules/cms/collections/pages';
 import { revalidateBlogListings } from '@/modules/cms/hooks/revalidate';
+import { inLanguage } from '@/modules/cms/fields/message';
 import { savedByField, stampSavedBy } from '@/modules/cms/fields/saved-by';
 import { collectionComponents } from '@/modules/cms/admin/document/config';
 import { adminGroup } from '@/modules/cms/admin/icons';
@@ -40,11 +41,14 @@ export const Categories: CollectionConfig = {
   hooks: {
     beforeChange: [stampSavedBy],
     beforeValidate: [
-      ({ data }) => {
+      ({ data, req }) => {
         const slug = data?.['slug'];
         if (typeof slug === 'string' && (!SLUG_PATTERN.test(slug) || slug.length > 40)) {
           throw new Refused(
-            'Slug: lowercase letters, digits and hyphens only, up to 40 characters',
+            inLanguage(req, {
+              ar: 'المعرّف في الرابط: حروف لاتينية صغيرة وأرقام وشرطات فقط، حتى 40 حرفاً',
+              en: 'Address ending: lowercase letters, digits and hyphens only, up to 40 characters',
+            }),
           );
         }
         return data;
@@ -71,13 +75,7 @@ export const Categories: CollectionConfig = {
             required: true,
             unique: true,
             index: true,
-            label: { ar: 'المعرّف في الرابط', en: 'Slug' },
-            admin: {
-              description: {
-                ar: 'حروف لاتينية صغيرة وشرطات؛ يصبح /blog/category/المعرّف',
-                en: 'lowercase-hyphenated; served at /blog/category/slug',
-              },
-            },
+            label: { ar: 'المعرّف في الرابط', en: 'Address ending (slug)' },
           },
         ],
       },
@@ -98,7 +96,7 @@ export const Categories: CollectionConfig = {
         name: 'lead',
         type: 'text',
         localized: true,
-        label: { ar: 'السطر تحت العنوان (اختياري)', en: 'Lead (optional)' },
+        label: { ar: 'السطر تحت العنوان (اختياري)', en: 'Line under the title (optional)' },
       },
       {
         type: 'row',

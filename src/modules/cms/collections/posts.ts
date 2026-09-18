@@ -29,6 +29,7 @@ import {
   TAKEAWAYS,
   TITLE_MAX,
 } from '@/modules/cms/fields/editorial';
+import { type Bilingual, inLanguage } from '@/modules/cms/fields/message';
 import { savedByField, stampSavedBy } from '@/modules/cms/fields/saved-by';
 import { isDraftSave, revalidatePosts } from '@/modules/cms/hooks/revalidate';
 import { collectionComponents } from '@/modules/cms/admin/document/config';
@@ -58,10 +59,13 @@ export const postEditor = lexicalEditor({
 export const POST_ORIGINS = ['manual', 'ai', 'ai-edited'] as const;
 export type PostOrigin = (typeof POST_ORIGINS)[number];
 
-/** Why a post slug is refused, or null. */
-export function postSlugProblem(slug: unknown): string | null {
+/** Why a post slug is refused, in both languages, or null. */
+export function postSlugProblem(slug: unknown): Bilingual | null {
   if (typeof slug !== 'string' || !SLUG_PATTERN.test(slug) || slug.length > 64) {
-    return 'Slug: lowercase letters, digits and hyphens only, up to 64 characters';
+    return {
+      ar: 'المعرّف في الرابط: حروف لاتينية صغيرة وأرقام وشرطات فقط، حتى 64 حرفاً',
+      en: 'Address ending: lowercase letters, digits and hyphens only, up to 64 characters',
+    };
   }
   return null;
 }
@@ -144,7 +148,7 @@ export const Posts: CollectionConfig = {
         const slug = data?.['slug'];
         if (slug) {
           const problem = postSlugProblem(slug);
-          if (problem) throw new Refused(problem);
+          if (problem) throw new Refused(inLanguage(req, problem));
         }
         if (isPublish(data, req)) {
           const problems = publishProblems({ ...originalDoc, ...data });
@@ -195,7 +199,10 @@ export const Posts: CollectionConfig = {
                     required: true,
                     localized: true,
                     maxLength: TITLE_MAX,
-                    label: { ar: `العنوان (حتى ${TITLE_MAX} حرفاً)`, en: `Title (≤ ${TITLE_MAX})` },
+                    label: {
+                      ar: `العنوان (حتى ${TITLE_MAX} حرفاً)`,
+                      en: `Title (up to ${TITLE_MAX} characters)`,
+                    },
                   },
                   {
                     name: 'slug',
@@ -203,13 +210,7 @@ export const Posts: CollectionConfig = {
                     required: true,
                     unique: true,
                     index: true,
-                    label: { ar: 'المعرّف في الرابط', en: 'Slug' },
-                    admin: {
-                      description: {
-                        ar: 'حروف لاتينية صغيرة وشرطات؛ يصبح /blog/المعرّف',
-                        en: 'lowercase-hyphenated; served at /blog/slug',
-                      },
-                    },
+                    label: { ar: 'المعرّف في الرابط', en: 'Address ending (slug)' },
                   },
                 ],
               },
@@ -240,7 +241,7 @@ export const Posts: CollectionConfig = {
                 maxLength: EXCERPT_MAX,
                 label: {
                   ar: `المقتطف (حتى ${EXCERPT_MAX} حرفاً)`,
-                  en: `Excerpt (≤ ${EXCERPT_MAX})`,
+                  en: `Excerpt (up to ${EXCERPT_MAX} characters)`,
                 },
                 admin: {
                   description: {
@@ -310,7 +311,7 @@ export const Posts: CollectionConfig = {
               {
                 name: 'seo',
                 type: 'group',
-                label: { ar: 'محركات البحث', en: 'SEO' },
+                label: { ar: 'محركات البحث', en: 'Search engines' },
                 admin: {
                   description: {
                     ar: 'اختياري: يُستخدم العنوان والمقتطف عندما تُترك فارغة.',
@@ -324,8 +325,8 @@ export const Posts: CollectionConfig = {
                     localized: true,
                     maxLength: TITLE_MAX,
                     label: {
-                      ar: `عنوان الصفحة (حتى ${TITLE_MAX} حرفاً)`,
-                      en: `Meta title (≤ ${TITLE_MAX})`,
+                      ar: `عنوان البحث (حتى ${TITLE_MAX} حرفاً)`,
+                      en: `Search title (up to ${TITLE_MAX} characters)`,
                     },
                   },
                   {
@@ -334,8 +335,8 @@ export const Posts: CollectionConfig = {
                     localized: true,
                     maxLength: EXCERPT_MAX,
                     label: {
-                      ar: `الوصف (حتى ${EXCERPT_MAX} حرفاً)`,
-                      en: `Meta description (≤ ${EXCERPT_MAX})`,
+                      ar: `وصف البحث (حتى ${EXCERPT_MAX} حرفاً)`,
+                      en: `Search description (up to ${EXCERPT_MAX} characters)`,
                     },
                   },
                   {
@@ -389,7 +390,7 @@ export const Posts: CollectionConfig = {
         name: 'readingMinutes',
         type: 'number',
         localized: true,
-        label: { ar: 'دقائق القراءة', en: 'Reading minutes' },
+        label: { ar: 'مدة القراءة (دقائق)', en: 'Reading time (minutes)' },
         admin: { position: 'sidebar', readOnly: true },
       },
       {

@@ -758,16 +758,16 @@ test.describe('CMS admin', () => {
       return page.locator('.tabs-field__tab-button').allTextContents();
     };
     expect(await tabsOf('/admin/globals/home')).toEqual([
-      'Hero',
+      'Opening slides',
       'Product strip',
       'Designer',
       'Three steps',
       'Video',
       'Why us',
       'Testimonials',
-      'Integrations',
+      'Connected stores',
       'FAQ',
-      'Ribbon',
+      'Bottom banner',
     ]);
     // A section tab opens on its switch, whose description says what "off" hides.
     await page.locator('.tabs-field__tab-button', { hasText: 'Three steps' }).click();
@@ -777,7 +777,7 @@ test.describe('CMS admin', () => {
       'Brand',
       'Contact & social',
       'Menus & footer',
-      'Numbers & legal',
+      'Numbers and delivery',
       'Analytics',
     ]);
     const products = (await (

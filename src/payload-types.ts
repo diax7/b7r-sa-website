@@ -217,7 +217,7 @@ export interface User {
   collection: 'users';
 }
 /**
- * Images and files used by pages and products. Give every image alt text.
+ * The photos and icons the site shows: products, the home page, the blog covers. Every image needs its alt text in both languages.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "media".
@@ -225,7 +225,7 @@ export interface User {
 export interface Media {
   id: number;
   /**
-   * Describe the image in the language of the open locale tab; required.
+   * What a screen reader says for this image, in the language of the pill beside the label. Required.
    */
   alt: string;
   /**
@@ -393,7 +393,7 @@ export interface Product {
     widthCm: number;
     heightCm: number;
     /**
-     * Where the print area sits over the product photo in the designer.
+     * Where the print area sits over the product photo in the designer, as fractions of the photo's width and height.
      */
     canvas: {
       /**
@@ -888,7 +888,7 @@ export interface Testimonial {
   _status?: ('draft' | 'published') | null;
 }
 /**
- * Connected platforms (Salla, Zid, Shopify) and their order in the integrations strip.
+ * The connected platforms (Salla, Zid, Shopify) and their order in the connected-stores section.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "integrations".
@@ -1084,7 +1084,7 @@ export interface Category {
   createdAt: string;
 }
 /**
- * Optional tags that connect related posts.
+ * Optional tags to sort posts inside the admin; the site reads none today.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "tags".
@@ -1212,7 +1212,7 @@ export interface AiTopic {
    */
   windowEnd?: string | null;
   /**
-   * Where the topic is in the cycle: backlog, scheduled, generating, published, failed, rejected.
+   * Where the topic is in the cycle: in the backlog, scheduled, being written, published, failed, rejected.
    */
   status: 'backlog' | 'scheduled' | 'generating' | 'published' | 'failed' | 'rejected';
   /**
@@ -1254,6 +1254,9 @@ export interface AiRun {
   tokensOut?: number | null;
   costUsd?: number | null;
   durationMs?: number | null;
+  /**
+   * The self-review score, criterion by criterion: what the post lost on each.
+   */
   rubric?:
     | {
         [k: string]: unknown;
@@ -1263,6 +1266,9 @@ export interface AiRun {
     | number
     | boolean
     | null;
+  /**
+   * The steps of the run in order, each with its time and outcome: outline, draft, review, cover, publish.
+   */
   steps?:
     | {
         [k: string]: unknown;
@@ -1273,7 +1279,7 @@ export interface AiRun {
     | boolean
     | null;
   /**
-   * The freshness job regenerates from it.
+   * The outline the post was written from; the freshness job regenerates from it when the facts change.
    */
   outline?:
     | {
@@ -1307,7 +1313,7 @@ export interface Connection {
    */
   label: string;
   /**
-   * The service the key is sent to. "OpenAI-compatible endpoint" fits any other AI that serves the OpenAI API at its own address; "Mock" is for tests only. Search Console, Bing and PageSpeed are services the visibility score reads, not models: one enabled connection each.
+   * Which service the key belongs to. Search Console, Bing and PageSpeed are read by the visibility score, not by the engine: one enabled connection each.
    */
   kind:
     | 'openai'
@@ -1328,7 +1334,7 @@ export interface Connection {
    */
   baseUrl?: string | null;
   /**
-   * The service's key as its console gives it; for Search Console the whole service account key file (JSON); PageSpeed works without one. Stored encrypted and never shown again; leave the mask to keep it, clear it to remove it.
+   * The key from the service's console; for Search Console, the service account's JSON file. Stored encrypted and never shown again; leave the mask to keep it.
    */
   apiKey?: string | null;
   /**
@@ -1340,7 +1346,7 @@ export interface Connection {
    */
   outputPerMillionUsd?: number | null;
   /**
-   * The most this connection may cost in a month (from the 1st, Riyadh time), estimated; past it the engine refuses to run on it until next month. Empty: no limit. The daily cap lives in the engine settings.
+   * The most this connection may cost in a month, estimated from its rates. Past it, nothing runs on it until next month. Empty: no limit.
    */
   monthlyLimitUsd?: number | null;
   /**
@@ -1504,7 +1510,7 @@ export interface Citation {
    */
   model?: string | null;
   /**
-   * "With search" when the vendor’s web search was on for the ask; "plain" for vendors that offer none through us.
+   * "On" when the vendor’s web search was on for the ask; "off" for vendors that offer none through us.
    */
   mode: 'search' | 'plain';
   /**
@@ -2827,11 +2833,11 @@ export interface Home {
   };
   integrations: {
     /**
-     * Off hides the “Integrations” section from the home page.
+     * Off hides the “Connected stores” section from the home page.
      */
     enabled?: boolean | null;
     /**
-     * The connected-stores heading (H2); the logos come from Store integrations.
+     * The connected-stores heading (H2); the logos come from Connected stores.
      */
     title: string;
     /**
@@ -2887,7 +2893,7 @@ export interface Home {
 export interface SiteSetting {
   id: number;
   /**
-   * The brand's name: the logo's accessible name in the header and the footer, the site name on share cards, the first line of llms.txt, the web app manifest, and the organisation data search engines read.
+   * The brand's name: the site name on share cards, the first line of llms.txt and the name search engines read.
    */
   brandName: string;
   /**
@@ -2899,7 +2905,7 @@ export interface SiteSetting {
    */
   tagline: string;
   /**
-   * Gives every main call-to-action button on the site (the header, the phone menu, the slides, the video, the ribbon, the product page, the designer, the posts) a sheen in the brand's two blues that slides on hover and a light glint every few seconds; unticked keeps the classic blue buttons.
+   * On: the main buttons on every page get a moving sheen in the brand's two blues. Off: the classic blue buttons.
    */
   ctaShiny?: boolean | null;
   /**
@@ -2972,7 +2978,7 @@ export interface SiteSetting {
        */
       href: string;
       /**
-       * The link stays marked as the current one on every page whose path starts with this. Example: /products
+       * Not read for footer links; leave it empty.
        */
       matchPrefix?: string | null;
       id?: string | null;
@@ -3171,7 +3177,7 @@ export interface AiSetting {
      */
     imageStyle?: string | null;
     /**
-     * Stored encrypted and never shown again; leave the mask to keep it, clear it to remove it.
+     * The Pexels key for the cover search when the cover source is "A stock photo (Pexels)". Stored encrypted and never shown again; leave the mask to keep it, clear it to remove it.
      */
     pexelsKey?: string | null;
   };

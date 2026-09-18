@@ -49,7 +49,7 @@ export const Citations: CollectionConfig = {
         name: 'title',
         type: 'text',
         required: true,
-        label: { ar: 'العنوان', en: 'Title' },
+        label: { ar: 'اليوم والمحرّك', en: 'Day and engine' },
         admin: { readOnly: true },
       },
       {
@@ -80,10 +80,10 @@ export const Citations: CollectionConfig = {
             type: 'select',
             required: true,
             options: [
-              { value: 'search', label: { ar: 'مع البحث', en: 'With search' } },
-              { value: 'plain', label: { ar: 'بلا بحث', en: 'Plain' } },
+              { value: 'search', label: { ar: 'مفعّل', en: 'On' } },
+              { value: 'plain', label: { ar: 'معطّل', en: 'Off' } },
             ],
-            label: { ar: 'الوضع', en: 'Mode' },
+            label: { ar: 'بحث الويب', en: 'Web search' },
             admin: { readOnly: true },
           },
         ],

@@ -82,7 +82,7 @@ export const AiSettings: GlobalConfig = {
         type: 'tabs',
         tabs: [
           {
-            label: { ar: 'الوتيرة', en: 'Cadence' },
+            label: { ar: 'الجدولة والحدود', en: 'Schedule and limits' },
             fields: [
               {
                 name: 'connection',
@@ -125,9 +125,12 @@ export const AiSettings: GlobalConfig = {
                       max: 23,
                     },
                   ),
-                  number('maxPostsPerMonth', { ar: 'الحد الشهري', en: 'Monthly cap' }, 31, {
-                    min: 0,
-                  }),
+                  number(
+                    'maxPostsPerMonth',
+                    { ar: 'الحد الشهري للمقالات', en: 'Monthly post cap' },
+                    31,
+                    { min: 0 },
+                  ),
                 ],
               },
               {
@@ -143,7 +146,7 @@ export const AiSettings: GlobalConfig = {
                   ),
                   number(
                     'reviewFirstRuns',
-                    { ar: 'أول مقالات حيّة كمسودات', en: 'First live posts as drafts' },
+                    { ar: 'مقالات تُراجع قبل النشر', en: 'Posts to review before publishing' },
                     3,
                     {
                       min: 0,
@@ -161,8 +164,8 @@ export const AiSettings: GlobalConfig = {
             label: { ar: 'اللغة والأسلوب', en: 'Language and style' },
             name: 'style',
             description: {
-              ar: 'لكل لغة دليلها وتعليماتها وعباراتها الممنوعة: بدّل اللغة في أعلى الصفحة.',
-              en: 'Each language has its own guide, instructions and banned phrases: switch the locale at the top of the page.',
+              ar: 'لكل لغة دليلها وتعليماتها وعباراتها الممنوعة.',
+              en: 'Each language has its own guide, instructions and banned phrases.',
             },
             fields: [
               {
@@ -262,7 +265,7 @@ export const AiSettings: GlobalConfig = {
                 name: 'imageStyle',
                 type: 'text',
                 defaultValue: DEFAULT_IMAGE_STYLE,
-                label: { ar: 'ملحق أسلوب الصورة', en: 'Image style suffix' },
+                label: { ar: 'كلمات إضافية لبحث الصور', en: 'Extra words for the photo search' },
               },
               secretField('pexelsKey', { ar: 'مفتاح Pexels', en: 'Pexels API key' }),
             ],

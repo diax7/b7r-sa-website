@@ -3,11 +3,13 @@ import type {
   CollectionBeforeValidateHook,
   CollectionConfig,
   Field,
+  PayloadRequest,
 } from 'payload';
 import { hiddenUnlessAdmin, isAdmin } from '@/modules/cms/access';
 import { describeFields } from '@/modules/cms/admin/descriptions/describe';
 import { collectionComponents } from '@/modules/cms/admin/document/config';
 import { adminGroup } from '@/modules/cms/admin/icons';
+import { inLanguage } from '@/modules/cms/fields/message';
 import { savedByField, stampSavedBy } from '@/modules/cms/fields/saved-by';
 import { secretField } from '@/modules/cms/fields/secret-field';
 import { Refused } from '@/modules/cms/refused';
@@ -197,14 +199,17 @@ export const Connections: CollectionConfig = {
         type: 'text',
         label: { ar: 'عنوان الخدمة', en: 'Base URL' },
         admin: { condition: (data) => data?.['kind'] === 'openai-compatible' },
-        validate: (value: unknown, { siblingData }: { siblingData: Record<string, unknown> }) =>
+        validate: (
+          value: unknown,
+          { req, siblingData }: { req: PayloadRequest; siblingData: Record<string, unknown> },
+        ) =>
           siblingData['kind'] !== 'openai-compatible' ||
           (typeof value === 'string' && HTTPS.test(value)) ||
-          'An https:// address',
+          inLanguage(req, { ar: 'عنوان يبدأ بـ https://', en: 'An https:// address' }),
       },
       secretField(
         'apiKey',
-        { ar: 'المفتاح', en: 'Key' },
+        { ar: 'مفتاح API', en: 'API key' },
         {
           // A partial update carries no `kind`: the stored row says which.
           serviceAccountWhen: (sibling, stored) =>
@@ -220,13 +225,19 @@ export const Connections: CollectionConfig = {
             name: 'inputPerMillionUsd',
             type: 'number',
             min: 0,
-            label: { ar: 'سعر المليون رمز داخل (دولار)', en: 'Input USD per 1M tokens' },
+            label: {
+              ar: 'سعر مليون رمز إدخال (دولار)',
+              en: 'Price per million input tokens (USD)',
+            },
           },
           {
             name: 'outputPerMillionUsd',
             type: 'number',
             min: 0,
-            label: { ar: 'سعر المليون رمز خارج (دولار)', en: 'Output USD per 1M tokens' },
+            label: {
+              ar: 'سعر مليون رمز إخراج (دولار)',
+              en: 'Price per million output tokens (USD)',
+            },
           },
           {
             name: 'monthlyLimitUsd',
@@ -288,7 +299,7 @@ export const Connections: CollectionConfig = {
       sidebarReadOnly({
         name: 'lastTestMessage',
         type: 'text',
-        label: { ar: 'نتيجة آخر اختبار', en: 'Last test said' },
+        label: { ar: 'نتيجة آخر اختبار', en: 'Last test result' },
       }),
       savedByField,
     ],

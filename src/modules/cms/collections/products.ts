@@ -1,6 +1,7 @@
-import type { CollectionConfig } from 'payload';
+import type { CollectionConfig, PayloadRequest } from 'payload';
 import { canDeleteVersioned, isEditorOrAdmin, publishedOrStaff } from '@/modules/cms/access';
 import { revalidateProducts } from '@/modules/cms/hooks/revalidate';
+import { inLanguage } from '@/modules/cms/fields/message';
 import { savedByField, stampSavedBy } from '@/modules/cms/fields/saved-by';
 import { localePath, requestLocale } from '@/lib/i18n';
 import { previewUrl } from '@/lib/preview-token';
@@ -9,10 +10,7 @@ import { adminGroup } from '@/modules/cms/admin/icons';
 import { PRODUCT_DESCRIPTIONS } from '@/modules/cms/admin/descriptions/catalogue';
 import { describeFields } from '@/modules/cms/admin/descriptions/describe';
 
-const PRICE_HELP = {
-  ar: 'يجب أن يطابق السعر في التطبيق (لا مزامنة آلية).',
-  en: 'Must match the app; there is no automatic sync.',
-};
+type Validation = { req: PayloadRequest; siblingData: Record<string, unknown> };
 
 /**
  * Products (BRD 9.4, Appendix A): one document per product, fields 1:1 with the Level 1
@@ -47,8 +45,8 @@ export const Products: CollectionConfig = {
       en: 'Products on the site and in the designer: prices, photos, sizes and colours.',
     },
   },
-  defaultSort: 'sortOrder',
   versions: { drafts: { autosave: { interval: 1500 }, schedulePublish: true }, maxPerDoc: 25 },
+  defaultSort: 'sortOrder',
   access: {
     read: publishedOrStaff,
     create: isEditorOrAdmin,
@@ -84,17 +82,14 @@ export const Products: CollectionConfig = {
                     required: true,
                     unique: true,
                     index: true,
-                    label: { ar: 'المعرّف في الرابط', en: 'Slug' },
-                    admin: {
-                      description: {
-                        ar: 'حروف لاتينية صغيرة وشرطات فقط',
-                        en: 'lowercase-hyphenated',
-                      },
-                    },
-                    validate: (value: unknown) =>
+                    label: { ar: 'المعرّف في الرابط', en: 'Address ending (slug)' },
+                    validate: (value: unknown, { req }: Validation) =>
                       typeof value === 'string' && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value)
                         ? true
-                        : 'حروف لاتينية صغيرة وأرقام وشرطات فقط',
+                        : inLanguage(req, {
+                            ar: 'حروف لاتينية صغيرة وأرقام وشرطات فقط',
+                            en: 'Lowercase letters, digits and hyphens only',
+                          }),
                   },
                 ],
               },
@@ -104,12 +99,6 @@ export const Products: CollectionConfig = {
                 required: true,
                 localized: true,
                 label: { ar: 'الوصف المختصر', en: 'Short description' },
-                admin: {
-                  description: {
-                    ar: 'سطر واحد للبطاقات ووصف الصفحة',
-                    en: 'One line for cards and meta',
-                  },
-                },
               },
               {
                 name: 'description',
@@ -127,7 +116,7 @@ export const Products: CollectionConfig = {
                     required: true,
                     min: 1,
                     label: { ar: 'التكلفة الأساسية (ريال)', en: 'Base cost (SAR)' },
-                    admin: { description: PRICE_HELP, step: 1 },
+                    admin: { step: 1 },
                   },
                   {
                     name: 'suggestedPrice',
@@ -135,14 +124,14 @@ export const Products: CollectionConfig = {
                     required: true,
                     min: 1,
                     label: { ar: 'سعر البيع المقترح (ريال)', en: 'Suggested price (SAR)' },
-                    admin: { description: PRICE_HELP, step: 1 },
-                    validate: (
-                      value: unknown,
-                      { siblingData }: { siblingData: Record<string, unknown> },
-                    ) => {
+                    admin: { step: 1 },
+                    validate: (value: unknown, { req, siblingData }: Validation) => {
                       const base = siblingData['baseCost'];
                       if (typeof value === 'number' && typeof base === 'number' && value < base) {
-                        return 'سعر البيع المقترح يجب ألا يقل عن التكلفة الأساسية';
+                        return inLanguage(req, {
+                          ar: 'سعر البيع المقترح يجب ألا يقل عن التكلفة الأساسية',
+                          en: 'The suggested price cannot be below the base cost',
+                        });
                       }
                       return true;
                     },
@@ -179,7 +168,7 @@ export const Products: CollectionConfig = {
                         name: 'slug',
                         type: 'text',
                         required: true,
-                        label: { ar: 'المعرّف', en: 'Slug' },
+                        label: { ar: 'معرّف اللون', en: 'Colour id' },
                       },
                       {
                         name: 'name',
@@ -193,10 +182,13 @@ export const Products: CollectionConfig = {
                         type: 'text',
                         required: true,
                         label: { ar: 'اللون (hex)', en: 'Hex' },
-                        validate: (value: unknown) =>
+                        validate: (value: unknown, { req }: Validation) =>
                           typeof value === 'string' && /^#[0-9A-Fa-f]{6}$/.test(value)
                             ? true
-                            : 'مثال: #FFFFFF',
+                            : inLanguage(req, {
+                                ar: 'لون بصيغة #FFFFFF',
+                                en: 'A colour written as #FFFFFF',
+                              }),
                       },
                     ],
                   },
@@ -271,7 +263,6 @@ export const Products: CollectionConfig = {
                 required: true,
                 localized: true,
                 label: { ar: 'ملخص المقاسات', en: 'Sizes summary' },
-                admin: { description: { ar: 'مثال: S – 2XL', en: 'e.g. S – 2XL' } },
               },
               {
                 type: 'row',
@@ -318,8 +309,12 @@ export const Products: CollectionConfig = {
                         type: 'number',
                         required: true,
                         defaultValue: 28,
-                        validate: (value: null | number | undefined) =>
-                          value === 28 || 'العرض ثابت: 28 سم',
+                        validate: (value: null | number | undefined, { req }: Validation) =>
+                          value === 28 ||
+                          inLanguage(req, {
+                            ar: 'العرض ثابت: 28 سم',
+                            en: 'The width is fixed: 28 cm',
+                          }),
                         label: { ar: 'العرض (سم)', en: 'Width (cm)' },
                         admin: { readOnly: true },
                       },
@@ -328,8 +323,12 @@ export const Products: CollectionConfig = {
                         type: 'number',
                         required: true,
                         defaultValue: 38,
-                        validate: (value: null | number | undefined) =>
-                          value === 38 || 'الارتفاع ثابت: 38 سم',
+                        validate: (value: null | number | undefined, { req }: Validation) =>
+                          value === 38 ||
+                          inLanguage(req, {
+                            ar: 'الارتفاع ثابت: 38 سم',
+                            en: 'The height is fixed: 38 cm',
+                          }),
                         label: { ar: 'الارتفاع (سم)', en: 'Height (cm)' },
                         admin: { readOnly: true },
                       },
@@ -339,23 +338,45 @@ export const Products: CollectionConfig = {
                     name: 'canvas',
                     type: 'group',
                     label: {
-                      ar: 'موضع الطباعة على الصورة (نِسَب 0–1)',
-                      en: 'Canvas fractions (0–1)',
-                    },
-                    admin: {
-                      description: {
-                        ar: 'يحدد أين تظهر منطقة الطباعة فوق صورة المنتج في المصمّم التفاعلي.',
-                        en: 'Where the print area sits over the product photo in the designer.',
-                      },
+                      ar: 'موضع الطباعة على الصورة (0 إلى 1)',
+                      en: 'Print area on the photo (0 to 1)',
                     },
                     fields: [
                       {
                         type: 'row',
                         fields: [
-                          { name: 'x', type: 'number', required: true, min: 0, max: 1, label: 'x' },
-                          { name: 'y', type: 'number', required: true, min: 0, max: 1, label: 'y' },
-                          { name: 'w', type: 'number', required: true, min: 0, max: 1, label: 'w' },
-                          { name: 'h', type: 'number', required: true, min: 0, max: 1, label: 'h' },
+                          {
+                            name: 'x',
+                            type: 'number',
+                            required: true,
+                            min: 0,
+                            max: 1,
+                            label: { ar: 'من اليسار', en: 'From the left' },
+                          },
+                          {
+                            name: 'y',
+                            type: 'number',
+                            required: true,
+                            min: 0,
+                            max: 1,
+                            label: { ar: 'من الأعلى', en: 'From the top' },
+                          },
+                          {
+                            name: 'w',
+                            type: 'number',
+                            required: true,
+                            min: 0,
+                            max: 1,
+                            label: { ar: 'العرض', en: 'Width' },
+                          },
+                          {
+                            name: 'h',
+                            type: 'number',
+                            required: true,
+                            min: 0,
+                            max: 1,
+                            label: { ar: 'الارتفاع', en: 'Height' },
+                          },
                         ],
                       },
                     ],

@@ -1,6 +1,7 @@
 import type { CollectionConfig, Field } from 'payload';
 import { CODE_TOP_LEVEL } from '@/lib/site-routes';
 import { hiddenUnlessAdmin, isAdmin } from '@/modules/cms/access';
+import { type Bilingual, inLanguage } from '@/modules/cms/fields/message';
 import { Refused } from '@/modules/cms/refused';
 import { revalidateRedirects } from '@/modules/cms/hooks/revalidate';
 import { collectionComponents } from '@/modules/cms/admin/document/config';
@@ -24,27 +25,45 @@ export function referenceId(to: RedirectTarget | undefined): number | string | u
 }
 
 /**
- * Why a redirect is refused, or null (ADR-032). Pure so the unit test needs no database:
- * `otherSources` are the other rows' `from` paths.
+ * Why a redirect is refused, in both languages, or null (ADR-032). Pure so the unit test
+ * needs no database: `otherSources` are the other rows' `from` paths.
  */
 export function redirectProblem(
   from: unknown,
   to: RedirectTarget | undefined,
   otherSources: readonly string[],
-): string | null {
+): Bilingual | null {
   if (typeof from !== 'string' || !FROM_PATTERN.test(from)) {
-    return 'From: a one-segment path of lowercase letters and hyphens, like /showcase';
+    return {
+      ar: 'المصدر: مسار من مقطع واحد بحروف لاتينية صغيرة وشرطات، مثل /showcase',
+      en: 'From: a one-segment path of lowercase letters and hyphens, like /showcase',
+    };
   }
   if ((CODE_TOP_LEVEL as readonly string[]).includes(from.slice(1))) {
-    return `"${from}" is a live page on the site; it cannot be redirected`;
+    return {
+      ar: `«${from}» صفحة حيّة في الموقع؛ لا يمكن تحويلها`,
+      en: `"${from}" is a live page on the site; it cannot be redirected`,
+    };
   }
   if (to?.type === 'custom') {
     const url = to.url?.trim() ?? '';
     const external = /^https:\/\/[^\s"'<>]+$/.test(url);
     const internal = url.startsWith('/') && !url.startsWith('//');
-    if (!external && !internal) return 'To: a path starting with / or an https:// URL';
-    if (url === from || url.startsWith(`${from}/`)) return 'To: the same as From';
-    if (otherSources.includes(url)) return 'To: the From of another redirect; no chains';
+    if (!external && !internal) {
+      return {
+        ar: 'الوجهة: مسار يبدأ بـ / أو رابط https://',
+        en: 'To: a path starting with / or an https:// URL',
+      };
+    }
+    if (url === from || url.startsWith(`${from}/`)) {
+      return { ar: 'الوجهة: هي المصدر نفسه', en: 'To: the same as From' };
+    }
+    if (otherSources.includes(url)) {
+      return {
+        ar: 'الوجهة: مصدر تحويل آخر؛ لا سلاسل',
+        en: 'To: the From of another redirect; no chains',
+      };
+    }
   }
   return null;
 }
@@ -52,9 +71,16 @@ export function redirectProblem(
 const label = (name: string, ar: string, en: string) => (field: Field) =>
   'name' in field && field.name === name ? { ...field, label: { ar, en } } : field;
 
+/** The redirect types this site allows, as an admin reads them (the plugin says "301 - Permanent"). */
+export const REDIRECT_TYPE_LABELS: Record<string, Bilingual> = {
+  '301': { ar: 'دائم (301)', en: 'Permanent (301)' },
+  '302': { ar: 'مؤقت (302)', en: 'Temporary (302)' },
+};
+
 /**
- * Arabic labels on the plugin's fields (it ships no `ar` translations), and a permanent
- * redirect by default: the plugin's `type` select is required but starts empty.
+ * Arabic labels on the plugin's fields (it ships no `ar` translations), the types named in
+ * both languages, and a permanent redirect by default: the plugin's `type` select is
+ * required but starts empty.
  */
 export function redirectFields(defaultFields: Field[]): Field[] {
   return defaultFields.map((field) => {
@@ -64,6 +90,10 @@ export function redirectFields(defaultFields: Field[]): Field[] {
         ...withLabel,
         defaultValue: '301',
         label: { ar: 'نوع التحويل', en: 'Redirect type' },
+        options: withLabel.options.map((option) => {
+          const value = typeof option === 'string' ? option : option.value;
+          return { value, label: REDIRECT_TYPE_LABELS[value] ?? { ar: value, en: value } };
+        }),
       };
     }
     if ('name' in withLabel && withLabel.name === 'to' && withLabel.type === 'group') {
@@ -141,7 +171,7 @@ export const REDIRECT_OVERRIDES: Omit<Partial<CollectionConfig>, 'fields'> & {
           to,
           others.docs.map((d) => d.from),
         );
-        if (problem) throw new Refused(problem);
+        if (problem) throw new Refused(inLanguage(req, problem));
         return data;
       },
     ],

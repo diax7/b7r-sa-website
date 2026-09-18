@@ -95,8 +95,8 @@ export const CITATION_DESCRIPTIONS: Described = {
     en: 'The model id at the time.',
   },
   mode: {
-    ar: '«مع البحث» عندما كان بحث الويب الخاص بالمزوّد مفعّلاً في السؤال؛ «بلا بحث» للمزوّدين الذين لا يقدّمونه عبرنا.',
-    en: '"With search" when the vendor’s web search was on for the ask; "plain" for vendors that offer none through us.',
+    ar: '«مفعّل» عندما كان بحث الويب الخاص بالمزوّد مفعّلاً في السؤال؛ «معطّل» للمزوّدين الذين لا يقدّمونه عبرنا.',
+    en: '"On" when the vendor’s web search was on for the ask; "off" for vendors that offer none through us.',
   },
   mentioned: {
     ar: 'الجواب ذكر بحر برنت أو b7r بالاسم.',

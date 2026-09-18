@@ -100,6 +100,7 @@ type Row = Record<string, unknown>;
  * form, on the field) and mask as the account's e-mail tail. The check lives in the
  * `beforeChange` hook rather than `validate`: Payload runs a field's hooks first and
  * validates what they return, which here is the ciphertext.
+ * What the field does on the site is the entity's description map's to say, like any field.
  */
 export function secretField(
   name: string,
@@ -119,12 +120,6 @@ export function secretField(
     name,
     type: 'text',
     label,
-    admin: {
-      description: {
-        ar: 'يُحفظ مشفّراً ولا يُعرض مرة أخرى؛ اتركه كما هو للإبقاء عليه، أو امسحه لإزالته.',
-        en: 'Stored encrypted and never shown again; leave the mask to keep it, clear it to remove it.',
-      },
-    },
     hooks: {
       beforeChange: [
         async (args) => {

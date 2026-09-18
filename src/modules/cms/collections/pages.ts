@@ -5,6 +5,7 @@ import { canDeleteVersioned, isEditorOrAdmin, publishedOrStaff } from '@/modules
 import { Refused } from '@/modules/cms/refused';
 import { PAGE_BLOCKS } from '@/modules/cms/blocks';
 import { isDraftSave, revalidatePages } from '@/modules/cms/hooks/revalidate';
+import { type Bilingual, inLanguage } from '@/modules/cms/fields/message';
 import { savedByField, stampSavedBy } from '@/modules/cms/fields/saved-by';
 import { localePath, requestLocale } from '@/lib/i18n';
 import { previewUrl } from '@/lib/preview-token';
@@ -20,12 +21,20 @@ export const FORBIDDEN_PAGE_SLUGS: readonly string[] = CODE_TOP_LEVEL.filter(
 
 export const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
-/** Why a slug is refused, or null. Pure so the unit test needs no database. */
-export function pageSlugProblem(slug: unknown): string | null {
+/** Why a slug is refused, in both languages, or null. Pure so the unit test needs no database. */
+export function pageSlugProblem(slug: unknown): Bilingual | null {
   if (typeof slug !== 'string' || !SLUG_PATTERN.test(slug) || slug.length > 64) {
-    return 'Slug: lowercase letters, digits and hyphens only, up to 64 characters';
+    return {
+      ar: 'المعرّف في الرابط: حروف لاتينية صغيرة وأرقام وشرطات فقط، حتى 64 حرفاً',
+      en: 'Address ending: lowercase letters, digits and hyphens only, up to 64 characters',
+    };
   }
-  if (FORBIDDEN_PAGE_SLUGS.includes(slug)) return `"${slug}" is reserved by the site itself`;
+  if (FORBIDDEN_PAGE_SLUGS.includes(slug)) {
+    return {
+      ar: `«${slug}» محجوز للموقع نفسه`,
+      en: `"${slug}" is reserved by the site itself`,
+    };
+  }
   return null;
 }
 
@@ -82,7 +91,12 @@ export const Pages: CollectionConfig = {
         const isReserved = reserved(originalDoc?.['slug']);
         // The seven designed pages keep their slug: a route folder renders each one.
         if (isReserved && slug && slug !== originalDoc?.['slug']) {
-          throw new Refused('This page has a fixed route on the site; its slug cannot change');
+          throw new Refused(
+            inLanguage(req, {
+              ar: 'لهذه الصفحة مسار ثابت في الموقع؛ معرّفها لا يتغيّر',
+              en: 'This page has a fixed route on the site; its address ending cannot change',
+            }),
+          );
         }
         // …and stay published: «Unpublish» writes `_status: draft` to the main row (no
         // `draft=true` on the request), which would leave the route with nothing to render.
@@ -93,12 +107,17 @@ export const Pages: CollectionConfig = {
           originalDoc?.['_status'] === 'published' &&
           !isDraftSave(req);
         if (unpublishing) {
-          throw new Refused('This page is part of the site; it cannot be unpublished');
+          throw new Refused(
+            inLanguage(req, {
+              ar: 'هذه الصفحة جزء من الموقع؛ لا يمكن إلغاء نشرها',
+              en: 'This page is part of the site; it cannot be unpublished',
+            }),
+          );
         }
         // A draft autosave may carry no slug yet; `required` refuses the empty slug at publish.
         if (!slug) return data;
         const problem = pageSlugProblem(slug);
-        if (problem) throw new Refused(problem);
+        if (problem) throw new Refused(inLanguage(req, problem));
         return data;
       },
     ],
@@ -106,7 +125,12 @@ export const Pages: CollectionConfig = {
       async ({ id, req }) => {
         const doc = await req.payload.findByID({ collection: 'pages', id, depth: 0, req });
         if (reserved(doc.slug)) {
-          throw new Refused('This page has a fixed route on the site; it cannot be deleted');
+          throw new Refused(
+            inLanguage(req, {
+              ar: 'لهذه الصفحة مسار ثابت في الموقع؛ لا يمكن حذفها',
+              en: 'This page has a fixed route on the site; it cannot be deleted',
+            }),
+          );
         }
       },
     ],
@@ -137,13 +161,7 @@ export const Pages: CollectionConfig = {
                     required: true,
                     unique: true,
                     index: true,
-                    label: { ar: 'المعرّف في الرابط', en: 'Slug' },
-                    admin: {
-                      description: {
-                        ar: 'حروف لاتينية صغيرة وشرطات؛ يصبح /المعرّف',
-                        en: 'lowercase-hyphenated; served at /slug',
-                      },
-                    },
+                    label: { ar: 'المعرّف في الرابط', en: 'Address ending (slug)' },
                   },
                 ],
               },
@@ -151,7 +169,7 @@ export const Pages: CollectionConfig = {
                 name: 'lead',
                 type: 'text',
                 localized: true,
-                label: { ar: 'السطر تحت العنوان (اختياري)', en: 'Lead (optional)' },
+                label: { ar: 'السطر تحت العنوان (اختياري)', en: 'Line under the title (optional)' },
               },
               {
                 name: 'blocks',
@@ -173,7 +191,7 @@ export const Pages: CollectionConfig = {
               {
                 name: 'seo',
                 type: 'group',
-                label: { ar: 'محركات البحث', en: 'SEO' },
+                label: { ar: 'محركات البحث', en: 'Search engines' },
                 fields: [
                   {
                     name: 'title',
@@ -181,7 +199,10 @@ export const Pages: CollectionConfig = {
                     required: true,
                     localized: true,
                     maxLength: 70,
-                    label: { ar: 'عنوان الصفحة (حتى 70 حرفاً)', en: 'Meta title (≤ 70)' },
+                    label: {
+                      ar: 'عنوان البحث (حتى 70 حرفاً)',
+                      en: 'Search title (up to 70 characters)',
+                    },
                   },
                   {
                     name: 'description',
@@ -189,7 +210,10 @@ export const Pages: CollectionConfig = {
                     required: true,
                     localized: true,
                     maxLength: 160,
-                    label: { ar: 'الوصف (حتى 160 حرفاً)', en: 'Meta description (≤ 160)' },
+                    label: {
+                      ar: 'وصف البحث (حتى 160 حرفاً)',
+                      en: 'Search description (up to 160 characters)',
+                    },
                   },
                   {
                     name: 'ogImage',

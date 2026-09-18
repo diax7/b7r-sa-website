@@ -100,7 +100,7 @@ export const Testimonials: CollectionConfig = {
         name: 'placeholder',
         type: 'checkbox',
         defaultValue: false,
-        label: { ar: 'نموذج (ليس رأي تاجر حقيقي)', en: 'Placeholder (not a real merchant)' },
+        label: { ar: 'نموذج (ليس رأي تاجر حقيقي)', en: 'Sample (not a real merchant)' },
         admin: {
           description: {
             ar: 'النماذج تظهر بشارة «نموذج» في المعاينة وتُخفى على b7r.sa حتى يُنشر رأي حقيقي.',

@@ -16,6 +16,16 @@ export const TOPIC_STATUSES = [
 ] as const;
 export type TopicStatus = (typeof TOPIC_STATUSES)[number];
 
+/** Where a topic is in the cycle, as an admin reads it. */
+export const TOPIC_STATUS_LABELS: Record<TopicStatus, { ar: string; en: string }> = {
+  backlog: { ar: 'في القائمة', en: 'In the backlog' },
+  scheduled: { ar: 'مجدول', en: 'Scheduled' },
+  generating: { ar: 'يُكتب الآن', en: 'Being written' },
+  published: { ar: 'منشور', en: 'Published' },
+  failed: { ar: 'فشل', en: 'Failed' },
+  rejected: { ar: 'مرفوض', en: 'Rejected' },
+};
+
 export const TOPIC_INTENTS = ['informational', 'commercial', 'seasonal'] as const;
 export type TopicIntent = (typeof TOPIC_INTENTS)[number];
 
@@ -159,7 +169,7 @@ export const AiTopics: CollectionConfig = {
             type: 'select',
             required: true,
             defaultValue: 'backlog',
-            options: TOPIC_STATUSES.map((value) => ({ value, label: value })),
+            options: TOPIC_STATUSES.map((value) => ({ value, label: TOPIC_STATUS_LABELS[value] })),
             label: { ar: 'الحالة', en: 'Status' },
           },
           {
@@ -170,7 +180,7 @@ export const AiTopics: CollectionConfig = {
             options: [
               { value: 'seed', label: { ar: 'القائمة الأولى', en: 'Seed' } },
               { value: 'manual', label: { ar: 'يدوي', en: 'Manual' } },
-              { value: 'searchConsole', label: 'Search Console' },
+              { value: 'searchConsole', label: { ar: 'Search Console', en: 'Search Console' } },
             ],
             label: { ar: 'المصدر', en: 'Source' },
           },

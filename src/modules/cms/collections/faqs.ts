@@ -3,6 +3,7 @@ import { FAQ_GROUPS } from '@/content/schema';
 import { isAdmin, isEditorOrAdmin } from '@/modules/cms/access';
 import { Refused } from '@/modules/cms/refused';
 import { PATHS_FOR_FAQS, revalidateRoutes } from '@/modules/cms/hooks/revalidate';
+import { type Bilingual, inLanguage } from '@/modules/cms/fields/message';
 import { savedByField, stampSavedBy } from '@/modules/cms/fields/saved-by';
 import { collectionComponents } from '@/modules/cms/admin/document/config';
 import { adminGroup } from '@/modules/cms/admin/icons';
@@ -12,13 +13,28 @@ import { describeFields } from '@/modules/cms/admin/descriptions/describe';
 /** The home accordion shows exactly this many entries (BRD 4.4, 6.4.9). */
 export const HOME_FAQ_LIMIT = 5;
 
-export const HOME_LIMIT_MESSAGE = `The home page shows ${HOME_FAQ_LIMIT} questions at most; untick another one first.`;
+export const HOME_LIMIT_MESSAGE: Bilingual = {
+  ar: `الصفحة الرئيسية تعرض ${HOME_FAQ_LIMIT} أسئلة على الأكثر؛ ألغِ تعليم سؤال آخر أولاً.`,
+  en: `The home page shows ${HOME_FAQ_LIMIT} questions at most; untick another one first.`,
+};
+
+/**
+ * The FAQ page's group headings are the stored values (Arabic, `FAQ_GROUPS`); the picker
+ * names each in both languages.
+ */
+export const FAQ_GROUP_LABELS: Record<(typeof FAQ_GROUPS)[number], Bilingual> = {
+  البداية: { ar: 'البداية', en: 'Getting started' },
+  'الأسعار والربح': { ar: 'الأسعار والربح', en: 'Prices and profit' },
+  'الطلبات والتوصيل': { ar: 'الطلبات والتوصيل', en: 'Orders and delivery' },
+  'المتاجر والربط': { ar: 'المتاجر والربط', en: 'Stores and connection' },
+  'الجودة والدعم': { ar: 'الجودة والدعم', en: 'Quality and support' },
+};
 
 /**
  * Refuses a sixth «show on home» (pure so the unit test needs no database): `othersOnHome`
  * is how many other entries already carry the flag.
  */
-export function homeFlagProblem(showOnHome: boolean, othersOnHome: number): string | null {
+export function homeFlagProblem(showOnHome: boolean, othersOnHome: number): Bilingual | null {
   return showOnHome && othersOnHome >= HOME_FAQ_LIMIT ? HOME_LIMIT_MESSAGE : null;
 }
 
@@ -41,7 +57,7 @@ async function guardHomeLimit({
     req,
   });
   const problem = homeFlagProblem(true, others.totalDocs);
-  if (problem) throw new Refused(problem);
+  if (problem) throw new Refused(inLanguage(req, problem));
   return data;
 }
 
@@ -102,7 +118,6 @@ export const Faqs: CollectionConfig = {
         required: true,
         localized: true,
         label: { ar: 'الإجابة', en: 'Answer' },
-        admin: { description: { ar: 'نص عادي، بلا روابط', en: 'Plain text, no links' } },
       },
       {
         type: 'row',
@@ -111,15 +126,15 @@ export const Faqs: CollectionConfig = {
             name: 'group',
             type: 'select',
             required: true,
-            options: FAQ_GROUPS.map((g) => ({ label: g, value: g })),
-            label: { ar: 'القسم', en: 'Group' },
+            options: FAQ_GROUPS.map((g) => ({ label: FAQ_GROUP_LABELS[g], value: g })),
+            label: { ar: 'المجموعة', en: 'Group' },
           },
           {
             name: 'order',
             type: 'number',
             required: true,
             defaultValue: 1,
-            label: { ar: 'الترتيب داخل القسم', en: 'Order within the group' },
+            label: { ar: 'الترتيب داخل المجموعة', en: 'Order in the group' },
             admin: { step: 1 },
           },
         ],
@@ -132,12 +147,6 @@ export const Faqs: CollectionConfig = {
             type: 'checkbox',
             defaultValue: false,
             label: { ar: 'يظهر في الرئيسية', en: 'Show on the home page' },
-            admin: {
-              description: {
-                ar: `${HOME_FAQ_LIMIT} أسئلة كحد أقصى`,
-                en: `At most ${HOME_FAQ_LIMIT} entries`,
-              },
-            },
           },
           {
             name: 'homeOrder',

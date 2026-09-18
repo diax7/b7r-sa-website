@@ -94,7 +94,11 @@ export const ADMIN_VIEWS: Record<
   ViewSlug,
   { label: { ar: string; en: string }; path: `/${string}`; icon: LucideIcon }
 > = {
-  traffic: { label: { ar: 'مصادر الزيارات', en: 'Traffic' }, path: '/traffic', icon: Signpost },
+  traffic: {
+    label: { ar: 'مصادر الزيارات', en: 'Traffic sources' },
+    path: '/traffic',
+    icon: Signpost,
+  },
   visibility: {
     label: { ar: 'درجة الظهور', en: 'Visibility score' },
     path: '/visibility',
@@ -268,3 +272,22 @@ export const WIDGET_ICONS: Record<string, LucideIcon> = {
   Eye,
   Heart,
 };
+
+/** What each of those icons is called in the picker and the list, never the lucide name. */
+export const WIDGET_ICON_LABELS: Record<keyof typeof WIDGET_ICONS, { ar: string; en: string }> = {
+  ShieldCheck: { ar: 'درع', en: 'Shield' },
+  Workflow: { ar: 'مسار', en: 'Workflow' },
+  Zap: { ar: 'برق', en: 'Bolt' },
+  Target: { ar: 'هدف', en: 'Target' },
+  Eye: { ar: 'عين', en: 'Eye' },
+  Heart: { ar: 'قلب', en: 'Heart' },
+};
+
+/** The options of a select over widget icons: the stored lucide name, labelled in both languages. */
+export function iconOptions(names: readonly string[]) {
+  return names.map((value) => {
+    const label = WIDGET_ICON_LABELS[value];
+    if (!label) throw new Error(`Icon "${value}" has no label in WIDGET_ICON_LABELS`);
+    return { value, label };
+  });
+}

@@ -20,8 +20,8 @@ export type PromptIntent = (typeof PROMPT_INTENTS)[number];
 export const Prompts: CollectionConfig = {
   slug: PROMPTS,
   labels: {
-    singular: { ar: 'سؤال', en: 'Prompt' },
-    plural: { ar: 'أسئلة المشترين', en: 'Prompts' },
+    singular: { ar: 'سؤال', en: 'Question' },
+    plural: { ar: 'أسئلة المشترين', en: 'Buyer questions' },
   },
   admin: {
     hideAPIURL: true,
@@ -52,7 +52,7 @@ export const Prompts: CollectionConfig = {
         type: 'textarea',
         required: true,
         maxLength: 300,
-        label: { ar: 'السؤال', en: 'Prompt' },
+        label: { ar: 'السؤال', en: 'Question' },
       },
       {
         type: 'row',
@@ -95,7 +95,7 @@ export const Prompts: CollectionConfig = {
             defaultValue: 1,
             min: 1,
             max: 365,
-            label: { ar: 'كل (أيام)', en: 'Every (days)' },
+            label: { ar: 'يُسأل كل (أيام)', en: 'Ask every (days)' },
           },
         ],
       },

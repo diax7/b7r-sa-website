@@ -75,6 +75,12 @@ export function describeFields(
     const name = `${path}${field.name}`;
     const description = map[name];
     if (description) applied?.add(name);
+    // An inline sentence the map also names is never shown and drifts (audit 2026-09-18, 2.9).
+    if (description && field.admin?.description !== undefined) {
+      throw new Error(
+        `Field "${name}" carries an inline admin.description where its map names it; delete the inline one, the map is what shows.`,
+      );
+    }
     let next: Field = description
       ? ({ ...field, admin: { ...field.admin, description } } as Field)
       : field;

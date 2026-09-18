@@ -11,6 +11,7 @@ import {
 } from '@payloadcms/richtext-lexical';
 import type { Block, Field } from 'payload';
 import { CARD_ICONS, FAQ_SELECTIONS } from '@/content/schema';
+import { iconOptions } from '@/modules/cms/admin/icons';
 
 /**
  * The rich-text feature set (BRD 9.5): H2/H3 (the page owns its H1), bold, italic, lists,
@@ -133,7 +134,7 @@ export const CardsBlock: Block = {
               type: 'select',
               admin: { components: { Field: '@/modules/cms/admin/fields/icon-select#IconSelect' } },
               required: true,
-              options: CARD_ICONS.map((i) => ({ label: i, value: i })),
+              options: iconOptions(CARD_ICONS),
               label: { ar: 'الأيقونة', en: 'Icon' },
             },
             text('title', { ar: 'العنوان', en: 'Title' }),

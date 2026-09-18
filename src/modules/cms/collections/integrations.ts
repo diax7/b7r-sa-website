@@ -2,22 +2,30 @@ import type { CollectionConfig } from 'payload';
 import { INTEGRATION_PLATFORMS } from '@/content/schema';
 import { isAdmin, isEditorOrAdmin } from '@/modules/cms/access';
 import { revalidateRoutes } from '@/modules/cms/hooks/revalidate';
+import type { Bilingual } from '@/modules/cms/fields/message';
 import { savedByField, stampSavedBy } from '@/modules/cms/fields/saved-by';
 import { collectionComponents } from '@/modules/cms/admin/document/config';
 import { adminGroup } from '@/modules/cms/admin/icons';
 import { INTEGRATION_DESCRIPTIONS } from '@/modules/cms/admin/descriptions/catalogue';
 import { describeFields } from '@/modules/cms/admin/descriptions/describe';
 
+/** The platforms as a visitor reads them; the value picks the brand SVG that ships with the site. */
+export const PLATFORM_LABELS: Record<(typeof INTEGRATION_PLATFORMS)[number], Bilingual> = {
+  salla: { ar: 'سلة', en: 'Salla' },
+  zid: { ar: 'زد', en: 'Zid' },
+  shopify: { ar: 'شوبيفاي', en: 'Shopify' },
+};
+
 /**
- * Integration tiles (BRD 4.4, 6.4.8): one document per platform. The logo is a brand SVG
- * kept in the code (the media library refuses SVG on purpose), so the platform is a fixed
+ * The connected stores (BRD 4.4, 6.4.8): one document per platform. The logo is a brand SVG
+ * kept in the code (the image library refuses SVG on purpose), so the platform is a fixed
  * choice and a new platform is a deploy; the name and order are content.
  */
 export const Integrations: CollectionConfig = {
   slug: 'integrations',
   labels: {
-    singular: { ar: 'منصة متاجر', en: 'Store integration' },
-    plural: { ar: 'المتاجر المتصلة', en: 'Store integrations' },
+    singular: { ar: 'منصة متاجر', en: 'Store platform' },
+    plural: { ar: 'المتاجر المتصلة', en: 'Connected stores' },
   },
   admin: {
     hideAPIURL: true,
@@ -33,8 +41,8 @@ export const Integrations: CollectionConfig = {
       },
     },
     description: {
-      ar: 'المنصات المتصلة (سلة، زد، شوبيفاي) وترتيبها في شريط التكاملات.',
-      en: 'Connected platforms (Salla, Zid, Shopify) and their order in the integrations strip.',
+      ar: 'المنصات المتصلة (سلة، زد، شوبيفاي) وترتيبها في قسم المتاجر المتصلة.',
+      en: 'The connected platforms (Salla, Zid, Shopify) and their order in the connected-stores section.',
     },
   },
   defaultSort: 'order',
@@ -59,13 +67,9 @@ export const Integrations: CollectionConfig = {
             type: 'select',
             required: true,
             unique: true,
-            options: INTEGRATION_PLATFORMS.map((p) => ({ label: p, value: p })),
+            options: INTEGRATION_PLATFORMS.map((p) => ({ label: PLATFORM_LABELS[p], value: p })),
             label: { ar: 'المنصة', en: 'Platform' },
             admin: {
-              description: {
-                ar: 'يحدد الشعار الذي يظهر في الموقع',
-                en: 'Selects the logo shown on the site',
-              },
               components: { Field: '@/modules/cms/admin/fields/platform-select#PlatformSelect' },
             },
           },

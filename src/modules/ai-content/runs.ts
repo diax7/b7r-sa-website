@@ -8,8 +8,23 @@ import { AI_RUNS_DESCRIPTIONS } from '@/modules/ai-content/descriptions';
 export const RUN_STATUSES = ['running', 'done', 'failed', 'skipped'] as const;
 export type RunStatus = (typeof RUN_STATUSES)[number];
 
+/** A run's outcome, as an admin reads it. */
+export const RUN_STATUS_LABELS: Record<RunStatus, { ar: string; en: string }> = {
+  running: { ar: 'يعمل', en: 'Running' },
+  done: { ar: 'انتهى', en: 'Done' },
+  failed: { ar: 'فشل', en: 'Failed' },
+  skipped: { ar: 'تُخطّي', en: 'Skipped' },
+};
+
 export const RUN_KINDS = ['generate', 'freshness', 'citation'] as const;
 export type RunKind = (typeof RUN_KINDS)[number];
+
+/** What a run did, as an admin reads it: a post written, a post refreshed, the citation ledger asked. */
+export const RUN_KIND_LABELS: Record<RunKind, { ar: string; en: string }> = {
+  generate: { ar: 'كتابة مقال', en: 'Post' },
+  freshness: { ar: 'تحديث', en: 'Refresh' },
+  citation: { ar: 'سجل الاستشهاد', en: 'Citation ledger' },
+};
 
 /**
  * The audit log (BRD 10.2.3): one row per pipeline execution, written by the pipeline
@@ -19,7 +34,7 @@ export type RunKind = (typeof RUN_KINDS)[number];
  */
 export const AiRuns: CollectionConfig = {
   slug: 'ai-runs',
-  labels: { singular: { ar: 'جولة', en: 'Run' }, plural: { ar: 'السجل', en: 'Runs' } },
+  labels: { singular: { ar: 'جولة', en: 'Run' }, plural: { ar: 'الجولات', en: 'Runs' } },
   admin: {
     hideAPIURL: true,
     useAsTitle: 'label',
@@ -57,7 +72,7 @@ export const AiRuns: CollectionConfig = {
             type: 'select',
             required: true,
             defaultValue: 'generate',
-            options: RUN_KINDS.map((value) => ({ value, label: value })),
+            options: RUN_KINDS.map((value) => ({ value, label: RUN_KIND_LABELS[value] })),
             label: { ar: 'النوع', en: 'Kind' },
             admin: { readOnly: true },
           },
@@ -66,7 +81,7 @@ export const AiRuns: CollectionConfig = {
             type: 'select',
             required: true,
             defaultValue: 'running',
-            options: RUN_STATUSES.map((value) => ({ value, label: value })),
+            options: RUN_STATUSES.map((value) => ({ value, label: RUN_STATUS_LABELS[value] })),
             label: { ar: 'الحالة', en: 'Status' },
             admin: { readOnly: true },
           },
