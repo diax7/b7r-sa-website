@@ -1648,7 +1648,9 @@ rail on whichever side it sits, the account menu passes the document direction t
 (which reads none from the page), the palette's Enter glyph is never mirrored (the key looks
 the same on an Arabic keyboard), a date pair in a table sits in a `dir="ltr"` span, and the
 sidebar's remembered group state is keyed by the group's registry key rather than its label,
-so it survives a change of language. The e2e "the admin in Arabic" switches through the
+so it survives a change of language; a state saved under the old English labels is simply
+not found, so every group opens once after this ships (a refinement, not a regression). The
+e2e "the admin in Arabic" switches through the
 account view, asserts `html[dir="rtl"]`, the groups, the dashboard, a list, an edit view
 with its content locale, the two views, runs axe on the shell, and switches back.
 

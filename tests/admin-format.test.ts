@@ -24,10 +24,18 @@ describe('numbers and dates in the panel (admin/format)', () => {
   });
 
   it('formats a date as dd/MM/yyyy in both languages, digits Western, no bidi marks', () => {
-    const date = new Date(2026, 8, 3);
+    const date = new Date('2026-09-03T09:00:00Z');
     expect(formatDate(date, 'en')).toBe('03/09/2026');
     expect(formatDate(date, 'ar')).toBe('03/09/2026');
     expect(formatDate(date, 'ar')).not.toMatch(/[\u200E\u200F]/);
+  });
+
+  it('reads the day in Riyadh, not the process zone: 22:00 UTC is already the next day', () => {
+    const lateUtc = new Date('2026-09-03T22:00:00Z');
+    expect(formatDate(lateUtc, 'en')).toBe('04/09/2026');
+    expect(formatDate(lateUtc, 'ar')).toBe('04/09/2026');
+    // The week-old fall-through of relativeTime inherits the same zone.
+    expect(relativeTime(lateUtc, 'en', new Date('2026-09-20T12:00:00Z'))).toBe('04/09/2026');
   });
 });
 

@@ -635,6 +635,8 @@ test.describe('CMS admin', () => {
       await expect(page.locator('[data-admin-locale-note]')).toContainText(
         'تحرير المحتوى الإنجليزي',
       );
+      // The note about the English content is itself written in Arabic: the UI language.
+      await expect(page.locator('[data-admin-locale-note]')).toContainText(/[؀-ۿ]/);
       expect(
         await serious(
           '[data-admin-nav]',

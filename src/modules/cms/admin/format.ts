@@ -1,3 +1,4 @@
+import { RIYADH } from '@/lib/riyadh';
 import { adminStringsFor } from '@/modules/cms/admin/strings';
 
 /**
@@ -5,6 +6,8 @@ import { adminStringsFor } from '@/modules/cms/admin/strings';
  * Western (design system §5): the locale carries `-u-nu-latn`, so Arabic reads "1,234" and
  * "قبل 5 دقائق", never "١٬٢٣٤". Every number or date an admin component prints goes through
  * here; day keys (`YYYY-MM-DD`) are shown as they are, since they sort and match the rows.
+ * A date is read in Riyadh (the site's clock, `lib/riyadh.ts`), never the process's zone:
+ * the container runs UTC, and a save at 01:00 Riyadh must not read as the day before.
  */
 export function formatLocale(language: string): string {
   return `${language === 'ar' ? 'ar' : 'en-GB'}-u-nu-latn`;
@@ -14,10 +17,11 @@ export function formatNumber(n: number, language: string): string {
   return new Intl.NumberFormat(formatLocale(language)).format(n);
 }
 
-/** `dd/MM/yyyy` in both languages (design system §5), in the server's or the browser's zone. */
+/** `dd/MM/yyyy` in both languages (design system §5), the day as Riyadh counts it. */
 export function formatDate(date: Date, language: string): string {
   return (
     new Intl.DateTimeFormat(formatLocale(language), {
+      timeZone: RIYADH,
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
