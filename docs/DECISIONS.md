@@ -1592,8 +1592,10 @@ React has finished with the DOM before a class is added (the CTO's review: an in
 before hydration adds classes the dev hydration diff reports on every section): an element
 already in view is marked visible at once and never hidden, so the LCP and the fold are never
 touched; one below the fold is hidden and fades up 12 px over 400 ms when it enters (an
-IntersectionObserver with an 8% bottom margin); a MutationObserver arms elements added later;
-the stagger delay is capped at the ninth child; a printed page shows everything. The CSS hides
+IntersectionObserver with an 8% bottom margin); the hide itself is instant, since a fade-out
+is what axe and Lighthouse read as half-transparent text (the first CI run's contrast
+failures on the product cards); a MutationObserver arms elements added later; the stagger
+delay is capped at the ninth child; a printed page shows everything. The CSS hides
 nothing by itself, so content is always there without JavaScript, and the arming exits under
 reduced motion; the graceful loss is a scroll in the first second, which shows plain content.
 `e2e/reveal.spec.ts` asserts the four rules and that the hero image has no hidden ancestor;

@@ -843,9 +843,12 @@
     transform 400ms var(--ease-standard);
   transition-delay: calc(min(var(--i, 0), 8) * 60ms);
 }
+/* The hide is instant (a transition here would fade a card out over 400 ms while axe and
+   Lighthouse read it half-transparent); only the reveal animates. */
 [data-reveal].is-hidden {
   opacity: 0;
   transform: translateY(12px);
+  transition: none;
 }
 [data-reveal].is-visible {
   opacity: 1;
