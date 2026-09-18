@@ -304,7 +304,7 @@ export interface Media {
 export interface Product {
   id: number;
   /**
-   * The product's colours: the swatches on the card, the colour choice on the page and in the designer. The first is the default. Duplicating a row copies the open language only; the other one starts empty.
+   * The product's colours: the swatches on the card, the colour choice on the page and in the designer. The first is the default. A duplicated row copies the Arabic only; its English starts empty.
    */
   colors: {
     /**
@@ -354,7 +354,7 @@ export interface Product {
    */
   suggestedPrice: number;
   /**
-   * The sizes on offer: the size table on the product's page, in this order. Duplicating a row copies the open language only; the other one starts empty.
+   * The sizes on offer: the size table on the product's page, in this order. A duplicated row copies the Arabic only; its English starts empty.
    */
   sizes: {
     /**
@@ -468,7 +468,7 @@ export interface Page {
    */
   lead?: string | null;
   /**
-   * The page's sections, top to bottom; drag to reorder. Each type has its own fields. Duplicating a row copies the open language only; the other one starts empty.
+   * The page's sections, top to bottom; drag to reorder. Each type has its own fields. A duplicated row copies the Arabic and the English text or photo under a field; the English beside the other fields starts empty.
    */
   blocks: (
     | {
@@ -547,7 +547,7 @@ export interface Page {
          */
         title?: string | null;
         /**
-         * The cards in grid order: an icon, a title, a text. Three per row on a desktop. Duplicating a row copies the open language only; the other one starts empty.
+         * The cards in grid order: an icon, a title, a text. Three per row on a desktop. A duplicated row copies the Arabic only; its English starts empty.
          */
         items: {
           /**
@@ -574,7 +574,7 @@ export interface Page {
       }
     | {
         /**
-         * The numbered steps on the how-it-works page, in order: a 3D icon, a title, a text. Duplicating a row copies the open language only; the other one starts empty.
+         * The numbered steps on the how-it-works page, in order: a 3D icon, a title, a text. A duplicated row copies the Arabic only; its English starts empty.
          */
         items: {
           /**
@@ -764,7 +764,7 @@ export interface Page {
          */
         asOf: string;
         /**
-         * The table’s rows in order: the criterion, then ours and theirs. Three at least; every claim about the other side is one a reader can check on its pages. Duplicating a row copies the open language only; the other one starts empty.
+         * The table’s rows in order: the criterion, then ours and theirs. Three at least; every claim about the other side is one a reader can check on its pages. A duplicated row copies the Arabic only; its English starts empty.
          */
         rows: {
           /**
@@ -782,7 +782,7 @@ export interface Page {
           id?: string | null;
         }[];
         /**
-         * Who B7R suits best: one item per case, in the affirmative. Duplicating a row copies the open language only; the other one starts empty.
+         * Who B7R suits best: one item per case, in the affirmative. A duplicated row copies the Arabic only; its English starts empty.
          */
         bestFor: {
           /**
@@ -792,7 +792,7 @@ export interface Page {
           id?: string | null;
         }[];
         /**
-         * Who B7R does not suit: what makes the page honest, and the assistants cite the honest. Duplicating a row copies the open language only; the other one starts empty.
+         * Who B7R does not suit: what makes the page honest, and the assistants cite the honest. A duplicated row copies the Arabic only; its English starts empty.
          */
         notBestFor: {
           /**
@@ -1062,7 +1062,7 @@ export interface Post {
    */
   cover: number | Media;
   /**
-   * The "key takeaways" box above the body: three short sentences for the reader in a hurry and for answer engines. Duplicating a row copies the open language only; the other one starts empty.
+   * The "key takeaways" box above the body: three short sentences for the reader in a hurry and for answer engines. A duplicated row copies the Arabic only; its English starts empty.
    */
   takeaways: {
     /**
@@ -2845,7 +2845,7 @@ export interface Home {
   id: number;
   hero: {
     /**
-     * The four slides at the top of the home page, rotating; the first is what a visitor sees first. Each has a headline, a subline and two photos per language. Duplicating a row copies the open language only; the other one starts empty.
+     * The four slides at the top of the home page, rotating; the first is what a visitor sees first. Each has a headline, a subline and two photos per language. A duplicated row copies the Arabic and the English text or photo under a field; the English beside the other fields starts empty.
      */
     slides: {
       /**
@@ -2900,7 +2900,7 @@ export interface Home {
      */
     microcopy: string;
     /**
-     * Zero to 6; none hides the row. The rows are shared by both languages, the text is per language: a row without an English text does not show on the English site. Duplicating a row copies the open language only; the other one starts empty.
+     * Zero to 6; none hides the row. The rows are shared by both languages, the text is per language: a row without an English text does not show on the English site. A duplicated row copies the Arabic only; its English starts empty.
      */
     chips?:
       | {
@@ -2974,7 +2974,7 @@ export interface Home {
      */
     link: string;
     /**
-     * The three steps in order: a 3D icon, a title, a text. Duplicating a row copies the open language only; the other one starts empty.
+     * The three steps in order: a 3D icon, a title, a text. A duplicated row copies the Arabic only; its English starts empty.
      */
     items: {
       /**
@@ -3020,7 +3020,7 @@ export interface Home {
      */
     title: string;
     /**
-     * The three cards in order: an icon, a title, a text. Also the facts band of the About page. Duplicating a row copies the open language only; the other one starts empty.
+     * The three cards in order: an icon, a title, a text. Also the facts band of the About page. A duplicated row copies the Arabic only; its English starts empty.
      */
     items: {
       /**
@@ -3178,7 +3178,7 @@ export interface SiteSetting {
   };
   menu: {
     /**
-     * The header links in order, the phone menu, and the "Links" column of the footer. Duplicating a row copies the open language only; the other one starts empty.
+     * The header links in order, the phone menu, and the "Links" column of the footer. A duplicated row copies the Arabic only; its English starts empty.
      */
     primary: {
       /**
@@ -3196,7 +3196,7 @@ export interface SiteSetting {
       id?: string | null;
     }[];
     /**
-     * The "Policies" column of the footer: terms, shipping, privacy, FAQ. Duplicating a row copies the open language only; the other one starts empty.
+     * The "Policies" column of the footer: terms, shipping, privacy, FAQ. A duplicated row copies the Arabic only; its English starts empty.
      */
     policies: {
       /**
@@ -3303,7 +3303,7 @@ export interface SeoDefault {
    */
   titleTemplate: string;
   /**
-   * One row per fixed page: its search title, its description and the date its content last changed. Duplicating a row copies the open language only; the other one starts empty.
+   * One row per fixed page: its search title, its description and the date its content last changed. A duplicated row copies the Arabic only; its English starts empty.
    */
   routes: {
     /**

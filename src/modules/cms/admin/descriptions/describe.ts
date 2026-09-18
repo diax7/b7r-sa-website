@@ -147,12 +147,12 @@ function named(field: Field & { name: string }, pass: Pass, name: string): Field
 
 /**
  * What duplicating a row does in a list whose rows are edited in both languages (ADR-057,
- * PR A): the form copies the open language with a new row id, so the other language of the
- * copy starts empty. Said on the list, after its own sentence.
+ * PR A): the form copies the Arabic with a new row id, so the English of the copy starts
+ * empty. Said on the list, after its own sentence.
  */
 export const SHARED_ROWS_NOTE = {
-  ar: 'تكرار الصف ينسخ اللغة المفتوحة فقط؛ واللغة الأخرى تبدأ فارغة.',
-  en: 'Duplicating a row copies the open language only; the other one starts empty.',
+  ar: 'تكرار الصف ينسخ العربية فقط؛ والإنجليزية تبدأ فارغة.',
+  en: 'A duplicated row copies the Arabic only; its English starts empty.',
 };
 
 /**
@@ -160,8 +160,8 @@ export const SHARED_ROWS_NOTE = {
  * photo under a field is a real field of the row, so the copy keeps it.
  */
 export const SHARED_ROWS_WITH_TWINS_NOTE = {
-  ar: 'تكرار الصف ينسخ اللغة المفتوحة والنص أو الصورة بالإنجليزية تحت الحقل؛ والإنجليزية بجانب الحقول الأخرى تبدأ فارغة.',
-  en: 'Duplicating a row copies the open language and the English text or photo under a field; the English beside the other fields starts empty.',
+  ar: 'تكرار الصف ينسخ العربية والنص أو الصورة بالإنجليزية تحت الحقل؛ والإنجليزية بجانب الحقول الأخرى تبدأ فارغة.',
+  en: 'A duplicated row copies the Arabic and the English text or photo under a field; the English beside the other fields starts empty.',
 };
 
 const rowsUnder = (paths: ReadonlySet<string>, name: string): boolean =>

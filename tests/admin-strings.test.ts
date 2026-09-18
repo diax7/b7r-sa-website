@@ -126,9 +126,11 @@ describe('adminStringsFor and adminDirection', () => {
     expect(adminDirection('en')).toBe('ltr');
     expect(adminDirection('fr')).toBe('ltr');
   });
-  it('keeps the content locale and the UI language apart: the note is keyed by locale in each language', () => {
-    expect(adminStringsFor('ar').locale.editing['en']).toMatch(ARABIC);
-    expect(adminStringsFor('en').locale.editing['ar']).toBe('Editing the Arabic content.');
+  it('names the content languages as nouns in each UI language and never an "open" one (ADR-057, no locale switch)', () => {
+    expect(adminStringsFor('ar').bilingual.languages).toEqual({ ar: 'العربية', en: 'الإنجليزية' });
+    expect(adminStringsFor('en').bilingual.languages).toEqual({ ar: 'Arabic', en: 'English' });
+    expect('locale' in adminStrings).toBe(false);
+    expect('locale' in adminStringsAr).toBe(false);
   });
   it('counts days with the Arabic plurals', () => {
     const { days } = adminStringsAr.traffic.page;

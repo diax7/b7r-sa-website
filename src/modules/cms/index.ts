@@ -81,9 +81,10 @@ export default buildConfig({
    * by itself (`rtlLanguages`). Payload's own `ar` pack is community work; `payloadArabic`
    * is ours merged on top. Our strings live in `admin/strings.ts`, both languages.
    *
-   * The content locale (`localization` below, the AR / EN pills, `?locale=`) is a different
-   * axis: it says which language of a document is being edited and never follows the UI
-   * language, nor the other way round.
+   * The content languages (`localization` below, the AR / EN pills) are a different axis:
+   * both are edited in every form at once (ADR-057, no locale switch in the panel; the REST
+   * API still answers `?locale=`), and neither follows the UI language, nor the other way
+   * round.
    */
   i18n: {
     supportedLanguages: { en, ar },
