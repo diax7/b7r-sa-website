@@ -1,75 +1,165 @@
+import { getTranslation } from '@payloadcms/translations';
+import type { I18nClient } from '@payloadcms/translations';
 import { Gutter } from '@payloadcms/ui';
-import type { AdminViewServerProps } from 'payload';
-import { healthReport } from '@/lib/cms/health';
-import { EngineCard, engineSummary } from '@/modules/ai-content/admin/engine-card';
-import { quickActions, recentActivity } from '@/modules/cms/admin/dashboard/data';
-import { HealthCard } from '@/modules/cms/admin/dashboard/health-card';
-import { QuickActions } from '@/modules/cms/admin/dashboard/quick-actions';
-import { RecentActivity } from '@/modules/cms/admin/dashboard/recent-activity';
-import { adminStringsFor } from '@/modules/cms/admin/strings';
+import type { AdminViewServerProps, Payload } from 'payload';
+import { riyadh } from '@/lib/riyadh';
+import { EngineCard } from '@/modules/ai-content/admin/engine-card';
+import { ContentCard, type ContentRow } from '@/modules/cms/admin/dashboard/content-card';
+import { contentActions } from '@/modules/cms/admin/dashboard/data';
+import { DashboardHeader } from '@/modules/cms/admin/dashboard/header';
+import { type DashboardData, readDashboard } from '@/modules/cms/admin/dashboard/read';
+import type { ContentSlug } from '@/modules/cms/admin/dashboard/readers';
+import { daypartOf, type HandItem, needsAHand, rangeOf } from '@/modules/cms/admin/dashboard/rules';
+import { nextLedgerMorning } from '@/modules/cms/admin/dashboard/schedule';
+import { EmptySection } from '@/modules/cms/admin/dashboard/section';
+import { ServerCard } from '@/modules/cms/admin/dashboard/server-card';
+import { dashboardTiles } from '@/modules/cms/admin/dashboard/tile-data';
+import { Tiles } from '@/modules/cms/admin/dashboard/tiles';
+import { ADMIN_VIEWS } from '@/modules/cms/admin/icons';
+import { type AdminStrings, adminStringsFor } from '@/modules/cms/admin/strings';
 import { TrafficCard } from '@/modules/traffic/admin/traffic-card';
-import { trafficSummary } from '@/modules/traffic/summary';
-import { VisibilityCard } from '@/modules/visibility/admin/visibility-card';
-import { reading } from '@/modules/visibility/reading';
+import { AssistantsCard } from '@/modules/visibility/admin/assistants-card';
+
+/** The collection's plural label in the UI language, for the content table and the hand line. */
+function labelOf(payload: Payload, i18n: I18nClient, slug: ContentSlug): string {
+  const collection = payload.config.collections.find((c) => c.slug === slug);
+  return collection ? getTranslation(collection.labels.plural, i18n) : slug;
+}
+
+/** The content section's rows and the "needs a hand" items, from what was read. */
+function shapeContent(
+  data: DashboardData,
+  args: { payload: Payload; i18n: I18nClient; adminRoute: string; s: AdminStrings },
+): { rows: ContentRow[]; hand: HandItem[] } {
+  const { payload, i18n, adminRoute, s } = args;
+  const label = (slug: ContentSlug) => labelOf(payload, i18n, slug);
+  const rows = data.contentCollections.map((collection) => ({
+    collection,
+    label: label(collection),
+    published: data.published?.find((p) => p.collection === collection)?.count ?? null,
+    drafts: data.drafts?.find((d) => d.collection === collection)?.waiting ?? null,
+    missingEnglish: data.missingEnglish?.find((m) => m.collection === collection) ?? null,
+  }));
+  const hand = needsAHand(
+    {
+      failedRuns: data.failedRuns ?? null,
+      connections: data.connections ?? null,
+      missingEnglish: data.missingEnglish ?? null,
+      drafts: data.drafts?.map((d) => ({ ...d, label: label(d.collection) })) ?? null,
+    },
+    s.dashboard.hand,
+    adminRoute,
+  );
+  return { rows, hand };
+}
 
 /**
- * The admin home (`admin.components.views.dashboard`, ADR-039). Payload's template and
- * header wrap it; this renders three answers to "what do I do now?": quick actions, the
- * system's health (the same report as `/api/health`, no HTTP hop) and the latest saves; for
- * an admin, the week's traffic (ADR-048) and the content engine too. Everything reads in
- * the UI language of the request (ADR-056), handed down as `language`.
+ * The admin home (`admin.components.views.dashboard`, ADR-039, ADR-059): seven sections, top
+ * to bottom, answering "how is the site doing and what needs me": the greeting with the range
+ * and the "needs a hand" line; four numbers at a glance; where visits come from; what the
+ * assistants say; the content; the engine and the spend; the server (collapsed). One server
+ * render, the reads in parallel (`read.ts`), each guarded: a failed reader shows its section
+ * with the "not available" word, a reader the user may not run leaves no section behind.
  */
 export async function Dashboard(props: AdminViewServerProps) {
-  const { payload, i18n, initPageResult, user } = props;
+  const { payload, i18n, initPageResult, user, searchParams } = props;
   const { permissions, req } = initPageResult;
   const language = i18n.language;
-  const s = adminStringsFor(language).dashboard;
+  const s = adminStringsFor(language);
   const adminRoute = payload.config.routes.admin;
-  // The engine and traffic cards are for admins (the settings global and the count are theirs alone).
-  const engineAllowed = permissions?.globals?.['ai-settings']?.read === true;
-  const trafficAllowed = permissions?.collections?.['traffic']?.read === true;
-  const scoreAllowed = permissions?.globals?.['visibility-checklist']?.read === true;
-  const [health, recent, engine, traffic, score] = await Promise.all([
-    healthReport(),
-    recentActivity({ payload, req, user, permissions, i18n }),
-    engineAllowed ? engineSummary(payload) : Promise.resolve(null),
-    trafficAllowed ? trafficSummary(payload, { days: 7 }) : Promise.resolve(null),
-    scoreAllowed ? reading(payload, { user: user ?? null, language }) : Promise.resolve(null),
-  ]);
+  const now = new Date();
+  const days = rangeOf(searchParams?.['days']);
+  const data = await readDashboard({ payload, req, user, permissions, i18n, days, now });
+  const { rows, hand } = shapeContent(data, { payload, i18n, adminRoute, s });
+  const actions = contentActions({ permissions, adminRoute, language });
+  const saves = (data.recent ?? []).filter((i) => i.savedBy !== null || i.status === 'draft');
+  const home = actions.home
+    ? { action: actions.home, item: data.recent?.find((i) => i.key === 'g-home') ?? null }
+    : null;
+  const tiles = dashboardTiles({ days, adminRoute, language, ...data });
+  const nextRun =
+    data.ledger && data.connections
+      ? nextLedgerMorning({
+          prompts: data.ledger.prompts,
+          connections: data.connections.filter((c) => c.enabled).map((c) => c.id),
+          now,
+        })
+      : null;
   const name = String(user?.['name'] ?? user?.email ?? '');
-  const [before, after] = s.greeting.split('{name}');
+  const { traffic, ledger, engine, health } = data;
   return (
     <Gutter>
-      <div className="flex flex-col gap-8 pb-2" data-admin-ui="" data-admin-dashboard="">
-        <header className="flex flex-col gap-1">
-          <h1 className="text-h2 text-text">
-            {before}
-            <span className="text-accent">{name}</span>
-            {after}
-          </h1>
-          <p className="text-small text-text-muted">{s.intro}</p>
-        </header>
-        <QuickActions
-          actions={quickActions({ permissions, adminRoute, language })}
-          title={s.quick}
+      <div
+        className="flex flex-col gap-8 pb-2"
+        data-admin-ui=""
+        data-admin-dashboard=""
+        data-admin-dashboard-days={days}
+      >
+        <DashboardHeader
+          name={name}
+          daypart={daypartOf(riyadh(now).hour)}
+          days={days}
+          adminRoute={adminRoute}
+          hand={hand}
+          language={language}
         />
-        <div className="grid gap-6 lg:grid-cols-2">
-          <RecentActivity items={recent} language={language} />
-          <HealthCard report={health} language={language} />
-        </div>
-        <div className="grid gap-6 lg:grid-cols-2">
-          {score && (
-            <VisibilityCard
-              score={score.score}
-              href={`${adminRoute}/visibility`}
-              language={language}
-            />
-          )}
-          {traffic && (
-            <TrafficCard summary={traffic} href={`${adminRoute}/traffic`} language={language} />
-          )}
-          {engine && <EngineCard summary={engine} adminRoute={adminRoute} language={language} />}
-        </div>
+        {tiles.length > 0 && <Tiles tiles={tiles} />}
+        {(traffic !== undefined || ledger !== undefined) && (
+          <div className="grid gap-6 lg:grid-cols-2">
+            {traffic === null && (
+              <EmptySection hook="visits" title={s.traffic.card.title} language={language} />
+            )}
+            {traffic && (
+              <TrafficCard
+                summary={traffic.current}
+                href={`${adminRoute}${ADMIN_VIEWS.traffic.path}?days=${days}`}
+                language={language}
+              />
+            )}
+            {ledger === null && (
+              <EmptySection
+                hook="assistants"
+                title={s.dashboard.assistants.title}
+                language={language}
+              />
+            )}
+            {ledger && (
+              <AssistantsCard
+                reading={ledger}
+                nextRun={nextRun}
+                href={`${adminRoute}${ADMIN_VIEWS.visibility.path}`}
+                adminRoute={adminRoute}
+                language={language}
+                now={now}
+              />
+            )}
+          </div>
+        )}
+        <ContentCard
+          rows={rows}
+          home={home}
+          saves={saves}
+          actions={actions.buttons}
+          adminRoute={adminRoute}
+          language={language}
+          now={now}
+        />
+        {engine === null && (
+          <EmptySection hook="engine" title={s.engine.card.title} language={language} />
+        )}
+        {engine && (
+          <EngineCard
+            summary={engine}
+            connections={data.connections ?? null}
+            adminRoute={adminRoute}
+            language={language}
+            now={now}
+          />
+        )}
+        {health === null && (
+          <EmptySection hook="server" title={s.dashboard.health.title} language={language} />
+        )}
+        {health && <ServerCard report={health} language={language} now={now} />}
       </div>
     </Gutter>
   );

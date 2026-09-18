@@ -15,6 +15,7 @@ import { safeMessage } from '@/modules/connections/safe-message';
 import { connectionSpend } from '@/modules/connections/spend';
 import { type Asker, mockAsker, sdkAsker } from '@/modules/visibility/ledger/ask';
 import { mentionsBrand, readAnswer } from '@/modules/visibility/ledger/read-answer';
+import { LEDGER_CRON } from '@/modules/visibility/ledger/schedule';
 
 export const CITATION_LEDGER = 'citation-ledger' as const;
 /** A connection is asked once an hour at most: a double "Run now" costs one batch. */
@@ -387,8 +388,7 @@ export const citationLedgerTask: TaskConfig<{
 }> = {
   slug: CITATION_LEDGER,
   label: 'Visibility: citation ledger',
-  // Every morning at 07:00 Riyadh on a UTC clock (Riyadh has no DST); each prompt on its period.
-  schedule: [{ cron: '0 4 * * *', queue: AI_QUEUE }],
+  schedule: [{ cron: LEDGER_CRON, queue: AI_QUEUE }],
   inputSchema: [{ name: 'all', type: 'checkbox' }],
   outputSchema: [{ name: 'summary', type: 'text' }],
   handler: async ({ input, req }) => {
