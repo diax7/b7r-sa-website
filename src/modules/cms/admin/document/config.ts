@@ -8,32 +8,22 @@ import type { EntityRef } from '@/modules/cms/admin/icons';
  * `tests/admin-config.test.ts` checks every config. A fresh object per config: Payload's
  * types want mutable arrays, and nineteen configs must not share one.
  */
-const LOCALE_NOTE = '@/modules/cms/admin/document/locale-note#LocaleNote';
 const ENTITY_HEADER = '@/modules/cms/admin/document/entity-header#EntityHeader';
 
 function header(entity: EntityRef) {
   return { path: ENTITY_HEADER, serverProps: { entity } };
 }
 
-/** `admin.components` of a global: its header, and the locale note when it has per-language fields. */
-export function globalComponents(slug: EntityRef['slug'], opts: { localized: boolean }) {
+/** `admin.components` of a global: its header. */
+export function globalComponents(slug: EntityRef['slug']) {
   const entity: EntityRef = { type: 'globals', slug };
-  return {
-    elements: {
-      Description: header(entity),
-      ...(opts.localized ? { beforeDocumentControls: [LOCALE_NOTE] } : {}),
-    },
-  };
+  return { elements: { Description: header(entity) } };
 }
 
-/** `admin.components` of a collection: its header, and the locale note when it has per-language fields. */
-export function collectionComponents(slug: EntityRef['slug'], opts: { localized: boolean }) {
+/** `admin.components` of a collection: its header. */
+export function collectionComponents(slug: EntityRef['slug']) {
   const entity: EntityRef = { type: 'collections', slug };
-  return {
-    Description: header(entity),
-    ...(opts.localized ? { edit: { beforeDocumentControls: [LOCALE_NOTE] } } : {}),
-  };
+  return { Description: header(entity) };
 }
 
-export const LOCALE_NOTE_PATH = LOCALE_NOTE;
 export const ENTITY_HEADER_PATH = ENTITY_HEADER;

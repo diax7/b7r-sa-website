@@ -30,7 +30,7 @@ export const Integrations: CollectionConfig = {
   },
   admin: {
     hideAPIURL: true,
-    components: collectionComponents('integrations', { localized: true }),
+    components: collectionComponents('integrations'),
     useAsTitle: 'name',
     defaultColumns: ['name', 'platform', 'order'],
     listSearchableFields: ['name'],

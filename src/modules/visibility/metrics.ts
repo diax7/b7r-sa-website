@@ -30,7 +30,7 @@ export const Metrics: CollectionConfig = {
     defaultColumns: ['date', 'source', 'updatedAt'],
     listSearchableFields: ['date', 'source'],
     group: adminGroup('visibility'),
-    components: collectionComponents(METRICS, { localized: false }),
+    components: collectionComponents(METRICS),
     custom: {
       shows: {
         ar: 'لا يظهر في الموقع: قراءات الخدمات الخارجية ودرجة كل يوم',

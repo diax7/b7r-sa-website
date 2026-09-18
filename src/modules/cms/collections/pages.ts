@@ -53,7 +53,7 @@ export const Pages: CollectionConfig = {
   labels: { singular: { ar: 'صفحة', en: 'Page' }, plural: { ar: 'الصفحات', en: 'Pages' } },
   admin: {
     hideAPIURL: true,
-    components: collectionComponents('pages', { localized: true }),
+    components: collectionComponents('pages'),
     useAsTitle: 'title',
     // «معاينة»: a signed link that turns on draft mode and lands on the page (ADR-039).
     preview: (doc, { req, locale }) =>

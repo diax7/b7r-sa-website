@@ -21,7 +21,7 @@ export const Testimonials: CollectionConfig = {
   },
   admin: {
     hideAPIURL: true,
-    components: collectionComponents('testimonials', { localized: true }),
+    components: collectionComponents('testimonials'),
     useAsTitle: 'name',
     defaultColumns: ['name', 'store', 'placeholder', 'order', '_status'],
     listSearchableFields: ['name', 'store'],

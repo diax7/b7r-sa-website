@@ -262,11 +262,6 @@
     --hover-btn-border: 1px solid var(--admin-accent);
   }
 
-  /* Payload's locale label sits on an elevation-100 pill at elevation-500: 3.4:1. Lifted to AA. */
-  .localizer-button__label {
-    color: var(--theme-elevation-700);
-  }
-
   .graphic-logo img {
     max-height: 56px;
   }
@@ -281,28 +276,25 @@
      by our hamburger in the header and closed by its X, Esc or a tap on the scrim.
      ---------------------------------------------------------------------------------------- */
   /* Our account block owns the account (design system §6); Payload's avatar and its two
-     hamburgers leave the header at every width, and the locale switcher, which Payload
-     places beside the avatar, moves to the gutter the avatar leaves. */
+     hamburgers leave the header at every width. So does the content locale switcher and
+     the spacer Payload keeps under it (ADR-057, PR C of the no-locale-switch plan): every
+     field is edited in both languages at once, so there is no locale to switch to; the
+     REST API still answers `?locale=`, the panel never carries it. The controls take the
+     gutter the switcher held. */
   .app-header__account,
   .app-header__mobile-nav-toggler,
-  .template-default__nav-toggler-wrapper {
+  .template-default__nav-toggler-wrapper,
+  .app-header__localizer,
+  .app-header__localizer-spacing,
+  .localizer-button {
     display: none;
-  }
-  .app-header__localizer.localizer {
-    inset-inline-end: var(--gutter-h);
-    /* Payload keeps a physical `right` on the switcher under 768 px; in the Arabic panel it
-       met our end inset and stretched the switcher across the header, its button over the
-       crumbs and 40 px in from the wrong edge. The start side is free at every width. */
-    inset-inline-start: auto;
   }
   /* The header's row shrinks instead of spilling (the CTO's 390 px check, 2026-09-18).
      Payload's crumbs wrapper is `width: 100%` with the flex default `min-width: auto`, so a
-     long title pushed the two controls and the switcher's spacer past the edge (482 px on a
-     390 px phone; the same from 1025 to 1150 px with the controls at their full width), and
-     the switcher itself, absolute at the gutter, painted over "View website". The crumbs
-     shrink first, the last one truncating with Payload's own ellipsis and the wrapper
-     clipping what a 320 px phone still cannot hold; the controls and the spacer keep their
-     width, so the spacer stays under the switcher at every width. */
+     long title pushed the two controls past the edge (482 px on a 390 px phone; the same
+     from 1025 to 1150 px with the controls at their full width). The crumbs shrink first,
+     the last one truncating with Payload's own ellipsis and the wrapper clipping what a
+     320 px phone still cannot hold; the controls keep their width. */
   .app-header__step-nav-wrapper,
   .app-header__step-nav,
   .step-nav__last {
@@ -311,8 +303,7 @@
   .app-header__step-nav-wrapper {
     overflow: hidden;
   }
-  .app-header__actions-wrapper,
-  .app-header__localizer-spacing {
+  .app-header__actions-wrapper {
     flex-shrink: 0;
   }
 
@@ -406,12 +397,13 @@
   }
 
   /* Payload suffixes every localized field label with the locale (a dash and its name).
-     The suffix becomes one neutral pill with the code of the open locale (ADR-044): a field
-     with a pill changes per language, a field without one is shared. The span's own text
-     (an em dash and the name) is hidden from sight and from readers; the pill is drawn by
-     ::after from `html[data-content-locale]`, set by the header, so before hydration there
-     is no pill rather than a wrong one. The same pill, as `.admin-locale-tag`, marks the
-     other language's input beside a bilingual field (ADR-057). */
+     The suffix becomes one neutral pill with the code of the language the field holds
+     (ADR-044): a field with a pill is per language, a field without one is shared. The
+     span's own text (an em dash and the name) is hidden from sight and from readers; the
+     pill is drawn by ::after and always reads AR, since the panel edits the default locale
+     and nothing else (ADR-057, PR C: no locale switch, no `?locale=` on a panel URL). The
+     same pill, as `.admin-locale-tag`, marks the English input beside a bilingual field,
+     and the EN pill of a heavy field's twin below. */
   .field-label .localized {
     display: inline-grid;
     vertical-align: 2px;
@@ -442,22 +434,14 @@
     font-weight: 700;
     letter-spacing: 0.06em;
   }
-  html[data-content-locale='ar'] .field-label .localized::after {
+  .field-label .localized::after {
     content: 'AR';
-  }
-  html[data-content-locale='en'] .field-label .localized::after {
-    content: 'EN';
-  }
-  html:not([data-content-locale]) .field-label .localized {
-    display: none;
   }
 
   /* A heavy field's twin (ADR-057, PR B): the English rich text or photo that Payload's own
      component renders under the Arabic one (`twinField`, `admin.className`). Its label wears
-     the EN pill (the upload's label is a direct child, Lexical's sits in a label row), its
-     editor runs left to right (an English text, whatever the panel's direction), and it
-     stays out of sight while the English locale itself is open: there the original is the
-     English and the twin holds nothing. */
+     the EN pill (the upload's label is a direct child, Lexical's sits in a label row) and
+     its editor runs left to right (an English text, whatever the panel's direction). */
   .admin-twin > .field-label::after,
   .admin-twin > .rich-text-lexical__label-row > .field-label::after {
     content: 'EN';
@@ -467,7 +451,17 @@
   .admin-twin .rich-text-lexical__wrap {
     direction: ltr;
   }
-  html[data-content-locale='en'] .admin-twin {
+
+  /* The panel publishes both languages at once, always (ADR-057, PR C): the Publish menu's
+     "Publish in Arabic" (a `publishSpecificLocale` write, which takes a different path
+     through Payload's update and would leave the English side where it was) and the
+     schedule drawer's "Locale to publish" select (its default, "All", is the one supported
+     choice; the select is a direct child of the scheduler, the timezone picker sits in a
+     wrapper of its own) are hidden. */
+  .popup-button-list:has(> #publish-locale),
+  .schedule-publish__scheduler > .field-label:has(+ .react-select),
+  .schedule-publish__scheduler > .react-select,
+  .schedule-publish__scheduler > .react-select + br {
     display: none;
   }
 
@@ -575,52 +569,6 @@
   }
   .step-nav a:hover {
     color: var(--admin-accent);
-  }
-
-  /* ----------------------------------------------------------------------------------------
-     The locale note in the document controls (audit 2026-09-18, 3.1). It is a
-     `beforeDocumentControls` slot, so it lives inside Payload's controls row beside Preview
-     and Publish. That row has a fixed height and scrolls sideways (Payload's wrapper is a
-     horizontal scroller), so a note on the same line never shrinks: it pushed Save and Publish
-     past the right edge of a 1440 px screen (2026-09-18, found on the temporary domain). The
-     note therefore takes a full line under the buttons at every width: the buttons keep the
-     first line, the note the second, truncating with the full text in its `title`, and the
-     wrapper grows with it. `:has` keeps every document without a note as Payload lays it out.
-     ---------------------------------------------------------------------------------------- */
-  .doc-controls__controls {
-    min-width: 0;
-  }
-  /* The bar and its wrapper grow by the note's line; the controls wrapper takes the free
-     space so the note can use it, and `min-width: 0` stops the note's sentence from sizing
-     it (a flex child's `min-width: auto` is its content's width, which pushed the buttons
-     off the screen). */
-  .doc-controls:has([data-admin-locale-note]),
-  .doc-controls__wrapper:has([data-admin-locale-note]),
-  .doc-controls__controls-wrapper:has([data-admin-locale-note]) {
-    height: auto;
-    min-height: var(--doc-controls-height);
-  }
-  .doc-controls__controls-wrapper:has([data-admin-locale-note]) {
-    align-items: flex-start;
-    flex: 1 1 auto;
-    min-width: 0;
-  }
-  .doc-controls__controls-wrapper:has([data-admin-locale-note]) .doc-controls__popup {
-    margin-block-start: 10px;
-  }
-  .doc-controls__controls:has([data-admin-locale-note]) {
-    flex: 1 1 auto;
-    flex-wrap: wrap;
-    justify-content: flex-end;
-    row-gap: 6px;
-    padding-block: 8px;
-  }
-  .doc-controls__controls [data-admin-locale-note] {
-    flex: 1 1 100%;
-    order: 1;
-    max-width: 100%;
-    /* The note's intrinsic width is zero: it never claims room, it fills what is left. */
-    contain: inline-size;
   }
 
   /* ----------------------------------------------------------------------------------------

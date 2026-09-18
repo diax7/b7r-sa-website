@@ -1,7 +1,11 @@
 import type { CollectionConfig, Field, GlobalConfig } from 'payload';
 import { describe, expect, it } from 'vitest';
 import { isAbandonedDraft, savesByPeople, titleOf } from '@/modules/cms/admin/dashboard/data';
-import { ENTITY_HEADER_PATH, LOCALE_NOTE_PATH } from '@/modules/cms/admin/document/config';
+import {
+  collectionComponents,
+  ENTITY_HEADER_PATH,
+  globalComponents,
+} from '@/modules/cms/admin/document/config';
 import {
   AUTHOR_DESCRIPTIONS,
   CATEGORY_DESCRIPTIONS,
@@ -109,6 +113,9 @@ const arabic = (label: unknown): boolean =>
   ARABIC.test(String((label as { ar?: unknown }).ar));
 const groupOf = (admin: { group?: unknown } | undefined): string =>
   String((admin?.group as { ar?: unknown } | undefined)?.ar ?? '');
+/** Whether a document's slot lists a locale note (the component PR C of ADR-057 deleted). */
+const noteAmong = (slot: unknown): boolean =>
+  Array.isArray(slot) && slot.some((c: unknown) => /locale-note|LocaleNote/.test(String(c)));
 
 describe('admin config shape (ADR-039)', () => {
   for (const c of collections) {
@@ -156,6 +163,9 @@ describe('the sidebar registry (ADR-046)', () => {
       }
       const header = c.admin?.components?.Description as { path?: string } | undefined;
       expect(header?.path, 'Description slot').toBe(ENTITY_HEADER_PATH);
+      // No locale note before the document controls: it went with the switch (PR C); an
+      // entity's own action there (Generate now, Test connection) is not one.
+      expect(noteAmong(c.admin?.components?.edit?.beforeDocumentControls)).toBe(false);
       const shows = c.admin?.custom?.['shows'] as { ar?: string; en?: string } | undefined;
       expect(shows?.en, 'shows.en').toBeTruthy();
       expect(ARABIC.test(shows?.ar ?? ''), 'shows.ar').toBe(true);
@@ -168,11 +178,28 @@ describe('the sidebar registry (ADR-046)', () => {
       expect(groupKey(groupOf(g.admin)), 'admin.group in the registry').toBe(placement?.group);
       const header = g.admin?.components?.elements?.Description as { path?: string } | undefined;
       expect(header?.path, 'Description slot').toBe(ENTITY_HEADER_PATH);
+      expect(noteAmong(g.admin?.components?.elements?.beforeDocumentControls)).toBe(false);
       const shows = g.admin?.custom?.['shows'] as { ar?: string; en?: string } | undefined;
       expect(shows?.en, 'shows.en').toBeTruthy();
       expect(ARABIC.test(shows?.ar ?? ''), 'shows.ar').toBe(true);
     });
   }
+  it('the header helpers register the description slot and nothing else', () => {
+    expect(collectionComponents('pages')).toEqual({
+      Description: {
+        path: ENTITY_HEADER_PATH,
+        serverProps: { entity: { type: 'collections', slug: 'pages' } },
+      },
+    });
+    expect(globalComponents('home')).toEqual({
+      elements: {
+        Description: {
+          path: ENTITY_HEADER_PATH,
+          serverProps: { entity: { type: 'globals', slug: 'home' } },
+        },
+      },
+    });
+  });
   it('every custom view of ours is registered with Payload, placed, iconed and admins-only', () => {
     expect(Object.keys(ADMIN_VIEW_COMPONENTS).toSorted()).toEqual(
       Object.keys(ADMIN_VIEWS).toSorted(),
@@ -321,33 +348,6 @@ describe('every field says what it does on the site (ADR-046)', () => {
         .filter((f) => !f.ok)
         .map((f) => f.path);
       expect(missing).toEqual([]);
-    });
-  }
-});
-
-/** Whether any field, at any depth, is per language. */
-function hasLocalized(fields: Field[]): boolean {
-  return fields.some((f) => {
-    if ('localized' in f && f.localized) return true;
-    if ('fields' in f && Array.isArray(f.fields)) return hasLocalized(f.fields);
-    if ('tabs' in f) return f.tabs.some((t) => hasLocalized(t.fields));
-    if ('blocks' in f) return f.blocks.some((b) => hasLocalized(b.fields));
-    return false;
-  });
-}
-const NOTE = LOCALE_NOTE_PATH;
-
-describe('the locale note (ADR-044): every document with per-language fields carries it', () => {
-  for (const c of collections.filter((entity) => entity.slug !== 'redirects')) {
-    it(`collection ${c.slug}`, () => {
-      const registered = c.admin?.components?.edit?.beforeDocumentControls ?? [];
-      expect(registered.includes(NOTE)).toBe(hasLocalized(c.fields));
-    });
-  }
-  for (const g of globals) {
-    it(`global ${g.slug}`, () => {
-      const registered = g.admin?.components?.elements?.beforeDocumentControls ?? [];
-      expect(registered.includes(NOTE)).toBe(hasLocalized(g.fields));
     });
   }
 });

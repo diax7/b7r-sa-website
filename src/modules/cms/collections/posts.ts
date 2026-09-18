@@ -135,7 +135,7 @@ export const Posts: CollectionConfig = {
   labels: { singular: { ar: 'مقال', en: 'Post' }, plural: { ar: 'المقالات', en: 'Posts' } },
   admin: {
     hideAPIURL: true,
-    components: collectionComponents('posts', { localized: true }),
+    components: collectionComponents('posts'),
     useAsTitle: 'title',
     preview: (doc, { req, locale }) =>
       typeof doc['slug'] === 'string' && doc['slug']

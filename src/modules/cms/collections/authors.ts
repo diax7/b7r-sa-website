@@ -21,7 +21,7 @@ export const Authors: CollectionConfig = {
   labels: { singular: { ar: 'كاتب', en: 'Author' }, plural: { ar: 'الكتّاب', en: 'Authors' } },
   admin: {
     hideAPIURL: true,
-    components: collectionComponents('authors', { localized: true }),
+    components: collectionComponents('authors'),
     useAsTitle: 'name',
     defaultColumns: ['name', 'role', 'slug', 'updatedAt'],
     listSearchableFields: ['name', 'slug'],
