@@ -9,6 +9,11 @@
 @source not '../modules/traffic/admin';
 @source not '../modules/visibility/admin';
 @source not '../app/(payload)';
+/* This sheet reaches /admin through the root error boundary, where Tailwind's `table`
+   utility (generated from the word in copy) would turn Payload's list scroller `div.table`
+   into a table box and Chrome would drop its `overflow: auto`. Nothing of ours uses it;
+   admin.css blocks it for the same reason. */
+@source not inline('table');
 
 /* ---------------------------------------------------------------------------------------
    Design tokens (BRD §3). The only place raw hex is allowed. Components use utilities or
