@@ -58,6 +58,12 @@ note), `check:rtl` and the admin e2e.
    `src/modules/visibility/rules/`, with its sentence and guide beside it; its weight lives in
    `rules/weights.ts`; a guide always links to the field that fixes the finding, in the
    locale that is missing; a thing the site guarantees by construction is a fact, not a rule.
+13. The sidebar shows no document count (ADR-058). A number that asks for action is a badge:
+   a kind in `src/modules/cms/admin/nav/badges.ts` (its reader, one cheap query with the
+   user's access; its tone, red or amber, never grey; its entry) and its sentence in both
+   string trees (`nav.badges`). The sidebar's shape itself (the tree, the rail, the drawer,
+   the keyboard model) is the design system's shell section; a new entry only needs its
+   place in `ADMIN_NAV`.
 
 ## Adding an admin component
 
@@ -96,3 +102,5 @@ note), `check:rtl` and the admin e2e.
 
 - Custom list or edit views; replacing Lexical; a light theme; `!important` against Payload;
   admin CSS or JS reaching the `(site)` bundle.
+- A second breakpoint for the shell (Payload's `m`, 1024 px, is the one), a document count
+  in the sidebar, a physical `left` or `right` anywhere in it.
