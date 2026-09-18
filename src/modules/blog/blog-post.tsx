@@ -122,6 +122,7 @@ export async function BlogPostPage({ post, locale }: { post: Post; locale: Local
                   alt={post.cover.alt}
                   fill
                   priority
+                  fetchPriority="high"
                   sizes="(min-width: 800px) 760px, 100vw"
                   className="object-cover"
                 />

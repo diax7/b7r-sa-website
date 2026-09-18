@@ -75,6 +75,12 @@ test.describe('product detail (BRD 6.6)', () => {
     await expect(chart).toHaveCount(1);
     await expect(chart.locator('tbody tr')).toHaveCount(5);
     await expect(chart.locator('th[scope="col"]')).toHaveCount(4);
+    await expect(page.locator('[data-size-chart-unit]')).toHaveText('القياسات بالسنتيمتر');
+    // Breadcrumb and footer contact links are 44 px tall hit areas (BRD 6.17, audit item 18).
+    const crumb = (await page.locator('nav[aria-label] ol a').first().boundingBox())!;
+    expect(crumb.height).toBeGreaterThanOrEqual(44);
+    const mail = (await page.locator('footer a[href^="mailto:"]').boundingBox())!;
+    expect(mail.height).toBeGreaterThanOrEqual(44);
     // Three other products in catalogue order, wrapping around.
     const related = page.locator('[aria-labelledby="product-related-title"]').getByRole('link');
     await expect(related).toHaveCount(3);
@@ -173,6 +179,37 @@ test.describe('product detail (BRD 6.6)', () => {
         ),
       )
       .toBe('72px');
+  });
+
+  test('no page lays out wider than a 360 px phone', async ({ browser, baseURL, isMobile }) => {
+    test.skip(!isMobile, 'phone widths');
+    // The size-chart table once widened the layout viewport to 438 px and the browser zoomed
+    // the page out (site audit 2026-09-18, blocker 2); a widened viewport is a class of
+    // defect, so the home, a post and the FAQ page are held to the same width.
+    const ctx = await browser.newContext({
+      viewport: { width: 360, height: 740 },
+      isMobile: true,
+      hasTouch: true,
+      locale: 'ar-SA',
+    });
+    const page = await ctx.newPage();
+    for (const path of [
+      '/products/tee-essential',
+      '/products/baby-onesie',
+      '/en/products/tee-essential',
+      '/',
+      '/blog/how-to-price-printed-tshirt-saudi',
+      '/faq',
+    ]) {
+      await page.goto(`${baseURL}${path}`);
+      const width = await page.evaluate(() => ({
+        inner: window.innerWidth,
+        scroll: document.documentElement.scrollWidth,
+      }));
+      expect(width.inner, path).toBe(360);
+      expect(width.scroll, path).toBeLessThanOrEqual(width.inner);
+    }
+    await ctx.close();
   });
 
   test('fires product_view once on mount, even before the Umami script is ready', async ({

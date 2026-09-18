@@ -15,8 +15,12 @@ const head = 'border-b-2 border-border px-4 py-3 text-start text-small font-medi
  */
 export function CompareBlock({ block, locale, tone, anchor, heading }: BlockProps<'compare'>) {
   const Heading = heading ? 'h1' : 'h2';
+  // The two lists sit one level under the block's own heading, so the outline never skips a
+  // level: H2 under the page's H1, H3 under a later block's H2 (site audit 2026-09-18, item 5).
+  const ListHeading = heading ? 'h2' : 'h3';
   const messages = copyFor(locale).compare;
   const title = heading?.title ?? block.title;
+  const caption = messages.caption.replace('{ours}', block.ours).replace('{theirs}', block.theirs);
   return (
     <Section
       tone={tone}
@@ -37,11 +41,16 @@ export function CompareBlock({ block, locale, tone, anchor, heading }: BlockProp
           {heading?.lead && <p className="lead text-text-muted">{heading.lead}</p>}
           {block.intro && <p className="text-body text-text-muted">{block.intro}</p>}
         </div>
-        <div className="overflow-x-auto rounded-lg border border-border bg-surface shadow-card">
+        {/* The table scrolls sideways on a phone: a keyboard-reachable region named by its caption. */}
+        <div
+          className="overflow-x-auto rounded-lg border border-border bg-surface shadow-card focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-accent/40"
+          // oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- a scrollable region must take focus for keyboard users (WCAG 2.1.1, axe scrollable-region-focusable)
+          tabIndex={0}
+          role="region"
+          aria-label={caption}
+        >
           <table className="w-full min-w-[36rem] border-collapse">
-            <caption className="sr-only">
-              {messages.caption.replace('{ours}', block.ours).replace('{theirs}', block.theirs)}
-            </caption>
+            <caption className="sr-only">{caption}</caption>
             <thead>
               <tr>
                 <th scope="col" className={cn(head, 'sticky start-0 z-10 bg-surface')}>
@@ -76,7 +85,9 @@ export function CompareBlock({ block, locale, tone, anchor, heading }: BlockProp
             className="flex flex-col gap-3 rounded-lg bg-accent-tint p-6"
             data-compare-list="best"
           >
-            <h3 className="text-h4 text-text">{messages.bestFor.replace('{ours}', block.ours)}</h3>
+            <ListHeading className="text-h4 text-text">
+              {messages.bestFor.replace('{ours}', block.ours)}
+            </ListHeading>
             <ul className="flex list-disc flex-col gap-2 ps-5 text-body text-text">
               {block.bestFor.map((item) => (
                 <li key={item}>{item}</li>
@@ -87,9 +98,9 @@ export function CompareBlock({ block, locale, tone, anchor, heading }: BlockProp
             className="flex flex-col gap-3 rounded-lg border border-border p-6"
             data-compare-list="not"
           >
-            <h3 className="text-h4 text-text">
+            <ListHeading className="text-h4 text-text">
               {messages.notBestFor.replace('{ours}', block.ours)}
-            </h3>
+            </ListHeading>
             <ul className="flex list-disc flex-col gap-2 ps-5 text-body text-text-muted">
               {block.notBestFor.map((item) => (
                 <li key={item}>{item}</li>

@@ -37,7 +37,9 @@ describe('contact schema (BRD 4.11, 6.9)', () => {
     expect(errors.phone).toBe(contactForm.validation.phone);
     expect(errors.email).toBe(contactForm.validation.email);
     expect(errors.message).toBe(contactForm.validation.message);
-    expect(errors.inquiry).toBeDefined();
+    // An instruction, not the label repeated (site audit 2026-09-18, item 13).
+    expect(errors.inquiry).toBe(contactForm.validation.inquiry);
+    expect(errors.inquiry).not.toBe(contactForm.labels.inquiry);
     expect(validateContact(valid, contactForm)).toEqual({});
   });
 

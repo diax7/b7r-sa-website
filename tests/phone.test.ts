@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { formatSaudiPhone, isSaudiMobile, normalisePhone, normaliseSaudiPhone } from '@/lib/phone';
+import {
+  displayPhone,
+  formatIntlPhone,
+  formatSaudiPhone,
+  isSaudiMobile,
+  normalisePhone,
+  normaliseSaudiPhone,
+} from '@/lib/phone';
 
 describe('normaliseSaudiPhone (BRD 4.11)', () => {
   it.each([
@@ -36,5 +43,13 @@ describe('normaliseSaudiPhone (BRD 4.11)', () => {
   it('formats the canonical form for display and leaves anything else alone', () => {
     expect(formatSaudiPhone('966501699572')).toBe('050 169 9572');
     expect(formatSaudiPhone('x')).toBe('x');
+  });
+
+  it('shows the local number in Arabic and the grouped international one in English', () => {
+    expect(formatIntlPhone('+966501699572')).toBe('+966 50 169 9572');
+    expect(formatIntlPhone('+971501699572')).toBe('+971501699572');
+    const contact = { phone: '0501699572', phoneIntl: '+966501699572' };
+    expect(displayPhone('ar', contact)).toBe('0501699572');
+    expect(displayPhone('en', contact)).toBe('+966 50 169 9572');
   });
 });

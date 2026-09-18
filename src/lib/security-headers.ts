@@ -160,6 +160,14 @@ export const FONT_CACHE: HeaderEntry = {
   value: 'public, max-age=31536000, immutable',
 };
 
+/**
+ * The Open Graph renders, the app icons and the brand and product images keep their names
+ * across deploys, so a day is the cache (site audit 2026-09-18, item 16); Next's default for
+ * `public/` is `max-age=0`.
+ */
+export const IMAGE_CACHE: HeaderEntry = { key: 'Cache-Control', value: 'public, max-age=86400' };
+export const IMAGE_ROUTE_SOURCES = ['/og/:path*', '/icons/:path*', '/images/:path*'];
+
 export function headerRoutes(options: SecurityHeaderOptions = {}): HeaderRoute[] {
   return [
     { source: '/(.*)', headers: securityHeaders(options) },
@@ -171,6 +179,7 @@ export function headerRoutes(options: SecurityHeaderOptions = {}): HeaderRoute[]
     // Without this Next answers `max-age=0` for /public files and every admin navigation
     // re-validates the brand font, which shows as a font swap on each page (ADR-039).
     { source: '/fonts/:path*', headers: [FONT_CACHE] },
+    ...IMAGE_ROUTE_SOURCES.map((source) => ({ source, headers: [IMAGE_CACHE] })),
     ...ADMIN_ROUTE_SOURCES.map((source) => ({ source, headers: adminHeaders(options) })),
   ];
 }

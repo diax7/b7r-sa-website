@@ -77,8 +77,9 @@ describe('public reads (BRD 9.6, ADR-043)', () => {
   });
 });
 
-const ogImage = (m: ReturnType<typeof pageMetadata>) =>
-  (m.openGraph as { images: Array<{ url: string }> }).images[0]?.url;
+const ogImages = (m: ReturnType<typeof pageMetadata>) =>
+  (m.openGraph as { images: Array<{ url: string; width: number; height: number }> }).images;
+const ogImage = (m: ReturnType<typeof pageMetadata>) => ogImages(m)[0]?.url;
 
 describe('page metadata (BRD 7.3, ADR-043)', () => {
   const base = {
@@ -147,5 +148,34 @@ describe('page metadata (BRD 7.3, ADR-043)', () => {
       '/og/en/default.png',
     );
     expect(defaultOgImage('en')).toBe('/og/en/default.png');
+  });
+
+  it('declares the real size of a CMS image and 1200×630 for a render (site audit 2026-09-18)', () => {
+    expect(
+      ogImages(
+        pageMetadata({
+          ...base,
+          locale: 'ar',
+          locales: ['ar'],
+          ogImage: { url: '/media/cover.jpg', width: 1600, height: 900 },
+        }),
+      ),
+    ).toEqual([{ url: '/media/cover.jpg', width: 1600, height: 900 }]);
+    expect(
+      ogImages(
+        pageMetadata({
+          ...base,
+          locale: 'ar',
+          locales: ['ar'],
+          ogImage: '/og/products/hoodie.png',
+        }),
+      ),
+    ).toEqual([{ url: '/og/products/hoodie.png', width: 1200, height: 630 }]);
+    // A CMS image without a recorded size keeps the default's dimensions rather than none.
+    expect(
+      ogImages(
+        pageMetadata({ ...base, locale: 'ar', locales: ['ar'], ogImage: { url: '/media/x.jpg' } }),
+      ),
+    ).toEqual([{ url: '/media/x.jpg', width: 1200, height: 630 }]);
   });
 });

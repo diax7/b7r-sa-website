@@ -100,9 +100,16 @@ export function DesignerStatic({ products, product, copy, ctaHref }: DesignerSta
             <span className="text-small text-text-muted">{designer.baseCostLabel}</span>
             <SarAmount value={product.baseCost} className="text-h4 text-text" />
           </div>
+          {/* The same rows as `PricingControls`: the label with its helper beside the field,
+              then the slider row, so the island's box is this box (the deep link and CLS). */}
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between gap-4">
-              <span className="text-small text-text">{designer.sellPriceLabel}</span>
+              <span className="flex flex-col gap-0.5">
+                <span className="text-small text-text">{designer.sellPriceLabel}</span>
+                <span className="text-caption text-text-muted">
+                  {designer.suggestedPriceHelper} <SarAmount value={product.suggestedPrice} />
+                </span>
+              </span>
               <span className="inline-flex h-11 items-center gap-1 rounded-base border border-border bg-surface px-3">
                 <SarSymbol className="text-text-muted" />
                 <span className="tabular w-16 text-body font-medium text-text" dir="ltr">
@@ -115,9 +122,6 @@ export function DesignerStatic({ products, product, copy, ctaHref }: DesignerSta
                 <span className="absolute inset-y-0 end-0 w-1/3 rounded-pill bg-primary" />
               </span>
             </div>
-            <p className="text-caption text-text-muted">
-              {designer.suggestedPriceHelper} <SarAmount value={product.suggestedPrice} />
-            </p>
           </div>
           <div className="flex items-center justify-between gap-4">
             <span className="text-small text-text">{designer.dailySalesLabel}</span>

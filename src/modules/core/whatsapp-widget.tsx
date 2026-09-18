@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import { X } from 'lucide-react';
 import { useEffect, useId, useRef, useState } from 'react';
-import { WhatsAppIcon } from '@/components/shared/brand-icons';
+import { WhatsAppIcon } from '@/components/shared/whatsapp-icon';
 import { Icon } from '@/components/shared/icon';
 import type { SiteCopy } from '@/content/copy';
 import { cn } from '@/lib/cn';
@@ -15,6 +15,9 @@ const PULSE_KEY = 'b7r_wa_pulse';
 // panel is positioned inside the dock, above the button, so opening it never moves the button.
 const dockClass =
   'fixed bottom-[calc(24px+var(--bottom-dock,0px))] end-6 z-40 transition-[bottom] duration-(--duration-base)';
+// 12 px above the button, or above the consent card while it shows: `--consent-top` is the
+// card's top edge over the dock's base line, less the dock's own 24 px, plus the same 12 px.
+const panelBottom = 'bottom-[max(calc(100%+12px),calc(var(--consent-top,0px)-12px))]';
 
 /**
  * Floating WhatsApp entry point (BRD 6.15, amended 2026-09-13: bottom-left, the inline end
@@ -84,7 +87,10 @@ export function WhatsAppWidget({
           ref={panelRef}
           role="dialog"
           aria-labelledby={titleId}
-          className="absolute bottom-full end-0 mb-3 w-[320px] max-w-[calc(100vw-32px)] overflow-hidden rounded-base bg-surface shadow-popover animate-rise-in motion-reduce:animate-none"
+          className={cn(
+            'absolute end-0 w-[320px] max-w-[calc(100vw-32px)] overflow-hidden rounded-base bg-surface shadow-popover animate-rise-in motion-reduce:animate-none',
+            panelBottom,
+          )}
           data-testid="whatsapp-panel"
         >
           <div className="flex items-center gap-3 bg-primary px-4 py-3 text-white">

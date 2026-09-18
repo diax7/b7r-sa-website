@@ -21,12 +21,19 @@ import type {
 
 export const POSTS_PER_PAGE = 12;
 
+/** An image for `og:image`: a CMS media's URL with the dimensions Payload recorded. */
+export interface OgImage {
+  url: string;
+  width?: number;
+  height?: number;
+}
+
 export interface Hub {
   slug: string;
   name: string;
   description: string;
   lead: string | null;
-  cover: string | null;
+  cover: OgImage | null;
   order: number;
 }
 
@@ -42,6 +49,8 @@ export interface Author {
 export interface Cover {
   src: string;
   alt: string;
+  width?: number;
+  height?: number;
   /** From the media document, for the feed's enclosure; absent for a hub's fallback cover. */
   bytes?: number;
   mime?: string;
@@ -52,6 +61,8 @@ export interface PostCard {
   title: string;
   excerpt: string;
   hub: Hub;
+  /** Who wrote it, for the byline (BRD 4.13: «كتبه {author}»); the post carries the record. */
+  author: Pick<Author, 'slug' | 'name'>;
   cover: Cover;
   publishedAt: string;
   contentUpdatedAt: string | null;
@@ -63,7 +74,7 @@ export interface Post extends PostCard {
   tags: string[];
   takeaways: string[];
   body: LexicalState;
-  seo: { title: string; description: string; ogImage: string | null };
+  seo: { title: string; description: string; ogImage: OgImage | null };
 }
 
 export interface PostPage {
@@ -81,13 +92,31 @@ export interface PostIndexEntry {
   hub: string;
 }
 
+function populated<T extends object>(value: number | T | null | undefined): T | null {
+  return value && typeof value === 'object' ? value : null;
+}
+
+/** The pixel size Payload recorded on upload, when it did. */
+function sizeOf(media: Media): Pick<OgImage, 'width' | 'height'> {
+  return {
+    ...(typeof media.width === 'number' ? { width: media.width } : {}),
+    ...(typeof media.height === 'number' ? { height: media.height } : {}),
+  };
+}
+
+function image(value: number | Media | null | undefined): OgImage | null {
+  const media = populated<Media>(value);
+  const url = mediaUrl(media);
+  return media && url ? { url, ...sizeOf(media) } : null;
+}
+
 function toHub(doc: CategoryDoc): Hub {
   return {
     slug: doc.slug,
     name: doc.name,
     description: doc.description,
     lead: doc.lead ?? null,
-    cover: mediaUrl(doc.defaultCover) ?? null,
+    cover: image(doc.defaultCover),
     order: doc.order,
   };
 }
@@ -97,38 +126,37 @@ function toAuthor(doc: AuthorDoc): Author {
     slug: doc.slug,
     name: doc.name,
     role: doc.role,
-    bio: doc.bio ?? null,
+    bio: doc.bio?.trim() || null,
     photo: mediaUrl(doc.photo) ?? null,
     sameAs: (doc.sameAs ?? []).map((row) => row.url),
   };
 }
 
-function populated<T extends object>(value: number | T | null | undefined): T | null {
-  return value && typeof value === 'object' ? value : null;
-}
-
 function cover(post: PostDoc, hub: Hub): Cover {
   const media = populated<Media>(post.cover);
   const src = mediaUrl(media);
-  if (!media || !src) return { src: hub.cover ?? '', alt: '' };
+  if (!media || !src) return { src: hub.cover?.url ?? '', alt: '', ...hub.cover };
   return {
     src,
     alt: media.alt ?? '',
+    ...sizeOf(media),
     ...(typeof media.filesize === 'number' ? { bytes: media.filesize } : {}),
     ...(media.mimeType ? { mime: media.mimeType } : {}),
   };
 }
 
-/** A card from a post read at `depth: 1`; a post whose hub is missing is skipped by the caller. */
+/** A card from a post read at `depth: 1`; a post missing its hub or author is skipped by the caller. */
 export function toPostCard(doc: PostDoc): PostCard | null {
   const hubDoc = populated<CategoryDoc>(doc.hub);
-  if (!hubDoc) return null;
+  const authorDoc = populated<AuthorDoc>(doc.author);
+  if (!hubDoc || !authorDoc) return null;
   const hub = toHub(hubDoc);
   return {
     slug: doc.slug,
     title: doc.title,
     excerpt: doc.excerpt,
     hub,
+    author: { slug: authorDoc.slug, name: authorDoc.name },
     cover: cover(doc, hub),
     publishedAt: doc.publishedAt ?? doc.createdAt,
     contentUpdatedAt: doc.contentUpdatedAt ?? null,
@@ -140,7 +168,10 @@ export function toPost(doc: PostDoc): Post | null {
   const card = toPostCard(doc);
   const authorDoc = populated<AuthorDoc>(doc.author);
   if (!card || !authorDoc) return null;
-  const ogImage = populated<Media>(doc.seo?.ogImage);
+  const { src, width, height } = card.cover;
+  const coverImage: OgImage | null = src
+    ? { url: src, ...(width ? { width } : {}), ...(height ? { height } : {}) }
+    : null;
   return {
     ...card,
     author: toAuthor(authorDoc),
@@ -152,7 +183,7 @@ export function toPost(doc: PostDoc): Post | null {
     seo: {
       title: doc.seo?.title || doc.title,
       description: doc.seo?.description || doc.excerpt,
-      ogImage: mediaUrl(ogImage) ?? card.cover.src ?? null,
+      ogImage: image(doc.seo?.ogImage) ?? coverImage,
     },
   };
 }

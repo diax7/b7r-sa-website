@@ -28,7 +28,7 @@ export function validateContact(values: ContactValues, copy: ContactCopy): Conta
   const email = values.email.trim();
   if (!EMAIL.test(email) || email.length > EMAIL_MAX) errors.email = copy.validation.email;
   if (!(copy.inquiryOptions as readonly string[]).includes(values.inquiry)) {
-    errors.inquiry = copy.labels.inquiry;
+    errors.inquiry = copy.validation.inquiry;
   }
   const message = values.message.trim();
   if (message.length === 0 || message.length > MESSAGE_MAX) {

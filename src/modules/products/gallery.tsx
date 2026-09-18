@@ -72,6 +72,7 @@ export function Gallery({ productName, colors, copy }: GalleryProps) {
           fill
           sizes="(min-width: 1024px) 560px, 100vw"
           priority
+          fetchPriority="high"
           className={cn(
             'object-cover transition-opacity duration-(--duration-slow) ease-(--ease-standard)',
             showBack ? 'opacity-0' : 'opacity-100',

@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { ERROR_PAGE } from '@/content/copy/error-page';
 // Error pages must render without the database: the seed is the static fallback (ADR-026).
 import { site } from '@/content/seed/site';
-import { StatusPage } from '@/modules/core';
+import { StatusPage } from '@/modules/core/status-page';
 
 const copy = ERROR_PAGE.en;
 

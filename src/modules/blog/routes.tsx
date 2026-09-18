@@ -102,7 +102,8 @@ export async function hubRouteMetadata(
   const page = n === undefined ? 1 : pageNumber(n);
   const hub = await getHub(locale, slug);
   if (!hub || !page) notFound();
-  return hubMetadata(locale, hub, page);
+  const listing = await getPostPage(locale, 1, { hub: hub.slug });
+  return hubMetadata(locale, hub, page, { empty: listing.totalPosts === 0 });
 }
 
 export async function renderHub(locale: Locale, slug: string, n?: string) {
@@ -140,7 +141,8 @@ export async function authorRouteMetadata(
 ): Promise<Metadata> {
   const author = await getAuthor(locale, slug);
   if (!author || (n !== undefined && !pageNumber(n))) notFound();
-  return authorMetadata(locale, author);
+  const listing = await getPostPage(locale, 1, { author: author.slug });
+  return authorMetadata(locale, author, { empty: listing.totalPosts === 0 });
 }
 
 export async function renderAuthor(locale: Locale, slug: string, n?: string) {

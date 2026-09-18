@@ -27,6 +27,7 @@ export function MiskCredentialBlock({
               alt="Misk Foundation"
               width={400}
               height={230}
+              sizes="180px"
               className="h-auto w-[180px]"
             />
           </div>

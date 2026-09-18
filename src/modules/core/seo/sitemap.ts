@@ -5,9 +5,30 @@ import { type Locale, languageTag, localePath } from '@/lib/i18n';
 
 /** The blog's sitemap input: what `lib/cms/blog.ts` reads. */
 export interface BlogSitemap {
-  posts: Array<{ slug: string; publishedAt: string; contentUpdatedAt: string | null }>;
+  posts: Array<{
+    slug: string;
+    publishedAt: string;
+    contentUpdatedAt: string | null;
+    hub: { slug: string };
+    author: { slug: string };
+  }>;
   hubs: Array<{ slug: string }>;
   authors: Array<{ slug: string }>;
+}
+
+/**
+ * The hubs and authors with at least one published post in the language: an empty listing
+ * is a thin page a crawler holds against the blog, so it stays out of the sitemap and the
+ * page says `noindex, follow` until it has a post (site audit 2026-09-18, item 10).
+ */
+export function populatedBlog(blog: BlogSitemap): BlogSitemap {
+  const hubs = new Set(blog.posts.map((p) => p.hub.slug));
+  const authors = new Set(blog.posts.map((p) => p.author.slug));
+  return {
+    posts: blog.posts,
+    hubs: blog.hubs.filter((h) => hubs.has(h.slug)),
+    authors: blog.authors.filter((a) => authors.has(a.slug)),
+  };
 }
 
 export const EMPTY_BLOG: BlogSitemap = { posts: [], hubs: [], authors: [] };
@@ -32,7 +53,7 @@ type Draft = { route: string; entry: Entry };
 function draftsOf(base: string, input: LocaleSitemapInput): Draft[] {
   const { locale } = input;
   const url = (route: string) => absoluteUrl(base, localePath(locale, route));
-  const blog = input.blog ?? EMPTY_BLOG;
+  const blog = populatedBlog(input.blog ?? EMPTY_BLOG);
   const staticEntries = input.seo.map((page) => ({
     route: page.route,
     entry: { url: url(page.route), lastModified: contentDate(page.updatedAt) },
@@ -81,9 +102,9 @@ function draftsOf(base: string, input: LocaleSitemapInput): Draft[] {
  * `seo-defaults` (`/`, `/products`, `/blog`), every published page with its date (a legal
  * page's date is its body's «آخر تحديث», so the visible line, the JSON-LD and the sitemap
  * agree), the products with their photos, the published posts with a real `lastmod`, the
- * hub pages and the authors. A route that exists in both languages carries the hreflang
- * pair on both entries (`x-default` on the Arabic). No 404, no API, no queries, no
- * paginated listing.
+ * hub pages and the authors that have a post in the language. A route that exists in both
+ * languages carries the hreflang pair on both entries (`x-default` on the Arabic). No 404,
+ * no API, no queries, no paginated listing, no empty listing.
  */
 export function sitemapEntries(base: string, inputs: LocaleSitemapInput[]): MetadataRoute.Sitemap {
   const drafts = inputs.flatMap((input) =>

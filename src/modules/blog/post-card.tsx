@@ -18,13 +18,18 @@ interface PostCardProps {
   priority?: boolean;
 }
 
-/** Post meta line per BRD 4.13: «كتبه ضياء · {date} · {n} دقائق قراءة»; the reading part is the 3–10 form. */
+/**
+ * Post meta line per BRD 4.13: «كتبه {author} · {date} · {n} دقائق قراءة», the author from the
+ * post's record (the same name the author card, the feed and the JSON-LD carry); the reading
+ * part is the 3–10 form.
+ */
 export function postMeta(
   copy: SiteCopy,
   locale: Locale,
-  post: Pick<PostCardData, 'publishedAt' | 'readingMinutes'>,
+  post: Pick<PostCardData, 'author' | 'publishedAt' | 'readingMinutes'>,
 ): string {
   return copy.blog.metaTemplate
+    .replace('{author}', post.author.name)
     .replace('{date}', formatDate(locale, post.publishedAt))
     .replace(copy.readingTime.few, readingLabel(copy.readingTime, post.readingMinutes));
 }
@@ -56,6 +61,7 @@ export function PostCard({
             alt=""
             fill
             priority={priority}
+            fetchPriority={priority ? 'high' : undefined}
             sizes={
               featured
                 ? '(min-width: 1024px) 560px, 100vw'

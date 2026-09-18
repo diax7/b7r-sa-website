@@ -154,7 +154,9 @@ export async function ProductPage({ product, locale }: { product: Product; local
             <SpecList product={product} copy={copy} />
           </div>
           {hasSizeChart && (
-            <div className="flex flex-col gap-4">
+            // min-w-0: the chart's 420 px table must scroll inside its card, never widen the
+            // grid column (and the layout viewport) on a phone.
+            <div className="flex min-w-0 flex-col gap-4">
               <h2 id="product-sizes-title" className="text-h3 text-text">
                 {copy.sections.sizeChart}
               </h2>

@@ -127,6 +127,7 @@ export const ar = {
     /** Between the sizes and the colours in the spec list. */
     listSeparator: '، ',
     sizeChartHeaders: { size: 'المقاس', length: 'الطول', chest: 'عرض الصدر', sleeve: 'طول الكم' },
+    sizeChartUnit: 'القياسات بالسنتيمتر',
     colorSwitchAria: 'اللون {colour}',
   },
   contactForm: {
@@ -154,6 +155,7 @@ export const ar = {
       name: 'أدخل اسمك',
       phone: 'أدخل رقم جوال صحيح',
       email: 'أدخل بريداً إلكترونياً صحيحاً',
+      inquiry: 'اختر نوع الاستفسار',
       message: 'اكتب رسالتك',
     },
   },
@@ -213,18 +215,19 @@ export const ar = {
   blog: {
     title: 'مدونة بحر',
     lead: 'أدلة عملية لبدء براندك وبيع منتجاتك المطبوعة في السعودية.',
-    metaTemplate: 'كتبه ضياء · {date} · {n} دقائق قراءة',
+    metaTemplate: 'كتبه {author} · {date} · {n} دقائق قراءة',
     takeawaysTitle: 'أهم النقاط',
     relatedTitle: 'مقالات ذات صلة',
     share: 'شارك',
     inPostCta: {
       title: 'ابدأ براندك اليوم',
       text: 'بدون رأس مال وبدون مخزون.',
-      button: 'ابدأ براندك مجانًا',
+      button: 'ابدأ براندك مجاناً',
     },
     author: { name: 'ضياء', role: 'مؤسس بحر برنت' },
     allHubs: 'الكل',
     emptyHub: 'لا مقالات في هذا القسم بعد.',
+    emptyAuthor: 'لا مقالات بعد.',
     copied: 'نُسخ الرابط',
     toc: 'في هذا المقال',
     updatedPrefix: 'حُدّث',

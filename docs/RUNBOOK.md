@@ -319,13 +319,28 @@ seed fixtures. Run both after a product or tagline change and commit the PNGs;
 `tests/og-images.test.ts` fails when a product has no image. A product added in the admin
 has no OG image until this runs: the page falls back to the language's default image.
 
+**A changed file under `public/` keeps its old look for a year unless its name changes.**
+Since 2026-09-18 (site audit, item 16) `next/image` caches its transforms for a year
+(`images.minimumCacheTTL`) and `/og`, `/icons` and `/images` answer with `max-age=86400`, so
+`pnpm og` and `pnpm assets`, which rewrite files under the same names, are served stale by
+the optimiser until the name changes or a deploy clears `.next/cache`. A CMS upload is safe:
+Payload gives a new file a new name.
+
 ## Lighthouse
 
-`pnpm lhci` runs the five BRD 8.7 URLs on Ubuntu CI. On Windows use
-`bash scripts/dev/lh-all.sh` (builds with the production origin, warms the `next/image` cache,
-prints the four scores per URL). Expect ±3 points around the 0.9 performance threshold on `/`
-and the product pages: the simulated LCP floor is the React runtime (ADR-014), and the first
-transform of each image costs a point on a cold server.
+`pnpm lhci` runs eleven URLs on Ubuntu CI: the five BRD 8.7 URLs and `/en`,
+`/en/products/tee-essential` at the 0.9 performance gate (`/contact` at `warn`, ADR-014), and
+four CMS routes (`/how-it-works`, `/faq`, `/privacy`, `/en/compare-printful`) at a `warn`
+floor of 0.85 (BRD §7.8, amended 2026-09-18 after the site audit's item 12). Why 85: 140
+of a CMS page's 164 KB of first-paint JavaScript is React DOM and the app router, which the
+site cannot shed; the floor is theirs, not ours, and 85 to 90 there is not a regression (the
+analyzer's numbers are in `docs/audits/2026-09-18-site.md`, "After the fixes"; do not spend
+a day looking for the missing points in our 24 KB). Accessibility, best practices, SEO and
+CLS are `error` on all eleven. On Windows use `bash scripts/dev/lh-all.sh` (builds
+with the production origin, warms the `next/image` cache, prints the four scores per URL;
+pass every public route as arguments for the launch-checklist pass, row 38). Expect ±3 points
+around the threshold on `/` and the product pages: the simulated LCP floor is the React
+runtime (ADR-014), and the first transform of each image costs a point on a cold server.
 
 ## Video poster
 

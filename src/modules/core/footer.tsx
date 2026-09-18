@@ -7,6 +7,7 @@ import { copyFor, type SiteCopy } from '@/content/copy';
 import type { Navigation, SiteSettings } from '@/content/schema';
 import { cn } from '@/lib/cn';
 import { type Locale, localePath } from '@/lib/i18n';
+import { displayPhone } from '@/lib/phone';
 import { whatsappUrl } from '@/lib/utm';
 
 const PAYMENT_BADGES = [
@@ -59,6 +60,7 @@ export function Footer({
   copy: SiteCopy;
 }) {
   const footerCopy = copy.footer;
+  const home = localePath(locale, '/');
   const year = new Date().getFullYear();
   const socials = [
     { href: site.social.x, label: footerCopy.socialAria.x, Icon: XIcon },
@@ -76,8 +78,11 @@ export function Footer({
       <Container className="pt-16 pb-10 md:pt-20">
         <div className="grid grid-cols-2 gap-x-6 gap-y-12 lg:grid-cols-[1.4fr_1fr_1fr_1.4fr] lg:gap-8">
           <div className="col-span-2 flex flex-col items-center gap-5 text-center lg:col-span-1 lg:items-start lg:text-start">
+            {/* The home is never prefetched: its payload hoists the hero preloads into this
+                page's head (see the header). */}
             <Link
-              href={localePath(locale, '/')}
+              href={home}
+              prefetch={false}
               className="inline-block rounded-inner"
               aria-label={site.brandName}
             >
@@ -105,13 +110,14 @@ export function Footer({
                 </li>
               ))}
             </ul>
+            {/* A 44 px hit area on the two contacts (BRD 6.17), the row's height unchanged. */}
             <p className="flex flex-wrap items-center justify-center gap-x-3 text-small text-white/75 lg:justify-start">
-              <a href={`mailto:${site.contact.email}`} className={cn(linkCls, 'py-0')}>
+              <a href={`mailto:${site.contact.email}`} className={cn(linkCls, 'py-2.5 -my-2.5')}>
                 <bdi dir="ltr">{site.contact.email}</bdi>
               </a>
               <span aria-hidden="true">·</span>
-              <a href={`tel:${site.contact.phoneIntl}`} className={cn(linkCls, 'py-0')}>
-                <bdi dir="ltr">{site.contact.phone}</bdi>
+              <a href={`tel:${site.contact.phoneIntl}`} className={cn(linkCls, 'py-2.5 -my-2.5')}>
+                <bdi dir="ltr">{displayPhone(locale, site.contact)}</bdi>
               </a>
             </p>
           </div>
@@ -119,7 +125,11 @@ export function Footer({
           <FooterColumn title={footerCopy.linksTitle}>
             {navigation.primary.map((item) => (
               <li key={item.href}>
-                <Link href={item.href} className={linkCls}>
+                <Link
+                  href={item.href}
+                  prefetch={item.href === home ? false : null}
+                  className={linkCls}
+                >
                   {item.label}
                 </Link>
               </li>
@@ -187,6 +197,7 @@ export function Footer({
               alt={copy.media.trustBadges.misk}
               width={400}
               height={230}
+              sizes="64px"
               className="h-10 w-auto rounded-inner bg-white p-1"
             />
           </div>

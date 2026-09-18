@@ -6,6 +6,8 @@ import {
   contentSecurityPolicy,
   FONT_CACHE,
   headerRoutes,
+  IMAGE_CACHE,
+  IMAGE_ROUTE_SOURCES,
   PAGE_ROUTE_SOURCE,
   securityHeaders,
   umamiSrcAllowed,
@@ -180,5 +182,23 @@ describe('font files', () => {
     const route = headerRoutes().find((r) => r.source === '/fonts/:path*');
     expect(route?.headers).toContainEqual(FONT_CACHE);
     expect(FONT_CACHE.value).toContain('immutable');
+  });
+});
+
+describe('rendered and static images', () => {
+  it('are cached for a day under /og, /icons and /images (site audit 2026-09-18)', () => {
+    const routes = headerRoutes();
+    for (const source of IMAGE_ROUTE_SOURCES) {
+      const route = routes.find((r) => r.source === source);
+      expect(route?.headers, source).toEqual([IMAGE_CACHE]);
+    }
+    expect(IMAGE_CACHE.value).toBe('public, max-age=86400');
+    // The admin set still follows every cache rule, so its no-store wins on its own sources.
+    const lastImage = Math.max(
+      ...IMAGE_ROUTE_SOURCES.map((s) => routes.findIndex((r) => r.source === s)),
+    );
+    expect(routes.findIndex((r) => ADMIN_ROUTE_SOURCES.includes(r.source))).toBeGreaterThan(
+      lastImage,
+    );
   });
 });

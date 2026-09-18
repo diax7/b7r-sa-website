@@ -35,6 +35,37 @@ test.describe('machine files (BRD 7.2, 7.3, 7.5, 7.6)', () => {
     expect(xml).toMatch(/<image:loc>https?:\/\/[^<]+\/hoodie-black-front\.jpg<\/image:loc>/);
   });
 
+  test('an empty hub is noindex, follow and out of the sitemap; a hub with posts is listed', async ({
+    request,
+  }) => {
+    // The seed puts posts in three of the six hubs; seasons has none (site audit 2026-09-18,
+    // item 10). The robots meta is `noindex, nofollow` everywhere off the production origin,
+    // so the `follow` variant is asserted only when the build runs as https://b7r.sa (CI).
+    const xml = await (await request.get('/sitemap.xml')).text();
+    expect(xml).toContain('<loc>https://b7r.sa/blog/category/pricing-profit</loc>');
+    expect(xml).not.toContain('<loc>https://b7r.sa/blog/category/seasons</loc>');
+    const robots = await (await request.get('/robots.txt')).text();
+    if (!robots.includes('Sitemap: https://b7r.sa/sitemap.xml')) return;
+    const empty = await (await request.get('/blog/category/seasons')).text();
+    expect(empty).toContain('<meta name="robots" content="noindex, follow"/>');
+    const full = await (await request.get('/blog/category/pricing-profit')).text();
+    expect(full).toContain(
+      '<meta name="robots" content="index, follow, max-image-preview:large"/>',
+    );
+  });
+
+  test('the renders, icons and brand images are cached for a day; the fonts for a year', async ({
+    request,
+  }) => {
+    for (const path of ['/og/default.png', '/icons/icon-192.png', '/images/logo/icon.png']) {
+      const res = await request.get(path);
+      expect(res.status(), path).toBe(200);
+      expect(res.headers()['cache-control'], path).toBe('public, max-age=86400');
+    }
+    const font = await request.get('/fonts/ITFRayatRound-Regular.woff2');
+    expect(font.headers()['cache-control']).toBe('public, max-age=31536000, immutable');
+  });
+
   test('robots.txt disallows everything on a non-production host', async ({ request }) => {
     // Local builds leave NEXT_PUBLIC_SITE_URL unset; CI sets the production origin and checks
     // the full rule set in the Lighthouse SEO audit instead.

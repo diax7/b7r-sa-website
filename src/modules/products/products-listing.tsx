@@ -43,7 +43,13 @@ export async function ProductsListing({ locale }: { locale: Locale }) {
           >
             {ordered.map((product, i) => (
               <li key={product.slug}>
-                <ProductCard product={product} locale={locale} priority={i < 3} headingLevel="h2" />
+                <ProductCard
+                  product={product}
+                  locale={locale}
+                  priority={i < 3}
+                  lcp={i === 0}
+                  headingLevel="h2"
+                />
               </li>
             ))}
           </ul>

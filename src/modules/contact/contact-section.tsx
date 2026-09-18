@@ -12,8 +12,9 @@ import type { BlockOf } from '@/content/schema';
 import { getSiteSettings } from '@/lib/cms';
 import { env } from '@/lib/env';
 import type { Locale } from '@/lib/i18n';
+import { displayPhone } from '@/lib/phone';
 import { whatsappUrl } from '@/lib/utm';
-import { ContactForm } from '@/modules/contact/contact-form';
+import { ContactFormLoader } from '@/modules/contact/contact-form-loader';
 
 function ContactCard({
   icon,
@@ -97,7 +98,7 @@ export async function ContactSection({
         )}
         <div className="grid gap-8 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:gap-12">
           <Card className="order-last p-6 md:p-8 lg:order-first" radius="lg">
-            <ContactForm
+            <ContactFormLoader
               locale={locale}
               copy={contactForm}
               whatsappHref={whatsapp}
@@ -135,7 +136,7 @@ export async function ContactSection({
                 className="text-body text-primary hover:text-primary-hover"
               >
                 <bdi dir="ltr" className="tabular">
-                  {site.contact.phone}
+                  {displayPhone(locale, site.contact)}
                 </bdi>
               </a>
             </ContactCard>

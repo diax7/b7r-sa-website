@@ -9,7 +9,7 @@ export interface ProductEn {
   description: string;
   material: string;
   sizesSummary: string;
-  /** English label by the Arabic label; sizes with Latin labels (`S`, `0-3M`) stay as they are. */
+  /** English label by the Arabic label; sizes with Latin labels (`S`, `0–3M`) stay as they are. */
   sizeLabels?: Record<string, string>;
 }
 
@@ -55,7 +55,7 @@ export const productsEn: Record<string, ProductEn> = {
     description:
       'A one-piece baby garment designed with care to be very soft on a baby’s sensitive skin. Stretchy openings make dressing and undressing easy, and the printing technique keeps the colours vivid and the design intact through many wash cycles.',
     material: 'Soft cotton suited to a baby’s skin',
-    sizesSummary: '0-3M – 12-18M',
+    sizesSummary: '0–3M – 12–18M',
   },
   'tote-bag': {
     name: 'Tote bag',

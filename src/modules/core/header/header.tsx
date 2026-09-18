@@ -72,13 +72,21 @@ export function Header({ navigation, site, locale, locales, copy }: ShellData) {
           )}
         >
           <Container className="header-inner flex items-center justify-between gap-4 lg:gap-6">
-            <Link href={home} className="shrink-0 rounded-inner" aria-label={site.brandName}>
+            {/* The home is never prefetched (the logo here, «الرئيسية» in the nav, the footer):
+                its RSC payload hoists the hero photo and the Black font preloads into every
+                other page's head (site audit 2026-09-18, item 4). */}
+            <Link
+              href={home}
+              prefetch={false}
+              className="shrink-0 rounded-inner"
+              aria-label={site.brandName}
+            >
               <Image
                 src="/images/logo/logo-header.png"
                 alt=""
                 width={198}
                 height={72}
-                sizes="198px"
+                sizes="(min-width: 768px) 198px, 88px"
                 priority
                 className={cn(
                   'w-auto transition-[height] duration-(--duration-base) ease-(--ease-standard)',
@@ -95,6 +103,7 @@ export function Header({ navigation, site, locale, locales, copy }: ShellData) {
                     <li key={item.href}>
                       <Link
                         href={item.href}
+                        prefetch={item.href === home ? false : null}
                         aria-current={active ? 'page' : undefined}
                         className={cn(
                           'nav-link relative py-2 text-body font-medium text-text transition-colors duration-(--duration-fast) hover:text-primary',

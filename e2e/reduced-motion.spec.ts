@@ -26,10 +26,11 @@ test.describe('prefers-reduced-motion', () => {
     await page.locator('#faq').scrollIntoViewIfNeeded();
     const trigger = page.locator('#faq button[aria-expanded]').first();
     await trigger.click();
-    const duration = await page
-      .locator('#faq [data-state="open"][role="region"]')
-      .evaluate((el) => getComputedStyle(el).animationDuration);
-    expect(Number.parseFloat(duration)).toBeLessThanOrEqual(0.001);
+    // The panel's inner grid carries the height transition; the global rule drops it.
+    const transition = await page
+      .locator('#faq [data-state="open"][role="region"] > div')
+      .evaluate((el) => getComputedStyle(el).transitionProperty);
+    expect(transition).not.toContain('grid-template-rows');
   });
 
   test('designer figures change instantly (no count-up)', async ({ page }) => {

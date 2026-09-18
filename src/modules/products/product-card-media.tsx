@@ -15,6 +15,7 @@ interface ProductCardMediaProps {
   initialSlug: string;
   alt: string;
   priority: boolean;
+  lcp: boolean;
   href: string;
   slug: string;
   name: string;
@@ -39,6 +40,7 @@ export function ProductCardMedia({
   initialSlug,
   alt,
   priority,
+  lcp,
   href,
   slug,
   name,
@@ -67,6 +69,7 @@ export function ProductCardMedia({
           fill
           sizes={SIZES}
           priority={priority}
+          fetchPriority={lcp ? 'high' : undefined}
           className={cn(
             'object-cover transition-opacity duration-(--duration-slow) ease-(--ease-standard)',
             shown.images.back && 'group-hover:opacity-0 group-data-[preview]:opacity-100',

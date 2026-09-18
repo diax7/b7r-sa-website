@@ -9,7 +9,7 @@ import { Textarea } from '@/components/shared/textarea';
 import { Select } from '@/components/ui/select';
 import { cn } from '@/lib/cn';
 import type { Locale } from '@/lib/i18n';
-import { track } from '@/modules/core';
+import { track } from '@/modules/core/analytics/track';
 import {
   type ContactCopy,
   validateContact,
@@ -19,7 +19,7 @@ import {
 } from '@/modules/contact/validate';
 import { useTurnstile } from '@/components/shared/use-turnstile';
 
-interface ContactFormProps {
+export interface ContactFormProps {
   locale: Locale;
   copy: ContactCopy;
   whatsappHref: string;

@@ -87,14 +87,16 @@ export async function AuthorPage({
               data-reveal-stagger=""
               data-post-grid=""
             >
-              {listing.posts.map((post) => (
+              {listing.posts.map((post, i) => (
                 <li key={post.slug}>
-                  <PostCard post={post} locale={locale} headingLevel="h3" />
+                  <PostCard post={post} locale={locale} headingLevel="h3" priority={i === 0} />
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="text-body text-text-muted">{blogCopy.emptyHub}</p>
+            <p className="text-body text-text-muted" data-author-empty="">
+              {blogCopy.emptyAuthor}
+            </p>
           )}
           <Pagination
             base={localePath(locale, route)}

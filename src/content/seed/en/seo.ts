@@ -43,7 +43,8 @@ export const seoEn = {
     },
     '/terms': {
       title: 'Terms and conditions',
-      description: 'The terms of use of the B7R Print platform.',
+      description:
+        'The terms of use of the B7R Print platform: registration, orders, prices and payment, design rights and cancellation.',
     },
     '/shipping': {
       title: 'Shipping and delivery',
@@ -51,7 +52,8 @@ export const seoEn = {
     },
     '/privacy': {
       title: 'Privacy policy',
-      description: 'How B7R Print collects and protects your data.',
+      description:
+        'How B7R Print collects, uses and protects your data, how long it is kept, and your rights over it.',
     },
   } as Record<string, { title: string; description: string }>,
 };

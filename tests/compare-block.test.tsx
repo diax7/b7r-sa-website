@@ -104,6 +104,12 @@ describe('the compare block (ADR-050)', () => {
         />,
       );
       expect(container.querySelector('h1')?.textContent).toBe(comparePrintful.title);
+      // The lists are H2s under the page's H1: no level is skipped (a11y 100).
+      expect([...container.querySelectorAll('h2')].map((h) => h.textContent)).toEqual([
+        container.querySelector('[data-compare-list="best"] h2')?.textContent,
+        container.querySelector('[data-compare-list="not"] h2')?.textContent,
+      ]);
+      expect(container.querySelector('h3')).toBeNull();
       expect(container.querySelector('table caption')?.textContent).toContain('Printful');
       expect(container.querySelectorAll('thead th[scope="col"]')).toHaveLength(3);
       expect(container.querySelectorAll('tbody th[scope="row"]')).toHaveLength(8);
@@ -113,5 +119,20 @@ describe('the compare block (ADR-050)', () => {
       expect(container.querySelectorAll('a')).toHaveLength(0);
       expect(container.innerHTML).not.toMatch(/\b(ml|mr|pl|pr|left|right)-/);
     }
+  });
+
+  it('as a later block, titles itself H2 and its lists H3', () => {
+    const { container } = render(
+      <CompareBlock
+        block={{ ...block, title: 'المقارنة' }}
+        page={comparePrintful}
+        locale="ar"
+        tone="ground"
+        anchor="compare-2"
+      />,
+    );
+    expect(container.querySelector('h1')).toBeNull();
+    expect([...container.querySelectorAll('h2')].map((h) => h.textContent)).toEqual(['المقارنة']);
+    expect(container.querySelectorAll('[data-compare-list] h3')).toHaveLength(2);
   });
 });

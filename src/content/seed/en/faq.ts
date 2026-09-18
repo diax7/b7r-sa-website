@@ -59,7 +59,7 @@ export const faqEn: Record<string, { question: string; answer: string }> = {
     question: 'Which stores can I connect?',
     answer: 'Salla, Zid and Shopify, and connecting is free.',
   },
-  'كيف يتم الربط؟': {
+  'كيف أربط متجري؟': {
     question: 'How does the connection work?',
     answer:
       'Through a secure authorisation from inside your store in one click, without sharing any sensitive data.',
@@ -74,6 +74,6 @@ export const faqEn: Record<string, { question: string; answer: string }> = {
   },
   'كيف أتواصل معكم؟': {
     question: 'How do I reach you?',
-    answer: 'On WhatsApp at 0501699572 or by email at contact@b7r.sa.',
+    answer: 'On WhatsApp at +966 50 169 9572 or by email at contact@b7r.sa.',
   },
 };

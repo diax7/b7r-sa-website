@@ -84,7 +84,7 @@ test.describe('header and navigation (BRD 6.2)', () => {
     );
     await expect(dialog.locator('[data-language-switch="en"]')).toHaveAttribute('href', '/en');
     await expect(dialog.getByRole('link', { name: 'المنتجات' })).toBeVisible();
-    await expect(dialog.getByRole('link', { name: 'ابدأ براندك مجانًا' })).toHaveAttribute(
+    await expect(dialog.getByRole('link', { name: 'ابدأ براندك مجاناً' })).toHaveAttribute(
       'href',
       /utm_campaign=menu/,
     );

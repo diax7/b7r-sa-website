@@ -10,6 +10,8 @@ interface ProductCardProps {
   locale: Locale;
   /** Listing cards preload nothing; the first row of the listing may pass `priority`. */
   priority?: boolean;
+  /** The listing's first card: the page's LCP photo is fetched ahead of the scripts. */
+  lcp?: boolean;
   headingLevel?: 'h2' | 'h3';
 }
 
@@ -23,6 +25,7 @@ export function ProductCard({
   product,
   locale,
   priority = false,
+  lcp = false,
   headingLevel = 'h3',
 }: ProductCardProps) {
   const productsPage = copyFor(locale).productsPage;
@@ -35,6 +38,7 @@ export function ProductCard({
       initialSlug={initial.slug}
       alt={product.shortDescription}
       priority={priority}
+      lcp={lcp}
       href={localePath(locale, `/products/${product.slug}`)}
       slug={product.slug}
       name={product.name}

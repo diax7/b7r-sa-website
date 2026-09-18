@@ -27,13 +27,13 @@ Every user-visible string in Level 1 is here. Copy it exactly, including punctua
 | Products | تيشيرت أساسي · تيشيرت أوفرسايز · هودي · بربتوز أطفال · حقيبة قماشية | قميص, سترة, شنطة |
 | Money | التكلفة (من بحر) · سعر البيع · ربحك · المحفظة · رصيد ترحيبي | السعر الأساسي, الرسوم |
 | Brand | براندك (CTA only, per Dhia) · علامتك التجارية (prose) | ماركتك |
-| Register | أنشئ حسابك / ابدأ براندك مجانًا | سجّل الآن (allowed only in the ribbon lead) |
+| Register | أنشئ حسابك / ابدأ براندك مجاناً | سجّل الآن (allowed only in the ribbon lead) |
 | Delivery | التوصيل, نوصّل | الشحن as the customer-facing verb (use شحن for the act B7R does) |
 
 ### 4.3 Global elements
 
 **Navigation (in order, RTL start to end):** الرئيسية · المنتجات · كيف نعمل · من نحن · المدونة · تواصل معنا
-**Header CTA:** ابدأ براندك مجانًا → `https://b7r.app/register?utm_source=b7r.sa&utm_medium=website&utm_campaign=header`
+**Header CTA:** ابدأ براندك مجاناً → `https://b7r.app/register?utm_source=b7r.sa&utm_medium=website&utm_campaign=header`
 **Header secondary:** none. *Amended 2026-09-14 (Dhia, ADR-044): the login link is gone from the header, the menu and the CMS; the language switch (an icon, §6.2) sits before the CTA.*
 **Skip link:** تخطَّ إلى المحتوى
 **Menu button labels (aria):** فتح القائمة / إغلاق القائمة
@@ -50,7 +50,7 @@ Every user-visible string in Level 1 is here. Copy it exactly, including punctua
 | 3 | من جدة إلى كل المملكة خلال 5 أيام | إنتاج محلي وشحن سريع، بدون جمارك ولا انتظار. |
 | 4 | متجرك في سلة أو زد؟ اربطه بضغطة | الطلبات تصلنا تلقائياً، وتوصل عميلك باسم متجرك. |
 
-**Hero primary CTA:** ابدأ براندك مجانًا → register URL with `utm_campaign=hero`
+**Hero primary CTA:** ابدأ براندك مجاناً → register URL with `utm_campaign=hero`
 **Hero secondary CTA (text link with mirrored arrow):** استكشف المنتجات → `/products`
 **Hero microcopy under the buttons:** رصيد ترحيبي 30 ريالاً، بدون بطاقة *(2026-09-13, Dhia: not shown in the hero any more; the line stays in the CMS for the About facts band)*
 **Hero proof chips (0 to 6, with check icons; the seed ships 3):** مجاني 100% · بدون حد أدنى للطلبات · توصيل لكل المملكة خلال 5 أيام
@@ -95,7 +95,7 @@ Every user-visible string in Level 1 is here. Copy it exactly, including punctua
 
 **Video section**
 - H2: شاهد كيف نطبع طلبك
-- Lead: من ملف التصميم إلى الطرد الجاهز، كل شيء يتم عندنا في جدة.
+- Lead: من ملف التصميم إلى الطرد الجاهز، كل شيء يحدث عندنا في جدة.
 - Play button aria: تشغيل الفيديو
 
 **Why us section**
@@ -133,7 +133,7 @@ Every user-visible string in Level 1 is here. Copy it exactly, including punctua
 **CTA ribbon (on every page, before the footer)**
 - H2: ابدأ اليوم واحصل على 30 ريالاً رصيداً ترحيبياً
 - Lead: سجّل مجاناً بدون بطاقة، وأطلق أول منتج خلال دقائق.
-- Button: ابدأ براندك مجانًا → register URL with `utm_campaign=ribbon&utm_content={page}`
+- Button: ابدأ براندك مجاناً → register URL with `utm_campaign=ribbon&utm_content={page}`
 
 ### 4.5 Footer
 
@@ -181,6 +181,7 @@ Every user-visible string in Level 1 is here. Copy it exactly, including punctua
 - Print method value (all products): طباعة رقمية عالية الجودة
 - Print area value: الواجهة الأمامية، 28 × 38 سم
 - Size chart headers: المقاس · الطول · عرض الصدر · طول الكم (cm; see Appendix A)
+- Size chart unit line (visible above the table, *2026-09-18*): القياسات بالسنتيمتر
 - Colour switch aria: اللون {colour}
 - Gallery aria: صورة {n} من {total}
 
@@ -224,7 +225,7 @@ Every user-visible string in Level 1 is here. Copy it exactly, including punctua
 - Sending state: جارٍ الإرسال
 - Success: وصلتنا رسالتك. سنرد عليك قريباً.
 - Failure: تعذّر الإرسال. حاول مرة أخرى أو راسلنا على واتساب.
-- Validation: أدخل اسمك · أدخل رقم جوال صحيح · أدخل بريداً إلكترونياً صحيحاً · اكتب رسالتك
+- Validation: أدخل اسمك · أدخل رقم جوال صحيح · أدخل بريداً إلكترونياً صحيحاً · اختر نوع الاستفسار · اكتب رسالتك
 - Contact cards: واتساب; راسلنا مباشرة · البريد الإلكتروني: contact@b7r.sa · الهاتف: 0501699572 · تابعنا: (social icons)
 - Booking card title: احجز استشارة مجانية
 - Booking card text: 30 دقيقة نجاوب فيها على أسئلتك ونساعدك تبدأ.
@@ -242,11 +243,11 @@ Every user-visible string in Level 1 is here. Copy it exactly, including punctua
 - H1: مدونة بحر
 - Lead: أدلة عملية لبدء براندك وبيع منتجاتك المطبوعة في السعودية.
 - Hub names (6): البداية · أساسيات الطباعة عند الطلب · سلة وزد وشوبيفاي · التصميم · التسعير والربح · المواسم
-- Post meta: كتبه ضياء · {date} · {n} دقائق قراءة
+- Post meta: كتبه {author} · {date} · {n} دقائق قراءة (*amended 2026-09-18: `{author}` is the name on the post's author record, the same name the author card, the feed and the JSON-LD carry; it read «ضياء» as a fixed word before*)
 - Key takeaways box title: أهم النقاط
 - Related title: مقالات ذات صلة
 - Share: شارك
-- In-post CTA block: title ابدأ براندك اليوم; text بدون رأس مال وبدون مخزون.: button ابدأ براندك مجانًا
+- In-post CTA block: title ابدأ براندك اليوم; text بدون رأس مال وبدون مخزون.: button ابدأ براندك مجاناً
 - Placeholder posts (3, marked as samples in the CMS data, real content to come in Level 3):
   1. كيف تبدأ براند ملابس في السعودية بدون مصنع وبدون مخزون
   2. ما هي الطباعة عند الطلب؟ شرح مبسط بالأمثلة السعودية
@@ -277,10 +278,10 @@ The English titles and descriptions (suffix ` | B7R Print`) are the `seo` rows o
 | About | من نحن | قصة بحر برنت، أول منصة سعودية للطباعة عند الطلب، من خريجي برنامج Misk Launchpad. |
 | Contact | تواصل معنا | راسلنا على واتساب أو البريد، أو احجز استشارة مجانية لمدة 30 دقيقة. |
 | FAQ | الأسئلة الشائعة عن الطباعة عند الطلب | إجابات مباشرة عن التكلفة والربح والتوصيل وربط المتاجر مع بحر برنت. |
-| Blog | مدونة بحر | أدلة عملية لبدء براندك وبيع المنتجات المطبوعة في السعودية. |
-| Terms | الشروط والأحكام | شروط استخدام منصة بحر برنت. |
-| Shipping | الشحن والتوصيل | سياسة الشحن والتوصيل في بحر برنت داخل المملكة. |
-| Privacy | سياسة الخصوصية | كيف نجمع بياناتك ونحميها في بحر برنت. |
+| Blog | مدونة بحر | أدلة عملية لبدء براندك وبيع المنتجات المطبوعة في السعودية: التسعير والربح وربط متجرك بسلة وزد وشوبيفاي. |
+| Terms | الشروط والأحكام | شروط استخدام منصة بحر برنت: التسجيل والطلبات والأسعار والدفع وحقوق التصاميم والإلغاء. |
+| Shipping | الشحن والتوصيل | سياسة الشحن والتوصيل في بحر برنت داخل المملكة: التوصيل خلال 5 أيام، ومحاولات التسليم، والتعويض خلال 10 أيام من الاستلام. |
+| Privacy | سياسة الخصوصية | كيف نجمع بياناتك ونستخدمها ونحميها في بحر برنت، ومدة الاحتفاظ بها، وحقوقك عليها. |
 | Compare (Printful) | بحر برنت مقابل Printful لمتجر سعودي | مقارنة بالأرقام: الطباعة في جدة والتوصيل خلال 5 أيام مقابل الشحن من الخارج خلال أسابيع؛ الأسعار بالريال وربط سلة وزد. |
 
 ### 4.17 Transactional emails (Level 1, sent through Resend)

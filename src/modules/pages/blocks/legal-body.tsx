@@ -2,6 +2,7 @@ import { Container } from '@/components/shared/container';
 import { Prose } from '@/components/shared/prose';
 import { Section } from '@/components/shared/section';
 import { copyFor } from '@/content/copy';
+import { formatDate } from '@/lib/dates';
 import { renderMarkdown, type Heading } from '@/lib/markdown';
 import type { BlockProps } from '@/modules/pages/blocks/types';
 
@@ -65,9 +66,7 @@ export function LegalBodyBlock({
             )}
             <p className="text-small text-text-muted">
               {messages.legal.updatedPrefix}{' '}
-              <time dateTime={block.updatedAt}>
-                <bdi dir="ltr">{block.updatedAt}</bdi>
-              </time>
+              <time dateTime={block.updatedAt}>{formatDate(locale, block.updatedAt)}</time>
             </p>
           </header>
           <Prose html={html} />

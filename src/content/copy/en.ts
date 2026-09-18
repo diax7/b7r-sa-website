@@ -125,6 +125,7 @@ export const en: SiteCopy = {
     /** Between the sizes and the colours in the spec list. */
     listSeparator: ', ',
     sizeChartHeaders: { size: 'Size', length: 'Length', chest: 'Chest width', sleeve: 'Sleeve' },
+    sizeChartUnit: 'Measurements in cm',
     colorSwitchAria: 'Colour {colour}',
   },
   contactForm: {
@@ -152,6 +153,7 @@ export const en: SiteCopy = {
       name: 'Enter your name',
       phone: 'Enter a valid mobile number',
       email: 'Enter a valid email address',
+      inquiry: 'Choose the inquiry type',
       message: 'Write your message',
     },
   },
@@ -211,7 +213,7 @@ export const en: SiteCopy = {
   blog: {
     title: 'The B7R blog',
     lead: 'Practical guides to starting your brand and selling printed products in Saudi Arabia.',
-    metaTemplate: 'By Dhia · {date} · {n} min read',
+    metaTemplate: 'By {author} · {date} · {n} min read',
     takeawaysTitle: 'Key takeaways',
     relatedTitle: 'Related articles',
     share: 'Share',
@@ -223,6 +225,7 @@ export const en: SiteCopy = {
     author: { name: 'Dhia', role: 'Founder of B7R Print' },
     allHubs: 'All',
     emptyHub: 'No articles in this section yet.',
+    emptyAuthor: 'No articles yet.',
     copied: 'Link copied',
     toc: 'In this article',
     updatedPrefix: 'Updated',

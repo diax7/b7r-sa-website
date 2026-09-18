@@ -349,13 +349,13 @@ Every user-visible string in Level 1 is here. Copy it exactly, including punctua
 | Products | تيشيرت أساسي · تيشيرت أوفرسايز · هودي · بربتوز أطفال · حقيبة قماشية | قميص, سترة, شنطة |
 | Money | التكلفة (من بحر) · سعر البيع · ربحك · المحفظة · رصيد ترحيبي | السعر الأساسي, الرسوم |
 | Brand | براندك (CTA only, per Dhia) · علامتك التجارية (prose) | ماركتك |
-| Register | أنشئ حسابك / ابدأ براندك مجانًا | سجّل الآن (allowed only in the ribbon lead) |
+| Register | أنشئ حسابك / ابدأ براندك مجاناً | سجّل الآن (allowed only in the ribbon lead) |
 | Delivery | التوصيل, نوصّل | الشحن as the customer-facing verb (use شحن for the act B7R does) |
 
 ### 4.3 Global elements
 
 **Navigation (in order, RTL start to end):** الرئيسية · المنتجات · كيف نعمل · من نحن · المدونة · تواصل معنا
-**Header CTA:** ابدأ براندك مجانًا → `https://b7r.app/register?utm_source=b7r.sa&utm_medium=website&utm_campaign=header`
+**Header CTA:** ابدأ براندك مجاناً → `https://b7r.app/register?utm_source=b7r.sa&utm_medium=website&utm_campaign=header`
 **Header secondary:** none. *Amended 2026-09-14 (Dhia, ADR-044): the login link is gone from the header, the menu and the CMS; the language switch (an icon, §6.2) sits before the CTA.*
 **Skip link:** تخطَّ إلى المحتوى
 **Menu button labels (aria):** فتح القائمة / إغلاق القائمة
@@ -372,7 +372,7 @@ Every user-visible string in Level 1 is here. Copy it exactly, including punctua
 | 3 | من جدة إلى كل المملكة خلال 5 أيام | إنتاج محلي وشحن سريع، بدون جمارك ولا انتظار. |
 | 4 | متجرك في سلة أو زد؟ اربطه بضغطة | الطلبات تصلنا تلقائياً، وتوصل عميلك باسم متجرك. |
 
-**Hero primary CTA:** ابدأ براندك مجانًا → register URL with `utm_campaign=hero`
+**Hero primary CTA:** ابدأ براندك مجاناً → register URL with `utm_campaign=hero`
 **Hero secondary CTA (text link with mirrored arrow):** استكشف المنتجات → `/products`
 **Hero microcopy under the buttons:** رصيد ترحيبي 30 ريالاً، بدون بطاقة *(2026-09-13, Dhia: not shown in the hero any more; the line stays in the CMS for the About facts band)*
 **Hero proof chips (0 to 6, with check icons; the seed ships 3):** مجاني 100% · بدون حد أدنى للطلبات · توصيل لكل المملكة خلال 5 أيام
@@ -417,7 +417,7 @@ Every user-visible string in Level 1 is here. Copy it exactly, including punctua
 
 **Video section**
 - H2: شاهد كيف نطبع طلبك
-- Lead: من ملف التصميم إلى الطرد الجاهز، كل شيء يتم عندنا في جدة.
+- Lead: من ملف التصميم إلى الطرد الجاهز، كل شيء يحدث عندنا في جدة.
 - Play button aria: تشغيل الفيديو
 
 **Why us section**
@@ -455,7 +455,7 @@ Every user-visible string in Level 1 is here. Copy it exactly, including punctua
 **CTA ribbon (on every page, before the footer)**
 - H2: ابدأ اليوم واحصل على 30 ريالاً رصيداً ترحيبياً
 - Lead: سجّل مجاناً بدون بطاقة، وأطلق أول منتج خلال دقائق.
-- Button: ابدأ براندك مجانًا → register URL with `utm_campaign=ribbon&utm_content={page}`
+- Button: ابدأ براندك مجاناً → register URL with `utm_campaign=ribbon&utm_content={page}`
 
 ### 4.5 Footer
 
@@ -503,6 +503,7 @@ Every user-visible string in Level 1 is here. Copy it exactly, including punctua
 - Print method value (all products): طباعة رقمية عالية الجودة
 - Print area value: الواجهة الأمامية، 28 × 38 سم
 - Size chart headers: المقاس · الطول · عرض الصدر · طول الكم (cm; see Appendix A)
+- Size chart unit line (visible above the table, *2026-09-18*): القياسات بالسنتيمتر
 - Colour switch aria: اللون {colour}
 - Gallery aria: صورة {n} من {total}
 
@@ -546,7 +547,7 @@ Every user-visible string in Level 1 is here. Copy it exactly, including punctua
 - Sending state: جارٍ الإرسال
 - Success: وصلتنا رسالتك. سنرد عليك قريباً.
 - Failure: تعذّر الإرسال. حاول مرة أخرى أو راسلنا على واتساب.
-- Validation: أدخل اسمك · أدخل رقم جوال صحيح · أدخل بريداً إلكترونياً صحيحاً · اكتب رسالتك
+- Validation: أدخل اسمك · أدخل رقم جوال صحيح · أدخل بريداً إلكترونياً صحيحاً · اختر نوع الاستفسار · اكتب رسالتك
 - Contact cards: واتساب; راسلنا مباشرة · البريد الإلكتروني: contact@b7r.sa · الهاتف: 0501699572 · تابعنا: (social icons)
 - Booking card title: احجز استشارة مجانية
 - Booking card text: 30 دقيقة نجاوب فيها على أسئلتك ونساعدك تبدأ.
@@ -564,11 +565,11 @@ Every user-visible string in Level 1 is here. Copy it exactly, including punctua
 - H1: مدونة بحر
 - Lead: أدلة عملية لبدء براندك وبيع منتجاتك المطبوعة في السعودية.
 - Hub names (6): البداية · أساسيات الطباعة عند الطلب · سلة وزد وشوبيفاي · التصميم · التسعير والربح · المواسم
-- Post meta: كتبه ضياء · {date} · {n} دقائق قراءة
+- Post meta: كتبه {author} · {date} · {n} دقائق قراءة (*amended 2026-09-18: `{author}` is the name on the post's author record, the same name the author card, the feed and the JSON-LD carry; it read «ضياء» as a fixed word before*)
 - Key takeaways box title: أهم النقاط
 - Related title: مقالات ذات صلة
 - Share: شارك
-- In-post CTA block: title ابدأ براندك اليوم; text بدون رأس مال وبدون مخزون.: button ابدأ براندك مجانًا
+- In-post CTA block: title ابدأ براندك اليوم; text بدون رأس مال وبدون مخزون.: button ابدأ براندك مجاناً
 - Placeholder posts (3, marked as samples in the CMS data, real content to come in Level 3):
   1. كيف تبدأ براند ملابس في السعودية بدون مصنع وبدون مخزون
   2. ما هي الطباعة عند الطلب؟ شرح مبسط بالأمثلة السعودية
@@ -599,10 +600,10 @@ The English titles and descriptions (suffix ` | B7R Print`) are the `seo` rows o
 | About | من نحن | قصة بحر برنت، أول منصة سعودية للطباعة عند الطلب، من خريجي برنامج Misk Launchpad. |
 | Contact | تواصل معنا | راسلنا على واتساب أو البريد، أو احجز استشارة مجانية لمدة 30 دقيقة. |
 | FAQ | الأسئلة الشائعة عن الطباعة عند الطلب | إجابات مباشرة عن التكلفة والربح والتوصيل وربط المتاجر مع بحر برنت. |
-| Blog | مدونة بحر | أدلة عملية لبدء براندك وبيع المنتجات المطبوعة في السعودية. |
-| Terms | الشروط والأحكام | شروط استخدام منصة بحر برنت. |
-| Shipping | الشحن والتوصيل | سياسة الشحن والتوصيل في بحر برنت داخل المملكة. |
-| Privacy | سياسة الخصوصية | كيف نجمع بياناتك ونحميها في بحر برنت. |
+| Blog | مدونة بحر | أدلة عملية لبدء براندك وبيع المنتجات المطبوعة في السعودية: التسعير والربح وربط متجرك بسلة وزد وشوبيفاي. |
+| Terms | الشروط والأحكام | شروط استخدام منصة بحر برنت: التسجيل والطلبات والأسعار والدفع وحقوق التصاميم والإلغاء. |
+| Shipping | الشحن والتوصيل | سياسة الشحن والتوصيل في بحر برنت داخل المملكة: التوصيل خلال 5 أيام، ومحاولات التسليم، والتعويض خلال 10 أيام من الاستلام. |
+| Privacy | سياسة الخصوصية | كيف نجمع بياناتك ونستخدمها ونحميها في بحر برنت، ومدة الاحتفاظ بها، وحقوقك عليها. |
 | Compare (Printful) | بحر برنت مقابل Printful لمتجر سعودي | مقارنة بالأرقام: الطباعة في جدة والتوصيل خلال 5 أيام مقابل الشحن من الخارج خلال أسابيع؛ الأسعار بالريال وربط سلة وزد. |
 
 ### 4.17 Transactional emails (Level 1, sent through Resend)
@@ -720,7 +721,7 @@ Each section below states purpose, layout (desktop ≥ 1024 px and mobile < 768 
 
 **Purpose:** orientation and one clear action.
 
-**Desktop layout:** height 88 px at rest (*amended 2026-09-14, Dhia: "a little bit more down"; was 72*); container; three zones in a flex row: start = colour logo (height 36 px, links to `/`), centre = nav links (17 px Medium, gap 32 px), end = the language switch then the primary `Button` "ابدأ براندك مجانًا" (md size). *Amended 2026-09-14 (Dhia, ADR-044): no login link anywhere. The switch is an icon: the translate glyph in a 44 px ring, its accessible name from the copy bank, a CSS tooltip naming the target language in that language; it links the current page in the other language and follows client-side navigation; a page without a twin goes to its section's listing in the other language.* Background transparent over the hero's top edge on `/` only; elsewhere white.
+**Desktop layout:** height 88 px at rest (*amended 2026-09-14, Dhia: "a little bit more down"; was 72*); container; three zones in a flex row: start = colour logo (height 36 px, links to `/`), centre = nav links (17 px Medium, gap 32 px), end = the language switch then the primary `Button` "ابدأ براندك مجاناً" (md size). *Amended 2026-09-14 (Dhia, ADR-044): no login link anywhere. The switch is an icon: the translate glyph in a 44 px ring, its accessible name from the copy bank, a CSS tooltip naming the target language in that language; it links the current page in the other language and follows client-side navigation; a page without a twin goes to its section's listing in the other language.* Background transparent over the hero's top edge on `/` only; elsewhere white.
 
 **Sticky behaviour:** `position: sticky; top: 0; z-index: 50`. *Amended 2026-09-17 (Dhia, ADR-053, "the island"): after the page scrolls more than 24 px the full-width bar settles, over 720 ms on a soft curve, into a capsule 12 px below the top edge with the brand's 13 px corner (the buttons' corner, not a pill): 880 px wide at most on desktop (the viewport minus 24 px on phones), 64 px tall (58 on phones), solid white with a hairline border and a blue-tinted shadow (`--shadow-island`), never a blur; the logo to 36 px, the links to 16 px with a 24 px gap. On phones the capsule holds the logo, the button and the burger. The previous rule (60 px, `rgba(255,255,255,.85)`, `backdrop-filter: blur(12px)`) is withdrawn.* It never hides on scroll.
 
@@ -732,7 +733,7 @@ Each section below states purpose, layout (desktop ≥ 1024 px and mobile < 768 
 
 ### 6.3 Footer, CTA ribbon, waves
 
-**6.3.1 CTA ribbon (component `CtaRibbon`, on every page before the footer):** full-bleed band, background `--color-primary`, white text, padding 72 px vertical (48 px mobile). Content centred: H2 (§4.4 ribbon), lead, then a white `Button` (primary text colour) "ابدأ براندك مجانًا". Top and bottom edges are `WaveDivider`s (§6.3.4) in the adjacent section's background colour so the band appears to sit between two gentle waves.
+**6.3.1 CTA ribbon (component `CtaRibbon`, on every page before the footer):** full-bleed band, background `--color-primary`, white text, padding 72 px vertical (48 px mobile). Content centred: H2 (§4.4 ribbon), lead, then a white `Button` (primary text colour) "ابدأ براندك مجاناً". Top and bottom edges are `WaveDivider`s (§6.3.4) in the adjacent section's background colour so the band appears to sit between two gentle waves.
 
 **6.3.2 Footer:** background `--color-navy`, text white at 90% opacity, links white, hover `--color-accent`. Top edge: a `WaveDivider` in the ribbon's primary blue so the ribbon flows into the footer. Layout desktop: 4 columns (logo + tagline + social icons 3 | روابط | السياسات | النشرة البريدية form). Second row: badges strip (payment logos at 28 px height in white rounded tiles, then SBC, Ministry of Commerce, then the Misk logo with its line), separated by a 1 px white/10% hairline. Third row: contact line and copyright. *Amended 2026-09-13 (Dhia): four social icons (X, Instagram, TikTok, WhatsApp) with the contact line (e-mail · phone) under them in the first column; the Misk logo without its line; the third row is the copyright alone, centred.* *Amended 2026-09-14 (Dhia, ADR-044): the white logo is 48 px (was 40). Below 1024 px: the brand block (logo, tagline, socials, contact line) spans the row and centres; روابط and السياسات share one row in two start-aligned columns; the newsletter spans the row; the badges wrap centred.*
 
@@ -922,7 +923,7 @@ Component `NewsletterForm` used in the footer and blog. `POST /api/newsletter` v
 
 - **Umami** loads on every page (script from `NEXT_PUBLIC_UMAMI_SRC` with `data-website-id`), cookieless, no consent needed.
 - **GA4** (`NEXT_PUBLIC_GA_ID`) loads only after consent. Implement Consent Mode v2: an inline `beforeInteractive` script sets `gtag('consent','default',{ analytics_storage:'denied', ad_storage:'denied', ad_user_data:'denied', ad_personalization:'denied' })`; on "موافق" set a first-party cookie `b7r_consent=granted` (180 days), call `gtag('consent','update',{ analytics_storage:'granted' })` and inject the GA script via `@next/third-parties`; on "رفض" set `b7r_consent=denied` and never load GA. On later visits respect the cookie; no bar.
-- **ConsentBar:** small card fixed at the bottom **end** (in RTL the end edge is the left, so it never collides with the WhatsApp button, which sits at the physical right), `inset-block-end: 24px; inset-inline-end: 24px`, max-width 420 px, radius 13 px, shadow-popover, text (§4.7) + two buttons (موافق primary md, رفض ghost md) + the privacy link. Appears 800 ms after load with a 200 ms rise. Never blocks scrolling or content. On mobile it is full-width and sits above the WhatsApp button with 88 px bottom clearance.
+- **ConsentBar:** small card fixed at the bottom **end** (in RTL the end edge is the left, so it never collides with the WhatsApp button, which sits at the physical right), `inset-block-end: 24px; inset-inline-end: 24px`, max-width 420 px, radius 13 px, shadow-popover, text (§4.7) + two buttons (موافق primary md, رفض ghost md) + the privacy link. Appears 800 ms after load with a 200 ms rise. Never blocks scrolling or content. On mobile it is full-width. *Amended 2026-09-18 (site audit, item 6): both widgets sit at the inline end since ADR-038, so the card sits above the WhatsApp button with 88 px bottom clearance at every width, and the open WhatsApp panel sits above the card while it shows; the two boxes never intersect.*
 - **Landing beacon (ADR-048, 2026-09-16):** one first-party POST when a visitor lands from another site or from nowhere (the page, the referrer, `utm_source`; nothing on a move between our pages, nothing on a reload; no cookie, no storage, no identifier, no IP stored) feeds the site's own traffic count in the admin. Cookieless, no consent needed.
 - **Event helper:** `track(name, props)` sends to Umami always and to GA4 when granted. Events: `cta_click{location}`, `whatsapp_click{location}`, `designer_*`, `calculator_change`, `contact_submit`, `newsletter_submit`, `product_view`, `faq_open`, `outbound_app_click` (any link to b7r.app). (`video_play` retired 2026-09-13, ADR-037.)
 
@@ -1043,6 +1044,8 @@ The key is served at `/indexnow/{INDEXNOW_KEY}.txt` by `app/indexnow/[key]/route
 | LCP image | ≤ 220 kB AVIF/WebP at 1920 w; responsive `srcset` 640–2560 |
 | Third-party scripts | Umami ≤ 5 kB; GA only after consent; Turnstile only on `/contact` |
 | Lighthouse CI thresholds | Performance 90, Accessibility 95, Best Practices 95, SEO 100 (mobile, throttled) |
+
+*Amended 2026-09-18 (site audit item 12, the CTO's settlement): performance 90 is the gate on the seven LHCI URLs (`/`, `/products`, `/products/tee-essential`, `/contact` at warn, `/blog/{sample}`, `/en`, `/en/products/tee-essential`); every other route carries a floor of 85, asserted as a warn on four of them in CI (`/how-it-works`, `/faq`, `/privacy`, `/en/compare-printful`) and on all of them by the launch-checklist `lh-all` pass. Why: 140 of a CMS page's 164 KB of first-paint JavaScript is React DOM and the app router, which the site cannot shed; the floor is theirs, not ours (ADR-014, and the analyzer's numbers in `docs/audits/2026-09-18-site.md`, "After the fixes"). Do not spend a day looking for the missing five points there. Accessibility, best practices, SEO and CLS keep their thresholds on every route.*
 
 ### 7.9 Content requirements that affect ranking (Level 1)
 
@@ -1578,7 +1581,7 @@ Common to all: print area الواجهة الأمامية 28 × 38 سم; print m
 | `tee-essential` | تيشيرت أساسي | 45 | 89 | white · أبيض · #FFFFFF; black · أسود · #000000 | S, M, L, XL, 2XL | قطن ناعم عالي الجودة | 180 |
 | `tee-oversize` | تيشيرت أوفرسايز | 55 | 119 | white · أبيض · #FFFFFF; black · أسود · #000000 | S, M, L, XL, 2XL | قطن ثقيل متين بقصة واسعة | 240 |
 | `hoodie` | هودي | 95 | 189 | white · أبيض · #FFFFFF; black · أسود · #000000 | S, M, L, XL | قماش فاخر ببطانة ناعمة، مع فتحات للإبهام | 520 |
-| `baby-onesie` | بربتوز أطفال | 35 | 69 | white · أبيض · #FFFFFF | 0-3M, 3-6M, 6-12M, 12-18M | قطن ناعم مناسب لبشرة الرضيع | 80 |
+| `baby-onesie` | بربتوز أطفال | 35 | 69 | white · أبيض · #FFFFFF | 0–3M, 3–6M, 6–12M, 12–18M | قطن ناعم مناسب لبشرة الرضيع | 80 |
 | `tote-bag` | حقيبة قماشية | 30 | 65 | beige · بيج · #F5F5DC | مقاس واحد | كانفاس عالي الجودة بمقابض قوية | 220 |
 
 **Short descriptions (cards, meta):**
@@ -1611,10 +1614,10 @@ Baby onesie:
 
 | المقاس | عرض الصدر | الطول |
 |---|---|---|
-| 0-3M | 22 | 38 |
-| 3-6M | 24 | 42 |
-| 6-12M | 26 | 46 |
-| 12-18M | 28 | 50 |
+| 0–3M | 22 | 38 |
+| 3–6M | 24 | 42 |
+| 6–12M | 26 | 46 |
+| 12–18M | 28 | 50 |
 
 Tote bag: مقاس واحد (no chart; show "مقاس واحد" in the specs).
 
@@ -1649,7 +1652,7 @@ These are the current b7r.sa policies with the corrections Dhia approved: draft 
 **4. الأسعار والدفع**
 - الأسعار المعروضة تشمل تكلفة المنتج والطباعة، وتُضاف رسوم الشحن حسب شركة الشحن المختارة.
 - تُحسب الضرائب والرسوم وفق الأنظمة المعمول بها في المملكة العربية السعودية.
-- يتم الدفع عبر وسائل الدفع الإلكترونية المعتمدة في المنصة.
+- يدفع العميل عبر وسائل الدفع الإلكترونية المعتمدة في المنصة.
 - في حال فشل الدفع أو إلغاء الطلب، يُعاد المبلغ وفق سياسة الإلغاء المذكورة أدناه.
 
 **5. حقوق الملكية الفكرية**
@@ -1702,7 +1705,7 @@ These are the current b7r.sa policies with the corrections Dhia approved: draft 
 
 **6. سياسة الإرجاع والتعويض**
 - جميع منتجاتنا تُنفَّذ حسب الطلب، لذلك لا نقبل الإرجاع أو الاستبدال بعد تنفيذ الطلب.
-- التعويض أو إعادة الطباعة يتم فقط إذا كان الخطأ من طرفنا، مثل عيب في الطباعة أو تلف في المنتج.
+- نعوّض أو نعيد الطباعة فقط إذا كان الخطأ من طرفنا، مثل عيب في الطباعة أو تلف في المنتج.
 - في حال وجود خطأ من طرفنا: نعيد الطباعة والشحن مجاناً، أو نعيد المبلغ المدفوع حسب الحالة.
 - يجب رفع الشكوى خلال 10 أيام من استلام الطلب، مع صور توضح المشكلة.
 
@@ -1774,7 +1777,7 @@ See §5.2. Keep the machine-readable version in `src/lib/redirects.ts` and a tes
 
 **المتاجر والربط**
 12. ما المتاجر التي أقدر أربطها؟، سلة وزد وشوبيفاي، والربط مجاني.
-13. كيف يتم الربط؟، بتفويض آمن من داخل متجرك بضغطة واحدة، بدون مشاركة أي بيانات حساسة.
+13. كيف أربط متجري؟، بتفويض آمن من داخل متجرك بضغطة واحدة، بدون مشاركة أي بيانات حساسة.
 14. هل أقدر أربط أكثر من متجر؟، نعم، اربط أكثر من متجر على أكثر من منصة من الحساب نفسه.
 
 **الجودة والدعم**
@@ -1905,7 +1908,7 @@ Decision history: `docs/00-decisions-log.md` (rounds 1–4 with Dhia, 2026-09-12
 | رصيد ترحيبي | welcomeCredit |
 | المحفظة | wallet |
 | منطقة الطباعة | printArea |
-| ابدأ براندك مجانًا | ctaPrimary |
+| ابدأ براندك مجاناً | ctaPrimary |
 
 ---
 
@@ -2005,6 +2008,7 @@ Every interface string of the English site, key for key with the Arabic bank of 
 | `productsPage.sizeChartHeaders.length` | Length |
 | `productsPage.sizeChartHeaders.chest` | Chest width |
 | `productsPage.sizeChartHeaders.sleeve` | Sleeve |
+| `productsPage.sizeChartUnit` | Measurements in cm |
 | `productsPage.colorSwitchAria` | Colour {colour} |
 | `contactForm.labels.name` | Name |
 | `contactForm.labels.phone` | Mobile number |
@@ -2024,6 +2028,7 @@ Every interface string of the English site, key for key with the Arabic bank of 
 | `contactForm.validation.name` | Enter your name |
 | `contactForm.validation.phone` | Enter a valid mobile number |
 | `contactForm.validation.email` | Enter a valid email address |
+| `contactForm.validation.inquiry` | Choose the inquiry type |
 | `contactForm.validation.message` | Write your message |
 | `contactEmail.subject` | New message from the website: {inquiryType} |
 | `contactEmail.replyOnWhatsapp` | Reply on WhatsApp |
@@ -2067,7 +2072,7 @@ Every interface string of the English site, key for key with the Arabic bank of 
 | `gonePage.button` | Back to the home page |
 | `blog.title` | The B7R blog |
 | `blog.lead` | Practical guides to starting your brand and selling printed products in Saudi Arabia. |
-| `blog.metaTemplate` | By Dhia · {date} · {n} min read |
+| `blog.metaTemplate` | By {author} · {date} · {n} min read |
 | `blog.takeawaysTitle` | Key takeaways |
 | `blog.relatedTitle` | Related articles |
 | `blog.share` | Share |
@@ -2078,6 +2083,7 @@ Every interface string of the English site, key for key with the Arabic bank of 
 | `blog.author.role` | Founder of B7R Print |
 | `blog.allHubs` | All |
 | `blog.emptyHub` | No articles in this section yet. |
+| `blog.emptyAuthor` | No articles yet. |
 | `blog.copied` | Link copied |
 | `blog.toc` | In this article |
 | `blog.updatedPrefix` | Updated |

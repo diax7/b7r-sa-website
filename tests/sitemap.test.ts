@@ -14,15 +14,24 @@ describe('sitemap (BRD 7.5)', () => {
   const codeRoutes = seo.filter((s) => ['/', '/products', '/blog'].includes(s.route));
   const blog = {
     posts: [
-      { slug: 'first-post', publishedAt: '2026-09-13T09:00:00.000Z', contentUpdatedAt: null },
+      {
+        slug: 'first-post',
+        publishedAt: '2026-09-13T09:00:00.000Z',
+        contentUpdatedAt: null,
+        hub: { slug: 'pricing-profit' },
+        author: { slug: 'dhia' },
+      },
       {
         slug: 'second-post',
         publishedAt: '2026-09-14T09:00:00.000Z',
         contentUpdatedAt: '2026-10-01T09:00:00.000Z',
+        hub: { slug: 'pricing-profit' },
+        author: { slug: 'dhia' },
       },
     ],
-    hubs: [{ slug: 'pricing-profit' }],
-    authors: [{ slug: 'dhia' }],
+    // The seasons hub and the second author have no post: thin pages, kept out (item 10).
+    hubs: [{ slug: 'pricing-profit' }, { slug: 'seasons' }],
+    authors: [{ slug: 'dhia' }, { slug: 'guest' }],
   };
   const entries = sitemapEntries(BASE, [{ locale: 'ar', seo: codeRoutes, pages, products, blog }]);
   const urls = entries.map((e) => e.url);
@@ -56,6 +65,8 @@ describe('sitemap (BRD 7.5)', () => {
     expect(urls).toContain(`${BASE}/blog/first-post`);
     expect(urls).toContain(`${BASE}/blog/category/pricing-profit`);
     expect(urls).toContain(`${BASE}/author/dhia`);
+    expect(urls).not.toContain(`${BASE}/blog/category/seasons`);
+    expect(urls).not.toContain(`${BASE}/author/guest`);
     expect(urls.some((u) => u.includes('/page/'))).toBe(false);
     const second = entries.find((e) => e.url.endsWith('/blog/second-post'));
     expect(second?.lastModified).toEqual(new Date('2026-10-01T09:00:00.000Z'));

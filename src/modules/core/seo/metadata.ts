@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import type { Metadata } from 'next';
 import { copyFor } from '@/content/copy';
 import type { Product } from '@/content/schema';
-import type { Author, Hub, Post } from '@/lib/cms/blog';
+import type { Author, Hub, OgImage, Post } from '@/lib/cms/blog';
 import { getPage, getSeo, getSeoDefaults, getSiteSettings } from '@/lib/cms';
 import { documentLocales, siteLocales } from '@/lib/cms/locales';
 import { env, siteBase } from '@/lib/env';
@@ -31,12 +31,15 @@ export interface PageMeta {
   title: string;
   description: string;
   ogType?: 'website' | 'article';
-  ogImage?: string;
+  /** A path to a 1200×630 render (`/og/…`), or a CMS image with its own dimensions. */
+  ogImage?: string | OgImage;
   /** Article dates, ISO `YYYY-MM-DD`. */
   publishedTime?: string;
   modifiedTime?: string;
   /** The home page uses the full title without the « | بحر برنت» template. */
   absoluteTitle?: boolean;
+  /** A listing with nothing to list yet (an empty hub or author): `noindex, follow`. */
+  noindex?: boolean;
 }
 
 /**
@@ -48,7 +51,7 @@ export interface PageMeta {
  * JSON-LD carries the commerce data).
  */
 export function pageMetadata(meta: PageMeta): Metadata {
-  const ogImage = meta.ogImage ?? defaultOgImage(meta.locale);
+  const ogImage = ogImageOf(meta);
   const canonical = localePath(meta.locale, meta.route);
   const twin = otherLocale(meta.locale);
   const paired = meta.locales.includes('ar') && meta.locales.includes('en');
@@ -59,7 +62,7 @@ export function pageMetadata(meta: PageMeta): Metadata {
     title: meta.title,
     description: meta.description,
     url: canonical,
-    images: [{ url: ogImage, width: 1200, height: 630 }],
+    images: [ogImage],
   };
   const openGraph: NonNullable<Metadata['openGraph']> =
     meta.ogType === 'article'
@@ -92,10 +95,26 @@ export function pageMetadata(meta: PageMeta): Metadata {
     },
     openGraph,
     twitter: { card: 'summary_large_image', site: '@b7rprint' },
-    robots: env.isProductionSite
-      ? { index: true, follow: true, 'max-image-preview': 'large' }
-      : { index: false, follow: false },
+    robots: robotsFor(meta.noindex ?? false),
   };
+}
+
+/**
+ * The page's image with the dimensions it really has: the `/og/*.png` renders are 1200×630;
+ * a CMS image (a post cover, a hub cover, an author photo) declares its own size so a scraper
+ * never reads 1200×630 for a 1600×900 JPEG (site audit 2026-09-18, item 15).
+ */
+function ogImageOf(meta: PageMeta): { url: string; width: number; height: number } {
+  const image = meta.ogImage ?? defaultOgImage(meta.locale);
+  if (typeof image === 'string') return { url: image, width: 1200, height: 630 };
+  return { url: image.url, width: image.width ?? 1200, height: image.height ?? 630 };
+}
+
+/** `noindex` on any host other than https://b7r.sa (BRD 7.2); on it, an empty listing follows. */
+function robotsFor(noindex: boolean): NonNullable<Metadata['robots']> {
+  if (!env.isProductionSite) return { index: false, follow: false };
+  if (noindex) return { index: false, follow: true };
+  return { index: true, follow: true, 'max-image-preview': 'large' };
 }
 
 /** Static routes: title/description from the `seo-defaults` global (BRD 4.16). */
@@ -183,8 +202,16 @@ export async function postMetadata(locale: Locale, post: Post): Promise<Metadata
   });
 }
 
-/** A hub page; page 2 and up carry the page number and a canonical of their own. */
-export async function hubMetadata(locale: Locale, hub: Hub, page = 1): Promise<Metadata> {
+/**
+ * A hub page; page 2 and up carry the page number and a canonical of their own. A hub with
+ * no post in the language is `noindex, follow` (and out of the sitemap) until it has one.
+ */
+export async function hubMetadata(
+  locale: Locale,
+  hub: Hub,
+  page = 1,
+  options: { empty?: boolean } = {},
+): Promise<Metadata> {
   const [site, locales] = await Promise.all([
     getSiteSettings(locale),
     documentLocales('categories', hub.slug, 'name'),
@@ -198,6 +225,7 @@ export async function hubMetadata(locale: Locale, hub: Hub, page = 1): Promise<M
     title: page > 1 ? `${hub.name} (${page})` : hub.name,
     description: hub.description,
     ...(hub.cover ? { ogImage: hub.cover } : {}),
+    ...(options.empty ? { noindex: true } : {}),
   });
 }
 
@@ -219,8 +247,12 @@ export async function blogPageMetadata(locale: Locale, page: number): Promise<Me
   });
 }
 
-/** The author page. */
-export async function authorMetadata(locale: Locale, author: Author): Promise<Metadata> {
+/** The author page; an author with no post in the language is `noindex, follow` until they have one. */
+export async function authorMetadata(
+  locale: Locale,
+  author: Author,
+  options: { empty?: boolean } = {},
+): Promise<Metadata> {
   const [site, locales] = await Promise.all([
     getSiteSettings(locale),
     documentLocales('authors', author.slug, 'name'),
@@ -233,6 +265,7 @@ export async function authorMetadata(locale: Locale, author: Author): Promise<Me
     title: author.name,
     description: author.bio ?? author.role,
     ...(author.photo ? { ogImage: author.photo } : {}),
+    ...(options.empty ? { noindex: true } : {}),
   });
 }
 

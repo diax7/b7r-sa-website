@@ -25,9 +25,16 @@ function ensure(dir: string) {
 
 async function logos() {
   ensure(pub('images', 'logo'));
-  for (const f of ['logo.png', 'logo-white.png', 'logo-black.png', 'icon.png', 'small-icon.png']) {
+  for (const f of ['logo.png', 'logo-white.png', 'logo-black.png', 'small-icon.png']) {
     copyFileSync(res('brand', 'logo', f), pub('images', 'logo', f));
   }
+  // The icon is the Organization logo in every page's JSON-LD and a 36 px mark in the panel
+  // and the admin: 512 px, palette PNG (two flat colours), about 16 KB against the 223 KB
+  // source (site audit 2026-09-18, item 15).
+  await sharp(res('brand', 'logo', 'icon.png'))
+    .resize(512, 512)
+    .png({ palette: true, quality: 90, compressionLevel: 9 })
+    .toFile(pub('images', 'logo', 'icon.png'));
   // Header lockups at 2x of their rendered height (36 px desktop) keep bytes small.
   await sharp(res('brand', 'logo', 'logo.png'))
     .resize({ height: 144 })
@@ -53,7 +60,7 @@ async function logos() {
   for (const size of [192, 512]) {
     await sharp(res('brand', 'logo', 'icon.png'))
       .resize(size, size)
-      .png()
+      .png({ palette: true, quality: 90, compressionLevel: 9 })
       .toFile(pub('icons', `icon-${size}.png`));
   }
   const png32 = await sharp(res('brand', 'logo', 'icon.png'))

@@ -1,23 +1,22 @@
 'use client';
 
-import dynamic from 'next/dynamic';
-import type { ReactNode } from 'react';
+import { lazy, type ReactNode } from 'react';
 import { NearViewport } from '@/modules/core/lazy-mount';
 
-// `ssr: false` inside a client component keeps the Radix accordion out of the route's initial
-// JS; the server-rendered list is shown until the island mounts near the viewport.
-const FaqAccordion = dynamic(
-  () => import('@/modules/core/faq/faq-accordion').then((m) => m.FaqAccordion),
-  {
-    ssr: false,
-  },
+// The `import()` in a client module keeps the Radix accordion (about 6 KB gzip with its
+// collection, collapsible and presence helpers) out of every route's first-paint JS; the
+// server-rendered closed rows stay on screen until the island mounts near the viewport.
+const FaqAccordion = lazy(() =>
+  import('@/modules/core/faq/faq-accordion').then((m) => ({ default: m.FaqAccordion })),
 );
 
 interface FaqAccordionLoaderProps {
   items: Array<{ question: string; answer: string }>;
+  /** `FaqClosedList` with the same items: the same boxes, so the swap moves nothing. */
   fallback: ReactNode;
 }
 
+/** Mounts the FAQ accordion near the viewport over its server-rendered closed rows. */
 export function FaqAccordionLoader({ items, fallback }: FaqAccordionLoaderProps) {
   return (
     <NearViewport fallback={fallback}>

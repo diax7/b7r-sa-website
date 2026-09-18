@@ -45,6 +45,7 @@ export async function StoryBlock({ block, locale, tone, anchor, heading }: Block
               alt=""
               fill
               priority
+              fetchPriority="high"
               sizes="(min-width: 1024px) 640px, 100vw"
               className="object-cover"
             />
