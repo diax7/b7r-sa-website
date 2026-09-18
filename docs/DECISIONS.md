@@ -1576,3 +1576,70 @@ crosses the accent only during the 700 ms slide. The stops and the 280% size are
 make this true; a later "more shine" edit must re-check the numbers. The glint is the
 site's third continuous animation after ADR-037's two, transform-only and off under
 reduced motion.
+
+## ADR-056: The Arabic admin (2026-09-18)
+
+Dhia, in the pre-launch programme: "add Arabic language support to the admin; I can switch
+the language to see it in Arabic; it must support right-to-left". This reverses the "English
+panel, Arabic content" of ADR-039 (his review of 2026-09-13, recorded in ADR-040's amendment):
+the panel now reads in English or in Arabic, per person.
+
+**The switch is Payload's.** `i18n.supportedLanguages` is `{ en, ar }` with `en` the
+fallback. Payload resolves the language per request from its `payload-lng` cookie (set for a
+year by the account view's language select through a server action, then a refresh), else
+the browser's `Accept-Language`, else the fallback; it sets `lang` and `dir` on `<html>`
+itself (`dir="RTL"` for Arabic, from its `rtlLanguages`), and every label and description the
+configs carry as `{ ar, en }` already followed `i18n.language`. Nothing of ours stores the
+choice.
+
+**Two axes, never one control.** The UI language (the cookie, the account view) and the
+content locale (the AR / EN pills, `html[data-content-locale]`, `?locale=`, the user's
+`locale` preference) are different things: the first says what language the panel speaks,
+the second which language of a document is open. Switching one leaves the other alone; the
+code says so where they meet (`strings.ts`, `locale-note.tsx`, `actions-client.tsx`), and
+Payload's own «اللغة» is split into «لغة اللوحة» (the panel's) and «لغة المحتوى» (the
+document's) so the two selects never read alike. The e2e opens the English content of a page
+inside the Arabic panel and checks both attributes.
+
+**Our strings are two trees of one shape.** `adminStrings` (English) is the shape;
+`AdminStrings` widens its literals (a string leaf to `string`, a pair to a pair, a list to a
+list, a function keeps its signature) and `adminStringsAr` is typed as that, so a string
+added in one language without the other is a compile error. A component picks its tree per
+render, `adminStringsFor(i18n.language)` on the server and `useAdminStrings()` (a `'use
+client'` hook over Payload's `useTranslation`) on the client, never at module top level: the
+old `const s = adminStrings.x` at import time would have fixed the language at build. Counts
+that Arabic declines (days) are small functions rather than templates.
+`tests/admin-strings.test.ts` walks both trees (every leaf, the same kind, the same
+placeholders, nothing extra), reads the Arabic under the ux-araby rules a regular expression
+can hold (no «تم» + مصدر, no «قم بـ», no «!», no «/» or Latin comma between Arabic words, no
+«بنجاح», no «الخاص بك», no em dash, no Eastern digits), and checks the resolver.
+
+**Digits stay Western** (design system §5). One formatter, `admin/format.ts`, hands
+`Intl` a locale with `-u-nu-latn` (`ar-u-nu-latn`, `en-GB-u-nu-latn`): numbers, `dd/MM/yyyy`
+dates and "5 minutes ago" («قبل 5 دقائق», the Arabic plurals from `Intl.RelativeTimeFormat`)
+all read Western digits in both languages; `tests/admin-format.test.ts` asserts "1,234" in
+Arabic. Day keys (`YYYY-MM-DD`) are shown as they are. The `relative-time.ts` module is
+replaced by it.
+
+**Payload's `ar` pack is community work**, and the strings an editor meets daily carried
+«تم» + مصدر, «قم بـ», wrong hamzas («أنشاء جديد»), mistranslations («محصول» for crop,
+«واضح» for clear, «المواقع» for locales), an untranslated «Toggle block», a translated
+placeholder («{{العنوان}}») and one leaked instruction to a translation model
+(`general.restoring`). `admin/payload-ar.ts` holds ours on top, merged through
+`i18n.translations.ar` (a key there wins, the rest stays Payload's), typed against the `en`
+pack so a wrong key is a compile error, and read by the same test.
+
+**RTL of our own components.** `check:rtl` already forbids physical utilities; on top of it
+the `mirror-rtl` utility is declared in `admin.css` (the site sheet reached the admin by
+accident and the admin must not depend on it), the sidebar's tooltips open away from the
+rail on whichever side it sits, the account menu passes the document direction to Radix
+(which reads none from the page), the palette's Enter glyph is never mirrored (the key looks
+the same on an Arabic keyboard), a date pair in a table sits in a `dir="ltr"` span, and the
+sidebar's remembered group state is keyed by the group's registry key rather than its label,
+so it survives a change of language. The e2e "the admin in Arabic" switches through the
+account view, asserts `html[dir="rtl"]`, the groups, the dashboard, a list, an edit view
+with its content locale, the two views, runs axe on the shell, and switches back.
+
+Not done here: the visibility rules' sentences (`modules/visibility/rules/*`, some seventy
+titles, guides and facts) are still English inside the Arabic Score page; they are the
+rules' own text (ADR-049) and a decision for the text review of Phase 2.
