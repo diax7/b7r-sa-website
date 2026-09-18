@@ -213,7 +213,7 @@ export const ar = {
   blog: {
     title: 'مدونة بحر',
     lead: 'أدلة عملية لبدء براندك وبيع منتجاتك المطبوعة في السعودية.',
-    metaTemplate: 'كتبه ضياء · {date} · {n} دقائق قراءة',
+    metaTemplate: 'كتبه {author} · {date} · {n} دقائق قراءة',
     takeawaysTitle: 'أهم النقاط',
     relatedTitle: 'مقالات ذات صلة',
     share: 'شارك',

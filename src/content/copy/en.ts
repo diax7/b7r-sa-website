@@ -211,7 +211,7 @@ export const en: SiteCopy = {
   blog: {
     title: 'The B7R blog',
     lead: 'Practical guides to starting your brand and selling printed products in Saudi Arabia.',
-    metaTemplate: 'By Dhia · {date} · {n} min read',
+    metaTemplate: 'By {author} · {date} · {n} min read',
     takeawaysTitle: 'Key takeaways',
     relatedTitle: 'Related articles',
     share: 'Share',

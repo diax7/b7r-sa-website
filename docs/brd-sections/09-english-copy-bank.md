@@ -152,7 +152,7 @@ Every interface string of the English site, key for key with the Arabic bank of 
 | `gonePage.button` | Back to the home page |
 | `blog.title` | The B7R blog |
 | `blog.lead` | Practical guides to starting your brand and selling printed products in Saudi Arabia. |
-| `blog.metaTemplate` | By Dhia · {date} · {n} min read |
+| `blog.metaTemplate` | By {author} · {date} · {n} min read |
 | `blog.takeawaysTitle` | Key takeaways |
 | `blog.relatedTitle` | Related articles |
 | `blog.share` | Share |

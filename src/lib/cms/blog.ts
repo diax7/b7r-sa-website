@@ -52,6 +52,8 @@ export interface PostCard {
   title: string;
   excerpt: string;
   hub: Hub;
+  /** Who wrote it, for the byline (BRD 4.13: «كتبه {author}»); the post carries the record. */
+  author: Pick<Author, 'slug' | 'name'>;
   cover: Cover;
   publishedAt: string;
   contentUpdatedAt: string | null;
@@ -119,16 +121,18 @@ function cover(post: PostDoc, hub: Hub): Cover {
   };
 }
 
-/** A card from a post read at `depth: 1`; a post whose hub is missing is skipped by the caller. */
+/** A card from a post read at `depth: 1`; a post missing its hub or author is skipped by the caller. */
 export function toPostCard(doc: PostDoc): PostCard | null {
   const hubDoc = populated<CategoryDoc>(doc.hub);
-  if (!hubDoc) return null;
+  const authorDoc = populated<AuthorDoc>(doc.author);
+  if (!hubDoc || !authorDoc) return null;
   const hub = toHub(hubDoc);
   return {
     slug: doc.slug,
     title: doc.title,
     excerpt: doc.excerpt,
     hub,
+    author: { slug: authorDoc.slug, name: authorDoc.name },
     cover: cover(doc, hub),
     publishedAt: doc.publishedAt ?? doc.createdAt,
     contentUpdatedAt: doc.contentUpdatedAt ?? null,

@@ -242,7 +242,7 @@ Every user-visible string in Level 1 is here. Copy it exactly, including punctua
 - H1: مدونة بحر
 - Lead: أدلة عملية لبدء براندك وبيع منتجاتك المطبوعة في السعودية.
 - Hub names (6): البداية · أساسيات الطباعة عند الطلب · سلة وزد وشوبيفاي · التصميم · التسعير والربح · المواسم
-- Post meta: كتبه ضياء · {date} · {n} دقائق قراءة
+- Post meta: كتبه {author} · {date} · {n} دقائق قراءة (*amended 2026-09-18: `{author}` is the name on the post's author record, the same name the author card, the feed and the JSON-LD carry; it read «ضياء» as a fixed word before*)
 - Key takeaways box title: أهم النقاط
 - Related title: مقالات ذات صلة
 - Share: شارك

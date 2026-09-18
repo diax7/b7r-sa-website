@@ -283,10 +283,16 @@ test.describe('blog (BRD 6.11, 10.1)', () => {
     await expect(page.locator('h1')).toHaveText(
       'ما هي الطباعة عند الطلب؟ شرح مبسط بالأمثلة السعودية',
     );
-    // The reading time is one minute on the live text, two once the answer-first draft is
-    // published (ADR-050): a fresh database seeds the longer opening directly.
-    await expect(page.locator('article header')).toContainText(
-      /كتبه ضياء · 13 سبتمبر 2026 · دقيق(ة|تا) قراءة/,
+    // The byline names the post's author record, the same name as the author card under the
+    // post (BRD 4.13 amended 2026-09-18). The reading time is one minute on the live text,
+    // two once the answer-first draft is published (ADR-050): a fresh database seeds the
+    // longer opening directly.
+    const authorName = (
+      await page.locator('[data-author] a[href^="/author/"]').textContent()
+    )?.trim();
+    expect(authorName).toBeTruthy();
+    await expect(page.locator('article header [data-post-meta]')).toContainText(
+      new RegExp(`^كتبه ${authorName} · 13 سبتمبر 2026 · دقيق(ة|تا) قراءة`),
     );
     await expect(page.locator('[aria-labelledby="post-takeaways-title"] li')).toHaveCount(3);
     // CTA sits after the second H2 and before the third.
