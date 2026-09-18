@@ -62,13 +62,13 @@ describe('useOtherLocale', () => {
       a.rerender(source({ lastUpdateTime: 2000 }));
       b.rerender(source({ lastUpdateTime: 2000 }));
     });
-    expect(a.result.current).toEqual({ status: 'ready', doc: { title: 'Old' } });
+    expect(a.result.current).toEqual({ status: 'ready', doc: { title: 'Old' }, stale: true });
     expect(fetch).toHaveBeenCalledTimes(2);
     await act(async () => {
       gate.resolve(await ok({ title: 'New' }));
     });
     await waitFor(() => expect(a.result.current.doc).toEqual({ title: 'New' }));
-    expect(b.result.current.doc).toEqual({ title: 'New' });
+    expect(b.result.current).toEqual({ status: 'ready', doc: { title: 'New' } });
   });
 
   it('a failed read is an error state, read once', async () => {

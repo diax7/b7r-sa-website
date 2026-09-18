@@ -22,7 +22,7 @@ import type {
   TextareaFieldClientProps,
   TextFieldClientProps,
 } from 'payload';
-import { type CSSProperties, type ReactNode, useEffect } from 'react';
+import { type CSSProperties, type ReactNode, useEffect, useState } from 'react';
 import {
   reconcile,
   readPath,
@@ -80,15 +80,25 @@ function Bilingual(props: Props) {
     if (JSON.stringify(next) !== JSON.stringify(translations)) setTranslations(next, true);
   }, [other, stored, translations, setTranslations]);
 
-  if (!other) return <Current {...props} />;
-  const mine: TranslationEntries = translations?.[other.code] ?? {};
-  const base = textOf(readPath(stored.doc, path));
+  // The last text typed for the other language: after a save applies it the form drops the
+  // entry before the fresh read lands, so for that round trip the typed text stands for what
+  // is stored (the old text must not show, and a keystroke meanwhile must not lose its base).
+  const [remembered, setRemembered] = useState<string | null>(null);
+  const mine: TranslationEntries = other ? (translations?.[other.code] ?? {}) : {};
   const entry = mine[path];
-  const shown = entry ? textOf(entry.value) : base;
+  const typed = entry ? textOf(entry.value) : null;
+  const stale = stored.status === 'ready' && stored.stale === true;
+  if (typed !== null && typed !== remembered) setRemembered(typed);
+  if (typed === null && !stale && remembered !== null) setRemembered(null);
+  const standIn = typed === null && stale ? remembered : null;
+  const current = standIn ?? textOf(readPath(stored.doc, path));
+  const shown = typed ?? current;
+
+  if (!other) return <Current {...props} />;
   const setShown = (value: string | null) => {
     const rest = { ...mine };
-    if (textOf(value) === base) delete rest[path];
-    else rest[path] = { value, base: base === '' ? null : base };
+    if (textOf(value) === current) delete rest[path];
+    else rest[path] = { value, base: current === '' ? null : current };
     setTranslations(Object.keys(rest).length > 0 ? { [other.code]: rest } : null);
   };
   const off = Boolean(readOnly) || Boolean(field.admin?.readOnly) || stored.status !== 'ready';

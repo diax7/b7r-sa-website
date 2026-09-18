@@ -12,7 +12,12 @@ import { useCallback, useSyncExternalStore } from 'react';
  */
 export type OtherLocaleState =
   | { status: 'loading'; doc: null }
-  | { status: 'ready'; doc: Record<string, unknown> }
+  | {
+      status: 'ready';
+      doc: Record<string, unknown>;
+      /** The read of an earlier save, standing in while the fresh one is on its way. */
+      stale?: true;
+    }
   | { status: 'error'; doc: null };
 
 interface Entry {
@@ -62,10 +67,10 @@ function entryFor(url: string, lastUpdateTime: number): Entry {
     // One live entry per document: after a save the earlier read stands in (no empty,
     // disabled input while the fresh one is on its way) and is dropped once it lands.
     let previous: OtherLocaleState = LOADING;
-    for (const [stale, old] of entries) {
-      if (!stale.startsWith(`${url}@`)) continue;
-      if (old.state.status === 'ready') previous = old.state;
-      entries.delete(stale);
+    for (const [earlier, old] of entries) {
+      if (!earlier.startsWith(`${url}@`)) continue;
+      if (old.state.status === 'ready') previous = { ...old.state, stale: true };
+      entries.delete(earlier);
     }
     entry = { state: previous, started: false, listeners: new Set() };
     entries.set(key, entry);
