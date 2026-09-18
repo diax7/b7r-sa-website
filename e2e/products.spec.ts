@@ -175,6 +175,37 @@ test.describe('product detail (BRD 6.6)', () => {
       .toBe('72px');
   });
 
+  test('no page lays out wider than a 360 px phone', async ({ browser, baseURL, isMobile }) => {
+    test.skip(!isMobile, 'phone widths');
+    // The size-chart table once widened the layout viewport to 438 px and the browser zoomed
+    // the page out (site audit 2026-09-18, blocker 2); a widened viewport is a class of
+    // defect, so the home, a post and the FAQ page are held to the same width.
+    const ctx = await browser.newContext({
+      viewport: { width: 360, height: 740 },
+      isMobile: true,
+      hasTouch: true,
+      locale: 'ar-SA',
+    });
+    const page = await ctx.newPage();
+    for (const path of [
+      '/products/tee-essential',
+      '/products/baby-onesie',
+      '/en/products/tee-essential',
+      '/',
+      '/blog/how-to-price-printed-tshirt-saudi',
+      '/faq',
+    ]) {
+      await page.goto(`${baseURL}${path}`);
+      const width = await page.evaluate(() => ({
+        inner: window.innerWidth,
+        scroll: document.documentElement.scrollWidth,
+      }));
+      expect(width.inner, path).toBe(360);
+      expect(width.scroll, path).toBeLessThanOrEqual(width.inner);
+    }
+    await ctx.close();
+  });
+
   test('fires product_view once on mount, even before the Umami script is ready', async ({
     page,
   }) => {
