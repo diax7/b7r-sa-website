@@ -6,15 +6,14 @@ import type { ArrayFieldClientComponent } from 'payload';
 import { useId } from 'react';
 import { Icon } from '@/components/shared/icon';
 import { FieldShell } from '@/modules/cms/admin/fields/field-shell';
-import { adminStrings } from '@/modules/cms/admin/strings';
-
-const s = adminStrings.warnings;
+import { useAdminStrings } from '@/modules/cms/admin/use-admin-strings';
 
 /**
  * The editorial warnings of a post (BRD 10.1, the soft rules) as a list in the sidebar,
  * recomputed on every save by the collection hook; nothing to edit here.
  */
 export const WarningsField: ArrayFieldClientComponent = ({ field, path }) => {
+  const s = useAdminStrings().warnings;
   const id = useId();
   const rows = useFormFields(([fields]) => fields[path]?.rows ?? []);
   const texts = useFormFields(([fields]) =>

@@ -4,9 +4,7 @@ import { Card } from '@/components/shared/card';
 import { Icon } from '@/components/shared/icon';
 import type { HealthReport } from '@/lib/cms/health';
 import { ENGINE_STATE_TONE } from '@/modules/ai-content/state';
-import { adminStrings } from '@/modules/cms/admin/strings';
-
-const s = adminStrings.dashboard.health;
+import { type AdminStrings, adminStringsFor } from '@/modules/cms/admin/strings';
 
 export type Tone = 'success' | 'warning' | 'error' | 'muted';
 
@@ -24,22 +22,22 @@ function kindRow(key: string, rows: Kind, kind: string): HealthRow {
   return { key, tone: 'error', text: rows.off };
 }
 
-function jobsFailedRow(failed: number | null): HealthRow {
-  if (failed === null) return { key: 'jobsFailed', tone: 'muted', text: s.rows.jobsFailed.unknown };
-  if (failed === 0) return { key: 'jobsFailed', tone: 'success', text: s.rows.jobsFailed.none };
-  return {
-    key: 'jobsFailed',
-    tone: 'error',
-    text: s.rows.jobsFailed.some.replace('{n}', String(failed)),
-  };
+function jobsFailedRow(
+  failed: number | null,
+  s: AdminStrings['dashboard']['health']['rows']['jobsFailed'],
+): HealthRow {
+  if (failed === null) return { key: 'jobsFailed', tone: 'muted', text: s.unknown };
+  if (failed === 0) return { key: 'jobsFailed', tone: 'success', text: s.none };
+  return { key: 'jobsFailed', tone: 'error', text: s.some.replace('{n}', String(failed)) };
 }
 
 /** The report as sentences an editor understands, each with a colour that says the same. */
-export function healthRows(r: HealthReport): HealthRow[] {
+export function healthRows(r: HealthReport, language: string): HealthRow[] {
+  const s = adminStringsFor(language).dashboard.health;
   return [
     { key: 'db', tone: r.db === 'ok' ? 'success' : 'error', text: s.rows.db[r.db] },
     { key: 'jobs', tone: r.jobs === 'on' ? 'success' : 'warning', text: s.rows.jobs[r.jobs] },
-    jobsFailedRow(r.jobsFailed),
+    jobsFailedRow(r.jobsFailed, s.rows.jobsFailed),
     {
       key: 'email',
       tone: r.email === 'resend' ? 'success' : 'warning',
@@ -76,8 +74,9 @@ const DOT: Record<Tone, string> = {
   muted: 'bg-text-muted',
 };
 
-export function HealthCard({ report }: { report: HealthReport }) {
-  const rows = healthRows(report);
+export function HealthCard({ report, language }: { report: HealthReport; language: string }) {
+  const s = adminStringsFor(language).dashboard.health;
+  const rows = healthRows(report, language);
   const worst = worstTone(rows);
   return (
     <Card className="flex flex-col gap-4 p-5" data-admin-health="">

@@ -8,9 +8,7 @@ import { Kbd } from '@/components/ui/kbd';
 import { ACTION_ICONS } from '@/modules/cms/admin/icons';
 import { Palette, type PaletteProps } from '@/modules/cms/admin/header/palette';
 import { PALETTE_EVENT } from '@/modules/cms/admin/header/palette-event';
-import { adminStrings } from '@/modules/cms/admin/strings';
-
-const s = adminStrings.header;
+import { useAdminStrings } from '@/modules/cms/admin/use-admin-strings';
 
 const control =
   'flex h-9 items-center gap-2 rounded-inner border border-border bg-surface px-3 text-small text-text-muted transition-colors duration-(--duration-fast) hover:border-text-muted/60 hover:text-text focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-accent/40';
@@ -21,8 +19,11 @@ const control =
  * still answers Ctrl/⌘ K everywhere.
  */
 export function HeaderActionsClient(props: PaletteProps) {
+  const s = useAdminStrings().header;
   // The content locale on the document root (ADR-044): `admin.css` draws the AR/EN pill on
-  // localized field labels from it; the header is on every view, so drawers inherit it.
+  // localized field labels from it; the header is on every view, so drawers inherit it. It
+  // is the locale of the content being edited, not the UI language (ADR-056): switching the
+  // panel to Arabic leaves it alone, and the pills leave the panel's language alone.
   const { code } = useLocale();
   useEffect(() => {
     document.documentElement.dataset['contentLocale'] = code;

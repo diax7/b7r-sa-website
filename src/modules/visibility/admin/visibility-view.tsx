@@ -3,10 +3,10 @@ import { Check, ChevronRight, CircleAlert, CircleX, type LucideIcon } from 'luci
 import type { AdminViewServerProps } from 'payload';
 import { Icon } from '@/components/shared/icon';
 import { cn } from '@/lib/cn';
+import { relativeTime } from '@/modules/cms/admin/format';
 import { ADMIN_VIEWS } from '@/modules/cms/admin/icons';
-import { adminStrings } from '@/modules/cms/admin/strings';
-import { relativeTime } from '@/modules/cms/admin/dashboard/relative-time';
-import { adminView, viewUser } from '@/modules/cms/admin/views/gate';
+import { type AdminStrings, adminStringsFor } from '@/modules/cms/admin/strings';
+import { adminView, viewLanguage, viewUser } from '@/modules/cms/admin/views/gate';
 import { AdminShell } from '@/modules/cms/admin/views/shell';
 import { Ledger } from '@/modules/visibility/admin/ledger';
 import { Ring } from '@/modules/visibility/admin/ring';
@@ -17,8 +17,9 @@ import { scoreTrend, signalRows } from '@/modules/visibility/signals';
 import type { SectionScore } from '@/modules/visibility/score';
 import type { Finding, Status } from '@/modules/visibility/types';
 
-const s = adminStrings.visibility;
 const ScoreIcon = ADMIN_VIEWS.visibility.icon;
+
+type Strings = AdminStrings['visibility'];
 
 /** The status colours mean what the design system says: green done, amber next, red missing. */
 const STATUS: Record<Status, { icon: LucideIcon; className: string }> = {
@@ -27,11 +28,13 @@ const STATUS: Record<Status, { icon: LucideIcon; className: string }> = {
   missing: { icon: CircleX, className: 'text-error' },
 };
 
-function FindingRow({ finding }: { finding: Finding }) {
+function FindingRow({ finding, s }: { finding: Finding; s: Strings }) {
   const status = STATUS[finding.status];
   const count =
     finding.count && finding.count.total > 0
-      ? ` (${finding.count.done} of ${finding.count.total})`
+      ? ` (${s.countOf
+          .replace('{done}', String(finding.count.done))
+          .replace('{total}', String(finding.count.total))})`
       : '';
   return (
     <li
@@ -97,7 +100,7 @@ function FindingRow({ finding }: { finding: Finding }) {
   );
 }
 
-function SectionCard({ section }: { section: SectionScore }) {
+function SectionCard({ section, s }: { section: SectionScore; s: Strings }) {
   const byStatus = (status: Status) => section.findings.filter((f) => f.status === status);
   const done = byStatus('done');
   return (
@@ -120,7 +123,7 @@ function SectionCard({ section }: { section: SectionScore }) {
       </span>
       <ul className="flex flex-col divide-y divide-border">
         {[...byStatus('next'), ...byStatus('missing'), ...done.slice(0, 5)].map((f) => (
-          <FindingRow key={f.key} finding={f} />
+          <FindingRow key={f.key} finding={f} s={s} />
         ))}
       </ul>
       {done.length > 5 && (
@@ -130,7 +133,7 @@ function SectionCard({ section }: { section: SectionScore }) {
           </summary>
           <ul className="mt-2 flex flex-col divide-y divide-border">
             {done.slice(5).map((f) => (
-              <FindingRow key={f.key} finding={f} />
+              <FindingRow key={f.key} finding={f} s={s} />
             ))}
           </ul>
         </details>
@@ -156,6 +159,8 @@ function SectionCard({ section }: { section: SectionScore }) {
  * only; the reads run with the user's access. "Recompute" bypasses the minute's cache.
  */
 export async function VisibilityView(props: AdminViewServerProps) {
+  const language = viewLanguage(props);
+  const s = adminStringsFor(language).visibility;
   const refused = adminView(props, ADMIN_VIEWS.visibility.path, s.page.title);
   if (refused) return refused;
   const fresh = props.searchParams?.['fresh'] !== undefined;
@@ -197,7 +202,7 @@ export async function VisibilityView(props: AdminViewServerProps) {
                 {s.page.recompute}
               </Link>{' '}
               <time dateTime={at} className="tabular-nums">
-                {relativeTime(at)}
+                {relativeTime(at, language)}
               </time>
             </p>
             {trend && trendText && (
@@ -212,11 +217,11 @@ export async function VisibilityView(props: AdminViewServerProps) {
         </header>
         <div className="grid gap-6 lg:grid-cols-2">
           {score.sections.map((section) => (
-            <SectionCard key={section.key} section={section} />
+            <SectionCard key={section.key} section={section} s={s} />
           ))}
         </div>
-        <Signals rows={signals} adminRoute={adminRoute} />
-        <Ledger reading={ledger} adminRoute={adminRoute} />
+        <Signals rows={signals} adminRoute={adminRoute} language={language} />
+        <Ledger reading={ledger} adminRoute={adminRoute} language={language} />
         <footer className="flex flex-col gap-1 border-t border-border pt-4 text-caption text-text-muted">
           <p>{s.page.howOverall}</p>
           <p>{s.page.howSiteOnly}</p>

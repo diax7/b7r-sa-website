@@ -19,7 +19,8 @@ import {
   NAV_SECTIONS,
 } from '@/modules/cms/admin/icons';
 import type { NavEntity, NavGroup, NavPrefs } from '@/modules/cms/admin/nav/groups';
-import { adminStrings } from '@/modules/cms/admin/strings';
+import type { AdminStrings } from '@/modules/cms/admin/strings';
+import { useAdminLanguage, useAdminStrings } from '@/modules/cms/admin/use-admin-strings';
 
 export interface NavClientProps {
   groups: NavGroup[];
@@ -28,7 +29,8 @@ export interface NavClientProps {
   adminRoute: string;
 }
 
-const s = adminStrings.nav;
+/** Where a tooltip opens: away from the rail, which sits at the start edge; Radix's `side` is physical. */
+type TooltipSide = 'left' | 'right';
 
 /** Payload's rule for the highlighted entry: the path or one of its sub-routes. */
 function isActive(pathname: string, href: string): boolean {
@@ -60,9 +62,13 @@ const iconButton =
  * `l` breakpoint, so a collapsed sidebar paints as a rail on the first frame of every page
  * with no shift. Hydration only adds what needs JS: tooltips and lifting `inert` (Payload
  * marks a closed nav inert for the phone drawer). Links are Payload's `Link` (Next's, with
- * the route transition bar), so a click never reloads the admin.
+ * the route transition bar), so a click never reloads the admin. The strings and the side
+ * the tooltips open on follow the UI language of the render (ADR-056).
  */
 export function NavClient({ groups, prefs, account, adminRoute }: NavClientProps) {
+  const s = useAdminStrings().nav;
+  const { direction } = useAdminLanguage();
+  const tooltipSide: TooltipSide = direction === 'rtl' ? 'left' : 'right';
   const { hydrated, navOpen, navRef, setNavOpen, shouldAnimate } = useNav();
   const { breakpoints } = useWindowInfo();
   const { setPreference } = usePreferences();
@@ -74,11 +80,12 @@ export function NavClient({ groups, prefs, account, adminRoute }: NavClientProps
   const rail = !navOpen && !drawer && hydrated;
   // The `nav` preference (Payload's own key) is written whole on every change, from one copy
   // of the state: Payload's merge path batches and caches across writes, and two quick
-  // changes (a group, then the sidebar) could lose one.
+  // changes (a group, then the sidebar) could lose one. Groups are keyed by their registry
+  // key, not their label, so the remembered state survives a change of UI language.
   const state = useRef<{ open: boolean; groups: Record<string, { open: boolean }> }>({
     open: navOpen,
     groups: Object.fromEntries(
-      Object.entries(prefs?.groups ?? {}).map(([label, g]) => [label, { open: g.open !== false }]),
+      Object.entries(prefs?.groups ?? {}).map(([key, g]) => [key, { open: g.open !== false }]),
     ),
   });
   function persist(patch: Partial<typeof state.current>) {
@@ -89,8 +96,8 @@ export function NavClient({ groups, prefs, account, adminRoute }: NavClientProps
     setNavOpen(next);
     persist({ open: next });
   }
-  function setGroupOpen(label: string, next: boolean) {
-    persist({ groups: { ...state.current.groups, [label]: { open: next } } });
+  function setGroupOpen(key: string, next: boolean) {
+    persist({ groups: { ...state.current.groups, [key]: { open: next } } });
   }
 
   return (
@@ -132,10 +139,12 @@ export function NavClient({ groups, prefs, account, adminRoute }: NavClientProps
                 <Group
                   key={group.label}
                   group={group}
-                  open={prefs?.groups?.[group.label]?.open !== false}
-                  onToggle={(next) => setGroupOpen(group.label, next)}
+                  open={prefs?.groups?.[group.key]?.open !== false}
+                  onToggle={(next) => setGroupOpen(group.key, next)}
                   pathname={pathname}
                   rail={rail}
+                  strings={s}
+                  tooltipSide={tooltipSide}
                 />
               ))}
             </div>
@@ -149,6 +158,7 @@ export function NavClient({ groups, prefs, account, adminRoute }: NavClientProps
                 data-rail-hide=""
                 data-admin-collapse=""
                 tooltip={rail}
+                tooltipSide={tooltipSide}
               >
                 <Icon icon={PanelLeftClose} size={18} className="mirror-rtl" />
               </RailButton>
@@ -159,11 +169,19 @@ export function NavClient({ groups, prefs, account, adminRoute }: NavClientProps
                 data-rail-show=""
                 data-admin-expand=""
                 tooltip={rail}
+                tooltipSide={tooltipSide}
               >
                 <Icon icon={PanelLeftOpen} size={18} className="mirror-rtl" />
               </RailButton>
             </div>
-            {account && <AccountMenu account={account} adminRoute={adminRoute} compact={rail} />}
+            {account && (
+              <AccountMenu
+                account={account}
+                adminRoute={adminRoute}
+                compact={rail}
+                direction={direction}
+              />
+            )}
           </div>
         </div>
 
@@ -191,6 +209,7 @@ function RailButton({
   onClick,
   className,
   tooltip,
+  tooltipSide,
   children,
   ...rest
 }: {
@@ -199,6 +218,7 @@ function RailButton({
   className?: string | undefined;
   /** Tooltips need the client; the server render carries the aria-label alone. */
   tooltip: boolean;
+  tooltipSide: TooltipSide;
   children: React.ReactNode;
   'data-rail-hide'?: string;
   'data-rail-show'?: string;
@@ -220,7 +240,7 @@ function RailButton({
   return (
     <Tooltip>
       <TooltipTrigger asChild>{button}</TooltipTrigger>
-      <TooltipContent side="right">{label}</TooltipContent>
+      <TooltipContent side={tooltipSide}>{label}</TooltipContent>
     </Tooltip>
   );
 }
@@ -231,12 +251,16 @@ function Group({
   onToggle,
   pathname,
   rail,
+  strings: s,
+  tooltipSide,
 }: {
   group: NavGroup;
   open: boolean;
   onToggle: (next: boolean) => void;
   pathname: string;
   rail: boolean;
+  strings: AdminStrings['nav'];
+  tooltipSide: TooltipSide;
 }) {
   const [isOpen, setIsOpen] = useState(open);
   const GroupIcon = ADMIN_GROUPS[group.key].icon;
@@ -286,6 +310,7 @@ function Group({
               hue={group.hue}
               pathname={pathname}
               rail={rail}
+              tooltipSide={tooltipSide}
             />
           ))}
           {group.sections.map((section) => {
@@ -307,6 +332,7 @@ function Group({
                       hue={group.hue}
                       pathname={pathname}
                       rail={rail}
+                      tooltipSide={tooltipSide}
                       secondary
                     />
                   ))}
@@ -331,12 +357,14 @@ function Entry({
   hue,
   pathname,
   rail,
+  tooltipSide,
   secondary = false,
 }: {
   entity: NavEntity;
   hue: Hue;
   pathname: string;
   rail: boolean;
+  tooltipSide: TooltipSide;
   secondary?: boolean;
 }) {
   const EntityIcon = entityIcon(entity.type, entity.slug);
@@ -380,7 +408,7 @@ function Entry({
       {rail ? (
         <Tooltip>
           <TooltipTrigger asChild>{anchor}</TooltipTrigger>
-          <TooltipContent side="right">{entity.label}</TooltipContent>
+          <TooltipContent side={tooltipSide}>{entity.label}</TooltipContent>
         </Tooltip>
       ) : (
         anchor
@@ -394,6 +422,7 @@ function Entry({
               hue={hue}
               pathname={pathname}
               rail={rail}
+              tooltipSide={tooltipSide}
               secondary
             />
           ))}

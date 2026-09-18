@@ -2,12 +2,11 @@
 
 import { MessageCircleQuestion } from 'lucide-react';
 import { ApiAction } from '@/modules/cms/admin/api-action';
-import { adminStrings } from '@/modules/cms/admin/strings';
-
-const s = adminStrings.visibility.ledger;
+import { useAdminStrings } from '@/modules/cms/admin/use-admin-strings';
 
 /** "Run now" on the Score page (ADR-049 D5): queues the citation ledger once, admins only. */
 export function RunLedger() {
+  const s = useAdminStrings().visibility.ledger;
   return (
     <ApiAction
       label={s.runNow}
