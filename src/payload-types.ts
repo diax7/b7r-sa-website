@@ -217,7 +217,7 @@ export interface User {
   collection: 'users';
 }
 /**
- * The photos and icons the site shows: products, the home page, the blog covers. Every image needs its alt text in both languages; product photos are 1000 by 1000 squares, and four sizes are generated on upload.
+ * The photos and icons the site shows: products, the home page, the blog covers. Every image needs its alt text in both languages; upload the largest file you have (product photos are squares), the site resizes it for every screen itself.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "media".
