@@ -1247,6 +1247,39 @@ test.describe('CMS admin', () => {
     ]);
   });
 
+  test('a desktop form: Save and Publish stay on the screen beside the locale note, nothing scrolls sideways', async ({
+    page,
+  }) => {
+    // The note is a nowrap pill in Payload's controls row; the row's wrapper sized itself to
+    // the whole sentence and pushed Save past the right edge of a 1440 px screen
+    // (2026-09-18, on the temporary domain). The bar grows by a line instead.
+    expect((await page.request.post(`${API}/users/login`, { data: admin })).status()).toBe(200);
+    for (const [width, path] of [
+      [1440, '/admin/globals/site-settings'],
+      [1280, '/admin/globals/home'],
+    ] as const) {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto(path);
+      const save = page.locator('.doc-controls #action-save');
+      const note = page.locator('[data-admin-locale-note]');
+      await expect(save).toBeVisible();
+      await expect(note).toBeVisible();
+      const [saveBox, noteBox] = await Promise.all([save.boundingBox(), note.boundingBox()]);
+      expect(saveBox!.x + saveBox!.width, `Save inside the ${width} px screen`).toBeLessThanOrEqual(
+        width,
+      );
+      expect(noteBox!.x + noteBox!.width, 'the note inside the screen').toBeLessThanOrEqual(width);
+      expect(noteBox!.height, 'the note is one line').toBeLessThan(40);
+      expect(saveBox && noteBox && disjoint(saveBox, noteBox), 'the note over Save').toBe(true);
+      expect(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+        ),
+        'no sideways scroll',
+      ).toBe(0);
+    }
+  });
+
   test('a phone form (audit 2026-09-18, 3.1): the locale note stays clear of Publish, the tab strip scrolls, nothing overflows', async ({
     page,
   }) => {
