@@ -25,6 +25,7 @@ import * as migration_20260916_230030_site_analytics from './20260916_230030_sit
 import * as migration_20260917_192112_cta_shiny from './20260917_192112_cta_shiny';
 import * as migration_20260918_033852_translations from './20260918_033852_translations';
 import * as migration_20260918_114349_takeaways_rows_shared from './20260918_114349_takeaways_rows_shared';
+import * as migration_20260918_131849_heavy_twins from './20260918_131849_heavy_twins';
 
 export const migrations = [
   {
@@ -160,6 +161,11 @@ export const migrations = [
   {
     up: migration_20260918_114349_takeaways_rows_shared.up,
     down: migration_20260918_114349_takeaways_rows_shared.down,
-    name: '20260918_114349_takeaways_rows_shared'
+    name: '20260918_114349_takeaways_rows_shared',
+  },
+  {
+    up: migration_20260918_131849_heavy_twins.up,
+    down: migration_20260918_131849_heavy_twins.down,
+    name: '20260918_131849_heavy_twins',
   },
 ];

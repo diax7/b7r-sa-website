@@ -1,5 +1,8 @@
 import type { CollectionConfig, Field, GlobalConfig, PayloadRequest } from 'payload';
 import { describe, expect, it } from 'vitest';
+import { home as homeSeed } from '@/content/seed/home';
+import { toHome, toPage } from '@/lib/cms/mappers';
+import type { Home as HomeDoc, Media, Page as PageDoc } from '@/payload-types';
 import {
   isTwinOf,
   shapeOf,
@@ -269,5 +272,73 @@ describe('twinValues and showTwins: what a write carries and what the response s
     expect(out['bodyTwin']).toEqual(en);
     expect(out['coverTwin']).toBe(13);
     expect(bases).toEqual({ body: { base: hashOf(en) }, cover: { base: '13' } });
+  });
+});
+
+/** A populated media document, as the site reads it at depth 1. */
+const photo = (id: number): Media => ({
+  id,
+  alt: 'صورة',
+  url: `/api/payload/media/file/${id}.jpg`,
+  updatedAt: '',
+  createdAt: '',
+});
+
+describe("the site's mappers never read a twin", () => {
+  it('a page maps the same with a rich-text block twin filled or null; the contract has no twin', () => {
+    const paragraph = {
+      root: { type: 'root', children: [{ type: 'paragraph', children: [] }], version: 1 },
+    };
+    const page = (contentTwin: unknown) =>
+      ({
+        id: 8,
+        slug: 'about-e2e',
+        title: 'عنوان',
+        blocks: [
+          { id: 'b1', blockType: 'richText', title: 'مقدمة', content: paragraph, contentTwin },
+        ],
+        seo: { title: 'عنوان', description: 'وصف' },
+        updatedAt: '2026-09-18T00:00:00.000Z',
+        createdAt: '2026-09-18T00:00:00.000Z',
+        _status: 'published',
+      }) as unknown as PageDoc;
+    const filled = toPage(page(en));
+    expect(filled).toEqual(toPage(page(null)));
+    expect(JSON.stringify(filled)).not.toContain('Twin');
+  });
+
+  it('the home page maps the same with the slide photo twins filled or null', () => {
+    const slide = (twins: boolean) => ({
+      id: 's1',
+      headline: 'عنوان',
+      subline: 'سطر',
+      imageDesktop: photo(1),
+      imageMobile: photo(2),
+      imageDesktopTwin: twins ? photo(3) : null,
+      imageMobileTwin: twins ? 4 : null,
+    });
+    const doc = (twins: boolean) =>
+      ({
+        ...homeSeed,
+        id: 1,
+        hero: {
+          ...homeSeed.hero,
+          slides: Array.from({ length: 4 }, () => slide(twins)),
+          chips: [],
+        },
+        productStrip: {
+          ...homeSeed.productStrip,
+          products: homeSeed.productStrip.order.map((slug, i) => ({ id: i + 1, slug })),
+        },
+        steps: {
+          ...homeSeed.steps,
+          items: homeSeed.steps.items.map((s, i) => ({ ...s, icon: photo(10 + i) })),
+        },
+        _status: 'published',
+      }) as unknown as HomeDoc;
+    const filled = toHome(doc(true));
+    expect(filled).toEqual(toHome(doc(false)));
+    expect(filled.hero.slides[0]?.imageDesktop).toBe('/api/payload/media/file/1.jpg');
+    expect(JSON.stringify(filled)).not.toContain('Twin');
   });
 });

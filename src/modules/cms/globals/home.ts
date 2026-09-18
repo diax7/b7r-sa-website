@@ -1,9 +1,11 @@
-import type { Field, GlobalConfig, PayloadRequest } from 'payload';
+import type { Field, GlobalConfig, PayloadRequest, UploadField } from 'payload';
 import { isEditorOrAdmin } from '@/modules/cms/access';
 import { revalidateGlobal } from '@/modules/cms/hooks/revalidate';
+import { twinField } from '@/modules/cms/fields/bilingual';
 import { inLanguage } from '@/modules/cms/fields/message';
 import { applyGlobalTranslations } from '@/modules/cms/hooks/translations';
 import { savedByField, stampSavedByGlobal } from '@/modules/cms/fields/saved-by';
+import { populateGlobalTwins } from '@/modules/cms/fields/twins';
 import { previewUrl } from '@/lib/preview-token';
 import { HERO_CHIPS_MAX, HERO_OVERLAY_DEFAULT, HEX_COLOR } from '@/content/schema';
 import { globalComponents } from '@/modules/cms/admin/document/config';
@@ -21,6 +23,29 @@ const PHOTO_PER_LANGUAGE = {
   ar: 'لكل لغة صورتها (الموقع الإنجليزي لا يعود إلى العربية). الإنجليزية: تركيب معكوس، المساحة الهادئة تحت النص.',
   en: 'Per language (the English site has no fallback). English: the mirrored composition, calm area under the copy.',
 };
+
+/**
+ * A slide's photo, per language (ADR-044): the English document mirrors the layout, so its
+ * photo is a mirrored composition; the site reads without locale fallback, so both languages
+ * need their own. The English is picked in the twin right under the Arabic (ADR-057, PR B).
+ */
+const slidePhoto = (name: string, label: { ar: string; en: string }): UploadField => ({
+  name,
+  type: 'upload',
+  relationTo: 'media',
+  required: true,
+  localized: true,
+  label,
+  admin: { description: PHOTO_PER_LANGUAGE },
+});
+const imageDesktop = slidePhoto('imageDesktop', {
+  ar: 'الصورة (سطح المكتب 16:9)',
+  en: 'Image (desktop 16:9)',
+});
+const imageMobile = slidePhoto('imageMobile', {
+  ar: 'الصورة (الجوال 4:5)',
+  en: 'Image (mobile 4:5)',
+});
 
 const text = (name: string, label: { ar: string; en: string }, extra: Partial<Field> = {}): Field =>
   ({ name, type: 'text', required: true, localized: true, label, ...extra }) as Field;
@@ -79,6 +104,7 @@ export const Home: GlobalConfig = {
   // reads through the Local API with `draft: false`.
   access: { read: isEditorOrAdmin, update: isEditorOrAdmin },
   hooks: {
+    beforeRead: [populateGlobalTwins],
     beforeChange: [stampSavedByGlobal],
     afterChange: [revalidateGlobal, applyGlobalTranslations],
   },
@@ -107,32 +133,12 @@ export const Home: GlobalConfig = {
                 fields: [
                   text('headline', { ar: 'العنوان الرئيسي', en: 'Headline' }),
                   text('subline', { ar: 'السطر تحت العنوان', en: 'Line under the headline' }),
-                  {
-                    type: 'row',
-                    // Per language (ADR-044): the English document mirrors the layout, so its photo
-                    // is a mirrored composition; the site reads without locale fallback, so both
-                    // languages need their own.
-                    fields: [
-                      {
-                        name: 'imageDesktop',
-                        type: 'upload',
-                        relationTo: 'media',
-                        required: true,
-                        localized: true,
-                        label: { ar: 'الصورة (سطح المكتب 16:9)', en: 'Image (desktop 16:9)' },
-                        admin: { description: PHOTO_PER_LANGUAGE },
-                      },
-                      {
-                        name: 'imageMobile',
-                        type: 'upload',
-                        relationTo: 'media',
-                        required: true,
-                        localized: true,
-                        label: { ar: 'الصورة (الجوال 4:5)', en: 'Image (mobile 4:5)' },
-                        admin: { description: PHOTO_PER_LANGUAGE },
-                      },
-                    ],
-                  },
+                  // Each photo full width with its English under it: no row (a row is transparent
+                  // in storage, so the columns are unchanged).
+                  imageDesktop,
+                  twinField(imageDesktop),
+                  imageMobile,
+                  twinField(imageMobile),
                 ],
               },
               {
