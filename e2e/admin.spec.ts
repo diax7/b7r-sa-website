@@ -273,7 +273,7 @@ test.describe('CMS admin', () => {
     }
   });
 
-  test('the shell (ADR-039): icons per entity, remembered groups, the icon rail, the palette, the account menu, the phone drawer', async ({
+  test('the shell (ADR-039, ADR-058): the dashboard entry, group rows, the active bar, the keyboard model, the rail and its flyout, one breakpoint, the drawer, the palette, the account menu', async ({
     page,
     browser,
     request,
@@ -294,6 +294,16 @@ test.describe('CMS admin', () => {
     await page.goto('/admin/collections/pages');
     const nav = page.locator('[data-admin-nav]');
     await expect(nav).toHaveClass(/nav--nav-open/);
+    // axe on OUR surfaces (Payload's own edit-view chrome has known gaps: unnamed drag handles
+    // and popup buttons, its engine, not the shell).
+    const { AxeBuilder } = await import('@axe-core/playwright');
+    const serious = async (...include: string[]) => {
+      let builder = new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']);
+      for (const sel of include) builder = builder.include(sel);
+      return (await builder.analyze()).violations
+        .filter((v) => ['serious', 'critical'].includes(v.impact ?? ''))
+        .map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`);
+    };
     // Every entity link carries its icon; the current section is marked.
     const links = nav.locator('a[id^="nav-"]');
     expect(await links.count()).toBeGreaterThanOrEqual(12);
@@ -326,23 +336,91 @@ test.describe('CMS admin', () => {
       'id',
       'nav-global-home',
     );
-    // Secondary entries sit under their parent; the engine is a section inside Blog; a
-    // collection shows its count; the active entry wears its group's hue.
+    // Secondary entries sit under their parent; the engine is a section inside Blog; no
+    // entry shows a document count, a badge only asks for action (red or amber); the
+    // active entry wears its group's hue; the dashboard is a real entry, active on /admin.
     await expect(nav.locator('#nav-categories')).toHaveAttribute('data-admin-entry', 'secondary');
     await expect(
       nav.locator('[data-admin-group="Blog"] [data-admin-section="engine"] #nav-ai-topics'),
     ).toBeVisible();
-    await expect(nav.locator('#nav-products [data-admin-count]')).toHaveText(/^\d+$/);
+    await expect(nav.locator('[data-admin-count]')).toHaveCount(0);
+    for (const badge of await nav.locator('[data-admin-badge]').all()) {
+      await expect(badge).toHaveAttribute('data-admin-badge', /^(error|warning)$/);
+      await expect(badge).toHaveText(/^\d+/);
+    }
     await expect(nav.locator('a[aria-current="page"]')).toHaveAttribute('data-hue', 'blue');
-    // A collapsed group stays collapsed across a reload (Payload's `nav` pref).
+    await expect(nav.locator('#nav-dashboard')).not.toHaveAttribute('aria-current', 'page');
+    await page.goto('/admin');
+    await expect(nav.locator('#nav-dashboard')).toHaveAttribute('aria-current', 'page');
+    await page.goto('/admin/collections/pages');
+    // A group row is a button with aria-expanded owning a role="group" labelled by it; the
+    // whole row toggles, and a collapsed group stays collapsed across a reload (the `nav` pref).
     const visibilityGroup = () => page.locator('[data-admin-group="Visibility"]');
-    await visibilityGroup().locator('button').first().click();
+    const visibilityToggle = () => visibilityGroup().locator('[data-admin-group-toggle]');
+    await expect(visibilityToggle()).toHaveAttribute('aria-expanded', 'true');
+    const toggleId = await visibilityToggle().getAttribute('id');
+    await expect(
+      visibilityGroup().locator(`[role="group"][aria-labelledby="${toggleId}"]`),
+    ).toBeVisible();
+    expect((await visibilityToggle().boundingBox())!.height).toBe(40);
+    expect((await nav.locator('#nav-pages').boundingBox())!.height).toBe(36);
+    expect((await nav.locator('#nav-categories').boundingBox())!.height).toBe(32);
+    await visibilityToggle().click();
+    await expect(visibilityToggle()).toHaveAttribute('aria-expanded', 'false');
     await expect(visibilityGroup().locator('#nav-redirects')).toBeHidden();
+    await expect
+      .poll(async () => {
+        const res = await request.get(`${API}/payload-preferences/nav`, { headers: adminAuth });
+        return ((await res.json()) as { value?: { groups?: Record<string, { open?: boolean }> } })
+          .value?.groups?.['visibility']?.open;
+      })
+      .toBe(false);
     await page.reload();
     await expect(page.locator('[data-admin-nav]')).toHaveClass(/nav--nav-open/);
     await expect(visibilityGroup().locator('#nav-redirects')).toBeHidden();
-    await visibilityGroup().locator('button').first().click();
+    await visibilityToggle().click();
     await expect(visibilityGroup().locator('#nav-redirects')).toBeVisible();
+    // The active entry's group is forced open: close Site here, open Home (in Site), and the
+    // group is open again with Home marked.
+    await page.locator('[data-admin-group="Site"] [data-admin-group-toggle]').click();
+    await expect(nav.locator('#nav-pages')).toBeHidden();
+    await page.goto('/admin/globals/home');
+    await expect(nav.locator('#nav-global-home')).toHaveAttribute('aria-current', 'page');
+    await page.goto('/admin/collections/pages');
+    // The keyboard model: one tab stop on the current entry; arrows, Home, End and a typed
+    // letter move between rows; Enter toggles a group; Tab leaves the tree.
+    const focusedRow = () =>
+      page.evaluate(() => (document.activeElement as HTMLElement | null)?.dataset['adminRow']);
+    await expect(nav.locator('#nav-pages')).toHaveAttribute('tabindex', '0');
+    await expect(nav.locator('#nav-global-home')).toHaveAttribute('tabindex', '-1');
+    await nav.locator('#nav-pages').focus();
+    await page.keyboard.press('ArrowDown');
+    expect(await focusedRow()).toBe('globals:site-settings');
+    await page.keyboard.press('ArrowUp');
+    await page.keyboard.press('ArrowUp');
+    expect(await focusedRow()).toBe('globals:home');
+    await page.keyboard.press('Home');
+    expect(await focusedRow()).toBe('dashboard');
+    await page.keyboard.press('p');
+    expect(await focusedRow()).toBe('collections:pages');
+    await page.keyboard.press('p');
+    expect(await focusedRow()).toBe('collections:products');
+    await page.keyboard.press('End');
+    expect(await focusedRow()).toBe('collections:connections');
+    await page.keyboard.press('Home');
+    await page.keyboard.press('ArrowDown');
+    expect(await focusedRow()).toBe('group:site');
+    await page.keyboard.press('Enter');
+    await expect(
+      page.locator('[data-admin-group="Site"] [data-admin-group-toggle]'),
+    ).toHaveAttribute('aria-expanded', 'false');
+    await page.keyboard.press('Space');
+    await expect(
+      page.locator('[data-admin-group="Site"] [data-admin-group-toggle]'),
+    ).toHaveAttribute('aria-expanded', 'true');
+    await nav.locator('#nav-pages').focus();
+    await page.keyboard.press('Tab');
+    await expect(page.locator('[data-admin-collapse]')).toBeFocused();
     // The page header (the description slot): the entity's disc and bar in its hue, where the
     // thing shows on the site, and the public listing on a list view.
     const header = page.locator('[data-admin-header="pages"]');
@@ -361,13 +439,38 @@ test.describe('CMS admin', () => {
       /10 sections, \d+ on/,
     );
     await page.goto('/admin/collections/pages');
-    // Collapsed on a desktop the sidebar is an icon rail, still usable, and it stays a rail
-    // across a reload; the expand button brings the labels back.
+    // Collapsed on a desktop the sidebar is the 64 px rail of groups: the dashboard's icon,
+    // the five group icons (the active group with the bar) and the avatar; a click on a
+    // group opens its flyout with focus inside, Esc closes it and hands focus back. The
+    // state survives a reload; the one button at the foot brings the tree back.
     await page.locator('[data-admin-collapse]').click();
     await expect(nav).toHaveAttribute('data-admin-rail', '');
-    await expect(nav.locator('#nav-pages')).toBeVisible();
-    await expect(nav.locator('#nav-pages')).toHaveAttribute('aria-label', /Pages/);
-    expect((await nav.boundingBox())!.width).toBeLessThan(100);
+    await expect(nav.locator('#nav-pages')).toBeHidden();
+    await expect(nav.locator('[data-admin-rail-group]')).toHaveCount(5);
+    await expect(nav.locator('[data-admin-rail-dashboard]')).toBeVisible();
+    await expect(nav.locator('[data-admin-account]')).toBeVisible();
+    expect(Math.round((await nav.boundingBox())!.width)).toBe(64);
+    await nav.locator('[data-admin-rail-group="Site"]').click();
+    const flyout = page.locator('[data-admin-flyout="Site"]');
+    await expect(flyout).toBeVisible();
+    expect(Math.round((await flyout.boundingBox())!.width)).toBe(224);
+    await expect(flyout.locator('[data-admin-flyout-entry="pages"]')).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
+    await expect(flyout.locator('[role="menuitem"]')).toHaveCount(4);
+    expect(
+      await page.evaluate(() => document.activeElement?.closest('[data-admin-flyout]') !== null),
+    ).toBe(true);
+    await page.keyboard.press('ArrowDown');
+    await expect(flyout.locator('[data-admin-flyout-entry="home"]')).toBeFocused();
+    expect(
+      await serious('[data-admin-nav]', '[data-admin-flyout]'),
+      'axe: the rail with a flyout open',
+    ).toEqual([]);
+    await page.keyboard.press('Escape');
+    await expect(flyout).toBeHidden();
+    await expect(nav.locator('[data-admin-rail-group="Site"]')).toBeFocused();
     // The collapse writes the `nav` preference; wait for it before the reload reads it.
     await expect
       .poll(async () => {
@@ -377,12 +480,34 @@ test.describe('CMS admin', () => {
       .toBe(false);
     await page.reload();
     await expect(page.locator('[data-admin-nav]')).toHaveAttribute('data-admin-rail', '');
+    // One breakpoint: a 1440 px laptop is a desktop like 1600, the rail and the button stay,
+    // no hamburger.
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.reload();
+    await expect(page.locator('[data-admin-nav]')).toHaveAttribute('data-admin-rail', '');
+    await expect(page.locator('[data-admin-menu]')).toBeHidden();
     await page.locator('[data-admin-expand]').click();
     await expect(nav).toHaveClass(/nav--nav-open/);
     await expect(nav.locator('#nav-pages')).toContainText(/Pages/);
-    // The header: a bordered search box and the site link, both with text on a desktop.
+    expect(Math.round((await nav.boundingBox())!.width)).toBe(264);
+    await expect
+      .poll(async () => {
+        const res = await request.get(`${API}/payload-preferences/nav`, { headers: adminAuth });
+        return ((await res.json()) as { value?: { open?: boolean } }).value?.open;
+      })
+      .toBe(true);
+    await page.reload();
+    await expect(nav).toHaveClass(/nav--nav-open/);
+    await expect(nav.locator('#nav-pages')).toBeVisible();
+    await page.setViewportSize({ width: 1600, height: 900 });
+    // The header: a 240 px search box and the site link, both with text on a desktop;
+    // Payload's avatar is gone (our account block is the one door).
     await expect(page.locator('[data-admin-palette-trigger]')).toContainText(/Search or jump/);
+    expect(
+      Math.round((await page.locator('[data-admin-palette-trigger]').boundingBox())!.width),
+    ).toBe(240);
     await expect(page.locator('[data-admin-view-site]')).toContainText(/View website/);
+    await expect(page.locator('.app-header__account')).toBeHidden();
     // The palette: Ctrl+K, a document by title, Enter opens it.
     await page.keyboard.press('Control+k');
     const palette = page.locator('[data-admin-palette]');
@@ -391,16 +516,6 @@ test.describe('CMS admin', () => {
     await expect(palette.getByRole('option', { name: /سياسة الخصوصية/ })).toBeVisible({
       timeout: 10_000,
     });
-    // axe on OUR surfaces (Payload's own edit-view chrome has known gaps: unnamed drag handles
-    // and popup buttons, its engine, not the shell).
-    const { AxeBuilder } = await import('@axe-core/playwright');
-    const serious = async (...include: string[]) => {
-      let builder = new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']);
-      for (const sel of include) builder = builder.include(sel);
-      return (await builder.analyze()).violations
-        .filter((v) => ['serious', 'critical'].includes(v.impact ?? ''))
-        .map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`);
-    };
     expect(await serious('[data-admin-palette]', '.app-header'), 'axe: palette open').toEqual([]);
     await page.keyboard.press('Enter');
     await page.waitForURL(/\/admin\/collections\/pages\/\d+/);
@@ -446,26 +561,76 @@ test.describe('CMS admin', () => {
       await editorContext.close();
       await request.delete(`${API}/users/${editor.id}`, { headers: adminAuth });
     }
-    // On a phone the sidebar is a drawer: the header opens it, its own button closes it,
-    // and the desktop's collapse control stays out of it.
-    await page.setViewportSize({ width: 412, height: 915 });
+    // At 1024 px and under the sidebar is a drawer over the page: the hamburger opens it,
+    // focus lands on its X, the X, Esc or a tap outside closes it and focus comes back; the
+    // full tree at 44 px rows, the language switch at the foot, no collapse control.
+    await page.setViewportSize({ width: 1024, height: 800 });
     await page.goto('/admin/collections/pages');
     await expect(nav).not.toHaveClass(/nav--nav-open/);
-    await page.locator('.app-header__mobile-nav-toggler').click({ force: true });
+    await expect(page.locator('[data-admin-collapse]')).toBeHidden();
+    const menu = page.locator('[data-admin-menu]');
+    await expect(menu).toBeVisible();
+    await expect(menu).toHaveAttribute('aria-label', 'Open the menu');
+    await expect(menu).toHaveAttribute('aria-expanded', 'false');
+    // Icon-only at this width, the two header controls keep their labels.
+    await expect(page.locator('[data-admin-palette-trigger]')).toHaveAttribute(
+      'aria-label',
+      /Search or jump/,
+    );
+    await expect(page.locator('[data-admin-view-site]')).toHaveAttribute(
+      'aria-label',
+      'View website',
+    );
+    await menu.click();
     await expect(nav).toHaveClass(/nav--nav-open/);
+    await expect(menu).toHaveAttribute('aria-expanded', 'true');
+    await expect(menu).toHaveAttribute('aria-label', 'Close the menu');
+    await expect(nav.locator('[data-admin-menu-close]')).toBeFocused();
     await expect(nav.locator('#nav-pages')).toBeVisible();
-    await expect(nav.locator('[data-admin-collapse]')).toBeHidden();
-    await nav.locator('.nav__mobile-close').click();
+    expect((await nav.locator('#nav-pages').boundingBox())!.height).toBe(44);
+    expect(Math.round((await nav.boundingBox())!.width)).toBe(320);
+    await expect(nav.locator('[data-admin-language] [aria-pressed="true"]')).toHaveText('English');
+    await expect(nav.locator('[data-admin-toggle]')).toBeHidden();
+    expect(await serious('[data-admin-nav]'), 'axe: the drawer open').toEqual([]);
+    await nav.locator('[data-admin-menu-close]').click();
+    await expect(nav).not.toHaveClass(/nav--nav-open/);
+    await expect(menu).toBeFocused();
+    await menu.click();
+    await expect(nav).toHaveClass(/nav--nav-open/);
+    await page.keyboard.press('Escape');
+    await expect(nav).not.toHaveClass(/nav--nav-open/);
+    await expect(menu).toBeFocused();
+    await menu.click();
+    await expect(nav).toHaveClass(/nav--nav-open/);
+    await page.mouse.click(900, 600);
+    await expect(nav).not.toHaveClass(/nav--nav-open/);
+    // A navigation from the drawer closes it.
+    await menu.click();
+    await nav.locator('#nav-products').click();
+    await page.waitForURL(/\/admin\/collections\/products/);
+    await expect(nav).not.toHaveClass(/nav--nav-open/);
+    // On a phone the drawer is the full width, the two header controls are icons.
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/admin/collections/pages');
+    await expect(nav).not.toHaveClass(/nav--nav-open/);
+    expect((await page.locator('[data-admin-palette-trigger]').boundingBox())!.width).toBeLessThan(
+      60,
+    );
+    await menu.click();
+    await expect(nav).toHaveClass(/nav--nav-open/);
+    expect(Math.round((await nav.boundingBox())!.width)).toBe(390);
+    await expect(nav.locator('#nav-pages')).toBeVisible();
+    await nav.locator('[data-admin-menu-close]').click();
     await expect(nav).not.toHaveClass(/nav--nav-open/);
   });
 
-  test('the dashboard (ADR-039): quick actions by permission, the health report, the latest saves', async ({
+  test("the dashboard (ADR-039, ADR-059): the seven sections, the range, the figures as links, the editor's view", async ({
     page,
     request,
   }) => {
     await page.setViewportSize({ width: 1600, height: 1000 });
     expect((await page.request.post(`${API}/users/login`, { data: admin })).status()).toBe(200);
-    // A save stamps «آخر حفظ» and lands at the top of the list.
+    // A save stamps «آخر حفظ» and lands at the top of the saves.
     const auth = await login(request, admin);
     const faq = await request.get(`${API}/faqs?limit=1&depth=0`, { headers: auth });
     const entry = ((await faq.json()) as { docs: Array<{ id: number; question: string }> }).docs[0];
@@ -481,9 +646,57 @@ test.describe('CMS admin', () => {
     await page.goto('/admin');
     const dashboard = page.locator('[data-admin-dashboard]');
     await expect(dashboard).toBeVisible();
-    for (const key of ['home', 'add-page', 'add-product', 'add-faq', 'add-post', 'site']) {
+    // 1. The greeting by the Riyadh hour, the week by default, the "needs a hand" line.
+    await expect(dashboard.locator('h1')).toContainText(/Good (morning|afternoon|evening)/);
+    await expect(dashboard).toHaveAttribute('data-admin-dashboard-days', '7');
+    await expect(dashboard.locator('[data-admin-dashboard-hand]')).toBeVisible();
+    // 2. Four tiles for an admin, each with a number and each a link.
+    await expect(dashboard.locator('[data-admin-tile]')).toHaveCount(4);
+    for (const key of ['visits', 'cited', 'score', 'published']) {
+      const tile = dashboard.locator(`[data-admin-tile="${key}"]`);
+      await expect(tile).toBeVisible();
+      await expect(tile).toHaveAttribute('data-admin-tile-value', /^[\d,]+%?$/);
+      await expect(tile).toHaveAttribute('href', /\/admin\//);
+    }
+    await expect(dashboard.locator('[data-admin-tile="visits"]')).toHaveAttribute(
+      'href',
+      /\/admin\/traffic\?days=7$/,
+    );
+    // The hint names the category prompts once a ledger run exists; a fresh database (CI's
+    // seed) has none yet and says so instead.
+    await expect(dashboard.locator('[data-admin-tile="cited"]')).toContainText(
+      /category prompts|No ledger run/,
+    );
+    // 3 to 7, top to bottom, each with its hook.
+    for (const hook of ['visits', 'assistants', 'content', 'engine', 'server']) {
+      await expect(dashboard.locator(`[data-admin-dashboard-${hook}]`)).toBeVisible();
+    }
+    // 5. The content: the home tile, the figures as links (the drafts to the list filtered on
+    // `_status`), the saves by people, the two actions in their entity's hue.
+    for (const key of ['home', 'add-product', 'add-post']) {
       await expect(dashboard.locator(`[data-admin-action="${key}"]`)).toBeVisible();
     }
+    await expect(dashboard.locator('[data-admin-action="add-page"]')).toHaveCount(0);
+    await expect(
+      dashboard.locator('[data-admin-figures="posts"] [data-admin-figure="drafts"]'),
+    ).toHaveAttribute('href', /where(\[|%5B)_status(\]|%5D)(\[|%5B)equals(\]|%5D)=draft/);
+    await expect(
+      dashboard.locator('[data-admin-figures="posts"] [data-admin-figure="published"]'),
+    ).toHaveAttribute('href', /\/admin\/collections\/posts/);
+    const first = dashboard.locator('[data-admin-recent] li').first();
+    await expect(first).toContainText(entry!.question);
+    await expect(first).toContainText(/by /);
+    // Hues are the group's (ADR-046): a FAQ entry is Catalogue teal, a post is Blog violet.
+    await expect(first.locator('[data-hue]')).toHaveAttribute('data-hue', 'teal');
+    await expect(dashboard.locator('[data-admin-action="add-post"]')).toHaveAttribute(
+      'data-hue',
+      'violet',
+    );
+    // 7. The server: collapsed unless a row is red; the rows keep their tones inside.
+    const server = dashboard.locator('[data-admin-dashboard-server]');
+    const worst = await server.getAttribute('data-admin-dashboard-server');
+    if (worst === 'error') await expect(server.locator('details')).toHaveAttribute('open', '');
+    else await expect(server.locator('details')).not.toHaveAttribute('open', '');
     await expect(dashboard.locator('[data-health-row="db"]')).toHaveAttribute(
       'data-tone',
       'success',
@@ -492,20 +705,24 @@ test.describe('CMS admin', () => {
       'data-tone',
       'success',
     );
-    const first = dashboard.locator('[data-admin-recent] li').first();
-    await expect(first).toContainText(entry!.question);
-    await expect(first).toContainText(/by /);
-    // Hues are the group's (ADR-046): a FAQ entry is Catalogue teal, a page is Site blue.
-    await expect(first.locator('[data-hue]')).toHaveAttribute('data-hue', 'teal');
-    await expect(dashboard.locator('[data-admin-action="add-page"]')).toHaveAttribute(
-      'data-hue',
-      'blue',
+    await server.locator('summary').click();
+    await expect(dashboard.locator('[data-health-row="db"]')).toBeVisible();
+    await expect(dashboard.locator('[data-admin-dashboard-queue]')).toContainText(/Riyadh/);
+    // 1. The range control is a link: the server renders the chosen range, no client state.
+    await dashboard.locator('[data-admin-dashboard-range] a[href$="days=30"]').click();
+    await page.waitForURL(/\/admin\?days=30/);
+    await expect(dashboard).toHaveAttribute('data-admin-dashboard-days', '30');
+    await expect(
+      dashboard.locator('[data-admin-dashboard-range] a[aria-current="page"]'),
+    ).toHaveText(/30 days/);
+    await expect(dashboard.locator('[data-admin-tile="visits"]')).toHaveAttribute(
+      'href',
+      /\/admin\/traffic\?days=30$/,
     );
-    await expect(dashboard.locator('[data-admin-action="add-post"]')).toHaveAttribute(
-      'data-hue',
-      'violet',
-    );
-    // A tile navigates inside the app: no reload.
+    await expect(dashboard.locator('[data-admin-tile="published"]')).toContainText(/30 days/);
+    await page.goto('/admin?days=12');
+    await expect(dashboard).toHaveAttribute('data-admin-dashboard-days', '7');
+    // The home tile navigates inside the app: no reload.
     await page.evaluate(() => {
       (window as unknown as { b7rMarker?: number }).b7rMarker = 1;
     });
@@ -525,6 +742,32 @@ test.describe('CMS admin', () => {
         .filter((v) => ['serious', 'critical'].includes(v.impact ?? ''))
         .map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`),
     ).toEqual([]);
+    // An editor sees what an editor may open: the published tile, the content, the server; no
+    // traffic, no assistants, no engine, no spend, and nothing refused in their place.
+    const editor = await createEditor(request, auth);
+    const editorContext = await page.context().browser()!.newContext();
+    try {
+      const editorPage = await editorContext.newPage();
+      expect((await editorPage.request.post(`${API}/users/login`, { data: editor })).status()).toBe(
+        200,
+      );
+      await editorPage.goto('/admin');
+      const theirs = editorPage.locator('[data-admin-dashboard]');
+      await expect(theirs).toBeVisible();
+      await expect(theirs.locator('[data-admin-tile]')).toHaveCount(1);
+      await expect(theirs.locator('[data-admin-tile="published"]')).toBeVisible();
+      await expect(theirs.locator('[data-admin-dashboard-content]')).toBeVisible();
+      await expect(theirs.locator('[data-admin-dashboard-server]')).toBeVisible();
+      await expect(theirs.locator('[data-admin-dashboard-hand]')).toBeVisible();
+      for (const hook of ['visits', 'assistants', 'engine']) {
+        await expect(theirs.locator(`[data-admin-dashboard-${hook}]`)).toHaveCount(0);
+      }
+      await expect(theirs.locator('[data-admin-view-refused]')).toHaveCount(0);
+      await expect(theirs.locator('[data-admin-action="home"]')).toBeVisible();
+    } finally {
+      await editorContext.close();
+      await request.delete(`${API}/users/${editor.id}`, { headers: auth });
+    }
     // The field widgets: a section switch with its consequence, and the platform tiles. The
     // section's switch lives in its tab (ADR-046), which Payload opens only on a click (a
     // remembered tab is a per-user preference, never assumed).
@@ -592,14 +835,33 @@ test.describe('CMS admin', () => {
         /الإدارة/,
       ]);
       const dashboard = page.locator('[data-admin-dashboard]');
-      await expect(dashboard.locator('h1')).toContainText('مرحباً');
-      await expect(dashboard.locator('[data-admin-health] h2')).toContainText('حالة النظام');
+      await expect(dashboard.locator('h1')).toContainText(/صباح الخير|مساء الخير/);
+      await expect(dashboard.locator('[data-admin-health] h2')).toContainText('الخادم');
+      await expect(dashboard.locator('[data-admin-tile]')).toHaveCount(4);
+      await expect(dashboard.locator('[data-admin-dashboard-range] a').first()).toContainText(
+        /أيام/,
+      );
+      // The digits stay Western in Arabic (design system §5): no Eastern digit on the dashboard.
+      expect(await dashboard.innerText()).not.toMatch(/[٠-٩]/);
       await expect(page.locator('[data-admin-palette-trigger]')).toContainText('ابحث');
       await expect(page.locator('[data-admin-view-site]')).toContainText('عرض الموقع');
-      // The sidebar's rail sits at the start edge: on the right now, so its box starts past the middle.
+      // The sidebar sits at the start edge: on the right now, so its box starts past the middle.
       const navBox = (await nav.boundingBox())!;
       const viewport = page.viewportSize()!;
       expect(navBox.x + navBox.width / 2).toBeGreaterThan(viewport.width / 2);
+      // Collapsed, the rail's flyout opens away from the rail: to the left; the groups keep
+      // their Arabic names on the icons (ADR-058).
+      await page.locator('[data-admin-collapse]').click();
+      await expect(nav).toHaveAttribute('data-admin-rail', '');
+      await nav.locator('[data-admin-rail-group="الموقع"]').click();
+      const flyout = page.locator('[data-admin-flyout="الموقع"]');
+      await expect(flyout).toBeVisible();
+      await expect(flyout).toHaveAttribute('data-side', 'left');
+      await expect(flyout.locator('[data-admin-flyout-entry="pages"]')).toHaveText(/الصفحات/);
+      await page.keyboard.press('Escape');
+      await expect(flyout).toBeHidden();
+      await page.locator('[data-admin-expand]').click();
+      await expect(nav).toHaveClass(/nav--nav-open/);
       const { AxeBuilder } = await import('@axe-core/playwright');
       const serious = async (...include: string[]) => {
         let builder = new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']);
@@ -669,13 +931,26 @@ test.describe('CMS admin', () => {
       ).toEqual([]);
       // The digits stay Western in Arabic (design system §5): no Eastern digit anywhere on the page.
       expect(await page.locator('[data-admin-visibility-page]').innerText()).not.toMatch(/[٠-٩]/);
+      // On a phone the drawer reads right-to-left, its language switch marks Arabic.
+      await page.setViewportSize({ width: 390, height: 844 });
+      await page.goto('/admin');
+      await page.locator('[data-admin-menu]').click();
+      await expect(nav).toHaveClass(/nav--nav-open/);
+      await expect(nav.locator('[data-admin-language] [aria-pressed="true"]')).toHaveText(
+        'العربية',
+      );
+      await expect(nav.locator('[data-admin-group]').first()).toContainText('الموقع');
+      expect(await serious('[data-admin-nav]'), 'axe: the Arabic drawer').toEqual([]);
+      await page.keyboard.press('Escape');
+      await expect(nav).not.toHaveClass(/nav--nav-open/);
+      await page.setViewportSize({ width: 1600, height: 1000 });
       // Back to English through the same control.
       await pickLanguage('English');
       await expect(html).toHaveAttribute('dir', /ltr/i);
       await expect(html).toHaveAttribute('lang', 'en');
       await expect.poll(languageCookie).toBe('en');
       await page.goto('/admin');
-      await expect(page.locator('[data-admin-dashboard] h1')).toContainText('Welcome');
+      await expect(page.locator('[data-admin-dashboard] h1')).toContainText(/Good /);
     } finally {
       // Whatever happened above, the context leaves the panel in English for the next test.
       await page.context().addCookies([{ name: 'payload-lng', value: 'en', url: baseURL! }]);
@@ -1359,6 +1634,168 @@ test.describe('CMS admin', () => {
       expect(restore.status()).toBe(200);
     });
 
+    // Side-by-side bilingual editing (ADR-057): a localized text field shows both languages,
+    // one Save writes both through the second write of the apply hook, and the rest of the
+    // document is untouched.
+    test('a page title edited in both languages is written by one Publish (ADR-057)', async ({
+      page,
+      request,
+    }) => {
+      test.setTimeout(150_000);
+      const auth = await login(request, ADMIN);
+      const slug = 'bilingual-e2e';
+      const created = await request.post(`${API}/pages?locale=ar`, {
+        headers: auth,
+        data: {
+          title: 'صفحة ثنائية اللغة',
+          slug,
+          blocks: [{ blockType: 'richText', title: 'المقدمة', content: paragraph('فقرة.') }],
+          seo: { title: 'صفحة ثنائية اللغة', description: 'وصف للاختبار.' },
+          _status: 'published',
+        },
+      });
+      expect(created.status()).toBe(201);
+      const createdDoc = (
+        (await created.json()) as { doc: { id: number; blocks: Array<{ id: string }> } }
+      ).doc;
+      const id = createdDoc.id;
+      const blockId = createdDoc.blocks[0]!.id;
+      const both = async () => {
+        const res = await request.get(`${API}/pages/${id}?locale=all&depth=0`, { headers: auth });
+        expect(res.status()).toBe(200);
+        return (await res.json()) as {
+          title: { ar?: string; en?: string };
+          lead?: { ar?: string; en?: string };
+          seo: { title: { ar?: string; en?: string } };
+          translations?: unknown;
+        };
+      };
+      try {
+        // The English side: a published page validates every English field on a write, so
+        // the block's body (required, localized) is given too, on the same block row.
+        const english = await request.patch(`${API}/pages/${id}?locale=en`, {
+          headers: auth,
+          data: {
+            title: 'Bilingual page',
+            blocks: [
+              {
+                id: blockId,
+                blockType: 'richText',
+                title: 'Introduction',
+                content: paragraph('A paragraph.'),
+              },
+            ],
+            seo: { title: 'Bilingual page', description: 'For the test.' },
+          },
+        });
+        expect(english.status()).toBe(200);
+        await page.goto('/admin/login');
+        await page.locator('#field-email').fill(admin.email);
+        await page.locator('#field-password').fill(admin.password);
+        await page.locator('form button[type="submit"]').first().click();
+        await page.waitForURL((u) => !u.pathname.endsWith('/login'));
+        await page.goto(`/admin/collections/pages/${id}?locale=ar`);
+        // The title sits in the Content tab; Payload restores the last active tab from the
+        // user's preferences after the first render, so the tab is chosen explicitly.
+        await page.locator('.tabs-field__tab-button', { hasText: 'Content' }).click();
+        // The note says what is side by side; the title carries both inputs, the English one
+        // tagged EN and prefilled from the stored English.
+        await expect(page.locator('[data-admin-locale-note="ar"]')).toContainText(
+          'one Save writes both',
+        );
+        const pair = page.locator('[data-admin-bilingual="title"]');
+        await expect(pair.locator('[data-admin-locale-tag="en"]')).toHaveText('EN');
+        const arabic = page.locator('#field-title');
+        const other = page.locator('#field-translations__en__title');
+        // The twin's first read lands after the form; a loaded runner needs the longer wait.
+        await expect(other).toHaveValue('Bilingual page', { timeout: 15_000 });
+        // Rich text stays on the switch: the block's body has no pair.
+        expect(await page.locator('[data-admin-bilingual^="blocks."]').count()).toBe(0);
+        await arabic.fill('صفحة ثنائية اللغة (محدّثة)');
+        await other.fill('Bilingual page (updated)');
+        await page.locator('#action-save').click();
+        await expect(page.locator('.payload-toast-container')).toContainText(
+          /updated successfully/i,
+        );
+        await expect
+          .poll(async () => (await both()).title, POLL)
+          .toEqual({ ar: 'صفحة ثنائية اللغة (محدّثة)', en: 'Bilingual page (updated)' });
+        const doc = await both();
+        // The pending JSON is cleared by the second write; the untouched fields keep both languages.
+        expect(doc.translations ?? null).toBeNull();
+        expect(doc.seo.title).toEqual({ ar: 'صفحة ثنائية اللغة', en: 'Bilingual page' });
+        // After the save the English input shows the applied text, not the old prefill.
+        await expect(other).toHaveValue('Bilingual page (updated)');
+        // Blanking a required English field is refused with the field and the language named,
+        // and the Arabic change of the same save does not land either.
+        await other.fill('');
+        await arabic.fill('لا تُحفظ');
+        await page.locator('#action-save').click();
+        await expect(page.locator('.payload-toast-container')).toContainText(/Title.*in English/);
+        expect((await both()).title).toEqual({
+          ar: 'صفحة ثنائية اللغة (محدّثة)',
+          en: 'Bilingual page (updated)',
+        });
+      } finally {
+        expect((await request.delete(`${API}/pages/${id}`, { headers: auth })).status()).toBe(200);
+      }
+    });
+
+    test("the site settings' tagline edited in both languages is written by one Save (ADR-057)", async ({
+      page,
+      request,
+    }) => {
+      test.setTimeout(120_000);
+      const auth = await login(request, ADMIN);
+      const both = async () => {
+        const res = await request.get(`${API}/globals/site-settings?locale=all&depth=0`, {
+          headers: auth,
+        });
+        expect(res.status()).toBe(200);
+        return (await res.json()) as {
+          tagline: { ar?: string; en?: string };
+          translations?: unknown;
+        };
+      };
+      const before = (await both()).tagline;
+      const restore = async (locale: 'ar' | 'en') =>
+        request.post(`${API}/globals/site-settings?locale=${locale}`, {
+          headers: auth,
+          data: { tagline: before[locale] },
+        });
+      try {
+        await page.goto('/admin/login');
+        await page.locator('#field-email').fill(admin.email);
+        await page.locator('#field-password').fill(admin.password);
+        await page.locator('form button[type="submit"]').first().click();
+        await page.waitForURL((u) => !u.pathname.endsWith('/login'));
+        await page.goto('/admin/globals/site-settings?locale=ar');
+        // The tagline sits in the Brand tab; Payload restores the last active tab from the
+        // user's preferences after the first render, so the tab is chosen explicitly.
+        await page.locator('.tabs-field__tab-button', { hasText: 'Brand' }).click();
+        const arabic = page.locator('#field-tagline');
+        const other = page.locator('#field-translations__en__tagline');
+        await expect(arabic).toBeVisible();
+        await expect(other).toBeEnabled({ timeout: 15_000 });
+        await expect(other).toHaveValue(before.en ?? '');
+        const stamp = Date.now();
+        await arabic.fill(`شعار الاختبار ${stamp}`);
+        await other.fill(`Tagline e2e ${stamp}`);
+        await page.locator('#action-save').click();
+        await expect(page.locator('.payload-toast-container')).toContainText(
+          /updated successfully/i,
+        );
+        await expect
+          .poll(async () => (await both()).tagline, POLL)
+          .toEqual({ ar: `شعار الاختبار ${stamp}`, en: `Tagline e2e ${stamp}` });
+        expect((await both()).translations ?? null).toBeNull();
+      } finally {
+        expect((await restore('ar')).status()).toBe(200);
+        expect((await restore('en')).status()).toBe(200);
+      }
+      expect((await both()).tagline).toEqual(before);
+    });
+
     test('two blocks of one type on a page get distinct ids and pass axe', async ({
       page,
       request,
@@ -1721,7 +2158,7 @@ test.describe('CMS admin', () => {
       const card = page.locator('[data-admin-visibility]');
       await expect(card).toBeVisible();
       await expect(card).toHaveAttribute('data-admin-visibility-overall', String(before));
-      await expect(card.locator('[data-admin-visibility-next] li')).toHaveCount(3);
+      await expect(card).toHaveAttribute('data-admin-tile', 'score');
       await expect(page.locator('#nav-view-visibility')).toHaveAttribute(
         'href',
         '/admin/visibility',
@@ -2112,7 +2549,11 @@ test.describe('CMS admin', () => {
         },
       });
       expect(created.status(), await created.text()).toBe(201);
-      const id = ((await created.json()) as { doc: { id: number } }).doc.id;
+      const createdDoc = (
+        (await created.json()) as { doc: { id: number; blocks: Array<{ id: string }> } }
+      ).doc;
+      const id = createdDoc.id;
+      const blockId = createdDoc.blocks[0]!.id;
       try {
         // The proxy's allowlist of published slugs refreshes within seconds (ADR-032).
         await expect.poll(async () => (await request.get(`/${slug}`)).status(), POLL).toBe(200);
@@ -2137,14 +2578,16 @@ test.describe('CMS admin', () => {
             .filter((v) => ['serious', 'critical'].includes(v.impact ?? ''))
             .map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`),
         ).toEqual([]);
-        // The English form of the same page renders the same table.
-        await request.patch(`${API}/pages/${id}?locale=en`, {
+        // The English form of the same page renders the same table: the same block row (its
+        // id) takes the English values, so the Arabic side keeps its own.
+        const english = await request.patch(`${API}/pages/${id}?locale=en`, {
           headers: json,
           data: {
             title: `Test comparison ${stamp}`,
             blocks: [
               {
                 ...comparison,
+                id: blockId,
                 intro: 'A test comparison.',
                 ours: 'B7R Print',
                 rows: [
@@ -2160,9 +2603,13 @@ test.describe('CMS admin', () => {
             seo: { title: 'Test comparison', description: 'A test comparison of B7R Print.' },
           },
         });
+        expect(english.status(), await english.text()).toBe(200);
+        // The English page carries the block's table once the publish has revalidated it (the
+        // header names the brand on every page, so the table is the marker).
         await expect
           .poll(
-            async () => (await (await request.get(`/en/${slug}`)).text()).includes('B7R Print'),
+            async () =>
+              (await (await request.get(`/en/${slug}`)).text()).includes('data-block="compare"'),
             POLL,
           )
           .toBe(true);
@@ -2700,21 +3147,20 @@ test.describe('CMS admin', () => {
           'data-admin-engine-state',
           'mock',
         );
-        await expect(
-          page.locator('[data-admin-engine-recent] li').first().locator('[data-admin-run-status]'),
-        ).toHaveAttribute('data-admin-run-status', 'done');
         await expect(page.locator('[data-health-row="engine"]')).toHaveAttribute(
           'data-tone',
           'warning',
         );
-        // The card names the connection and what it has cost this month.
-        const connectionLine = page.locator('[data-admin-engine-connection]');
-        await expect(connectionLine).toHaveAttribute(
-          'data-admin-engine-connection',
-          String(mockId),
+        // The spend table has a row per AI connection: the engine's one is marked, it names the
+        // connection, what it has cost this month, and the amber "no monthly limit" badge (ADR-059).
+        const connectionRow = page.locator(`[data-admin-connection="${mockId}"]`);
+        await expect(connectionRow).toHaveAttribute('data-admin-engine-connection', String(mockId));
+        await expect(connectionRow).toContainText(/Mock/);
+        await expect(connectionRow).toContainText(/\$\d+\.\d\d/);
+        await expect(connectionRow.locator('[data-admin-no-limit]')).toContainText(
+          /No monthly limit/,
         );
-        await expect(connectionLine).toContainText(/Mock/);
-        await expect(connectionLine).toContainText(/\$\d+\.\d\d this month, no limit/);
+        await expect(page.locator('[data-admin-engine-cap="posts"]')).toContainText(/\d+ of \d+/);
         // The topic's edit view carries "Generate now"; the post's sidebar carries "Regenerate".
         await page.goto(`/admin/collections/ai-topics/${topicId}`);
         await expect(page.locator('[data-admin-action="generate-now"]')).toBeVisible();

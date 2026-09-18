@@ -23,6 +23,7 @@ import * as migration_20260916_171315_prompt_period from './20260916_171315_prom
 import * as migration_20260916_180013_citation_answer from './20260916_180013_citation_answer';
 import * as migration_20260916_230030_site_analytics from './20260916_230030_site_analytics';
 import * as migration_20260917_192112_cta_shiny from './20260917_192112_cta_shiny';
+import * as migration_20260918_033852_translations from './20260918_033852_translations';
 
 export const migrations = [
   {
@@ -148,6 +149,11 @@ export const migrations = [
   {
     up: migration_20260917_192112_cta_shiny.up,
     down: migration_20260917_192112_cta_shiny.down,
-    name: '20260917_192112_cta_shiny'
+    name: '20260917_192112_cta_shiny',
+  },
+  {
+    up: migration_20260918_033852_translations.up,
+    down: migration_20260918_033852_translations.down,
+    name: '20260918_033852_translations',
   },
 ];

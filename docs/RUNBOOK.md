@@ -369,8 +369,8 @@ CI writes its dummy ids into the settings (`scripts/ci/analytics-ids.ts`), the U
 ## The visibility score (ADR-049)
 
 - **Where.** Visibility → Visibility score (`/admin/visibility`), admins; the same number on
-  the dashboard card. "Recompute" re-reads everything now (the page keeps a reading for a
-  minute).
+  the dashboard's score tile, with its trend. "Recompute" re-reads everything now (the page
+  keeps a reading for a minute).
 - **Reading it.** Six sections, each with a bar and its items in the order next, missing, done.
   An item over documents says "4 of 5" and lists what is left, each a link into the field in
   the language that is missing. "The site guarantees" under a section lists what cannot be
@@ -488,7 +488,8 @@ CI writes its dummy ids into the settings (`scripts/ci/analytics-ids.ts`), the U
   read. Visibility → Traffic is the page: pick 7, 30 or 90 days; the channels with their
   share, the top sources, the landing pages with the channel that brings most, and the
   crawlers with what they read most; the rows themselves sit under it as "Counts". The
-  dashboard carries a "Traffic, last 7 days" card (admins). Nothing needs configuring: the
+  dashboard carries the visits tile and the "Where visits come from" section over the
+  dashboard's own 7 / 30 / 90 day range (admins, ADR-059). Nothing needs configuring: the
   beacon and the crawler count are on in every environment.
 - **Reading it.** A landing's source is the referring site folded (`chatgpt.com`,
   `google.com`, `instagram.com`), a UTM token, or `direct`; the channel and its group (AI
@@ -597,8 +598,9 @@ seeded before Level 5: deploy the image, run `pnpm content:migrate --force` agai
 production, then wait a minute (`revalidate`) or republish the site settings: `/en` answers
 and the switch appears on its own.
 
-Publishing a page in English: open the document, switch the locale to English in the panel's
-locale control, fill the title and the rest, save. The page is on `/en/<slug>` and carries
+Publishing a page in English: open the document, type the English title beside the Arabic
+one (ADR-057, below), switch the locale to English in the panel's locale control for the
+blocks, save. The page is on `/en/<slug>` and carries
 hreflang to its Arabic twin once its English title is not empty; leave the title empty and
 the page stays Arabic-only (no `/en` route, no pair). The same rule holds for products
 (`name`), posts (`title`, from 5b), categories and authors (`name`). Media alt text has a
@@ -614,6 +616,20 @@ its Arabic twin once its English title is not empty. Hubs (`categories`) and aut
 same way (`name` decides). An Arabic-only post's switch sends the reader to `/en/blog`, an
 Arabic-only product's to `/en/products` (ADR-044).
 
+Both languages at once (ADR-057): every text field that is per language (a title, a lead, a
+meta description, a product name, the home page's headlines and buttons, the engine's style
+texts) shows the Arabic and the English side by side, the English input tagged EN; type the
+other language next to the first and one Save writes both. Rich text, lists (chips, sizes,
+colours, takeaways) and page blocks stay on the locale control, and the note above the
+document's controls says which is which. The Publish rule: touching one English field on a
+Publish validates the whole English document, the collection's own rules included (on a
+post: the English excerpt, the three English takeaways and the two internal links of the
+English body), exactly as a Publish from the English locale does; a half-filled English side
+is refused with the fields named ("Title in English: This field is required.") and nothing
+of that save lands, the Arabic change included. Save Draft never validates: type the
+English at your own pace over several drafts and publish when both sides are complete. A
+bilingual Save leaves two version rows, one per language.
+
 The English hero photos (ADR-044): each slide's two photos are per language, like its
 headline. The seed ships mirrored copies of the Arabic placeholders (`public/images/hero-en/`,
 made by `pnpm assets`), on which the printed wordmark reads backwards; replace them from the
@@ -627,8 +643,8 @@ chip added on the Arabic tab shows in English once its English text is written.
 The engine in English (5c): a topic's `language` decides the post's language; the English
 backlog is seeded beside the Arabic one, and a CSV import takes `language` as its seventh
 column (`ar` by default): `title,hub,primaryKeyword,secondaryKeywords,intent,priority,language`,
-for example `Connect a Shopify store,salla-zid-shopify,Shopify print on demand,,commercial,4,en`. Engine settings, "Language and style": switch the panel's locale
-to edit the English style guide, system prompt, banned phrases and banned claims (the code
+for example `Connect a Shopify store,salla-zid-shopify,Shopify print on demand,,commercial,4,en`. Engine settings, "Language and style": the English style guide,
+system prompt, banned phrases and banned claims sit beside the Arabic ones (the code
 defaults show until you save your own). The facts sheet tab shows both languages. On the review server
 `node scripts/dev/engine-demo.mjs run 1 en` writes one English post with the mock;
 `... clean` removes it. `/llms.txt` and `/en/llms.txt` are generated from the CMS and

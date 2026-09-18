@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload';
 import { isAdmin, isEditorOrAdmin } from '@/modules/cms/access';
 import { savedByField, stampSavedBy } from '@/modules/cms/fields/saved-by';
+import { applyTranslations } from '@/modules/cms/hooks/translations';
 import { collectionComponents } from '@/modules/cms/admin/document/config';
 import { adminGroup } from '@/modules/cms/admin/icons';
 import { MEDIA_DESCRIPTIONS } from '@/modules/cms/admin/descriptions/site';
@@ -53,7 +54,7 @@ export const Media: CollectionConfig = {
     ],
     adminThumbnail: 'thumbnail',
   },
-  hooks: { beforeChange: [stampSavedBy] },
+  hooks: { beforeChange: [stampSavedBy], afterChange: [applyTranslations] },
   fields: describeFields(
     [
       {

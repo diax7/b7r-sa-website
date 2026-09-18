@@ -15,6 +15,7 @@ import {
   TESTIMONIAL_DESCRIPTIONS,
 } from '@/modules/cms/admin/descriptions/catalogue';
 import type { Described } from '@/modules/cms/admin/descriptions/describe';
+import { describeFields } from '@/modules/cms/admin/descriptions/describe';
 import { PAGE_DESCRIPTIONS } from '@/modules/cms/admin/descriptions/pages';
 import {
   HOME_DESCRIPTIONS,
@@ -62,6 +63,8 @@ import { Connections } from '@/modules/connections/collection';
 import { CONNECTION_DESCRIPTIONS } from '@/modules/connections/descriptions';
 import { Traffic } from '@/modules/traffic/collection';
 import { TRAFFIC_DESCRIPTIONS } from '@/modules/traffic/descriptions';
+import { BILINGUAL_FIELD, bilingualPaths, TRANSLATIONS } from '@/modules/cms/fields/bilingual';
+import { applyGlobalTranslations, applyTranslations } from '@/modules/cms/hooks/translations';
 
 /**
  * The admin design system's "future things" guarantee (ADR-039, `.claude/rules/admin-ui.md`):
@@ -339,6 +342,111 @@ describe('the locale note (ADR-044): every document with per-language fields car
     it(`global ${g.slug}`, () => {
       const registered = g.admin?.components?.elements?.beforeDocumentControls ?? [];
       expect(registered.includes(NOTE)).toBe(hasLocalized(g.fields));
+    });
+  }
+});
+
+/**
+ * Side-by-side bilingual editing (ADR-057): `describeFields` renders every localized text,
+ * textarea and select field with `BilingualField` and adds the hidden `translations` JSON to
+ * a config that has any; such a config lists the apply hook after its own. Fields inside
+ * arrays and blocks, rich text, uploads and relationships stay on the locale switch.
+ */
+type Placed = { path: string; field: Field; inList: boolean };
+
+function everyField(fields: Field[], path = '', inList = false): Placed[] {
+  const out: Placed[] = [];
+  for (const f of fields) {
+    if (f.type === 'tabs') {
+      for (const t of f.tabs) {
+        const next = 'name' in t && t.name ? `${path}${t.name}.` : path;
+        out.push(...everyField(t.fields, next, inList));
+      }
+      continue;
+    }
+    if (f.type === 'ui') continue;
+    if (
+      f.type === 'row' ||
+      f.type === 'collapsible' ||
+      (f.type === 'group' && !('name' in f && f.name))
+    ) {
+      out.push(...everyField(f.fields, path, inList));
+      continue;
+    }
+    if (!('name' in f) || !f.name) continue;
+    const name = `${path}${f.name}`;
+    out.push({ path: name, field: f, inList });
+    const list = inList || f.type === 'array' || f.type === 'blocks';
+    if ('fields' in f && Array.isArray(f.fields))
+      out.push(...everyField(f.fields, `${name}.`, list));
+    if ('blocks' in f) {
+      for (const b of f.blocks) out.push(...everyField(b.fields, `${name}.${b.slug}.`, list));
+    }
+  }
+  return out;
+}
+
+const widgetOf = (f: Field) =>
+  (f as { admin?: { components?: { Field?: unknown } } }).admin?.components?.Field;
+
+describe('side-by-side bilingual editing (ADR-057)', () => {
+  it('describeFields attaches the component to localized text, textarea and select only, outside lists', () => {
+    const fields: Field[] = [
+      { name: 'title', type: 'text', localized: true },
+      { name: 'excerpt', type: 'textarea', localized: true },
+      { name: 'kind', type: 'select', localized: true, options: ['a'] },
+      { name: 'slug', type: 'text' },
+      { name: 'body', type: 'richText', localized: true },
+      { name: 'cover', type: 'upload', relationTo: 'media', localized: true },
+      { name: 'hub', type: 'relationship', relationTo: 'categories', localized: true },
+      {
+        name: 'takeaways',
+        type: 'array',
+        localized: true,
+        fields: [{ name: 'text', type: 'text' }],
+      },
+      { name: 'items', type: 'array', fields: [{ name: 'text', type: 'text', localized: true }] },
+      {
+        name: 'blocks',
+        type: 'blocks',
+        blocks: [{ slug: 'cards', fields: [{ name: 'title', type: 'text', localized: true }] }],
+      },
+      { name: 'seo', type: 'group', fields: [{ name: 'title', type: 'text', localized: true }] },
+    ];
+    const described = describeFields(fields, {});
+    const attached = everyField(described)
+      .filter((p) => widgetOf(p.field) === BILINGUAL_FIELD)
+      .map((p) => p.path);
+    expect(attached).toEqual(['title', 'excerpt', 'kind', 'seo.title']);
+    expect(described.at(-1)).toMatchObject({
+      name: TRANSLATIONS,
+      type: 'json',
+      admin: { hidden: true },
+    });
+    // A config without a localized text carries neither the component nor the JSON.
+    const plain = describeFields([{ name: 'slug', type: 'text' }], {});
+    expect(plain.some((f) => 'name' in f && f.name === TRANSLATIONS)).toBe(false);
+  });
+
+  const configs: Array<{ slug: string; fields: Field[]; hooks?: { afterChange?: unknown[] } }> = [
+    ...collections.filter((c) => c.slug !== 'redirects'),
+    ...globals,
+  ].map((c) => ({ slug: c.slug, fields: c.fields, hooks: c.hooks as { afterChange?: unknown[] } }));
+  for (const c of configs) {
+    it(`${c.slug}: the component sits on exactly the bilingual paths; the JSON and the hook go together`, () => {
+      const placed = everyField(c.fields);
+      const attached = placed.filter((p) => widgetOf(p.field) === BILINGUAL_FIELD);
+      expect(attached.map((p) => p.path).toSorted()).toEqual(bilingualPaths(c.fields).toSorted());
+      for (const p of attached) {
+        expect(['text', 'textarea', 'select'], p.path).toContain(p.field.type);
+        expect((p.field as { localized?: boolean }).localized, p.path).toBe(true);
+        expect(p.inList, p.path).toBe(false);
+      }
+      const carried = placed.some((p) => p.path === TRANSLATIONS);
+      expect(carried).toBe(attached.length > 0);
+      const hooks = c.hooks?.afterChange ?? [];
+      const hooked = hooks.includes(applyTranslations) || hooks.includes(applyGlobalTranslations);
+      expect(hooked, 'applyTranslations in hooks.afterChange').toBe(carried);
     });
   }
 });

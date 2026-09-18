@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload';
 import { canDeleteVersioned, isEditorOrAdmin, publishedOrStaff } from '@/modules/cms/access';
 import { revalidateProducts } from '@/modules/cms/hooks/revalidate';
+import { applyTranslations } from '@/modules/cms/hooks/translations';
 import { savedByField, stampSavedBy } from '@/modules/cms/fields/saved-by';
 import { localePath, requestLocale } from '@/lib/i18n';
 import { previewUrl } from '@/lib/preview-token';
@@ -46,7 +47,7 @@ export const Products: CollectionConfig = {
       en: 'Products on the site and in the designer: prices, photos, sizes and colours.',
     },
   },
-  versions: { drafts: { autosave: { interval: 1500 }, schedulePublish: true }, maxPerDoc: 25 },
+  versions: { drafts: { autosave: { interval: 1500 }, schedulePublish: true }, maxPerDoc: 50 },
   access: {
     read: publishedOrStaff,
     create: isEditorOrAdmin,
@@ -55,7 +56,7 @@ export const Products: CollectionConfig = {
   },
   hooks: {
     beforeChange: [stampSavedBy],
-    afterChange: [revalidateProducts],
+    afterChange: [revalidateProducts, applyTranslations],
     afterDelete: [revalidateProducts],
   },
   fields: describeFields(

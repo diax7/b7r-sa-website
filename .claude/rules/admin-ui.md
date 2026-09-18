@@ -17,7 +17,8 @@ note), `check:rtl` and the admin e2e.
 2b. `admin.custom.shows` in Arabic + English (where on the site the thing shows) and the
    header registered through `collectionComponents(slug, { localized })` /
    `globalComponents(slug, { localized })` from `admin/document/config.ts` (the description
-   slot; the locale note rides along when the config has per-language fields).
+   slot; the locale note rides along when the config has per-language fields, and says which
+   fields are side by side, rule 13).
 3. `labels.singular` / `labels.plural` (collections) or `label` (globals) in Arabic + English;
    nouns, never sentences.
 4. `admin.description` on the entity: one sentence about what it is *for the site*, not how
@@ -58,6 +59,23 @@ note), `check:rtl` and the admin e2e.
    `src/modules/visibility/rules/`, with its sentence and guide beside it; its weight lives in
    `rules/weights.ts`; a guide always links to the field that fixes the finding, in the
    locale that is missing; a thing the site guarantees by construction is a fact, not a rule.
+13. A localized `text`, `textarea` or `select` field is bilingual by `describeFields`
+   (ADR-057, design system §6a): both languages side by side, one Save writes both through
+   `applyTranslations` / `applyGlobalTranslations` (`src/modules/cms/hooks/translations.ts`),
+   which a config with such a field lists last in `hooks.afterChange` (the config test
+   checks). Never add a second place to edit a value: no per-language duplicate field, no
+   `titleEn` beside `title`, no widget of your own on a localized text. What stays on the
+   locale switch (rich text, arrays, blocks, uploads, relationships, `hasMany`) is by design;
+   the locale note says so (`locale.legend`) and the field's own strings are the `bilingual`
+   branch of both trees in `strings.ts`, read per render like every other string.
+14. The sidebar shows no document count (ADR-058). A number that asks for action is a badge:
+   a kind in `src/modules/cms/admin/nav/badges.ts` (its reader, a cheap query with the
+   user's access, the dashboard's own from `dashboard/readers.ts` when the dashboard shows
+   the same number; its tone, red or amber, never grey; its entry) and its sentence in
+   both string trees, picked in `nav/badge-strings.ts` (the dashboard's sentence when the
+   number is the dashboard's). The sidebar's shape itself (the tree, the rail, the drawer,
+   the keyboard model) is the design system's shell section; a new entry only needs its
+   place in `ADMIN_NAV`.
 
 ## Adding an admin component
 
@@ -96,3 +114,5 @@ note), `check:rtl` and the admin e2e.
 
 - Custom list or edit views; replacing Lexical; a light theme; `!important` against Payload;
   admin CSS or JS reaching the `(site)` bundle.
+- A second breakpoint for the shell (Payload's `m`, 1024 px, is the one), a document count
+  in the sidebar, a physical `left` or `right` anywhere in it.
