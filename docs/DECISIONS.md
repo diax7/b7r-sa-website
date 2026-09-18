@@ -1738,8 +1738,9 @@ clock. One server render, every read in one `Promise.all`, each guarded: a faili
 logs and its section shows the "not available" word; a reader the user may not run is
 skipped and its section is not rendered (the editor's dashboard is the greeting, the
 published tile, the content and the server). Nothing new is cached: the score reading keeps
-its minute per process and user; a render of an admin's dashboard is about seventy small
-Local API calls, most of them the latest-saves walk and the score snapshot, all parallel.
+its minute per process and user; a render of an admin's dashboard is about fifty-five small
+Local API calls (sixty-five when the score's minute has lapsed), the largest shares the
+latest-saves walk, the health report's engine state and the score snapshot, all parallel.
 
 **The engine card** loses its run list and its average score (the runs page holds them; a
 failed run reaches the "needs a hand" line) and gains the caps: posts against the monthly
