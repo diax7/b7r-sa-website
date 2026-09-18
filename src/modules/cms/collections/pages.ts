@@ -67,7 +67,7 @@ export const Pages: CollectionConfig = {
       en: 'Site pages as editable blocks. The seven designed pages keep their URLs; add new ones freely.',
     },
   },
-  versions: { drafts: { autosave: { interval: 1500 }, schedulePublish: true }, maxPerDoc: 25 },
+  versions: { drafts: { autosave: { interval: 1500 }, schedulePublish: true }, maxPerDoc: 50 },
   access: {
     read: publishedOrStaff,
     create: isEditorOrAdmin,

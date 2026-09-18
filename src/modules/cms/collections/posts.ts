@@ -130,7 +130,7 @@ export const Posts: CollectionConfig = {
       en: 'Blog posts. Drafts stay private; publishing needs a cover, three takeaways and two internal links.',
     },
   },
-  versions: { drafts: { autosave: { interval: 1500 }, schedulePublish: true }, maxPerDoc: 25 },
+  versions: { drafts: { autosave: { interval: 1500 }, schedulePublish: true }, maxPerDoc: 50 },
   access: {
     read: publishedOrStaff,
     create: isEditorOrAdmin,

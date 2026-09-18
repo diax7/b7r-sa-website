@@ -70,7 +70,7 @@ export const Home: GlobalConfig = {
       en: 'The home page, section by section. Drafts are free; publishing is live within seconds.',
     },
   },
-  versions: { drafts: { autosave: { interval: 1500 }, schedulePublish: true }, max: 25 },
+  versions: { drafts: { autosave: { interval: 1500 }, schedulePublish: true }, max: 50 },
   // Drafts sit next to the published copy: the REST read is for signed-in staff; the site
   // reads through the Local API with `draft: false`.
   access: { read: isEditorOrAdmin, update: isEditorOrAdmin },

@@ -36,7 +36,7 @@ export const Testimonials: CollectionConfig = {
       en: 'Merchant quotes on the home page. Placeholders never show on the site.',
     },
   },
-  versions: { drafts: { autosave: { interval: 1500 }, schedulePublish: true }, maxPerDoc: 10 },
+  versions: { drafts: { autosave: { interval: 1500 }, schedulePublish: true }, maxPerDoc: 20 },
   access: {
     read: publishedOrStaff,
     create: isEditorOrAdmin,
