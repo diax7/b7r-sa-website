@@ -76,6 +76,11 @@ test.describe('product detail (BRD 6.6)', () => {
     await expect(chart.locator('tbody tr')).toHaveCount(5);
     await expect(chart.locator('th[scope="col"]')).toHaveCount(4);
     await expect(page.locator('[data-size-chart-unit]')).toHaveText('القياسات بالسنتيمتر');
+    // Breadcrumb and footer contact links are 44 px tall hit areas (BRD 6.17, audit item 18).
+    const crumb = (await page.locator('nav[aria-label] ol a').first().boundingBox())!;
+    expect(crumb.height).toBeGreaterThanOrEqual(44);
+    const mail = (await page.locator('footer a[href^="mailto:"]').boundingBox())!;
+    expect(mail.height).toBeGreaterThanOrEqual(44);
     // Three other products in catalogue order, wrapping around.
     const related = page.locator('[aria-labelledby="product-related-title"]').getByRole('link');
     await expect(related).toHaveCount(3);

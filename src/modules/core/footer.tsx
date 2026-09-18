@@ -110,12 +110,13 @@ export function Footer({
                 </li>
               ))}
             </ul>
+            {/* A 44 px hit area on the two contacts (BRD 6.17), the row's height unchanged. */}
             <p className="flex flex-wrap items-center justify-center gap-x-3 text-small text-white/75 lg:justify-start">
-              <a href={`mailto:${site.contact.email}`} className={cn(linkCls, 'py-0')}>
+              <a href={`mailto:${site.contact.email}`} className={cn(linkCls, 'py-2.5 -my-2.5')}>
                 <bdi dir="ltr">{site.contact.email}</bdi>
               </a>
               <span aria-hidden="true">·</span>
-              <a href={`tel:${site.contact.phoneIntl}`} className={cn(linkCls, 'py-0')}>
+              <a href={`tel:${site.contact.phoneIntl}`} className={cn(linkCls, 'py-2.5 -my-2.5')}>
                 <bdi dir="ltr">{displayPhone(locale, site.contact)}</bdi>
               </a>
             </p>
