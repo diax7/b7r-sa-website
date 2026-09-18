@@ -26,32 +26,35 @@ describe('resolveSlug (ADR-032): redirect, then page, then nothing', () => {
 });
 
 const custom = (url: string) => ({ type: 'custom' as const, url });
+/** The English side of a refusal, or null: the rules are the same in both languages. */
+const problem = (...args: Parameters<typeof redirectProblem>) =>
+  redirectProblem(...args)?.en ?? null;
 
 describe('redirectProblem: the rules an admin row must pass', () => {
   it('accepts a single-segment source to a site path or an https URL', () => {
-    expect(redirectProblem('/showcase', custom('/products'), [])).toBeNull();
-    expect(redirectProblem('/promo', custom('https://example.com/x'), [])).toBeNull();
-    expect(redirectProblem('/old', { type: 'reference' }, [])).toBeNull();
+    expect(problem('/showcase', custom('/products'), [])).toBeNull();
+    expect(problem('/promo', custom('https://example.com/x'), [])).toBeNull();
+    expect(problem('/old', { type: 'reference' }, [])).toBeNull();
   });
 
   it('refuses nested, malformed or code-owned sources', () => {
-    expect(redirectProblem('/a/b', custom('/x'), [])).toMatch(/one-segment/);
-    expect(redirectProblem('showcase', custom('/x'), [])).toMatch(/one-segment/);
-    expect(redirectProblem('/Show', custom('/x'), [])).toMatch(/one-segment/);
-    expect(redirectProblem('/about', custom('/x'), [])).toMatch(/live page/);
-    expect(redirectProblem('/products', custom('/x'), [])).toMatch(/live page/);
-    expect(redirectProblem('/en', custom('/'), [])).toMatch(/live page/);
-    expect(redirectProblem(undefined, custom('/x'), [])).not.toBeNull();
+    expect(problem('/a/b', custom('/x'), [])).toMatch(/one-segment/);
+    expect(problem('showcase', custom('/x'), [])).toMatch(/one-segment/);
+    expect(problem('/Show', custom('/x'), [])).toMatch(/one-segment/);
+    expect(problem('/about', custom('/x'), [])).toMatch(/live page/);
+    expect(problem('/products', custom('/x'), [])).toMatch(/live page/);
+    expect(problem('/en', custom('/'), [])).toMatch(/live page/);
+    expect(problem(undefined, custom('/x'), [])).not.toBeNull();
   });
 
   it('refuses http, javascript and protocol-relative targets, self and loops', () => {
-    expect(redirectProblem('/old', custom('http://example.com'), [])).toMatch(/https/);
-    expect(redirectProblem('/old', custom('javascript:alert(1)'), [])).toMatch(/https/);
-    expect(redirectProblem('/old', custom('//evil.com'), [])).toMatch(/https/);
-    expect(redirectProblem('/old', custom('/old'), [])).toMatch(/same as From/);
-    expect(redirectProblem('/old', custom('/old/x'), [])).toMatch(/same as From/);
-    expect(redirectProblem('/old', custom('/older'), ['/older'])).toMatch(/no chains/);
-    expect(redirectProblem('/old', custom('/older'), ['/other'])).toBeNull();
+    expect(problem('/old', custom('http://example.com'), [])).toMatch(/https/);
+    expect(problem('/old', custom('javascript:alert(1)'), [])).toMatch(/https/);
+    expect(problem('/old', custom('//evil.com'), [])).toMatch(/https/);
+    expect(problem('/old', custom('/old'), [])).toMatch(/same as From/);
+    expect(problem('/old', custom('/old/x'), [])).toMatch(/same as From/);
+    expect(problem('/old', custom('/older'), ['/older'])).toMatch(/no chains/);
+    expect(problem('/old', custom('/older'), ['/other'])).toBeNull();
   });
 
   it('reads the page id out of a reference target so the same self/loop rules apply', () => {
@@ -63,8 +66,8 @@ describe('redirectProblem: the rules an admin row must pass', () => {
     ).toBe(7);
     expect(referenceId({ type: 'custom', url: '/x' })).toBeUndefined();
     // Resolved to its path, a reference loops like a custom URL would.
-    expect(redirectProblem('/a', custom('/b'), ['/b'])).toMatch(/no chains/);
-    expect(redirectProblem('/x', custom('/x'), [])).toMatch(/same as From/);
+    expect(problem('/a', custom('/b'), ['/b'])).toMatch(/no chains/);
+    expect(problem('/x', custom('/x'), [])).toMatch(/same as From/);
   });
 
   it('labels the plugin fields in Arabic without changing their names', () => {
@@ -79,7 +82,11 @@ describe('redirectProblem: the rules an admin row must pass', () => {
           { name: 'url', type: 'text' },
         ],
       },
-      { name: 'type', type: 'select', options: [] },
+      {
+        name: 'type',
+        type: 'select',
+        options: ['301', { label: '302 - Temporary', value: '302' }],
+      },
     ]);
     const names = fields.map((f) => ('name' in f ? f.name : ''));
     expect(names).toEqual(['from', 'to', 'type']);
@@ -89,5 +96,10 @@ describe('redirectProblem: the rules an admin row must pass', () => {
     expect(labels.every((l) => l && 'ar' in l)).toBe(true);
     const type = fields.find((f) => 'name' in f && f.name === 'type');
     expect(type && 'defaultValue' in type ? type.defaultValue : null).toBe('301');
+    // The plugin's "301 - Permanent" reads as a word in both languages (audit 2026-09-18, 2.2).
+    expect(type && 'options' in type ? type.options : null).toEqual([
+      { value: '301', label: { ar: 'دائم (301)', en: 'Permanent (301)' } },
+      { value: '302', label: { ar: 'مؤقت (302)', en: 'Temporary (302)' } },
+    ]);
   });
 });

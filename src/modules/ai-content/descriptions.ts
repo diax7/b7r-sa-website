@@ -34,6 +34,10 @@ export const AI_SETTINGS_DESCRIPTIONS: Described = {
     ar: 'ادعاءات لا يجوز أن يقدّمها المحرّك (شهادات، أرقام غير مثبتة)، سطر لكل ادعاء.',
     en: 'Claims the engine may never make (certifications, unproven numbers), one per line.',
   },
+  'images.pexelsKey': {
+    ar: 'مفتاح Pexels لبحث صور الغلاف عندما يكون مصدر الغلاف «صورة من Pexels». يُحفظ مشفّراً ولا يُعرض مرة أخرى؛ اتركه كما هو للإبقاء عليه، أو امسحه لإزالته.',
+    en: 'The Pexels key for the cover search when the cover source is "A stock photo (Pexels)". Stored encrypted and never shown again; leave the mask to keep it, clear it to remove it.',
+  },
   'images.imageStyle': {
     ar: 'كلمات تُضاف إلى البحث عن صورة الغلاف من Pexels: «استوديو، خلفية بيضاء». فارغ يبحث بعنوان المقال فقط.',
     en: 'Words appended to the Pexels search for a cover: "studio, white background". Empty searches by the title alone.',
@@ -61,6 +65,90 @@ export const AI_SETTINGS_DESCRIPTIONS: Described = {
   'notifications.failureAlerts': {
     ar: 'رسالة فورية إلى بريد التنبيهات عند فشل تشغيل.',
     en: 'An e-mail to the notification address as soon as a run fails.',
+  },
+};
+
+/** Runs: what each column of a log row holds (ADR-042, ADR-047). Read-only. */
+export const AI_RUNS_DESCRIPTIONS: Described = {
+  label: {
+    ar: 'ما فعلته الجولة بكلمة: نوعها وعنوان الموضوع، كما يظهر في القائمة ولوحة التحكم.',
+    en: 'What the run did, in a line: its kind and the topic, as the list and the dashboard show it.',
+  },
+  kind: {
+    ar: 'كتابة مقال جديد، تحديث مقال قائم عند تغيّر الحقائق، أو جولة سجل الاستشهاد الصباحية.',
+    en: 'A new post written, an existing post refreshed when the facts changed, or a morning run of the citation ledger.',
+  },
+  status: {
+    ar: 'يعمل الآن، انتهى، فشل (السبب في الخطأ)، أو تُخطّي قبل البداية (الحدود أو المفتاح).',
+    en: 'Running now, done, failed (the reason is under Error), or skipped before it started (a cap or the switch).',
+  },
+  provider: {
+    ar: 'خدمة الذكاء الاصطناعي التي استُخدمت وقتها، كما كانت: OpenAI، Anthropic، Google.',
+    en: 'The AI service used at the time, as it was: OpenAI, Anthropic, Google.',
+  },
+  model: {
+    ar: 'معرّف النموذج كما كان وقتها: gpt-4.1-mini.',
+    en: 'The model id at the time: gpt-4.1-mini.',
+  },
+  score: {
+    ar: 'درجة المراجعة الذاتية من 100؛ المقال ينشر عند بلوغ حدّ الجودة في إعدادات المحرّك.',
+    en: 'The self-review score out of 100; the post publishes when it reaches the quality threshold in the engine settings.',
+  },
+  tokensIn: {
+    ar: 'رموز الإدخال التي قرأها النموذج في الجولة كلها؛ منها تُقدَّر التكلفة.',
+    en: 'The input tokens the model read over the whole run; the cost estimate starts here.',
+  },
+  tokensOut: {
+    ar: 'رموز الإخراج التي كتبها النموذج في الجولة كلها؛ منها تُقدَّر التكلفة.',
+    en: 'The output tokens the model wrote over the whole run; the cost estimate starts here.',
+  },
+  costUsd: {
+    ar: 'التكلفة التقديرية بالدولار من الرموز وأسعار الاتصال؛ تُحسب في سقف اليوم وحدّ الاتصال الشهري.',
+    en: "The estimated cost in USD from the tokens and the connection's rates; counted against the daily cap and the connection's monthly limit.",
+  },
+  durationMs: {
+    ar: 'مدة الجولة بالمللي ثانية من البداية إلى النهاية (1000 = ثانية واحدة).',
+    en: 'How long the run took, in milliseconds from start to finish (1000 is one second).',
+  },
+  systemPromptVersion: {
+    ar: 'رقم نسخة التعليمات الأساسية التي كُتب بها المقال؛ يرتفع كلما تغيّرت في إعدادات المحرّك.',
+    en: 'The version of the system prompt the post was written with; it rises whenever the prompt changes in the engine settings.',
+  },
+  connection: {
+    ar: 'الاتصال الذي حُسبت عليه التكلفة؛ يُفرَّغ إن حُذف الاتصال.',
+    en: 'The connection the cost counted against; emptied when the connection is deleted.',
+  },
+  topic: {
+    ar: 'الموضوع الذي كُتب عنه.',
+    en: 'The topic it wrote about.',
+  },
+  post: {
+    ar: 'المقال الذي نتج عن الجولة، مسودة أو منشوراً.',
+    en: 'The post the run produced, as a draft or published.',
+  },
+  error: {
+    ar: 'سبب الفشل أو التخطّي كما سجّله المحرّك، بلا مفاتيح ولا روابط.',
+    en: 'Why the run failed or was skipped, as the engine recorded it, keys and links removed.',
+  },
+  startedAt: {
+    ar: 'لحظة بداية الجولة.',
+    en: 'When the run started.',
+  },
+  finishedAt: {
+    ar: 'لحظة انتهاء الجولة؛ فارغ لجولة ما زالت تعمل.',
+    en: 'When the run finished; empty while it is still running.',
+  },
+  rubric: {
+    ar: 'تفصيل درجة المراجعة الذاتية: كل معيار وما خسره المقال فيه.',
+    en: 'The self-review score, criterion by criterion: what the post lost on each.',
+  },
+  steps: {
+    ar: 'خطوات الجولة بترتيبها مع وقت كل خطوة ونتيجتها: المخطط، الكتابة، المراجعة، الصورة، النشر.',
+    en: 'The steps of the run in order, each with its time and outcome: outline, draft, review, cover, publish.',
+  },
+  outline: {
+    ar: 'مخطط المقال الذي كُتب منه؛ التحديث الآلي يعيد التوليد منه عند تغيّر الحقائق.',
+    en: 'The outline the post was written from; the freshness job regenerates from it when the facts change.',
   },
 };
 
@@ -100,7 +188,7 @@ export const AI_TOPICS_DESCRIPTIONS: Described = {
   },
   status: {
     ar: 'أين الموضوع في الدورة: في القائمة، مجدول، يُكتب الآن، منشور، فشل، مرفوض.',
-    en: 'Where the topic is in the cycle: backlog, scheduled, generating, published, failed, rejected.',
+    en: 'Where the topic is in the cycle: in the backlog, scheduled, being written, published, failed, rejected.',
   },
   source: {
     ar: 'من أين جاء الموضوع: القائمة الأولى، مُضاف يدوياً، أو من Search Console.',
@@ -109,5 +197,17 @@ export const AI_TOPICS_DESCRIPTIONS: Described = {
   notes: {
     ar: 'ملاحظات للمحرّك قبل الكتابة: زاوية، مثال، ما يجب تجنّبه. لا تظهر في الموقع.',
     en: 'Notes for the engine before it writes: an angle, an example, what to avoid. Not shown on the site.',
+  },
+  post: {
+    ar: 'المقال الذي كتبه المحرّك عن هذا الموضوع؛ يفتح المقال نفسه.',
+    en: 'The post the engine wrote for this topic; opens the post itself.',
+  },
+  lastRun: {
+    ar: 'آخر جولة عملت على هذا الموضوع: خطواتها ودرجتها وتكلفتها.',
+    en: 'The last run that worked on this topic: its steps, score and cost.',
+  },
+  lastError: {
+    ar: 'سبب فشل آخر جولة كما سجّله المحرّك؛ يُمحى عندما تنجح جولة.',
+    en: 'Why the last run failed, as the engine recorded it; cleared when a run succeeds.',
   },
 };

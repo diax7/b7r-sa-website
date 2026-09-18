@@ -126,7 +126,7 @@ export const adminStrings = {
     postTitle: 'Content engine',
     regenerate: 'Regenerate',
     regenerateHint: 'A new run from the topic replaces the text under the same address and cover.',
-    importTitle: 'Bulk add from CSV',
+    importTitle: 'Add topics from CSV',
     importHint:
       'Columns: title, hub (slug), primaryKeyword, secondaryKeywords (separated by ;), intent, priority. A header row is fine.',
     importPlaceholder: 'title,hub,primaryKeyword,secondaryKeywords,intent,priority',
@@ -191,6 +191,14 @@ export const adminStrings = {
     yesNo: ['Yes', 'No'] as const,
     onOff: ['On', 'Off'] as const,
     notYet: 'Not yet',
+  },
+  readOnly: {
+    /** A read-only date the jobs have not written yet (a connection never tested). */
+    noDate: 'Not yet',
+  },
+  jsonView: {
+    copy: 'Copy',
+    copied: 'Copied',
   },
   views: {
     adminsOnlyTitle: 'Admins only',
@@ -598,7 +606,7 @@ export const adminStringsAr: AdminStrings = {
     postTitle: 'محرّك المحتوى',
     regenerate: 'أعد التوليد',
     regenerateHint: 'جولة جديدة من الموضوع تستبدل النص وتبقي الرابط والغلاف كما هما.',
-    importTitle: 'إضافة دفعة من CSV',
+    importTitle: 'أضف مواضيع من CSV',
     importHint:
       'الأعمدة: title، hub (slug)، primaryKeyword، secondaryKeywords (مفصولة بـ ;)، intent، priority. لا بأس بصف عناوين.',
     importPlaceholder: 'title,hub,primaryKeyword,secondaryKeywords,intent,priority',
@@ -663,6 +671,13 @@ export const adminStringsAr: AdminStrings = {
     yesNo: ['نعم', 'لا'],
     onOff: ['مفعّل', 'متوقف'],
     notYet: 'ليس بعد',
+  },
+  readOnly: {
+    noDate: 'ليس بعد',
+  },
+  jsonView: {
+    copy: 'انسخ',
+    copied: 'نُسخ',
   },
   views: {
     adminsOnlyTitle: 'للمديرين فقط',
@@ -933,9 +948,19 @@ export const adminStringsAr: AdminStrings = {
   },
 };
 
+/**
+ * Whether a UI language is Arabic: the one comparison behind the strings tree, the number
+ * and date locale (`admin/format.ts`) and a validation message's language
+ * (`cms/fields/message.ts`). The content locale (which language of a document is open) is
+ * the other axis (ADR-056) and never goes through here.
+ */
+export function isArabic(language: string | undefined): boolean {
+  return language === 'ar';
+}
+
 /** The tree for a UI language: Arabic for `ar`, English for anything else (the fallback). */
 export function adminStringsFor(language: string): AdminStrings {
-  return language === 'ar' ? adminStringsAr : adminStrings;
+  return isArabic(language) ? adminStringsAr : adminStrings;
 }
 
 /** Payload's own rule for the document direction, so our components agree with `html[dir]`. */

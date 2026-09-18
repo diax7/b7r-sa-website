@@ -586,6 +586,11 @@ and what it does, then its limit or an example. They live in one map per entity
 sentence, edit the map; to add a field, add its key (the config test fails until it exists
 and refuses a key that names no field).
 
+The document views show no API tab (the audit of 2026-09-18 took it out: nothing in the
+site's workflow needs it). An admin who wants a document as the API returns it opens
+`/api/payload/<collection>/<id>?depth=0` (a global: `/api/payload/globals/<slug>?depth=0`)
+while signed in; `?locale=all` returns every language of a localised field.
+
 ## The English site (Level 5, ADR-043)
 
 The site is in English once `site-settings.brandName` and `site-settings.menu.ctaLabel` have English

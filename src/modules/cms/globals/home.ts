@@ -1,12 +1,13 @@
-import type { Field, GlobalConfig } from 'payload';
+import type { Field, GlobalConfig, PayloadRequest } from 'payload';
 import { isEditorOrAdmin } from '@/modules/cms/access';
 import { revalidateGlobal } from '@/modules/cms/hooks/revalidate';
+import { inLanguage } from '@/modules/cms/fields/message';
 import { applyGlobalTranslations } from '@/modules/cms/hooks/translations';
 import { savedByField, stampSavedByGlobal } from '@/modules/cms/fields/saved-by';
 import { previewUrl } from '@/lib/preview-token';
 import { HERO_CHIPS_MAX, HERO_OVERLAY_DEFAULT, HEX_COLOR } from '@/content/schema';
 import { globalComponents } from '@/modules/cms/admin/document/config';
-import { adminGroup } from '@/modules/cms/admin/icons';
+import { adminGroup, iconOptions } from '@/modules/cms/admin/icons';
 import { HOME_DESCRIPTIONS } from '@/modules/cms/admin/descriptions/site';
 import { describeFields } from '@/modules/cms/admin/descriptions/describe';
 
@@ -40,9 +41,11 @@ const enabled = (section: { ar: string; en: string }): Field => ({
 });
 
 const header = (withEyebrow = true, withLead = true): Field[] => [
-  ...(withEyebrow ? [text('eyebrow', { ar: 'العنوان الصغير', en: 'Eyebrow' })] : []),
+  ...(withEyebrow
+    ? [text('eyebrow', { ar: 'العنوان الصغير', en: 'Small line above the title' })]
+    : []),
   text('title', { ar: 'العنوان', en: 'Title' }),
-  ...(withLead ? [text('lead', { ar: 'الوصف', en: 'Lead' })] : []),
+  ...(withLead ? [text('lead', { ar: 'السطر تحت العنوان', en: 'Line under the title' })] : []),
 ];
 
 /**
@@ -56,6 +59,7 @@ export const Home: GlobalConfig = {
   slug: 'home',
   label: { ar: 'الصفحة الرئيسية', en: 'Home page' },
   admin: {
+    hideAPIURL: true,
     components: globalComponents('home', { localized: true }),
     group: adminGroup('site'),
     custom: {
@@ -87,7 +91,7 @@ export const Home: GlobalConfig = {
         tabs: [
           {
             name: 'hero',
-            label: { ar: 'الواجهة (Hero)', en: 'Hero' },
+            label: { ar: 'الشرائح الافتتاحية', en: 'Opening slides' },
             fields: [
               {
                 name: 'slides',
@@ -102,7 +106,7 @@ export const Home: GlobalConfig = {
                 },
                 fields: [
                   text('headline', { ar: 'العنوان الرئيسي', en: 'Headline' }),
-                  text('subline', { ar: 'السطر الثاني', en: 'Subline' }),
+                  text('subline', { ar: 'السطر تحت العنوان', en: 'Line under the headline' }),
                   {
                     type: 'row',
                     // Per language (ADR-044): the English document mirrors the layout, so its photo
@@ -170,30 +174,30 @@ export const Home: GlobalConfig = {
                       },
                       components: { Field: '@/modules/cms/admin/fields/color-field#ColorField' },
                     },
-                    validate: (value: unknown) =>
+                    validate: (value: unknown, { req }: { req: PayloadRequest }) =>
                       typeof value === 'string' && HEX_COLOR.test(value)
                         ? true
-                        : 'اكتب لوناً بصيغة #rrggbb',
+                        : inLanguage(req, {
+                            ar: 'اكتب لوناً بصيغة #rrggbb',
+                            en: 'A colour written as #rrggbb',
+                          }),
                   },
                 ],
               },
               {
                 type: 'row',
                 fields: [
-                  text('primaryCta', { ar: 'الزر الرئيسي', en: 'Primary CTA' }),
-                  text('secondaryCta', { ar: 'الرابط الثانوي', en: 'Secondary link' }),
+                  text('primaryCta', { ar: 'الزر الرئيسي', en: 'Main button' }),
+                  text('secondaryCta', { ar: 'الرابط بجانب الزر', en: 'Link beside the button' }),
                 ],
               },
-              text('microcopy', {
-                ar: 'سطر الرصيد الترحيبي (شريط الحقائق في «من نحن»)',
-                en: 'Welcome-credit line (the About facts band)',
-              }),
+              text('microcopy', { ar: 'سطر الرصيد الترحيبي', en: 'Welcome credit line' }),
               {
                 name: 'chips',
                 type: 'array',
                 minRows: 0,
                 maxRows: HERO_CHIPS_MAX,
-                label: { ar: 'شارات الإثبات', en: 'Proof chips' },
+                label: { ar: 'الشارات تحت الأزرار', en: 'Small badges under the buttons' },
                 labels: {
                   singular: { ar: 'شارة', en: 'Chip' },
                   plural: { ar: 'الشارات', en: 'Chips' },
@@ -237,14 +241,21 @@ export const Home: GlobalConfig = {
                     en: 'Published products only; one unpublished later drops out of the strip until it is published again.',
                   },
                 },
-                validate: (value: unknown) => {
+                validate: (value: unknown, { req }: { req: PayloadRequest }) => {
                   const ids = Array.isArray(value)
                     ? value.map((v) =>
                         typeof v === 'object' && v ? (v as { id?: unknown }).id : v,
                       )
                     : [];
-                  if (ids.length !== STRIP_SIZE) return `اختر ${STRIP_SIZE} منتجات بالضبط`;
-                  if (new Set(ids.map(String)).size !== STRIP_SIZE) return 'كل منتج مرة واحدة';
+                  if (ids.length !== STRIP_SIZE) {
+                    return inLanguage(req, {
+                      ar: `اختر ${STRIP_SIZE} منتجات بالضبط`,
+                      en: `Pick exactly ${STRIP_SIZE} products`,
+                    });
+                  }
+                  if (new Set(ids.map(String)).size !== STRIP_SIZE) {
+                    return inLanguage(req, { ar: 'كل منتج مرة واحدة', en: 'Each product once' });
+                  }
                   return true;
                 },
               },
@@ -257,7 +268,7 @@ export const Home: GlobalConfig = {
               ar: 'قسم المصمّم والحاسبة: يجرّب الزائر تصميماً على منتج ويرى ربحه قبل أن يسجّل.',
               en: 'The designer and calculator section: a visitor tries a design on a product and sees the profit before signing up.',
             },
-            fields: [...header(), text('cta', { ar: 'الزر', en: 'CTA' })],
+            fields: [...header(), text('cta', { ar: 'الزر', en: 'Button' })],
           },
           {
             name: 'steps',
@@ -322,7 +333,7 @@ export const Home: GlobalConfig = {
                     name: 'icon',
                     type: 'select',
                     required: true,
-                    options: WHY_US_ICONS.map((i) => ({ label: i, value: i })),
+                    options: iconOptions(WHY_US_ICONS),
                     label: { ar: 'الأيقونة', en: 'Icon' },
                     admin: {
                       components: { Field: '@/modules/cms/admin/fields/icon-select#IconSelect' },
@@ -345,8 +356,8 @@ export const Home: GlobalConfig = {
           },
           {
             name: 'integrations',
-            label: { ar: 'المتاجر المتصلة', en: 'Integrations' },
-            fields: [enabled({ ar: 'المتاجر المتصلة', en: 'Integrations' }), ...header(false)],
+            label: { ar: 'المتاجر المتصلة', en: 'Connected stores' },
+            fields: [enabled({ ar: 'المتاجر المتصلة', en: 'Connected stores' }), ...header(false)],
           },
           {
             name: 'faq',
@@ -363,7 +374,7 @@ export const Home: GlobalConfig = {
           },
           {
             name: 'ribbon',
-            label: { ar: 'شريط الدعوة', en: 'Ribbon' },
+            label: { ar: 'شريط الدعوة', en: 'Bottom banner' },
             description: {
               ar: 'شريط الدعوة أسفل كل صفحة من الموقع، فوق التذييل؛ يُحرَّر هنا مرة واحدة.',
               en: 'The CTA ribbon at the bottom of every page of the site, above the footer; edited here once.',

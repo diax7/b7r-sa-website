@@ -1,6 +1,8 @@
 import {
   BoldFeature,
+  FixedToolbarFeature,
   HeadingFeature,
+  InlineToolbarFeature,
   ItalicFeature,
   lexicalEditor,
   LinkFeature,
@@ -11,24 +13,29 @@ import {
 } from '@payloadcms/richtext-lexical';
 import type { Block, Field } from 'payload';
 import { CARD_ICONS, FAQ_SELECTIONS } from '@/content/schema';
+import { iconOptions } from '@/modules/cms/admin/icons';
 
 /**
  * The rich-text feature set (BRD 9.5): H2/H3 (the page owns its H1), bold, italic, lists,
- * links to the site's pages and products or a URL, images from the media library. No H1,
- * no alignment, no code, no tables; the «CTA block» custom node is deferred (ADR-031).
+ * links to the site's pages and products or a URL, images from the media library, and the
+ * two toolbars (admin audit 2026-09-18, 2.3): a fixed one above the text and one that
+ * follows a selection. No H1, no alignment, no code, no tables; the «CTA block» custom node
+ * is deferred (ADR-031).
  */
-export const richTextEditor = lexicalEditor({
-  features: [
-    ParagraphFeature(),
-    HeadingFeature({ enabledHeadingSizes: ['h2', 'h3'] }),
-    BoldFeature(),
-    ItalicFeature(),
-    UnorderedListFeature(),
-    OrderedListFeature(),
-    LinkFeature({ enabledCollections: ['pages', 'products'] }),
-    UploadFeature({ enabledCollections: ['media'] }),
-  ],
-});
+export const PAGE_TEXT_FEATURES = [
+  ParagraphFeature(),
+  HeadingFeature({ enabledHeadingSizes: ['h2', 'h3'] }),
+  BoldFeature(),
+  ItalicFeature(),
+  UnorderedListFeature(),
+  OrderedListFeature(),
+  LinkFeature({ enabledCollections: ['pages', 'products'] }),
+  UploadFeature({ enabledCollections: ['media'] }),
+  FixedToolbarFeature(),
+  InlineToolbarFeature(),
+];
+
+export const richTextEditor = lexicalEditor({ features: PAGE_TEXT_FEATURES });
 
 /**
  * The page blocks (BRD 9.4, 9.5; ADR-031): each one is a section the designed pages already
@@ -133,7 +140,7 @@ export const CardsBlock: Block = {
               type: 'select',
               admin: { components: { Field: '@/modules/cms/admin/fields/icon-select#IconSelect' } },
               required: true,
-              options: CARD_ICONS.map((i) => ({ label: i, value: i })),
+              options: iconOptions(CARD_ICONS),
               label: { ar: 'الأيقونة', en: 'Icon' },
             },
             text('title', { ar: 'العنوان', en: 'Title' }),

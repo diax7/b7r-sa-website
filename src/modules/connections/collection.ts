@@ -3,11 +3,13 @@ import type {
   CollectionBeforeValidateHook,
   CollectionConfig,
   Field,
+  PayloadRequest,
 } from 'payload';
 import { hiddenUnlessAdmin, isAdmin } from '@/modules/cms/access';
 import { describeFields } from '@/modules/cms/admin/descriptions/describe';
 import { collectionComponents } from '@/modules/cms/admin/document/config';
 import { adminGroup } from '@/modules/cms/admin/icons';
+import { inLanguage } from '@/modules/cms/fields/message';
 import { savedByField, stampSavedBy } from '@/modules/cms/fields/saved-by';
 import { secretField } from '@/modules/cms/fields/secret-field';
 import { Refused } from '@/modules/cms/refused';
@@ -127,6 +129,7 @@ export const Connections: CollectionConfig = {
     plural: { ar: 'الاتصالات', en: 'Connections' },
   },
   admin: {
+    hideAPIURL: true,
     useAsTitle: 'label',
     defaultColumns: ['label', 'kind', 'model', 'enabled', 'spentThisMonthUsd', 'lastTestOk'],
     listSearchableFields: ['label', 'model'],
@@ -196,14 +199,17 @@ export const Connections: CollectionConfig = {
         type: 'text',
         label: { ar: 'عنوان الخدمة', en: 'Base URL' },
         admin: { condition: (data) => data?.['kind'] === 'openai-compatible' },
-        validate: (value: unknown, { siblingData }: { siblingData: Record<string, unknown> }) =>
+        validate: (
+          value: unknown,
+          { req, siblingData }: { req: PayloadRequest; siblingData: Record<string, unknown> },
+        ) =>
           siblingData['kind'] !== 'openai-compatible' ||
           (typeof value === 'string' && HTTPS.test(value)) ||
-          'An https:// address',
+          inLanguage(req, { ar: 'عنوان يبدأ بـ https://', en: 'An https:// address' }),
       },
       secretField(
         'apiKey',
-        { ar: 'المفتاح', en: 'Key' },
+        { ar: 'مفتاح API', en: 'API key' },
         {
           // A partial update carries no `kind`: the stored row says which.
           serviceAccountWhen: (sibling, stored) =>
@@ -211,29 +217,43 @@ export const Connections: CollectionConfig = {
             'serviceAccount',
         },
       ),
+      // The rates fill themselves from the model (audit 2026-09-18, 3.8): folded, still there.
       {
-        type: 'row',
-        admin: { condition: (data) => !isServiceKind(data?.['kind']) },
+        type: 'collapsible',
+        label: { ar: 'الأسعار', en: 'Rates' },
+        admin: { initCollapsed: true, condition: (data) => !isServiceKind(data?.['kind']) },
         fields: [
           {
-            name: 'inputPerMillionUsd',
-            type: 'number',
-            min: 0,
-            label: { ar: 'سعر المليون رمز داخل (دولار)', en: 'Input USD per 1M tokens' },
-          },
-          {
-            name: 'outputPerMillionUsd',
-            type: 'number',
-            min: 0,
-            label: { ar: 'سعر المليون رمز خارج (دولار)', en: 'Output USD per 1M tokens' },
-          },
-          {
-            name: 'monthlyLimitUsd',
-            type: 'number',
-            min: 0,
-            label: { ar: 'الحد الشهري (دولار)', en: 'Monthly limit (USD)' },
+            type: 'row',
+            fields: [
+              {
+                name: 'inputPerMillionUsd',
+                type: 'number',
+                min: 0,
+                label: {
+                  ar: 'سعر مليون رمز إدخال (دولار)',
+                  en: 'Price per million input tokens (USD)',
+                },
+              },
+              {
+                name: 'outputPerMillionUsd',
+                type: 'number',
+                min: 0,
+                label: {
+                  ar: 'سعر مليون رمز إخراج (دولار)',
+                  en: 'Price per million output tokens (USD)',
+                },
+              },
+            ],
           },
         ],
+      },
+      {
+        name: 'monthlyLimitUsd',
+        type: 'number',
+        min: 0,
+        label: { ar: 'الحد الشهري (دولار)', en: 'Monthly limit (USD)' },
+        admin: { condition: (data) => !isServiceKind(data?.['kind']) },
       },
       {
         name: 'enabled',
@@ -277,7 +297,11 @@ export const Connections: CollectionConfig = {
         name: 'lastTestAt',
         type: 'date',
         label: { ar: 'آخر اختبار', en: 'Last test' },
-        admin: { date: { pickerAppearance: 'dayAndTime' } },
+        admin: {
+          date: { pickerAppearance: 'dayAndTime' },
+          // What the read-only line says while no test has run (audit 2026-09-18, 2.11).
+          custom: { emptyText: { ar: 'لا اختبار بعد', en: 'No test yet' } },
+        },
       }),
       sidebarReadOnly({
         name: 'lastTestOk',
@@ -287,7 +311,7 @@ export const Connections: CollectionConfig = {
       sidebarReadOnly({
         name: 'lastTestMessage',
         type: 'text',
-        label: { ar: 'نتيجة آخر اختبار', en: 'Last test said' },
+        label: { ar: 'نتيجة آخر اختبار', en: 'Last test result' },
       }),
       savedByField,
     ],

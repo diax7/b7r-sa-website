@@ -1,24 +1,26 @@
 'use client';
 
 /* eslint-disable @next/next/no-img-element -- the brand SVGs are static files */
-import { useField } from '@payloadcms/ui';
-import type { SelectFieldClientComponent } from 'payload';
+import { getTranslation } from '@payloadcms/translations';
+import { useField, useTranslation } from '@payloadcms/ui';
+import type { SelectFieldClientComponent, StaticLabel } from 'payload';
 import { useId } from 'react';
 import { ChoiceGrid } from '@/modules/cms/admin/fields/choice-grid';
 import { FieldShell } from '@/modules/cms/admin/fields/field-shell';
 
-const NAMES: Record<string, string> = { salla: 'سلة', zid: 'زد', shopify: 'Shopify' };
-const optionValue = (o: { value: string } | string) => (typeof o === 'string' ? o : o.value);
-
-/** The platform select as logo tiles: the value picks the SVG that ships with the site. */
+/**
+ * The platform select as logo tiles: the value picks the SVG that ships with the site, the
+ * option's label names it («سلة», Salla).
+ */
 export const PlatformSelect: SelectFieldClientComponent = ({ field, path, readOnly }) => {
   const { value, setValue, showError, errorMessage, disabled } = useField<string>({ path });
+  const { i18n } = useTranslation();
   const id = useId();
   const choices = field.options.map((o) => {
-    const platform = optionValue(o);
+    const platform = typeof o === 'string' ? o : o.value;
     return {
       value: platform,
-      label: NAMES[platform] ?? platform,
+      label: typeof o === 'string' ? o : getTranslation(o.label as StaticLabel, i18n),
       art: (
         <img
           src={`/images/integrations/${platform}.svg`}

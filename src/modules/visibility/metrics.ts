@@ -25,6 +25,7 @@ export const Metrics: CollectionConfig = {
     plural: { ar: 'اللقطات', en: 'Snapshots' },
   },
   admin: {
+    hideAPIURL: true,
     useAsTitle: 'date',
     defaultColumns: ['date', 'source', 'updatedAt'],
     listSearchableFields: ['date', 'source'],
@@ -61,9 +62,9 @@ export const Metrics: CollectionConfig = {
             type: 'select',
             required: true,
             options: [
-              { value: 'search-console', label: 'Search Console' },
-              { value: 'bing', label: 'Bing' },
-              { value: 'pagespeed', label: 'PageSpeed' },
+              { value: 'search-console', label: { ar: 'Search Console', en: 'Search Console' } },
+              { value: 'bing', label: { ar: 'Bing', en: 'Bing' } },
+              { value: 'pagespeed', label: { ar: 'PageSpeed', en: 'PageSpeed' } },
               { value: 'score', label: { ar: 'الدرجة', en: 'Score' } },
             ],
             label: { ar: 'المصدر', en: 'Source' },

@@ -136,7 +136,7 @@ export const HOME_DESCRIPTIONS: Described = {
   },
   'integrations.title': {
     ar: 'عنوان قسم المتاجر المتصلة (H2)؛ الشعارات من مجموعة «المتاجر المتصلة».',
-    en: 'The connected-stores heading (H2); the logos come from Store integrations.',
+    en: 'The connected-stores heading (H2); the logos come from Connected stores.',
   },
   'integrations.lead': {
     ar: 'السطر تحت عنوان المتاجر المتصلة.',
@@ -179,8 +179,8 @@ export const SITE_SETTINGS_DESCRIPTIONS: Described = {
     en: 'The consultation booking link (Cal.com) for the contact page booking card. Empty opens WhatsApp with the prefilled message instead.',
   },
   brandName: {
-    ar: 'اسم العلامة: الاسم المقروء للشعار في الترويسة والتذييل، اسم الموقع في بطاقات المشاركة، السطر الأول في llms.txt، بيان التطبيق، وبيانات المنظمة لمحركات البحث.',
-    en: "The brand's name: the logo's accessible name in the header and the footer, the site name on share cards, the first line of llms.txt, the web app manifest, and the organisation data search engines read.",
+    ar: 'اسم العلامة: اسم الموقع في بطاقات المشاركة، والسطر الأول في llms.txt، والاسم الذي تقرؤه محركات البحث.',
+    en: "The brand's name: the site name on share cards, the first line of llms.txt and the name search engines read.",
   },
   brandNameLatin: {
     ar: 'الاسم اللاتيني للعلامة: الاسم البديل في بيانات المنظمة لمحركات البحث، وورقة حقائق المحرّك. B7R Print.',
@@ -226,6 +226,38 @@ export const SITE_SETTINGS_DESCRIPTIONS: Described = {
     ar: 'رابط حساب تيك توك الكامل: https://tiktok.com/@b7rprint',
     en: 'The full TikTok profile link: https://tiktok.com/@b7rprint',
   },
+  'menu.primary': {
+    ar: 'روابط الترويسة بترتيبها، وقائمة الجوال، وعمود «روابط» في التذييل.',
+    en: 'The header links in order, the phone menu, and the "Links" column of the footer.',
+  },
+  'menu.primary.matchPrefix': {
+    ar: 'يبقى الرابط مُعلَّماً في الترويسة لكل صفحة يبدأ مسارها بهذا. مثال: /products',
+    en: 'The link stays marked as the current one on every page whose path starts with this. Example: /products',
+  },
+  'menu.policies': {
+    ar: 'عمود «السياسات» في التذييل: الشروط، الشحن، الخصوصية، الأسئلة الشائعة.',
+    en: 'The "Policies" column of the footer: terms, shipping, privacy, FAQ.',
+  },
+  'menu.policies.matchPrefix': {
+    ar: 'لا يُقرأ لروابط التذييل؛ اتركه فارغاً.',
+    en: 'Not read for footer links; leave it empty.',
+  },
+  'menu.ctaLabel': {
+    ar: 'نص الزر الأزرق في الترويسة وفي قائمة الجوال.',
+    en: 'The blue button in the header and in the phone menu.',
+  },
+  'menu.skipLinkLabel': {
+    ar: 'رابط يظهر عند الضغط على Tab أول مرة، يقفز إلى المحتوى.',
+    en: 'The link a keyboard user sees on the first Tab, jumping past the header to the content.',
+  },
+  'menu.menuOpenLabel': {
+    ar: 'الاسم الذي يقرؤه قارئ الشاشة لزر القائمة في الجوال وهي مغلقة.',
+    en: "What a screen reader calls the phone menu's burger while the menu is closed.",
+  },
+  'menu.menuCloseLabel': {
+    ar: 'الاسم الذي يقرؤه قارئ الشاشة لزر القائمة في الجوال وهي مفتوحة.',
+    en: "What a screen reader calls the phone menu's button while the menu is open.",
+  },
   'menu.primary.label': {
     ar: 'نص الرابط في الترويسة، وقائمة الجوال، وعمود «روابط» في التذييل.',
     en: 'The link text in the header, the phone menu and the "Links" column of the footer.',
@@ -267,8 +299,8 @@ export const SITE_SETTINGS_DESCRIPTIONS: Described = {
     en: 'The Umami website id (a UUID). Works only together with the script URL.',
   },
   ctaShiny: {
-    ar: 'يمنح كل أزرار الدعوة الرئيسية في الموقع (الترويسة، قائمة الجوال، الشرائح، الفيديو، شريط الدعوة، صفحة المنتج، المصمّم، المقالات) لمعة بلوني العلامة تتحرك عند المرور ووميضاً خفيفاً كل بضع ثوانٍ؛ بلا تعبئة تبقى الأزرار الزرقاء الكلاسيكية.',
-    en: "Gives every main call-to-action button on the site (the header, the phone menu, the slides, the video, the ribbon, the product page, the designer, the posts) a sheen in the brand's two blues that slides on hover and a light glint every few seconds; unticked keeps the classic blue buttons.",
+    ar: 'مفعّل: تكتسب الأزرار الرئيسية في كل الصفحات لمعة متحركة بلوني العلامة. معطّل: الأزرار الزرقاء الكلاسيكية.',
+    en: "On: the main buttons on every page get a moving sheen in the brand's two blues. Off: the classic blue buttons.",
   },
   legalEntity: {
     ar: 'لا يقرؤه الموقع اليوم: سطر الحقوق في التذييل والصفحات القانونية نصّها ثابت في الكود. محفوظ لليوم الذي يُقرأ فيه.',
@@ -333,6 +365,10 @@ export const USER_DESCRIPTIONS: Described = {
 };
 
 export const MEDIA_DESCRIPTIONS: Described = {
+  alt: {
+    ar: 'ما يقرؤه قارئ الشاشة لهذه الصورة، بلغة الشارة بجانب العنوان. مطلوب.',
+    en: 'What a screen reader says for this image, in the language of the pill beside the label. Required.',
+  },
   credit: {
     ar: 'مصدر الصورة أو المصوّر، للتوثيق الداخلي. لا يظهر في الموقع.',
     en: "The photo's source or photographer, for the record. Not shown on the site.",
