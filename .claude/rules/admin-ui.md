@@ -2,8 +2,8 @@
 
 Read `docs/ADMIN-DESIGN-SYSTEM.md` before touching anything under `src/modules/cms/**`,
 `src/app/(payload)/**` or a Payload collection/global config. These rules are enforced by
-`tests/admin-config.test.ts` (the config shape, the icons, the sidebar registry, the locale
-note), `check:rtl` and the admin e2e.
+`tests/admin-config.test.ts` (the config shape, the icons, the sidebar registry, the
+bilingual census), `check:rtl` and the admin e2e.
 
 ## Adding or changing a collection or global
 
@@ -15,10 +15,10 @@ note), `check:rtl` and the admin e2e.
    global; a group's icon must not repeat its first entry's. Missing = type error + failing
    test; the test also checks that `admin.group` and the registry agree.
 2b. `admin.custom.shows` in Arabic + English (where on the site the thing shows) and the
-   header registered through `collectionComponents(slug, { localized })` /
-   `globalComponents(slug, { localized })` from `admin/document/config.ts` (the description
-   slot; the locale note rides along when the config has per-language fields, and says which
-   fields are side by side, rule 13).
+   header registered through `collectionComponents(slug)` / `globalComponents(slug)` from
+   `admin/document/config.ts` (the description slot, nothing else: there is no locale note
+   and no locale switch, ADR-057; both languages of every field are in the form, rules 13
+   and 15).
 3. `labels.singular` / `labels.plural` (collections) or `label` (globals) in Arabic + English;
    nouns, never sentences.
 4. `admin.description` on the entity: one sentence about what it is *for the site*, not how
@@ -57,8 +57,13 @@ note), `check:rtl` and the admin e2e.
    `@source not` of `globals.css` (`tests/admin-css.test.ts`); the e2e asserts the shell.
 12. A visibility rule (ADR-049) is a pure function over the snapshot in
    `src/modules/visibility/rules/`, with its sentence and guide beside it; its weight lives in
-   `rules/weights.ts`; a guide always links to the field that fixes the finding, in the
-   locale that is missing; a thing the site guarantees by construction is a fact, not a rule.
+   `rules/weights.ts`; a guide always links to the field that fixes the finding
+   (`editHref(adminRoute, collection, id, field)` / `globalHref(adminRoute, slug, field)`:
+   the form at Payload's `field-<path>` anchor) and, when the English is what is missing,
+   says which column ("the English field beside the Arabic title", "the English body is the
+   editor under the Arabic one"); never a `?locale=` (the panel has no locale switch,
+   ADR-057, and the proxy redirects the query away); a thing the site guarantees by
+   construction is a fact, not a rule.
 13. A localized `text`, `textarea`, `select` or `number` field is bilingual by
    `describeFields` (ADR-057 and its amendment, design system §6a): both languages side by
    side, inside the rows of arrays and blocks too, one Save writes both through
@@ -68,9 +73,10 @@ note), `check:rtl` and the admin e2e.
    `titleEn` beside `title`, no widget of your own on a localized text. `localized` goes on
    a row's subfields, never on the array or the blocks field itself (a list localized as a
    whole has one row set per language and cannot be paired; the census test refuses one
-   that is not `posts.warnings`). What stays on the locale switch (rich text, uploads,
-   relationships, `hasMany`) is by design until PR B of the no-locale-switch plan; the
-   locale note says so (`locale.legend`) and the field's own strings are the `bilingual`
+   that is not `posts.warnings`). There is no locale switch to fall back on (ADR-057,
+   PR C): a localized field that is neither a light field with the component nor a heavy
+   field with its twin (rule 15) is unreachable, and the census gate in
+   `tests/admin-config.test.ts` names it; the field's own strings are the `bilingual`
    branch of both trees in `strings.ts`, read per render like every other string.
 14. The sidebar shows no document count (ADR-058). A number that asks for action is a badge:
    a kind in `src/modules/cms/admin/nav/badges.ts` (its reader, a cheap query with the
@@ -81,7 +87,7 @@ note), `check:rtl` and the admin e2e.
    the keyboard model) is the design system's shell section; a new entry only needs its
    place in `ADMIN_NAV`.
 
-13. A localized `richText` or `upload` (ADR-057, PR B) is followed, in the same field list,
+15. A localized `richText` or `upload` (ADR-057, PR B) is followed, in the same field list,
    by `twinField(original)` from `src/modules/cms/fields/bilingual.ts`: the English the
    editor types under the Arabic, filled on read and applied on save by the mechanism. The
    entity lists `populateTwins` / `populateGlobalTwins` (`fields/twins.ts`) in

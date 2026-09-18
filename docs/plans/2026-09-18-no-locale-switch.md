@@ -150,3 +150,12 @@ Checked on 2026-09-18 in the installed packages (Payload 3.89.0), one line each:
   with the hash base, migration `20260918_131849_heavy_twins`, the census reads every
   localized field of one value covered; two e2e run on a private server and database. What
   remains: PR C.
+- 2026-09-18: PR C built on `admin/no-switch`: the census gate read zero (125 light fields
+  paired, 55 in rows, the four heavy ones by their twins; the post's `warnings` and
+  `readingMinutes`, both computed and read-only, named as the two facts without a pair),
+  then Payload's localizer, the per-locale publish and the schedule drawer's locale select
+  hidden in `@layer payload`, the locale note and the `localized` option deleted, the
+  `locale` strings gone, the row notes reworded, the guides linking the field's anchor and
+  naming the column, migration `20260918_142817_purge_locale_preference`, the proxy
+  answering an admin `?locale=` with a 307 without it; thirteen e2e run on a private server
+  and database (port 3014, `b7r_noswitch`).

@@ -750,9 +750,8 @@ describe('read-only scalars render as ReadOnlyLine (audit 2026-09-18)', () => {
  * the rows of arrays and blocks alike (PR A), and adds the hidden `translations` JSON to a
  * config that has any; such a config lists the apply hook after its own. A localized heavy
  * field (rich text, upload) is covered by the twin that follows it in the config (PR B), and
- * such a config lists the population hook. A localized relationship stays on the locale
- * switch, and so does a list that is localized as a whole (its rows are per language and
- * cannot be paired).
+ * such a config lists the population hook. There is no locale switch to fall back on (PR C):
+ * the census gate below names any localized field left without a pair.
  */
 type Placed = {
   path: string;

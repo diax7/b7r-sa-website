@@ -144,17 +144,11 @@ The admin's strings are interface copy (ADR-031): written by us, under the ux-ar
 - Localised fields (ADR-043): a document reaches the English site when its title-like field
   has an English value. Media alt text is per language; the Arabic value must be Arabic
   script, the English one is free text. Every localised field label carries a neutral pill
-  with the open locale's code (`AR`/`EN`, ADR-044): a field with a pill changes per language,
-  a field without one is shared. A localised text, textarea or select shows both languages
-  at once (§6a, ADR-057); rich text, lists and blocks follow the panel's locale control. A
-  document with per-language fields shows the `LocaleNote` pill in its controls: one line
-  that never wraps, the full text in its `title`, its own line under the buttons on a phone
-  ("Editing the Arabic content. A field tagged AR has its English beside it: type the English
-  next to the Arabic, one Save writes both. Rich text, lists and blocks stay per language:
-  switch the locale at the top to edit their English. Fields without a tag are shared.",
-  `locale.editing` and `locale.legend` of both trees in `strings.ts`, §5a); register it
-  through `admin/document/config.ts` on every new collection or global with a localised
-  field (`tests/admin-config.test.ts` checks).
+  with its language's code (`AR` on the Arabic field, `EN` on the English input beside it or
+  the English editor under it, ADR-044): a field with pills is per language, a field without
+  one is shared. Both languages are in every form at once (§6a, ADR-057): there is no locale
+  switch and no note about one; nothing to register on a new collection or global beyond
+  its header (`admin/document/config.ts`).
 
 ### 5a. Two languages (ADR-056)
 
@@ -180,10 +174,9 @@ document. Everything of ours follows the request's language, never the build's.
 - **Payload's own strings:** its `ar` pack, with ours merged on top from
   `modules/cms/admin/payload-ar.ts` (`i18n.translations.ar`); fix a poor Payload string there,
   keyed exactly as the `en` pack (a wrong key fails `tsc`).
-- **The content locale is a different axis:** `useLocale()`, the pills and
-  `html[data-content-locale]` say which language of a document is open, whatever the panel's
-  language. A component that needs both (the locale note) keys its sentence by the content
-  locale inside each UI language.
+- **The content languages are a different axis:** both are in every form whatever the
+  panel's language (ADR-057, §6a); the pills name them, the `bilingual` branch of the trees
+  names them as nouns, and no string names an "open" language.
 - **Direction:** logical utilities only (§8), directional icons through `Icon` (mirrored by
   name; `mirror={false}` for a glyph that must not flip, like the Enter key), Radix menus
   take `dir` from `useAdminLanguage().direction`, tooltips beside the rail open away from it.
@@ -218,14 +211,14 @@ Payload's own elements (buttons, fields, pills, toasts) are themed in `admin.css
 | Piece | File | Notes |
 |---|---|---|
 | Sidebar | `modules/cms/admin/nav/*` | One tree, one breakpoint (ADR-058). `nav-client.tsx` is the aside (Payload's outer `nav` classes and its `useNav` state, so the template's grid follows) with the brand row, the tree, the rail and the foot; `tree.tsx` the tree; `rail.tsx` the rail; `groups.ts` the data, `badges.ts` the badges, `keyboard.ts` and `active.ts` the pure rules. **The tree**, top to bottom: the brand row (the logo, a link to the dashboard); the dashboard as an entry; the five task groups (Site · Catalogue · Blog · Visibility · Admin, ADR-046), each a 40 px row (weight 600, an 8 px dot in the group's hue before the name, the chevron at the end; the whole row toggles, `button[aria-expanded]` owning a `role="group"` labelled by it) over its entries: 36 px with a 24 px disc in the group's hue, secondary entries (hubs, authors, tags under Posts; the checklist, snapshots, prompts and citations under the Score page; counts under Traffic) 32 px and 13 px under a 2 px guide line, the content engine a sub-heading inside Blog; a hairline between groups, never between entries. The active entry sits on its group's tint with weight 500, a 3 px bar on the leading edge and a solid disc, `aria-current="page"`, its group forced open (a click closes it for that page only). Hover is `surface-2`, focus the accent ring. No counts; a badge only where a number asks for action (`badges.ts`, red or amber; the runs' and the drafts' numbers and sentences are the dashboard's, ADR-059). **The state** (open or collapsed, each group) lives in Payload's `nav` preference, written whole, keyed by the group's registry key. **Above 1024 px** (Payload's `m`) the sidebar is inline: open at 264 px, or the 64 px **rail** when collapsed by the one button above the account (« open, » collapsed, mirrored in RTL): the brand mark, the dashboard icon, the five group icons (the active group's carries the bar, a group with a badge a dot) and the avatar; a click on a group opens a 224 px flyout with the group's entries (a `DropdownMenu` of links, not modal, opening away from the rail, focus moved in, Esc back; its active entry wears the hue, weight 500 and the bar, no tint). Both the tree and the rail are in the markup and `admin.css` shows one by the aside's open class (`[data-admin-tree]`, `[data-admin-rail-list]`, `[data-rail-hide]`, `[data-rail-center]`), so a collapsed sidebar paints as a rail on the first frame; hydration adds `data-admin-rail`, the tooltips and the flyouts. Payload closes the nav under its `l` breakpoint (1440 px); a layout effect puts the preference back, so 1025 to 1440 px is inline like any desktop. **At 1024 px and under** it is a drawer over the page (320 px, the full width under 768): the header's hamburger opens it, the X at the same spot in the drawer, Esc, a tap on the scrim or a navigation closes it; the page behind is `inert` while it is open; rows are 44 px; the collapse button hides; the account block and the panel's language switch (`language-switch.tsx`, Payload's `switchLanguage`) sit at the foot. |
-| Header actions | `modules/cms/admin/header/actions*` | The hamburger (`[data-admin-menu]`, at the leading edge of the header at 1024 px and under, hidden above), a bordered 240 px search box that opens the palette (the Ctrl K hint; 320 px on focus) and a bordered "View website" link with text; both fold to icons at the drawer widths, where each carries its tooltip beside its `aria-label`. Payload's account avatar and its two hamburgers are hidden in `@layer payload` (our account block and our hamburger own them); the locale switcher stays in the header, moved into the gutter the avatar left (both insets logical, so the Arabic panel keeps it at the gutter under 768 px too). The row never spills: Payload's crumbs shrink first, the last one truncating with its ellipsis, while the controls and the switcher's spacer keep their width, so a long title on a 390 px phone (or at 1025 px with the controls at full width) never pushes the switcher past the edge or over "View website" (`admin.css`, the header block). |
+| Header actions | `modules/cms/admin/header/actions*` | The hamburger (`[data-admin-menu]`, at the leading edge of the header at 1024 px and under, hidden above), a bordered 240 px search box that opens the palette (the Ctrl K hint; 320 px on focus) and a bordered "View website" link with text; both fold to icons at the drawer widths, where each carries its tooltip beside its `aria-label`. Payload's account avatar and its two hamburgers are hidden in `@layer payload` (our account block and our hamburger own them); so is the content locale switcher and its spacer (ADR-057: no locale switch), whose gutter the controls took. The row never spills: Payload's crumbs shrink first, the last one truncating with its ellipsis, while the controls keep their width, so a long title on a 390 px phone (or at 1025 px with the controls at full width) never pushes "View website" past the edge (`admin.css`, the header block). |
 | Command palette | `modules/cms/admin/header/palette*` | Ctrl/⌘ K; sections first, then documents of collections with `listSearchableFields` (5 per collection, from two characters); combobox semantics; ranking in `palette-rank.ts`. |
 | Account menu | `modules/cms/admin/account/*` | Initials avatar, name, e-mail (LTR), role badge, "My account", "Log out" (red). In the rail only the avatar shows. The one account entry point: Payload's header avatar is hidden. |
 | Login | `modules/cms/admin/login/*` | One line under the form; the Turnstile widget above it (ADR-034). |
 
 | Dashboard | `modules/cms/admin/dashboard/*` | Seven sections top to bottom (ADR-059), one server render, the reads in parallel and each guarded (a failed reader shows its section with the "not available" word, never a blank page). (1) The greeting by the Riyadh hour (name in the accent), the 7 / 30 / 90 day range as links at the trailing edge (`?days=`, server-rendered, no client state; `rules.ts`) and the "needs a hand" line (failed runs this week, a connection at its limit, an enabled connection whose last test failed, documents without English, drafts older than a week; each a link, or one sentence). (2) Four tiles, each one link (`tiles.tsx`, `tile-data.ts`): visits with the change against the previous range (`trafficSummary` twice), the cited rate on the category prompts over 28 days with the engines' count, the score with its trend, "went live" in the range with the drafts waiting. (3) Where visits come from (`traffic/admin/traffic-card.tsx`): the bars by group, the top three entry pages, the crawler reads, "All traffic" into the same range. (4) What the assistants say (`visibility/admin/assistants-card.tsx`): per engine the cited and linked rates, the last run, the next run computed from the prompts' periods (`schedule.ts`, `duePrompts`) or the plain sentence; no "Run now" (it costs money). (5) Content (`content-card.tsx`): the home tile with when it was published, one row per content collection with published, drafts (linked to the list filtered on `_status`) and missing English (linked to the first English form), the last five saves by people (`data.ts`: the content groups only, no machine rows, no untitled unsaved draft), "Write a post" and "Add a product" as bordered buttons by permission. (6) Engine and spend (`ai-content/admin/engine-card.tsx`): the state, posts against the monthly cap and today's cost against the daily cap as bars (violet, amber from 80 %, red at the cap), the next slot, one row per AI connection with its spend against its limit (amber with "No monthly limit" when it has none, red at the limit), runs and last test. (7) Server (`server-card.tsx`): a `details` collapsed by default and open when a row is red, the ten health rows (`healthReport()`), the version, the jobs queue as the next run of each scheduled task on the Riyadh clock, "Full report". An editor sees the sections they may open; a reader that needs an admin is skipped. Numbers, dates and moments through `admin/format.ts`; the hooks are `data-admin-dashboard-<section>`. Every in-admin link is Payload's `Link`: no reload. |
 | Forms as tabs | `globals/{home,site-settings}.ts`, `collections/{products,posts,pages}.ts` | One tab per section of the site, in site order (ADR-046): Home ten named tabs (Opening slides · Product strip · Designer · Three steps · Video · Why us · Testimonials · Connected stores · FAQ · Bottom banner, each opening on its switch where one exists; a named tab stores under the group's old path and columns), Product four in the card's order (Photos & colours · Basics · Sizes · Print area; the order in the sidebar), Post three (Content · Summary & cover · Search; the sidebar in three collapsibles: Publishing with author and dates, Checks with the warnings and the reading time, Engine with origin and the engine actions), Page two (Content · Search), Site settings five (Brand · Contact & social · Menus & footer with a collapsed Advanced group for the three accessibility labels · Numbers and delivery · Analytics; the menus are the named tab `menu`). The tab strip scrolls sideways with edge fades and an accent bar on the active tab (`admin.css`). |
-| Page header | `modules/cms/admin/document/entity-header.tsx` | The description slot under Payload's title (`admin.components.Description` on collections, shared with the list view; `admin.components.elements.Description` on globals; registered per config with its `serverProps.entity` through `admin/document/config.ts`): a bar and a disc in the group's hue, the description, "Shows on:" from `admin.custom.shows` (both languages), a link to the public listing where one exists, and on the home page "10 sections, N on" from the saved document (`HomeSectionsCount`). The locale note stays before the document controls. |
+| Page header | `modules/cms/admin/document/entity-header.tsx` | The description slot under Payload's title (`admin.components.Description` on collections, shared with the list view; `admin.components.elements.Description` on globals; registered per config with its `serverProps.entity` through `admin/document/config.ts`): a bar and a disc in the group's hue, the description, "Shows on:" from `admin.custom.shows` (both languages), a link to the public listing where one exists, and on the home page "10 sections, N on" from the saved document (`HomeSectionsCount`). Nothing of ours sits before the document controls (the locale note went with the switch, ADR-057). |
 | Blog group | `modules/cms/collections/{posts,categories,authors,tags}.ts` | Posts, hubs, authors, tags (violet, the Blog hue); the post's sidebar carries author, publish and update dates, reading minutes, origin, the editorial warnings (`WarningsField`) and "Last saved"; a publish that breaks a hard rule is refused with the reason (`fields/editorial.ts`, ADR-041). |
 | Content engine section (inside Blog) | `modules/ai-content/{settings,topics,runs}.ts`, `modules/ai-content/admin/*` | Admin only. Engine settings in tabs (the connection it writes with, the caps, the style), topics with "Generate now" (`ApiAction`) and a CSV import panel, runs read-only with their connection; the "Engine and spend" section of the dashboard (ADR-059) and a health row; "Regenerate" in an engine post's sidebar (`PostEngineActions`). ADR-042, ADR-047. |
 | Traffic (Visibility group) | `modules/traffic/*`, `lib/traffic/*`, `modules/core/analytics/landing-beacon.tsx` | Admin only. The site's own daily count of landings by source and page and of crawler reads by bot (`traffic`, read-only rows written by the batcher's upsert, listed as "Counts" under the page); the "Where visits come from" section of the dashboard with one bar per group (the Visibility pink on the surface track: identity, not meaning), the top channel, the crawler reads, the top entry pages and an empty state (ADR-059); the Traffic page (`/admin/traffic`, `TrafficView`) with 7 / 30 / 90-day ranges, the groups, four tables (channels, sources, landing pages, crawlers) each with an empty state, and the honesty lines. The channel is derived at read (`channelOf`). ADR-048. |
@@ -242,63 +235,69 @@ The sidebar has one breakpoint, Payload's `m` (1024 px): inline above it, a draw
 and under (ADR-058); Payload's own `l` behaviour at 1440 px is overridden in `admin.css`.
 Every view gets 24 px under the header. Payload's locale suffix on localized
 labels (`.field-label .localized`, an em dash and the locale's name) is drawn as the locale
-pill (ADR-044): the span's own text is hidden, a `::after` shows the code from
-`html[data-content-locale]`, which the header actions set from `useLocale()`; before
-hydration there is no pill rather than a wrong one.
+pill (ADR-044): the span's own text is hidden, a `::after` shows `AR`, static in the
+stylesheet, since the panel edits the default locale and nothing else (ADR-057, no switch).
 
 ### 6a. Both languages at once
 
-Dhia's rule (2026-09-18, ADR-057): the two languages of a text are edited side by side, never
-by switching the page language. `describeFields()` gives every localised `text`, `textarea`,
-`select` and `number` field (one value, no widget of its own) the `BilingualField`
-component, outside a list and inside the rows of arrays and blocks alike (the amendment of
-ADR-057), so a new config gets it with no work and there is never a second place to edit a
+Dhia's rule (2026-09-18, ADR-057): "one edit for both languages". Every form holds both
+languages of every field, and the panel has no locale switch: Payload's localizer, its
+per-locale publish and the locale note are gone (PR C of
+`docs/plans/2026-09-18-no-locale-switch.md`), no admin URL carries `?locale=` (the proxy
+redirects one away), and the REST API alone still answers it. `describeFields()` gives every
+localised `text`, `textarea`, `select` and `number` field (one value, no widget of its own)
+the `BilingualField` component, outside a list and inside the rows of arrays and blocks
+alike, so a new config gets it with no work and there is never a second place to edit a
 value. A localised rich text or upload (a heavy field) gets a real sibling field instead,
-`twinField(original)` placed right after it in the config (PR B of
-`docs/plans/2026-09-18-no-locale-switch.md`): Payload's own editor or picker renders the
-English under the Arabic. What still follows the locale control: a list localised as a
-whole (its rows are per language and cannot be paired; a new config never adds one:
-`localized` goes on the row's subfields, never on the array), until PR C removes the
-control itself.
+`twinField(original)` placed right after it in the config: Payload's own editor or picker
+renders the English under the Arabic. A list is never localised as a whole (`localized` goes
+on the row's subfields, never on the array; the census refuses one that is not the post's
+computed `warnings`). Two columns for the light fields, stacked for the heavy ones, a pill
+per language, no switch, no note.
 
-- **Layout.** Payload's own field for the open locale at the start, the same input for the
-  other locale at the end, in a two-column grid that stacks under 32 rem of container width
+- **Layout.** Payload's own field for the Arabic at the start, the same input for the
+  English at the end, in a two-column grid that stacks under 32 rem of container width
   (`@container` on the root, so a narrow drawer stacks too). In a `row` the pair takes the
   full line unless the config gives the field a `width`; the other row fields follow. Both
   inputs are Payload's (`TextInput`, `TextareaInput`, `SelectInput`), so they look alike and
   keep Payload's greys, radius and focus; the root therefore carries **no `data-admin-ui`**
   (the shell's element reset would strip Payload's input box) and `data-admin-bilingual`
   with the field's path for the e2e.
-- **The tag.** The other input's label repeats the field's label, the required star, and
-  the other locale's code in the locale pill (`.admin-locale-tag`, the same declarations as
-  ADR-044's `::after` pill, one rule in `admin.css`). A field with two pills is per language
-  and both are in front of you; a field with none is shared.
+- **The pills.** The Arabic field's label carries the AR pill (Payload's localized suffix,
+  redrawn by `admin.css`, static since the panel edits the default locale only); the English
+  input's label repeats the field's label, the required star, and EN in the same pill
+  (`.admin-locale-tag`, the same declarations, one rule in `admin.css`). A field with pills
+  is per language and both are in front of you; a field with none is shared.
 - **Stacked editors (the heavy twins).** A localised rich text or photo is followed by its
   twin: the Arabic full width, then the English full width under it, each Payload's own
-  component (Lexical, the upload picker) with its own pill: the original's AR pill from the
-  locale, the twin's EN pill from its class (`.admin-twin`, `admin.css`), whose label reads
-  "English text" or "English photo" and whose description says one Save writes both. The
-  twin's editor runs left to right whatever the panel's direction. The twin is filled from
-  the document's own English on every admin read (`populateTwins`, a `beforeRead` hook, no
-  extra query) and is null at rest: it carries the English only between typing and the
-  save that applies it (an autosave keeps it in the draft). While the English locale itself
-  is open the twins are hidden: there the original is the English. A row duplicated in a
-  list keeps its twin (the form copies the row), so an English rich text or photo comes
-  along while the English beside the light fields starts empty; the list's description
-  says so (`SHARED_ROWS_WITH_TWINS_NOTE`).
+  component (Lexical, the upload picker) with its own pill: the original's AR, the twin's EN
+  from its class (`.admin-twin`, `admin.css`), whose label reads "English text" or "English
+  photo" and whose description says one Save writes both. The twin's editor runs left to
+  right whatever the panel's direction. The twin is filled from the document's own English
+  on every admin read (`populateTwins`, a `beforeRead` hook, no extra query) and is null at
+  rest: it carries the English only between typing and the save that applies it (an
+  autosave keeps it in the draft). A row duplicated in a list keeps its twin (the form
+  copies the row), so an English rich text or photo comes along while the English beside
+  the light fields starts empty; the list's description says so
+  (`SHARED_ROWS_WITH_TWINS_NOTE`).
+- **Publishing.** Save and Publish write both languages, always: the Publish menu's
+  "Publish in Arabic" and the schedule drawer's locale select are hidden (`admin.css`),
+  since a per-locale publish takes a different path through Payload's update and would leave
+  the English side where it was; a scheduled publish publishes all.
 - **Rows.** Inside an array or a blocks field the pair sits in the row like any other field
   and its entry is keyed by the row's id from the form state, never by the index
   (`hero.slides.<id>.headline`, `blocks.<id>.items.<id>.title`; `data-admin-bilingual`
-  carries that key), so a moved row keeps its other language, a deleted row's entry is
-  dropped, and a duplicated row starts with the other language empty. The list's
+  carries that key), so a moved row keeps its English, a deleted row's entry is dropped,
+  and a duplicated row copies the Arabic only, its English starting empty. The list's
   description ends with that sentence (`SHARED_ROWS_NOTE` in `describe.ts`, appended by the
   pass to every list whose rows are bilingual). A row added and typed in both languages
   lands with both on the same save. The number twin renders Payload's own number markup
   (`field-type number`, an `<input type="number">`; `@payloadcms/ui` exports the field, not
   its input).
-- **Prefill and states.** The other locale is read once per document view (the REST API
-  with the editor's cookie, `fallback-locale=none`, `draft=true`), shared by every bilingual
-  field on the page, and read again after each save. While it loads the other input is
+- **Prefill and states.** The English is read once per document view (the REST API with
+  the editor's cookie, `?locale=en`, `fallback-locale=none`, `draft=true`: the API keeps the
+  query the panel lost), shared by every bilingual field on the page, and read again after
+  each save. While it loads the other input is
   disabled with "Loading English…" as its placeholder; if the read fails the input stays
   disabled and a red caption says what happened and the way out ("The English text could
   not be loaded. Reload the page to edit it."). Read-only fields disable both inputs.
@@ -315,8 +314,13 @@ control itself.
   base, an emptied required English is refused the same way ("Content in English: This
   field is required."), and after the save the twin shows the English as it now stands.
 - **Strings.** The placeholder, the error and the language names are the `bilingual`
-  branch of both trees in `strings.ts`, the note's sentences `locale.legend` (§5a): read
-  per render through `useAdminStrings()`, the Arabic under §5's rules and the strings test.
+  branch of both trees in `strings.ts` (§5a), read per render through `useAdminStrings()`,
+  the Arabic under §5's rules and the strings test; the twins' labels and descriptions are
+  config labels in both languages (`fields/bilingual.ts`). No string names an "open"
+  language.
+- **Where a guide points.** A finding or a dashboard line that asks for English links the
+  form at the field (`#field-<path>`, Payload's input id) and says which column ("the
+  English field beside the Arabic title"), never a `?locale=`.
 
 ## 7. States
 
