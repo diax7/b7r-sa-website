@@ -24,6 +24,7 @@ export const Prompts: CollectionConfig = {
     plural: { ar: 'أسئلة المشترين', en: 'Prompts' },
   },
   admin: {
+    hideAPIURL: true,
     useAsTitle: 'text',
     defaultColumns: ['text', 'language', 'intent', 'enabled'],
     listSearchableFields: ['text'],

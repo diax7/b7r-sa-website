@@ -18,6 +18,7 @@ export const Authors: CollectionConfig = {
   slug: 'authors',
   labels: { singular: { ar: 'كاتب', en: 'Author' }, plural: { ar: 'الكتّاب', en: 'Authors' } },
   admin: {
+    hideAPIURL: true,
     components: collectionComponents('authors', { localized: true }),
     useAsTitle: 'name',
     defaultColumns: ['name', 'role', 'slug', 'updatedAt'],

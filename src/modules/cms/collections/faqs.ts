@@ -57,6 +57,7 @@ export const Faqs: CollectionConfig = {
     plural: { ar: 'الأسئلة الشائعة', en: 'FAQ' },
   },
   admin: {
+    hideAPIURL: true,
     components: collectionComponents('faqs', { localized: true }),
     useAsTitle: 'question',
     defaultColumns: ['question', 'group', 'order', 'showOnHome'],
@@ -73,6 +74,7 @@ export const Faqs: CollectionConfig = {
       en: 'FAQ entries by group. Up to five show on the home page.',
     },
   },
+  defaultSort: 'order',
   access: {
     read: () => true,
     create: isEditorOrAdmin,

@@ -23,6 +23,7 @@ export const Traffic: CollectionConfig = {
     plural: { ar: 'العدّادات', en: 'Counts' },
   },
   admin: {
+    hideAPIURL: true,
     useAsTitle: 'path',
     defaultColumns: ['date', 'kind', 'source', 'path', 'hits'],
     listSearchableFields: ['source', 'path'],

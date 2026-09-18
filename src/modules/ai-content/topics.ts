@@ -28,6 +28,7 @@ export const AiTopics: CollectionConfig = {
   slug: 'ai-topics',
   labels: { singular: { ar: 'موضوع', en: 'Topic' }, plural: { ar: 'المواضيع', en: 'Topics' } },
   admin: {
+    hideAPIURL: true,
     useAsTitle: 'title',
     defaultColumns: ['title', 'language', 'hub', 'status', 'priority', 'windowStart', 'post'],
     listSearchableFields: ['title', 'primaryKeyword'],

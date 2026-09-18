@@ -12,6 +12,7 @@ export const SeoDefaults: GlobalConfig = {
   slug: 'seo-defaults',
   label: { ar: 'إعدادات البحث', en: 'Search defaults' },
   admin: {
+    hideAPIURL: true,
     components: globalComponents('seo-defaults', { localized: true }),
     group: adminGroup('visibility'),
     custom: {

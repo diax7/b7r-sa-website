@@ -49,6 +49,7 @@ export const Users: CollectionConfig = {
     },
   },
   admin: {
+    hideAPIURL: true,
     useAsTitle: 'name',
     defaultColumns: ['name', 'email', 'role'],
     listSearchableFields: ['name', 'email'],

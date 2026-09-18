@@ -105,6 +105,7 @@ export const Posts: CollectionConfig = {
   slug: 'posts',
   labels: { singular: { ar: 'مقال', en: 'Post' }, plural: { ar: 'المقالات', en: 'Posts' } },
   admin: {
+    hideAPIURL: true,
     components: collectionComponents('posts', { localized: true }),
     useAsTitle: 'title',
     preview: (doc, { req, locale }) =>
@@ -129,6 +130,7 @@ export const Posts: CollectionConfig = {
       en: 'Blog posts. Drafts stay private; publishing needs a cover, three takeaways and two internal links.',
     },
   },
+  defaultSort: '-publishedAt',
   versions: { drafts: { autosave: { interval: 1500 }, schedulePublish: true }, maxPerDoc: 25 },
   access: {
     read: publishedOrStaff,

@@ -20,6 +20,7 @@ export const Integrations: CollectionConfig = {
     plural: { ar: 'المتاجر المتصلة', en: 'Store integrations' },
   },
   admin: {
+    hideAPIURL: true,
     components: collectionComponents('integrations', { localized: true }),
     useAsTitle: 'name',
     defaultColumns: ['name', 'platform', 'order'],
@@ -36,6 +37,7 @@ export const Integrations: CollectionConfig = {
       en: 'Connected platforms (Salla, Zid, Shopify) and their order in the integrations strip.',
     },
   },
+  defaultSort: 'order',
   access: {
     read: () => true,
     create: isAdmin,

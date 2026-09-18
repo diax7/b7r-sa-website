@@ -18,6 +18,7 @@ export const Media: CollectionConfig = {
   slug: 'media',
   labels: { singular: { ar: 'ملف وسائط', en: 'Media' }, plural: { ar: 'الوسائط', en: 'Media' } },
   admin: {
+    hideAPIURL: true,
     components: collectionComponents('media', { localized: true }),
     group: adminGroup('site'),
     custom: {

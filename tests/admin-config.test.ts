@@ -343,6 +343,34 @@ describe('the locale note (ADR-044): every document with per-language fields car
   }
 });
 
+/**
+ * The document chrome (admin audit 2026-09-18, 2.17 and 3.10): the API tab serves nothing in
+ * the site's workflow, so no entity shows it; a list opens in the order the site shows.
+ */
+describe('the document chrome (audit 2026-09-18)', () => {
+  for (const c of collections) {
+    it(`collection ${c.slug}: no API tab`, () => {
+      expect(c.admin?.hideAPIURL).toBe(true);
+    });
+  }
+  for (const g of globals) {
+    it(`global ${g.slug}: no API tab`, () => {
+      expect(g.admin?.hideAPIURL).toBe(true);
+    });
+  }
+  it('lists open in site order', () => {
+    const sorts = Object.fromEntries(collections.map((c) => [c.slug, c.defaultSort]));
+    expect(sorts).toMatchObject({
+      products: 'sortOrder',
+      faqs: 'order',
+      categories: 'order',
+      testimonials: 'order',
+      integrations: 'order',
+      posts: '-publishedAt',
+    });
+  });
+});
+
 describe('dashboard recent list: a title for every row', () => {
   it('shows the title, the id when the title is the id, and "Untitled" for an empty one', () => {
     expect(titleOf('من نحن')).toBe('من نحن');

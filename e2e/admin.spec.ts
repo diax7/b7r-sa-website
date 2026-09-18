@@ -28,6 +28,12 @@ declare global {
 const withoutRowIds = (rows: unknown) =>
   Array.isArray(rows) ? rows.map(({ id: _row, ...row }: Record<string, unknown>) => row) : rows;
 
+type Box = { x: number; y: number; width: number; height: number };
+
+/** Two boxes that share no pixel. */
+const disjoint = (a: Box, b: Box) =>
+  a.x + a.width <= b.x || b.x + b.width <= a.x || a.y + a.height <= b.y || b.y + b.height <= a.y;
+
 async function recordViolations(page: Page) {
   await page.addInitScript(() => {
     window.__cspViolations = [];
@@ -809,6 +815,53 @@ test.describe('CMS admin', () => {
       'Content',
       'Search',
     ]);
+  });
+
+  test('a phone form (audit 2026-09-18, 3.1): the locale note stays clear of Publish, the tab strip scrolls, nothing overflows', async ({
+    page,
+  }) => {
+    test.setTimeout(90_000);
+    await page.setViewportSize({ width: 390, height: 844 });
+    expect((await page.request.post(`${API}/users/login`, { data: admin })).status()).toBe(200);
+    await page.goto('/admin/globals/home');
+    const note = page.locator('[data-admin-locale-note]');
+    const publish = page.locator('.doc-controls #action-save');
+    await expect(note).toBeVisible();
+    await expect(publish).toBeVisible();
+    // The note is a one-line pill under the buttons: its box never crosses Publish's or the
+    // status line's, and the controls bar grew to hold it instead of letting it spill.
+    const [noteBox, publishBox, statusBox] = await Promise.all([
+      note.boundingBox(),
+      publish.boundingBox(),
+      page.locator('.doc-controls__status').boundingBox(),
+    ]);
+    expect(noteBox && publishBox && disjoint(noteBox, publishBox), 'note over Publish').toBe(true);
+    expect(noteBox && statusBox && disjoint(noteBox, statusBox), 'note over the status').toBe(true);
+    expect(noteBox!.height, 'the note is one line').toBeLessThan(40);
+    expect(noteBox!.y, 'the note sits under the buttons').toBeGreaterThanOrEqual(
+      publishBox!.y + publishBox!.height - 1,
+    );
+    // Ten tabs at 390 px: the strip is a horizontal scroller, the active tab is marked in the
+    // accent, and the page itself never scrolls sideways.
+    const strip = page.locator('.tabs-field__tabs-wrap').first();
+    const scrollable = await strip.evaluate((el) => el.scrollWidth > el.clientWidth + 8);
+    expect(scrollable, 'the tab strip overflows into a scroller').toBe(true);
+    await strip.evaluate((el) => {
+      el.scrollLeft = el.scrollWidth;
+    });
+    expect(await strip.evaluate((el) => el.scrollLeft)).toBeGreaterThan(0);
+    const active = page.locator('.tabs-field__tab-button--active').first();
+    await expect(active).toHaveCSS('color', 'rgb(0, 152, 224)');
+    await active.scrollIntoViewIfNeeded();
+    await expect(active).toBeInViewport();
+    const overflow = await page.evaluate(() => ({
+      document: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      body: document.body.scrollWidth - document.body.clientWidth,
+    }));
+    expect(overflow.document, 'no horizontal overflow on the document').toBeLessThanOrEqual(0);
+    expect(overflow.body, 'no horizontal overflow on the body').toBeLessThanOrEqual(0);
+    // No entity shows the API tab any more (3.10).
+    await expect(page.locator('.doc-tab', { hasText: /^API$/ })).toHaveCount(0);
   });
 
   test('an outsider holding no credential reads published content and nothing else', async ({

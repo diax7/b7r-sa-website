@@ -22,6 +22,7 @@ export const Products: CollectionConfig = {
   slug: 'products',
   labels: { singular: { ar: 'منتج', en: 'Product' }, plural: { ar: 'المنتجات', en: 'Products' } },
   admin: {
+    hideAPIURL: true,
     components: collectionComponents('products', { localized: true }),
     useAsTitle: 'name',
     preview: (doc, { req, locale }) =>
@@ -46,6 +47,7 @@ export const Products: CollectionConfig = {
       en: 'Products on the site and in the designer: prices, photos, sizes and colours.',
     },
   },
+  defaultSort: 'sortOrder',
   versions: { drafts: { autosave: { interval: 1500 }, schedulePublish: true }, maxPerDoc: 25 },
   access: {
     read: publishedOrStaff,

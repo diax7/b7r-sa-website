@@ -23,6 +23,7 @@ export const Citations: CollectionConfig = {
     plural: { ar: 'سجل الاستشهادات', en: 'Citations' },
   },
   admin: {
+    hideAPIURL: true,
     useAsTitle: 'title',
     defaultColumns: ['title', 'promptText', 'mentioned', 'linked', 'mode'],
     listSearchableFields: ['title', 'promptText', 'excerpt'],

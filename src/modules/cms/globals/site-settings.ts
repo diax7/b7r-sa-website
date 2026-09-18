@@ -157,6 +157,7 @@ export const SiteSettings: GlobalConfig = {
   slug: 'site-settings',
   label: { ar: 'إعدادات الموقع', en: 'Site settings' },
   admin: {
+    hideAPIURL: true,
     components: globalComponents('site-settings', { localized: true }),
     group: adminGroup('site'),
     custom: {

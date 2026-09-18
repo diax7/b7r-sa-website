@@ -127,6 +127,7 @@ export const Connections: CollectionConfig = {
     plural: { ar: 'الاتصالات', en: 'Connections' },
   },
   admin: {
+    hideAPIURL: true,
     useAsTitle: 'label',
     defaultColumns: ['label', 'kind', 'model', 'enabled', 'spentThisMonthUsd', 'lastTestOk'],
     listSearchableFields: ['label', 'model'],

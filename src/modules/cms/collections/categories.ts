@@ -18,6 +18,7 @@ export const Categories: CollectionConfig = {
   slug: 'categories',
   labels: { singular: { ar: 'قسم', en: 'Hub' }, plural: { ar: 'أقسام المدونة', en: 'Hubs' } },
   admin: {
+    hideAPIURL: true,
     components: collectionComponents('categories', { localized: true }),
     useAsTitle: 'name',
     defaultColumns: ['name', 'slug', 'order', 'updatedAt'],
@@ -34,6 +35,7 @@ export const Categories: CollectionConfig = {
       en: 'The six blog hubs. Each has its own page, description and default cover.',
     },
   },
+  defaultSort: 'order',
   access: { read: () => true, create: isAdmin, update: isEditorOrAdmin, delete: isAdmin },
   hooks: {
     beforeChange: [stampSavedBy],

@@ -93,6 +93,7 @@ export const REDIRECT_OVERRIDES: Omit<Partial<CollectionConfig>, 'fields'> & {
     plural: { ar: 'التحويلات', en: 'Redirects' },
   },
   admin: {
+    hideAPIURL: true,
     group: adminGroup('visibility'),
     components: collectionComponents('redirects', { localized: false }),
     custom: {

@@ -16,6 +16,7 @@ export const Tags: CollectionConfig = {
   slug: 'tags',
   labels: { singular: { ar: 'وسم', en: 'Tag' }, plural: { ar: 'الوسوم', en: 'Tags' } },
   admin: {
+    hideAPIURL: true,
     components: collectionComponents('tags', { localized: true }),
     useAsTitle: 'name',
     defaultColumns: ['name', 'slug', 'updatedAt'],

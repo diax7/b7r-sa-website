@@ -19,6 +19,7 @@ export const AiRuns: CollectionConfig = {
   slug: 'ai-runs',
   labels: { singular: { ar: 'جولة', en: 'Run' }, plural: { ar: 'السجل', en: 'Runs' } },
   admin: {
+    hideAPIURL: true,
     useAsTitle: 'label',
     defaultColumns: ['label', 'status', 'score', 'costUsd', 'durationMs', 'createdAt'],
     listSearchableFields: ['label', 'model'],

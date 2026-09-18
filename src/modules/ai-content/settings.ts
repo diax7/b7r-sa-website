@@ -45,6 +45,7 @@ export const AiSettings: GlobalConfig = {
   slug: 'ai-settings',
   label: { ar: 'إعدادات المحرّك', en: 'Engine settings' },
   admin: {
+    hideAPIURL: true,
     components: globalComponents('ai-settings', { localized: true }),
     group: adminGroup('blog'),
     custom: {

@@ -25,6 +25,7 @@ export const Metrics: CollectionConfig = {
     plural: { ar: 'اللقطات', en: 'Snapshots' },
   },
   admin: {
+    hideAPIURL: true,
     useAsTitle: 'date',
     defaultColumns: ['date', 'source', 'updatedAt'],
     listSearchableFields: ['date', 'source'],
