@@ -1,4 +1,5 @@
-import type { Payload } from 'payload';
+import { getRequestLanguage, type Payload } from 'payload';
+import { parseCookies } from 'payload/shared';
 import { cms } from '@/lib/cms/payload';
 import { acceptsJsonFrom } from '@/lib/request-guards';
 import { roleOf } from '@/modules/cms/access';
@@ -7,9 +8,13 @@ import { roleOf } from '@/modules/cms/access';
  * The admin-only JSON routes (`/api/ai/*`, ADR-042; `/api/connections/*`, ADR-047): JSON from
  * the site's own origin, and a signed-in admin (the cookie or a JWT through Payload's
  * `auth`). Anything else is 403 without a body worth reading; an editor gets the same answer
- * as an outsider.
+ * as an outsider. `language` is the panel's UI language as Payload resolves it for the same
+ * request (its `payload-lng` cookie, else the browser's, else English; ADR-056), so a
+ * sentence the route answers reads in the language of the page that asked.
  */
-export type AdminRequest = { ok: true; payload: Payload } | { ok: false; response: Response };
+export type AdminRequest =
+  | { ok: true; payload: Payload; language: string }
+  | { ok: false; response: Response };
 
 export async function adminOnly(req: Request): Promise<AdminRequest> {
   if (!acceptsJsonFrom(req)) {
@@ -24,7 +29,12 @@ export async function adminOnly(req: Request): Promise<AdminRequest> {
   if (!user || role !== 'admin') {
     return { ok: false, response: Response.json({ error: 'Admins only' }, { status: 403 }) };
   }
-  return { ok: true, payload };
+  const language = getRequestLanguage({
+    config: payload.config,
+    cookies: parseCookies(req.headers),
+    headers: req.headers,
+  });
+  return { ok: true, payload, language };
 }
 
 /** The JSON body, or null when it is not an object. */

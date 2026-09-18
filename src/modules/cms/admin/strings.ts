@@ -217,6 +217,7 @@ export const adminStrings = {
       desktop: 'Desktop',
       window: '{from} to {to}',
       psiErrors: '{n} audit(s) failed; the row is partial.',
+      tooSoon: 'A pull ran a moment ago; wait ten minutes.',
     },
     ledger: {
       title: 'Citation ledger',
@@ -225,6 +226,7 @@ export const adminStrings = {
       queuing: 'Queuing',
       queued:
         'Queued: every prompt, whatever its period; the answers land within minutes, reload to see them',
+      tooSoon: 'A ledger run was queued a moment ago; wait ten minutes.',
       every: (n: number) => `(every ${n} days)`,
       viewAnswer: 'View answer',
       answerTitle: '{engine}, {date}',
@@ -602,6 +604,7 @@ export const adminStringsAr: AdminStrings = {
       desktop: 'سطح المكتب',
       window: 'من {from} إلى {to}',
       psiErrors: 'الفحوص الفاشلة: {n}؛ الصف ناقص.',
+      tooSoon: 'جرى سحب قبل لحظات؛ انتظر عشر دقائق.',
     },
     ledger: {
       title: 'سجل الاستشهادات',
@@ -609,6 +612,7 @@ export const adminStringsAr: AdminStrings = {
       runNow: 'شغّل الآن',
       queuing: 'جارٍ الإرسال',
       queued: 'في الطابور: كل الأسئلة أياً كانت دوريتها؛ تصل الإجابات خلال دقائق، أعد التحميل لرؤيتها',
+      tooSoon: 'أُرسلت جولة قبل لحظات؛ انتظر عشر دقائق.',
       every: (n) => `(كل ${arabicDays(n)})`,
       viewAnswer: 'عرض الإجابة',
       answerTitle: '{engine}، {date}',

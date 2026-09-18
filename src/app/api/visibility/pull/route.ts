@@ -1,4 +1,5 @@
 import { createRateLimiter } from '@/lib/rate-limit';
+import { adminStringsFor } from '@/modules/cms/admin/strings';
 import { adminOnly } from '@/modules/connections';
 import { queuePull } from '@/modules/visibility';
 
@@ -17,7 +18,7 @@ export async function POST(req: Request): Promise<Response> {
   const hit = limiter.hit('visibility-pull');
   if (!hit.allowed) {
     return Response.json(
-      { error: 'A pull ran a moment ago; wait ten minutes' },
+      { error: adminStringsFor(guard.language).visibility.signals.tooSoon },
       { status: 429, headers: { 'Retry-After': String(Math.ceil(hit.retryAfterMs / 1000)) } },
     );
   }
