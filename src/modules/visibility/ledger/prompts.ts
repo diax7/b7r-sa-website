@@ -92,7 +92,7 @@ export const Prompts: CollectionConfig = {
             name: 'everyDays',
             type: 'number',
             required: true,
-            defaultValue: 1,
+            defaultValue: 7,
             min: 1,
             max: 365,
             label: { ar: 'يُسأل كل (أيام)', en: 'Ask every (days)' },

@@ -1,7 +1,7 @@
 'use client';
 
 import { useDocumentInfo } from '@payloadcms/ui';
-import { adminStrings } from '@/modules/cms/admin/strings';
+import { useAdminStrings } from '@/modules/cms/admin/use-admin-strings';
 
 /** The home page's sections in site order; the ones with a switch are counted as on or off. */
 export const HOME_SECTIONS = [
@@ -25,6 +25,7 @@ const SWITCHED = ['steps', 'video', 'whyUs', 'testimonials', 'integrations', 'fa
  * from the document context, not the live switches: the number follows a save or a publish.
  */
 export function HomeSectionsCount() {
+  const s = useAdminStrings().entityHeader;
   const { savedDocumentData, initialData } = useDocumentInfo();
   const doc = (savedDocumentData ?? initialData ?? {}) as Record<
     string,
@@ -33,10 +34,5 @@ export function HomeSectionsCount() {
   const on = SWITCHED.filter((key) => doc[key]?.enabled !== false).length;
   const total = HOME_SECTIONS.length;
   const enabled = total - SWITCHED.length + on;
-  return (
-    <span data-admin-sections-on={enabled}>
-      {' '}
-      · {adminStrings.entityHeader.sectionsOn(total, enabled)}
-    </span>
-  );
+  return <span data-admin-sections-on={enabled}> · {s.sectionsOn(total, enabled)}</span>;
 }

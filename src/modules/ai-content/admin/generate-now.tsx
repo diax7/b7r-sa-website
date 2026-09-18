@@ -3,12 +3,11 @@
 import { useDocumentInfo } from '@payloadcms/ui';
 import { Sparkles } from 'lucide-react';
 import { ApiAction } from '@/modules/cms/admin/api-action';
-import { adminStrings } from '@/modules/cms/admin/strings';
-
-const s = adminStrings.engine;
+import { useAdminStrings } from '@/modules/cms/admin/use-admin-strings';
 
 /** "Generate now" in a topic's edit view (BRD 10.2.7): queues one run for this topic. */
 export function GenerateNow() {
+  const s = useAdminStrings().engine;
   const { id } = useDocumentInfo();
   if (typeof id !== 'number') return null;
   return (

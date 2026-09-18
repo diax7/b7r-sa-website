@@ -1,14 +1,13 @@
 import type { UIFieldServerComponent } from 'payload';
 import { payloadStore } from '@/modules/ai-content/store/payload-store';
-import { adminStrings } from '@/modules/cms/admin/strings';
-
-const s = adminStrings.engine;
+import { adminStringsFor } from '@/modules/cms/admin/strings';
 
 /**
  * The facts sheet as the engine sees it (BRD 10.2.1): read-only, built live from the site
  * settings, the products and the integrations. A server component: nothing to edit here.
  */
-export const FactsSheetField: UIFieldServerComponent = async ({ payload }) => {
+export const FactsSheetField: UIFieldServerComponent = async ({ payload, i18n }) => {
+  const s = adminStringsFor(i18n.language).engine;
   const store = payloadStore(payload);
   const [facts, factsEn] = await Promise.all([store.facts('ar'), store.facts('en')]);
   return (

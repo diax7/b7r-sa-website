@@ -3,9 +3,7 @@
 import { Upload } from 'lucide-react';
 import { useId, useState } from 'react';
 import { Icon } from '@/components/shared/icon';
-import { adminStrings } from '@/modules/cms/admin/strings';
-
-const s = adminStrings.engine;
+import { useAdminStrings } from '@/modules/cms/admin/use-admin-strings';
 
 type Outcome = { created: string[]; skipped: string[]; errors: string[] } | null;
 
@@ -15,6 +13,8 @@ type Outcome = { created: string[]; skipped: string[]; errors: string[] } | null
  * gutter.
  */
 export function ImportTopics() {
+  const strings = useAdminStrings();
+  const s = strings.engine;
   const id = useId();
   const [open, setOpen] = useState(false);
   const [csv, setCsv] = useState('');
@@ -39,7 +39,9 @@ export function ImportTopics() {
         errors?: string[];
       };
       if (!res.ok) {
-        setError(json.error ?? `The server answered ${res.status}`);
+        setError(
+          json.error ?? strings.common.serverAnswered.replace('{status}', String(res.status)),
+        );
         return;
       }
       setOutcome({

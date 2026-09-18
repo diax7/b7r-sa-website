@@ -4,18 +4,17 @@ import { Card } from '@/components/shared/card';
 import { Icon } from '@/components/shared/icon';
 import type { QuickAction } from '@/modules/cms/admin/dashboard/data';
 import { HUE_CLASSES } from '@/modules/cms/admin/icons';
-import { adminStrings } from '@/modules/cms/admin/strings';
 
 /**
  * Big icon tiles: one per thing an editor does most, each in its entity's hue. In-admin tiles
  * are Payload's `Link` (no reload); the site tile opens a new tab.
  */
-export function QuickActions({ actions }: { actions: QuickAction[] }) {
+export function QuickActions({ actions, title }: { actions: QuickAction[]; title: string }) {
   return (
     <section aria-labelledby="dashboard-quick" className="flex flex-col gap-4">
       <h2 id="dashboard-quick" className="flex items-center gap-2 text-h4 text-text">
         <Icon icon={Rocket} size={20} className="text-accent" />
-        {adminStrings.dashboard.quick}
+        {title}
       </h2>
       <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" data-admin-quick-actions="">
         {actions.map((a) => (

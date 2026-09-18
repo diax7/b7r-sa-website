@@ -1,7 +1,8 @@
 import { render } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
-// The widget reads the form through Payload's hooks; the test hands it a value directly.
+// The widget reads the form and the UI language through Payload's hooks; the test hands it
+// a value directly and an English panel.
 let formValue: unknown;
 vi.mock('@payloadcms/ui', () => ({
   useField: () => ({ value: formValue }),
@@ -51,6 +52,8 @@ describe('JsonView: pretty-printed, one line in a list, nothing for an empty val
     const pre = container.querySelector('pre[data-admin-json-view="steps"]');
     expect(pre?.getAttribute('dir')).toBe('ltr');
     expect(pre?.textContent).toBe('{\n  "outline": [\n    "intro",\n    "body"\n  ]\n}');
+    // A copy button beside it, in the panel's language (the strings are per render).
+    expect(container.querySelector('[data-admin-json-copy]')?.textContent).toBe('Copy');
   });
 
   it('the field shows the label alone when the value is empty', () => {

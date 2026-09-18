@@ -17,7 +17,7 @@ const serverFunction: ServerFunctionClient = async function (args) {
   return handleServerFunctions({ ...args, config, importMap });
 };
 
-/** Payload's root layout (Arabic RTL admin at /admin, BRD 9.3). Do not edit beyond the imports. */
+/** Payload's root layout (the admin at /admin, English or Arabic RTL, BRD 9.3). Do not edit beyond the imports. */
 export default function PayloadLayout({ children }: Args) {
   for (const weight of ADMIN_FONT_WEIGHTS) {
     preload(`/fonts/ITFRayatRound-${weight}.woff2`, {

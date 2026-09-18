@@ -1,11 +1,12 @@
 import { Link } from '@payloadcms/ui';
 import type { ReactNode } from 'react';
 import { cn } from '@/lib/cn';
-import { adminStrings } from '@/modules/cms/admin/strings';
+import { formatNumber } from '@/modules/cms/admin/format';
+import { type AdminStrings, adminStringsFor } from '@/modules/cms/admin/strings';
 import { PullNow } from '@/modules/visibility/admin/pull-action';
 import type { SignalRows } from '@/modules/visibility/signals';
 
-const s = adminStrings.visibility.signals;
+type Strings = AdminStrings['visibility']['signals'];
 
 const th = 'py-1 text-start text-caption font-medium text-text-muted';
 const td = 'py-1 text-small text-text';
@@ -17,12 +18,14 @@ function Panel({
   date,
   connected,
   connectionsHref,
+  s,
   children,
 }: {
   title: string;
   date: string | null;
   connected: boolean;
   connectionsHref: string;
+  s: Strings;
   children: ReactNode;
 }) {
   return (
@@ -74,8 +77,12 @@ function Totals({ rows }: { rows: Array<[string, string]> }) {
 
 function QueryTable({
   rows,
+  s,
+  language,
 }: {
   rows: Array<{ key: string; impressions: number; clicks: number }>;
+  s: Strings;
+  language: string;
 }) {
   if (rows.length === 0) return null;
   return (
@@ -94,8 +101,8 @@ function QueryTable({
               <td className={td} dir="auto">
                 {q.key}
               </td>
-              <td className={cn(td, num)}>{q.impressions}</td>
-              <td className={cn(td, num)}>{q.clicks}</td>
+              <td className={cn(td, num)}>{formatNumber(q.impressions, language)}</td>
+              <td className={cn(td, num)}>{formatNumber(q.clicks, language)}</td>
             </tr>
           ))}
         </tbody>
@@ -110,7 +117,16 @@ function QueryTable({
  * exists, a waiting sentence when one does and no pull has run yet; "Pull now" queues the
  * nightly job.
  */
-export function Signals({ rows, adminRoute }: { rows: SignalRows; adminRoute: string }) {
+export function Signals({
+  rows,
+  adminRoute,
+  language,
+}: {
+  rows: SignalRows;
+  adminRoute: string;
+  language: string;
+}) {
+  const s = adminStringsFor(language).visibility.signals;
   const connections = `${adminRoute}/collections/connections`;
   const sc = rows.searchConsole;
   const bing = rows.bing;
@@ -127,13 +143,14 @@ export function Signals({ rows, adminRoute }: { rows: SignalRows; adminRoute: st
           date={sc?.date ?? null}
           connected={rows.connected['google-search-console']}
           connectionsHref={connections}
+          s={s}
         >
           {sc && (
             <>
               <Totals
                 rows={[
-                  [s.clicks, String(sc.data.totals.clicks)],
-                  [s.impressions, String(sc.data.totals.impressions)],
+                  [s.clicks, formatNumber(sc.data.totals.clicks, language)],
+                  [s.impressions, formatNumber(sc.data.totals.impressions, language)],
                   [s.ctr, pct(sc.data.totals.ctr)],
                   [s.position, sc.data.totals.position.toFixed(1)],
                 ]}
@@ -141,7 +158,7 @@ export function Signals({ rows, adminRoute }: { rows: SignalRows; adminRoute: st
               <p className="text-caption text-text-muted tabular-nums">
                 {s.window.replace('{from}', sc.data.from).replace('{to}', sc.data.to)}
               </p>
-              <QueryTable rows={sc.data.queries.slice(0, 10)} />
+              <QueryTable rows={sc.data.queries.slice(0, 10)} s={s} language={language} />
             </>
           )}
         </Panel>
@@ -150,17 +167,20 @@ export function Signals({ rows, adminRoute }: { rows: SignalRows; adminRoute: st
           date={bing?.date ?? null}
           connected={rows.connected['bing-webmaster']}
           connectionsHref={connections}
+          s={s}
         >
           {bing && (
             <>
               <Totals
                 rows={[
-                  [s.clicks, String(bing.data.totals.clicks)],
-                  [s.impressions, String(bing.data.totals.impressions)],
+                  [s.clicks, formatNumber(bing.data.totals.clicks, language)],
+                  [s.impressions, formatNumber(bing.data.totals.impressions, language)],
                 ]}
               />
               <QueryTable
                 rows={bing.data.queries.slice(0, 10).map((q) => ({ ...q, key: q.query }))}
+                s={s}
+                language={language}
               />
             </>
           )}
@@ -170,6 +190,7 @@ export function Signals({ rows, adminRoute }: { rows: SignalRows; adminRoute: st
           date={psi?.date ?? null}
           connected={rows.connected.pagespeed}
           connectionsHref={connections}
+          s={s}
         >
           {psi && (
             <div className="overflow-x-auto">

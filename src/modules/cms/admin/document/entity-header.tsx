@@ -12,9 +12,7 @@ import {
   HUE_CLASSES,
   navPlacement,
 } from '@/modules/cms/admin/icons';
-import { adminStrings } from '@/modules/cms/admin/strings';
-
-const s = adminStrings.entityHeader;
+import { adminStringsFor } from '@/modules/cms/admin/strings';
 
 /**
  * The block under a document's or a list's title (the `Description` slot, ADR-046): the
@@ -26,6 +24,7 @@ const s = adminStrings.entityHeader;
  */
 export function EntityHeader(props: ViewDescriptionServerProps & { entity: EntityRef }) {
   const { entity, description, i18n, payload } = props;
+  const s = adminStringsFor(i18n.language).entityHeader;
   const placement = navPlacement(entity.type, entity.slug);
   const hue = placement ? ADMIN_GROUPS[placement.group].hue : 'blue';
   const EntityIcon = entityIcon(entity.type, entity.slug);

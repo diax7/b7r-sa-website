@@ -59,8 +59,8 @@ export const PROMPT_DESCRIPTIONS: Described = {
     en: 'The prompt’s place in the run and the table; smallest first. When the run’s twenty-minute budget runs out, the last prompts wait for the next run.',
   },
   everyDays: {
-    ar: 'كل كم يوماً يُسأل هذا السؤال: 1 كل صباح، 7 كل أسبوع، 30 كل شهر. كل سؤال يومي يكلّف نحو 0.03 دولار لكل محرّك في اليوم، مع بحث الويب.',
-    en: 'How often this prompt is asked: 1 every morning, 7 weekly, 30 monthly. A daily prompt costs about $0.03 per engine per day with web search on.',
+    ar: 'كل كم يوماً يُسأل هذا السؤال: 7 كل أسبوع (البذرة)، 1 كل صباح، 30 كل شهر. مع البحث على الويب يكلّف السؤال الواحد نحو 0.02 دولار على OpenAI و0.01 على Gemini Flash و0.03 على Claude Haiku: سؤال أسبوعي نحو 0.30 دولار شهرياً عبر الثلاثة، واليومي نحو دولارين.',
+    en: 'How often this prompt is asked: 7 weekly (the seed), 1 every morning, 30 monthly. With web search on, one ask costs about $0.02 on OpenAI, $0.01 on Gemini Flash and $0.03 on Claude Haiku: a weekly prompt is about $0.30 a month across the three, a daily one about $2.',
   },
   namesBrand: {
     ar: 'السؤال نفسه يذكر بحر برنت (سؤال مقارنة): يُسأل ويُسجَّل، لكنه لا يدخل في نسبة الاستشهاد، لأن الجواب سيذكر العلامة حتماً. النص يقرّر أيضاً: سؤال يذكر «بحر برنت» أو b7r يُعامل كذلك وإن لم يُعلَّم.',

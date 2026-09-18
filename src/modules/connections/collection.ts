@@ -297,7 +297,11 @@ export const Connections: CollectionConfig = {
         name: 'lastTestAt',
         type: 'date',
         label: { ar: 'آخر اختبار', en: 'Last test' },
-        admin: { date: { pickerAppearance: 'dayAndTime' } },
+        admin: {
+          date: { pickerAppearance: 'dayAndTime' },
+          // What the read-only line says while no test has run (audit 2026-09-18, 2.11).
+          custom: { emptyText: { ar: 'لا اختبار بعد', en: 'No test yet' } },
+        },
       }),
       sidebarReadOnly({
         name: 'lastTestOk',

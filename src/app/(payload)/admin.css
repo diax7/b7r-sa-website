@@ -67,6 +67,17 @@
   --shadow-header: 0 1px 0 rgb(255 255 255 / 0.06);
 }
 
+/* Directional icons flip under the Arabic panel (ADR-056; `components/shared/icon.tsx`
+   applies this to arrows, chevrons and the panel icons). Payload writes `dir="RTL"` on the
+   root; the attribute selector is case-insensitive for `dir`, so the same rule serves. The
+   site's globals.css declares the same utility and happens to reach /admin through the root
+   error boundary; the admin sheet must not depend on that. */
+@utility mirror-rtl {
+  &:where([dir='rtl'], [dir='rtl'] *) {
+    transform: scaleX(-1);
+  }
+}
+
 /* ---------------------------------------------------------------------------------------
    Brand on Payload's own elements. Greys stay Payload's; the accent, the font and the radii
    are ours. Selectors and custom properties checked against @payloadcms/ui 3.89.0.
@@ -134,9 +145,10 @@
     padding-block-start: 24px;
   }
 
-  /* The panel is English and left-to-right; the content it edits is Arabic. Every text
-     control follows the direction of what is typed into it, so Arabic reads right-to-left
-     and a slug or a URL left-to-right, without a per-field setting. */
+  /* The panel reads in English or in Arabic (ADR-056); the content it edits is either.
+     Every text control follows the direction of what is typed into it, so Arabic reads
+     right-to-left and a slug or a URL left-to-right in both panels, without a per-field
+     setting. */
   input:not([type='checkbox']):not([type='radio']),
   textarea,
   [contenteditable='true'],
