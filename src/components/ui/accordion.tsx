@@ -47,6 +47,14 @@ export function AccordionTrigger({
   );
 }
 
+/**
+ * The panel is always in the DOM (`forceMount`): the server renders every item closed, so
+ * the answers reach crawlers and hydration changes no height (the FAQ page's CLS, site audit
+ * 2026-09-18). Radix leaves the closed panel visible, so this component hides it: the region
+ * is `visibility: hidden` while closed (out of the accessibility tree) and its inner grid
+ * animates `0fr → 1fr`. The transition sits on the inner element because Radix zeroes the
+ * panel's own transition while it measures it.
+ */
 export function AccordionContent({
   className,
   children,
@@ -54,10 +62,15 @@ export function AccordionContent({
 }: ComponentPropsWithoutRef<typeof AccordionPrimitive.Content>) {
   return (
     <AccordionPrimitive.Content
-      className="overflow-hidden data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down"
+      forceMount
+      className="group/panel data-[state=closed]:invisible"
       {...rest}
     >
-      <div className={cn('pb-5 text-text-muted', className)}>{children}</div>
+      <div className="grid grid-rows-[0fr] transition-[grid-template-rows,visibility] duration-(--duration-base) ease-(--ease-standard) group-data-[state=closed]/panel:invisible group-data-[state=open]/panel:visible group-data-[state=open]/panel:grid-rows-[1fr]">
+        <div className="min-h-0 overflow-hidden">
+          <div className={cn('pb-5 text-text-muted', className)}>{children}</div>
+        </div>
+      </div>
     </AccordionPrimitive.Content>
   );
 }

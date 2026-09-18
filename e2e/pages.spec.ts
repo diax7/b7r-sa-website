@@ -10,6 +10,13 @@ async function progressExtent(page: Page) {
   });
 }
 
+/** The rendered height of each FAQ group, in document order. */
+function groupHeights(page: Page) {
+  return page
+    .locator('section[id^="faq-group-"]')
+    .evaluateAll((els) => els.map((el) => Math.round(el.getBoundingClientRect().height)));
+}
+
 /** Scrolls so the track's start edge sits 40 px above the bottom of the viewport. */
 async function scrollToTrackEntry(page: Page) {
   await page.locator('[data-flow] .flow-track').evaluate((el) => {
@@ -113,11 +120,12 @@ test.describe('FAQ page (BRD 6.10)', () => {
       await nav.locator('a').nth(2).click();
       await expect(page).toHaveURL(/#faq-group-3$/);
     }
-    // Accordion mounts near the viewport and opens one item at a time.
+    // The accordion is server-rendered closed and opens one item at a time.
     const first = groups.first();
     await first.scrollIntoViewIfNeeded();
     const trigger = first.getByRole('button', { name: 'كم أحتاج لأبدأ؟' });
-    await expect(trigger).toBeVisible({ timeout: 10_000 });
+    await expect(trigger).toBeVisible();
+    await expect(trigger).toHaveAttribute('aria-expanded', 'false');
     await trigger.click();
     await expect(trigger).toHaveAttribute('aria-expanded', 'true');
     const wa = page.locator('a[data-track="whatsapp_click"][data-location="contact"]');
@@ -130,11 +138,39 @@ test.describe('FAQ page (BRD 6.10)', () => {
     expect(faq['@id']).toBe('https://b7r.sa/faq#faq');
     expect(faq['inLanguage']).toBe('ar');
     const schemaQuestions = (faq['mainEntity'] as Array<{ name: string }>).map((q) => q.name);
-    // A group's accordion mounts near the viewport and replaces the static list: a question
-    // is a button once mounted and a term before, one of the two on any device.
-    const visible = await groups.locator('button, dt').allTextContents();
+    const visible = await groups.locator('button').allTextContents();
     expect(schemaQuestions).toEqual(visible.map((q) => q.trim()));
     expect(schemaQuestions.length).toBeGreaterThanOrEqual(15);
+  });
+
+  test('the accordion is server-rendered closed with the answers in the DOM, so hydration moves nothing', async ({
+    page,
+    browser,
+    baseURL,
+    request,
+  }) => {
+    // The server HTML carries every answer inside a closed panel (crawlers, no JavaScript).
+    const html = await (await request.get('/faq')).text();
+    expect(html).toContain('data-state="closed"');
+    expect(html).toContain('بضغطة واحدة');
+    // Each group is the same height before and after the accordion hydrates (the audit's
+    // CLS of 1.19 came from a static list the island replaced with collapsed rows).
+    await page.goto('/faq');
+    await expect(page.locator('#faq-group-1 button[aria-expanded]').first()).toBeVisible();
+    const hydrated = await groupHeights(page);
+    const viewport = page.viewportSize();
+    const noJs = await browser.newContext({
+      javaScriptEnabled: false,
+      locale: 'ar-SA',
+      ...(viewport ? { viewport } : {}),
+    });
+    const plain = await noJs.newPage();
+    await plain.goto(`${baseURL}/faq`);
+    const served = await groupHeights(plain);
+    await noJs.close();
+    expect(served).toHaveLength(hydrated.length);
+    for (const [i, height] of served.entries())
+      expect(Math.abs(height - hydrated[i]!)).toBeLessThanOrEqual(1);
   });
 });
 

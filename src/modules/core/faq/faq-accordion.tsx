@@ -12,7 +12,10 @@ interface FaqAccordionProps {
   items: Array<{ question: string; answer: string }>;
 }
 
-/** Single-open accordion for the FAQ items; tracks `faq_open{question}` (BRD 6.4.9). */
+/**
+ * Single-open accordion for the FAQ items, rendered closed on the server with every answer in
+ * the DOM (`AccordionContent` mounts its panel); tracks `faq_open{question}` (BRD 6.4.9).
+ */
 export function FaqAccordion({ items }: FaqAccordionProps) {
   return (
     <Accordion

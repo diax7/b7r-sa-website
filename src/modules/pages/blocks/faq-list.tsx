@@ -7,7 +7,7 @@ import { copyFor } from '@/content/copy';
 import { getFaqs, getHomeFaqs, getSiteSettings } from '@/lib/cms';
 import { type Locale, localePath } from '@/lib/i18n';
 import { whatsappUrl } from '@/lib/utm';
-import { FaqAccordionLoader, FaqStaticList } from '@/modules/core';
+import { FaqAccordion } from '@/modules/core';
 import type { BlockProps } from '@/modules/pages/blocks/types';
 
 type Item = { question: string; answer: string };
@@ -112,7 +112,7 @@ export async function FaqListBlock({
               </Link>
             )}
           </div>
-          <FaqAccordionLoader items={items} fallback={<FaqStaticList items={items} />} />
+          <FaqAccordion items={items} />
         </Container>
       </Section>
     );
@@ -160,10 +160,7 @@ export async function FaqListBlock({
                 <h2 id={`${group.id}-title`} className="text-h3 mb-4 text-text">
                   {group.name}
                 </h2>
-                <FaqAccordionLoader
-                  items={group.items}
-                  fallback={<FaqStaticList items={group.items} />}
-                />
+                <FaqAccordion items={group.items} />
               </section>
             ))}
             {block.bottomLine && block.bottomLinkWord && (

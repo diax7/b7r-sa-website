@@ -12,5 +12,4 @@ export { NearViewport, AfterDelay } from '@/modules/core/lazy-mount';
 // '@/modules/core/seo/metadata' directly, so this barrel stays safe for client components.
 export { JsonLd } from '@/modules/core/seo/json-ld-script';
 export * as jsonLd from '@/modules/core/seo/json-ld';
-export { FaqAccordionLoader } from '@/modules/core/faq/faq-accordion-loader';
-export { FaqStaticList } from '@/modules/core/faq/faq-static-list';
+export { FaqAccordion } from '@/modules/core/faq/faq-accordion';

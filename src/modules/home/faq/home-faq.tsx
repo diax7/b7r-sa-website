@@ -6,12 +6,11 @@ import { Section, type SectionTone } from '@/components/shared/section';
 import { SectionHeader } from '@/components/shared/section-header';
 import { getHome, getHomeFaqs } from '@/lib/cms';
 import { type Locale, localePath } from '@/lib/i18n';
-import { FaqAccordionLoader, FaqStaticList } from '@/modules/core';
+import { FaqAccordion } from '@/modules/core';
 
 /**
- * Home FAQ (BRD 6.4.9): header + link at the start, accordion at the end. The questions and
- * answers are server-rendered as a plain list (crawlers, no-JS) until the Radix accordion
- * mounts near the viewport.
+ * Home FAQ (BRD 6.4.9): header + link at the start, accordion at the end. The accordion is
+ * server-rendered closed with every answer in the DOM (crawlers, no layout shift on mount).
  */
 export async function HomeFaq({ locale, tone = 'ground' }: { locale: Locale; tone?: SectionTone }) {
   const [{ faq }, homeFaq] = await Promise.all([getHome(locale), getHomeFaqs(locale)]);
@@ -31,7 +30,7 @@ export async function HomeFaq({ locale, tone = 'ground' }: { locale: Locale; ton
             <Icon icon={ArrowRight} size={18} />
           </Link>
         </div>
-        <FaqAccordionLoader items={items} fallback={<FaqStaticList items={items} />} />
+        <FaqAccordion items={items} />
       </Container>
     </Section>
   );
