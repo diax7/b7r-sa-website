@@ -174,14 +174,23 @@ const uploadValue = (value: unknown): number | string | null => {
 
 /**
  * The twins a write carries: for every twin of the saved document (rows by id), the value the
- * request sent for it, an upload's as its id. A twin the request did not send (a REST write
- * of other fields, a script) is left out: never "blank the English" by omission.
+ * request sent for it (`null` included: a photo cleared), an upload's as its id. A twin the
+ * request did not send falls back to the document before the write (`previousDoc`, the draft
+ * as stored: its twin is the English an autosave kept, or null at rest), so a scheduled
+ * publish or a REST publish that writes `_status` alone still carries the pending English;
+ * a twin neither sent nor pending is left out: never "blank the English" by omission.
  */
-export function twinValues(shape: Shape, data: unknown, doc: unknown): TwinValue[] {
+export function twinValues(
+  shape: Shape,
+  data: unknown,
+  doc: unknown,
+  previousDoc: unknown,
+): TwinValue[] {
   const out: TwinValue[] = [];
   for (const { key, twinKey, kind } of twinsIn(shape, doc, '')) {
-    const value = readKey(data, twinKey);
-    if (value === undefined) continue;
+    const sent = readKey(data, twinKey);
+    const value = sent === undefined ? readKey(previousDoc, twinKey) : sent;
+    if (value === undefined || (sent === undefined && value === null)) continue;
     out.push({ key, twinKey, kind, value: kind === 'upload' ? uploadValue(value) : value });
   }
   return out;

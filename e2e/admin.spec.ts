@@ -2448,6 +2448,97 @@ test.describe('CMS admin', () => {
       }
     });
 
+    // The one premise that rests on Lexical's internals: mounting the twin's editor does not
+    // re-serialise the English (`OnChangePlugin` skips the initial state), so a save that
+    // touches only Arabic makes one version, the Arabic write, and never a second English one.
+    test('a Publish that touches only Arabic writes one version: the untouched English twin is not re-written (ADR-057, PR B)', async ({
+      page,
+      request,
+    }) => {
+      test.setTimeout(150_000);
+      const auth = await login(request, ADMIN);
+      const slug = `bilingual-twin-noop-e2e-${Date.now()}`;
+      const created = await request.post(`${API}/pages?locale=ar`, {
+        headers: auth,
+        data: {
+          title: 'صفحة بلا تغيير',
+          slug,
+          blocks: [{ blockType: 'richText', title: 'المقدمة', content: paragraph('فقرة عربية.') }],
+          seo: { title: 'صفحة بلا تغيير', description: 'وصف للاختبار.' },
+          _status: 'published',
+        },
+      });
+      expect(created.status(), await created.text()).toBe(201);
+      const createdDoc = (
+        (await created.json()) as { doc: { id: number; blocks: Array<{ id: string }> } }
+      ).doc;
+      const id = createdDoc.id;
+      const versions = async () => {
+        const res = await request.get(
+          `${API}/pages/versions?where[parent][equals]=${id}&limit=1&depth=0`,
+          { headers: auth },
+        );
+        expect(res.status()).toBe(200);
+        return ((await res.json()) as { totalDocs: number }).totalDocs;
+      };
+      const title = async (locale: string) => {
+        const res = await request.get(`${API}/pages/${id}?locale=${locale}&depth=0`, {
+          headers: auth,
+        });
+        return ((await res.json()) as { title: string }).title;
+      };
+      try {
+        const english = await request.patch(`${API}/pages/${id}?locale=en`, {
+          headers: auth,
+          data: {
+            title: 'Untouched page',
+            blocks: [
+              {
+                id: createdDoc.blocks[0]!.id,
+                blockType: 'richText',
+                title: 'Introduction',
+                content: paragraph('An English paragraph that stays.'),
+              },
+            ],
+            seo: { title: 'Untouched page', description: 'For the test.' },
+          },
+        });
+        expect(english.status(), await english.text()).toBe(200);
+        await page.goto('/admin/login');
+        await page.locator('#field-email').fill(admin.email);
+        await page.locator('#field-password').fill(admin.password);
+        await page.locator('form button[type="submit"]').first().click();
+        await page.waitForURL((u) => !u.pathname.endsWith('/login'));
+        await page.goto(`/admin/collections/pages/${id}?locale=ar`);
+        await page.locator('.tabs-field__tab-button', { hasText: 'Content' }).click();
+        const twinEditor = page.locator(
+          '[data-field-path="blocks.0.contentTwin"] [data-lexical-editor="true"]',
+        );
+        await expect(twinEditor).toHaveText('An English paragraph that stays.', {
+          timeout: 15_000,
+        });
+        // An Arabic edit alone; the autosave lands first, and the count settles.
+        const before = await versions();
+        await page.locator('#field-title').fill('صفحة بلا تغيير (محدّثة)');
+        await expect.poll(versions, POLL).toBeGreaterThan(before);
+        await page.waitForTimeout(3_000);
+        const settled = await versions();
+        await page.locator('#action-save').click();
+        await expect(page.locator('.payload-toast-container')).toContainText(
+          /updated successfully/i,
+        );
+        await expect.poll(() => title('ar'), POLL).toBe('صفحة بلا تغيير (محدّثة)');
+        await page.waitForTimeout(3_000);
+        // One version: the Arabic publish. A second one would be an English write the
+        // editor never asked for.
+        expect(await versions()).toBe(settled + 1);
+        expect(await title('en')).toBe('Untouched page');
+        await expect(twinEditor).toHaveText('An English paragraph that stays.');
+      } finally {
+        expect((await request.delete(`${API}/pages/${id}`, { headers: auth })).status()).toBe(200);
+      }
+    });
+
     test('two blocks of one type on a page get distinct ids and pass axe', async ({
       page,
       request,

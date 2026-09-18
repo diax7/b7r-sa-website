@@ -243,10 +243,22 @@ export const hasTwins = (shape: Shape): boolean =>
   Object.values(shape.groups).some(hasTwins) ||
   Object.values(shape.lists).some((list) => Object.values(list.rows).some(hasTwins));
 
+/**
+ * The walk of a config's top-level fields, once per field list: the hooks ask for it on every
+ * read and every save and a config's field array never changes after boot. Nothing writes to
+ * a shape.
+ */
+const shapes = new WeakMap<Field[], Shape>();
+
 /** The config walk behind `bilingualPaths`, the hook's allow-list and the row builder. */
 export function shapeOf(fields: Field[], parentLocalized = false): Shape {
+  if (!parentLocalized) {
+    const known = shapes.get(fields);
+    if (known) return known;
+  }
   const shape = emptyShape();
   collect(fields, shape, parentLocalized);
+  if (!parentLocalized) shapes.set(fields, shape);
   return shape;
 }
 

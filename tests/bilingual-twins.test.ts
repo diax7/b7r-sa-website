@@ -259,26 +259,61 @@ describe('twinValues and showTwins: what a write carries and what the response s
     ],
   };
 
-  it('reads each twin the request sent, by row id; an upload as its id; a twin not sent is left out', () => {
+  it('reads each twin the request sent, by row id; an upload as its id; a twin neither sent nor pending is left out', () => {
     const data = {
       bodyTwin: en,
       coverTwin: { id: 31, url: '/x.jpg' },
       blocks: [{ id: 'b2', contentTwin: en }, { id: 'b1' }],
     };
-    expect(twinValues(shape, data, doc)).toEqual([
+    expect(twinValues(shape, data, doc, doc)).toEqual([
       { key: 'body', twinKey: 'bodyTwin', kind: 'richText', value: en },
       { key: 'cover', twinKey: 'coverTwin', kind: 'upload', value: 31 },
       { key: 'blocks.b2.content', twinKey: 'blocks.b2.contentTwin', kind: 'richText', value: en },
     ]);
-    expect(twinValues(shape, {}, doc)).toEqual([]);
-    expect(twinValues(shape, { coverTwin: null }, doc)).toEqual([
+    expect(twinValues(shape, {}, doc, doc)).toEqual([]);
+    expect(twinValues(shape, { coverTwin: null }, doc, doc)).toEqual([
       { key: 'cover', twinKey: 'coverTwin', kind: 'upload', value: null },
     ]);
   });
 
+  it('a twin the request did not send falls back to the pending one of the document before (a scheduled publish); null there is not pending', () => {
+    const pendingEn = { root: { children: [{ type: 'paragraph', text: 'Pending.' }] } };
+    const previous = {
+      ...doc,
+      bodyTwin: pendingEn,
+      coverTwin: 31,
+      blocks: [
+        { id: 'b1', blockType: 'richText', content: ar, contentTwin: pendingEn },
+        { id: 'b2', blockType: 'richText', content: ar, contentTwin: null },
+      ],
+    };
+    expect(twinValues(shape, { _status: 'published' }, doc, previous)).toEqual([
+      { key: 'body', twinKey: 'bodyTwin', kind: 'richText', value: pendingEn },
+      { key: 'cover', twinKey: 'coverTwin', kind: 'upload', value: 31 },
+      {
+        key: 'blocks.b1.content',
+        twinKey: 'blocks.b1.contentTwin',
+        kind: 'richText',
+        value: pendingEn,
+      },
+    ]);
+    // What the request sends wins over the draft, a cleared photo included.
+    expect(twinValues(shape, { bodyTwin: en, coverTwin: null }, doc, previous)).toEqual([
+      { key: 'body', twinKey: 'bodyTwin', kind: 'richText', value: en },
+      { key: 'cover', twinKey: 'coverTwin', kind: 'upload', value: null },
+      {
+        key: 'blocks.b1.content',
+        twinKey: 'blocks.b1.contentTwin',
+        kind: 'richText',
+        value: pendingEn,
+      },
+    ]);
+    expect(twinValues(shape, {}, doc, undefined)).toEqual([]);
+  });
+
   it('shows an applied twin as written and the others as stored, each with a fresh base', () => {
     const out = structuredClone(doc) as Doc;
-    const values = twinValues(shape, { bodyTwin: en, coverTwin: 31 }, out);
+    const values = twinValues(shape, { bodyTwin: en, coverTwin: 31 }, out, out);
     const stored = { body: { root: 'theirs' }, cover: 13 };
     const bases = showTwins(out, values, new Set(['body']), stored);
     expect(out['bodyTwin']).toEqual(en);

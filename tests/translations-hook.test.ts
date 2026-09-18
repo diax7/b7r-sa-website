@@ -128,11 +128,11 @@ function fake(opts: Fake = {}) {
 
 const pending = (entries: Translations['en']): Translations => ({ en: entries });
 
-function save(doc: Doc, req: PayloadRequest, data?: Doc) {
+function save(doc: Doc, req: PayloadRequest, data?: Doc, previousDoc: Doc = doc) {
   return (applyTranslations as unknown as Hook)({
     doc,
     data,
-    previousDoc: doc,
+    previousDoc,
     operation: 'update',
     req,
     collection,
@@ -560,6 +560,38 @@ describe('the twins (PR B): a rich text or a photo in English rides the same sav
     expect(result['translations']).toEqual({
       en: { 'slides.s1.image': { base: '31' }, 'slides.s2.image': { base: null } },
     });
+  });
+
+  it("a publish that sends _status alone (the schedule, a script) carries the draft's pending twin with the light entries", async () => {
+    const { req, update } = fake({ stored: { title: 'Old', body: oldEn } });
+    // The draft as autosaved: the twin holds the English typed since the last manual save,
+    // the JSON its base and a title entry. Payload's scheduled publish writes `_status` only;
+    // the JSON rides in by field fallback, the twin column is nulled by its own hook.
+    const draft = {
+      id: 7,
+      _status: 'draft',
+      bodyTwin: newEn,
+      translations: {
+        en: { title: { value: 'New title', base: 'Old' }, body: { base: hashOf(oldEn) } },
+      },
+    };
+    const published = { ...draft, _status: 'published', bodyTwin: null };
+    const result = await save(published, req, { _status: 'published' }, draft);
+    expect(update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        locale: 'en',
+        draft: false,
+        data: { title: 'New title', body: newEn, translations: null },
+      }),
+    );
+    expect(result['bodyTwin']).toEqual(newEn);
+    // A draft whose twin is null at rest has nothing pending: the light entry alone applies.
+    const rest = fake({ stored: { title: 'Old', body: oldEn } });
+    const settled = { ...draft, bodyTwin: null };
+    await save({ ...settled, _status: 'published' }, rest.req, { _status: 'published' }, settled);
+    expect(rest.update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: { title: 'New title', translations: null } }),
+    );
   });
 
   it('the twins pair with a save from the default locale only: saving in English ignores them', async () => {

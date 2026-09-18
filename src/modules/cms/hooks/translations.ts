@@ -173,15 +173,24 @@ function languageName(req: PayloadRequest, code: string): string {
   return en ?? code;
 }
 
-async function apply(req: PayloadRequest, doc: Doc, data: unknown, target: Target): Promise<Doc> {
+/** What a save hands the hook: the written document, the request's data, the document before. */
+interface Save {
+  doc: Doc;
+  data: unknown;
+  previousDoc: unknown;
+}
+
+async function apply(req: PayloadRequest, save: Save, target: Target): Promise<Doc> {
+  const { doc, data, previousDoc } = save;
   if (req.context?.[SKIP_TRANSLATIONS] || isAutosave(req)) return doc;
   const pair = localePair(req);
   if (!pair) return doc;
   const shape = shapeOf(target.fields);
   const translations = doc[TRANSLATIONS];
   const entries = entriesOf(translations, pair.other);
-  // The twins are the English: they pair with a save from the default locale only.
-  const twins = pair.isDefault ? twinValues(shape, data, doc) : [];
+  // The twins are the English: they pair with a save from the default locale only. A publish
+  // that sends `_status` alone (the schedule, a script) carries the draft's pending twins.
+  const twins = pair.isDefault ? twinValues(shape, data, doc, previousDoc) : [];
   if (Object.keys(entries).length === 0 && twins.length === 0) return doc;
   const stored = await readOther(req, target, pair.other);
   const applying = twins.filter((t) =>
@@ -229,14 +238,34 @@ function shown({ doc, twins, applied, stored, written }: Shown, pair: { other: s
 }
 
 /** Collections: after a Save or Publish, the other language's pending edits are written too. */
-export const applyTranslations: CollectionAfterChangeHook = ({ doc, data, req, collection }) =>
-  apply(req, doc as Doc, data, {
-    type: 'collections',
-    slug: collection.slug,
-    fields: collection.fields,
-    id: (doc as Doc)['id'] as number | string | undefined,
-  });
+export const applyTranslations: CollectionAfterChangeHook = ({
+  doc,
+  data,
+  previousDoc,
+  req,
+  collection,
+}) =>
+  apply(
+    req,
+    { doc: doc as Doc, data, previousDoc },
+    {
+      type: 'collections',
+      slug: collection.slug,
+      fields: collection.fields,
+      id: (doc as Doc)['id'] as number | string | undefined,
+    },
+  );
 
 /** Globals: the same, through `updateGlobal`. */
-export const applyGlobalTranslations: GlobalAfterChangeHook = ({ doc, data, req, global }) =>
-  apply(req, doc as Doc, data, { type: 'globals', slug: global.slug, fields: global.fields });
+export const applyGlobalTranslations: GlobalAfterChangeHook = ({
+  doc,
+  data,
+  previousDoc,
+  req,
+  global,
+}) =>
+  apply(
+    req,
+    { doc: doc as Doc, data, previousDoc },
+    { type: 'globals', slug: global.slug, fields: global.fields },
+  );
