@@ -6,6 +6,7 @@ import {
   adminStringsAr,
   adminStringsFor,
 } from '@/modules/cms/admin/strings';
+import { ARABIC, LATIN_ONLY, RULES } from './helpers/arabic-rules';
 
 /**
  * The panel's two languages (ADR-056): every leaf of the English tree has an Arabic
@@ -25,10 +26,6 @@ function leaves(tree: unknown, path = ''): Leaf[] {
   }
   return [{ path, value: tree }];
 }
-
-const ARABIC = /[؀-ۿ]/;
-/** Brand names, codes and placeholders stay Latin; a string is Arabic once it holds a letter. */
-const LATIN_ONLY = /^[\sA-Za-z0-9,;.:{}()%$/+_-]*$/;
 
 /** The values a leaf renders, whatever its kind, so the rules read functions and lists too. */
 function rendered(value: unknown): string[] {
@@ -78,19 +75,7 @@ describe('adminStrings: both languages, the same tree', () => {
   });
 });
 
-/** The ux-araby rules a regular expression can read (design system §5, ADR-040). */
-const RULES: Array<{ name: string; bad: RegExp }> = [
-  { name: 'no «تم» + مصدر', bad: /(^|\s)تم(ت|ّ)?\s/u },
-  { name: 'no «قم بـ»', bad: /(^|\s)قم\s?ب/u },
-  { name: 'no «!»', bad: /!/ },
-  { name: 'no «/» between Arabic words («أو» instead)', bad: /[؀-ۿ]\s*\/\s*[؀-ۿ]/u },
-  { name: 'no Latin comma between Arabic words («،» instead)', bad: /[؀-ۿ],\s/u },
-  { name: 'no em dash', bad: /\u2014/ },
-  { name: 'no «الخاص بك»', bad: /الخاص(ة)? ب/u },
-  { name: 'no «بنجاح»', bad: /بنجاح/u },
-  { name: 'no Eastern Arabic digits', bad: /[٠-٩]/u },
-];
-
+/** The ux-araby rules a regular expression can read (design system §5): `tests/helpers/arabic-rules.ts`. */
 describe('the Arabic strings under the ux-araby rules', () => {
   for (const rule of RULES) {
     it(rule.name, () => {
