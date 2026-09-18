@@ -4,7 +4,6 @@ import { preload } from 'react-dom';
 import { SAR_NAME_ID } from '@/components/shared/sar-symbol';
 import { copyFor, shellCopy } from '@/content/copy';
 import type { Navigation, SiteSettings } from '@/content/schema';
-
 import { htmlDir, languageTag, type Locale } from '@/lib/i18n';
 import { Footer, Header, newsletterCopy, SkipLink } from '@/modules/core';
 import { PageExtras } from '@/modules/core/page-extras';
