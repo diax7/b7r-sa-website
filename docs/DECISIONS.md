@@ -1576,3 +1576,22 @@ crosses the accent only during the 700 ms slide. The stops and the 280% size are
 make this true; a later "more shine" edit must re-check the numbers. The glint is the
 site's third continuous animation after ADR-037's two, transform-only and off under
 reduced motion.
+
+## ADR-055: Scroll reveal on every section, by the primitives (2026-09-18)
+
+Dhia: a subtle animation as things scroll into view, on every item and every page, and on
+future additions. Until now `Reveal` wrapped four lists by hand and hid them by CSS under
+`html.js`, which would have delayed the first paint anywhere a wrapped element sat above the
+fold. The rule now: `Section` carries `data-reveal` by default (`reveal={false}` for the hero,
+which is not a Section anyway, and for a section holding a `position: fixed` child, since a
+transformed ancestor becomes its containing block: the designer); a grid marks
+`data-reveal-stagger` and its children stagger 60 ms by index; `Reveal` stays for a hand-placed
+element and is a server component now. One inline script at the end of the body
+(`modules/core/reveal-script`) runs after the DOM is parsed and before hydration: an element
+already in view is marked visible at once and never hidden, so the LCP and the fold are never
+touched; one below the fold is hidden and fades up 12 px over 400 ms when it enters (an
+IntersectionObserver with an 8% bottom margin); a MutationObserver arms elements added later.
+The CSS hides nothing by itself, so content is always there without JavaScript, and the
+script exits under reduced motion. `e2e/reveal.spec.ts` asserts the four rules; new
+components inherit the behaviour through `Section`, which is what makes "future additions"
+true without anyone remembering.

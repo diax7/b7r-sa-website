@@ -4,10 +4,10 @@ import { preload } from 'react-dom';
 import { SAR_NAME_ID } from '@/components/shared/sar-symbol';
 import { copyFor, shellCopy } from '@/content/copy';
 import type { Navigation, SiteSettings } from '@/content/schema';
-
 import { htmlDir, languageTag, type Locale } from '@/lib/i18n';
 import { Footer, Header, newsletterCopy, SkipLink } from '@/modules/core';
 import { PageExtras } from '@/modules/core/page-extras';
+import { REVEAL_SCRIPT } from '@/modules/core/reveal-script';
 import { NewsletterForm } from '@/modules/forms';
 import '@/styles/globals.css';
 
@@ -96,6 +96,8 @@ export function SiteDocument({
           locale={locale}
           copy={shell}
         />
+        {/* The scroll reveal (ADR-055): after the DOM, before hydration; hides only what is below the fold. */}
+        <script dangerouslySetInnerHTML={{ __html: REVEAL_SCRIPT }} />
         {site.analytics.umami && (
           <Script
             src={site.analytics.umami.src}

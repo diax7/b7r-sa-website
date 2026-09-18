@@ -830,18 +830,22 @@
 }
 
 /* ---------------------------------------------------------------------------------------
-   Scroll reveal (§3.7). Hidden state only when JS is running (html.js is set by an inline
-   script in <head>), so JS-off and pre-hydration always show content.
+   Scroll reveal (§3.7, ADR-055). `[data-reveal]` on every Section and on the children of a
+   `[data-reveal-stagger]` group. The CSS hides nothing by itself: the inline observer
+   (modules/core/reveal-script) adds `is-hidden` only to elements below the fold, then
+   `is-visible` as they enter, staggered 60 ms by `--i` inside a group.
    --------------------------------------------------------------------------------------- */
-html.js .reveal {
-  opacity: 0;
-  transform: translateY(12px);
+[data-reveal] {
   transition:
     opacity 400ms var(--ease-standard),
     transform 400ms var(--ease-standard);
   transition-delay: calc(var(--i, 0) * 60ms);
 }
-html.js .reveal.is-visible {
+[data-reveal].is-hidden {
+  opacity: 0;
+  transform: translateY(12px);
+}
+[data-reveal].is-visible {
   opacity: 1;
   transform: none;
 }
@@ -853,7 +857,8 @@ html.js .reveal.is-visible {
   html {
     scroll-behavior: auto;
   }
-  html.js .reveal {
+  [data-reveal],
+  [data-reveal].is-hidden {
     opacity: 1;
     transform: none;
     transition: none;

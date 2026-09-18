@@ -1,13 +1,4 @@
-'use client';
-
-import {
-  useEffect,
-  useRef,
-  type ComponentPropsWithoutRef,
-  type CSSProperties,
-  type ElementType,
-} from 'react';
-import { cn } from '@/lib/cn';
+import type { ComponentPropsWithoutRef, CSSProperties, ElementType } from 'react';
 
 interface RevealProps extends ComponentPropsWithoutRef<'div'> {
   as?: ElementType;
@@ -16,41 +7,18 @@ interface RevealProps extends ComponentPropsWithoutRef<'div'> {
 }
 
 /**
- * Scroll reveal: fade up 12 px over 400 ms, once, when 20 % visible (BRD 3.7). The hidden
- * state exists only under `html.js` (see globals.css), so content is always visible without
- * JS. Reduced motion disables it in CSS. Never wrap hero content.
+ * One element that fades up 12 px over 400 ms, once, when it scrolls into view (BRD 3.7,
+ * ADR-055). Renders `data-reveal`; the site's inline observer (`modules/core/reveal-script`)
+ * does the work, so this is a server component and costs no JavaScript of its own. A group
+ * of siblings staggers by itself with `data-reveal-stagger` on the parent; `index` is for
+ * a hand-placed stagger. Never wrap hero content.
  */
-export function Reveal({ as, index = 0, className, style, ...rest }: RevealProps) {
+export function Reveal({ as, index, style, ...rest }: RevealProps) {
   const Tag = (as ?? 'div') as ElementType;
-  const ref = useRef<HTMLElement>(null);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    if (!('IntersectionObserver' in window)) {
-      el.classList.add('is-visible');
-      return;
-    }
-    const io = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            el.classList.add('is-visible');
-            io.disconnect();
-          }
-        }
-      },
-      { threshold: 0.2 },
-    );
-    io.observe(el);
-    return () => io.disconnect();
-  }, []);
-
   return (
     <Tag
-      ref={ref}
-      className={cn('reveal', className)}
-      style={{ '--i': index, ...style } as CSSProperties}
+      data-reveal=""
+      style={index === undefined ? style : ({ '--i': index, ...style } as CSSProperties)}
       {...rest}
     />
   );
