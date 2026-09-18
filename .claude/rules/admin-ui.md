@@ -59,14 +59,18 @@ note), `check:rtl` and the admin e2e.
    `src/modules/visibility/rules/`, with its sentence and guide beside it; its weight lives in
    `rules/weights.ts`; a guide always links to the field that fixes the finding, in the
    locale that is missing; a thing the site guarantees by construction is a fact, not a rule.
-13. A localized `text`, `textarea` or `select` field is bilingual by `describeFields`
-   (ADR-057, design system §6a): both languages side by side, one Save writes both through
+13. A localized `text`, `textarea`, `select` or `number` field is bilingual by
+   `describeFields` (ADR-057 and its amendment, design system §6a): both languages side by
+   side, inside the rows of arrays and blocks too, one Save writes both through
    `applyTranslations` / `applyGlobalTranslations` (`src/modules/cms/hooks/translations.ts`),
    which a config with such a field lists last in `hooks.afterChange` (the config test
    checks). Never add a second place to edit a value: no per-language duplicate field, no
-   `titleEn` beside `title`, no widget of your own on a localized text. What stays on the
-   locale switch (rich text, arrays, blocks, uploads, relationships, `hasMany`) is by design;
-   the locale note says so (`locale.legend`) and the field's own strings are the `bilingual`
+   `titleEn` beside `title`, no widget of your own on a localized text. `localized` goes on
+   a row's subfields, never on the array or the blocks field itself (a list localized as a
+   whole has one row set per language and cannot be paired; the census test refuses one
+   that is not `posts.warnings`). What stays on the locale switch (rich text, uploads,
+   relationships, `hasMany`) is by design until PR B of the no-locale-switch plan; the
+   locale note says so (`locale.legend`) and the field's own strings are the `bilingual`
    branch of both trees in `strings.ts`, read per render like every other string.
 14. The sidebar shows no document count (ADR-058). A number that asks for action is a badge:
    a kind in `src/modules/cms/admin/nav/badges.ts` (its reader, a cheap query with the

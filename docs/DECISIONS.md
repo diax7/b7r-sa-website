@@ -1799,6 +1799,55 @@ with `?locale=all`, the refusal of a blanked English title). Migration
 version tables. The bilingual root carries no `data-admin-ui`: it hosts Payload's inputs,
 which the shell's element reset would strip; `data-admin-bilingual` is the e2e hook.
 
+**Amendment, 2026-09-18 (PR A of `docs/plans/2026-09-18-no-locale-switch.md`): rows too.**
+Dhia, after seeing the live panel: "there is no editing for the English content separated
+from the Arabic; something that has Arabic and English has the two fields next to each other,
+not a switch of where you are editing; the header's locale change is the same thing; I don't
+want to be switching between them, one edit for both languages." The rule that settles the
+classes, with the CTO: a light field (text, textarea, select, number) keeps the JSON entry; a
+heavy field (rich text, upload) gets a real sibling twin (PR B). So the paragraph above that
+kept arrays and blocks on the switch is reversed: `describeFields` renders every localized
+light field inside the rows of an array or a blocks field with `BilingualField` too (55
+fields across the products' colours and sizes, the pages' blocks, the home page's slides,
+chips, steps and reasons, the site settings' menus, the search defaults' routes, the posts'
+takeaways), and the entry is keyed by the row's id, never its index
+(`hero.slides.<rowId>.headline`, `blocks.<rowId>.items.<itemId>.title`): the admin form makes
+the id when a row is added (`ADD_ROW` in `@payloadcms/ui`'s `fieldReducer.js`), the server
+keeps a supplied id, and Payload's own locale merge for rows is id-keyed
+(`getExistingRowDoc.js`), so a reorder keeps the entry with its row, a deleted row's entry is
+dropped, and a duplicated row (a new id) starts with an empty other language, which the
+list's description says. `bilingualPaths()` is a config walk (`shapeOf`) that also yields,
+per array or blocks path and per block slug, which subfields are localized; the hook
+resolves every entry key against it and the saved document at apply time (`resolveKey`: a
+bilingual leaf, a row the document has, the row's block type), so a crafted id, a
+non-localized subfield or a `blockType` never reaches the write. Payload's array write is
+positional and a partial list would drop the other rows, so an entry inside a list sends the
+whole list in the other locale (`otherLocaleRows`): for each row of the saved document by
+id, the non-localized subfields from it, the localized ones from the stored row of the other
+locale matched by id (null for a row that locale has no text for yet: a row added on the
+same save), the planned writes on top; nested lists the same inside their row; the saved
+language's text is never copied into the other. The base check is unchanged for scalars and
+for rows alike (`readKey` walks a list by id). Two consequences worth knowing: touching any
+English field of a list on a Publish validates the whole English list, so a row added
+without its English fails with the field named, the same net as a half-filled English side
+elsewhere; and a list localized as a whole cannot be paired, so `posts.takeaways` became a
+shared array with a localized `text` (migration `20260918_114349_takeaways_rows_shared`: the
+Arabic rows keep their ids, the English text moves under them paired by `_order` as the seed
+created it, the versions table the same, both directions verified on a copy of the database
+and read back with `?locale=all`); `seo-defaults.routes` already had that shape since the
+initial migration, so there was one restructure, not two. The post's `warnings` stays
+localized as a whole: computed and read-only, a fact, not an edit. What still stays on the
+switch: rich text (the page block's body) and uploads (the hero's two photos), until PR B's
+twins. The locale note says so ("inside lists and blocks too", "Rich text and images stay
+per language"). Tests: `tests/bilingual-rows.test.ts` (the walk, the resolver, the key
+reader and the index-to-id mapping, the row builder: reorder, delete, a new row on the same
+save, a nested block array, a crafted id and a crafted non-localized path with the block
+slug, the Arabic never copied into an untouched English row), the hook with a blocks row and
+with a made-up row, the census in `tests/admin-config.test.ts` (55 in rows; the three heavy
+row fields; the one whole-localized list); two e2e (a comparison row's text in both
+languages, a fourth row with its English and a keyboard move in one Publish; a hero slide's
+line on the home page).
+
 ## ADR-058: The sidebar: one tree, one breakpoint (2026-09-18)
 
 **Context.** The admin audit of 2026-09-18 (section 1) found two open/close systems by

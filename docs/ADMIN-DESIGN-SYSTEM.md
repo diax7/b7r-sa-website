@@ -249,10 +249,14 @@ hydration there is no pill rather than a wrong one.
 ### 6a. Both languages at once
 
 Dhia's rule (2026-09-18, ADR-057): the two languages of a text are edited side by side, never
-by switching the page language. `describeFields()` gives every localised `text`, `textarea`
-and `select` field (one value, outside arrays and blocks, no widget of its own) the
-`BilingualField` component, so a new config gets it with no work and there is never a second
-place to edit a value.
+by switching the page language. `describeFields()` gives every localised `text`, `textarea`,
+`select` and `number` field (one value, no widget of its own) the `BilingualField`
+component, outside a list and inside the rows of arrays and blocks alike (the amendment of
+ADR-057), so a new config gets it with no work and there is never a second place to edit a
+value. What still follows the locale control: rich text and uploads (their twins are PR B of
+`docs/plans/2026-09-18-no-locale-switch.md`), and a list localised as a whole (its rows are
+per language and cannot be paired; a new config never adds one: `localized` goes on the
+row's subfields, never on the array).
 
 - **Layout.** Payload's own field for the open locale at the start, the same input for the
   other locale at the end, in a two-column grid that stacks under 32 rem of container width
@@ -265,8 +269,18 @@ place to edit a value.
 - **The tag.** The other input's label repeats the field's label, the required star, and
   the other locale's code in the locale pill (`.admin-locale-tag`, the same declarations as
   ADR-044's `::after` pill, one rule in `admin.css`). A field with two pills is per language
-  and both are in front of you; a field with one pill (rich text, a list) follows the locale
-  control; a field with none is shared.
+  and both are in front of you; a field with one pill (rich text, an image) follows the
+  locale control; a field with none is shared.
+- **Rows.** Inside an array or a blocks field the pair sits in the row like any other field
+  and its entry is keyed by the row's id from the form state, never by the index
+  (`hero.slides.<id>.headline`, `blocks.<id>.items.<id>.title`; `data-admin-bilingual`
+  carries that key), so a moved row keeps its other language, a deleted row's entry is
+  dropped, and a duplicated row starts with the other language empty. The list's
+  description ends with that sentence (`SHARED_ROWS_NOTE` in `describe.ts`, appended by the
+  pass to every list whose rows are bilingual). A row added and typed in both languages
+  lands with both on the same save. The number twin renders Payload's own number markup
+  (`field-type number`, an `<input type="number">`; `@payloadcms/ui` exports the field, not
+  its input).
 - **Prefill and states.** The other locale is read once per document view (the REST API
   with the editor's cookie, `fallback-locale=none`, `draft=true`), shared by every bilingual
   field on the page, and read again after each save. While it loads the other input is
@@ -276,7 +290,10 @@ place to edit a value.
 - **Saving.** The other language's edits wait in the hidden `translations` JSON and are
   written by the entity's `afterChange` hook on a Save or Publish, never on an autosave;
   a refusal in the other language fails the whole save with a toast naming the field and
-  the language ("Title in English: This field is required."). After a save the other
+  the language ("Title in English: This field is required."). An entry inside a list sends
+  the whole list in the other locale, its rows built from the saved document by id, so a
+  Publish that touches any English field of a list validates the whole English list: a
+  row added without its English is refused with the field named. After a save the other
   input shows what was written, not the old prefill.
 - **Strings.** The placeholder, the error and the language names are the `bilingual`
   branch of both trees in `strings.ts`, the note's sentences `locale.legend` (§5a): read

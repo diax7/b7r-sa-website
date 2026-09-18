@@ -134,3 +134,9 @@ Checked on 2026-09-18 in the installed packages (Payload 3.89.0), one line each:
 ## Status log
 
 - 2026-09-18: settled with the CTO; PR A building.
+- 2026-09-18: PR A built on `admin/bilingual-rows`: 55 localized light fields inside rows
+  bilingual (the census in `tests/admin-config.test.ts`), one restructure (`posts.takeaways`,
+  migration `20260918_114349_takeaways_rows_shared`; `seo-defaults.routes` already had the
+  shape), the row builder and its tests, two e2e run on a private server and database. What
+  remains: rich text (one field, the page block's body) and uploads (the hero's two photos),
+  PR B; then PR C.
