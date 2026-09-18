@@ -74,11 +74,43 @@ export function bilingualPaths(fields: Field[], path = '', parentLocalized = fal
   return out;
 }
 
+/** How much pending text one document may hold: the largest form (the home page) needs a tenth. */
+export const TRANSLATIONS_MAX_ENTRIES = 200;
+export const TRANSLATIONS_MAX_BYTES = 64 * 1024;
+
+const TOO_MUCH = {
+  en: `Pending translations: at most ${TRANSLATIONS_MAX_ENTRIES} entries and 64 KB; save, then continue.`,
+  ar: `الترجمات المعلّقة: ${TRANSLATIONS_MAX_ENTRIES} مدخل و64 كيلوبايت كحد أقصى؛ احفظ ثم تابع.`,
+};
+
+/** How many entries the JSON holds across every locale key, whatever their shape. */
+function entryCount(value: unknown): number {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return 0;
+  return Object.values(value as Record<string, unknown>).reduce<number>(
+    (n, byLocale) =>
+      n + (byLocale && typeof byLocale === 'object' ? Object.keys(byLocale).length : 0),
+    0,
+  );
+}
+
+/**
+ * Why the JSON is refused, in both languages, or null: the row stores whatever a signed-in
+ * user sends, so the bound is on the size, not the shape (the hook already ignores what is
+ * not an entry on an allowed path).
+ */
+export function translationsProblem(value: unknown): { en: string; ar: string } | null {
+  if (value === null || value === undefined) return null;
+  if (entryCount(value) > TRANSLATIONS_MAX_ENTRIES) return TOO_MUCH;
+  const bytes = new TextEncoder().encode(JSON.stringify(value)).length;
+  return bytes > TRANSLATIONS_MAX_BYTES ? TOO_MUCH : null;
+}
+
 /**
  * The hidden JSON that carries the other language's edits between the form and the hook.
  * Hidden in the form (Payload still keeps it in the form state), out of the versions diff,
- * and read by signed-in staff only: the site's Local API reads override access anyway, and an
- * outsider on the REST API has no business with an editor's pending text.
+ * read by signed-in staff only (the site's Local API reads override access anyway, and an
+ * outsider on the REST API has no business with an editor's pending text), and bounded in
+ * size, with the reason in the panel's language.
  */
 export function translationsField(): Field {
   return {
@@ -86,6 +118,11 @@ export function translationsField(): Field {
     type: 'json',
     access: { read: ({ req }) => Boolean(req.user) },
     admin: { hidden: true, components: { Diff: NO_DIFF } },
+    validate: (value, { req }) => {
+      const problem = translationsProblem(value);
+      if (!problem) return true;
+      return req?.i18n?.language === 'ar' ? problem.ar : problem.en;
+    },
   };
 }
 

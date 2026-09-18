@@ -6,6 +6,10 @@ import {
   nestPaths,
   plannedWrites,
   reconcile,
+  TRANSLATIONS_MAX_BYTES,
+  TRANSLATIONS_MAX_ENTRIES,
+  translationsField,
+  translationsProblem,
   type Translations,
 } from '@/modules/cms/fields/bilingual';
 import {
@@ -419,6 +423,49 @@ describe('the pure pieces', () => {
         ['seo.description', 'c'],
       ]),
     ).toEqual({ title: 'a', seo: { title: 'b', description: 'c' } });
+  });
+
+  it('the hidden JSON is bounded: more than 200 entries is refused', () => {
+    const entries = Object.fromEntries(
+      Array.from({ length: TRANSLATIONS_MAX_ENTRIES + 1 }, (_, i) => [
+        `f${i}`,
+        { value: 'x', base: null },
+      ]),
+    );
+    expect(translationsProblem({ en: entries })).toMatchObject({
+      en: expect.stringContaining('at most 200 entries'),
+      ar: expect.stringContaining('200 مدخل'),
+    });
+    const { [`f${TRANSLATIONS_MAX_ENTRIES}`]: _last, ...atTheCap } = entries;
+    void _last;
+    expect(translationsProblem({ en: atTheCap })).toBeNull();
+    // The count is over every locale key, so a split across two keys is the same count.
+    const half = Object.fromEntries(Object.entries(entries).slice(0, 101));
+    expect(translationsProblem({ en: half, ar: half })).not.toBeNull();
+  });
+
+  it('the hidden JSON is bounded: a serialised size over 64 KB is refused', () => {
+    const big = { en: { title: { value: 'x'.repeat(TRANSLATIONS_MAX_BYTES), base: null } } };
+    expect(translationsProblem(big)?.en).toContain('64 KB');
+    const fits = { en: { title: { value: 'x'.repeat(TRANSLATIONS_MAX_BYTES - 100), base: null } } };
+    expect(translationsProblem(fits)).toBeNull();
+    // Bytes, not characters: Arabic is two bytes a letter.
+    const arabic = { en: { title: { value: 'ن'.repeat(TRANSLATIONS_MAX_BYTES / 2), base: null } } };
+    expect(translationsProblem(arabic)).not.toBeNull();
+    expect(translationsProblem(null)).toBeNull();
+    expect(translationsProblem(undefined)).toBeNull();
+  });
+
+  it("the field's validate answers in the panel's language", () => {
+    const validate = (translationsField() as { validate?: unknown }).validate as (
+      value: unknown,
+      options: { req: unknown },
+    ) => true | string;
+    const big = { en: { title: { value: 'x'.repeat(TRANSLATIONS_MAX_BYTES), base: null } } };
+    expect(validate(null, { req: {} })).toBe(true);
+    expect(validate({ en: {} }, { req: {} })).toBe(true);
+    expect(validate(big, { req: { i18n: { language: 'en' } } })).toMatch(/^Pending translations/);
+    expect(validate(big, { req: { i18n: { language: 'ar' } } })).toMatch(/^الترجمات المعلّقة/);
   });
 
   it('refusalFor: a validation error names each field and the language; anything else passes', () => {
