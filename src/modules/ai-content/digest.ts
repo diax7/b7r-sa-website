@@ -2,6 +2,7 @@ import type { Payload, TaskConfig } from 'payload';
 import { siteBase } from '@/lib/env';
 import { riyadh } from '@/lib/riyadh';
 import { envAllows } from '@/modules/ai-content/caps';
+import { DIGEST_CRON } from '@/modules/ai-content/schedule';
 import { payloadStore } from '@/modules/ai-content/store/payload-store';
 import { AI_QUEUE } from '@/modules/ai-content/workflow';
 
@@ -150,8 +151,7 @@ export const digestTask: TaskConfig<{
 }> = {
   slug: DIGEST_TASK,
   label: 'Content engine: weekly digest',
-  // Sunday 08:00 Riyadh on a UTC clock (the production runtime; Riyadh has no DST).
-  schedule: [{ cron: '0 5 * * 0', queue: AI_QUEUE }],
+  schedule: [{ cron: DIGEST_CRON, queue: AI_QUEUE }],
   inputSchema: [],
   outputSchema: [
     { name: 'sent', type: 'checkbox' },

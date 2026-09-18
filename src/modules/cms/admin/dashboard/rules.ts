@@ -48,8 +48,10 @@ export interface HandInput {
   connections: Array<{
     id: number;
     label: string;
+    enabled: boolean;
     spentUsd: number;
     limitUsd: number | null;
+    lastTestOk: boolean | null;
   }> | null;
   missingEnglish: Array<{ collection: string; count: number; href: string | null }> | null;
   drafts: Array<{ collection: string; label: string; stale: number }> | null;
@@ -57,9 +59,10 @@ export interface HandInput {
 
 /**
  * The line under the greeting (ADR-059): failed runs this week, a connection at or over its
- * monthly limit, a document without its English, drafts nobody touched for a week; each a
- * link to the place that fixes it, in the order an owner acts. Nothing to say is a sentence,
- * never an empty line.
+ * monthly limit, an enabled connection whose last Test failed (it costs nothing and records
+ * nothing every morning, and nothing else on the page says so), a document without its
+ * English, drafts nobody touched for a week; each a link to the place that fixes it, in the
+ * order an owner acts. Nothing to say is a sentence, never an empty line.
  */
 export function needsAHand(
   input: HandInput,
@@ -75,11 +78,19 @@ export function needsAHand(
     });
   }
   for (const c of input.connections ?? []) {
+    const href = `${adminRoute}/collections/connections/${c.id}`;
     if (c.limitUsd !== null && c.spentUsd >= c.limitUsd) {
       items.push({
         key: `over-limit-${c.id}`,
-        href: `${adminRoute}/collections/connections/${c.id}`,
+        href,
         text: s.overLimit.replace('{label}', c.label),
+      });
+    }
+    if (c.enabled && c.lastTestOk === false) {
+      items.push({
+        key: `failed-test-${c.id}`,
+        href,
+        text: s.failedTest.replace('{label}', c.label),
       });
     }
   }

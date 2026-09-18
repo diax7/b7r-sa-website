@@ -1,21 +1,23 @@
 import { riyadh } from '@/lib/riyadh';
+import { DIGEST_CRON, FRESHNESS_CRON } from '@/modules/ai-content/schedule';
 import { duePrompts, type LedgerPrompt } from '@/modules/visibility/ledger/run';
+import { LEDGER_CRON } from '@/modules/visibility/ledger/schedule';
+import { PULL_CRON } from '@/modules/visibility/schedule';
 
 export type ScheduleKey = 'pull' | 'ledger' | 'freshness' | 'digest';
 
 /**
- * The crons the scheduled tasks declare, on the UTC clock the runtime keeps (Riyadh is UTC+3
- * with no daylight saving): the nightly pull (`visibility/pull.ts`), the citation ledger
- * (`visibility/ledger/run.ts`), the weekly freshness and digest (`ai-content/freshness.ts`,
- * `digest.ts`). Copied here so the dashboard stays light (the tasks import the AI SDKs);
- * `tests/dashboard.test.ts` holds each equal to its task's. The engine's hourly tick is not a
- * slot: its next run is the engine card's, judged by the caps.
+ * The scheduled jobs the server section lists, each with the cron its task declares (the
+ * same constant, so the two cannot drift), on the UTC clock the runtime keeps (Riyadh is
+ * UTC+3 with no daylight saving): the nightly pull, the citation ledger, the weekly freshness
+ * and digest. The engine's hourly tick is not a slot: its next run is the engine card's,
+ * judged by the caps.
  */
 export const SCHEDULES: ReadonlyArray<{ key: ScheduleKey; cron: string }> = [
-  { key: 'pull', cron: '0 1 * * *' },
-  { key: 'ledger', cron: '0 4 * * *' },
-  { key: 'freshness', cron: '0 3 * * 1' },
-  { key: 'digest', cron: '0 5 * * 0' },
+  { key: 'pull', cron: PULL_CRON },
+  { key: 'ledger', cron: LEDGER_CRON },
+  { key: 'freshness', cron: FRESHNESS_CRON },
+  { key: 'digest', cron: DIGEST_CRON },
 ];
 
 const RIYADH_OFFSET_HOURS = 3;
@@ -62,7 +64,7 @@ export function nextOccurrence(slot: RiyadhSlot, now: Date): Date {
   return riyadhAt(day, slot.hour);
 }
 
-export const LEDGER_SLOT: RiyadhSlot = riyadhSlot(SCHEDULES.find((s) => s.key === 'ledger')!.cron);
+export const LEDGER_SLOT: RiyadhSlot = riyadhSlot(LEDGER_CRON);
 
 /** A prompt as the ledger page reads it: its period and the latest citation per connection. */
 export type PromptWithLatest = LedgerPrompt & { latest: Record<number, { date: string }> };

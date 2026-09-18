@@ -1,7 +1,5 @@
 import type { Payload, PayloadRequest } from 'payload';
 import { describe, expect, it } from 'vitest';
-import { digestTask } from '@/modules/ai-content/digest';
-import { freshnessTask } from '@/modules/ai-content/freshness';
 import { can, contentActions, isMachineRow } from '@/modules/cms/admin/dashboard/data';
 import {
   connectionRows,
@@ -30,8 +28,6 @@ import { dashboardTiles, type TileInputs } from '@/modules/cms/admin/dashboard/t
 import { adminStrings, adminStringsAr } from '@/modules/cms/admin/strings';
 import type { TrafficSummary } from '@/modules/traffic/summary';
 import type { LedgerReading } from '@/modules/visibility/ledger/reading';
-import { citationLedgerTask } from '@/modules/visibility/ledger/run';
-import { visibilityPullTask } from '@/modules/visibility/pull';
 import type { Score } from '@/modules/visibility/score';
 
 /** Riyadh is UTC+3: 2026-09-18 10:00 Riyadh is 07:00 UTC. */
@@ -81,6 +77,16 @@ describe('the range control (ADR-059)', () => {
   });
 });
 
+/** A connection row as the hand line reads it: on or off, its last test passed, failed or never run. */
+const connection = (id: number, enabled: boolean, lastTestOk: boolean | null) => ({
+  id,
+  label: `Key ${id}`,
+  enabled,
+  spentUsd: 0,
+  limitUsd: 5,
+  lastTestOk,
+});
+
 describe('the "needs a hand" line (ADR-059)', () => {
   const s = adminStrings.dashboard.hand;
   const nothing = { failedRuns: 0, connections: [], missingEnglish: [], drafts: [] };
@@ -101,9 +107,10 @@ describe('the "needs a hand" line (ADR-059)', () => {
       {
         failedRuns: 2,
         connections: [
-          { id: 3, label: 'OpenAI', spentUsd: 5, limitUsd: 5 },
-          { id: 4, label: 'Claude', spentUsd: 1, limitUsd: 5 },
-          { id: 5, label: 'Gemini', spentUsd: 9, limitUsd: null },
+          { id: 3, label: 'OpenAI', enabled: true, spentUsd: 5, limitUsd: 5, lastTestOk: true },
+          { id: 4, label: 'Claude', enabled: true, spentUsd: 1, limitUsd: 5, lastTestOk: null },
+          { id: 5, label: 'Gemini', enabled: true, spentUsd: 9, limitUsd: null, lastTestOk: true },
+          { id: 6, label: 'Old key', enabled: false, spentUsd: 0, limitUsd: 5, lastTestOk: false },
         ],
         missingEnglish: [
           { collection: 'posts', count: 0, href: null },
@@ -141,6 +148,32 @@ describe('the "needs a hand" line (ADR-059)', () => {
     });
   });
 
+  it('names an enabled connection whose last test failed, never one that is off or untested', () => {
+    const items = needsAHand(
+      {
+        ...nothing,
+        connections: [
+          connection(1, true, false),
+          connection(2, false, false),
+          connection(3, true, null),
+          connection(4, true, true),
+        ],
+      },
+      s,
+      '/admin',
+    );
+    expect(items).toEqual([
+      {
+        key: 'failed-test-1',
+        href: '/admin/collections/connections/1',
+        text: 'The Key 1 connection failed its last test',
+      },
+    ]);
+    expect(adminStringsAr.dashboard.hand.failedTest.replace('{label}', 'OpenAI')).toBe(
+      'فشل اتصال OpenAI في آخر اختبار',
+    );
+  });
+
   it('counts in Arabic with the four plurals and Western digits', () => {
     const ar = adminStringsAr.dashboard.hand;
     expect(ar.failedRuns(1)).toBe('جولة فاشلة واحدة هذا الأسبوع');
@@ -155,19 +188,13 @@ describe('the "needs a hand" line (ADR-059)', () => {
 });
 
 describe('the scheduled jobs on the Riyadh clock (ADR-059)', () => {
-  it('holds the same crons the tasks declare', () => {
-    const declared = {
-      pull: visibilityPullTask.schedule?.[0]?.cron,
-      ledger: citationLedgerTask.schedule?.[0]?.cron,
-      freshness: freshnessTask.schedule?.[0]?.cron,
-      digest: digestTask.schedule?.[0]?.cron,
-    };
-    for (const { key, cron } of SCHEDULES) expect(cron, key).toBe(declared[key]);
-  });
-
-  it('reads a UTC cron as a Riyadh hour and weekday, and refuses any other shape', () => {
-    expect(riyadhSlot('0 4 * * *')).toEqual({ hour: 7, weekday: null });
-    expect(riyadhSlot('0 3 * * 1')).toEqual({ hour: 6, weekday: 1 });
+  it("reads every job's cron as a Riyadh hour and weekday, and refuses any other shape", () => {
+    expect(SCHEDULES.map((s) => [s.key, riyadhSlot(s.cron)])).toEqual([
+      ['pull', { hour: 4, weekday: null }],
+      ['ledger', { hour: 7, weekday: null }],
+      ['freshness', { hour: 6, weekday: 1 }],
+      ['digest', { hour: 8, weekday: 0 }],
+    ]);
     expect(riyadhSlot('0 22 * * 0')).toEqual({ hour: 1, weekday: 1 });
     expect(() => riyadhSlot('*/5 * * * *')).toThrow(/cannot read the cron/);
   });

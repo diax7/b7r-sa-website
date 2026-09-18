@@ -343,6 +343,7 @@ export const adminStrings = {
       none: 'Nothing needs a hand today.',
       failedRuns: (n: number) => `${n} failed run${n === 1 ? '' : 's'} this week`,
       overLimit: '{label} is over its monthly limit',
+      failedTest: 'The {label} connection failed its last test',
       missingEnglish: (n: number) => `${n} document${n === 1 ? '' : 's'} without English`,
       staleDrafts: (n: number, collection: string) =>
         `${n} draft${n === 1 ? '' : 's'} in ${collection} older than a week`,
@@ -359,7 +360,7 @@ export const adminStrings = {
         `on the category prompts, 28 days, ${engines} engine${engines === 1 ? '' : 's'}`,
       citedNone: 'No ledger run in the last 28 days',
       score: 'Visibility score',
-      published: 'Published',
+      published: 'Went live',
       publishedDetail: (days: number) => `posts, pages and products in ${days} days`,
       drafts: (n: number) =>
         n === 0 ? 'no drafts waiting' : `${n} draft${n === 1 ? '' : 's'} waiting`,
@@ -797,6 +798,7 @@ export const adminStringsAr: AdminStrings = {
       failedRuns: (n) =>
         `${arabicCount(n, { one: 'جولة فاشلة واحدة', two: 'جولتان فاشلتان', few: 'جولات فاشلة', many: 'جولة فاشلة' })} هذا الأسبوع`,
       overLimit: '{label} تجاوز حده الشهري',
+      failedTest: 'فشل اتصال {label} في آخر اختبار',
       missingEnglish: (n) =>
         `${arabicCount(n, { one: 'مستند واحد', two: 'مستندان', few: 'مستندات', many: 'مستنداً' })} بلا نسخة إنجليزية`,
       staleDrafts: (n, collection) =>
@@ -813,7 +815,7 @@ export const adminStringsAr: AdminStrings = {
         `على أسئلة الفئة، 28 يوماً، ${arabicCount(engines, { one: 'محرّك واحد', two: 'محرّكان', few: 'محرّكات', many: 'محرّكاً' })}`,
       citedNone: 'لا جولة للسجل في آخر 28 يوماً',
       score: 'درجة الظهور',
-      published: 'المنشورات',
+      published: 'نُشر',
       publishedDetail: (days) => `مقالات وصفحات ومنتجات خلال ${arabicDays(days)}`,
       drafts: (n) =>
         n === 0
