@@ -74,6 +74,6 @@ export const faqEn: Record<string, { question: string; answer: string }> = {
   },
   'كيف أتواصل معكم؟': {
     question: 'How do I reach you?',
-    answer: 'On WhatsApp at 0501699572 or by email at contact@b7r.sa.',
+    answer: 'On WhatsApp at +966 50 169 9572 or by email at contact@b7r.sa.',
   },
 };

@@ -90,6 +90,7 @@ Every interface string of the English site, key for key with the Arabic bank of 
 | `productsPage.sizeChartHeaders.length` | Length |
 | `productsPage.sizeChartHeaders.chest` | Chest width |
 | `productsPage.sizeChartHeaders.sleeve` | Sleeve |
+| `productsPage.sizeChartUnit` | Measurements in cm |
 | `productsPage.colorSwitchAria` | Colour {colour} |
 | `contactForm.labels.name` | Name |
 | `contactForm.labels.phone` | Mobile number |

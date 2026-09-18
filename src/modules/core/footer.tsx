@@ -7,6 +7,7 @@ import { copyFor, type SiteCopy } from '@/content/copy';
 import type { Navigation, SiteSettings } from '@/content/schema';
 import { cn } from '@/lib/cn';
 import { type Locale, localePath } from '@/lib/i18n';
+import { displayPhone } from '@/lib/phone';
 import { whatsappUrl } from '@/lib/utm';
 
 const PAYMENT_BADGES = [
@@ -115,7 +116,7 @@ export function Footer({
               </a>
               <span aria-hidden="true">·</span>
               <a href={`tel:${site.contact.phoneIntl}`} className={cn(linkCls, 'py-0')}>
-                <bdi dir="ltr">{site.contact.phone}</bdi>
+                <bdi dir="ltr">{displayPhone(locale, site.contact)}</bdi>
               </a>
             </p>
           </div>

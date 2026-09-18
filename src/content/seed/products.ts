@@ -115,12 +115,12 @@ export const products: Product[] = [
     suggestedPrice: 69,
     colors: [white('baby-onesie')],
     sizes: [
-      { label: '0-3M', measurements: { chest: 22, length: 38 } },
-      { label: '3-6M', measurements: { chest: 24, length: 42 } },
-      { label: '6-12M', measurements: { chest: 26, length: 46 } },
-      { label: '12-18M', measurements: { chest: 28, length: 50 } },
+      { label: '0–3M', measurements: { chest: 22, length: 38 } },
+      { label: '3–6M', measurements: { chest: 24, length: 42 } },
+      { label: '6–12M', measurements: { chest: 26, length: 46 } },
+      { label: '12–18M', measurements: { chest: 28, length: 50 } },
     ],
-    sizesSummary: '0-3M – 12-18M',
+    sizesSummary: '0–3M – 12–18M',
     material: 'قطن ناعم مناسب لبشرة الرضيع',
     weightGrams: 80,
     printArea: {

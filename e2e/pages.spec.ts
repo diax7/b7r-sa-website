@@ -181,7 +181,9 @@ test.describe('legal pages (BRD 6.12)', () => {
   }) => {
     await page.goto('/terms');
     await expect(page.locator('h1')).toHaveText('الشروط والأحكام');
-    await expect(page.getByText(/آخر تحديث:/)).toBeVisible();
+    // The date is formatted like every other date on the site («12 سبتمبر 2026»), never the
+    // raw ISO string (site audit 2026-09-18, item 14); the ISO stays in `datetime`.
+    await expect(page.getByText(/آخر تحديث:/)).toHaveText(/^آخر تحديث: \d{1,2} [؀-ۿ]+ \d{4}$/);
     const headings = page.locator('.prose h2');
     await expect(headings).toHaveCount(9);
     await expect(headings.first()).toHaveAttribute('id', 'legal-section-1');

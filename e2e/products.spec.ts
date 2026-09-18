@@ -75,6 +75,7 @@ test.describe('product detail (BRD 6.6)', () => {
     await expect(chart).toHaveCount(1);
     await expect(chart.locator('tbody tr')).toHaveCount(5);
     await expect(chart.locator('th[scope="col"]')).toHaveCount(4);
+    await expect(page.locator('[data-size-chart-unit]')).toHaveText('القياسات بالسنتيمتر');
     // Three other products in catalogue order, wrapping around.
     const related = page.locator('[aria-labelledby="product-related-title"]').getByRole('link');
     await expect(related).toHaveCount(3);

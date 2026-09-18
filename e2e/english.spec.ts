@@ -56,6 +56,12 @@ test.describe('the English site (Level 5a, ADR-043)', () => {
     // Prerendered like its twin (constitution II).
     const cached = await request.get('/en');
     expect(cached.headers()['x-nextjs-cache']).toMatch(/HIT|STALE/);
+    // The phone reads in its international form on the English site, the local one in Arabic
+    // (site audit 2026-09-18, item 14); both dial the same number.
+    const en = await cached.text();
+    expect(en).toContain('<bdi dir="ltr">+966 50 169 9572</bdi>');
+    expect(en).toContain('href="tel:+966501699572"');
+    expect(await (await request.get('/')).text()).toContain('<bdi dir="ltr">0501699572</bdi>');
   });
 
   test('hreflang pairs point both ways, x-default on the Arabic, each language canonical to itself', async ({

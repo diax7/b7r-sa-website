@@ -127,6 +127,7 @@ export const ar = {
     /** Between the sizes and the colours in the spec list. */
     listSeparator: '، ',
     sizeChartHeaders: { size: 'المقاس', length: 'الطول', chest: 'عرض الصدر', sleeve: 'طول الكم' },
+    sizeChartUnit: 'القياسات بالسنتيمتر',
     colorSwitchAria: 'اللون {colour}',
   },
   contactForm: {

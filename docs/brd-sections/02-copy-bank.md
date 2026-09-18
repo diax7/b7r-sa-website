@@ -181,6 +181,7 @@ Every user-visible string in Level 1 is here. Copy it exactly, including punctua
 - Print method value (all products): طباعة رقمية عالية الجودة
 - Print area value: الواجهة الأمامية، 28 × 38 سم
 - Size chart headers: المقاس · الطول · عرض الصدر · طول الكم (cm; see Appendix A)
+- Size chart unit line (visible above the table, *2026-09-18*): القياسات بالسنتيمتر
 - Colour switch aria: اللون {colour}
 - Gallery aria: صورة {n} من {total}
 

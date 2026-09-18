@@ -125,6 +125,7 @@ export const en: SiteCopy = {
     /** Between the sizes and the colours in the spec list. */
     listSeparator: ', ',
     sizeChartHeaders: { size: 'Size', length: 'Length', chest: 'Chest width', sleeve: 'Sleeve' },
+    sizeChartUnit: 'Measurements in cm',
     colorSwitchAria: 'Colour {colour}',
   },
   contactForm: {

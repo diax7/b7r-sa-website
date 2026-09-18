@@ -195,8 +195,8 @@ export const SITE_SETTINGS_DESCRIPTIONS: Described = {
     en: 'How to reach us: the footer, the contact page, the WhatsApp widget and the organisation data.',
   },
   'contact.phone': {
-    ar: 'الرقم كما يُعرض للزائر في التذييل وصفحة التواصل: 0501699572.',
-    en: 'The number as a visitor sees it in the footer and on the contact page: 0501699572.',
+    ar: 'الرقم كما يُعرض لزائر الموقع العربي في التذييل وصفحة التواصل: 0501699572؛ الموقع الإنجليزي يعرض الرقم الدولي.',
+    en: 'The number as a visitor of the Arabic site sees it in the footer and on the contact page: 0501699572; the English site shows the international number.',
   },
   'contact.phoneIntl': {
     ar: 'الرقم الدولي الذي يطلبه الهاتف عند النقر، وبيانات المنظمة: +966501699572.',

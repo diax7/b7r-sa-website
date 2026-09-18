@@ -503,6 +503,7 @@ Every user-visible string in Level 1 is here. Copy it exactly, including punctua
 - Print method value (all products): طباعة رقمية عالية الجودة
 - Print area value: الواجهة الأمامية، 28 × 38 سم
 - Size chart headers: المقاس · الطول · عرض الصدر · طول الكم (cm; see Appendix A)
+- Size chart unit line (visible above the table, *2026-09-18*): القياسات بالسنتيمتر
 - Colour switch aria: اللون {colour}
 - Gallery aria: صورة {n} من {total}
 
@@ -1578,7 +1579,7 @@ Common to all: print area الواجهة الأمامية 28 × 38 سم; print m
 | `tee-essential` | تيشيرت أساسي | 45 | 89 | white · أبيض · #FFFFFF; black · أسود · #000000 | S, M, L, XL, 2XL | قطن ناعم عالي الجودة | 180 |
 | `tee-oversize` | تيشيرت أوفرسايز | 55 | 119 | white · أبيض · #FFFFFF; black · أسود · #000000 | S, M, L, XL, 2XL | قطن ثقيل متين بقصة واسعة | 240 |
 | `hoodie` | هودي | 95 | 189 | white · أبيض · #FFFFFF; black · أسود · #000000 | S, M, L, XL | قماش فاخر ببطانة ناعمة، مع فتحات للإبهام | 520 |
-| `baby-onesie` | بربتوز أطفال | 35 | 69 | white · أبيض · #FFFFFF | 0-3M, 3-6M, 6-12M, 12-18M | قطن ناعم مناسب لبشرة الرضيع | 80 |
+| `baby-onesie` | بربتوز أطفال | 35 | 69 | white · أبيض · #FFFFFF | 0–3M, 3–6M, 6–12M, 12–18M | قطن ناعم مناسب لبشرة الرضيع | 80 |
 | `tote-bag` | حقيبة قماشية | 30 | 65 | beige · بيج · #F5F5DC | مقاس واحد | كانفاس عالي الجودة بمقابض قوية | 220 |
 
 **Short descriptions (cards, meta):**
@@ -1611,10 +1612,10 @@ Baby onesie:
 
 | المقاس | عرض الصدر | الطول |
 |---|---|---|
-| 0-3M | 22 | 38 |
-| 3-6M | 24 | 42 |
-| 6-12M | 26 | 46 |
-| 12-18M | 28 | 50 |
+| 0–3M | 22 | 38 |
+| 3–6M | 24 | 42 |
+| 6–12M | 26 | 46 |
+| 12–18M | 28 | 50 |
 
 Tote bag: مقاس واحد (no chart; show "مقاس واحد" in the specs).
 
@@ -2005,6 +2006,7 @@ Every interface string of the English site, key for key with the Arabic bank of 
 | `productsPage.sizeChartHeaders.length` | Length |
 | `productsPage.sizeChartHeaders.chest` | Chest width |
 | `productsPage.sizeChartHeaders.sleeve` | Sleeve |
+| `productsPage.sizeChartUnit` | Measurements in cm |
 | `productsPage.colorSwitchAria` | Colour {colour} |
 | `contactForm.labels.name` | Name |
 | `contactForm.labels.phone` | Mobile number |

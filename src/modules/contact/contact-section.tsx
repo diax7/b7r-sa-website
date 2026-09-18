@@ -12,6 +12,7 @@ import type { BlockOf } from '@/content/schema';
 import { getSiteSettings } from '@/lib/cms';
 import { env } from '@/lib/env';
 import type { Locale } from '@/lib/i18n';
+import { displayPhone } from '@/lib/phone';
 import { whatsappUrl } from '@/lib/utm';
 import { ContactForm } from '@/modules/contact/contact-form';
 
@@ -135,7 +136,7 @@ export async function ContactSection({
                 className="text-body text-primary hover:text-primary-hover"
               >
                 <bdi dir="ltr" className="tabular">
-                  {site.contact.phone}
+                  {displayPhone(locale, site.contact)}
                 </bdi>
               </a>
             </ContactCard>
