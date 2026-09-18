@@ -1,7 +1,17 @@
 import { randomBytes } from 'node:crypto';
 import { expect, type APIRequestContext } from '@playwright/test';
 
-/** Shared seats for the CMS suites: the REST prefix, JWT login and a throwaway editor. */
+/**
+ * Shared seats for the CMS suites: the REST prefix, JWT login and a throwaway editor.
+ *
+ * A REST call on `?locale=en` carries `&fallback-locale=none`, the read that captures a
+ * document for a restore and the write alike: a global's write in a non-default locale
+ * takes every omitted localized field from the request's fallback locale (its update reads
+ * the original flattened with `req.fallbackLocale`, the default locale unless the request
+ * says otherwise; a collection's update by id reads without fallback), so a restore of the
+ * English slides without it wrote the Arabic chips into the English (RUNBOOK, "The English
+ * site"). The collections' calls carry it too, for one rule.
+ */
 export const API = '/api/payload';
 
 export const ADMIN = {

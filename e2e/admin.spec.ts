@@ -1171,7 +1171,9 @@ test.describe('CMS admin', () => {
       ctaShiny?: boolean;
     };
     const en = (await (
-      await request.get(`${API}/globals/site-settings?locale=en`, { headers: auth })
+      await request.get(`${API}/globals/site-settings?locale=en&fallback-locale=none`, {
+        headers: auth,
+      })
     ).json()) as Settings;
     expect(en.menu.primary).toHaveLength(6);
     expect(en.menu.policies).toHaveLength(4);
@@ -1187,7 +1189,7 @@ test.describe('CMS admin', () => {
     await expect(page.getByText('Policy 04')).toBeVisible();
     const stamp = `Start e2e ${Date.now()}`;
     const save = (ctaLabel: string, ctaShiny = false) =>
-      request.post(`${API}/globals/site-settings?locale=en`, {
+      request.post(`${API}/globals/site-settings?locale=en&fallback-locale=none`, {
         headers: auth,
         data: { menu: { ...en.menu, ctaLabel }, ctaShiny },
       });
@@ -1821,7 +1823,7 @@ test.describe('CMS admin', () => {
       try {
         // The English side: a published page validates every English field on a write, so
         // the block's body (required, localized) is given too, on the same block row.
-        const english = await request.patch(`${API}/pages/${id}?locale=en`, {
+        const english = await request.patch(`${API}/pages/${id}?locale=en&fallback-locale=none`, {
           headers: auth,
           data: {
             title: 'Bilingual page',
@@ -1877,7 +1879,9 @@ test.describe('CMS admin', () => {
         expect(doc.seo.title).toEqual({ ar: 'صفحة ثنائية اللغة', en: 'Bilingual page' });
         // The REST API keeps `?locale=`: the English read answers with the English text.
         const inEnglish = (await (
-          await request.get(`${API}/pages/${id}?locale=en&depth=0`, { headers: auth })
+          await request.get(`${API}/pages/${id}?locale=en&depth=0&fallback-locale=none`, {
+            headers: auth,
+          })
         ).json()) as { title: string };
         expect(inEnglish.title).toBe('Bilingual page (updated)');
         // After the save the English input shows the applied text, not the old prefill.
@@ -1915,7 +1919,7 @@ test.describe('CMS admin', () => {
       };
       const before = (await both()).tagline;
       const restore = async (locale: 'ar' | 'en') =>
-        request.post(`${API}/globals/site-settings?locale=${locale}`, {
+        request.post(`${API}/globals/site-settings?locale=${locale}&fallback-locale=none`, {
           headers: auth,
           data: { tagline: before[locale] },
         });
@@ -2008,7 +2012,7 @@ test.describe('CMS admin', () => {
       try {
         // The English side of every required field, on the same rows by id: a published page
         // validates the whole English document on a write.
-        const english = await request.patch(`${API}/pages/${id}?locale=en`, {
+        const english = await request.patch(`${API}/pages/${id}?locale=en&fallback-locale=none`, {
           headers: auth,
           data: {
             title: 'Rows page',
@@ -2106,7 +2110,9 @@ test.describe('CMS admin', () => {
         expect(doc.translations ?? null).toBeNull();
         // The REST API keeps `?locale=`: the English read answers with the English rows.
         const inEnglish = (await (
-          await request.get(`${API}/pages/${id}?locale=en&depth=0`, { headers: auth })
+          await request.get(`${API}/pages/${id}?locale=en&depth=0&fallback-locale=none`, {
+            headers: auth,
+          })
         ).json()) as { blocks: Array<{ rows: Array<{ criterion: string }> }> };
         expect(inEnglish.blocks[0]!.rows.map((r) => r.criterion)).toEqual([
           'First criterion (updated)',
@@ -2130,16 +2136,19 @@ test.describe('CMS admin', () => {
       const auth = await login(request, ADMIN);
       type Slide = { id: string; subline: unknown };
       const inLocale = async (locale: string) => {
-        const res = await request.get(`${API}/globals/home?locale=${locale}&depth=0&draft=true`, {
-          headers: auth,
-        });
+        const res = await request.get(
+          `${API}/globals/home?locale=${locale}&depth=0&draft=true&fallback-locale=none`,
+          {
+            headers: auth,
+          },
+        );
         expect(res.status()).toBe(200);
         return (await res.json()) as { hero: { slides: Slide[] } };
       };
       const before = { ar: await inLocale('ar'), en: await inLocale('en') };
       const first = before.ar.hero.slides[0]!;
       const restore = (locale: 'ar' | 'en') =>
-        request.post(`${API}/globals/home?locale=${locale}`, {
+        request.post(`${API}/globals/home?locale=${locale}&fallback-locale=none`, {
           headers: auth,
           data: { hero: { slides: before[locale].hero.slides }, _status: 'published' },
         });
@@ -2237,7 +2246,7 @@ test.describe('CMS admin', () => {
         return (await res.json()) as { blocks: Block[]; translations?: unknown };
       };
       try {
-        const english = await request.patch(`${API}/pages/${id}?locale=en`, {
+        const english = await request.patch(`${API}/pages/${id}?locale=en&fallback-locale=none`, {
           headers: auth,
           data: {
             title: 'Twin page',
@@ -2405,9 +2414,12 @@ test.describe('CMS admin', () => {
       const auth = await login(request, ADMIN);
       type Slide = { id: string; imageDesktop: unknown; imageMobile: unknown };
       const inLocale = async (locale: string) => {
-        const res = await request.get(`${API}/globals/home?locale=${locale}&depth=0&draft=true`, {
-          headers: auth,
-        });
+        const res = await request.get(
+          `${API}/globals/home?locale=${locale}&depth=0&draft=true&fallback-locale=none`,
+          {
+            headers: auth,
+          },
+        );
         expect(res.status()).toBe(200);
         return (await res.json()) as { hero: { slides: Slide[] } };
       };
@@ -2422,7 +2434,7 @@ test.describe('CMS admin', () => {
         await request.get(`${API}/media/${other}?depth=0`, { headers: auth })
       ).json()) as { filename: string };
       const restore = (locale: 'ar' | 'en') =>
-        request.post(`${API}/globals/home?locale=${locale}`, {
+        request.post(`${API}/globals/home?locale=${locale}&fallback-locale=none`, {
           headers: auth,
           data: { hero: { slides: before[locale].hero.slides }, _status: 'published' },
         });
@@ -2588,7 +2600,7 @@ test.describe('CMS admin', () => {
         return ((await res.json()) as { title: string }).title;
       };
       try {
-        const english = await request.patch(`${API}/pages/${id}?locale=en`, {
+        const english = await request.patch(`${API}/pages/${id}?locale=en&fallback-locale=none`, {
           headers: auth,
           data: {
             title: 'Untouched page',
@@ -2827,7 +2839,7 @@ test.describe('CMS admin', () => {
         // The takeaway rows are shared and their text per language (ADR-057, PR A): the
         // English rides on the Arabic rows' ids; a row without an id would replace them.
         const rows = doc['takeaways'] as Array<{ id: string }>;
-        const enSaved = await request.patch(`${API}/posts/${id}?locale=en`, {
+        const enSaved = await request.patch(`${API}/posts/${id}?locale=en&fallback-locale=none`, {
           headers: auth,
           data: {
             title: englishTitle,
@@ -3431,7 +3443,7 @@ test.describe('CMS admin', () => {
         ).toEqual([]);
         // The English form of the same page renders the same table: the same block row (its
         // id) takes the English values, so the Arabic side keeps its own.
-        const english = await request.patch(`${API}/pages/${id}?locale=en`, {
+        const english = await request.patch(`${API}/pages/${id}?locale=en&fallback-locale=none`, {
           headers: json,
           data: {
             title: `Test comparison ${stamp}`,
