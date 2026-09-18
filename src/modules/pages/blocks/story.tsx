@@ -59,7 +59,10 @@ export async function StoryBlock({ block, locale, tone, anchor, heading }: Block
 
       {block.withFacts && (
         <section className="bg-navy text-white" aria-label={home.whyUs.title} data-facts-band="">
-          <Container className="grid gap-6 py-10 sm:grid-cols-2 lg:grid-cols-4 lg:py-12">
+          <Container
+            data-reveal-stagger=""
+            className="grid gap-6 py-10 sm:grid-cols-2 lg:grid-cols-4 lg:py-12"
+          >
             <div className="flex flex-col gap-1">
               <SarAmount value={site.offer.welcomeCredit} className="text-h2 text-white" />
               <span className="text-small text-white/75">{home.hero.microcopy}</span>

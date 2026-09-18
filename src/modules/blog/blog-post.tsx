@@ -168,7 +168,7 @@ export async function BlogPostPage({ post, locale }: { post: Post; locale: Local
             <h2 id="related-title" className="text-h2 text-text">
               {blogCopy.relatedTitle}
             </h2>
-            <ul className="grid gap-6 md:grid-cols-2" data-related="">
+            <ul className="grid gap-6 md:grid-cols-2" data-reveal-stagger="" data-related="">
               {related.map((item) => (
                 <li key={item.slug}>
                   <PostCard post={item} locale={locale} headingLevel="h3" />

@@ -340,14 +340,14 @@ describe('the ledger reading (ADR-049 D5)', () => {
     expect(bestMatch('hoodie riyadh', candidates)).toBeNull();
   });
 
-  it('seeds fourteen Arabic and eight English prompts, nine naming the brand, all daily', () => {
+  it('seeds fourteen Arabic and eight English prompts, nine naming the brand, all weekly', () => {
     expect(SEED_PROMPTS.filter((p) => p.language === 'ar')).toHaveLength(14);
     expect(SEED_PROMPTS.filter((p) => p.language === 'en')).toHaveLength(8);
     // The two compare prompts and the seven brand questions name B7R and leave the rate.
     expect(SEED_PROMPTS.filter((p) => p.namesBrand)).toHaveLength(9);
     expect(SEED_PROMPTS.every((p) => p.namesBrand === mentionsBrand(p.text))).toBe(true);
     expect(new Set(SEED_PROMPTS.map((p) => p.text)).size).toBe(SEED_PROMPTS.length);
-    expect(SEED_EVERY_DAYS).toBe(1);
+    expect(SEED_EVERY_DAYS).toBe(7);
   });
 
   it('asks a prompt again only when its period has passed, and never asked means due', () => {

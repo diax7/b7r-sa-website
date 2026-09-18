@@ -6,6 +6,7 @@ import type { Locale } from '@/lib/i18n';
 import { AnalyticsBridge } from '@/modules/core/analytics/analytics-bridge';
 import { LandingBeacon } from '@/modules/core/analytics/landing-beacon';
 import { AfterDelay } from '@/modules/core/lazy-mount';
+import { RevealObserver } from '@/modules/core/reveal-observer';
 
 const WhatsAppWidget = dynamic(
   () => import('@/modules/core/whatsapp-widget').then((m) => m.WhatsAppWidget),
@@ -28,14 +29,16 @@ interface PageExtrasProps {
 /**
  * Everything that must never compete with the first paint (BRD 6.15, 6.16): the analytics
  * bridge and the landing beacon (ADR-048) are tiny and immediate; the WhatsApp widget mounts
- * after 1.5 s and the consent card after 0.8 s (only when there is a GA id to consent to).
- * The 404 shell renders this too, so a dead inbound link is counted with its path.
+ * after 1.5 s and the consent card after 0.8 s (only when there is a GA id to consent to);
+ * the scroll reveal (ADR-055) arms once hydration is done. The 404 shell renders this too,
+ * so a dead inbound link is counted with its path.
  */
 export function PageExtras({ gaId, whatsapp, locale, copy }: PageExtrasProps) {
   return (
     <>
       <AnalyticsBridge gaId={gaId} />
       <LandingBeacon />
+      <RevealObserver />
       {gaId && (
         <AfterDelay ms={800}>
           <ConsentBar locale={locale} copy={copy.consent} />

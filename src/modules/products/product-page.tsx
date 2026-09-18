@@ -173,7 +173,7 @@ export async function ProductPage({ product, locale }: { product: Product; local
       <Section tone={relatedTone} aria-labelledby="product-related-title">
         <Container className="flex flex-col gap-10">
           <SectionHeader id="product-related-title" title={copy.sections.related} />
-          <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3" data-reveal-stagger="">
             {relatedProducts(product, products).map((other) => (
               <li key={other.slug}>
                 <ProductCard product={other} locale={locale} />
