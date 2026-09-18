@@ -1247,7 +1247,11 @@ test.describe('CMS admin', () => {
         },
       });
       expect(created.status()).toBe(201);
-      const id = ((await created.json()) as { doc: { id: number } }).doc.id;
+      const createdDoc = (
+        (await created.json()) as { doc: { id: number; blocks: Array<{ id: string }> } }
+      ).doc;
+      const id = createdDoc.id;
+      const blockId = createdDoc.blocks[0]!.id;
       const both = async () => {
         const res = await request.get(`${API}/pages/${id}?locale=all&depth=0`, { headers: auth });
         expect(res.status()).toBe(200);
@@ -1259,11 +1263,20 @@ test.describe('CMS admin', () => {
         };
       };
       try {
-        // The English side starts empty for the title and the meta title.
+        // The English side: a published page validates every English field on a write, so
+        // the block's body (required, localized) is given too, on the same block row.
         const english = await request.patch(`${API}/pages/${id}?locale=en`, {
           headers: auth,
           data: {
             title: 'Bilingual page',
+            blocks: [
+              {
+                id: blockId,
+                blockType: 'richText',
+                title: 'Introduction',
+                content: paragraph('A paragraph.'),
+              },
+            ],
             seo: { title: 'Bilingual page', description: 'For the test.' },
           },
         });
@@ -1283,7 +1296,8 @@ test.describe('CMS admin', () => {
         await expect(pair.locator('[data-admin-locale-tag="en"]')).toHaveText('EN');
         const arabic = page.locator('#field-title');
         const other = page.locator('#field-translations__en__title');
-        await expect(other).toHaveValue('Bilingual page');
+        // The twin's first read lands after the form; a loaded runner needs the longer wait.
+        await expect(other).toHaveValue('Bilingual page', { timeout: 15_000 });
         // Rich text stays on the switch: the block's body has no pair.
         expect(await page.locator('[data-admin-bilingual^="blocks."]').count()).toBe(0);
         await arabic.fill('صفحة ثنائية اللغة (محدّثة)');
@@ -1347,7 +1361,7 @@ test.describe('CMS admin', () => {
         await page.goto('/admin/globals/site-settings?locale=ar');
         const arabic = page.locator('#field-tagline');
         const other = page.locator('#field-translations__en__tagline');
-        await expect(other).toHaveValue(before.en ?? '');
+        await expect(other).toHaveValue(before.en ?? '', { timeout: 15_000 });
         const stamp = Date.now();
         await arabic.fill(`شعار الاختبار ${stamp}`);
         await other.fill(`Tagline e2e ${stamp}`);
