@@ -184,7 +184,11 @@ test.describe('FAQ page (BRD 6.10)', () => {
     expect(html).toMatch(/<button[^>]*aria-disabled="true"[^>]*aria-expanded="false"/);
     expect(html).not.toMatch(/<button[^>]*\sdisabled=""[^>]*aria-expanded=/);
     await page.goto('/faq');
-    await expect(page.locator('#faq-group-1 button[aria-expanded]').first()).toBeVisible();
+    // The first group is near the viewport at load: its island live means the page hydrated.
+    await expect(page.locator('#faq-group-1 button[aria-expanded]').first()).not.toHaveAttribute(
+      'aria-disabled',
+      'true',
+    );
     // From the last trigger of the group before, Tab onto the last group's first trigger:
     // the focus mounts the island and is handed to its trigger, enabled and closed.
     const groups = page.locator('section[id^="faq-group-"]');
