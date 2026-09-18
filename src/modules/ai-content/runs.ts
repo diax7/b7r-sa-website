@@ -41,7 +41,7 @@ export const AiRuns: CollectionConfig = {
     defaultColumns: ['label', 'status', 'score', 'costUsd', 'durationMs', 'createdAt'],
     listSearchableFields: ['label', 'model'],
     group: adminGroup('blog'),
-    components: collectionComponents('ai-runs', { localized: false }),
+    components: collectionComponents('ai-runs'),
     custom: {
       shows: {
         ar: 'لا يظهر في الموقع: سجل تشغيلات المحرّك',

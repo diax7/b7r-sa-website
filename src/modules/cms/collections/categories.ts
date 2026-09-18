@@ -21,7 +21,7 @@ export const Categories: CollectionConfig = {
   labels: { singular: { ar: 'قسم', en: 'Hub' }, plural: { ar: 'أقسام المدونة', en: 'Hubs' } },
   admin: {
     hideAPIURL: true,
-    components: collectionComponents('categories', { localized: true }),
+    components: collectionComponents('categories'),
     useAsTitle: 'name',
     defaultColumns: ['name', 'slug', 'order', 'updatedAt'],
     listSearchableFields: ['name', 'slug'],

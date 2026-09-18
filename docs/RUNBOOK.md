@@ -609,29 +609,33 @@ production, then wait a minute (`revalidate`) or republish the site settings: `/
 and the switch appears on its own.
 
 Publishing a page in English: open the document, type the English title beside the Arabic
-one (ADR-057, below), switch the locale to English in the panel's locale control for the
-blocks, save. The page is on `/en/<slug>` and carries
+one and the blocks' English in the editor under each Arabic one (ADR-057, below), save.
+The page is on `/en/<slug>` and carries
 hreflang to its Arabic twin once its English title is not empty; leave the title empty and
 the page stays Arabic-only (no `/en` route, no pair). The same rule holds for products
 (`name`), posts (`title`, from 5b), categories and authors (`name`). Media alt text has a
 value per language; the Arabic one must be Arabic script.
 
-Publishing a post in English (5b): the same document, the locale control on English; title,
-excerpt, three takeaways and a body with two internal links (the same rules as Arabic, judged
-on the English version when you publish from the English tab; publish the Arabic version from
-the Arabic tab). Internal links typed as URLs go under `/en/` (`/en/products/hoodie`); a link
-to a document resolves under `/en/` on its own. The sidebar's warnings and reading time are
-the English version's. The post is on `/en/blog/<slug>`, in `/en/feed.xml` and paired with
+Publishing a post in English (5b): the same document, the English beside or under the
+Arabic; title, excerpt, three takeaways and a body with two internal links (the same rules
+as Arabic, judged on the English side by the same Publish and refused with the field and
+the language named). Internal links typed as URLs go under `/en/` (`/en/products/hoodie`);
+a link to a document resolves under `/en/` on its own. The sidebar's warnings and reading
+time are the Arabic body's (the English ones are computed on the same save and not shown).
+The post is on `/en/blog/<slug>`, in `/en/feed.xml` and paired with
 its Arabic twin once its English title is not empty. Hubs (`categories`) and authors work the
 same way (`name` decides). An Arabic-only post's switch sends the reader to `/en/blog`, an
 Arabic-only product's to `/en/products` (ADR-044).
 
 Both languages at once (ADR-057): every text field that is per language (a title, a lead, a
 meta description, a product name, the home page's headlines and buttons, the engine's style
-texts) shows the Arabic and the English side by side, the English input tagged EN; type the
-other language next to the first and one Save writes both. Rich text, lists (chips, sizes,
-colours, takeaways) and page blocks stay on the locale control, and the note above the
-document's controls says which is which. The Publish rule: touching one English field on a
+texts) shows the Arabic and the English side by side, the English input tagged EN, inside
+lists (chips, sizes, colours, takeaways) and page blocks too; a rich text or a photo has
+its English editor or picker under the Arabic one. Type the English next to the Arabic and
+one Save writes both. There is no locale switch in the panel and no admin URL takes
+`?locale=` (an old link is redirected without it); the REST API keeps `?locale=`, and a
+`locale` preference left from before the switch went is purged by migration
+`20260918_142817_purge_locale_preference`. The Publish rule: touching one English field on a
 Publish validates the whole English document, the collection's own rules included (on a
 post: the English excerpt, the three English takeaways and the two internal links of the
 English body), exactly as a Publish from the English locale does; a half-filled English side
@@ -642,13 +646,13 @@ bilingual Save leaves two version rows, one per language.
 
 The English hero photos (ADR-044): each slide's two photos are per language, like its
 headline. The seed ships mirrored copies of the Arabic placeholders (`public/images/hero-en/`,
-made by `pnpm assets`), on which the printed wordmark reads backwards; replace them from the
-home page's English tab (locale control on English, "Image (desktop 16:9)" and "Image (mobile
-4:5)" on each slide) with photographs composed for the left-aligned copy: the product cluster
+made by `pnpm assets`), on which the printed wordmark reads backwards; replace them through
+the "English photo" picker under each slide's "Image (desktop 16:9)" and "Image (mobile
+4:5)" with photographs composed for the left-aligned copy: the product cluster
 on the right, the calm area on the left. The overlay over the photo is "Fade over the photo"
 under the slides: a switch and a colour, one setting for both languages. The proof chips are
 zero to six; a chip's rows are shared by both languages and its text is per language, so a
-chip added on the Arabic tab shows in English once its English text is written.
+chip shows in English once the English text beside its Arabic is written.
 
 The engine in English (5c): a topic's `language` decides the post's language; the English
 backlog is seeded beside the Arabic one, and a CSV import takes `language` as its seventh

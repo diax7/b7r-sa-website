@@ -11,9 +11,9 @@ import { rtlLanguages } from '@payloadcms/translations';
  *
  * Two axes that never share a control: the UI language (Payload's `i18n`, the account view's
  * language select, the `payload-lng` cookie) decides which of these trees renders; the
- * content locale (the AR / EN pills, `html[data-content-locale]`, `?locale=`) decides which
- * language of a document is being edited. `locale.editing` below is keyed by the content
- * locale inside each UI language for exactly that reason.
+ * content languages (the AR / EN pills) are both in every form at once (ADR-057: no locale
+ * switch), so the `bilingual` branch names them as nouns and nothing here names an "open"
+ * language.
  *
  * Payload's own strings come from its `en` and `ar` packs (the `ar` one patched in the
  * config). No em dashes (.claude/rules/writing.md).
@@ -96,22 +96,6 @@ export const adminStrings = {
     dayAt: '{day} {time}',
     riyadh: '{when} Riyadh',
   },
-  locale: {
-    /**
-     * One line before the document controls of anything with per-language fields (ADR-044,
-     * the legend by ADR-057: what sits beside or under its Arabic, and that a rich text or
-     * a photo pairs from the Arabic locale), keyed by the CONTENT locale being edited,
-     * written in the UI language.
-     */
-    editing: { ar: 'Editing the Arabic content.', en: 'Editing the English content.' } as Record<
-      string,
-      string
-    >,
-    legend: {
-      ar: 'A field tagged AR has its English beside it, inside lists and blocks too, and a rich text or a photo has its English under it: type the English next to the Arabic, one Save writes both. Fields without a tag are shared.',
-      en: 'A field tagged EN has its Arabic beside it, inside lists and blocks too: type the Arabic next to the English, one Save writes both. A rich text or a photo pairs with its English from the Arabic locale: switch the locale at the top to edit both. Fields without a tag are shared.',
-    } as Record<string, string>,
-  },
   bilingual: {
     /** The content locales by code, as nouns, for the two lines below (ADR-057). */
     languages: { ar: 'Arabic', en: 'English' } as Record<string, string>,
@@ -119,6 +103,10 @@ export const adminStrings = {
     loading: 'Loading {language}…',
     /** The other language's input when the read failed: what happened, then the way out. */
     failed: 'The {language} text could not be loaded. Reload the page to edit it.',
+    /** A read-only fact's other language when the read failed (nothing to edit). */
+    unavailable: 'The {language} value could not be loaded. Reload the page.',
+    /** A read-only fact one language has no value for yet (a post without its English body). */
+    empty: 'Empty',
   },
   engine: {
     generateNow: 'Generate now',
@@ -591,17 +579,12 @@ export const adminStringsAr: AdminStrings = {
     dayAt: '{day} الساعة {time}',
     riyadh: '{when} بتوقيت الرياض',
   },
-  locale: {
-    editing: { ar: 'تحرير المحتوى العربي.', en: 'تحرير المحتوى الإنجليزي.' },
-    legend: {
-      ar: 'الحقل المعلَّم AR إلى جانبه نصه الإنجليزي، داخل القوائم والأقسام أيضاً، والنص المنسّق أو الصورة تحته نسخته الإنجليزية: اكتب الإنجليزية بجانب العربية، وحفظ واحد يكتب اللغتين. الحقول بلا علامة مشتركة بين اللغتين.',
-      en: 'الحقل المعلَّم EN إلى جانبه نصه العربي، داخل القوائم والأقسام أيضاً: اكتب العربية بجانب الإنجليزية، وحفظ واحد يكتب اللغتين. النص المنسّق أو الصورة يُحرَّر بلغتيه من اللغة العربية: بدّل اللغة من أعلى الصفحة لتحرير اللغتين. الحقول بلا علامة مشتركة بين اللغتين.',
-    },
-  },
   bilingual: {
     languages: { ar: 'العربية', en: 'الإنجليزية' },
     loading: 'تحميل {language}…',
     failed: 'تعذّر تحميل نص اللغة {language}. أعد تحميل الصفحة لتحريره.',
+    unavailable: 'تعذّر تحميل قيمة اللغة {language}. أعد تحميل الصفحة.',
+    empty: 'فارغ',
   },
   engine: {
     generateNow: 'ولّد الآن',

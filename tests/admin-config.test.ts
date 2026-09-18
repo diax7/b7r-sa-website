@@ -1,7 +1,11 @@
 import type { CollectionConfig, Field, GlobalConfig } from 'payload';
 import { describe, expect, it } from 'vitest';
 import { isAbandonedDraft, savesByPeople, titleOf } from '@/modules/cms/admin/dashboard/data';
-import { ENTITY_HEADER_PATH, LOCALE_NOTE_PATH } from '@/modules/cms/admin/document/config';
+import {
+  collectionComponents,
+  ENTITY_HEADER_PATH,
+  globalComponents,
+} from '@/modules/cms/admin/document/config';
 import {
   AUTHOR_DESCRIPTIONS,
   CATEGORY_DESCRIPTIONS,
@@ -55,7 +59,7 @@ import { Faqs } from '@/modules/cms/collections/faqs';
 import { Integrations } from '@/modules/cms/collections/integrations';
 import { Media } from '@/modules/cms/collections/media';
 import { Pages } from '@/modules/cms/collections/pages';
-import { POST_FEATURES, Posts } from '@/modules/cms/collections/posts';
+import { POST_FEATURES, Posts, WARNINGS_FIELD } from '@/modules/cms/collections/posts';
 import { Products } from '@/modules/cms/collections/products';
 import { REDIRECT_OVERRIDES } from '@/modules/cms/collections/redirects';
 import { Tags } from '@/modules/cms/collections/tags';
@@ -109,6 +113,9 @@ const arabic = (label: unknown): boolean =>
   ARABIC.test(String((label as { ar?: unknown }).ar));
 const groupOf = (admin: { group?: unknown } | undefined): string =>
   String((admin?.group as { ar?: unknown } | undefined)?.ar ?? '');
+/** Whether a document's slot lists a locale note (the component PR C of ADR-057 deleted). */
+const noteAmong = (slot: unknown): boolean =>
+  Array.isArray(slot) && slot.some((c: unknown) => /locale-note|LocaleNote/.test(String(c)));
 
 describe('admin config shape (ADR-039)', () => {
   for (const c of collections) {
@@ -156,6 +163,9 @@ describe('the sidebar registry (ADR-046)', () => {
       }
       const header = c.admin?.components?.Description as { path?: string } | undefined;
       expect(header?.path, 'Description slot').toBe(ENTITY_HEADER_PATH);
+      // No locale note before the document controls: it went with the switch (PR C); an
+      // entity's own action there (Generate now, Test connection) is not one.
+      expect(noteAmong(c.admin?.components?.edit?.beforeDocumentControls)).toBe(false);
       const shows = c.admin?.custom?.['shows'] as { ar?: string; en?: string } | undefined;
       expect(shows?.en, 'shows.en').toBeTruthy();
       expect(ARABIC.test(shows?.ar ?? ''), 'shows.ar').toBe(true);
@@ -168,11 +178,28 @@ describe('the sidebar registry (ADR-046)', () => {
       expect(groupKey(groupOf(g.admin)), 'admin.group in the registry').toBe(placement?.group);
       const header = g.admin?.components?.elements?.Description as { path?: string } | undefined;
       expect(header?.path, 'Description slot').toBe(ENTITY_HEADER_PATH);
+      expect(noteAmong(g.admin?.components?.elements?.beforeDocumentControls)).toBe(false);
       const shows = g.admin?.custom?.['shows'] as { ar?: string; en?: string } | undefined;
       expect(shows?.en, 'shows.en').toBeTruthy();
       expect(ARABIC.test(shows?.ar ?? ''), 'shows.ar').toBe(true);
     });
   }
+  it('the header helpers register the description slot and nothing else', () => {
+    expect(collectionComponents('pages')).toEqual({
+      Description: {
+        path: ENTITY_HEADER_PATH,
+        serverProps: { entity: { type: 'collections', slug: 'pages' } },
+      },
+    });
+    expect(globalComponents('home')).toEqual({
+      elements: {
+        Description: {
+          path: ENTITY_HEADER_PATH,
+          serverProps: { entity: { type: 'globals', slug: 'home' } },
+        },
+      },
+    });
+  });
   it('every custom view of ours is registered with Payload, placed, iconed and admins-only', () => {
     expect(Object.keys(ADMIN_VIEW_COMPONENTS).toSorted()).toEqual(
       Object.keys(ADMIN_VIEWS).toSorted(),
@@ -321,33 +348,6 @@ describe('every field says what it does on the site (ADR-046)', () => {
         .filter((f) => !f.ok)
         .map((f) => f.path);
       expect(missing).toEqual([]);
-    });
-  }
-});
-
-/** Whether any field, at any depth, is per language. */
-function hasLocalized(fields: Field[]): boolean {
-  return fields.some((f) => {
-    if ('localized' in f && f.localized) return true;
-    if ('fields' in f && Array.isArray(f.fields)) return hasLocalized(f.fields);
-    if ('tabs' in f) return f.tabs.some((t) => hasLocalized(t.fields));
-    if ('blocks' in f) return f.blocks.some((b) => hasLocalized(b.fields));
-    return false;
-  });
-}
-const NOTE = LOCALE_NOTE_PATH;
-
-describe('the locale note (ADR-044): every document with per-language fields carries it', () => {
-  for (const c of collections.filter((entity) => entity.slug !== 'redirects')) {
-    it(`collection ${c.slug}`, () => {
-      const registered = c.admin?.components?.edit?.beforeDocumentControls ?? [];
-      expect(registered.includes(NOTE)).toBe(hasLocalized(c.fields));
-    });
-  }
-  for (const g of globals) {
-    it(`global ${g.slug}`, () => {
-      const registered = g.admin?.components?.elements?.beforeDocumentControls ?? [];
-      expect(registered.includes(NOTE)).toBe(hasLocalized(g.fields));
     });
   }
 });
@@ -750,9 +750,8 @@ describe('read-only scalars render as ReadOnlyLine (audit 2026-09-18)', () => {
  * the rows of arrays and blocks alike (PR A), and adds the hidden `translations` JSON to a
  * config that has any; such a config lists the apply hook after its own. A localized heavy
  * field (rich text, upload) is covered by the twin that follows it in the config (PR B), and
- * such a config lists the population hook. A localized relationship stays on the locale
- * switch, and so does a list that is localized as a whole (its rows are per language and
- * cannot be paired).
+ * such a config lists the population hook. There is no locale switch to fall back on (PR C):
+ * the census gate below names any localized field left without a pair.
  */
 type Placed = {
   path: string;
@@ -806,6 +805,8 @@ const descriptionOf = (f: Field | undefined) =>
   (f as { admin?: { description?: { ar?: string; en?: string } } } | undefined)?.admin?.description;
 const LIGHT = ['text', 'textarea', 'select', 'number'];
 const HEAVY = new Set(['richText', 'upload']);
+/** A field named by its entity: what the census lists. */
+const placedName = (p: Placed & { slug: string }) => `${p.slug}.${p.path}`;
 
 /** A localized light field an editor can type in: what the rule says must be bilingual. */
 function editableLight(p: Placed): boolean {
@@ -959,54 +960,66 @@ describe('side-by-side bilingual editing (ADR-057)', () => {
     });
   }
 
-  it('the census (PR A and B): 55 localized light fields inside rows are bilingual; every localized rich text and upload has its twin right after it', () => {
+  /**
+   * The census gate of PR C (`docs/plans/2026-09-18-no-locale-switch.md`): the locale switch
+   * may go only when every localized field shows both languages. Across the 23 configs each
+   * one is a light field wearing `BilingualField`, a heavy field followed by its `<name>Twin`
+   * with the same editor or collection, or a read-only fact whose widget shows the other
+   * language under the open one (`ReadOnlyLine`, `WarningsField`: the post's `readingMinutes`
+   * and `warnings`, the one list localized as a whole, both written by the post's own
+   * `beforeChange` for the language of each write). Anything else is listed by name so the
+   * failure says what remains.
+   */
+  it('the census gate (PR C): 131 localized fields show both languages, 125 light ones paired (55 inside rows), the four heavy ones by their twins, the two facts of the post by their widgets; nothing remains; no list is localized as a whole but the warnings', () => {
     const placed = configs.flatMap((c) =>
       everyField(c.fields).map((p) => ({ ...p, slug: c.slug })),
     );
-    const inRows = placed.filter((p) => p.inList && widgetOf(p.field) === BILINGUAL_FIELD);
-    expect(inRows.length).toBe(55);
-    const heavy = placed.filter(
-      (p) =>
-        !p.inLocalizedList &&
-        (p.field as { localized?: boolean }).localized === true &&
-        HEAVY.has(p.field.type),
+    const localized = placed.filter(
+      (p) => !p.inLocalizedList && (p.field as { localized?: boolean }).localized === true,
     );
-    expect(heavy.map((p) => `${p.slug}.${p.path}`)).toEqual([
+    const pairedLight = localized.filter(
+      (p) => LIGHT.includes(p.field.type) && widgetOf(p.field) === BILINGUAL_FIELD,
+    );
+    const pairedHeavy = localized.filter(
+      (p) => HEAVY.has(p.field.type) && isTwinOf(p.next, p.field),
+    );
+    expect(pairedLight.length).toBe(125);
+    expect(pairedLight.filter((p) => p.inList).length).toBe(55);
+    expect(pairedHeavy.map(placedName)).toEqual([
       'pages.blocks.richText.content',
       'posts.body',
       'home.hero.slides.imageDesktop',
       'home.hero.slides.imageMobile',
     ]);
-    // Covered: the twin follows, same editor or collection, and the config's walk agrees.
-    const uncovered = heavy.filter((p) => !isTwinOf(p.next, p.field)).map((p) => p.path);
-    expect(uncovered).toEqual([]);
+    for (const p of pairedHeavy) {
+      expect((p.next as { name?: string }).name).toBe(twinName((p.field as { name: string }).name));
+    }
     expect(twinPaths(Pages.fields)).toEqual(['blocks.richText.content']);
     expect(twinPaths(Posts.fields)).toEqual(['body']);
     expect(twinPaths(Home.fields)).toEqual(['hero.slides.imageDesktop', 'hero.slides.imageMobile']);
-    for (const p of heavy) {
-      expect((p.next as { name?: string }).name).toBe(twinName((p.field as { name: string }).name));
-    }
-    // Every other localized field of one value is light and bilingual: nothing is left on the
-    // locale control but the lists localized as a whole below.
-    const onSwitch = placed
-      .filter(
-        (p) =>
-          !p.inLocalizedList &&
-          (p.field as { localized?: boolean }).localized === true &&
-          !LIGHT.includes(p.field.type) &&
-          !HEAVY.has(p.field.type) &&
-          !['array', 'blocks', 'group'].includes(p.field.type),
-      )
-      .map((p) => `${p.slug}.${p.path}`);
-    expect(onSwitch).toEqual([]);
-    // The lists localized as a whole: only the post's computed warnings (a fact, read-only).
+    // The read-only facts: their widgets show the other language under the open one.
+    const pairedFacts = localized.filter(
+      (p) =>
+        (p.field as { admin?: { readOnly?: boolean } }).admin?.readOnly === true &&
+        [READ_ONLY_LINE, WARNINGS_FIELD].includes(String(widgetOf(p.field))),
+    );
+    expect(pairedFacts.map((p) => `${placedName(p)} (${String(widgetOf(p.field))})`)).toEqual([
+      `posts.warnings (${WARNINGS_FIELD})`,
+      `posts.readingMinutes (${READ_ONLY_LINE})`,
+    ]);
+    // Nothing remains. A localized field that lands here has no place that shows its other
+    // language (a heavy field without its twin, a light field with a widget of its own, a
+    // hasMany, a relationship, a list localized as a whole), and no switch reaches it.
+    const paired = new Set([...pairedLight, ...pairedHeavy, ...pairedFacts]);
+    const remaining = localized.filter((p) => !paired.has(p));
+    expect(remaining.map((p) => `${placedName(p)} (${p.field.type})`)).toEqual([]);
     const wholeLists = placed
       .filter(
         (p) =>
           (p.field.type === 'array' || p.field.type === 'blocks') &&
           (p.field as { localized?: boolean }).localized === true,
       )
-      .map((p) => `${p.slug}.${p.path}`);
+      .map(placedName);
     expect(wholeLists).toEqual(['posts.warnings']);
   });
 });

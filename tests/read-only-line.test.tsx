@@ -1,13 +1,21 @@
 import { render } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
-// The widget reads the form and the UI language through Payload's hooks; the test hands it
-// a value and a language directly.
+// The widget reads the form and the UI language through Payload's hooks, and a localized
+// one the other language through the shared read (ADR-057); the test hands it each directly.
 let formValue: unknown;
 let uiLanguage = 'en';
+let otherLanguage: { other: { code: string } | null; stored: unknown } = {
+  other: null,
+  stored: { status: 'loading', doc: null },
+};
 vi.mock('@payloadcms/ui', () => ({
   useField: () => ({ value: formValue }),
+  useLocale: () => ({ code: 'ar' }),
   useTranslation: () => ({ i18n: { language: uiLanguage, t: (k: string) => k } }),
+}));
+vi.mock('@/modules/cms/admin/fields/bilingual/use-other-language', () => ({
+  useOtherLanguage: () => otherLanguage,
 }));
 
 const { ReadOnlyLine, readOnlyText } = await import('@/modules/cms/admin/fields/read-only-line');
@@ -111,5 +119,63 @@ describe('ReadOnlyLine: the label, the description and the value as a line', () 
     uiLanguage = 'ar';
     const { container } = render(<ReadOnlyLine field={field('checkbox')} path="x" />);
     expect(container.querySelector('[data-admin-read-only="x"]')?.textContent).toBe('نعم');
+  });
+
+  // A localized fact shows both languages (ADR-057, the post's reading time): the open
+  // language's line under its pill, the other language's under its own from the shared read.
+  it('a localized value: both languages under their pills, the other from the shared read', () => {
+    formValue = 3;
+    uiLanguage = 'en';
+    otherLanguage = { other: { code: 'en' }, stored: { status: 'ready', doc: { x: 5 } } };
+    const { container } = render(
+      <ReadOnlyLine field={field('number', { localized: true })} path="x" />,
+    );
+    expect(container.querySelector('[data-admin-read-only="x"]')?.textContent).toBe('3');
+    expect(
+      [...container.querySelectorAll('[data-admin-locale-tag]')].map((el) => el.textContent),
+    ).toEqual(['AR', 'EN']);
+    const other = container.querySelector('[data-admin-other="x"]');
+    expect(other?.getAttribute('data-admin-locale')).toBe('en');
+    expect(other?.textContent).toBe('EN5');
+  });
+
+  it('a localized value while the other language loads, or when its read failed', () => {
+    formValue = 3;
+    uiLanguage = 'en';
+    otherLanguage = { other: { code: 'en' }, stored: { status: 'loading', doc: null } };
+    const loading = render(<ReadOnlyLine field={field('number', { localized: true })} path="x" />);
+    expect(loading.container.querySelector('[data-admin-other="x"]')?.textContent).toBe(
+      'ENLoading English…',
+    );
+    otherLanguage = { other: { code: 'en' }, stored: { status: 'error', doc: null } };
+    const failed = render(<ReadOnlyLine field={field('number', { localized: true })} path="x" />);
+    expect(failed.container.querySelector('[data-admin-other="x"]')?.textContent).toBe(
+      'ENThe English value could not be loaded. Reload the page.',
+    );
+  });
+
+  it('a localized value one language has none of yet reads "Empty" under its pill', () => {
+    formValue = 3;
+    uiLanguage = 'en';
+    otherLanguage = { other: { code: 'en' }, stored: { status: 'ready', doc: { x: null } } };
+    const { container } = render(
+      <ReadOnlyLine field={field('number', { localized: true })} path="x" />,
+    );
+    expect(container.querySelector('[data-admin-other="x"]')?.textContent).toBe('ENEmpty');
+    formValue = null;
+    uiLanguage = 'ar';
+    const both = render(<ReadOnlyLine field={field('number', { localized: true })} path="x" />);
+    expect(both.container.textContent).toContain('ARفارغ');
+    expect(both.container.textContent).toContain('ENفارغ');
+  });
+
+  it('a value that is not localized shows one line and no pill', () => {
+    formValue = 3;
+    uiLanguage = 'en';
+    otherLanguage = { other: { code: 'en' }, stored: { status: 'ready', doc: { x: 5 } } };
+    const { container } = render(<ReadOnlyLine field={field('number')} path="x" />);
+    expect(container.querySelector('[data-admin-read-only="x"]')?.textContent).toBe('3');
+    expect(container.querySelector('[data-admin-locale-tag]')).toBeNull();
+    expect(container.querySelector('[data-admin-other]')).toBeNull();
   });
 });

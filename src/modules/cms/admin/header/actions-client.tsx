@@ -1,8 +1,8 @@
 'use client';
 
-import { useLocale, useNav, useWindowInfo } from '@payloadcms/ui';
+import { useNav, useWindowInfo } from '@payloadcms/ui';
 import { Menu, Search } from 'lucide-react';
-import { type ReactElement, useEffect } from 'react';
+import type { ReactElement } from 'react';
 import { Icon } from '@/components/shared/icon';
 import { Kbd } from '@/components/ui/kbd';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -49,14 +49,6 @@ export function HeaderActionsClient(props: PaletteProps) {
   // Payload's `m` (1024 px): at or under it the two controls are icons (undefined, before
   // the first measurement, counts as icons; the tooltip is harmless beside visible text).
   const iconsOnly = useWindowInfo().breakpoints['m'] !== false;
-  // The content locale on the document root (ADR-044): `admin.css` draws the AR/EN pill on
-  // localized field labels from it; the header is on every view, so drawers inherit it. It
-  // is the locale of the content being edited, not the UI language (ADR-056): switching the
-  // panel to Arabic leaves it alone, and the pills leave the panel's language alone.
-  const { code } = useLocale();
-  useEffect(() => {
-    document.documentElement.dataset['contentLocale'] = code;
-  }, [code]);
   const menuLabel = navOpen ? s.nav.closeMenu : s.nav.openMenu;
   return (
     <TooltipProvider delayDuration={200}>

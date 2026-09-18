@@ -1930,6 +1930,85 @@ document, and heals itself there. `shapeOf` is memoised per field array (a `Weak
 a read or a save pays the walk once per process. What still follows the locale control:
 nothing of one value; the switch itself goes in PR C.
 
+**Amendment, 2026-09-18 (PR C of the same plan): no locale switch.** Dhia's sentence, the
+directive of the plan: "I don't want to be switching between them, one edit for both
+languages." The light/heavy rule as it stands: a light field (text, textarea, select,
+number) is edited in both languages side by side through the JSON entry; a heavy field
+(rich text, upload) through the real twin under it; a read-only fact with two languages
+shows both (the rule reaches what nobody edits too). **The gate.** The switch went only
+once the census in `tests/admin-config.test.ts` read zero: of the 131 localized fields
+across the 23 configs, 125 light ones wear `BilingualField` (55 of them inside rows), the
+four heavy ones are followed by their twins with the same editor or collection, and the
+post's two computed facts, `warnings` (the one list localized as a whole) and
+`readingMinutes`, both read-only and written by the post's own `beforeChange` for the
+language of each write (the nested English write included, so the English warnings follow
+the English body), carry widgets that show the other language under the open one:
+`WarningsField` lists the English warnings under the Arabic ones, `ReadOnlyLine` the
+English reading time under the Arabic, each language under its pill (`LocaleTag`), the
+English read through the same shared store the form's bilingual inputs use
+(`useOtherLanguage`, one REST read per document view, again after every save; a field that
+is not localized pays no read), with the loading and the failure lines while it is not
+there. Nothing is an exception, and the census names anything else by entity and path, so
+a future localized field that lands there is a field no widget shows the other language of
+(a heavy field without its twin, a light field with a widget of its own, a `hasMany`, a
+relationship, a list localized as a whole) and no switch reaches. **What went.** Payload's localizer in the header (its button
+and the spacer it kept under it) is hidden in `@layer payload`, and the header's controls
+took the gutter it held; the locale note before the document controls, its rows in
+`admin.css`, the `localized` option of `collectionComponents` / `globalComponents` and the
+`locale.legend` / `locale.editing` strings of both trees are deleted (a note that named an
+"open language" had nothing left to say); the `SHARED_ROWS_NOTE` sentences now read "a
+duplicated row copies the Arabic only; its English starts empty"; the twins' hiding under
+the `en` locale went with the `en` view; the AR pill on a localized label is static in the
+stylesheet, since the panel edits the default locale and nothing else, and the header no
+longer writes `html[data-content-locale]`. The Publish menu's "Publish in Arabic"
+(`publishSpecificLocale`, a different path through Payload's update that would leave the
+English where it was) and the schedule drawer's "Locale to publish" select are hidden the
+same way: publishing both languages at once (the drawer's default, "All") is the one
+supported choice, and the e2e asserts the menu and the drawer offer no other. The REST
+API still accepts `?publishSpecificLocale=<code>` on a write, and such a write is outside
+the mechanism: the hook pairs the request's `req.locale` (from the query) with the other
+locale and knows nothing of a per-locale publish, whose path through Payload's update
+(`update.js`) is a different one; nothing in the panel sends it, and a script that does is
+on its own. Payload's
+"Copy to locale" in the document menu stays: a data operation, not a view, and the
+navigation it ends with (`?locale=en`) is caught by the redirect below. **The stranded
+preference.** Payload's `RootPage` writes every `?locale=` it is given into the person's
+persistent `locale` preference (`getRequestLocale` in `@payloadcms/next`) and reads it back
+on every admin request after, and its client `LocaleProvider` reads the same query, so an
+old English link would have left someone in the English view with no switch to come back.
+Two things close that: migration `20260918_142817_purge_locale_preference` deletes every
+`locale` row of `payload_preferences` (data only, `down` a no-op), and the proxy now matches
+`/admin` too (`PROXY_MATCHER`, `ADMIN_PREFIX` in `lib/site-routes.ts`, the CMS config's
+`routes.admin` reads the same constant) and answers an admin URL carrying `?locale=` with a
+307 to the same URL without it, before Payload's page runs, the other parameters kept
+(`stripAdminLocale`; the `Location` is absolute on the request's own origin because Next's
+proxy adapter parses it with no base and answers a relative one with a 500, then
+relativises it when its host is the request's, which holds by construction, so the browser
+gets `/admin/...` in the container too, where `request.url` names the bind address; every
+other admin request passes through untouched). Payload's own
+push to `?locale=ar` after a create or a duplicate costs one such redirect, and the
+`LocaleProvider` never navigates, so the redirect cannot loop. The visibility
+guides that linked a document "in the locale that is missing" now link the field that
+fixes the finding (Payload's `field-<path>` input id as the fragment; the anchor scrolls
+only when the field's tab is active, and the guides name the tab) and say which column
+("the English field beside the Arabic title", "the English body is the editor under the
+Arabic one"); the dashboard's "documents without English" link lands on the title field
+the same way; no URL under `src/` carries `?locale=` (`tests/visibility.test.ts` walks
+every rule's links). **What the REST `?locale=` still does.** Everything it did: the API
+is outside the proxy's matcher, so `?locale=en` reads or writes the English document,
+`?locale=all` returns every language, and the mechanism's own English read and nested
+English write use it; only the panel lost the query. Tests: the census gate, the proxy
+(`tests/site-routes.test.ts`: the 307 with its `Location`, the root, a pass-through, a site
+path that merely starts with the letters), the strings without a `locale` branch, the
+helpers without the option, the guides' links and sentences, the two widgets with both
+languages, the loading and the failed line, and the one-locale case; the e2e (no visible localizer
+and no note on a document, a global and a list from 390 to 1440 px, in English and in
+Arabic; a light pair beside a stacked heavy pair on one page; the English text and the
+English rows landing in `?locale=en` REST reads after one Save; the empty English refused
+with the field named; the Publish menu and the schedule drawer without a locale; the twin
+adding no axe violation of its own; a `?locale=en&foo=bar` admin URL redirected to
+`?foo=bar` with no preference left behind and the next form in Arabic).
+
 ## ADR-058: The sidebar: one tree, one breakpoint (2026-09-18)
 
 **Context.** The admin audit of 2026-09-18 (section 1) found two open/close systems by

@@ -135,7 +135,7 @@ export const Connections: CollectionConfig = {
     listSearchableFields: ['label', 'model'],
     group: adminGroup('admin'),
     components: {
-      ...collectionComponents(CONNECTIONS, { localized: false }),
+      ...collectionComponents(CONNECTIONS),
       edit: {
         beforeDocumentControls: ['@/modules/connections/admin/test-action#TestConnection'],
       },

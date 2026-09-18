@@ -171,7 +171,7 @@ export const REDIRECT_OVERRIDES: Omit<Partial<CollectionConfig>, 'fields'> & {
   admin: {
     hideAPIURL: true,
     group: adminGroup('visibility'),
-    components: collectionComponents('redirects', { localized: false }),
+    components: collectionComponents('redirects'),
     custom: {
       shows: {
         ar: 'الروابط القديمة: الزائر أو محرك البحث الواصل إليها يُحوَّل إلى الصفحة الجديدة',

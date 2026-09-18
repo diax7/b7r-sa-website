@@ -23,7 +23,7 @@ export const Media: CollectionConfig = {
   labels: { singular: { ar: 'صورة', en: 'Image' }, plural: { ar: 'الصور', en: 'Images' } },
   admin: {
     hideAPIURL: true,
-    components: collectionComponents('media', { localized: true }),
+    components: collectionComponents('media'),
     group: adminGroup('site'),
     custom: {
       shows: {

@@ -29,7 +29,7 @@ export const Prompts: CollectionConfig = {
     defaultColumns: ['text', 'language', 'intent', 'enabled'],
     listSearchableFields: ['text'],
     group: adminGroup('visibility'),
-    components: collectionComponents(PROMPTS, { localized: false }),
+    components: collectionComponents(PROMPTS),
     custom: {
       shows: {
         ar: 'لا يظهر في الموقع: ما يُسأل عنه مساعدو الذكاء الاصطناعي كل أسبوع',

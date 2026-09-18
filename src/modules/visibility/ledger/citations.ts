@@ -28,7 +28,7 @@ export const Citations: CollectionConfig = {
     defaultColumns: ['title', 'promptText', 'mentioned', 'linked', 'mode'],
     listSearchableFields: ['title', 'promptText', 'excerpt'],
     group: adminGroup('visibility'),
-    components: collectionComponents(CITATIONS, { localized: false }),
+    components: collectionComponents(CITATIONS),
     custom: {
       shows: {
         ar: 'لا يظهر في الموقع: ما أجاب به كل مساعد عن كل سؤال، ومن ذكر بحر برنت',

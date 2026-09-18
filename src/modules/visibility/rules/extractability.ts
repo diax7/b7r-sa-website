@@ -36,7 +36,7 @@ export function emitted(s: Snapshot): Emitted[] {
     for (const locale of localesOf(s, route.title)) {
       out.push({
         label: docLabel(route.route, undefined, locale),
-        href: `${s.adminRoute}/globals/seo-defaults${locale === 'en' ? '?locale=en' : ''}`,
+        href: `${s.adminRoute}/globals/seo-defaults`,
         title: emittedTitle(template(locale), loc(route.title, locale), route.route === '/'),
         description: loc(route.description, locale),
       });
@@ -46,7 +46,7 @@ export function emitted(s: Snapshot): Emitted[] {
     for (const locale of localesOf(s, page.title)) {
       out.push({
         label: docLabel(loc(page.title, locale), 'page', locale),
-        href: editHref(s.adminRoute, 'pages', page.id, locale),
+        href: editHref(s.adminRoute, 'pages', page.id, 'seo.title'),
         title: emittedTitle(template(locale), loc(page.seo?.title, locale)),
         description: loc(page.seo?.description, locale),
       });
@@ -57,7 +57,7 @@ export function emitted(s: Snapshot): Emitted[] {
       const copy = copyFor(locale).seo.product;
       out.push({
         label: docLabel(loc(product.title, locale), 'product', locale),
-        href: editHref(s.adminRoute, 'products', product.id, locale),
+        href: editHref(s.adminRoute, 'products', product.id, 'name'),
         title: emittedTitle(
           template(locale),
           copy.title.replace('{name}', loc(product.title, locale)),
@@ -72,7 +72,7 @@ export function emitted(s: Snapshot): Emitted[] {
     for (const locale of localesOf(s, post.title)) {
       out.push({
         label: docLabel(loc(post.title, locale), 'post', locale),
-        href: editHref(s.adminRoute, 'posts', post.id, locale),
+        href: editHref(s.adminRoute, 'posts', post.id, 'seo.title'),
         title: emittedTitle(
           template(locale),
           loc(post.seo?.title, locale) || loc(post.title, locale),
@@ -85,7 +85,7 @@ export function emitted(s: Snapshot): Emitted[] {
     for (const locale of localesOf(s, hub.title)) {
       out.push({
         label: docLabel(loc(hub.title, locale), 'hub', locale),
-        href: editHref(s.adminRoute, 'categories', hub.id, locale),
+        href: editHref(s.adminRoute, 'categories', hub.id, 'name'),
         title: emittedTitle(template(locale), loc(hub.title, locale)),
         description: loc(hub.lead, locale),
       });
@@ -115,7 +115,7 @@ export function extractability(s: Snapshot): Finding[] {
         en: `${m.filename} (${uses.join(', ')}${more})`,
         ar: `${m.filename} (${uses.join('، ')}${more})`,
       },
-      href: editHref(s.adminRoute, 'media', m.id, 'en'),
+      href: editHref(s.adminRoute, 'media', m.id, 'alt'),
     };
   });
   const perPostLocale = (judge: (post: Snapshot['posts'][number], locale: Locale) => boolean) =>
@@ -123,7 +123,7 @@ export function extractability(s: Snapshot): Finding[] {
       localesOf(s, post.title).map((locale) => ({
         ok: judge(post, locale),
         label: docLabel(loc(post.title, locale), undefined, locale),
-        href: editHref(s.adminRoute, 'posts', post.id, locale),
+        href: editHref(s.adminRoute, 'posts', post.id),
       })),
     );
   const openings = perPostLocale((post, locale) => {
@@ -153,8 +153,8 @@ export function extractability(s: Snapshot): Finding[] {
         ar: 'لكل صفحة عنوان بحث ووصف بالطول المناسب',
       },
       guide: {
-        en: `The title as the browser tab shows it (the template included) within ${titleMax} characters, the description within ${descriptionMax}, both present, in every language the page exists in. A result shows them whole; an engine quotes them.`,
-        ar: `العنوان كما يظهر في تبويب المتصفح (مع القالب) حتى ${titleMax} حرفاً، والوصف حتى ${descriptionMax}، كلاهما موجود، في كل لغة توجد فيها الصفحة. تعرضهما نتيجة البحث كاملين؛ ويقتبسهما المحرّك.`,
+        en: `The title as the browser tab shows it (the template included) within ${titleMax} characters, the description within ${descriptionMax}, both present, in every language the page exists in: the Arabic field and the English one beside it. A result shows them whole; an engine quotes them.`,
+        ar: `العنوان كما يظهر في تبويب المتصفح (مع القالب) حتى ${titleMax} حرفاً، والوصف حتى ${descriptionMax}، كلاهما موجود، في كل لغة توجد فيها الصفحة: الحقل العربي والإنجليزي بجانبه. تعرضهما نتيجة البحث كاملين؛ ويقتبسهما المحرّك.`,
       },
     }),
     prorata({
@@ -166,8 +166,8 @@ export function extractability(s: Snapshot): Finding[] {
         ar: 'لكل صورة مستخدمة نص بديل إنجليزي',
       },
       guide: {
-        en: 'The Arabic alt text is required; the English one is what the English page and an engine reading it get. Open each photo listed here in English and write it.',
-        ar: 'النص البديل العربي إلزامي؛ والإنجليزي هو ما تحصل عليه الصفحة الإنجليزية والمحرّك الذي يقرؤها. افتح كل صورة في هذه القائمة بالإنجليزية واكتبه.',
+        en: 'The Arabic alt text is required; the English one is what the English page and an engine reading it get. Open each photo listed here and write the English field beside the Arabic alt text.',
+        ar: 'النص البديل العربي إلزامي؛ والإنجليزي هو ما تحصل عليه الصفحة الإنجليزية والمحرّك الذي يقرؤها. افتح كل صورة في هذه القائمة واكتب الحقل الإنجليزي بجانب النص البديل العربي.',
       },
     }),
     prorata({
@@ -179,8 +179,8 @@ export function extractability(s: Snapshot): Finding[] {
         ar: 'كل مقال يبدأ بالإجابة',
       },
       guide: {
-        en: `The first paragraph answers the question the post is for, in ${answerWords.min} to ${answerWords.max} words, before any story: that block is what an assistant lifts.`,
-        ar: `الفقرة الأولى تجيب عن سؤال المقال في ${answerWords.min} إلى ${answerWords.max} كلمة، قبل أي سرد: هذه الكتلة هي ما يلتقطه المساعد.`,
+        en: `The first paragraph answers the question the post is for, in ${answerWords.min} to ${answerWords.max} words, before any story: that block is what an assistant lifts. The English body is the editor under the Arabic one.`,
+        ar: `الفقرة الأولى تجيب عن سؤال المقال في ${answerWords.min} إلى ${answerWords.max} كلمة، قبل أي سرد: هذه الكتلة هي ما يلتقطه المساعد. النص الإنجليزي هو المحرّر تحت النص العربي.`,
       },
     }),
     prorata({
@@ -192,8 +192,8 @@ export function extractability(s: Snapshot): Finding[] {
         ar: 'في كل مقال عنوان فرعي بصيغة سؤال',
       },
       guide: {
-        en: 'At least one H2 worded the way a buyer asks ("How do I…?", «كيف…؟»): the engines match questions to headings.',
-        ar: 'عنوان فرعي واحد على الأقل (H2) بصيغة سؤال المشتري («كيف…؟» أو "How do I…?"): المحرّكات تطابق الأسئلة بالعناوين.',
+        en: 'At least one H2 worded the way a buyer asks ("How do I…?", «كيف…؟»): the engines match questions to headings. The English body is the editor under the Arabic one.',
+        ar: 'عنوان فرعي واحد على الأقل (H2) بصيغة سؤال المشتري («كيف…؟» أو "How do I…?"): المحرّكات تطابق الأسئلة بالعناوين. النص الإنجليزي هو المحرّر تحت النص العربي.',
       },
     }),
     prorata({

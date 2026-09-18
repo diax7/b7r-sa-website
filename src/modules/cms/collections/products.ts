@@ -24,7 +24,7 @@ export const Products: CollectionConfig = {
   labels: { singular: { ar: 'منتج', en: 'Product' }, plural: { ar: 'المنتجات', en: 'Products' } },
   admin: {
     hideAPIURL: true,
-    components: collectionComponents('products', { localized: true }),
+    components: collectionComponents('products'),
     useAsTitle: 'name',
     preview: (doc, { req, locale }) =>
       typeof doc['slug'] === 'string' && doc['slug']

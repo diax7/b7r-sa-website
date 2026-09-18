@@ -20,21 +20,43 @@ function serviceStatus(s: Snapshot, kind: string): 'done' | 'next' | 'missing' {
 /** Crawl access (ADR-049 C1 to C5): the engines can reach and index every page. */
 export function crawl(s: Snapshot): Finding[] {
   const connections = `${s.adminRoute}/collections/connections`;
+  // The link lands on the title field: its English column is the one to fill (ADR-057).
   const english = s.englishOn
     ? [
-        ...s.pages.map((d) => ({ d, collection: 'pages', kind: 'page' as DocKind })),
-        ...s.products.map((d) => ({ d, collection: 'products', kind: 'product' as DocKind })),
-        ...s.posts.map((d) => ({ d, collection: 'posts', kind: 'post' as DocKind })),
-        ...s.hubs.map((d) => ({ d, collection: 'categories', kind: 'hub' as DocKind })),
+        ...s.pages.map((d) => ({
+          d,
+          collection: 'pages',
+          kind: 'page' as DocKind,
+          field: 'title',
+        })),
+        ...s.products.map((d) => ({
+          d,
+          collection: 'products',
+          kind: 'product' as DocKind,
+          field: 'name',
+        })),
+        ...s.posts.map((d) => ({
+          d,
+          collection: 'posts',
+          kind: 'post' as DocKind,
+          field: 'title',
+        })),
+        ...s.hubs.map((d) => ({
+          d,
+          collection: 'categories',
+          kind: 'hub' as DocKind,
+          field: 'name',
+        })),
         ...s.authors.map((a) => ({
           d: { id: a.id, slug: `author ${a.id}`, title: a.name },
           collection: 'authors',
           kind: 'author' as DocKind,
+          field: 'name',
         })),
-      ].map(({ d, collection, kind }) => ({
+      ].map(({ d, collection, kind, field }) => ({
         ok: has(loc(d.title, 'en')),
         label: docLabel(loc(d.title, 'ar') || d.slug, kind),
-        href: editHref(s.adminRoute, collection, d.id, 'en'),
+        href: editHref(s.adminRoute, collection, d.id, field),
       }))
     : [];
   return [
@@ -101,8 +123,8 @@ export function crawl(s: Snapshot): Finding[] {
         ar: 'كل مستند منشور له نسخة إنجليزية',
       },
       guide: {
-        en: 'While the site is in English, a document without an English title (an author without an English name) has no English page and no language pair for the engines. Open its English version and fill the title, then the rest.',
-        ar: 'ما دام الموقع بالإنجليزية، فالمستند بلا عنوان إنجليزي (والكاتب بلا اسم إنجليزي) لا صفحة إنجليزية له ولا زوج لغوي للمحرّكات. افتح نسخته الإنجليزية واملأ العنوان، ثم البقية.',
+        en: 'While the site is in English, a document without an English title (an author without an English name) has no English page and no language pair for the engines. Open it and fill the English field beside the Arabic title, then the rest of the English column.',
+        ar: 'ما دام الموقع بالإنجليزية، فالمستند بلا عنوان إنجليزي (والكاتب بلا اسم إنجليزي) لا صفحة إنجليزية له ولا زوج لغوي للمحرّكات. افتحه واملأ الحقل الإنجليزي بجانب العنوان العربي، ثم بقية العمود الإنجليزي.',
       },
     }),
   ];

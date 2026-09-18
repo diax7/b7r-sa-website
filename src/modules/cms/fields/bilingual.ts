@@ -198,8 +198,9 @@ export function twinField(original: HeavyField): Field {
 /**
  * Whether a field is edited in both languages at once: a localized light field (or one inside
  * a localized group) that holds one value, is shown, is editable, and has no widget of its
- * own. A `hasMany` text, select or number is a list and stays on the locale switch; a
- * read-only value is a line (`ReadOnlyLine`), never a twin.
+ * own. A `hasMany` text, select or number is a list and has no pair (none exists in the
+ * configs; the census in `tests/admin-config.test.ts` would name one); a read-only value is
+ * a line (`ReadOnlyLine`, which shows both languages of a localized one), never a twin.
  */
 export function isBilingualField(field: Field, parentLocalized = false): boolean {
   if (!isLight(field) || !field.name) return false;

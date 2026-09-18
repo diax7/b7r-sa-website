@@ -10,6 +10,8 @@ import {
   signals,
 } from '@/modules/visibility/rules/rest';
 import {
+  editHref,
+  globalHref,
   isQuestion,
   openingWords,
   prorata,
@@ -80,7 +82,7 @@ describe('the visibility score: the table (ADR-049)', () => {
     const c5 = ar.findings.find((f) => f.key === 'C5');
     expect(c5?.items?.[0]).toEqual({
       label: 'عنوان (مقال)',
-      href: '/admin/collections/posts/3?locale=en',
+      href: '/admin/collections/posts/3#field-title',
     });
     expect(en.sections[0]?.facts.map((f) => f.text)).toEqual(
       score.sections[0]?.facts.map((f) => f.text.en),
@@ -147,6 +149,11 @@ describe('the visibility score: the rules (ADR-049)', () => {
       }),
     );
     expect(by(bare, 'I1').status).toBe('missing');
+    // A guide links the field that fixes it and names the English column beside it: no
+    // `?locale=` anywhere (ADR-057, no locale switch), the fragment is Payload's input id.
+    expect(by(bare, 'I1').href).toBe('/admin/globals/site-settings#field-tagline');
+    expect(by(bare, 'I1').guide.en).toMatch(/the English field beside the Arabic tagline/);
+    expect(by(bare, 'I1').guide.ar).toMatch(/الحقل الإنجليزي بجانب/);
     expect(by(bare, 'I2')).toMatchObject({ status: 'next', count: { done: 1, total: 3 } });
     expect(by(bare, 'I2').items?.map((i) => i.label.en)).toEqual(['X', 'TikTok']);
     expect(by(bare, 'I3').status).toBe('missing');
@@ -195,7 +202,7 @@ describe('the visibility score: the rules (ADR-049)', () => {
     expect(by(review, 'C5')).toMatchObject({ status: 'next', count: { done: 4, total: 5 } });
     expect(by(review, 'C5').items?.[0]).toEqual({
       label: { en: 'عنوان (post)', ar: 'عنوان (مقال)' },
-      href: '/admin/collections/posts/3?locale=en',
+      href: '/admin/collections/posts/3#field-title',
     });
     // Not in English: nothing to judge.
     expect(by(crawl(filled({ englishOn: false })), 'C5')).toMatchObject({
@@ -262,7 +269,7 @@ describe('the visibility score: the rules (ADR-049)', () => {
       items: [
         {
           label: { en: 'dhia.jpg (ضياء, home hero…)', ar: 'dhia.jpg (ضياء، home hero…)' },
-          href: '/admin/collections/media/7?locale=en',
+          href: '/admin/collections/media/7#field-alt',
         },
       ],
     });
@@ -302,6 +309,29 @@ describe('the visibility score: the rules (ADR-049)', () => {
     });
     expect(by(geo([comparePage], '2026-08-27T00:00:00.000Z'), 'E7').status).toBe('done');
     expect(by(geo([{ ...comparePage, blocks: [] }]), 'E7').status).toBe('done');
+  });
+
+  it('links a document at its field, never at a locale: the fragment is the input id, dots as __', () => {
+    expect(editHref('/admin', 'pages', 8)).toBe('/admin/collections/pages/8');
+    expect(editHref('/admin', 'pages', 8, 'seo.title')).toBe(
+      '/admin/collections/pages/8#field-seo__title',
+    );
+    expect(globalHref('/admin', 'site-settings', 'tagline')).toBe(
+      '/admin/globals/site-settings#field-tagline',
+    );
+    const all = [
+      ...crawl(filled()),
+      ...identity(filled()),
+      ...extractability(filled()),
+      ...corroboration(filled()),
+      ...measurement(filled()),
+    ];
+    for (const f of all) {
+      for (const href of [f.href, ...(f.items ?? []).map((i) => i.href)]) {
+        expect(href ?? '', f.key).not.toMatch(/locale=/);
+      }
+      expect(f.guide.en, f.key).not.toMatch(/switch the locale|English version/);
+    }
   });
 
   it('reads an opening and a question heading the way the rule says', () => {

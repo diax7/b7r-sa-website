@@ -54,7 +54,7 @@ export const Users: CollectionConfig = {
     defaultColumns: ['name', 'email', 'role'],
     listSearchableFields: ['name', 'email'],
     group: adminGroup('admin'),
-    components: collectionComponents('users', { localized: false }),
+    components: collectionComponents('users'),
     custom: {
       shows: {
         ar: 'لا يظهر في الموقع: من يسجّل الدخول هنا وما يُسمح له بتغييره',

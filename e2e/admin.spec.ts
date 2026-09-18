@@ -28,12 +28,6 @@ declare global {
 const withoutRowIds = (rows: unknown) =>
   Array.isArray(rows) ? rows.map(({ id: _row, ...row }: Record<string, unknown>) => row) : rows;
 
-type Box = { x: number; y: number; width: number; height: number };
-
-/** Two boxes that share no pixel. */
-const disjoint = (a: Box, b: Box) =>
-  a.x + a.width <= b.x || b.x + b.width <= a.x || a.y + a.height <= b.y || b.y + b.height <= a.y;
-
 /** How far the document could scroll sideways: zero on a page that fits its screen. */
 const sidewaysOverflow = (page: Page) =>
   page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
@@ -554,17 +548,19 @@ test.describe('CMS admin', () => {
     // to be gone before the audit.
     await expect(page.getByRole('menuitem', { name: /Log out/ })).toHaveCount(0);
     await expect(page.locator('body > [aria-hidden="true"]')).toHaveCount(0);
-    // The locale note (ADR-044) sits in the document controls of this localized page.
-    await expect(page.locator('[data-admin-locale-note]')).toContainText('Editing the Arabic');
+    // No locale to switch (ADR-057, PR C): neither Payload's switcher nor our note is on the
+    // page; the localized label keeps its AR pill, the shared one has none.
+    await expect(page.locator('.localizer-button:visible')).toHaveCount(0);
+    await expect(page.locator('[data-admin-locale-note]')).toHaveCount(0);
     await expect(page.locator('label[for="field-title"] .localized')).toHaveCount(1);
+    expect(
+      await page
+        .locator('label[for="field-title"] .localized')
+        .evaluate((el) => getComputedStyle(el, '::after').content),
+    ).toBe('"AR"');
     await expect(page.locator('label[for="field-slug"] .localized')).toHaveCount(0);
     expect(
-      await serious(
-        '[data-admin-nav]',
-        '.app-header',
-        '[data-admin-locale-note]',
-        '[data-admin-header]',
-      ),
+      await serious('[data-admin-nav]', '.app-header', '[data-admin-header]'),
       'axe: shell on an edit view',
     ).toEqual([]);
     // An editor never sees the settings entries.
@@ -648,9 +644,9 @@ test.describe('CMS admin', () => {
     await expect(nav.locator('#nav-pages')).toBeVisible();
     await nav.locator('[data-admin-menu-close]').click();
     await expect(nav).not.toHaveClass(/nav--nav-open/);
-    // At every width the shell fits its screen: a localized document (the header's crumbs
-    // and locale switcher), a global (the locale note beside Save) and a list (the table
-    // scrolls inside its wrapper) never scroll the page sideways.
+    // At every width the shell fits its screen: a localized document (the header's crumbs),
+    // a global and a list (the table scrolls inside its wrapper) never scroll the page
+    // sideways, and none of them shows a locale switcher or a locale note (ADR-057, PR C).
     const pageId = await firstDocId(request, adminAuth, 'pages');
     for (const width of [390, 1024, 1280, 1440]) {
       await page.setViewportSize({ width, height: 900 });
@@ -660,7 +656,10 @@ test.describe('CMS admin', () => {
         '/admin/collections/pages',
       ]) {
         await page.goto(path);
-        await expect(page.locator('.app-header__localizer')).toBeVisible();
+        await expect(page.locator('[data-admin-view-site]')).toBeVisible();
+        await expect(page.locator('.localizer-button:visible')).toHaveCount(0);
+        await expect(page.locator('.app-header__localizer')).toBeHidden();
+        await expect(page.locator('[data-admin-locale-note]')).toHaveCount(0);
         expect(await sidewaysOverflow(page), `${path} at ${width} px`).toBe(0);
       }
     }
@@ -814,15 +813,20 @@ test.describe('CMS admin', () => {
     // section's switch lives in its tab (ADR-046), which Payload opens only on a click (a
     // remembered tab is a per-user preference, never assumed).
     await page.goto('/admin/globals/home');
-    await page.locator('.tabs-field__tab-button', { hasText: 'Three steps' }).click();
     const stepsSwitch = page.locator('[data-admin-switch="steps.enabled"]');
+    // Payload restores the remembered tab from the user's preferences after the first render,
+    // which can undo a click that landed before it; click until the tab's content is there.
+    await expect(async () => {
+      await page.locator('.tabs-field__tab-button', { hasText: 'Three steps' }).click();
+      await expect(stepsSwitch).toBeVisible({ timeout: 2000 });
+    }).toPass({ timeout: 20_000 });
     await expect(stepsSwitch).toHaveAttribute('role', 'switch');
     await expect(stepsSwitch).toHaveAttribute('aria-checked', 'true');
     await expect(
       page.locator('[data-admin-field="enabled"]').filter({ has: stepsSwitch }),
     ).toContainText(/hides the “Three steps” section/);
-    // Payload's locale suffix on localized labels (an em dash) is hidden; the header's locale
-    // switcher carries that information.
+    // Payload's locale suffix on localized labels (an em dash) is hidden; the AR pill drawn
+    // over it carries that information.
     await expect(page.locator('.field-label .localized').first()).toBeHidden();
     await page.goto('/admin/collections/integrations/create');
     await expect(page.locator('[data-admin-choice="salla"]')).toHaveAttribute('role', 'radio');
@@ -923,8 +927,9 @@ test.describe('CMS admin', () => {
       );
       await expect(page.getByText('إنشاء جديد').first()).toBeVisible();
       await expect(nav.locator('a[aria-current="page"]')).toHaveText(/الصفحات/);
-      // An edit view: Payload's controls in Arabic; the content locale is untouched by the
-      // UI language (the note still says which content language is open, in Arabic now).
+      // An edit view: Payload's controls in Arabic; both content languages are in the one
+      // form whatever the UI language (ADR-057, PR C): the title's English input beside the
+      // Arabic one, the block's English editor under the Arabic one, no switcher, no note.
       const auth = await login(request, admin);
       const about = await request.get(`${API}/pages?where[slug][equals]=about&depth=0`, {
         headers: auth,
@@ -933,34 +938,32 @@ test.describe('CMS admin', () => {
       expect(aboutId).toBeDefined();
       await page.goto(`/admin/collections/pages/${aboutId}`);
       await expect(page.locator('#field-slug')).toHaveValue('about');
-      await expect(page.locator('[data-admin-locale-note]')).toHaveAttribute(
-        'data-admin-locale-note',
-        'ar',
-      );
-      await expect(page.locator('[data-admin-locale-note]')).toContainText('تحرير المحتوى العربي');
-      await expect(html).toHaveAttribute('data-content-locale', 'ar');
       await expect(page.locator('#action-save')).toContainText(/نشر|حفظ/);
-      // Opening the English content changes the pills and the note, never the panel's language.
-      await page.goto(`/admin/collections/pages/${aboutId}?locale=en`);
-      await expect(html).toHaveAttribute('data-content-locale', 'en');
+      await expect(page.locator('.localizer-button:visible')).toHaveCount(0);
+      await expect(page.locator('[data-admin-locale-note]')).toHaveCount(0);
       await expect(html).toHaveAttribute('dir', /rtl/i);
-      await expect(page.locator('[data-admin-locale-note]')).toContainText(
-        'تحرير المحتوى الإنجليزي',
-      );
-      // The note about the English content is itself written in Arabic: the UI language.
-      await expect(page.locator('[data-admin-locale-note]')).toContainText(/[؀-ۿ]/);
+      await page.locator('.tabs-field__tab-button', { hasText: 'المحتوى' }).click();
+      const titlePair = page.locator('[data-admin-bilingual="title"]');
+      await expect(titlePair.locator('[data-admin-locale-tag="en"]')).toHaveText('EN');
+      await expect(page.locator('#field-translations__en__title')).toBeEnabled({
+        timeout: 15_000,
+      });
       expect(
-        await serious(
-          '[data-admin-nav]',
-          '.app-header',
-          '[data-admin-locale-note]',
-          '[data-admin-header]',
-        ),
+        await serious('[data-admin-nav]', '.app-header', '[data-admin-header]'),
         'axe: the Arabic shell on an edit view',
       ).toEqual([]);
-      // `?locale=` is remembered per user (Payload's `locale` preference): back to Arabic content.
-      await page.goto(`/admin/collections/pages/${aboutId}?locale=ar`);
-      await expect(html).toHaveAttribute('data-content-locale', 'ar');
+      // A post: the body's English twin under it, labelled in the panel's Arabic, left to right.
+      await page.goto(`/admin/collections/posts/${await firstDocId(request, auth, 'posts')}`);
+      await page.locator('.tabs-field__tab-button', { hasText: 'المحتوى' }).click();
+      const twin = page.locator('[data-field-path="bodyTwin"]');
+      await expect(twin).toHaveClass(/admin-twin/);
+      await expect(twin.locator('.field-label').first()).toHaveText('النص بالإنجليزية');
+      expect(
+        await twin
+          .locator('.rich-text-lexical__wrap')
+          .evaluate((el) => getComputedStyle(el).direction),
+      ).toBe('ltr');
+      await expect(page.locator('.localizer-button:visible')).toHaveCount(0);
       // Our two views, titled in Arabic, inside the shell.
       await page.goto('/admin/traffic');
       await expect(page.locator('[data-admin-traffic-page] h1')).toContainText('مصادر الزيارات');
@@ -998,15 +1001,12 @@ test.describe('CMS admin', () => {
       expect(await serious('[data-admin-nav]'), 'axe: the Arabic drawer').toEqual([]);
       await page.keyboard.press('Escape');
       await expect(nav).not.toHaveClass(/nav--nav-open/);
-      // A document on an Arabic phone: the page fits its screen and the locale switcher sits
-      // at the leading gutter (Payload's physical `right` once stretched it over the crumbs).
+      // A document on an Arabic phone: the page fits its screen, no switcher, no note.
       await page.goto(`/admin/collections/pages/${aboutId}`);
-      const switcher = page.locator('.app-header__localizer .popup__trigger-wrap');
-      await expect(switcher).toBeVisible();
+      await expect(page.locator('[data-admin-view-site]')).toBeVisible();
+      await expect(page.locator('.localizer-button:visible')).toHaveCount(0);
+      await expect(page.locator('[data-admin-locale-note]')).toHaveCount(0);
       expect(await sidewaysOverflow(page), 'no horizontal overflow on an Arabic phone').toBe(0);
-      expect((await switcher.boundingBox())!.x, 'the switcher at the leading edge').toBeLessThan(
-        60,
-      );
       await page.setViewportSize({ width: 1600, height: 1000 });
       // Back to English through the same control.
       await pickLanguage('English');
@@ -1290,12 +1290,11 @@ test.describe('CMS admin', () => {
     ]);
   });
 
-  test('a desktop form: Save and Publish stay on the screen beside the locale note, nothing scrolls sideways', async ({
+  test('a desktop form: Save and Publish stay on the screen, the controls bar is one line, nothing scrolls sideways', async ({
     page,
   }) => {
-    // The note is a nowrap pill in Payload's controls row; the row's wrapper sized itself to
-    // the whole sentence and pushed Save past the right edge of a 1440 px screen
-    // (2026-09-18, on the temporary domain). The bar grows by a line instead.
+    // The locale note once grew the controls bar by a line (2026-09-18); with the note gone
+    // (ADR-057, PR C) the bar is Payload's own height again and Save stays inside the screen.
     expect((await page.request.post(`${API}/users/login`, { data: admin })).status()).toBe(200);
     for (const [width, path] of [
       [1440, '/admin/globals/site-settings'],
@@ -1304,16 +1303,16 @@ test.describe('CMS admin', () => {
       await page.setViewportSize({ width, height: 900 });
       await page.goto(path);
       const save = page.locator('.doc-controls #action-save');
-      const note = page.locator('[data-admin-locale-note]');
       await expect(save).toBeVisible();
-      await expect(note).toBeVisible();
-      const [saveBox, noteBox] = await Promise.all([save.boundingBox(), note.boundingBox()]);
+      await expect(page.locator('[data-admin-locale-note]')).toHaveCount(0);
+      const [saveBox, barBox] = await Promise.all([
+        save.boundingBox(),
+        page.locator('.doc-controls').boundingBox(),
+      ]);
       expect(saveBox!.x + saveBox!.width, `Save inside the ${width} px screen`).toBeLessThanOrEqual(
         width,
       );
-      expect(noteBox!.x + noteBox!.width, 'the note inside the screen').toBeLessThanOrEqual(width);
-      expect(noteBox!.height, 'the note is one line').toBeLessThan(40);
-      expect(saveBox && noteBox && disjoint(saveBox, noteBox), 'the note over Save').toBe(true);
+      expect(barBox!.height, 'the controls bar is one line').toBeLessThan(80);
       expect(
         await page.evaluate(
           () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
@@ -1323,7 +1322,7 @@ test.describe('CMS admin', () => {
     }
   });
 
-  test('a phone form (audit 2026-09-18, 3.1): the locale note stays clear of Publish, the tab strip scrolls, nothing overflows', async ({
+  test('a phone form (audit 2026-09-18, 3.1): Publish on the screen, the tab strip scrolls, nothing overflows', async ({
     page,
     request,
   }) => {
@@ -1332,23 +1331,11 @@ test.describe('CMS admin', () => {
     expect((await page.request.post(`${API}/users/login`, { data: admin })).status()).toBe(200);
     const auth = await login(request, admin);
     await page.goto('/admin/globals/home');
-    const note = page.locator('[data-admin-locale-note]');
     const publish = page.locator('.doc-controls #action-save');
-    await expect(note).toBeVisible();
     await expect(publish).toBeVisible();
-    // The note is a one-line pill under the buttons: its box never crosses Publish's or the
-    // status line's, and the controls bar grew to hold it instead of letting it spill.
-    const [noteBox, publishBox, statusBox] = await Promise.all([
-      note.boundingBox(),
-      publish.boundingBox(),
-      page.locator('.doc-controls__status').boundingBox(),
-    ]);
-    expect(noteBox && publishBox && disjoint(noteBox, publishBox), 'note over Publish').toBe(true);
-    expect(noteBox && statusBox && disjoint(noteBox, statusBox), 'note over the status').toBe(true);
-    expect(noteBox!.height, 'the note is one line').toBeLessThan(40);
-    expect(noteBox!.y, 'the note sits under the buttons').toBeGreaterThanOrEqual(
-      publishBox!.y + publishBox!.height - 1,
-    );
+    await expect(page.locator('[data-admin-locale-note]')).toHaveCount(0);
+    const publishBox = (await publish.boundingBox())!;
+    expect(publishBox.x + publishBox.width, 'Publish inside the screen').toBeLessThanOrEqual(390);
     // Ten tabs at 390 px: the strip is a horizontal scroller, the active tab is marked in the
     // accent, and the page itself never scrolls sideways.
     const strip = page.locator('.tabs-field__tabs-wrap').first();
@@ -1366,20 +1353,17 @@ test.describe('CMS admin', () => {
     expect(await sidewaysOverflow(page), 'no horizontal overflow on the home form').toBe(0);
     // No entity shows the API tab any more (3.10).
     await expect(page.locator('.doc-tab', { hasText: /^API$/ })).toHaveCount(0);
-    // A document with a long title: the header's crumbs shrink, the locale switcher stays at
-    // the gutter, and the page never scrolls sideways (the CTO's 390 px check, 2026-09-18).
+    // A document with a long title: the header's crumbs shrink, the two controls stay inside
+    // the screen, no switcher, and the page never scrolls sideways (the CTO's 390 px check).
     for (const slug of ['products', 'pages', 'posts']) {
       await page.goto(`/admin/collections/${slug}/${await firstDocId(request, auth, slug)}`);
-      await expect(page.locator('.app-header__localizer')).toBeVisible();
+      await expect(page.locator('[data-admin-view-site]')).toBeVisible();
+      await expect(page.locator('.localizer-button:visible')).toHaveCount(0);
       expect(await sidewaysOverflow(page), `no horizontal overflow on a ${slug} form`).toBe(0);
-      const [switcher, viewSite] = await Promise.all([
-        page.locator('.app-header__localizer').boundingBox(),
-        page.locator('[data-admin-view-site]').boundingBox(),
-      ]);
-      expect(switcher!.x + switcher!.width, 'the switcher inside the screen').toBeLessThanOrEqual(
+      const viewSite = (await page.locator('[data-admin-view-site]').boundingBox())!;
+      expect(viewSite.x + viewSite.width, '"View website" inside the screen').toBeLessThanOrEqual(
         390,
       );
-      expect(disjoint(switcher!, viewSite!), 'the switcher over "View website"').toBe(true);
     }
   });
 
@@ -1858,15 +1842,14 @@ test.describe('CMS admin', () => {
         await page.locator('#field-password').fill(admin.password);
         await page.locator('form button[type="submit"]').first().click();
         await page.waitForURL((u) => !u.pathname.endsWith('/login'));
-        await page.goto(`/admin/collections/pages/${id}?locale=ar`);
+        await page.goto(`/admin/collections/pages/${id}`);
         // The title sits in the Content tab; Payload restores the last active tab from the
         // user's preferences after the first render, so the tab is chosen explicitly.
         await page.locator('.tabs-field__tab-button', { hasText: 'Content' }).click();
-        // The note says what is side by side; the title carries both inputs, the English one
-        // tagged EN and prefilled from the stored English.
-        await expect(page.locator('[data-admin-locale-note="ar"]')).toContainText(
-          'one Save writes both',
-        );
+        // The title carries both inputs, the English one tagged EN and prefilled from the
+        // stored English; nothing on the page switches a locale (ADR-057, PR C).
+        await expect(page.locator('.localizer-button:visible')).toHaveCount(0);
+        await expect(page.locator('[data-admin-locale-note]')).toHaveCount(0);
         const pair = page.locator('[data-admin-bilingual="title"]');
         await expect(pair.locator('[data-admin-locale-tag="en"]')).toHaveText('EN');
         const arabic = page.locator('#field-title');
@@ -1892,6 +1875,11 @@ test.describe('CMS admin', () => {
         // The pending JSON is cleared by the second write; the untouched fields keep both languages.
         expect(doc.translations ?? null).toBeNull();
         expect(doc.seo.title).toEqual({ ar: 'صفحة ثنائية اللغة', en: 'Bilingual page' });
+        // The REST API keeps `?locale=`: the English read answers with the English text.
+        const inEnglish = (await (
+          await request.get(`${API}/pages/${id}?locale=en&depth=0`, { headers: auth })
+        ).json()) as { title: string };
+        expect(inEnglish.title).toBe('Bilingual page (updated)');
         // After the save the English input shows the applied text, not the old prefill.
         await expect(other).toHaveValue('Bilingual page (updated)');
         // Blanking a required English field is refused with the field and the language named,
@@ -1937,7 +1925,7 @@ test.describe('CMS admin', () => {
         await page.locator('#field-password').fill(admin.password);
         await page.locator('form button[type="submit"]').first().click();
         await page.waitForURL((u) => !u.pathname.endsWith('/login'));
-        await page.goto('/admin/globals/site-settings?locale=ar');
+        await page.goto('/admin/globals/site-settings');
         // The tagline sits in the Brand tab; Payload restores the last active tab from the
         // user's preferences after the first render, so the tab is chosen explicitly.
         await page.locator('.tabs-field__tab-button', { hasText: 'Brand' }).click();
@@ -2049,12 +2037,8 @@ test.describe('CMS admin', () => {
         await page.locator('#field-password').fill(admin.password);
         await page.locator('form button[type="submit"]').first().click();
         await page.waitForURL((u) => !u.pathname.endsWith('/login'));
-        await page.goto(`/admin/collections/pages/${id}?locale=ar`);
+        await page.goto(`/admin/collections/pages/${id}`);
         await page.locator('.tabs-field__tab-button', { hasText: 'Content' }).click();
-        // The note says lists and blocks are side by side too.
-        await expect(page.locator('[data-admin-locale-note="ar"]')).toContainText(
-          'inside lists and blocks too',
-        );
         // The first row's criterion: the pair is keyed by the row's id, the English prefilled.
         const key = (row: string, name: string) => `blocks.${compare.id}.rows.${row}.${name}`;
         const twin = (row: string, name: string) =>
@@ -2120,6 +2104,16 @@ test.describe('CMS admin', () => {
         expect(rows[3]!.criterion).toEqual({ ar: 'المعيار الثالث', en: 'Third criterion' });
         expect(rows[3]!.ours).toEqual({ ar: 'عندنا 3', en: 'Ours 3' });
         expect(doc.translations ?? null).toBeNull();
+        // The REST API keeps `?locale=`: the English read answers with the English rows.
+        const inEnglish = (await (
+          await request.get(`${API}/pages/${id}?locale=en&depth=0`, { headers: auth })
+        ).json()) as { blocks: Array<{ rows: Array<{ criterion: string }> }> };
+        expect(inEnglish.blocks[0]!.rows.map((r) => r.criterion)).toEqual([
+          'First criterion (updated)',
+          'Second criterion',
+          'Fourth criterion',
+          'Third criterion',
+        ]);
         // After the save the English inputs show what was written, on the rows' new indices.
         await expect(twin(newRowId, 'criterion')).toHaveValue('Fourth criterion');
         await expect(twin(r1.id, 'criterion')).toHaveValue('First criterion (updated)');
@@ -2155,7 +2149,7 @@ test.describe('CMS admin', () => {
         await page.locator('#field-password').fill(admin.password);
         await page.locator('form button[type="submit"]').first().click();
         await page.waitForURL((u) => !u.pathname.endsWith('/login'));
-        await page.goto('/admin/globals/home?locale=ar');
+        await page.goto('/admin/globals/home');
         // The biggest form: Payload restores the last active tab from the user's preferences
         // after the first render and can undo an early click, so the tab is clicked until it
         // stays active.
@@ -2166,7 +2160,10 @@ test.describe('CMS admin', () => {
         }).toPass({ timeout: 30_000 });
         const key = `hero.slides.${first.id}.subline`;
         const pair = page.locator(`[data-admin-bilingual="${key}"]`);
-        await expect(pair.locator('[data-admin-locale-tag="en"]')).toHaveText('EN');
+        // The slides' rows (their photos and twins) render after the tab flips on a busy machine.
+        await expect(pair.locator('[data-admin-locale-tag="en"]')).toHaveText('EN', {
+          timeout: 15_000,
+        });
         const arabic = page.locator('#field-hero__slides__0__subline');
         const other = page.locator(`#field-translations__en__${key.replace(/\./g, '__')}`);
         await expect(other).toHaveValue(String(before.en.hero.slides[0]!.subline ?? ''), {
@@ -2278,13 +2275,31 @@ test.describe('CMS admin', () => {
         await page.locator('#field-password').fill(admin.password);
         await page.locator('form button[type="submit"]').first().click();
         await page.waitForURL((u) => !u.pathname.endsWith('/login'));
-        await page.goto(`/admin/collections/pages/${id}?locale=ar`);
+        await page.goto(`/admin/collections/pages/${id}`);
         await page.locator('.tabs-field__tab-button', { hasText: 'Content' }).click();
-        await expect(page.locator('[data-admin-locale-note="ar"]')).toContainText(
-          'a rich text or a photo has its English under it',
+        // Both columns in the one form (ADR-057, PR C): the block's title as a light pair
+        // side by side, and under it the Arabic editor, then the English twin right under
+        // it: Payload's own editor, labelled as the English with the EN pill, running left
+        // to right, prefilled. No switcher, no note.
+        await expect(page.locator('.localizer-button:visible')).toHaveCount(0);
+        await expect(page.locator('[data-admin-locale-note]')).toHaveCount(0);
+        const titlePair = page.locator(`[data-admin-bilingual="blocks.${blockId}.title"]`);
+        await expect(titlePair.locator('[data-admin-locale-tag="en"]')).toHaveText('EN');
+        const titleTwin = page.locator(`#field-translations__en__blocks__${blockId}__title`);
+        await expect(titleTwin).toHaveValue('Introduction', { timeout: 15_000 });
+        const [titleBox, titleTwinBox] = await Promise.all([
+          page.locator('#field-blocks__0__title').boundingBox(),
+          titleTwin.boundingBox(),
+        ]);
+        // Side by side: the English input starts past the Arabic one's end and overlaps it
+        // vertically (the labels above them may differ by a line).
+        expect(titleTwinBox!.x, 'the English column after the Arabic').toBeGreaterThanOrEqual(
+          titleBox!.x + titleBox!.width,
         );
-        // The Arabic editor, then the English twin right under it: Payload's own editor,
-        // labelled as the English with the EN pill, running left to right, prefilled.
+        expect(titleTwinBox!.y, 'the light pair on one line').toBeLessThan(
+          titleBox!.y + titleBox!.height,
+        );
+        expect(titleTwinBox!.y + titleTwinBox!.height).toBeGreaterThan(titleBox!.y);
         const arabic = page.locator('[data-field-path="blocks.0.content"]');
         const twin = page.locator('[data-field-path="blocks.0.contentTwin"]');
         await expect(twin).toHaveClass(/admin-twin/);
@@ -2292,6 +2307,40 @@ test.describe('CMS admin', () => {
         const arabicBox = await arabic.boundingBox();
         expect(twinBox!.y).toBeGreaterThan(arabicBox!.y + arabicBox!.height - 1);
         expect(Math.abs(twinBox!.width - arabicBox!.width)).toBeLessThan(2);
+        // The Publish menu offers no per-locale publish and the schedule drawer no locale
+        // select: the panel publishes both languages at once, always (ADR-057, PR C).
+        await page.locator('#action-save-popup .popup-button').click();
+        await expect(page.locator('#schedule-publish')).toBeVisible();
+        await expect(page.locator('#publish-locale')).toBeHidden();
+        await page.locator('#schedule-publish').click();
+        const drawer = page.locator('.schedule-publish');
+        await expect(drawer.locator('#scheduled-publish-save')).toBeVisible({ timeout: 15_000 });
+        await expect(drawer.locator('.schedule-publish__scheduler > .react-select')).toBeHidden();
+        await expect(drawer.locator('#time')).toBeVisible();
+        await page.keyboard.press('Escape');
+        await expect(drawer).toBeHidden();
+        // axe on the page with the stacked editor. The light pairs are clean; Lexical's own
+        // contenteditable and toolbar buttons carry Payload's known gaps (no accessible
+        // name), the same on the Arabic editor and on the twin, so the twin is held to
+        // adding no violation of its own rather than to Payload's engine.
+        const { AxeBuilder } = await import('@axe-core/playwright');
+        const seriousIds = async (selector: string) =>
+          (
+            await new AxeBuilder({ page })
+              .withTags(['wcag2a', 'wcag2aa'])
+              .include(selector)
+              .analyze()
+          ).violations
+            .filter((v) => ['serious', 'critical'].includes(v.impact ?? ''))
+            .map((v) => v.id)
+            .toSorted();
+        expect(await seriousIds('[data-admin-bilingual]'), 'axe: the light pairs').toEqual([]);
+        const onArabic = await seriousIds('[data-field-path="blocks.0.content"]');
+        const onTwin = await seriousIds('[data-field-path="blocks.0.contentTwin"]');
+        expect(
+          onTwin.filter((rule) => !onArabic.includes(rule)),
+          'axe: the twin adds nothing',
+        ).toEqual([]);
         const twinLabel = twin.locator('.field-label').first();
         await expect(twinLabel).toHaveText('English text');
         expect(await twinLabel.evaluate((el) => getComputedStyle(el, '::after').content)).toBe(
@@ -2383,7 +2432,7 @@ test.describe('CMS admin', () => {
         await page.locator('#field-password').fill(admin.password);
         await page.locator('form button[type="submit"]').first().click();
         await page.waitForURL((u) => !u.pathname.endsWith('/login'));
-        await page.goto('/admin/globals/home?locale=ar');
+        await page.goto('/admin/globals/home');
         const tab = page.locator('.tabs-field__tab-button', { hasText: 'Opening slides' });
         await expect(async () => {
           await tab.click();
@@ -2448,6 +2497,57 @@ test.describe('CMS admin', () => {
       }
     });
 
+    // The stranded preference (ADR-057, PR C): Payload wrote every `?locale=` into a persistent
+    // preference and read it back on every admin request; the panel now drops the query
+    // before Payload sees it, so an old English link cannot leave anyone in the English view.
+    test('a stray ?locale=en on an admin URL is dropped and leaves no preference behind: the next form opens in Arabic', async ({
+      page,
+      request,
+    }) => {
+      const auth = await login(request, ADMIN);
+      const pageId = await firstDocId(request, auth, 'pages');
+      // The preference this test guards: none before, none after.
+      const preference = async () =>
+        (
+          await request.get(`${API}/payload-preferences/locale`, { headers: auth })
+        ).json() as Promise<{
+          value?: unknown;
+        }>;
+      expect((await preference()).value ?? null).toBeNull();
+      await page.goto('/admin/login');
+      await page.locator('#field-email').fill(admin.email);
+      await page.locator('#field-password').fill(admin.password);
+      await page.locator('form button[type="submit"]').first().click();
+      await page.waitForURL((u) => !u.pathname.endsWith('/login'));
+      await page.goto(`/admin/collections/pages/${pageId}?locale=en&foo=bar`);
+      // The redirect keeps the path and the other parameters and drops `locale`.
+      await expect(page).toHaveURL(new RegExp(`/admin/collections/pages/${pageId}\\?foo=bar$`));
+      await page.locator('.tabs-field__tab-button', { hasText: 'Content' }).click();
+      // The form is the Arabic one with its English column: the title's AR pill and the EN
+      // input beside it, the English editor under the block's body.
+      expect(
+        await page
+          .locator('label[for="field-title"] .localized')
+          .evaluate((el) => getComputedStyle(el, '::after').content),
+      ).toBe('"AR"');
+      await expect(
+        page.locator('[data-admin-bilingual="title"] [data-admin-locale-tag="en"]'),
+      ).toHaveText('EN');
+      expect((await preference()).value ?? null).toBeNull();
+      // The next read without any query is Arabic too: the same twins, the same pill.
+      await page.goto(`/admin/collections/pages/${pageId}`);
+      await page.locator('.tabs-field__tab-button', { hasText: 'Content' }).click();
+      expect(
+        await page
+          .locator('label[for="field-title"] .localized')
+          .evaluate((el) => getComputedStyle(el, '::after').content),
+      ).toBe('"AR"');
+      await expect(page.locator('#field-translations__en__title')).toBeEnabled({
+        timeout: 15_000,
+      });
+      expect((await preference()).value ?? null).toBeNull();
+    });
+
     // The one premise that rests on Lexical's internals: mounting the twin's editor does not
     // re-serialise the English (`OnChangePlugin` skips the initial state), so a save that
     // touches only Arabic makes one version, the Arabic write, and never a second English one.
@@ -2509,7 +2609,7 @@ test.describe('CMS admin', () => {
         await page.locator('#field-password').fill(admin.password);
         await page.locator('form button[type="submit"]').first().click();
         await page.waitForURL((u) => !u.pathname.endsWith('/login'));
-        await page.goto(`/admin/collections/pages/${id}?locale=ar`);
+        await page.goto(`/admin/collections/pages/${id}`);
         await page.locator('.tabs-field__tab-button', { hasText: 'Content' }).click();
         const twinEditor = page.locator(
           '[data-field-path="blocks.0.contentTwin"] [data-lexical-editor="true"]',

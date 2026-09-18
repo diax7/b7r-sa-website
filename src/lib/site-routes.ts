@@ -30,7 +30,10 @@ export const CODE_TOP_LEVEL = [
  * every request but the API, the admin, Next's own files and the asset folders. The page
  * logic and the crawler count decide the rest at runtime.
  */
-export const PROXY_MATCHER = '/((?!(?:api|admin|_next|media|images|fonts|og|video)(?:/|$)).*)';
+export const PROXY_MATCHER = '/((?!(?:api|_next|media|images|fonts|og|video)(?:/|$)).*)';
+
+/** Payload's admin route (`routes.admin` in the CMS config); the proxy strips `?locale=` under it. */
+export const ADMIN_PREFIX = '/admin';
 
 /** The path the proxy rewrites an unknown slug to: no route matches it, so Next renders the global 404. */
 export const NOT_FOUND_PREFIX = '/__404/';

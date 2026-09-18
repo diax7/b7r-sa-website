@@ -9,11 +9,8 @@ import {
   TextareaInput,
   TextField,
   TextInput,
-  useConfig,
-  useDocumentInfo,
   useField,
   useFormFields,
-  useLocale,
   useTranslation,
   withCondition,
 } from '@payloadcms/ui';
@@ -36,7 +33,11 @@ import {
   TRANSLATIONS,
   type Translations,
 } from '@/modules/cms/fields/bilingual';
-import { useOtherLocale } from '@/modules/cms/admin/fields/bilingual/other-locale';
+import { LocaleTag } from '@/modules/cms/admin/fields/bilingual/locale-tag';
+import {
+  type LocaleInfo,
+  useOtherLanguage,
+} from '@/modules/cms/admin/fields/bilingual/use-other-language';
 import { useAdminStrings } from '@/modules/cms/admin/use-admin-strings';
 
 type Props =
@@ -45,11 +46,6 @@ type Props =
   | TextareaFieldClientProps
   | TextFieldClientProps;
 type ClientField = Props['field'];
-
-interface LocaleInfo {
-  code: string;
-  rtl?: boolean | undefined;
-}
 
 /**
  * A localized text, textarea, select or number field in both languages at once (ADR-057):
@@ -64,22 +60,11 @@ interface LocaleInfo {
  */
 function Bilingual(props: Props) {
   const { field, path, readOnly } = props;
-  const locale = useLocale();
-  const { config } = useConfig();
   const { i18n } = useTranslation();
   const strings = useAdminStrings().bilingual;
-  const info = useDocumentInfo();
-  const other = otherOf(config.localization, locale.code);
+  const { other, stored } = useOtherLanguage();
   const key = useFormFields(([fields]) => keyOfPath(path, (rowPath) => fields[rowPath]?.value));
   const pending = useField<Translations | null>({ path: TRANSLATIONS });
-  const stored = useOtherLocale({
-    apiRoute: config.routes.api,
-    collection: info.collectionSlug,
-    global: info.globalSlug,
-    id: info.id,
-    locale: other?.code ?? locale.code,
-    lastUpdateTime: info.lastUpdateTime,
-  });
   const { value: translations, setValue: setTranslations } = pending;
 
   // After every read of the other locale (on open, after each save): keep what the editor
@@ -137,9 +122,7 @@ function Bilingual(props: Props) {
             <label className="field-label" htmlFor={`field-${otherPath.replace(/\./g, '__')}`}>
               {labelOf(field, i18n)}
               {field.required && <span className="required">*</span>}
-              <span className="admin-locale-tag" data-admin-locale-tag={other.code}>
-                {other.code.toUpperCase()}
-              </span>
+              <LocaleTag code={other.code} />
             </label>
           }
         />
@@ -317,16 +300,6 @@ function rtlOf(field: ClientField, other: LocaleInfo): boolean {
 function rowsOf(field: ClientField): { rows?: number } {
   const rows = (field.admin as { rows?: number } | undefined)?.rows;
   return typeof rows === 'number' ? { rows } : {};
-}
-
-/** The locale that is not open; null with one locale or more than two (nothing to pair). */
-function otherOf(
-  localization: { locales: LocaleInfo[] } | false | undefined,
-  current: string,
-): LocaleInfo | null {
-  if (!localization) return null;
-  const others = localization.locales.filter((l) => l.code !== current);
-  return others.length === 1 ? (others[0] ?? null) : null;
 }
 
 function labelOf(field: ClientField, i18n: Parameters<typeof getTranslation>[1]): string {

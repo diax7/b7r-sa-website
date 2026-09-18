@@ -41,7 +41,7 @@ import { showTwins, twinApplies, type TwinValue, twinValues } from '@/modules/cm
  *
  * The second write runs this hook again with `context.skipTranslations`, so it returns at
  * once; the collection's other hooks (revalidation, the stamps) run for the other language
- * as they would on the locale switch. Only keys the config resolves are ever written
+ * as they would on a write in that locale. Only keys the config resolves are ever written
  * (`resolveKey`: a bilingual field, a row the saved document has): the JSON comes from the
  * client. An entry inside a shared list sends the whole list in the other locale, its rows
  * built from the saved document by id (`otherLocaleRows`): Payload's array write is

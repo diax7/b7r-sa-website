@@ -142,9 +142,9 @@ function titled(
       ? [
           {
             title,
-            // The English form is a different target: say so beside the title.
+            // The English title is a different target in the same form: say so beside it.
             label: locale === 'en' ? `${title} (en)` : title,
-            href: editHref(adminRoute, collection, doc.id, locale),
+            href: editHref(adminRoute, collection, doc.id),
           },
         ]
       : [];

@@ -75,7 +75,7 @@ export const Faqs: CollectionConfig = {
   },
   admin: {
     hideAPIURL: true,
-    components: collectionComponents('faqs', { localized: true }),
+    components: collectionComponents('faqs'),
     useAsTitle: 'question',
     defaultColumns: ['question', 'group', 'order', 'showOnHome'],
     listSearchableFields: ['question'],

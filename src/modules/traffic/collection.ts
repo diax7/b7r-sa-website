@@ -28,7 +28,7 @@ export const Traffic: CollectionConfig = {
     defaultColumns: ['date', 'kind', 'source', 'path', 'hits'],
     listSearchableFields: ['source', 'path'],
     group: adminGroup('visibility'),
-    components: collectionComponents(TRAFFIC, { localized: false }),
+    components: collectionComponents(TRAFFIC),
     custom: {
       shows: {
         ar: 'لا يظهر في الموقع: عدّاد الزيارات وزواحف الذكاء الاصطناعي',

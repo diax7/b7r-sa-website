@@ -85,7 +85,7 @@ export const Home: GlobalConfig = {
   label: { ar: 'الصفحة الرئيسية', en: 'Home page' },
   admin: {
     hideAPIURL: true,
-    components: globalComponents('home', { localized: true }),
+    components: globalComponents('home'),
     group: adminGroup('site'),
     custom: {
       shows: {

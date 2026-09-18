@@ -17,6 +17,7 @@ import { AI_QUEUE, generatePostWorkflow } from '@/modules/ai-content/workflow';
 import { REDIRECT_OVERRIDES } from '@/modules/cms/collections/redirects';
 import { indexNowTask } from '@/modules/cms/jobs/indexnow';
 import { cmsEnv, isBuildPhase } from '@/lib/cms/env';
+import { ADMIN_PREFIX } from '@/lib/site-routes';
 import { COLLECTIONS, GLOBALS } from '@/modules/cms/entities';
 import { payloadArabic } from '@/modules/cms/admin/payload-ar';
 import { ADMIN_VIEW_COMPONENTS } from '@/modules/cms/admin/views/registry';
@@ -34,7 +35,7 @@ const env = cmsEnv();
 export default buildConfig({
   serverURL: env.serverUrl,
   secret: env.secret,
-  routes: { admin: '/admin', api: '/api/payload' },
+  routes: { admin: ADMIN_PREFIX, api: '/api/payload' },
   graphQL: { disable: true },
   telemetry: false,
   // Expected client-side outcomes (a refused edit, a wrong password, a bad form) are not
@@ -81,9 +82,10 @@ export default buildConfig({
    * by itself (`rtlLanguages`). Payload's own `ar` pack is community work; `payloadArabic`
    * is ours merged on top. Our strings live in `admin/strings.ts`, both languages.
    *
-   * The content locale (`localization` below, the AR / EN pills, `?locale=`) is a different
-   * axis: it says which language of a document is being edited and never follows the UI
-   * language, nor the other way round.
+   * The content languages (`localization` below, the AR / EN pills) are a different axis:
+   * both are edited in every form at once (ADR-057, no locale switch in the panel; the REST
+   * API still answers `?locale=`), and neither follows the UI language, nor the other way
+   * round.
    */
   i18n: {
     supportedLanguages: { en, ar },
