@@ -1688,9 +1688,12 @@ written in both languages beside the logic it belongs to (rule 12 of `admin-ui.m
 sentence in `modules/visibility/rules/*` is a `Text` pair (`{ en, ar }`, `visibility/types.ts`),
 `Finding`, `Fact` and `Item` are generic over it, `scoreOf()` stays a pure function of the
 snapshot that answers in both languages, and `reading(payload, { user, language })` picks the
-request's language once (`pickScore`) so the Score page, the dashboard card and the nightly
-score row keep reading plain strings and numbers; a caller that passes no language gets
-English. The Arabic follows the ux-araby rules (verb-first guides, nominal titles, «أو» not
+request's language once (`pickScore`) so the Score page and the dashboard card read plain
+strings; `language` is required, so a call site cannot forget it (the nightly score row
+uses `scoreOf` directly and needs none). The section names left `weights.ts`
+(`SECTIONS[].label` was dead: they live in both string trees as `visibility.sections`), so
+the table there is the keys and the weights ADR-049 names. The Arabic follows the ux-araby
+rules (verb-first guides, nominal titles, «أو» not
 «/», Arabic comma, Western digits, no «تم», no «!»), and the audit's 2.19 and 6.3 are applied
 to both languages: arrows became words ("Admin, Connections", «الإدارة، الاتصالات»), no guide
 names an environment variable or a code path (C1 and C2 say the address and IndexNow are set
@@ -1705,6 +1708,10 @@ guide are Arabic script. The same review moved the two "wait ten minutes" answer
 page's buttons into the admin strings (`adminOnly()` now resolves the request's UI language
 the way Payload does) and wrote the traffic table's date range in words instead of an arrow
 (6.3). The checklist global reads its labels from the rule's `CHECKLIST_ITEMS`, one source.
+**Not translated, on purpose:** a connection's `lastTestMessage` is a record written once at
+test time in the service's own terms (a model id, `sc-domain:b7r.sa (siteOwner)`, `mobile
+performance: 92`, an HTTP status and reason), never a sentence for a reader; our own words in
+it (`services/tests.ts`, `connections/test.ts`) are terse and technical for that reason.
 
 ## ADR-057: Side-by-side bilingual editing (2026-09-18)
 
