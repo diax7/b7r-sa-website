@@ -459,13 +459,13 @@ test.describe('CMS admin', () => {
     await expect(nav).not.toHaveClass(/nav--nav-open/);
   });
 
-  test('the dashboard (ADR-039): quick actions by permission, the health report, the latest saves', async ({
+  test("the dashboard (ADR-039, ADR-059): the seven sections, the range, the figures as links, the editor's view", async ({
     page,
     request,
   }) => {
     await page.setViewportSize({ width: 1600, height: 1000 });
     expect((await page.request.post(`${API}/users/login`, { data: admin })).status()).toBe(200);
-    // A save stamps «آخر حفظ» and lands at the top of the list.
+    // A save stamps «آخر حفظ» and lands at the top of the saves.
     const auth = await login(request, admin);
     const faq = await request.get(`${API}/faqs?limit=1&depth=0`, { headers: auth });
     const entry = ((await faq.json()) as { docs: Array<{ id: number; question: string }> }).docs[0];
@@ -481,9 +481,53 @@ test.describe('CMS admin', () => {
     await page.goto('/admin');
     const dashboard = page.locator('[data-admin-dashboard]');
     await expect(dashboard).toBeVisible();
-    for (const key of ['home', 'add-page', 'add-product', 'add-faq', 'add-post', 'site']) {
+    // 1. The greeting by the Riyadh hour, the week by default, the "needs a hand" line.
+    await expect(dashboard.locator('h1')).toContainText(/Good (morning|afternoon|evening)/);
+    await expect(dashboard).toHaveAttribute('data-admin-dashboard-days', '7');
+    await expect(dashboard.locator('[data-admin-dashboard-hand]')).toBeVisible();
+    // 2. Four tiles for an admin, each with a number and each a link.
+    await expect(dashboard.locator('[data-admin-tile]')).toHaveCount(4);
+    for (const key of ['visits', 'cited', 'score', 'published']) {
+      const tile = dashboard.locator(`[data-admin-tile="${key}"]`);
+      await expect(tile).toBeVisible();
+      await expect(tile).toHaveAttribute('data-admin-tile-value', /^[\d,]+%?$/);
+      await expect(tile).toHaveAttribute('href', /\/admin\//);
+    }
+    await expect(dashboard.locator('[data-admin-tile="visits"]')).toHaveAttribute(
+      'href',
+      /\/admin\/traffic\?days=7$/,
+    );
+    await expect(dashboard.locator('[data-admin-tile="cited"]')).toContainText(/category prompts/);
+    // 3 to 7, top to bottom, each with its hook.
+    for (const hook of ['visits', 'assistants', 'content', 'engine', 'server']) {
+      await expect(dashboard.locator(`[data-admin-dashboard-${hook}]`)).toBeVisible();
+    }
+    // 5. The content: the home tile, the figures as links (the drafts to the list filtered on
+    // `_status`), the saves by people, the two actions in their entity's hue.
+    for (const key of ['home', 'add-product', 'add-post']) {
       await expect(dashboard.locator(`[data-admin-action="${key}"]`)).toBeVisible();
     }
+    await expect(dashboard.locator('[data-admin-action="add-page"]')).toHaveCount(0);
+    await expect(
+      dashboard.locator('[data-admin-figures="posts"] [data-admin-figure="drafts"]'),
+    ).toHaveAttribute('href', /where(\[|%5B)_status(\]|%5D)(\[|%5B)equals(\]|%5D)=draft/);
+    await expect(
+      dashboard.locator('[data-admin-figures="posts"] [data-admin-figure="published"]'),
+    ).toHaveAttribute('href', /\/admin\/collections\/posts/);
+    const first = dashboard.locator('[data-admin-recent] li').first();
+    await expect(first).toContainText(entry!.question);
+    await expect(first).toContainText(/by /);
+    // Hues are the group's (ADR-046): a FAQ entry is Catalogue teal, a post is Blog violet.
+    await expect(first.locator('[data-hue]')).toHaveAttribute('data-hue', 'teal');
+    await expect(dashboard.locator('[data-admin-action="add-post"]')).toHaveAttribute(
+      'data-hue',
+      'violet',
+    );
+    // 7. The server: collapsed unless a row is red; the rows keep their tones inside.
+    const server = dashboard.locator('[data-admin-dashboard-server]');
+    const worst = await server.getAttribute('data-admin-dashboard-server');
+    if (worst === 'error') await expect(server.locator('details')).toHaveAttribute('open', '');
+    else await expect(server.locator('details')).not.toHaveAttribute('open', '');
     await expect(dashboard.locator('[data-health-row="db"]')).toHaveAttribute(
       'data-tone',
       'success',
@@ -492,20 +536,24 @@ test.describe('CMS admin', () => {
       'data-tone',
       'success',
     );
-    const first = dashboard.locator('[data-admin-recent] li').first();
-    await expect(first).toContainText(entry!.question);
-    await expect(first).toContainText(/by /);
-    // Hues are the group's (ADR-046): a FAQ entry is Catalogue teal, a page is Site blue.
-    await expect(first.locator('[data-hue]')).toHaveAttribute('data-hue', 'teal');
-    await expect(dashboard.locator('[data-admin-action="add-page"]')).toHaveAttribute(
-      'data-hue',
-      'blue',
+    await server.locator('summary').click();
+    await expect(dashboard.locator('[data-health-row="db"]')).toBeVisible();
+    await expect(dashboard.locator('[data-admin-dashboard-queue]')).toContainText(/Riyadh/);
+    // 1. The range control is a link: the server renders the chosen range, no client state.
+    await dashboard.locator('[data-admin-dashboard-range] a[href$="days=30"]').click();
+    await page.waitForURL(/\/admin\?days=30/);
+    await expect(dashboard).toHaveAttribute('data-admin-dashboard-days', '30');
+    await expect(
+      dashboard.locator('[data-admin-dashboard-range] a[aria-current="page"]'),
+    ).toHaveText(/30 days/);
+    await expect(dashboard.locator('[data-admin-tile="visits"]')).toHaveAttribute(
+      'href',
+      /\/admin\/traffic\?days=30$/,
     );
-    await expect(dashboard.locator('[data-admin-action="add-post"]')).toHaveAttribute(
-      'data-hue',
-      'violet',
-    );
-    // A tile navigates inside the app: no reload.
+    await expect(dashboard.locator('[data-admin-tile="published"]')).toContainText(/30 days/);
+    await page.goto('/admin?days=12');
+    await expect(dashboard).toHaveAttribute('data-admin-dashboard-days', '7');
+    // The home tile navigates inside the app: no reload.
     await page.evaluate(() => {
       (window as unknown as { b7rMarker?: number }).b7rMarker = 1;
     });
@@ -525,6 +573,32 @@ test.describe('CMS admin', () => {
         .filter((v) => ['serious', 'critical'].includes(v.impact ?? ''))
         .map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`),
     ).toEqual([]);
+    // An editor sees what an editor may open: the published tile, the content, the server; no
+    // traffic, no assistants, no engine, no spend, and nothing refused in their place.
+    const editor = await createEditor(request, auth);
+    const editorContext = await page.context().browser()!.newContext();
+    try {
+      const editorPage = await editorContext.newPage();
+      expect((await editorPage.request.post(`${API}/users/login`, { data: editor })).status()).toBe(
+        200,
+      );
+      await editorPage.goto('/admin');
+      const theirs = editorPage.locator('[data-admin-dashboard]');
+      await expect(theirs).toBeVisible();
+      await expect(theirs.locator('[data-admin-tile]')).toHaveCount(1);
+      await expect(theirs.locator('[data-admin-tile="published"]')).toBeVisible();
+      await expect(theirs.locator('[data-admin-dashboard-content]')).toBeVisible();
+      await expect(theirs.locator('[data-admin-dashboard-server]')).toBeVisible();
+      await expect(theirs.locator('[data-admin-dashboard-hand]')).toBeVisible();
+      for (const hook of ['visits', 'assistants', 'engine']) {
+        await expect(theirs.locator(`[data-admin-dashboard-${hook}]`)).toHaveCount(0);
+      }
+      await expect(theirs.locator('[data-admin-view-refused]')).toHaveCount(0);
+      await expect(theirs.locator('[data-admin-action="home"]')).toBeVisible();
+    } finally {
+      await editorContext.close();
+      await request.delete(`${API}/users/${editor.id}`, { headers: auth });
+    }
     // The field widgets: a section switch with its consequence, and the platform tiles. The
     // section's switch lives in its tab (ADR-046), which Payload opens only on a click (a
     // remembered tab is a per-user preference, never assumed).
@@ -592,8 +666,14 @@ test.describe('CMS admin', () => {
         /الإدارة/,
       ]);
       const dashboard = page.locator('[data-admin-dashboard]');
-      await expect(dashboard.locator('h1')).toContainText('مرحباً');
-      await expect(dashboard.locator('[data-admin-health] h2')).toContainText('حالة النظام');
+      await expect(dashboard.locator('h1')).toContainText(/صباح الخير|مساء الخير/);
+      await expect(dashboard.locator('[data-admin-health] h2')).toContainText('الخادم');
+      await expect(dashboard.locator('[data-admin-tile]')).toHaveCount(4);
+      await expect(dashboard.locator('[data-admin-dashboard-range] a').first()).toContainText(
+        /أيام/,
+      );
+      // The digits stay Western in Arabic (design system §5): no Eastern digit on the dashboard.
+      expect(await dashboard.innerText()).not.toMatch(/[٠-٩]/);
       await expect(page.locator('[data-admin-palette-trigger]')).toContainText('ابحث');
       await expect(page.locator('[data-admin-view-site]')).toContainText('عرض الموقع');
       // The sidebar's rail sits at the start edge: on the right now, so its box starts past the middle.
@@ -675,7 +755,7 @@ test.describe('CMS admin', () => {
       await expect(html).toHaveAttribute('lang', 'en');
       await expect.poll(languageCookie).toBe('en');
       await page.goto('/admin');
-      await expect(page.locator('[data-admin-dashboard] h1')).toContainText('Welcome');
+      await expect(page.locator('[data-admin-dashboard] h1')).toContainText(/Good /);
     } finally {
       // Whatever happened above, the context leaves the panel in English for the next test.
       await page.context().addCookies([{ name: 'payload-lng', value: 'en', url: baseURL! }]);
@@ -1721,7 +1801,7 @@ test.describe('CMS admin', () => {
       const card = page.locator('[data-admin-visibility]');
       await expect(card).toBeVisible();
       await expect(card).toHaveAttribute('data-admin-visibility-overall', String(before));
-      await expect(card.locator('[data-admin-visibility-next] li')).toHaveCount(3);
+      await expect(card).toHaveAttribute('data-admin-tile', 'score');
       await expect(page.locator('#nav-view-visibility')).toHaveAttribute(
         'href',
         '/admin/visibility',
@@ -2700,21 +2780,20 @@ test.describe('CMS admin', () => {
           'data-admin-engine-state',
           'mock',
         );
-        await expect(
-          page.locator('[data-admin-engine-recent] li').first().locator('[data-admin-run-status]'),
-        ).toHaveAttribute('data-admin-run-status', 'done');
         await expect(page.locator('[data-health-row="engine"]')).toHaveAttribute(
           'data-tone',
           'warning',
         );
-        // The card names the connection and what it has cost this month.
-        const connectionLine = page.locator('[data-admin-engine-connection]');
-        await expect(connectionLine).toHaveAttribute(
-          'data-admin-engine-connection',
-          String(mockId),
+        // The spend table has a row per AI connection: the engine's one is marked, it names the
+        // connection, what it has cost this month, and the amber "no monthly limit" badge (ADR-059).
+        const connectionRow = page.locator(`[data-admin-connection="${mockId}"]`);
+        await expect(connectionRow).toHaveAttribute('data-admin-engine-connection', String(mockId));
+        await expect(connectionRow).toContainText(/Mock/);
+        await expect(connectionRow).toContainText(/\$\d+\.\d\d/);
+        await expect(connectionRow.locator('[data-admin-no-limit]')).toContainText(
+          /No monthly limit/,
         );
-        await expect(connectionLine).toContainText(/Mock/);
-        await expect(connectionLine).toContainText(/\$\d+\.\d\d this month, no limit/);
+        await expect(page.locator('[data-admin-engine-cap="posts"]')).toContainText(/\d+ of \d+/);
         // The topic's edit view carries "Generate now"; the post's sidebar carries "Regenerate".
         await page.goto(`/admin/collections/ai-topics/${topicId}`);
         await expect(page.locator('[data-admin-action="generate-now"]')).toBeVisible();
