@@ -143,3 +143,10 @@ Checked on 2026-09-18 in the installed packages (Payload 3.89.0), one line each:
   shape), the row builder and its tests, two e2e run on a private server and database. What
   remains: rich text (one field, the page block's body) and uploads (the hero's two photos),
   PR B; then PR C.
+- 2026-09-18: PR B built on `admin/bilingual-heavy`: the four heavy fields (the page block's
+  body, the post's body, the hero's two photos) have their twins, `twinField()`, the
+  population as a `beforeRead` hook with no extra read (an `afterRead` hook runs inside
+  `update` too and would clobber the typed twin: ADR-057's amendment says why), the apply
+  with the hash base, migration `20260918_131849_heavy_twins`, the census reads every
+  localized field of one value covered; two e2e run on a private server and database. What
+  remains: PR C.

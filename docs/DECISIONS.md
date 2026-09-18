@@ -1850,6 +1850,76 @@ line on the home page). The mechanism is built for exactly two locales: with a t
 pair resolver returns nothing and every field falls back to Payload's switch (a decision to
 take the day a third language is added, not a bug).
 
+**Amendment, 2026-09-18 (PR B of the same plan): the heavy twins.** The light/heavy rule
+as built: a light field (text, textarea, select, number) keeps the JSON entry; a heavy field
+(rich text, upload) gets a real sibling field, `<name>Twin` (`twinField()` in
+`fields/bilingual.ts`: `type` and `editor` or `relationTo` copied from the original,
+`localized: false`, labelled «النص بالإنجليزية» / "English text" or «الصورة بالإنجليزية» /
+"English photo", read by signed-in staff only, `NoDiff` in the versions view, the class
+`admin-twin` that `admin.css` gives the EN pill and a left-to-right editor), placed right
+after the original in the config so Payload's own component renders the Arabic full width
+and the English full width under it. Form state exists only for config paths, which is why
+a second Lexical on the JSON was never possible and the twin is a column: `content_twin` on
+the page's rich-text block, `body_twin` on the post, `image_desktop_twin_id` and
+`image_mobile_twin_id` on the hero slide, and the same on their versions tables (migration
+`20260918_131849_heavy_twins`, additive). The four heavy fields of the census are covered
+(`pages.blocks.richText.content`, `posts.body`, `home.hero.slides.imageDesktop` and
+`imageMobile`); `shapeOf` records a heavy field as a twin only when its twin follows it in
+the same field list with the same editor (two sanitized adapters count as the same editor
+when their features match, since Payload turns the one `lexicalEditor()` provider into an
+adapter per field) or the same collection, and `tests/admin-config.test.ts` refuses a
+localized rich text or upload without one. **Population.** The plan said an `afterRead` hook
+with one extra English read; it is a `beforeRead` hook with none (`populateTwins`,
+`populateGlobalTwins` in `fields/twins.ts`): Payload runs a collection's or a global's
+`afterRead` hooks inside `update` too, before `afterChange`, where it would have overwritten
+the typed English with the stored one and refreshed its base before the apply read either,
+and a global's hook cannot tell that pass from a read; `beforeRead` runs in read operations
+only and, as Payload documents, before the locales are flattened, so the document it sees
+carries every locale (`{ ar, en }`) and the twin is filled from the document's own English.
+It runs for a signed-in user reading the default locale, never under the re-entry flag, so
+the site's reads and the mechanism's own English reads pay nothing and a first admin read
+costs one walk of the document and no query. A twin that is null is filled and its base
+written into the hidden JSON under the original's key as `{ base }` (a sha256 of the
+canonical English rich text, keys sorted at every level so jsonb's order never matters; an
+English photo's id); a twin holding a value is the pending English of an autosaved draft
+and is kept with its base. **At rest every twin is null.** The twin's own `beforeChange`
+stores null on a Save or Publish and keeps the value on an autosave (so a draft carries the
+pending English across a reload), and the apply reads what was typed from the request's
+data (Payload's field hooks run on a copy). The apply treats a twin as one more entry: the
+value from the data by row id, the stored English from the read in the other locale, and
+`twinApplies` (the value's base differs from the entry's and the stored English still
+hashes to it) decides as the light fields' base check does; a rich text or photo cleared
+over an existing English applies and lets Payload's `required` refuse it on a Publish
+("Content in English: This field is required."), an empty photo over none is nothing. An
+applying twin lands on the original's key in the same nested write, a twin inside a row
+through the whole-list row build (`otherLocaleNode` already carried the heavy names; the
+write overlays the value where a light entry's would sit); the row's twin travels null. The
+response to the save shows every twin as the English now stands (the written value, or the
+stored one read before the write) with a fresh base in the JSON, so the form the admin
+rebuilds from the response is ready for the next save without a reload. A duplicated row
+copies its twin (the form copies the row's fields), so the English rich text or photo comes
+along while the light fields' English starts empty; a list whose rows hold a twin says so
+(`SHARED_ROWS_WITH_TWINS_NOTE`). The twins pair with a save from the default locale only;
+while the English locale itself is open `admin.css` hides them (the original is the
+English there) and a save from it stores null. The public API never carries a twin (the
+field's read access) nor the JSON, and the site's mappers read none
+(`tests/bilingual-twins.test.ts` maps a page and the home page with the twins filled and
+null and gets the same). Tests: `tests/bilingual-twins.test.ts` (the field's hooks and access, the canonical
+hash stable across key order and changed by content, the upload base, `twinApplies` in the
+differs, equal, stale, nothing-yet and cleared cases, the population's guards and its
+fill by row id, what a write carries, what the response shows, the mappers),
+`tests/translations-hook.test.ts` (a rich-text twin written and shown, equal, stale, a
+first English over none, a block row twin by id with the whole list, an upload twin by id
+with a cleared one written as null, a save in English ignoring them, a light entry and a
+twin in one write), `tests/bilingual-rows.test.ts` (the walk's twins, the resolver's kinds,
+a twin write inside its row, `writeKey`), the census; two e2e in `e2e/admin.spec.ts` (a
+page's rich-text block edited in Arabic and in its twin by one Publish and read back with
+`?locale=all`, both bodies, the twin null, the JSON cleared, then the English emptied and
+refused with the field and the language named; a hero slide's English photo cleared and
+picked again through the twin's own picker, landing in `?locale=en` with the Arabic and the
+other slides untouched). What still follows the locale control: nothing of one value; the
+switch itself goes in PR C.
+
 ## ADR-058: The sidebar: one tree, one breakpoint (2026-09-18)
 
 **Context.** The admin audit of 2026-09-18 (section 1) found two open/close systems by
