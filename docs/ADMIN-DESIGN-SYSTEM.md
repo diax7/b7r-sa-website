@@ -179,6 +179,14 @@ document. Everything of ours follows the request's language, never the build's.
 - **Direction:** logical utilities only (§8), directional icons through `Icon` (mirrored by
   name; `mirror={false}` for a glyph that must not flip, like the Enter key), Radix menus
   take `dir` from `useAdminLanguage().direction`, tooltips beside the rail open away from it.
+- **A sentence a module owns** (the visibility rules' titles, guides and facts, ADR-049;
+  a label a rule gives a listed document) is a `Text` pair (`{ en, ar }`,
+  `modules/visibility/types.ts`) written beside the logic that produces it, never a key in
+  `strings.ts`; the module picks the language once at its reading (`reading(payload, {
+  language })`) so its pages render plain strings. A place in the panel is named in words,
+  in the panel's own labels ("Admin, Connections", «الإدارة، الاتصالات»), never with an
+  arrow, an environment variable or a code path; `tests/visibility-rules-strings.test.ts`
+  reads the pairs under the same rules as the strings test.
 
 ## 6. Components
 
