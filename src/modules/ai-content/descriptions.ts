@@ -64,6 +64,22 @@ export const AI_SETTINGS_DESCRIPTIONS: Described = {
   },
 };
 
+/** Runs: what each column of a log row holds (ADR-042, ADR-047). Read-only. */
+export const AI_RUNS_DESCRIPTIONS: Described = {
+  rubric: {
+    ar: 'تفصيل درجة المراجعة الذاتية: كل معيار وما خسره المقال فيه.',
+    en: 'The self-review score, criterion by criterion: what the post lost on each.',
+  },
+  steps: {
+    ar: 'خطوات الجولة بترتيبها مع وقت كل خطوة ونتيجتها: المخطط، الكتابة، المراجعة، الصورة، النشر.',
+    en: 'The steps of the run in order, each with its time and outcome: outline, draft, review, cover, publish.',
+  },
+  outline: {
+    ar: 'مخطط المقال الذي كُتب منه؛ التحديث الآلي يعيد التوليد منه عند تغيّر الحقائق.',
+    en: 'The outline the post was written from; the freshness job regenerates from it when the facts change.',
+  },
+};
+
 /** Topics: the engine's backlog. */
 export const AI_TOPICS_DESCRIPTIONS: Described = {
   title: {

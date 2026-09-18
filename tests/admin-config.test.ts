@@ -14,7 +14,13 @@ import {
   PRODUCT_DESCRIPTIONS,
   TESTIMONIAL_DESCRIPTIONS,
 } from '@/modules/cms/admin/descriptions/catalogue';
-import type { Described } from '@/modules/cms/admin/descriptions/describe';
+import {
+  BOOL_CELL,
+  type Described,
+  describeFields,
+  JSON_VIEW_CELL,
+  JSON_VIEW_FIELD,
+} from '@/modules/cms/admin/descriptions/describe';
 import { PAGE_DESCRIPTIONS } from '@/modules/cms/admin/descriptions/pages';
 import {
   HOME_DESCRIPTIONS,
@@ -24,6 +30,7 @@ import {
   USER_DESCRIPTIONS,
 } from '@/modules/cms/admin/descriptions/site';
 import {
+  AI_RUNS_DESCRIPTIONS,
   AI_SETTINGS_DESCRIPTIONS,
   AI_TOPICS_DESCRIPTIONS,
 } from '@/modules/ai-content/descriptions';
@@ -54,6 +61,7 @@ import { Users } from '@/modules/cms/collections/users';
 import { Home } from '@/modules/cms/globals/home';
 import { SeoDefaults } from '@/modules/cms/globals/seo-defaults';
 import { SiteSettings } from '@/modules/cms/globals/site-settings';
+import { AiRuns } from '@/modules/ai-content/runs';
 import { AiSettings } from '@/modules/ai-content/settings';
 import { AiTopics } from '@/modules/ai-content/topics';
 import { COLLECTIONS, GLOBALS } from '@/modules/cms/entities';
@@ -188,6 +196,39 @@ describe('the sidebar registry (ADR-046)', () => {
   });
 });
 
+/** Every named field of a config at any depth, with its path (the description maps' keys). */
+function walkFields(fields: Field[], path = ''): Array<{ path: string; field: Field }> {
+  const out: Array<{ path: string; field: Field }> = [];
+  for (const f of fields) {
+    if (f.type === 'tabs') {
+      for (const t of f.tabs) {
+        out.push(...walkFields(t.fields, 'name' in t && t.name ? `${path}${t.name}.` : path));
+      }
+      continue;
+    }
+    if (f.type === 'ui') continue;
+    if (
+      f.type === 'row' ||
+      f.type === 'collapsible' ||
+      (f.type === 'group' && !('name' in f && f.name))
+    ) {
+      out.push(...walkFields(f.fields, path));
+      continue;
+    }
+    if (!('name' in f) || !f.name) continue;
+    const name = `${path}${f.name}`;
+    out.push({ path: name, field: f });
+    if ('fields' in f && Array.isArray(f.fields)) out.push(...walkFields(f.fields, `${name}.`));
+    if ('blocks' in f) {
+      for (const b of f.blocks) out.push(...walkFields(b.fields, `${name}.${b.slug}.`));
+    }
+  }
+  return out;
+}
+
+const componentsOf = (field: Field) =>
+  (field as { admin?: { components?: { Field?: unknown; Cell?: unknown } } }).admin?.components;
+
 /**
  * Every field an editor sees says what it does on the site (ADR-046, design system §1.5):
  * an `admin.description` in both languages, at least four words each. Layout fields (row,
@@ -199,41 +240,19 @@ describe('the sidebar registry (ADR-046)', () => {
  */
 const words = (v: unknown) => (typeof v === 'string' ? v.trim().split(/\s+/).length : 0);
 
-function describedFields(fields: Field[], path = ''): Array<{ path: string; ok: boolean }> {
+function describedFields(fields: Field[]): Array<{ path: string; ok: boolean }> {
   const out: Array<{ path: string; ok: boolean }> = [];
-  for (const f of fields) {
-    const admin = (f as { admin?: Record<string, unknown> }).admin ?? {};
-    if (f.type === 'tabs') {
-      for (const t of f.tabs) {
-        out.push(...describedFields(t.fields, 'name' in t && t.name ? `${path}${t.name}.` : path));
-      }
-      continue;
-    }
-    if (f.type === 'ui') continue;
-    if (
-      f.type === 'row' ||
-      f.type === 'collapsible' ||
-      (f.type === 'group' && !('name' in f && f.name))
-    ) {
-      if ('fields' in f) out.push(...describedFields(f.fields, path));
-      continue;
-    }
-    if (!('name' in f) || !f.name) continue;
-    const name = `${path}${f.name}`;
+  const skipped: string[] = [];
+  for (const { path, field } of walkFields(fields)) {
+    if (skipped.some((s) => path.startsWith(`${s}.`))) continue;
+    const admin = (field as { admin?: Record<string, unknown> }).admin ?? {};
     if (admin['hidden'] === true || admin['readOnly'] === true || admin['disabled'] === true) {
+      skipped.push(path);
       continue;
     }
-    const skip = (f as { label?: unknown }).label === false;
-    if (!skip) {
-      const d = admin['description'] as { ar?: string; en?: string } | undefined;
-      out.push({ path: name, ok: words(d?.ar) >= 4 && words(d?.en) >= 4 });
-    }
-    if ('fields' in f && Array.isArray(f.fields)) {
-      out.push(...describedFields(f.fields, `${name}.`));
-    }
-    if ('blocks' in f) {
-      for (const b of f.blocks) out.push(...describedFields(b.fields, `${name}.${b.slug}.`));
-    }
+    if ((field as { label?: unknown }).label === false) continue;
+    const d = admin['description'] as { ar?: string; en?: string } | undefined;
+    out.push({ path, ok: words(d?.ar) >= 4 && words(d?.en) >= 4 });
   }
   return out;
 }
@@ -243,34 +262,7 @@ function describedFields(fields: Field[], path = ''): Array<{ path: string; ok: 
  * or hidden field is a real field (its description still renders under it), so a map may name
  * it; only the rule of four words leaves it out.
  */
-function fieldPaths(fields: Field[], path = ''): string[] {
-  const out: string[] = [];
-  for (const f of fields) {
-    if (f.type === 'tabs') {
-      for (const t of f.tabs) {
-        out.push(...fieldPaths(t.fields, 'name' in t && t.name ? `${path}${t.name}.` : path));
-      }
-      continue;
-    }
-    if (f.type === 'ui') continue;
-    if (
-      f.type === 'row' ||
-      f.type === 'collapsible' ||
-      (f.type === 'group' && !('name' in f && f.name))
-    ) {
-      out.push(...fieldPaths(f.fields, path));
-      continue;
-    }
-    if (!('name' in f) || !f.name) continue;
-    const name = `${path}${f.name}`;
-    out.push(name);
-    if ('fields' in f && Array.isArray(f.fields)) out.push(...fieldPaths(f.fields, `${name}.`));
-    if ('blocks' in f) {
-      for (const b of f.blocks) out.push(...fieldPaths(b.fields, `${name}.${b.slug}.`));
-    }
-  }
-  return out;
-}
+const fieldPaths = (fields: Field[]): string[] => walkFields(fields).map((f) => f.path);
 
 describe('the description maps name real fields (ADR-046)', () => {
   const maps: Array<[{ slug: string; fields: Field[] }, Described]> = [
@@ -290,6 +282,7 @@ describe('the description maps name real fields (ADR-046)', () => {
     [SeoDefaults, SEO_DEFAULTS_DESCRIPTIONS],
     [AiSettings, AI_SETTINGS_DESCRIPTIONS],
     [AiTopics, AI_TOPICS_DESCRIPTIONS],
+    [AiRuns, AI_RUNS_DESCRIPTIONS],
     [Connections, CONNECTION_DESCRIPTIONS],
     [Traffic, TRAFFIC_DESCRIPTIONS],
   ];
@@ -368,6 +361,58 @@ describe('the document chrome (audit 2026-09-18)', () => {
       integrations: 'order',
       posts: '-publishedAt',
     });
+  });
+});
+
+/**
+ * Read-only JSON reads as our block (admin audit 2026-09-18, 2.1): Payload's JSON editor
+ * loads Monaco from a CDN the admin CSP refuses, so every read-only JSON field of a log row
+ * (the runs' rubric, steps and outline, the snapshots' data, the citations' links) carries
+ * the `JsonView` field and cell, set by `describeFields()`.
+ */
+describe('read-only JSON fields render as JsonView (audit 2026-09-18)', () => {
+  const expected: Record<string, string[]> = {
+    'ai-runs': ['rubric', 'steps', 'outline'],
+    metrics: ['data'],
+    citations: ['urls', 'competitors'],
+  };
+  for (const [slug, names] of Object.entries(expected)) {
+    it(`${slug}: ${names.join(', ')}`, () => {
+      const config = collections.find((c) => c.slug === slug);
+      const json = walkFields(config?.fields ?? []).filter(({ field }) => field.type === 'json');
+      expect(json.map((f) => f.path)).toEqual(names);
+      for (const { field } of json) {
+        expect(componentsOf(field)?.Field).toBe(JSON_VIEW_FIELD);
+        expect(componentsOf(field)?.Cell).toBe(JSON_VIEW_CELL);
+      }
+    });
+  }
+  it('every read-only JSON field of every entity carries it; a hidden or writable one does not', () => {
+    for (const c of [...collections, ...globals]) {
+      for (const { path, field } of walkFields(c.fields)) {
+        if (field.type !== 'json') continue;
+        const admin = field.admin ?? {};
+        const ours = componentsOf(field)?.Field === JSON_VIEW_FIELD;
+        expect(ours, `${c.slug}.${path}`).toBe(admin.readOnly === true && !admin.hidden);
+      }
+    }
+  });
+  it('the rule: read-only JSON gets the view, a hidden or editable JSON keeps Payload’s editor, a set component stays', () => {
+    const [readOnly, hidden, editable, custom, checkbox] = describeFields(
+      [
+        { name: 'a', type: 'json', admin: { readOnly: true } },
+        { name: 'b', type: 'json', admin: { readOnly: true, hidden: true } },
+        { name: 'c', type: 'json' },
+        { name: 'd', type: 'json', admin: { readOnly: true, components: { Field: 'x#Y' } } },
+        { name: 'e', type: 'checkbox' },
+      ],
+      {},
+    );
+    expect(componentsOf(readOnly!)).toEqual({ Field: JSON_VIEW_FIELD, Cell: JSON_VIEW_CELL });
+    expect(componentsOf(hidden!)).toBeUndefined();
+    expect(componentsOf(editable!)).toBeUndefined();
+    expect(componentsOf(custom!)).toEqual({ Field: 'x#Y', Cell: JSON_VIEW_CELL });
+    expect(componentsOf(checkbox!)).toEqual({ Cell: BOOL_CELL });
   });
 });
 

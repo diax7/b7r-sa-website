@@ -17,6 +17,31 @@ export type Described = Record<string, { ar: string; en: string }>;
  */
 export const BOOL_CELL = '@/modules/cms/admin/fields/bool-cell#BoolCell';
 
+/**
+ * The field and the list cell for every read-only JSON field (admin audit 2026-09-18, 2.1):
+ * Payload's JSON editor loads Monaco from a CDN the admin CSP refuses, so a log row's JSON
+ * rendered empty. A read-only value needs no editor; it needs to be read.
+ */
+export const JSON_VIEW_FIELD = '@/modules/cms/admin/fields/json-view#JsonView';
+export const JSON_VIEW_CELL = '@/modules/cms/admin/fields/json-view#JsonViewCell';
+
+/** A read-only JSON field reads as our pretty-printed block, in the form and in the list. */
+function withJsonView(field: Field): Field {
+  if (field.type !== 'json' || field.admin?.readOnly !== true || field.admin?.hidden) return field;
+  const components = field.admin.components ?? {};
+  return {
+    ...field,
+    admin: {
+      ...field.admin,
+      components: {
+        ...components,
+        Field: components.Field ?? JSON_VIEW_FIELD,
+        Cell: components.Cell ?? JSON_VIEW_CELL,
+      },
+    },
+  };
+}
+
 export function describeFields(
   fields: Field[],
   map: Described,
@@ -63,6 +88,7 @@ export function describeFields(
         },
       };
     }
+    next = withJsonView(next);
     if ('fields' in next && Array.isArray(next.fields)) {
       next = { ...next, fields: describeFields(next.fields, map, applied, `${name}.`) } as Field;
     }
