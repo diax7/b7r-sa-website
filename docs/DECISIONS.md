@@ -1702,8 +1702,11 @@ number; the CTO agreed with four edits.
 **Decision.** The dashboard (`modules/cms/admin/dashboard/*`, still Payload's
 `views.dashboard` inside its template) is seven sections, top to bottom: (1) the greeting
 by the Riyadh hour, the 7 / 30 / 90 day range at the trailing edge and the "needs a hand"
-line; (2) four tiles: visits with the change against the previous range, the cited rate,
-the visibility score with its trend, published in the range with the drafts waiting; (3)
+line (failed runs this week, a connection at its limit, an enabled connection whose last
+Test failed, documents without English, drafts older than a week); (2) four tiles: visits
+with the change against the previous range, the cited rate, the visibility score with its
+trend, "went live" in the range (a post by its publish date, a page or product by the last
+save of the live document, which the hint says) with the drafts waiting; (3)
 where visits come from; (4) what the assistants say; (5) the content; (6) the engine and
 the spend; (7) the server. The quick-action tiles fold into section 5 as the home tile and
 two bordered buttons ("Write a post", "Add a product"); "Add a page" and "Add a question"
@@ -1732,9 +1735,10 @@ double range minus the current (`trafficSummary` twice).
 (posts by `publishedAt`, pages and products by the last published save), drafts waiting and
 stale, documents without their English title (`locale: 'all'`, no fallback, nothing while
 the site is Arabic only) and one row per AI connection with `connectionSpend`; plus the
-failed runs of the week and the next occurrence of each scheduled task, computed from the
-crons the tasks declare (copied into `schedule.ts` and held equal by the test) on the Riyadh
-clock. One server render, every read in one `Promise.all`, each guarded: a failing reader
+failed runs of the week and the next occurrence of each scheduled task, computed on the
+Riyadh clock from the cron each task exports beside itself (`visibility/schedule.ts`,
+`visibility/ledger/schedule.ts`, `ai-content/schedule.ts`: one constant read by the task and
+by the dashboard, so the two cannot drift). One server render, every read in one `Promise.all`, each guarded: a failing reader
 logs and its section shows the "not available" word; a reader the user may not run is
 skipped and its section is not rendered (the editor's dashboard is the greeting, the
 published tile, the content and the server). Nothing new is cached: the score reading keeps
