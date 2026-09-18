@@ -1140,7 +1140,7 @@ base URL, `mock` for tests, refused in production as before), `model`, `apiKey` 
 existing secret scheme: encrypted at rest with `PAYLOAD_SECRET`, masked on read, kept when
 the form posts the mask back), the two rates, `monthlyLimitUsd` (empty: no limit),
 `enabled`, and read-only `lastTestAt` / `lastTestOk` / `lastTestMessage` written only by
-the test. A new row that leaves the model or a rate empty gets its kind's usual value. Two
+the test. A new row that leaves the model or a rate empty gets its kind's usual value (since 2026-09-18 the cheap model: `gpt-4.1-mini`, `claude-haiku-4-5`, `gemini-3-flash-preview`). Two
 numbers are derived on every read and never stored: `spentThisMonthUsd` and
 `callsThisMonth`, the `ai-runs` rows naming the connection since the Riyadh month began,
 `skipped` left out. **No ledger**: the runs are the record; `ai-runs` gains a nullable
@@ -1425,6 +1425,18 @@ equal to the row's, not absent; the longest model family wins the rate lookup. T
 views (Traffic, the Score page) render inside Payload's `DefaultTemplate` through
 `AdminShell` with the step nav: they had rendered bare, with no sidebar and no way back, a
 defect he reported.
+
+*Amended 2026-09-18 (Dhia's decision under the Phase 3 brief of the pre-launch programme,
+"minimise overall usage, daily to weekly", executed on the AI cost audit in
+`docs/audits/2026-09-18-ai-cost.md`; it reverses his 2026-09-16 "daily on every prompt"): every
+prompt weekly, the brand prompts included (the
+score reads four weeks and M3 a fortnight; a daily brand prompt would have cost $17 a month
+for nothing the rules read); Google on `gemini-3-flash-preview` and Anthropic on
+`claude-haiku-4-5` (the same search tools at half and a third of the price; OpenAI's cost is
+its search fee, so the mini stays); a monthly limit on every AI connection ($10 / $5 / $5);
+the kinds' defaults are the cheap models. Measured: $2.64 a batch on the old models, $1.42 on
+the new; about $6 a month weekly. Applied to the review and the production databases by
+`scripts/ai-spend.ts`, which also removed three queued jobs carrying a Riyadh-clock time.*
 
 ## ADR-050: The GEO content: FAQPage schema, the compare page, answer-first openings, the off-site kit (2026-09-16)
 
