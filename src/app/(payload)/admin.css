@@ -100,7 +100,8 @@
     --admin-red-tint: rgb(242 107 107 / 0.14);
     --admin-amber: #f5b53f;
     --admin-ring: rgb(0 152 224 / 0.4);
-    --admin-rail-width: 72px;
+    --admin-rail-width: 64px;
+    --admin-drawer-width: 320px;
     --font-body: var(--font-sans);
     /* The rich-text editor sets its content in `--font-serif` (Georgia on Arabic: a system
        fallback). The brand face carries Arabic, so the editor shows what the site shows. */
@@ -265,20 +266,37 @@
   }
 
   /* ----------------------------------------------------------------------------------------
-     The icon rail (Dhia, 2026-09-13): closed on a desktop, the sidebar keeps a narrow column
-     with icons and tooltips instead of vanishing. Payload's `l` breakpoint is 1440 px; at or
-     under it the sidebar is a drawer and these rules do not apply. The nav component adds
-     `data-admin-rail` and drops `inert` in that state; Payload's own toggler is replaced by
-     the collapse/expand buttons inside the sidebar.
+     The sidebar's one breakpoint (ADR-058): Payload's `m` (1024 px). Above it the sidebar
+     is inline, open at 264 px or the 64 px rail of groups, and Payload's togglers are gone
+     (the collapse button at the foot of the sidebar is the control, its state the `nav`
+     preference); Payload's `l` special case at 1440 px is overridden here (the nav visible
+     and in the grid from 1025 px up), the client puts the preference back where Payload's
+     provider closes it. At 1024 px and under the sidebar is a drawer over the page, opened
+     by our hamburger in the header and closed by its X, Esc or a tap on the scrim.
      ---------------------------------------------------------------------------------------- */
-  @media (min-width: 1441px) {
-    .template-default__nav-toggler-wrapper {
-      display: none;
+  /* Our account block owns the account (design system §6); Payload's avatar and its two
+     hamburgers leave the header at every width, and the locale switcher, which Payload
+     places beside the avatar, moves to the gutter the avatar leaves. */
+  .app-header__account,
+  .app-header__mobile-nav-toggler,
+  .template-default__nav-toggler-wrapper {
+    display: none;
+  }
+  .app-header__localizer.localizer {
+    inset-inline-end: var(--gutter-h);
+  }
+
+  @media (min-width: 1025px) {
+    :root {
+      --nav-width: 264px;
     }
-    /* Payload hides the nav until it hydrates and gives a closed one no column; the rail
-       needs neither, so the server render already paints it and nothing shifts. */
+    /* Payload hides the nav until it hydrates at or under 1440 px and gives a closed one no
+       column; inline, the server render already paints it and nothing shifts. */
     .template-default .nav {
       display: block;
+    }
+    .template-default--nav-open {
+      grid-template-columns: var(--nav-width) auto;
     }
     .template-default:not(.template-default--nav-open) {
       grid-template-columns: var(--admin-rail-width) auto;
@@ -289,6 +307,57 @@
     }
     .nav:not(.nav--nav-open) .nav__scroll {
       padding-inline: 12px;
+    }
+  }
+
+  @media (max-width: 1024px) {
+    :root {
+      --nav-width: var(--admin-drawer-width);
+    }
+    /* The drawer is out of the grid: the page keeps its one column whatever the drawer does. */
+    .template-default,
+    .template-default--nav-hydrated,
+    .template-default--nav-hydrated.template-default--nav-open {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .nav {
+      position: fixed;
+      inset-block: 0;
+      inset-inline: 0 auto;
+      height: auto;
+      z-index: 35;
+      opacity: 1;
+      transition:
+        translate var(--nav-trans-time) ease-out,
+        visibility 0s;
+      --nav-padding-block-start: 12px;
+      --nav-padding-inline-start: 12px;
+      --nav-padding-inline-end: 12px;
+    }
+    /* Closed, it slides off the leading edge and turns invisible once the slide is over. */
+    .nav:not(.nav--nav-open) {
+      visibility: hidden;
+      translate: -100% 0;
+      transition:
+        translate var(--nav-trans-time) ease-out,
+        visibility 0s linear var(--nav-trans-time);
+    }
+    [dir='rtl'] .nav:not(.nav--nav-open) {
+      translate: 100% 0;
+    }
+    /* The header makes room for the hamburger at its leading edge. */
+    .app-header__content {
+      padding-inline-start: 60px;
+    }
+  }
+  @media (max-width: 768px) {
+    :root {
+      --admin-drawer-width: 100vw;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .nav {
+      transition: none;
     }
   }
 
@@ -447,41 +516,57 @@
 }
 
 /* ---------------------------------------------------------------------------------------
-   The icon rail's element rules. Unlayered on purpose: `[data-rail-show]` must beat the
-   `hidden` utility on the same element. Only above Payload's `l` breakpoint and only while
-   the aside is closed; the phone drawer never sees them.
+   The shell's element rules by state (ADR-058). Unlayered on purpose: `[data-rail-show]` and
+   the drawer-only controls must beat the `hidden` utility on the same element. The rail
+   rules apply only above Payload's `m` breakpoint while the aside is closed; the drawer
+   rules only at or under it.
    --------------------------------------------------------------------------------------- */
-@media (max-width: 1440px) {
-  /* The drawer closes with Payload's own control; the rail toggle belongs to the desktop. */
-  .nav [data-admin-toggle] {
+@media (min-width: 1025px) {
+  .nav:not(.nav--nav-open) [data-rail-hide],
+  .nav:not(.nav--nav-open) [data-admin-tree] {
     display: none;
   }
-}
-@media (min-width: 1441px) {
-  .nav:not(.nav--nav-open) [data-rail-hide] {
-    display: none;
-  }
-  .nav:not(.nav--nav-open) [data-rail-show] {
-    display: block;
+  .nav:not(.nav--nav-open) [data-admin-rail-list] {
+    display: flex;
   }
   .nav:not(.nav--nav-open) [data-rail-center] {
     justify-content: center;
     padding-inline: 0;
     width: 100%;
   }
-  .nav:not(.nav--nav-open) [data-rail-list] {
-    align-items: center;
+  [data-admin-scrim] {
+    display: none;
   }
-  /* One hairline per group: the top-level list only, not the secondary or section lists. */
-  .nav:not(.nav--nav-open) [data-rail-group-list] {
-    border-top: 1px solid var(--theme-elevation-150);
-    padding-block: 8px;
+}
+@media (max-width: 1024px) {
+  /* The collapse control belongs to the desktop; the drawer has its X, and its language switch. */
+  .nav [data-admin-toggle] {
+    display: none;
   }
-  .nav:not(.nav--nav-open) [data-admin-group]:first-child [data-rail-group-list] {
-    border-top: 0;
-    padding-block-start: 0;
+  .nav [data-admin-drawer-only] {
+    display: grid;
   }
-  .nav:not(.nav--nav-open) [data-rail-list] a {
-    width: 40px;
+  .nav [data-admin-language][data-admin-drawer-only] {
+    display: flex;
+  }
+  /* Touch rows. */
+  .nav [data-admin-tree] [data-admin-row] {
+    min-height: 44px;
+  }
+  [data-admin-scrim] {
+    position: fixed;
+    inset-block: 0;
+    inset-inline-start: var(--nav-width);
+    inset-inline-end: 0;
+    z-index: 34;
+    background: rgb(0 0 0 / 0.5);
+  }
+  /* The hamburger at the leading edge of the header, where the drawer's X will sit. */
+  [data-admin-menu] {
+    display: grid;
+    position: fixed;
+    top: 0;
+    inset-inline-start: 12px;
+    height: var(--app-header-height);
   }
 }

@@ -22,11 +22,21 @@ export const adminStrings = {
   nav: {
     label: 'Main navigation',
     brand: 'B7R Print Website',
+    dashboard: 'Dashboard',
     expand: 'Expand the sidebar',
     collapse: 'Collapse the sidebar',
+    openMenu: 'Open the menu',
     closeMenu: 'Close the menu',
-    groupToggle: 'collapse or expand the group',
     viewSite: 'View website',
+    language: 'Panel language',
+    languages: { en: 'English', ar: 'العربية' },
+    /** The badges (ADR-058): read to a screen reader after the entry's name. */
+    badges: {
+      failedRuns: (n: number) => `${n} failed ${n === 1 ? 'run' : 'runs'} this month`,
+      drafts: (n: number) => `${n} ${n === 1 ? 'draft' : 'drafts'} waiting`,
+      overLimit: (n: number) =>
+        `${n} ${n === 1 ? 'connection' : 'connections'} over the monthly limit`,
+    },
   },
   entityHeader: {
     shows: 'Shows on:',
@@ -400,12 +410,23 @@ type Widen<T> = T extends (...args: infer A) => infer R
 
 export type AdminStrings = Widen<typeof adminStrings>;
 
-/** Arabic counts of days: one, two, three to ten, eleven and up (the four Arabic plurals). */
+/**
+ * An Arabic count in its four plurals: one and two carry their own forms, three to ten take
+ * the plural with the number, eleven and up the singular with the number.
+ */
+function arabicCount(
+  n: number,
+  forms: { one: string; two: string; few: string; many: string },
+): string {
+  if (n === 1) return forms.one;
+  if (n === 2) return forms.two;
+  if (n >= 3 && n <= 10) return `${n} ${forms.few}`;
+  return `${n} ${forms.many}`;
+}
+
+/** Arabic counts of days («يوم», «يومين», «7 أيام», «30 يوماً»). */
 function arabicDays(n: number): string {
-  if (n === 1) return 'يوم';
-  if (n === 2) return 'يومين';
-  if (n >= 3 && n <= 10) return `${n} أيام`;
-  return `${n} يوماً`;
+  return arabicCount(n, { one: 'يوم', two: 'يومين', few: 'أيام', many: 'يوماً' });
 }
 
 /**
@@ -417,11 +438,37 @@ export const adminStringsAr: AdminStrings = {
   nav: {
     label: 'التنقل الرئيسي',
     brand: 'موقع بحر برنت',
+    dashboard: 'لوحة التحكم',
     expand: 'وسّع الشريط الجانبي',
     collapse: 'اطوِ الشريط الجانبي',
+    openMenu: 'افتح القائمة',
     closeMenu: 'أغلق القائمة',
-    groupToggle: 'اطوِ المجموعة أو وسّعها',
     viewSite: 'عرض الموقع',
+    language: 'لغة اللوحة',
+    languages: { en: 'English', ar: 'العربية' },
+    badges: {
+      failedRuns: (n) =>
+        `${arabicCount(n, {
+          one: 'جولة واحدة فاشلة',
+          two: 'جولتان فاشلتان',
+          few: 'جولات فاشلة',
+          many: 'جولة فاشلة',
+        })} هذا الشهر`,
+      drafts: (n) =>
+        `${arabicCount(n, {
+          one: 'مسودة واحدة',
+          two: 'مسودتان',
+          few: 'مسودات',
+          many: 'مسودة',
+        })} بانتظار النشر`,
+      overLimit: (n) =>
+        arabicCount(n, {
+          one: 'اتصال واحد تجاوز حدّه الشهري',
+          two: 'اتصالان تجاوزا حدّهما الشهري',
+          few: 'اتصالات تجاوزت حدّها الشهري',
+          many: 'اتصالاً تجاوز حدّه الشهري',
+        }),
+    },
   },
   entityHeader: {
     shows: 'يظهر في:',

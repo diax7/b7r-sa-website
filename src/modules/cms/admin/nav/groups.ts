@@ -19,6 +19,7 @@ import {
   type NavPlacement,
   type NavSection,
 } from '@/modules/cms/admin/icons';
+import { type NavBadge, navBadges } from '@/modules/cms/admin/nav/badges';
 
 /** One sidebar / palette entry: plain data, safe to hand to a client component. */
 export interface NavEntity {
@@ -26,8 +27,8 @@ export interface NavEntity {
   slug: string;
   label: string;
   href: string;
-  /** Documents in the collection the user may see; globals have none. */
-  count?: number;
+  /** A number that asks for action (ADR-058); most entries carry none. */
+  badge?: NavBadge;
   /** Secondary entries, indented under this one. */
   children: NavEntity[];
 }
@@ -68,10 +69,10 @@ export async function navGroups(args: {
   permissions: SanitizedPermissions | undefined;
   user: TypedUser | undefined;
   i18n: I18nClient;
-  /** Query the collections' document counts (the sidebar shows them; the palette and the dashboard do not). */
-  counts?: boolean;
+  /** Read the action badges (the sidebar shows them; the palette and the dashboard do not). */
+  badges?: boolean;
 }): Promise<NavGroup[]> {
-  const { payload, permissions, user, i18n, counts: withCounts = false } = args;
+  const { payload, permissions, user, i18n, badges: withBadges = false } = args;
   const adminRoute = payload.config.routes.admin;
   const visible = (hidden: unknown): boolean =>
     typeof hidden === 'function'
@@ -111,12 +112,12 @@ export async function navGroups(args: {
       });
     }
   }
-  const counts = withCounts
-    ? await collectionCounts(
+  const badges = withBadges
+    ? await navBadges({
         payload,
         user,
-        allowed.filter((e) => e.type === 'collections').map((e) => e.slug as CollectionSlug),
-      )
+        visible: new Set(allowed.filter((e) => e.type === 'collections').map((e) => e.slug)),
+      })
     : {};
   const placed: Placed[] = allowed
     .flatMap((e) => {
@@ -124,12 +125,16 @@ export async function navGroups(args: {
       return placement ? [{ ...e, placement }] : [];
     })
     .toSorted((a, b) => a.placement.order - b.placement.order);
+  const badgeOf = (e: Placed): { badge: NavBadge } | Record<string, never> => {
+    const badge = e.type === 'collections' ? badges[e.slug as CollectionSlug] : undefined;
+    return badge ? { badge } : {};
+  };
   const toEntity = (e: Placed): NavEntity => ({
     type: e.type,
     slug: e.slug,
     label: e.label,
     href: e.href,
-    ...(e.type === 'collections' && counts[e.slug] !== undefined ? { count: counts[e.slug] } : {}),
+    ...badgeOf(e),
     children: placed
       .filter((c) => c.placement.parent && sameRef(c.placement.parent, e))
       .map(toEntity),
@@ -157,34 +162,6 @@ export async function navGroups(args: {
       sections,
     };
   }).filter((g) => g.entities.length > 0 || g.sections.length > 0);
-}
-
-/**
- * How many documents the user may see per collection, for the sidebar's counts. Never
- * cached: a stale number right after "Create" is worse than none. One `count` per
- * collection, in parallel, with the user's access.
- */
-async function collectionCounts(
-  payload: Payload,
-  user: TypedUser | undefined,
-  slugs: CollectionSlug[],
-): Promise<Partial<Record<string, number>>> {
-  const entries = await Promise.all(
-    slugs.map(async (slug) => {
-      try {
-        const { totalDocs } = await payload.count({
-          collection: slug,
-          overrideAccess: false,
-          user,
-        });
-        return [slug, totalDocs] as const;
-      } catch (error) {
-        payload.logger.error({ err: error, msg: `nav: count of ${slug} failed` });
-        return [slug, undefined] as const;
-      }
-    }),
-  );
-  return Object.fromEntries(entries.filter(([, n]) => n !== undefined));
 }
 
 function flat(entities: NavEntity[], group: string): Array<NavEntity & { group: string }> {

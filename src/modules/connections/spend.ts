@@ -39,6 +39,45 @@ export async function connectionSpend(
   };
 }
 
+/**
+ * How many enabled connections with a monthly limit have reached it (the cap's own rule,
+ * `spent >= limit`), for the sidebar's badge (ADR-058). Two queries whatever the number of
+ * connections: the limited rows, then the month's runs of all of them summed per row.
+ */
+export async function overLimitConnections(payload: Payload, now = new Date()): Promise<number> {
+  const limited = await payload.find({
+    collection: 'connections',
+    where: { monthlyLimitUsd: { greater_than: 0 } },
+    depth: 0,
+    pagination: false,
+    select: { monthlyLimitUsd: true, enabled: true },
+    overrideAccess: true,
+  });
+  const rows = limited.docs.filter((c) => c.enabled !== false);
+  if (rows.length === 0) return 0;
+  const runs = await payload.find({
+    collection: 'ai-runs',
+    where: {
+      and: [
+        { connection: { in: rows.map((c) => c.id) } },
+        { startedAt: { greater_than_equal: riyadhMonthStart(now).toISOString() } },
+        { status: { not_equals: 'skipped' } },
+      ],
+    },
+    depth: 0,
+    pagination: false,
+    select: { costUsd: true, connection: true },
+    overrideAccess: true,
+  });
+  const spent = new Map<number, number>();
+  for (const run of runs.docs) {
+    const id = typeof run.connection === 'object' ? run.connection?.id : run.connection;
+    if (typeof id !== 'number') continue;
+    spent.set(id, (spent.get(id) ?? 0) + (run.costUsd ?? 0));
+  }
+  return rows.filter((c) => (spent.get(c.id) ?? 0) >= (c.monthlyLimitUsd ?? 0)).length;
+}
+
 /** The spend once per request: the two virtual fields of a document share one query. */
 export async function spendFor(req: PayloadRequest, id: number): Promise<ConnectionSpend> {
   const key = `connectionSpend:${id}`;
