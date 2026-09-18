@@ -56,6 +56,7 @@ export function PostCard({
             alt=""
             fill
             priority={priority}
+            fetchPriority={priority ? 'high' : undefined}
             sizes={
               featured
                 ? '(min-width: 1024px) 560px, 100vw'

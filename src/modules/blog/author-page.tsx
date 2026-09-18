@@ -83,9 +83,9 @@ export async function AuthorPage({
           </h2>
           {listing.posts.length > 0 ? (
             <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3" data-post-grid="">
-              {listing.posts.map((post) => (
+              {listing.posts.map((post, i) => (
                 <li key={post.slug}>
-                  <PostCard post={post} locale={locale} headingLevel="h3" />
+                  <PostCard post={post} locale={locale} headingLevel="h3" priority={i === 0} />
                 </li>
               ))}
             </ul>

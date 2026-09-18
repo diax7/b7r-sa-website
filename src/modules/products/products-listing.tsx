@@ -39,7 +39,13 @@ export async function ProductsListing({ locale }: { locale: Locale }) {
           <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3" data-product-grid="">
             {ordered.map((product, i) => (
               <li key={product.slug}>
-                <ProductCard product={product} locale={locale} priority={i < 3} headingLevel="h2" />
+                <ProductCard
+                  product={product}
+                  locale={locale}
+                  priority={i < 3}
+                  lcp={i === 0}
+                  headingLevel="h2"
+                />
               </li>
             ))}
           </ul>
