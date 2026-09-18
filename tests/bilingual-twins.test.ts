@@ -88,6 +88,13 @@ const raw = (): Doc => ({
 const read = (doc: Doc, request: PayloadRequest) =>
   (populateTwins as unknown as Hook)({ doc, req: request, collection, context: request.context });
 
+/** A rich text and its twin as the sanitized config holds them: an editor adapter each. */
+const adapter = (keys: string[]) => ({ features: keys.map((key) => ({ key })) });
+const sanitized = (editor: unknown): Field =>
+  ({ name: 'body', type: 'richText', localized: true, editor }) as Field;
+const sanitizedTwin = (editor: unknown): Field =>
+  ({ name: 'bodyTwin', type: 'richText', editor }) as Field;
+
 describe('the twin field', () => {
   it('twinField pairs a localized rich text or upload with a non-localized sibling of the same editor or collection', () => {
     const twin = richText(body) as { name: string; type: string; localized?: boolean };
@@ -100,6 +107,11 @@ describe('the twin field', () => {
       isTwinOf({ name: 'coverTwin', type: 'upload', relationTo: 'users' } as Field, cover),
     ).toBe(false);
     expect(() => twinField({ name: 'plain', type: 'richText' } as never)).toThrow(/localized/);
+    // At run time Payload has turned the one provider into an adapter per field: the same
+    // features make the same editor; different features do not.
+    expect(isTwinOf(sanitizedTwin(adapter(['p', 'h'])), sanitized(adapter(['p', 'h'])))).toBe(true);
+    expect(isTwinOf(sanitizedTwin(adapter(['p'])), sanitized(adapter(['p', 'h'])))).toBe(false);
+    expect(isTwinOf(sanitizedTwin({}), sanitized({}))).toBe(false);
     // The shape records a heavy field as a twin only when the twin follows it.
     expect(twinPaths(fields)).toEqual(['body', 'cover', 'blocks.richText.content']);
     expect(twinPaths([body, cover, richText(body)])).toEqual([]);

@@ -134,8 +134,10 @@ function populate(req: PayloadRequest, doc: unknown, fields: Field[]): unknown {
   if (!pair?.isDefault) return doc;
   const shape = shapeOf(fields);
   if (!hasTwins(shape)) return doc;
+  const twins = twinsIn(shape, doc, '');
+  if (twins.length === 0) return doc;
   const pending: PendingEntries = { ...pendingOf(doc[TRANSLATIONS], pair.other) };
-  for (const { key, name, kind, node } of twinsIn(shape, doc, '')) {
+  for (const { key, name, kind, node } of twins) {
     const twin = twinName(name);
     if (node[twin] !== null && node[twin] !== undefined) continue;
     const other = localeValue(node[name], pair.other);

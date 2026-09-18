@@ -104,18 +104,37 @@ const TWIN_DESCRIPTION = {
   },
 };
 
+/** The feature keys of a rich-text editor, provider (the config) or sanitized adapter alike. */
+function editorFeatures(editor: unknown): string | null {
+  const features = (editor as { features?: unknown } | undefined)?.features;
+  if (!Array.isArray(features)) return null;
+  return features.map((f: { key?: unknown }) => String(f?.key ?? '')).join(',');
+}
+
+/**
+ * Whether two rich-text editors are the same: the one provider in the config, or two
+ * sanitized adapters made from it (Payload turns `lexicalEditor()` into one adapter per
+ * field) with the same features.
+ */
+function sameEditor(a: unknown, b: unknown): boolean {
+  if (a === b) return true;
+  const keys = editorFeatures(a);
+  return keys !== null && keys === editorFeatures(b);
+}
+
 /**
  * Whether `candidate` is the twin of `original`: the twin's name, the same type, not
  * localized, and the same editor (rich text) or collection (upload), so the two render and
  * validate alike. The census in `tests/admin-config.test.ts` counts a localized heavy field as
- * covered when its twin follows it in the same field list.
+ * covered when its twin follows it in the same field list; the hooks ask the same of the
+ * sanitized config at run time.
  */
 export function isTwinOf(candidate: Field | undefined, original: Field): boolean {
   if (!isHeavy(candidate) || !isHeavy(original) || !original.name) return false;
   if (candidate.name !== twinName(original.name) || candidate.localized === true) return false;
   if (candidate.type !== original.type) return false;
   if (candidate.type === 'richText' && original.type === 'richText') {
-    return candidate.editor === original.editor;
+    return sameEditor(candidate.editor, original.editor);
   }
   if (candidate.type === 'upload' && original.type === 'upload') {
     return candidate.relationTo === original.relationTo;
