@@ -17,7 +17,8 @@ note), `check:rtl` and the admin e2e.
 2b. `admin.custom.shows` in Arabic + English (where on the site the thing shows) and the
    header registered through `collectionComponents(slug, { localized })` /
    `globalComponents(slug, { localized })` from `admin/document/config.ts` (the description
-   slot; the locale note rides along when the config has per-language fields).
+   slot; the locale note rides along when the config has per-language fields, and says which
+   fields are side by side, rule 13).
 3. `labels.singular` / `labels.plural` (collections) or `label` (globals) in Arabic + English;
    nouns, never sentences.
 4. `admin.description` on the entity: one sentence about what it is *for the site*, not how
@@ -58,6 +59,14 @@ note), `check:rtl` and the admin e2e.
    `src/modules/visibility/rules/`, with its sentence and guide beside it; its weight lives in
    `rules/weights.ts`; a guide always links to the field that fixes the finding, in the
    locale that is missing; a thing the site guarantees by construction is a fact, not a rule.
+13. A localized `text`, `textarea` or `select` field is bilingual by `describeFields`
+   (ADR-057, design system §6a): both languages side by side, one Save writes both through
+   `applyTranslations` / `applyGlobalTranslations` (`src/modules/cms/hooks/translations.ts`),
+   which a config with such a field lists last in `hooks.afterChange` (the config test
+   checks). Never add a second place to edit a value: no per-language duplicate field, no
+   `titleEn` beside `title`, no widget of your own on a localized text. What stays on the
+   locale switch (rich text, arrays, blocks, uploads, relationships, `hasMany`) is by design;
+   the locale note says so and its strings live in `admin/fields/bilingual/strings.ts`.
 
 ## Adding an admin component
 

@@ -130,15 +130,19 @@ The admin's strings are interface copy (ADR-031): written by us, under the ux-ar
   Shopify, Turnstile, Resend.
 - Punctuation: Arabic comma «،», «أو» not «/», no «!». **No em dash anywhere** (ADR-040,
   `.claude/rules/writing.md`, `pnpm check:dash`): a colon or two sentences instead.
-- Localised fields (ADR-043): the panel's locale control switches every localised field
-  between Arabic and English; a document reaches the English site when its title-like field
+- Localised fields (ADR-043): a document reaches the English site when its title-like field
   has an English value. Media alt text is per language; the Arabic value must be Arabic
   script, the English one is free text. Every localised field label carries a neutral pill
   with the open locale's code (`AR`/`EN`, ADR-044): a field with a pill changes per language,
-  a field without one is shared. A document with per-language fields shows the `LocaleNote`
-  line before its controls ("Editing the English content. Fields marked EN are per language;
-  the rest is shared with Arabic."); register it through `admin/document/config.ts` on every
-  new collection or global with a localised field (`tests/admin-config.test.ts` checks).
+  a field without one is shared. A localised text, textarea or select shows both languages
+  at once (§6a, ADR-057); rich text, lists and blocks follow the panel's locale control. A
+  document with per-language fields shows the `LocaleNote` line before its controls
+  ("Editing the Arabic content. A field tagged AR has its English beside it: type the English
+  next to the Arabic, one Save writes both. Rich text, lists and blocks stay per language:
+  switch the locale at the top to edit their English. Fields without a tag are shared.", the
+  strings in `admin/fields/bilingual/strings.ts` in both panel languages); register it
+  through `admin/document/config.ts` on every new collection or global with a localised
+  field (`tests/admin-config.test.ts` checks).
 
 ## 6. Components
 
@@ -176,7 +180,7 @@ Payload's own elements (buttons, fields, pills, toasts) are themed in `admin.css
 | Visibility score (Visibility group) | `modules/visibility/*` | Admin only. The Score page (`/admin/visibility`, `VisibilityView`): the overall ring (`Ring`, the Visibility pink on the surface track: identity), the site-only number, one card per section with its findings in the order next, missing, done, the status icons by meaning (green done, amber next, red missing), each finding's guide, link and documents, the section's facts; "Recompute"; "up N points since <date>" from the score snapshots; the outside signals as three panels (`Signals`: Search Console, Bing, PageSpeed, each with its snapshot's date, a "Connect" link to Connections when absent, a waiting sentence when connected and not yet pulled) and "Pull now" (`PullNow`, an `ApiAction` on `/api/visibility/pull`). The citation ledger (`Ledger`: one rate card per engine, the per-prompt table with a check or a cross per engine carrying its `aria-label`, or "not run"; the excerpts in a `details`; the competitors line; the "improve" link on an uncited prompt) and "Run now" (`RunLedger`, an `ApiAction` on `/api/visibility/ledger`). The off-site checklist global, the read-only `metrics` snapshots ("Snapshots", `Camera`), the editable `prompts` ("Prompts", `MessageCircleQuestion`) and the read-only `citations` ("Citations", `Quote`) under it. A "Visibility score" card on the dashboard with the ring and the three heaviest open items. ADR-049. |
 | Custom views | `modules/cms/admin/views/{registry.ts,gate.tsx}`, `ADMIN_VIEWS` in `icons.ts` | A page of ours in the panel: registered with Payload from the registry, listed in the sidebar and the palette like a global (admins only, by the registry's rule), gated by `adminView()` (a visitor to the login with the way back, an editor the "Admins only" sentence) because Payload renders a custom view with a `path` for anyone. Views are left out of the data paths that walk entities. ADR-048. |
 | Connections (Admin group) | `modules/connections/*`, `modules/cms/fields/secret-field.ts`, `modules/cms/admin/api-action.tsx` | Admin only. One row per AI account: kind, model, the key (`secretField`: encrypted, masked, kept when the mask comes back), rates, a monthly limit, `EnabledSwitch`; "Test connection" (`ApiAction` to `/api/connections/test`, held while the form is dirty) records its outcome in read-only sidebar fields; "Spent this month" and "Runs this month" are virtual, read from the runs log. ADR-047. |
-| Field widgets | `modules/cms/admin/fields/*` | `EnabledSwitch` (switch + the section's consequence), `IconSelect` (lucide tiles), `PlatformSelect` (brand SVG tiles), `SavedByField` (the `lastSavedBy` snapshot as one line, nothing on a create form), `WarningsField` (the post's soft editorial warnings as a list); all on `FieldShell` (label, description, error), the pickers on `ChoiceGrid` (radiogroup). |
+| Field widgets | `modules/cms/admin/fields/*` | `EnabledSwitch` (switch + the section's consequence), `IconSelect` (lucide tiles), `PlatformSelect` (brand SVG tiles), `SavedByField` (the `lastSavedBy` snapshot as one line, nothing on a create form), `WarningsField` (the post's soft editorial warnings as a list); all on `FieldShell` (label, description, error), the pickers on `ChoiceGrid` (radiogroup). `BilingualField` (`fields/bilingual/*`, §6a) is the exception: it hosts Payload's own inputs, not `FieldShell`. |
 | Preview | `lib/preview-token.ts`, `app/api/preview/*`, `modules/core/draft-bar.tsx` | The preview button opens a signed link → Next draft mode → the page with a warning bar; exit returns to the page. |
 
 **Links inside the admin are Payload's `Link`** (`@payloadcms/ui`): Next navigation with
@@ -188,6 +192,41 @@ labels (`.field-label .localized`, an em dash and the locale's name) is drawn as
 pill (ADR-044): the span's own text is hidden, a `::after` shows the code from
 `html[data-content-locale]`, which the header actions set from `useLocale()`; before
 hydration there is no pill rather than a wrong one.
+
+### 6a. Both languages at once
+
+Dhia's rule (2026-09-18, ADR-057): the two languages of a text are edited side by side, never
+by switching the page language. `describeFields()` gives every localised `text`, `textarea`
+and `select` field (one value, outside arrays and blocks, no widget of its own) the
+`BilingualField` component, so a new config gets it with no work and there is never a second
+place to edit a value.
+
+- **Layout.** Payload's own field for the open locale at the start, the same input for the
+  other locale at the end, in a two-column grid that stacks under 32 rem of container width
+  (`@container` on the root, so a narrow drawer stacks too). In a `row` the pair takes the
+  full line unless the config gives the field a `width`; the other row fields follow. Both
+  inputs are Payload's (`TextInput`, `TextareaInput`, `SelectInput`), so they look alike and
+  keep Payload's greys, radius and focus; the root therefore carries **no `data-admin-ui`**
+  (the shell's element reset would strip Payload's input box) and `data-admin-bilingual`
+  with the field's path for the e2e.
+- **The tag.** The other input's label repeats the field's label, the required star, and
+  the other locale's code in the locale pill (`.admin-locale-tag`, the same declarations as
+  ADR-044's `::after` pill, one rule in `admin.css`). A field with two pills is per language
+  and both are in front of you; a field with one pill (rich text, a list) follows the locale
+  control; a field with none is shared.
+- **Prefill and states.** The other locale is read once per document view (the REST API
+  with the editor's cookie, `fallback-locale=none`, `draft=true`), shared by every bilingual
+  field on the page, and read again after each save. While it loads the other input is
+  disabled with "Loading English…" as its placeholder; if the read fails the input stays
+  disabled and a red caption says what happened and the way out ("The English text could
+  not be loaded. Reload the page to edit it."). Read-only fields disable both inputs.
+- **Saving.** The other language's edits wait in the hidden `translations` JSON and are
+  written by the entity's `afterChange` hook on a Save or Publish, never on an autosave;
+  a refusal in the other language fails the whole save with a toast naming the field and
+  the language ("Title in English: This field is required."). After a save the other
+  input shows what was written, not the old prefill.
+- **Arabic strings** for the tag, the placeholder, the error and the locale note live in
+  `admin/fields/bilingual/strings.ts` as `{ en, ar }` pairs, under §5's rules.
 
 ## 7. States
 
