@@ -46,6 +46,7 @@ export function ConsentBar({ locale, copy }: { locale: Locale; copy: SiteCopy['c
         </Button>
         <Link
           href={localePath(locale, '/privacy')}
+          prefetch={false}
           className="ms-auto text-small font-medium text-primary hover:underline"
         >
           {copy.link}

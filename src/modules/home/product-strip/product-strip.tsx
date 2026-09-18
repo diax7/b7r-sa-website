@@ -59,6 +59,7 @@ export async function ProductStrip({ locale }: { locale: Locale }) {
             <li key={product.slug} className="contents">
               <Link
                 href={localePath(locale, `/products/${product.slug}`)}
+                prefetch={false}
                 className="strip-panel"
                 data-strip-panel={product.slug}
               >

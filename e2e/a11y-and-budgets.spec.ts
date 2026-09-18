@@ -192,6 +192,21 @@ test.describe('budgets (BRD 7.8, constitution IV)', () => {
     expect(html).toMatch(/<h2 id="legal-section-1">/);
   });
 
+  test('a page other than the home never downloads the hero photo or the Black font', async ({
+    page,
+  }) => {
+    // Prefetching the home hoisted its hero and font preloads into every other page's head
+    // (site audit 2026-09-18, item 4): the home links carry prefetch={false}.
+    const requests: string[] = [];
+    page.on('request', (r) => requests.push(r.url()));
+    await page.goto('/products');
+    await page.waitForLoadState('load');
+    await page.locator('footer').scrollIntoViewIfNeeded();
+    await page.waitForTimeout(1500);
+    expect(requests.filter((u) => /hero-set-|ITFRayatRound-Black/.test(u))).toEqual([]);
+    expect(await page.locator('link[rel="preload"][as="image"][media]').count()).toBe(0);
+  });
+
   test('the LCP photo of each template is fetched at high priority', async ({ page }) => {
     // `priority` on next/image only preloads; the fetchpriority attribute is what lets the
     // browser start the LCP image ahead of the scripts (site audit 2026-09-18, item 3).

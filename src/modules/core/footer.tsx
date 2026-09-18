@@ -59,6 +59,7 @@ export function Footer({
   copy: SiteCopy;
 }) {
   const footerCopy = copy.footer;
+  const home = localePath(locale, '/');
   const year = new Date().getFullYear();
   const socials = [
     { href: site.social.x, label: footerCopy.socialAria.x, Icon: XIcon },
@@ -76,8 +77,11 @@ export function Footer({
       <Container className="pt-16 pb-10 md:pt-20">
         <div className="grid grid-cols-2 gap-x-6 gap-y-12 lg:grid-cols-[1.4fr_1fr_1fr_1.4fr] lg:gap-8">
           <div className="col-span-2 flex flex-col items-center gap-5 text-center lg:col-span-1 lg:items-start lg:text-start">
+            {/* The home is never prefetched: its payload hoists the hero preloads into this
+                page's head (see the header). */}
             <Link
-              href={localePath(locale, '/')}
+              href={home}
+              prefetch={false}
               className="inline-block rounded-inner"
               aria-label={site.brandName}
             >
@@ -119,7 +123,11 @@ export function Footer({
           <FooterColumn title={footerCopy.linksTitle}>
             {navigation.primary.map((item) => (
               <li key={item.href}>
-                <Link href={item.href} className={linkCls}>
+                <Link
+                  href={item.href}
+                  prefetch={item.href === home ? false : null}
+                  className={linkCls}
+                >
                   {item.label}
                 </Link>
               </li>
