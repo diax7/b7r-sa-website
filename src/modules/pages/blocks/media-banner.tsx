@@ -2,6 +2,7 @@ import Image from 'next/image';
 import { Container } from '@/components/shared/container';
 import { Section } from '@/components/shared/section';
 import { SectionHeader } from '@/components/shared/section-header';
+import { PHOTO_QUALITY } from '@/lib/photo';
 import type { BlockProps } from '@/modules/pages/blocks/types';
 
 /** A wide photo with an optional caption (BRD 9.5 block set). */
@@ -28,6 +29,7 @@ export function MediaBannerBlock({ block, tone, anchor, heading }: BlockProps<'m
               src={block.media.src}
               alt={block.media.alt}
               fill
+              quality={PHOTO_QUALITY}
               sizes="(min-width: 1280px) 1200px, 100vw"
               className="object-cover"
             />

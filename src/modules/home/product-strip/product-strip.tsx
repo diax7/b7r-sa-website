@@ -8,6 +8,7 @@ import { SectionHeader } from '@/components/shared/section-header';
 import { copyFor } from '@/content/copy';
 import { getHome, getProduct } from '@/lib/cms';
 import { type Locale, localePath } from '@/lib/i18n';
+import { PHOTO_QUALITY } from '@/lib/photo';
 import { stripColorFor } from '@/lib/product-helpers';
 import { StripHint } from '@/modules/home/product-strip/strip-hint';
 
@@ -68,6 +69,7 @@ export async function ProductStrip({ locale }: { locale: Locale }) {
                   alt=""
                   fill
                   sizes="(min-width: 1024px) 20vw, 78vw"
+                  quality={PHOTO_QUALITY}
                   className="object-cover object-center"
                 />
                 <span className="strip-label">

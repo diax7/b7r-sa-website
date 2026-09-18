@@ -6,6 +6,7 @@ import { copyFor, type SiteCopy } from '@/content/copy';
 import type { PostCard as PostCardData } from '@/lib/cms/blog';
 import { cn } from '@/lib/cn';
 import { formatDate } from '@/lib/dates';
+import { PHOTO_QUALITY } from '@/lib/photo';
 import { type Locale, localePath } from '@/lib/i18n';
 import { readingLabel } from '@/lib/reading-time';
 
@@ -60,6 +61,7 @@ export function PostCard({
             src={post.cover.src}
             alt=""
             fill
+            quality={PHOTO_QUALITY}
             priority={priority}
             fetchPriority={priority ? 'high' : undefined}
             sizes={

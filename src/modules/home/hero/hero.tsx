@@ -4,6 +4,7 @@ import { copyFor } from '@/content/copy';
 import { getHome, getSiteSettings } from '@/lib/cms';
 import { env } from '@/lib/env';
 import { type Locale, localePath } from '@/lib/i18n';
+import { PHOTO_QUALITY } from '@/lib/photo';
 import { registerUrl } from '@/lib/utm';
 import { HeroCarousel, type HeroImageSet } from '@/modules/home/hero/hero-carousel';
 import { DESKTOP, DESKTOP_SIZES, MOBILE } from '@/modules/home/hero/renditions';
@@ -11,7 +12,7 @@ import { DESKTOP, DESKTOP_SIZES, MOBILE } from '@/modules/home/hero/renditions';
 // `priority` is deliberately not passed: it would call ReactDOM.preload() without a media
 // query and fetch both renditions. The media-gated <link>s below do the preloading.
 function imageSet(desktopSrc: string, mobileSrc: string): HeroImageSet {
-  const common = { alt: '', quality: 82 };
+  const common = { alt: '', quality: PHOTO_QUALITY };
   const d = getImageProps({ ...common, sizes: DESKTOP_SIZES, src: desktopSrc, ...DESKTOP }).props;
   const m = getImageProps({ ...common, sizes: '100vw', src: mobileSrc, ...MOBILE }).props;
   return {

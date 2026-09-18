@@ -6,6 +6,7 @@ import { type ReactNode, useState } from 'react';
 import { Card } from '@/components/shared/card';
 import type { ProductColor } from '@/content/schema';
 import { cn } from '@/lib/cn';
+import { PHOTO_QUALITY } from '@/lib/photo';
 
 const SIZES = '(min-width: 1024px) 400px, (min-width: 640px) 50vw, 100vw';
 
@@ -68,6 +69,7 @@ export function ProductCardMedia({
           alt={alt}
           fill
           sizes={SIZES}
+          quality={PHOTO_QUALITY}
           priority={priority}
           fetchPriority={lcp ? 'high' : undefined}
           className={cn(
@@ -81,6 +83,7 @@ export function ProductCardMedia({
             alt=""
             fill
             sizes={SIZES}
+            quality={PHOTO_QUALITY}
             className="object-cover opacity-0 transition-opacity duration-(--duration-slow) ease-(--ease-standard) group-hover:opacity-100 group-data-[preview]:opacity-0"
           />
         )}
