@@ -1,0 +1,42 @@
+[
+  {
+    "name": "hero-desktop-1920w",
+    "url": "/_next/image?url=%2Fapi%2Fpayload%2Fmedia%2Ffile%2Fhero-set-a-desktop.jpg&w=1920&q=82",
+    "type": "image/avif",
+    "bytes": 38436,
+    "dims": "1920x1080",
+    "file": "hero-desktop-1920w-before.png (crop 400px at 107,578 of 1920x1080, shown 2x)"
+  },
+  {
+    "name": "hero-mobile-1200w",
+    "url": "/_next/image?url=%2Fapi%2Fpayload%2Fmedia%2Ffile%2Fhero-set-a-mobile.jpg&w=1200&q=82",
+    "type": "image/avif",
+    "bytes": 19262,
+    "dims": "1080x1350",
+    "file": "hero-mobile-1200w-before.png (crop 400px at 16,772 of 1080x1350, shown 2x)"
+  },
+  {
+    "name": "product-card-828w",
+    "url": "/_next/image?url=%2Fapi%2Fpayload%2Fmedia%2Ffile%2Ftee-essential-black-front.jpg&w=828&q=75",
+    "type": "image/avif",
+    "bytes": 6648,
+    "dims": "828x828",
+    "file": "product-card-828w-before.png (crop 400px at 214,0 of 828x828, shown 2x)"
+  },
+  {
+    "name": "product-page-1200w",
+    "url": "/_next/image?url=%2Fapi%2Fpayload%2Fmedia%2Ffile%2Ftee-essential-white-front.jpg&w=1200&q=75",
+    "type": "image/avif",
+    "bytes": 7133,
+    "dims": "1000x1000",
+    "file": "product-page-1200w-before.png (crop 400px at 300,0 of 1000x1000, shown 2x)"
+  },
+  {
+    "name": "blog-cover-1920w",
+    "url": "/_next/image?url=%2Fapi%2Fpayload%2Fmedia%2Ffile%2Flifestyle-cover-pricing.jpg&w=1920&q=75",
+    "type": "image/avif",
+    "bytes": 33783,
+    "dims": "1600x900",
+    "file": "blog-cover-1920w-before.png (crop 400px at 552,448 of 1600x900, shown 2x)"
+  }
+]

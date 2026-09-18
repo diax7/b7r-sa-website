@@ -58,6 +58,13 @@ b7r.sa to go live.
 | 29 | The hero never grows wider than its photo; white on both sides beyond 1920 px (ADR-051) | *code* | done | `e2e/home-hero.spec.ts` at 2560 and 3440 |
 | 30 | The image builds where the platform builds from the repository (build args, migration inside the build) | *code* | done | Dockerfile, ADR-025 amended; the first build-arg build on 2026-09-17 found a production-only type error (the mock kind and the generated types), fixed the same day |
 | 31 | An outsider's read of the API: `connections`, `prompts`, `citations`, `payload-jobs`, `users` answer 403 anonymously; GraphQL is off; drafts are not served | *code* | done | `tests/access.test.ts`; checked on the review server 2026-09-17 |
+
+## Added 2026-09-19 (photo quality, ADR-029 amended)
+
+| # | Item | Owner | Status | Notes |
+|---|---|---|---|---|
+| 32 | The real photographs: the hero at 3000 px wide (both compositions, ADR-044) and the product photos at 2000 by 2000 exported from the PSDs in `resources/source-files`; the pipeline serves them whole the day they land | Dhia | open | Under `resources/hero/examples` and `resources/products/{slug}/`, then `pnpm assets` and row 33; or uploaded through the admin (RUNBOOK "Assets"). Row 3 stays for the crops |
+| 33 | Production after the merge: `pnpm exec tsx scripts/media-requality.ts --env .env.cranl.local --dry-run`, then without the flag (every seeded photo re-uploaded at the new encode under a new name, the old renditions deleted from the bucket), then `scripts/media-blur.ts --env .env.cranl.local` for any upload the pass did not cover | *code* / Dhia | open | Done on the review database 2026-09-19; the CDN caches an object as immutable for a year, which is why the names change (RUNBOOK "Assets") |
 | 32 | An external uptime monitor on `/api/health` every five minutes | Dhia | open | UptimeRobot or cron-job.org; the platform's own check restarts, the external one tells you |
 
 ## Added 2026-09-18 (the site audit, `docs/audits/2026-09-18-site.md`)
