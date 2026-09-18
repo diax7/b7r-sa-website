@@ -99,7 +99,7 @@ function toAuthor(doc: AuthorDoc): Author {
     slug: doc.slug,
     name: doc.name,
     role: doc.role,
-    bio: doc.bio ?? null,
+    bio: doc.bio?.trim() || null,
     photo: mediaUrl(doc.photo) ?? null,
     sameAs: (doc.sameAs ?? []).map((row) => row.url),
   };

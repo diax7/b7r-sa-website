@@ -90,7 +90,9 @@ export async function AuthorPage({
               ))}
             </ul>
           ) : (
-            <p className="text-body text-text-muted">{blogCopy.emptyHub}</p>
+            <p className="text-body text-text-muted" data-author-empty="">
+              {blogCopy.emptyAuthor}
+            </p>
           )}
           <Pagination
             base={localePath(locale, route)}

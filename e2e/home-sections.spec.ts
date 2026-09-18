@@ -77,7 +77,7 @@ test.describe('video (BRD 6.4.5, amended 2026-09-13)', () => {
         timeout: 10_000,
       })
       .toBe(true);
-    await expect(section.getByRole('link', { name: 'ابدأ براندك مجانًا' })).toHaveAttribute(
+    await expect(section.getByRole('link', { name: 'ابدأ براندك مجاناً' })).toHaveAttribute(
       'href',
       /utm_campaign=video/,
     );

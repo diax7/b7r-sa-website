@@ -16,7 +16,7 @@ export const navigation: Navigation = {
     { label: 'سياسة الخصوصية', href: '/privacy' },
     { label: 'الأسئلة الشائعة', href: '/faq' },
   ],
-  ctaLabel: 'ابدأ براندك مجانًا',
+  ctaLabel: 'ابدأ براندك مجاناً',
   skipLinkLabel: 'تخطَّ إلى المحتوى',
   menuOpenLabel: 'فتح القائمة',
   menuCloseLabel: 'إغلاق القائمة',

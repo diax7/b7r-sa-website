@@ -109,6 +109,7 @@ Every interface string of the English site, key for key with the Arabic bank of 
 | `contactForm.validation.name` | Enter your name |
 | `contactForm.validation.phone` | Enter a valid mobile number |
 | `contactForm.validation.email` | Enter a valid email address |
+| `contactForm.validation.inquiry` | Choose the inquiry type |
 | `contactForm.validation.message` | Write your message |
 | `contactEmail.subject` | New message from the website: {inquiryType} |
 | `contactEmail.replyOnWhatsapp` | Reply on WhatsApp |
@@ -163,6 +164,7 @@ Every interface string of the English site, key for key with the Arabic bank of 
 | `blog.author.role` | Founder of B7R Print |
 | `blog.allHubs` | All |
 | `blog.emptyHub` | No articles in this section yet. |
+| `blog.emptyAuthor` | No articles yet. |
 | `blog.copied` | Link copied |
 | `blog.toc` | In this article |
 | `blog.updatedPrefix` | Updated |

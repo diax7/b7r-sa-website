@@ -349,13 +349,13 @@ Every user-visible string in Level 1 is here. Copy it exactly, including punctua
 | Products | تيشيرت أساسي · تيشيرت أوفرسايز · هودي · بربتوز أطفال · حقيبة قماشية | قميص, سترة, شنطة |
 | Money | التكلفة (من بحر) · سعر البيع · ربحك · المحفظة · رصيد ترحيبي | السعر الأساسي, الرسوم |
 | Brand | براندك (CTA only, per Dhia) · علامتك التجارية (prose) | ماركتك |
-| Register | أنشئ حسابك / ابدأ براندك مجانًا | سجّل الآن (allowed only in the ribbon lead) |
+| Register | أنشئ حسابك / ابدأ براندك مجاناً | سجّل الآن (allowed only in the ribbon lead) |
 | Delivery | التوصيل, نوصّل | الشحن as the customer-facing verb (use شحن for the act B7R does) |
 
 ### 4.3 Global elements
 
 **Navigation (in order, RTL start to end):** الرئيسية · المنتجات · كيف نعمل · من نحن · المدونة · تواصل معنا
-**Header CTA:** ابدأ براندك مجانًا → `https://b7r.app/register?utm_source=b7r.sa&utm_medium=website&utm_campaign=header`
+**Header CTA:** ابدأ براندك مجاناً → `https://b7r.app/register?utm_source=b7r.sa&utm_medium=website&utm_campaign=header`
 **Header secondary:** none. *Amended 2026-09-14 (Dhia, ADR-044): the login link is gone from the header, the menu and the CMS; the language switch (an icon, §6.2) sits before the CTA.*
 **Skip link:** تخطَّ إلى المحتوى
 **Menu button labels (aria):** فتح القائمة / إغلاق القائمة
@@ -372,7 +372,7 @@ Every user-visible string in Level 1 is here. Copy it exactly, including punctua
 | 3 | من جدة إلى كل المملكة خلال 5 أيام | إنتاج محلي وشحن سريع، بدون جمارك ولا انتظار. |
 | 4 | متجرك في سلة أو زد؟ اربطه بضغطة | الطلبات تصلنا تلقائياً، وتوصل عميلك باسم متجرك. |
 
-**Hero primary CTA:** ابدأ براندك مجانًا → register URL with `utm_campaign=hero`
+**Hero primary CTA:** ابدأ براندك مجاناً → register URL with `utm_campaign=hero`
 **Hero secondary CTA (text link with mirrored arrow):** استكشف المنتجات → `/products`
 **Hero microcopy under the buttons:** رصيد ترحيبي 30 ريالاً، بدون بطاقة *(2026-09-13, Dhia: not shown in the hero any more; the line stays in the CMS for the About facts band)*
 **Hero proof chips (0 to 6, with check icons; the seed ships 3):** مجاني 100% · بدون حد أدنى للطلبات · توصيل لكل المملكة خلال 5 أيام
@@ -417,7 +417,7 @@ Every user-visible string in Level 1 is here. Copy it exactly, including punctua
 
 **Video section**
 - H2: شاهد كيف نطبع طلبك
-- Lead: من ملف التصميم إلى الطرد الجاهز، كل شيء يتم عندنا في جدة.
+- Lead: من ملف التصميم إلى الطرد الجاهز، كل شيء يحدث عندنا في جدة.
 - Play button aria: تشغيل الفيديو
 
 **Why us section**
@@ -455,7 +455,7 @@ Every user-visible string in Level 1 is here. Copy it exactly, including punctua
 **CTA ribbon (on every page, before the footer)**
 - H2: ابدأ اليوم واحصل على 30 ريالاً رصيداً ترحيبياً
 - Lead: سجّل مجاناً بدون بطاقة، وأطلق أول منتج خلال دقائق.
-- Button: ابدأ براندك مجانًا → register URL with `utm_campaign=ribbon&utm_content={page}`
+- Button: ابدأ براندك مجاناً → register URL with `utm_campaign=ribbon&utm_content={page}`
 
 ### 4.5 Footer
 
@@ -546,7 +546,7 @@ Every user-visible string in Level 1 is here. Copy it exactly, including punctua
 - Sending state: جارٍ الإرسال
 - Success: وصلتنا رسالتك. سنرد عليك قريباً.
 - Failure: تعذّر الإرسال. حاول مرة أخرى أو راسلنا على واتساب.
-- Validation: أدخل اسمك · أدخل رقم جوال صحيح · أدخل بريداً إلكترونياً صحيحاً · اكتب رسالتك
+- Validation: أدخل اسمك · أدخل رقم جوال صحيح · أدخل بريداً إلكترونياً صحيحاً · اختر نوع الاستفسار · اكتب رسالتك
 - Contact cards: واتساب; راسلنا مباشرة · البريد الإلكتروني: contact@b7r.sa · الهاتف: 0501699572 · تابعنا: (social icons)
 - Booking card title: احجز استشارة مجانية
 - Booking card text: 30 دقيقة نجاوب فيها على أسئلتك ونساعدك تبدأ.
@@ -568,7 +568,7 @@ Every user-visible string in Level 1 is here. Copy it exactly, including punctua
 - Key takeaways box title: أهم النقاط
 - Related title: مقالات ذات صلة
 - Share: شارك
-- In-post CTA block: title ابدأ براندك اليوم; text بدون رأس مال وبدون مخزون.: button ابدأ براندك مجانًا
+- In-post CTA block: title ابدأ براندك اليوم; text بدون رأس مال وبدون مخزون.: button ابدأ براندك مجاناً
 - Placeholder posts (3, marked as samples in the CMS data, real content to come in Level 3):
   1. كيف تبدأ براند ملابس في السعودية بدون مصنع وبدون مخزون
   2. ما هي الطباعة عند الطلب؟ شرح مبسط بالأمثلة السعودية
@@ -720,7 +720,7 @@ Each section below states purpose, layout (desktop ≥ 1024 px and mobile < 768 
 
 **Purpose:** orientation and one clear action.
 
-**Desktop layout:** height 88 px at rest (*amended 2026-09-14, Dhia: "a little bit more down"; was 72*); container; three zones in a flex row: start = colour logo (height 36 px, links to `/`), centre = nav links (17 px Medium, gap 32 px), end = the language switch then the primary `Button` "ابدأ براندك مجانًا" (md size). *Amended 2026-09-14 (Dhia, ADR-044): no login link anywhere. The switch is an icon: the translate glyph in a 44 px ring, its accessible name from the copy bank, a CSS tooltip naming the target language in that language; it links the current page in the other language and follows client-side navigation; a page without a twin goes to its section's listing in the other language.* Background transparent over the hero's top edge on `/` only; elsewhere white.
+**Desktop layout:** height 88 px at rest (*amended 2026-09-14, Dhia: "a little bit more down"; was 72*); container; three zones in a flex row: start = colour logo (height 36 px, links to `/`), centre = nav links (17 px Medium, gap 32 px), end = the language switch then the primary `Button` "ابدأ براندك مجاناً" (md size). *Amended 2026-09-14 (Dhia, ADR-044): no login link anywhere. The switch is an icon: the translate glyph in a 44 px ring, its accessible name from the copy bank, a CSS tooltip naming the target language in that language; it links the current page in the other language and follows client-side navigation; a page without a twin goes to its section's listing in the other language.* Background transparent over the hero's top edge on `/` only; elsewhere white.
 
 **Sticky behaviour:** `position: sticky; top: 0; z-index: 50`. *Amended 2026-09-17 (Dhia, ADR-053, "the island"): after the page scrolls more than 24 px the full-width bar settles, over 720 ms on a soft curve, into a capsule 12 px below the top edge with the brand's 13 px corner (the buttons' corner, not a pill): 880 px wide at most on desktop (the viewport minus 24 px on phones), 64 px tall (58 on phones), solid white with a hairline border and a blue-tinted shadow (`--shadow-island`), never a blur; the logo to 36 px, the links to 16 px with a 24 px gap. On phones the capsule holds the logo, the button and the burger. The previous rule (60 px, `rgba(255,255,255,.85)`, `backdrop-filter: blur(12px)`) is withdrawn.* It never hides on scroll.
 
@@ -732,7 +732,7 @@ Each section below states purpose, layout (desktop ≥ 1024 px and mobile < 768 
 
 ### 6.3 Footer, CTA ribbon, waves
 
-**6.3.1 CTA ribbon (component `CtaRibbon`, on every page before the footer):** full-bleed band, background `--color-primary`, white text, padding 72 px vertical (48 px mobile). Content centred: H2 (§4.4 ribbon), lead, then a white `Button` (primary text colour) "ابدأ براندك مجانًا". Top and bottom edges are `WaveDivider`s (§6.3.4) in the adjacent section's background colour so the band appears to sit between two gentle waves.
+**6.3.1 CTA ribbon (component `CtaRibbon`, on every page before the footer):** full-bleed band, background `--color-primary`, white text, padding 72 px vertical (48 px mobile). Content centred: H2 (§4.4 ribbon), lead, then a white `Button` (primary text colour) "ابدأ براندك مجاناً". Top and bottom edges are `WaveDivider`s (§6.3.4) in the adjacent section's background colour so the band appears to sit between two gentle waves.
 
 **6.3.2 Footer:** background `--color-navy`, text white at 90% opacity, links white, hover `--color-accent`. Top edge: a `WaveDivider` in the ribbon's primary blue so the ribbon flows into the footer. Layout desktop: 4 columns (logo + tagline + social icons 3 | روابط | السياسات | النشرة البريدية form). Second row: badges strip (payment logos at 28 px height in white rounded tiles, then SBC, Ministry of Commerce, then the Misk logo with its line), separated by a 1 px white/10% hairline. Third row: contact line and copyright. *Amended 2026-09-13 (Dhia): four social icons (X, Instagram, TikTok, WhatsApp) with the contact line (e-mail · phone) under them in the first column; the Misk logo without its line; the third row is the copyright alone, centred.* *Amended 2026-09-14 (Dhia, ADR-044): the white logo is 48 px (was 40). Below 1024 px: the brand block (logo, tagline, socials, contact line) spans the row and centres; روابط and السياسات share one row in two start-aligned columns; the newsletter spans the row; the badges wrap centred.*
 
@@ -1649,7 +1649,7 @@ These are the current b7r.sa policies with the corrections Dhia approved: draft 
 **4. الأسعار والدفع**
 - الأسعار المعروضة تشمل تكلفة المنتج والطباعة، وتُضاف رسوم الشحن حسب شركة الشحن المختارة.
 - تُحسب الضرائب والرسوم وفق الأنظمة المعمول بها في المملكة العربية السعودية.
-- يتم الدفع عبر وسائل الدفع الإلكترونية المعتمدة في المنصة.
+- يدفع العميل عبر وسائل الدفع الإلكترونية المعتمدة في المنصة.
 - في حال فشل الدفع أو إلغاء الطلب، يُعاد المبلغ وفق سياسة الإلغاء المذكورة أدناه.
 
 **5. حقوق الملكية الفكرية**
@@ -1702,7 +1702,7 @@ These are the current b7r.sa policies with the corrections Dhia approved: draft 
 
 **6. سياسة الإرجاع والتعويض**
 - جميع منتجاتنا تُنفَّذ حسب الطلب، لذلك لا نقبل الإرجاع أو الاستبدال بعد تنفيذ الطلب.
-- التعويض أو إعادة الطباعة يتم فقط إذا كان الخطأ من طرفنا، مثل عيب في الطباعة أو تلف في المنتج.
+- نعوّض أو نعيد الطباعة فقط إذا كان الخطأ من طرفنا، مثل عيب في الطباعة أو تلف في المنتج.
 - في حال وجود خطأ من طرفنا: نعيد الطباعة والشحن مجاناً، أو نعيد المبلغ المدفوع حسب الحالة.
 - يجب رفع الشكوى خلال 10 أيام من استلام الطلب، مع صور توضح المشكلة.
 
@@ -1774,7 +1774,7 @@ See §5.2. Keep the machine-readable version in `src/lib/redirects.ts` and a tes
 
 **المتاجر والربط**
 12. ما المتاجر التي أقدر أربطها؟، سلة وزد وشوبيفاي، والربط مجاني.
-13. كيف يتم الربط؟، بتفويض آمن من داخل متجرك بضغطة واحدة، بدون مشاركة أي بيانات حساسة.
+13. كيف أربط متجري؟، بتفويض آمن من داخل متجرك بضغطة واحدة، بدون مشاركة أي بيانات حساسة.
 14. هل أقدر أربط أكثر من متجر؟، نعم، اربط أكثر من متجر على أكثر من منصة من الحساب نفسه.
 
 **الجودة والدعم**
@@ -1905,7 +1905,7 @@ Decision history: `docs/00-decisions-log.md` (rounds 1–4 with Dhia, 2026-09-12
 | رصيد ترحيبي | welcomeCredit |
 | المحفظة | wallet |
 | منطقة الطباعة | printArea |
-| ابدأ براندك مجانًا | ctaPrimary |
+| ابدأ براندك مجاناً | ctaPrimary |
 
 ---
 
@@ -2024,6 +2024,7 @@ Every interface string of the English site, key for key with the Arabic bank of 
 | `contactForm.validation.name` | Enter your name |
 | `contactForm.validation.phone` | Enter a valid mobile number |
 | `contactForm.validation.email` | Enter a valid email address |
+| `contactForm.validation.inquiry` | Choose the inquiry type |
 | `contactForm.validation.message` | Write your message |
 | `contactEmail.subject` | New message from the website: {inquiryType} |
 | `contactEmail.replyOnWhatsapp` | Reply on WhatsApp |
@@ -2078,6 +2079,7 @@ Every interface string of the English site, key for key with the Arabic bank of 
 | `blog.author.role` | Founder of B7R Print |
 | `blog.allHubs` | All |
 | `blog.emptyHub` | No articles in this section yet. |
+| `blog.emptyAuthor` | No articles yet. |
 | `blog.copied` | Link copied |
 | `blog.toc` | In this article |
 | `blog.updatedPrefix` | Updated |

@@ -100,7 +100,7 @@ test.describe('hero (BRD 6.4.1)', () => {
     await page.goto('/');
     const cta = page.locator('section.hero a[data-location="hero"]');
     await expect(cta).toHaveAttribute('href', /utm_campaign=hero/);
-    await expect(cta).toHaveText('ابدأ براندك مجانًا');
+    await expect(cta).toHaveText('ابدأ براندك مجاناً');
   });
 
   // Beyond Full HD the hero keeps its photo's width, centred, white on both sides, and the

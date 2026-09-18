@@ -59,7 +59,7 @@ export const faqEn: Record<string, { question: string; answer: string }> = {
     question: 'Which stores can I connect?',
     answer: 'Salla, Zid and Shopify, and connecting is free.',
   },
-  'كيف يتم الربط؟': {
+  'كيف أربط متجري؟': {
     question: 'How does the connection work?',
     answer:
       'Through a secure authorisation from inside your store in one click, without sharing any sensitive data.',

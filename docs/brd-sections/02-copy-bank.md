@@ -27,13 +27,13 @@ Every user-visible string in Level 1 is here. Copy it exactly, including punctua
 | Products | تيشيرت أساسي · تيشيرت أوفرسايز · هودي · بربتوز أطفال · حقيبة قماشية | قميص, سترة, شنطة |
 | Money | التكلفة (من بحر) · سعر البيع · ربحك · المحفظة · رصيد ترحيبي | السعر الأساسي, الرسوم |
 | Brand | براندك (CTA only, per Dhia) · علامتك التجارية (prose) | ماركتك |
-| Register | أنشئ حسابك / ابدأ براندك مجانًا | سجّل الآن (allowed only in the ribbon lead) |
+| Register | أنشئ حسابك / ابدأ براندك مجاناً | سجّل الآن (allowed only in the ribbon lead) |
 | Delivery | التوصيل, نوصّل | الشحن as the customer-facing verb (use شحن for the act B7R does) |
 
 ### 4.3 Global elements
 
 **Navigation (in order, RTL start to end):** الرئيسية · المنتجات · كيف نعمل · من نحن · المدونة · تواصل معنا
-**Header CTA:** ابدأ براندك مجانًا → `https://b7r.app/register?utm_source=b7r.sa&utm_medium=website&utm_campaign=header`
+**Header CTA:** ابدأ براندك مجاناً → `https://b7r.app/register?utm_source=b7r.sa&utm_medium=website&utm_campaign=header`
 **Header secondary:** none. *Amended 2026-09-14 (Dhia, ADR-044): the login link is gone from the header, the menu and the CMS; the language switch (an icon, §6.2) sits before the CTA.*
 **Skip link:** تخطَّ إلى المحتوى
 **Menu button labels (aria):** فتح القائمة / إغلاق القائمة
@@ -50,7 +50,7 @@ Every user-visible string in Level 1 is here. Copy it exactly, including punctua
 | 3 | من جدة إلى كل المملكة خلال 5 أيام | إنتاج محلي وشحن سريع، بدون جمارك ولا انتظار. |
 | 4 | متجرك في سلة أو زد؟ اربطه بضغطة | الطلبات تصلنا تلقائياً، وتوصل عميلك باسم متجرك. |
 
-**Hero primary CTA:** ابدأ براندك مجانًا → register URL with `utm_campaign=hero`
+**Hero primary CTA:** ابدأ براندك مجاناً → register URL with `utm_campaign=hero`
 **Hero secondary CTA (text link with mirrored arrow):** استكشف المنتجات → `/products`
 **Hero microcopy under the buttons:** رصيد ترحيبي 30 ريالاً، بدون بطاقة *(2026-09-13, Dhia: not shown in the hero any more; the line stays in the CMS for the About facts band)*
 **Hero proof chips (0 to 6, with check icons; the seed ships 3):** مجاني 100% · بدون حد أدنى للطلبات · توصيل لكل المملكة خلال 5 أيام
@@ -95,7 +95,7 @@ Every user-visible string in Level 1 is here. Copy it exactly, including punctua
 
 **Video section**
 - H2: شاهد كيف نطبع طلبك
-- Lead: من ملف التصميم إلى الطرد الجاهز، كل شيء يتم عندنا في جدة.
+- Lead: من ملف التصميم إلى الطرد الجاهز، كل شيء يحدث عندنا في جدة.
 - Play button aria: تشغيل الفيديو
 
 **Why us section**
@@ -133,7 +133,7 @@ Every user-visible string in Level 1 is here. Copy it exactly, including punctua
 **CTA ribbon (on every page, before the footer)**
 - H2: ابدأ اليوم واحصل على 30 ريالاً رصيداً ترحيبياً
 - Lead: سجّل مجاناً بدون بطاقة، وأطلق أول منتج خلال دقائق.
-- Button: ابدأ براندك مجانًا → register URL with `utm_campaign=ribbon&utm_content={page}`
+- Button: ابدأ براندك مجاناً → register URL with `utm_campaign=ribbon&utm_content={page}`
 
 ### 4.5 Footer
 
@@ -224,7 +224,7 @@ Every user-visible string in Level 1 is here. Copy it exactly, including punctua
 - Sending state: جارٍ الإرسال
 - Success: وصلتنا رسالتك. سنرد عليك قريباً.
 - Failure: تعذّر الإرسال. حاول مرة أخرى أو راسلنا على واتساب.
-- Validation: أدخل اسمك · أدخل رقم جوال صحيح · أدخل بريداً إلكترونياً صحيحاً · اكتب رسالتك
+- Validation: أدخل اسمك · أدخل رقم جوال صحيح · أدخل بريداً إلكترونياً صحيحاً · اختر نوع الاستفسار · اكتب رسالتك
 - Contact cards: واتساب; راسلنا مباشرة · البريد الإلكتروني: contact@b7r.sa · الهاتف: 0501699572 · تابعنا: (social icons)
 - Booking card title: احجز استشارة مجانية
 - Booking card text: 30 دقيقة نجاوب فيها على أسئلتك ونساعدك تبدأ.
@@ -246,7 +246,7 @@ Every user-visible string in Level 1 is here. Copy it exactly, including punctua
 - Key takeaways box title: أهم النقاط
 - Related title: مقالات ذات صلة
 - Share: شارك
-- In-post CTA block: title ابدأ براندك اليوم; text بدون رأس مال وبدون مخزون.: button ابدأ براندك مجانًا
+- In-post CTA block: title ابدأ براندك اليوم; text بدون رأس مال وبدون مخزون.: button ابدأ براندك مجاناً
 - Placeholder posts (3, marked as samples in the CMS data, real content to come in Level 3):
   1. كيف تبدأ براند ملابس في السعودية بدون مصنع وبدون مخزون
   2. ما هي الطباعة عند الطلب؟ شرح مبسط بالأمثلة السعودية

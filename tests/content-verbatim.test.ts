@@ -52,6 +52,7 @@ const TODO_COPY = new Set<string>([
   gonePage.title,
   blogCopy.allHubs,
   blogCopy.emptyHub,
+  blogCopy.emptyAuthor,
   blogCopy.copied,
   // Level 3 template strings and the hub and author copy (BRD 10.1 names them, not their
   // text); listed for Dhia in Appendix G.

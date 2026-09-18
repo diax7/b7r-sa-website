@@ -97,7 +97,7 @@ export const faq: FaqItem[] = ordered([
   },
   {
     group: 'المتاجر والربط',
-    question: 'كيف يتم الربط؟',
+    question: 'كيف أربط متجري؟',
     answer: 'بتفويض آمن من داخل متجرك بضغطة واحدة، بدون مشاركة أي بيانات حساسة.',
     showOnHome: false,
   },
