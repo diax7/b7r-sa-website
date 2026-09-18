@@ -25,6 +25,24 @@ interface TableProps {
   language: string;
 }
 
+/**
+ * "2026-09-01 to 2026-09-17" in words, never an arrow (audit 6.3): each day key is shown as it
+ * is (design system §5) inside its own `dir="ltr"` span, the words between them in the
+ * language of the panel.
+ */
+function DayRange({ from, to, s }: { from: string; to: string; s: AdminStrings['traffic'] }) {
+  const [before, between, after] = s.page.window.split(/\{from\}|\{to\}/);
+  return (
+    <>
+      {before}
+      <span dir="ltr">{from}</span>
+      {between}
+      <span dir="ltr">{to}</span>
+      {after}
+    </>
+  );
+}
+
 function rangeOf(raw: string | string[] | undefined): (typeof RANGES)[number] {
   const n = Number(Array.isArray(raw) ? raw[0] : raw);
   return RANGES.find((r) => r === n) ?? 30;
@@ -109,11 +127,12 @@ function Channels({ summary, s, language }: TableProps) {
             <td className={td}>
               <Bar percent={share(c.hits, summary.landings)} />
             </td>
-            {/* Day keys are shown as they are (design system §5); the pair reads left to right. */}
             <td className={cn(td, 'text-text-muted tabular-nums')}>
-              <span dir="ltr">
-                {c.firstDay === c.lastDay ? c.firstDay : `${c.firstDay} → ${c.lastDay}`}
-              </span>
+              {c.firstDay === c.lastDay ? (
+                <span dir="ltr">{c.firstDay}</span>
+              ) : (
+                <DayRange from={c.firstDay} to={c.lastDay} s={s} />
+              )}
             </td>
           </tr>
         ))}

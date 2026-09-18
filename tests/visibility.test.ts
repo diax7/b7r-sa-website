@@ -1,10 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import type { LexicalState } from '@/lib/lexical';
 import { crawl } from '@/modules/visibility/rules/crawl';
 import { emitted, extractability } from '@/modules/visibility/rules/extractability';
 import { identity } from '@/modules/visibility/rules/identity';
 import {
-  CHECKLIST_ITEMS,
   corroboration,
   isBrandQuery,
   isCategoryQuery,
@@ -15,149 +13,25 @@ import {
   isQuestion,
   openingWords,
   prorata,
+  same,
   words as wordCount,
 } from '@/modules/visibility/rules/shared';
 import { blogPostBody, blogPosts } from '@/content/seed/blog';
 import { blogPostBodyEn } from '@/content/seed/en/blog';
 import { ITEMS, SECTIONS, THRESHOLDS } from '@/modules/visibility/rules/weights';
-import { findings, scoreOf } from '@/modules/visibility/score';
+import { findings, pickScore, scoreOf } from '@/modules/visibility/score';
 import type { Snapshot } from '@/modules/visibility/types';
-
-const paragraph = (text: string) => ({
-  type: 'paragraph',
-  children: [{ type: 'text', text }],
-});
-const h2 = (text: string) => ({ type: 'heading', tag: 'h2', children: [{ type: 'text', text }] });
-const body = (...children: unknown[]): LexicalState =>
-  ({ root: { type: 'root', children } }) as unknown as LexicalState;
-const words = (n: number) => Array.from({ length: n }, (_, i) => `كلمة${i}`).join(' ');
-
-/** A filled production site: everything an admin controls is right, nothing outside is connected. */
-function filled(overrides: Partial<Snapshot> = {}): Snapshot {
-  return {
-    at: '2026-09-16T09:00:00.000Z',
-    adminRoute: '/admin',
-    isProductionSite: true,
-    englishOn: true,
-    indexNow: true,
-    gaConfigured: true,
-    site: {
-      tagline: { ar: 'اطبع براندك بلا مخزون', en: 'Print your brand with no stock' },
-      social: {
-        x: 'https://x.com/b7rprint',
-        instagram: 'https://instagram.com/b7rprint',
-        tiktok: 'https://tiktok.com/@b7rprint',
-      },
-    },
-    titleTemplate: { ar: '%s | بحر برنت', en: '%s | B7R Print' },
-    routes: [
-      {
-        route: '/',
-        title: { ar: 'بحر برنت: طباعة عند الطلب', en: 'B7R Print: print on demand' },
-        description: {
-          ar: 'وصف الرئيسية بطول مناسب لمحركات البحث في السعودية.',
-          en: 'A home description of a fitting length for search engines in Saudi Arabia.',
-        },
-      },
-    ],
-    pages: [
-      {
-        id: 1,
-        slug: 'about',
-        title: { ar: 'من نحن', en: 'About' },
-        blocks: [{ type: 'story', asOf: null }],
-        seo: {
-          title: { ar: 'من نحن', en: 'About B7R' },
-          description: {
-            ar: 'قصة بحر برنت وفريقها ومن أين تشحن.',
-            en: 'The story of B7R Print, its team and where it ships from.',
-          },
-        },
-      },
-    ],
-    products: [
-      {
-        id: 2,
-        slug: 'hoodie',
-        title: { ar: 'هودي', en: 'Hoodie' },
-        shortDescription: {
-          ar: 'هودي قطني ثقيل بطباعة واضحة.',
-          en: 'A heavy cotton hoodie with a crisp print.',
-        },
-        baseCost: 89,
-        sortOrder: 1,
-      },
-    ],
-    posts: [
-      {
-        id: 3,
-        slug: 'start-a-brand',
-        title: { ar: 'كيف تبدأ براند ملابس', en: 'How to start a clothing brand' },
-        excerpt: { ar: 'مقدمة المقال', en: 'The post intro' },
-        seo: {
-          title: { ar: 'كيف تبدأ براند ملابس بلا مخزون', en: 'Start a clothing brand with no stock' },
-          description: {
-            ar: 'خطوات البدء بدون مصنع ولا مخزون، بالأرقام.',
-            en: 'The steps to start with no factory and no stock, in numbers.',
-          },
-        },
-        body: {
-          ar: body(paragraph(words(50)), h2('كيف أبدأ؟'), paragraph('نص')),
-          en: body(
-            paragraph(Array.from({ length: 45 }, () => 'word').join(' ')),
-            h2('What does it cost?'),
-          ),
-        },
-        author: 4,
-      },
-    ],
-    hubs: [
-      {
-        id: 5,
-        slug: 'getting-started',
-        title: { ar: 'البداية', en: 'Getting started' },
-        lead: { ar: 'أول خطوة نحو براندك.', en: 'The first step towards your brand.' },
-      },
-    ],
-    authors: [
-      {
-        id: 4,
-        name: { ar: 'ضياء', en: 'Dhia' },
-        bio: { ar: 'مؤسس بحر برنت', en: 'Founder' },
-        photo: 7,
-        sameAs: 1,
-      },
-    ],
-    faqs: Array.from({ length: 6 }, (_, i) => ({
-      id: 10 + i,
-      question: { ar: `سؤال ${i}؟`, en: `Question ${i}?` },
-    })),
-    media: [{ id: 7, filename: 'dhia.jpg', alt: { ar: 'ضياء', en: 'Dhia' }, usedBy: ['ضياء'] }],
-    checklist: Object.fromEntries(CHECKLIST_ITEMS.map((i) => [i.key, true])),
-    connections: [],
-    landings30d: 12,
-    prompts: [
-      ...Array.from({ length: 5 }, () => ({
-        language: 'ar' as const,
-        enabled: true,
-        namesBrand: false,
-      })),
-      ...Array.from({ length: 5 }, () => ({
-        language: 'en' as const,
-        enabled: true,
-        namesBrand: false,
-      })),
-    ],
-    lastLedgerRunAt: null,
-    citedRate: null,
-    pagespeed: [],
-    searchConsole: null,
-    ...overrides,
-  };
-}
+import { body, filled, h2, paragraph, words } from './helpers/visibility-snapshot';
 
 /** Documents for a pro-rata rule, one per flag. */
-const checks = (oks: boolean[]) => oks.map((ok, i) => ({ ok, label: `d${i}`, href: `/x/${i}` }));
+const checks = (oks: boolean[]) =>
+  oks.map((ok, i) => ({ ok, label: same(`d${i}`), href: `/x/${i}` }));
+const t = same('t');
+const g = same('g');
+
+/** The extractability rules over a site whose only pages are the GEO ones (E6, E7). */
+const geo = (pages: Snapshot['pages'], at = '2026-09-16T10:00:00.000Z') =>
+  extractability(filled({ pages, at }));
 
 const by = (list: ReturnType<typeof findings>, key: string) => {
   const f = list.find((x) => x.key === key);
@@ -189,6 +63,30 @@ describe('the visibility score: the table (ADR-049)', () => {
     expect(findings(filled()).map((f) => f.key)).toEqual(ITEMS.map((i) => i.key));
   });
 
+  it('picks one language for a page (ADR-056): the sentences and the listed documents, the numbers untouched', () => {
+    const score = scoreOf(filled({ posts: [{ ...filled().posts[0]!, title: { ar: 'عنوان' } }] }));
+    const ar = pickScore(score, 'ar');
+    const en = pickScore(score, 'en');
+    expect([ar.overall, ar.siteOnly]).toEqual([score.overall, score.siteOnly]);
+    expect(ar.findings.map((f) => f.key)).toEqual(score.findings.map((f) => f.key));
+    expect(ar.sections.map((s) => [s.key, s.percent])).toEqual(
+      score.sections.map((s) => [s.key, s.percent]),
+    );
+    for (const f of ar.findings) {
+      expect(f.title, f.key).toMatch(/[؀-ۿ]/);
+      expect(f.guide, f.key).toMatch(/[؀-ۿ]/);
+    }
+    expect(en.findings.map((f) => f.title)).toEqual(score.findings.map((f) => f.title.en));
+    const c5 = ar.findings.find((f) => f.key === 'C5');
+    expect(c5?.items?.[0]).toEqual({
+      label: 'عنوان (مقال)',
+      href: '/admin/collections/posts/3?locale=en',
+    });
+    expect(en.sections[0]?.facts.map((f) => f.text)).toEqual(
+      score.sections[0]?.facts.map((f) => f.text.en),
+    );
+  });
+
   it('scores a filled site with no service at the floor, and the site-only number at what is controllable', () => {
     const score = scoreOf(filled());
     // Everything controllable is right except E6 and E7 (project 4): 74 minus 7.
@@ -211,25 +109,26 @@ describe('the visibility score: the rules (ADR-049)', () => {
       key: 'C5',
       section: 'crawl',
       checks: checks([true, true, false, false, true]),
-      title: 't',
-      guide: 'g',
+      title: t,
+      guide: g,
     });
     expect(partial.status).toBe('next');
     expect(partial.earned).toBe(3);
-    expect(partial.items?.map((i) => i.label)).toEqual(['d2', 'd3']);
+    expect(partial.items?.map((i) => i.label.en)).toEqual(['d2', 'd3']);
     expect(partial.count).toEqual({ done: 3, total: 5 });
+    expect(prorata({ key: 'C5', section: 'crawl', checks: [], title: t, guide: g })).toMatchObject({
+      status: 'done',
+      earned: 5,
+    });
     expect(
-      prorata({ key: 'C5', section: 'crawl', checks: [], title: 't', guide: 'g' }),
-    ).toMatchObject({ status: 'done', earned: 5 });
-    expect(
-      prorata({ key: 'C5', section: 'crawl', checks: checks([false]), title: 't', guide: 'g' }),
+      prorata({ key: 'C5', section: 'crawl', checks: checks([false]), title: t, guide: g }),
     ).toMatchObject({ status: 'missing', earned: 0 });
     const many = prorata({
       key: 'E2',
       section: 'extractability',
       checks: checks(Array.from({ length: 14 }, () => false)),
-      title: 't',
-      guide: 'g',
+      title: t,
+      guide: g,
     });
     expect(many.items).toHaveLength(10);
   });
@@ -249,11 +148,11 @@ describe('the visibility score: the rules (ADR-049)', () => {
     );
     expect(by(bare, 'I1').status).toBe('missing');
     expect(by(bare, 'I2')).toMatchObject({ status: 'next', count: { done: 1, total: 3 } });
-    expect(by(bare, 'I2').items?.map((i) => i.label)).toEqual(['X', 'TikTok']);
+    expect(by(bare, 'I2').items?.map((i) => i.label.en)).toEqual(['X', 'TikTok']);
     expect(by(bare, 'I3').status).toBe('missing');
     expect(by(bare, 'I4')).toMatchObject({
       status: 'missing',
-      items: [{ label: 'ضياء', href: '/admin/collections/authors/4' }],
+      items: [{ label: { en: 'ضياء', ar: 'ضياء' }, href: '/admin/collections/authors/4' }],
     });
     // An author with no published post is not judged.
     const unused = identity(
@@ -288,12 +187,16 @@ describe('the visibility score: the rules (ADR-049)', () => {
       }),
     );
     expect(by(review, 'C1')).toMatchObject({ status: 'missing', earned: 0 });
-    expect(by(review, 'C1').guide).toMatch(/noindex/);
+    expect(by(review, 'C1').guide.en).toMatch(/noindex/);
+    expect(by(review, 'C1').guide.ar).toMatch(/noindex/);
     expect(by(review, 'C2').status).toBe('missing');
     expect(by(review, 'C3').status).toBe('missing');
     // Four documents and one author, the post without English: 4 of 5.
     expect(by(review, 'C5')).toMatchObject({ status: 'next', count: { done: 4, total: 5 } });
-    expect(by(review, 'C5').items?.[0]?.href).toBe('/admin/collections/posts/3?locale=en');
+    expect(by(review, 'C5').items?.[0]).toEqual({
+      label: { en: 'عنوان (post)', ar: 'عنوان (مقال)' },
+      href: '/admin/collections/posts/3?locale=en',
+    });
     // Not in English: nothing to judge.
     expect(by(crawl(filled({ englishOn: false })), 'C5')).toMatchObject({
       status: 'done',
@@ -304,13 +207,14 @@ describe('the visibility score: the rules (ADR-049)', () => {
   it('extractability: the emitted titles, the alts, the openings, the questions, the FAQ, the project-4 items', () => {
     const s = filled();
     const titles = emitted(s);
-    expect(titles.find((t) => t.label === '/ (ar)')?.title).toBe('بحر برنت: طباعة عند الطلب');
-    expect(titles.find((t) => t.label === 'هودي (product, ar)')?.title).toBe(
-      'هودي للطباعة عند الطلب | بحر برنت',
-    );
-    expect(titles.find((t) => t.label === 'Hoodie (product, en)')?.description).toContain('89');
+    const labelled = (en: string) => titles.find((e) => e.label.en === en);
+    expect(labelled('/ (Arabic)')?.title).toBe('بحر برنت: طباعة عند الطلب');
+    expect(labelled('هودي (product, Arabic)')?.title).toBe('هودي للطباعة عند الطلب | بحر برنت');
+    expect(labelled('هودي (product, Arabic)')?.label.ar).toBe('هودي (منتج، العربية)');
+    expect(labelled('Hoodie (product, English)')?.description).toContain('89');
     expect(
-      titles.find((t) => t.label.startsWith('كيف تبدأ') && t.label.endsWith('(post, ar)'))?.title,
+      titles.find((e) => e.label.en.startsWith('كيف تبدأ') && e.label.en.endsWith('(post, Arabic)'))
+        ?.title,
     ).toBe('كيف تبدأ براند ملابس بلا مخزون | بحر برنت');
     const ok = extractability(s);
     expect(by(ok, 'E1').status).toBe('done');
@@ -350,13 +254,16 @@ describe('the visibility score: the rules (ADR-049)', () => {
       }),
     );
     expect(by(bad, 'E1').items?.[0]).toEqual({
-      label: '/ (ar)',
+      label: { en: '/ (Arabic)', ar: '/ (العربية)' },
       href: '/admin/globals/seo-defaults',
     });
     expect(by(bad, 'E2')).toMatchObject({
       status: 'missing',
       items: [
-        { label: 'dhia.jpg (ضياء, home hero…)', href: '/admin/collections/media/7?locale=en' },
+        {
+          label: { en: 'dhia.jpg (ضياء, home hero…)', ar: 'dhia.jpg (ضياء، home hero…)' },
+          href: '/admin/collections/media/7?locale=en',
+        },
       ],
     });
     expect(by(bad, 'E3')).toMatchObject({ status: 'missing', count: { done: 0, total: 2 } });
@@ -364,8 +271,6 @@ describe('the visibility score: the rules (ADR-049)', () => {
     expect(by(bad, 'E5')).toMatchObject({ status: 'missing', count: { done: 0, total: 2 } });
     expect(by(bad, 'E7').status).toBe('done');
     // E6 reads the FAQ page's section; E7 the compare page's as-of date (ADR-050).
-    const geo = (pages: Snapshot['pages'], at = '2026-09-16T10:00:00.000Z') =>
-      extractability(filled({ pages, at }));
     const faqPage = {
       id: 9,
       slug: 'faq',
@@ -379,9 +284,10 @@ describe('the visibility score: the rules (ADR-049)', () => {
     });
     expect(by(geo([{ ...faqPage, blocks: [] }]), 'E6')).toMatchObject({
       status: 'missing',
-      guide: expect.stringMatching(/no FAQ section/),
+      guide: { en: expect.stringMatching(/no FAQ section/) },
     });
-    expect(by(geo([]), 'E6').guide).toMatch(/not published/);
+    expect(by(geo([]), 'E6').guide.en).toMatch(/not published/);
+    expect(by(geo([]), 'E6').guide.ar).toMatch(/غير منشورة/);
     const compare = s.pages[0]!;
     const comparePage = {
       ...compare,
@@ -391,7 +297,7 @@ describe('the visibility score: the rules (ADR-049)', () => {
     };
     expect(by(geo([comparePage]), 'E7')).toMatchObject({
       status: 'next',
-      guide: expect.stringMatching(/older than 180 days/),
+      guide: { en: expect.stringMatching(/older than 180 days/) },
       href: '/admin/collections/pages/8',
     });
     expect(by(geo([comparePage], '2026-08-27T00:00:00.000Z'), 'E7').status).toBe('done');
@@ -459,7 +365,7 @@ describe('the visibility score: the rules (ADR-049)', () => {
   it('signals: PageSpeed by the median of three, impressions, a category query, the cited-rate', () => {
     const none = signals(filled());
     expect(none.every((f) => f.status === 'missing')).toBe(true);
-    expect(by(none, 'P1').guide).toMatch(/Connect PageSpeed/);
+    expect(by(none, 'P1').guide.en).toMatch(/Connect PageSpeed/);
     const good = signals(
       filled({
         // Keyed by URL: the night that failed /p is left out for /p, not shifted onto /blog.

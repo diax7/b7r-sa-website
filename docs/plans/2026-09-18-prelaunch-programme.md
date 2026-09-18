@@ -68,9 +68,14 @@ motion); the CTO's GO; the temporary domain checked after the merge.
 - [ ] **Dashboard numbers**: what matters at a glance (visits and sources over 7 and 30 days,
   citations and the cited rate, drafts waiting, published this week, jobs failed, the
   engine's spend and limits, the ledger's next run), each a link to its place.
-- [ ] **Text and organisation review**: every label, description and empty state read for
+- [x] **Text and organisation review**: every label, description and empty state read for
   clarity in both languages; forms reorganised where the audit says; the admin design
-  system doc updated.
+  system doc updated. Done in two PRs: `admin/text-review` wrote the visibility rules'
+  seventy sentences in both languages with arrows as words and no environment variable or
+  code path in a guide (audit 2.19, 6.3; ADR-056 amended, design system §5a), the Score
+  page's wait answers and the traffic date range the same; `admin/audit-fixes` relabelled
+  the collections and the description maps and reorganised the forms (the audit's items 3
+  and 7).
 - [ ] **Side-by-side bilingual editing**: the approach settled with the CTO before code (a
   custom field wrapper for localized fields showing both languages at once, saved in one
   go), applied to every localized text, textarea and select field, with rich text handled

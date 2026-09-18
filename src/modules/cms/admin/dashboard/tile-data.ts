@@ -21,7 +21,7 @@ export interface TileInputs {
   /** The range and the double range, so the previous range is the difference. */
   traffic: { current: TrafficSummary; double: TrafficSummary } | null | undefined;
   ledger: LedgerReading | null | undefined;
-  score: { score: Score; trend: ScoreTrend | null } | null | undefined;
+  score: { score: Score<string>; trend: ScoreTrend | null } | null | undefined;
   published: PublishedCount[] | null | undefined;
   drafts: DraftCount[] | null | undefined;
 }

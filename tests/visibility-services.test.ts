@@ -295,13 +295,13 @@ describe('the service kinds (ADR-049)', () => {
     const services = {
       pagespeed: async (secret: string | null) => {
         ran.push(`psi:${secret}`);
-        return 'mobile performance 96 on the home page';
+        return 'mobile performance: 96';
       },
       'bing-webmaster': async () => 'https://b7r.sa/',
     };
     expect(await testConnection(connectionOf('pagespeed', null), 3, services)).toMatchObject({
       ok: true,
-      message: 'mobile performance 96 on the home page',
+      message: 'mobile performance: 96',
     });
     expect(ran).toEqual(['psi:null']);
     expect(await testConnection(connectionOf('bing-webmaster', null), 4, services)).toMatchObject({

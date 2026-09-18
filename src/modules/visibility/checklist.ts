@@ -9,17 +9,10 @@ import { CHECKLIST_ITEMS } from '@/modules/visibility/rules/rest';
 
 export const CHECKLIST = 'visibility-checklist' as const;
 
-const LABELS: Record<(typeof CHECKLIST_ITEMS)[number]['key'], { ar: string; en: string }> = {
-  linkedinCompany: { ar: 'صفحة الشركة على LinkedIn', en: 'LinkedIn company page' },
-  linkedinFounder: { ar: 'حساب المؤسس على LinkedIn', en: 'LinkedIn founder profile' },
-  youtube: { ar: 'قناة YouTube بشرح واحد', en: 'YouTube channel with a walkthrough' },
-  xProfile: { ar: 'حساب X بمنشور مثبّت', en: 'X profile with a pinned demo' },
-  firstMention: { ar: 'أول ذكر من طرف ثالث', en: 'A first third-party mention' },
-};
-
 /**
  * The off-site work the score cannot see (ADR-049 R1): five boxes an admin ticks once the
- * thing exists. Each box's description says what counts. Admins only, under the Score page.
+ * thing exists, labelled as R1 lists them. Each box's description says what counts. Admins
+ * only, under the Score page.
  */
 export const VisibilityChecklist: GlobalConfig = {
   slug: CHECKLIST,
@@ -48,7 +41,7 @@ export const VisibilityChecklist: GlobalConfig = {
         name: item.key,
         type: 'checkbox',
         defaultValue: false,
-        label: LABELS[item.key],
+        label: item.label,
       })),
       savedByField,
     ],

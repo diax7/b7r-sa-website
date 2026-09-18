@@ -3,6 +3,15 @@ import type { LexicalState } from '@/lib/lexical';
 /** A localized value as `locale: 'all'` returns it: one string per language, or none. */
 export type Loc = { ar?: string | null; en?: string | null };
 
+/**
+ * A sentence in the panel's two languages (ADR-056): every rule writes its title, its guide,
+ * its facts and the labels of the documents it lists as a pair beside its logic (rule 12),
+ * and `reading()` picks the request's language before a page sees them.
+ */
+export type Text = { en: string; ar: string };
+
+export type Language = keyof Text;
+
 export type Section =
   | 'identity'
   | 'crawl'
@@ -14,34 +23,35 @@ export type Section =
 export type Status = 'done' | 'next' | 'missing';
 
 /** A document a finding points at: the admin link opens the locale that is missing. */
-export interface Item {
-  label: string;
+export interface Item<T = Text> {
+  label: T;
   href: string;
 }
 
 /**
  * One rule's answer (ADR-049): the weight it could earn, what it earned, and the sentence,
  * the guide and the documents that tell an admin what to do. `done` earns the weight,
- * `missing` nothing; a rule over documents is pro-rata and `next` while partial.
+ * `missing` nothing; a rule over documents is pro-rata and `next` while partial. The rules
+ * answer in both languages (`Finding<Text>`); a page reads one (`Finding<string>`).
  */
-export interface Finding {
+export interface Finding<T = Text> {
   key: string;
   section: Section;
   weight: number;
   earned: number;
   status: Status;
-  title: string;
-  guide: string;
+  title: T;
+  guide: T;
   href?: string;
-  items?: Item[];
+  items?: Item<T>[];
   /** How many of how many, for a pro-rata rule. */
   count?: { done: number; total: number };
 }
 
 /** What a section guarantees by construction: listed as facts, worth no points. */
-export interface Fact {
+export interface Fact<T = Text> {
   section: Section;
-  text: string;
+  text: T;
 }
 
 export interface SnapshotDoc {

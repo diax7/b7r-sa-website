@@ -482,7 +482,7 @@ describe('the weekly batch (ADR-049 D5)', () => {
     }
     const gated = fakeLedgerPayload({ connections: [mock] });
     const result = await runLedger(gated.payload, { env: {} });
-    expect(result.connections[0]?.reason).toMatch(/AI_CONTENT_MOCK/);
+    expect(result.connections[0]?.reason).toBe('mock kind: not enabled on this server');
   });
 
   it('stops asking when the budget is spent and says how many were not run', async () => {

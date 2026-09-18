@@ -491,8 +491,8 @@ const ledger = (cited: number, runs: number, engines: number): LedgerReading =>
     citedRate: runs ? { runs, cited } : null,
   }) as unknown as LedgerReading;
 
-const scoreOf = (overall: number, siteOnly: number): Score =>
-  ({ overall, siteOnly, findings: [] }) as unknown as Score;
+const scoreOf = (overall: number, siteOnly: number): Score<string> =>
+  ({ overall, siteOnly, findings: [] }) as unknown as Score<string>;
 
 /** Sanitized permissions as Payload hands them: `true`, or `{ permission }` before sanitising. */
 const permissionsOf = (allowed: Record<string, boolean>) =>

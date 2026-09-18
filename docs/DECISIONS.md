@@ -1686,9 +1686,37 @@ e2e "the admin in Arabic" switches through the
 account view, asserts `html[dir="rtl"]`, the groups, the dashboard, a list, an edit view
 with its content locale, the two views, runs axe on the shell, and switches back.
 
-Not done here: the visibility rules' sentences (`modules/visibility/rules/*`, some seventy
-titles, guides and facts) are still English inside the Arabic Score page; they are the
-rules' own text (ADR-049) and a decision for the text review of Phase 2.
+**The rules' sentences (amended 2026-09-18, the Phase 2 text review).** The visibility
+rules' own text (ADR-049: some seventy titles, guides, facts and the labels of the documents
+a rule lists) was left English inside the Arabic Score page by the first cut. It is now
+written in both languages beside the logic it belongs to (rule 12 of `admin-ui.md`): every
+sentence in `modules/visibility/rules/*` is a `Text` pair (`{ en, ar }`, `visibility/types.ts`),
+`Finding`, `Fact` and `Item` are generic over it, `scoreOf()` stays a pure function of the
+snapshot that answers in both languages, and `reading(payload, { user, language })` picks the
+request's language once (`pickScore`) so the Score page and the dashboard card read plain
+strings; `language` is required, so a call site cannot forget it (the nightly score row
+uses `scoreOf` directly and needs none). The section names left `weights.ts`
+(`SECTIONS[].label` was dead: they live in both string trees as `visibility.sections`), so
+the table there is the keys and the weights ADR-049 names. The Arabic follows the ux-araby
+rules (verb-first guides, nominal titles, «أو» not
+«/», Arabic comma, Western digits, no «تم», no «!»), and the audit's 2.19 and 6.3 are applied
+to both languages: arrows became words ("Admin, Connections", «الإدارة، الاتصالات»), no guide
+names an environment variable or a code path (C1 and C2 say the address and IndexNow are set
+where the site is hosted, nothing in the panel), and each guide still links to the field that
+fixes the finding in the locale that is missing. `tests/visibility-rules-strings.test.ts`
+walks every rule over three snapshots (every branch of every guide, the listed documents, the
+checklist's labels) and refuses a sentence without both languages, a number quoted in one
+language only, an Arabic that breaks the regular-expression rules (shared with the admin
+strings test through `tests/helpers/arabic-rules.ts`), and any arrow, environment variable or
+`admin/` path in either language; the Arabic e2e asserts the first open finding's title and
+guide are Arabic script. The same review moved the two "wait ten minutes" answers of the Score
+page's buttons into the admin strings (`adminOnly()` now resolves the request's UI language
+the way Payload does) and wrote the traffic table's date range in words instead of an arrow
+(6.3). The checklist global reads its labels from the rule's `CHECKLIST_ITEMS`, one source.
+**Not translated, on purpose:** a connection's `lastTestMessage` is a record written once at
+test time in the service's own terms (a model id, `sc-domain:b7r.sa (siteOwner)`, `mobile
+performance: 92`, an HTTP status and reason), never a sentence for a reader; our own words in
+it (`services/tests.ts`, `connections/test.ts`) are terse and technical for that reason.
 
 ## ADR-057: Side-by-side bilingual editing (2026-09-18)
 
