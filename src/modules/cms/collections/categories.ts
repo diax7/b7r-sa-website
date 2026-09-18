@@ -3,6 +3,7 @@ import { isAdmin, isEditorOrAdmin } from '@/modules/cms/access';
 import { Refused } from '@/modules/cms/refused';
 import { SLUG_PATTERN } from '@/modules/cms/collections/pages';
 import { revalidateBlogListings } from '@/modules/cms/hooks/revalidate';
+import { applyTranslations } from '@/modules/cms/hooks/translations';
 import { savedByField, stampSavedBy } from '@/modules/cms/fields/saved-by';
 import { collectionComponents } from '@/modules/cms/admin/document/config';
 import { adminGroup } from '@/modules/cms/admin/icons';
@@ -48,7 +49,7 @@ export const Categories: CollectionConfig = {
         return data;
       },
     ],
-    afterChange: [revalidateBlogListings],
+    afterChange: [revalidateBlogListings, applyTranslations],
     afterDelete: [revalidateBlogListings],
   },
   fields: describeFields(

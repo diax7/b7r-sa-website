@@ -6,11 +6,13 @@ import { Icon } from '@/components/shared/icon';
 import { useAdminStrings } from '@/modules/cms/admin/use-admin-strings';
 
 /**
- * One line before the document controls of a document with per-language fields (ADR-044):
- * which language is open and what the AR/EN pill on a field label means. The pill itself is
- * `admin.css` on Payload's localized label suffix. Two axes meet here (ADR-056): `code` is
- * the CONTENT locale (which language of the document is open) and picks the sentence; the
- * strings tree is the UI language and decides what language the sentence is written in.
+ * One line before the document controls of a document with per-language fields (ADR-044,
+ * rewritten by ADR-057): which language is open, that a tagged text field has the other
+ * language beside it and one Save writes both, and that rich text, lists and blocks stay on
+ * the locale switch. The tag itself is `admin.css` on Payload's localized label suffix. Two
+ * axes meet here (ADR-056): `code` is the CONTENT locale (which language of the document is
+ * open) and picks the sentence; the strings tree is the UI language and decides what
+ * language the sentence is written in.
  */
 export function LocaleNote() {
   const s = useAdminStrings().locale;
