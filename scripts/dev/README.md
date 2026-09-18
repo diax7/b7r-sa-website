@@ -16,5 +16,6 @@ WebKit projects (taps landed late, a stepper click was lost) and the interaction
 CI keeps Playwright's default. Do not raise the cap to save a minute.
 - `island-shots.mjs <out dir>`, the header at rest and scrolled on desktop and iPhone (ADR-053); `cta-shot.mjs <out dir>`, the header CTA at rest and hovered.
 - `cta-shiny-toggle.ts on|off`, the header's shiny switch on the local database (ADR-054).
+- `cranl-smoke.mjs [origin]`, the temporary domain (or `https://b7r.sa` after the cutover) after a deploy: the admin in both languages, the sidebar, the dashboard, a bilingual twin, one publish and one upload through the API, both undone (launch checklist row 39).
 - `prelaunch-clean.ts`, before dumping the review database for production: the Mock connection and its citations, the failed jobs, the CI analytics ids. `media-to-bucket.mjs <env file>`, copies `public/media` into the production bucket under `media/`.
 - `shot-studies.mjs <html> <out dir>`, one look at a design-studies page.
