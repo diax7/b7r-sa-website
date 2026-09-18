@@ -3,14 +3,15 @@ import { navGroups, navPrefs } from '@/modules/cms/admin/nav/groups';
 import { NavClient } from '@/modules/cms/admin/nav/nav-client';
 
 /**
- * The sidebar (`admin.components.Nav`, ADR-039). Server side: the entities this user may
- * open, grouped like Payload groups them, plus the remembered group state; the client renders
- * them with an icon per entity. Payload's outer `nav` classes are kept so the template's
- * layout and the mobile slide-in keep working (see nav-client.tsx).
+ * The sidebar (`admin.components.Nav`, ADR-039, ADR-058). Server side: the entities this
+ * user may open in the five task groups, the action badges, and the remembered state of the
+ * sidebar and its groups; the client renders one tree (open, or the drawer), the rail of
+ * groups when collapsed, and the keyboard model. Payload's outer `nav` classes are kept so
+ * the template's grid and the open/closed state stay Payload's (see nav-client.tsx).
  */
 export async function Nav(props: ServerProps & { req?: PayloadRequest }) {
   const { payload, permissions, user, i18n, req } = props;
-  const groups = await navGroups({ payload, permissions, user, i18n, counts: true });
+  const groups = await navGroups({ payload, permissions, user, i18n, badges: true });
   const prefs = await navPrefs(req);
   const account = user
     ? {

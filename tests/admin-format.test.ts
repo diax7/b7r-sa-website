@@ -4,6 +4,8 @@ import {
   formatDateTime,
   formatLocale,
   formatNumber,
+  formatSlot,
+  formatTime,
   relativeTime,
 } from '@/modules/cms/admin/format';
 
@@ -85,5 +87,33 @@ describe('relative time (dashboard, widgets)', () => {
     expect(relativeTime(old, 'en', now)).toBe(formatDate(old, 'en'));
     expect(relativeTime(old, 'ar', now)).toBe(formatDate(old, 'ar'));
     expect(relativeTime('not-a-date', 'en', now)).toBe('');
+  });
+});
+
+describe("a moment ahead (formatSlot, the dashboard's next runs)", () => {
+  // 10:00 Riyadh on the 13th is 07:00 UTC.
+  const riyadhNow = new Date('2026-09-13T07:00:00Z');
+
+  it('reads the hour on the Riyadh clock, 24 hours, Western digits', () => {
+    expect(formatTime(new Date('2026-09-13T04:00:00Z'), 'en')).toBe('07:00');
+    expect(formatTime(new Date('2026-09-13T04:00:00Z'), 'ar')).toBe('07:00');
+    expect(formatTime(new Date('2026-09-13T21:30:00Z'), 'ar')).toBe('00:30');
+  });
+
+  it('says today, tomorrow, then the date, in both languages', () => {
+    expect(formatSlot(new Date('2026-09-13T09:00:00Z'), 'en', riyadhNow)).toBe('today 12:00');
+    expect(formatSlot(new Date('2026-09-14T04:00:00Z'), 'en', riyadhNow)).toBe('tomorrow 07:00');
+    expect(formatSlot(new Date('2026-09-16T03:00:00Z'), 'en', riyadhNow)).toBe('16/09/2026 06:00');
+    expect(formatSlot(new Date('2026-09-14T04:00:00Z'), 'ar', riyadhNow)).toBe('غداً الساعة 07:00');
+    expect(formatSlot(new Date('2026-09-16T03:00:00Z'), 'ar', riyadhNow)).toBe(
+      '16/09/2026 الساعة 06:00',
+    );
+    expect(formatSlot(new Date('2026-09-16T03:00:00Z'), 'ar', riyadhNow)).not.toMatch(
+      EASTERN_DIGITS,
+    );
+  });
+
+  it('counts the day in Riyadh: 22:00 UTC tonight is already tomorrow', () => {
+    expect(formatSlot(new Date('2026-09-13T22:00:00Z'), 'en', riyadhNow)).toBe('tomorrow 01:00');
   });
 });

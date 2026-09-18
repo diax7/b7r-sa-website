@@ -1,4 +1,4 @@
-import { RIYADH } from '@/lib/riyadh';
+import { RIYADH, riyadh } from '@/lib/riyadh';
 import { adminStringsFor, isArabic } from '@/modules/cms/admin/strings';
 
 /**
@@ -13,6 +13,13 @@ export function formatLocale(language: string): string {
   return `${isArabic(language) ? 'ar' : 'en-GB'}-u-nu-latn`;
 }
 
+const MINUTE = 60_000;
+const HOUR = 60 * MINUTE;
+const DAY = 24 * HOUR;
+
+/** The Arabic patterns wrap their separators in bidi marks (U+200E, U+200F); the digits are the whole message. */
+const BIDI_MARKS = /[\u200E\u200F]/g;
+
 export function formatNumber(
   n: number,
   language: string,
@@ -23,36 +30,46 @@ export function formatNumber(
 
 /** `dd/MM/yyyy` in both languages (design system §5), the day as Riyadh counts it. */
 export function formatDate(date: Date, language: string): string {
-  return (
-    new Intl.DateTimeFormat(formatLocale(language), {
-      timeZone: RIYADH,
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-    })
-      .format(date)
-      // The Arabic pattern wraps its separators in bidi marks (U+200E, U+200F); the digits are
-      // the whole message and the marks would break a `dd/MM/yyyy` equality in a test.
-      .replaceAll(/[\u200E\u200F]/g, '')
-  );
+  return new Intl.DateTimeFormat(formatLocale(language), {
+    timeZone: RIYADH,
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  })
+    .format(date)
+    .replaceAll(BIDI_MARKS, '');
 }
 
-/** `dd/MM/yyyy HH:mm` in Riyadh, for a read-only value that carries a time of day. */
-export function formatDateTime(date: Date, language: string): string {
-  const time = new Intl.DateTimeFormat(formatLocale(language), {
+/** `HH:mm` on the Riyadh clock, 24 hours, in both languages. */
+export function formatTime(date: Date, language: string): string {
+  return new Intl.DateTimeFormat(formatLocale(language), {
     timeZone: RIYADH,
     hour: '2-digit',
     minute: '2-digit',
     hourCycle: 'h23',
   })
     .format(date)
-    .replaceAll(/[\u200E\u200F]/g, '');
-  return `${formatDate(date, language)} ${time}`;
+    .replaceAll(BIDI_MARKS, '');
 }
 
-const MINUTE = 60_000;
-const HOUR = 60 * MINUTE;
-const DAY = 24 * HOUR;
+/** `dd/MM/yyyy HH:mm` in Riyadh, for a read-only value that carries a time of day. */
+export function formatDateTime(date: Date, language: string): string {
+  return `${formatDate(date, language)} ${formatTime(date, language)}`;
+}
+
+/**
+ * A moment ahead as the dashboard says it: "today 07:00", "tomorrow 04:00", then the date
+ * (`dd/MM/yyyy 06:00`), the day and the hour both read in Riyadh; the caller adds the clock's
+ * name (`time.riyadh`). A moment already past reads like any other date.
+ */
+export function formatSlot(date: Date, language: string, now: Date = new Date()): string {
+  const s = adminStringsFor(language).time;
+  const day = riyadh(date).dateKey;
+  const today = riyadh(now).dateKey;
+  const tomorrow = riyadh(new Date(now.getTime() + DAY)).dateKey;
+  const word = day === today ? s.today : day === tomorrow ? s.tomorrow : formatDate(date, language);
+  return s.dayAt.replace('{day}', word).replace('{time}', formatTime(date, language));
+}
 
 /**
  * "5 minutes ago" / «قبل 5 دقائق» for the dashboard and the widgets; under a minute reads as
