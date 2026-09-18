@@ -222,7 +222,7 @@ test.describe('budgets (BRD 7.8, constitution IV)', () => {
       '/about',
     ]) {
       const html = await (await page.request.get(`${baseURL}${path}`)).text();
-      const lcp = /<img[^>]*fetchpriority="high"[^>]*>/.exec(html)?.[0];
+      const lcp = /<img[^>]*fetchpriority="high"[^>]*>/i.exec(html)?.[0];
       expect(lcp, `${path}: the LCP img in the server HTML`).toBeTruthy();
       expect(lcp, path).toContain('data:image/webp;base64,');
       await page.goto(path);

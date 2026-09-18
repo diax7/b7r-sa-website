@@ -56,7 +56,8 @@ test.describe('hero (BRD 6.4.1)', () => {
     expect(img).toContain('--hero-blur-desktop:url(');
     expect(img).toContain('--hero-blur-mobile:url(');
     expect(img).toContain('data:image/webp;base64,');
-    expect(img).toContain('fetchpriority="high"');
+    // React writes the attribute in camel case; the browser reads it either way.
+    expect(img).toMatch(/fetchpriority="high"/i);
     expect(img).toContain('loading="eager"');
     // A preload per breakpoint, neither carrying the placeholder.
     const preloads = [...html.matchAll(/<link[^>]*rel="preload"[^>]*as="image"[^>]*>/g)].map(
