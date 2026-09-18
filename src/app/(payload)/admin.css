@@ -496,10 +496,12 @@
     margin-inline-end: calc(-1 * var(--gutter-h));
     background: linear-gradient(to right, var(--theme-bg), transparent);
   }
+  /* The trailing fade overlaps the gutter spacer only and adds its own tail past the last
+     tab, so scrolled to the end it dims nothing. */
   .tabs-field__tabs-wrap::after {
     inset-inline-end: 0;
     inline-size: 40px;
-    margin-inline-start: -40px;
+    margin-inline-start: calc(-1 * var(--gutter-h));
     background: linear-gradient(to left, var(--theme-bg), transparent);
   }
   [dir='rtl'] .tabs-field__tabs-wrap::before {
