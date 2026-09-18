@@ -256,7 +256,8 @@ test.describe('CMS admin', () => {
     expect(aboutId).toBeDefined();
     await page.goto(`/admin/collections/pages/${aboutId}`);
     await expect(page.locator('#field-slug')).toHaveValue('about');
-    await expect(page.getByRole('textbox', { name: /Story heading/ })).toHaveValue(/حكاية/);
+    // The Arabic input; its English twin follows it in the same block (ADR-057, PR A).
+    await expect(page.getByRole('textbox', { name: /Story heading/ }).first()).toHaveValue(/حكاية/);
     await page.goto('/admin/collections/pages/create');
     await page.getByRole('button', { name: /أضف قسم|Add Section/ }).click();
     await page
