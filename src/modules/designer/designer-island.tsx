@@ -14,7 +14,7 @@ import { SarAmount } from '@/components/shared/sar-amount';
 import { useBottomDock } from '@/components/shared/use-bottom-dock';
 import type { Product } from '@/content/schema';
 import { cn } from '@/lib/cn';
-import { track } from '@/modules/core';
+import { track } from '@/modules/core/analytics/track';
 import { DesignCanvas } from '@/modules/designer/canvas/design-canvas';
 import { PricingControls } from '@/modules/designer/controls/pricing-controls';
 import { PrintAreaOverlay } from '@/modules/designer/controls/print-area-overlay';
