@@ -94,7 +94,11 @@ export const ADMIN_VIEWS: Record<
   ViewSlug,
   { label: { ar: string; en: string }; path: `/${string}`; icon: LucideIcon }
 > = {
-  traffic: { label: { ar: 'مصادر الزيارات', en: 'Traffic' }, path: '/traffic', icon: Signpost },
+  traffic: {
+    label: { ar: 'مصادر الزيارات', en: 'Traffic sources' },
+    path: '/traffic',
+    icon: Signpost,
+  },
   visibility: {
     label: { ar: 'درجة الظهور', en: 'Visibility score' },
     path: '/visibility',
@@ -118,6 +122,26 @@ export const HUE_CLASSES: Record<Hue, string> = {
   pink: 'bg-pink-tint text-pink',
   slate: 'bg-slate-tint text-slate',
   green: 'bg-success-tint text-success',
+};
+
+/** Text (and `currentColor`) in the hue alone: the rail's active icon and its bar (ADR-058). */
+export const HUE_TEXT_CLASSES: Record<Hue, string> = {
+  blue: 'text-accent',
+  teal: 'text-teal',
+  violet: 'text-violet',
+  pink: 'text-pink',
+  slate: 'text-slate',
+  green: 'text-success',
+};
+
+/** The 8 px dot before a sidebar group's name (ADR-058): the group's mark, in its hue. */
+export const HUE_DOT_CLASSES: Record<Hue, string> = {
+  blue: 'bg-accent',
+  teal: 'bg-teal',
+  violet: 'bg-violet',
+  pink: 'bg-pink',
+  slate: 'bg-slate',
+  green: 'bg-success',
 };
 
 /** The bar beside a page header, in the entity's hue (literal classes). */
@@ -268,3 +292,22 @@ export const WIDGET_ICONS: Record<string, LucideIcon> = {
   Eye,
   Heart,
 };
+
+/** What each of those icons is called in the picker and the list, never the lucide name. */
+export const WIDGET_ICON_LABELS: Record<keyof typeof WIDGET_ICONS, { ar: string; en: string }> = {
+  ShieldCheck: { ar: 'درع', en: 'Shield' },
+  Workflow: { ar: 'مسار', en: 'Workflow' },
+  Zap: { ar: 'برق', en: 'Bolt' },
+  Target: { ar: 'هدف', en: 'Target' },
+  Eye: { ar: 'عين', en: 'Eye' },
+  Heart: { ar: 'قلب', en: 'Heart' },
+};
+
+/** The options of a select over widget icons: the stored lucide name, labelled in both languages. */
+export function iconOptions(names: readonly string[]) {
+  return names.map((value) => {
+    const label = WIDGET_ICON_LABELS[value];
+    if (!label) throw new Error(`Icon "${value}" has no label in WIDGET_ICON_LABELS`);
+    return { value, label };
+  });
+}

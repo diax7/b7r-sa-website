@@ -207,6 +207,9 @@ export async function connectionRows(
   );
 }
 
+/** The window of the "failed runs" figure: the dashboard's hand line and the sidebar's badge on Runs read it. */
+export const FAILED_RUNS_DAYS = 7;
+
 /** Engine and ledger runs that failed in the last `days` days (admins). */
 export async function failedRuns(
   payload: Payload,

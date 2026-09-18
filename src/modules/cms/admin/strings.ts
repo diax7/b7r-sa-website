@@ -22,11 +22,23 @@ export const adminStrings = {
   nav: {
     label: 'Main navigation',
     brand: 'B7R Print Website',
+    dashboard: 'Dashboard',
     expand: 'Expand the sidebar',
     collapse: 'Collapse the sidebar',
+    openMenu: 'Open the menu',
     closeMenu: 'Close the menu',
-    groupToggle: 'collapse or expand the group',
     viewSite: 'View website',
+    language: 'Panel language',
+    languages: { en: 'English', ar: 'العربية' },
+    /**
+     * The badges (ADR-058), read to a screen reader after the entry's name. The runs and the
+     * drafts badges say what the dashboard says (`dashboard.hand.failedRuns`,
+     * `dashboard.tiles.drafts`): one number, one sentence.
+     */
+    badges: {
+      overLimit: (n: number) =>
+        `${n} ${n === 1 ? 'connection' : 'connections'} over the monthly limit`,
+    },
   },
   entityHeader: {
     shows: 'Shows on:',
@@ -114,7 +126,7 @@ export const adminStrings = {
     postTitle: 'Content engine',
     regenerate: 'Regenerate',
     regenerateHint: 'A new run from the topic replaces the text under the same address and cover.',
-    importTitle: 'Bulk add from CSV',
+    importTitle: 'Add topics from CSV',
     importHint:
       'Columns: title, hub (slug), primaryKeyword, secondaryKeywords (separated by ;), intent, priority. A header row is fine.',
     importPlaceholder: 'title,hub,primaryKeyword,secondaryKeywords,intent,priority',
@@ -179,6 +191,14 @@ export const adminStrings = {
     yesNo: ['Yes', 'No'] as const,
     onOff: ['On', 'Off'] as const,
     notYet: 'Not yet',
+  },
+  readOnly: {
+    /** A read-only date the jobs have not written yet (a connection never tested). */
+    noDate: 'Not yet',
+  },
+  jsonView: {
+    copy: 'Copy',
+    copied: 'Copied',
   },
   views: {
     adminsOnlyTitle: 'Admins only',
@@ -472,16 +492,8 @@ type Widen<T> = T extends (...args: infer A) => infer R
 
 export type AdminStrings = Widen<typeof adminStrings>;
 
-/** Arabic counts of days: one, two, three to ten, eleven and up (the four Arabic plurals). */
-function arabicDays(n: number): string {
-  if (n === 1) return 'يوم';
-  if (n === 2) return 'يومين';
-  if (n >= 3 && n <= 10) return `${n} أيام`;
-  return `${n} يوماً`;
-}
-
 /**
- * A counted noun under the same four plurals: the singular carries «واحد» or «واحدة», the dual
+ * A counted noun in the four Arabic plurals: the singular carries «واحد» or «واحدة», the dual
  * stands alone, three to ten take the plural, eleven and up the accusative singular.
  */
 function arabicCount(
@@ -494,6 +506,11 @@ function arabicCount(
   return `${n} ${forms.many}`;
 }
 
+/** Arabic counts of days («يوم», «يومين», «7 أيام», «30 يوماً»). */
+function arabicDays(n: number): string {
+  return arabicCount(n, { one: 'يوم', two: 'يومين', few: 'أيام', many: 'يوماً' });
+}
+
 /**
  * The Arabic tree, under the ux-araby rules (design system §5): nominal labels, verb-first
  * actions, light passives and never «تم», the Arabic comma, «أو» not «/», no «!», Western
@@ -503,11 +520,23 @@ export const adminStringsAr: AdminStrings = {
   nav: {
     label: 'التنقل الرئيسي',
     brand: 'موقع بحر برنت',
+    dashboard: 'لوحة التحكم',
     expand: 'وسّع الشريط الجانبي',
     collapse: 'اطوِ الشريط الجانبي',
+    openMenu: 'افتح القائمة',
     closeMenu: 'أغلق القائمة',
-    groupToggle: 'اطوِ المجموعة أو وسّعها',
     viewSite: 'عرض الموقع',
+    language: 'لغة اللوحة',
+    languages: { en: 'English', ar: 'العربية' },
+    badges: {
+      overLimit: (n) =>
+        arabicCount(n, {
+          one: 'اتصال واحد تجاوز حدّه الشهري',
+          two: 'اتصالان تجاوزا حدّهما الشهري',
+          few: 'اتصالات تجاوزت حدّها الشهري',
+          many: 'اتصالاً تجاوز حدّه الشهري',
+        }),
+    },
   },
   entityHeader: {
     shows: 'يظهر في:',
@@ -580,7 +609,7 @@ export const adminStringsAr: AdminStrings = {
     postTitle: 'محرّك المحتوى',
     regenerate: 'أعد التوليد',
     regenerateHint: 'جولة جديدة من الموضوع تستبدل النص وتبقي الرابط والغلاف كما هما.',
-    importTitle: 'إضافة دفعة من CSV',
+    importTitle: 'أضف مواضيع من CSV',
     importHint:
       'الأعمدة: title، hub (slug)، primaryKeyword، secondaryKeywords (مفصولة بـ ;)، intent، priority. لا بأس بصف عناوين.',
     importPlaceholder: 'title,hub,primaryKeyword,secondaryKeywords,intent,priority',
@@ -645,6 +674,13 @@ export const adminStringsAr: AdminStrings = {
     yesNo: ['نعم', 'لا'],
     onOff: ['مفعّل', 'متوقف'],
     notYet: 'ليس بعد',
+  },
+  readOnly: {
+    noDate: 'ليس بعد',
+  },
+  jsonView: {
+    copy: 'انسخ',
+    copied: 'نُسخ',
   },
   views: {
     adminsOnlyTitle: 'للمديرين فقط',
@@ -918,9 +954,19 @@ export const adminStringsAr: AdminStrings = {
   },
 };
 
+/**
+ * Whether a UI language is Arabic: the one comparison behind the strings tree, the number
+ * and date locale (`admin/format.ts`) and a validation message's language
+ * (`cms/fields/message.ts`). The content locale (which language of a document is open) is
+ * the other axis (ADR-056) and never goes through here.
+ */
+export function isArabic(language: string | undefined): boolean {
+  return language === 'ar';
+}
+
 /** The tree for a UI language: Arabic for `ar`, English for anything else (the fallback). */
 export function adminStringsFor(language: string): AdminStrings {
-  return language === 'ar' ? adminStringsAr : adminStrings;
+  return isArabic(language) ? adminStringsAr : adminStrings;
 }
 
 /** Payload's own rule for the document direction, so our components agree with `html[dir]`. */

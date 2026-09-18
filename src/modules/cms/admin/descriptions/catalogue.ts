@@ -90,6 +90,10 @@ export const PRODUCT_DESCRIPTIONS: Described = {
     ar: 'منطقة الطباعة: ما يقرؤه الزائر في صفحة المنتج، وأين يضع المصمّم التصميم فوق الصورة.',
     en: 'The print area: what a visitor reads on the page, and where the designer places the design on the photo.',
   },
+  'printArea.canvas': {
+    ar: 'أين تقع منطقة الطباعة فوق صورة المنتج في المصمّم التفاعلي، كنِسَب من عرض الصورة وارتفاعها.',
+    en: "Where the print area sits over the product photo in the designer, as fractions of the photo's width and height.",
+  },
   'printArea.label': {
     ar: 'وصف المنطقة في صفحة المنتج: «الواجهة الأمامية، 28 × 38 سم».',
     en: 'The area as the page states it: "Front, 28 by 38 cm".',
@@ -168,7 +172,7 @@ export const TESTIMONIAL_DESCRIPTIONS: Described = {
   },
 };
 
-/** Store integrations. */
+/** Connected stores (the store platforms). */
 export const INTEGRATION_DESCRIPTIONS: Described = {
   platform: {
     ar: 'أي منصة هذه: يختار الشعار المعروض في قسم المتاجر المتصلة؛ حقلا الاسم يحددان كيف يُكتب.',

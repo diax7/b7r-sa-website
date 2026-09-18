@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   formatDate,
+  formatDateTime,
   formatLocale,
   formatNumber,
   formatSlot,
@@ -35,6 +36,19 @@ describe('numbers and dates in the panel (admin/format)', () => {
     expect(formatDate(date, 'en')).toBe('03/09/2026');
     expect(formatDate(date, 'ar')).toBe('03/09/2026');
     expect(formatDate(date, 'ar')).not.toMatch(/[\u200E\u200F]/);
+  });
+
+  it('formats a number with the options asked for: four decimals for a spend', () => {
+    expect(formatNumber(0.9439, 'en', { maximumFractionDigits: 4 })).toBe('0.9439');
+    expect(formatNumber(0.9439, 'ar', { maximumFractionDigits: 4 })).toBe('0.9439');
+    expect(formatNumber(0.9439, 'en')).toBe('0.944');
+  });
+
+  it('formats a date with its time in Riyadh, 24 hours, Western digits, both languages', () => {
+    const date = new Date('2026-09-03T11:02:00Z');
+    expect(formatDateTime(date, 'en')).toBe('03/09/2026 14:02');
+    expect(formatDateTime(date, 'ar')).toBe('03/09/2026 14:02');
+    expect(formatDateTime(new Date('2026-09-03T22:30:00Z'), 'en')).toBe('04/09/2026 01:30');
   });
 
   it('reads the day in Riyadh, not the process zone: 22:00 UTC is already the next day', () => {

@@ -1095,9 +1095,10 @@ amber, the "careful" colour), Admin a neutral slate. The registry is `admin/icon
 place is a type error, and `tests/admin-config.test.ts` asserts that each config's
 `admin.group` (still what Payload groups by) names the registry's group. `navGroups()` keeps
 Payload's `groupNavItems` for permissions and hidden entities and shapes the result by the
-registry; the sidebar shows a collection's document count (14 `count` queries per page, for
+registry; the sidebar showed a collection's document count (14 `count` queries per page, for
 the sidebar only, 10 ms warm, never cached: a stale number right after Create is worse than
-none). **An
+none) until ADR-058 took the counts out and kept a badge only for a number that asks for
+action. **An
 amendment of the design system's §2**: the active sidebar entry sits on its group's tint with
 weight and `aria-current`, not on blue; blue keeps the main action, links, focus and the Site
 group. **The page header** (`EntityHeader`, in the description slot under Payload's title,
@@ -1797,6 +1798,90 @@ with `?locale=all`, the refusal of a blanked English title). Migration
 `20260918_033852_translations`: one nullable `jsonb` on the fourteen tables and the five
 version tables. The bilingual root carries no `data-admin-ui`: it hosts Payload's inputs,
 which the shell's element reset would strip; `data-admin-bilingual` is the e2e hook.
+
+## ADR-058: The sidebar: one tree, one breakpoint (2026-09-18)
+
+**Context.** The admin audit of 2026-09-18 (section 1) found two open/close systems by
+width (Payload's drawer with its hamburger at or under 1440 px, our collapse button and a
+rail above), a 1440 px laptop treated as a small screen, a rail that was an icon wall of 26
+entries, group headers that looked like entries, document counts sitting where badges sit,
+an active entry with no edge mark and two account entry points. Dhia wanted Cloudflare's
+sidebar: groups with a clear open/close control, separation between groups, the active entry
+unmistakable, the collapse control where the hand expects it, the same on narrow screens.
+The audit weighed a two-tier sidebar (a rail of groups beside a panel of the selected group's
+entries) against one sidebar with collapsible groups and the collapse toggle at the bottom,
+and recommended the second, shape B, for five groups with 26 entries; the CTO agreed with
+two corrections kept from the design memo and two settlements.
+
+**Decided.** Shape B, as built in `src/modules/cms/admin/nav/*`:
+
+- **One tree.** The dashboard is a real entry (active on the admin route alone). The five
+  task groups of ADR-046 are rows of 40 px, weight 600, an 8 px dot in the group's hue before
+  the name and the chevron at the end; the whole row toggles (`button[aria-expanded]` owning
+  a `role="group"` labelled by it, the list inside it, because an `li` under a `ul` whose
+  role is overridden fails the list rule). Entries are 36 px with a 24 px disc in the group's
+  hue; secondary entries 32 px and 13 px under a 2 px guide line; a hairline between groups
+  only. The active entry sits on its group's tint with a 3 px bar on the leading edge and a
+  solid disc, `aria-current="page"`, and its group is forced open unless the person closed
+  it on that very page. Hover is `surface-2`, focus the accent ring.
+- **The two corrections kept.** The state (open or collapsed, each group) stays in Payload's
+  `nav` preference, per user and server side, never `localStorage`; the hues and the active
+  tint are ADR-046's, not Cloudflare's single grey. The registry `ADMIN_NAV` is untouched.
+- **Counts out, badges only for action.** No entry shows a document count (ADR-046 amended).
+  A badge stays for a number that asks for action: runs that failed this week on Runs (red),
+  posts whose newest version is a draft on Posts (amber), connections past their monthly
+  limit on Connections (red). One number per thing (the CTO's review): the first two are
+  the dashboard's own readers (ADR-059, `dashboard/readers.ts`): `failedRuns` over its
+  `FAILED_RUNS_DAYS` window and `draftsWaiting` for posts through `countVersions` with
+  `latest: true`, so the badge, the dashboard's tile and its hand line show the same figure
+  and say it in the same sentence (`dashboard.hand.failedRuns`, `dashboard.tiles.drafts`);
+  the third is `overLimitConnections` beside `connectionSpend`. Read in parallel with the
+  user's access, never cached, a failed read logs and leaves the entry bare. The cost,
+  counted the way ADR-059 counts the dashboard's: five queries per page render for an admin
+  (the runs' one `count`, the drafts' two `countVersions`, of which the badge shows the
+  waiting one and not the stale one, and the connections' two `find`s), two for an editor
+  (the drafts; the other entries are not in the editor's sidebar), each a few milliseconds
+  warm.
+- **One breakpoint, Payload's `m` (1024 px).** Above it the sidebar is inline: open at 264 px,
+  or the 64 px rail when collapsed by the one button above the account (« open, » collapsed,
+  mirrored in RTL): the brand mark, the dashboard icon, the five group icons (the active
+  group's with the bar, a group with a badge with a dot) and the avatar; a click on a group
+  icon opens a 224 px flyout of the group's entries, a Radix `DropdownMenu` of links (focus
+  moved in, arrows and a typed letter, Esc back to the icon), since a Popover is not among
+  the repo's Radix packages and a menu of links is the right role for it anyway. The tree and
+  the rail are both in the markup and the stylesheet shows one by the aside's open class, so
+  a collapsed sidebar paints as a rail on the first frame. Payload's provider closes the nav
+  at or under its `l` breakpoint (1440 px) on hydration and on a resize; a layout effect puts
+  the preference back before paint, and the stylesheet keeps the nav visible and in the
+  template's grid from 1025 px up, which is how the 1440 px special case goes. At 1024 px and
+  under the sidebar is a drawer over the page (320 px; the full width under 768): our
+  hamburger at the leading edge of the header opens it (Payload's two hamburgers and its
+  header avatar are hidden in `@layer payload`), the X at the same spot inside the drawer,
+  Esc, a tap on the scrim or a navigation closes it, the page behind is `inert` while it is
+  open, rows are 44 px, the collapse button hides, the account block and the panel's
+  language switch (Payload's `switchLanguage`) sit at the foot.
+- **The keyboard model** (`keyboard.ts`, pure, tested). The tree is a `nav` with `aria-label`
+  and one tab stop: a roving `tabindex` puts Tab on the row focused last, else the current
+  page's entry, else the first, and Tab leaves after it; Arrow Up and Down walk the rows
+  without wrapping, Home and End jump to the ends, a typed letter jumps to the next row whose
+  label starts with it (folded like the palette, so «ا» finds «أدوات»), wrapping; Enter or
+  Space toggles a group, Enter opens a link. "Tab through every row" and "roving tabindex"
+  cannot both hold; the roving model is the accessible one, and every row is still one
+  arrow away.
+- **The header.** The search box is 240 px and grows to 320 on focus; "View website" keeps
+  its text; both fold to icons at the drawer widths, where Payload caps the actions at
+  300 px, and icon-only carry a tooltip beside their label (the icon-only rule). The locale
+  switcher stays in the header (it leaves for the document header with the side-by-side
+  editing, section 4 of the audit) and moves into the gutter the avatar left, so it no
+  longer overlaps our controls. The sidebar stays on the page colour, not one step above
+  it: the identity hues on their tints reach 4.5:1 there (blue 4.9, violet 5.3) and fall
+  under it on the surface (4.1, 4.5), which is also why the flyout, a menu on the surface,
+  marks its active entry with the hue, the weight and the bar and no tint; and the flyout is
+  not modal, because a modal menu marks the rest of the page `aria-hidden` with the focused
+  icon inside it, which axe refuses.
+
+**Not done here.** Palette hits ranked by match quality (the audit's 1.9) is the palette's
+own change; `g` then a letter to jump to a group, the audit's "later, not now".
 
 ## ADR-059: The dashboard: what matters at a glance (2026-09-18)
 

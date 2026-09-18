@@ -24,14 +24,15 @@ export type Translations = Record<string, TranslationEntries>;
 
 /**
  * Whether a field is edited in both languages at once: a localized text, textarea or select
- * (or one inside a localized group) that holds one value, is shown, and has no widget of its
- * own. A `hasMany` text or select is a list and stays on the locale switch.
+ * (or one inside a localized group) that holds one value, is shown, is editable, and has no
+ * widget of its own. A `hasMany` text or select is a list and stays on the locale switch; a
+ * read-only value is a line (`ReadOnlyLine`), never a twin.
  */
 export function isBilingualField(field: Field, parentLocalized = false): boolean {
   if (field.type !== 'text' && field.type !== 'textarea' && field.type !== 'select') return false;
   if (!field.name || !(field.localized === true || parentLocalized)) return false;
   if ('hasMany' in field && field.hasMany) return false;
-  if (field.admin?.hidden || field.admin?.disabled) return false;
+  if (field.admin?.hidden || field.admin?.disabled || field.admin?.readOnly) return false;
   const widget = field.admin?.components?.Field;
   return widget === undefined || widget === BILINGUAL_FIELD;
 }

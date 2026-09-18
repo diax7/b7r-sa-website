@@ -20,6 +20,7 @@ export const Testimonials: CollectionConfig = {
     plural: { ar: 'آراء التجار', en: 'Testimonials' },
   },
   admin: {
+    hideAPIURL: true,
     components: collectionComponents('testimonials', { localized: true }),
     useAsTitle: 'name',
     defaultColumns: ['name', 'store', 'placeholder', 'order', '_status'],
@@ -36,6 +37,7 @@ export const Testimonials: CollectionConfig = {
       en: 'Merchant quotes on the home page. Placeholders never show on the site.',
     },
   },
+  defaultSort: 'order',
   versions: { drafts: { autosave: { interval: 1500 }, schedulePublish: true }, maxPerDoc: 20 },
   access: {
     read: publishedOrStaff,
@@ -99,7 +101,7 @@ export const Testimonials: CollectionConfig = {
         name: 'placeholder',
         type: 'checkbox',
         defaultValue: false,
-        label: { ar: 'نموذج (ليس رأي تاجر حقيقي)', en: 'Placeholder (not a real merchant)' },
+        label: { ar: 'نموذج (ليس رأي تاجر حقيقي)', en: 'Sample (not a real merchant)' },
         admin: {
           description: {
             ar: 'النماذج تظهر بشارة «نموذج» في المعاينة وتُخفى على b7r.sa حتى يُنشر رأي حقيقي.',

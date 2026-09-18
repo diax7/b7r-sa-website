@@ -18,6 +18,7 @@ export const VisibilityChecklist: GlobalConfig = {
   slug: CHECKLIST,
   label: { ar: 'قائمة الحضور الخارجي', en: 'Off-site checklist' },
   admin: {
+    hideAPIURL: true,
     components: globalComponents(CHECKLIST, { localized: false }),
     group: adminGroup('visibility'),
     custom: {
