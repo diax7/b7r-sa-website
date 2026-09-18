@@ -497,7 +497,11 @@ test.describe('CMS admin', () => {
       'href',
       /\/admin\/traffic\?days=7$/,
     );
-    await expect(dashboard.locator('[data-admin-tile="cited"]')).toContainText(/category prompts/);
+    // The hint names the category prompts once a ledger run exists; a fresh database (CI's
+    // seed) has none yet and says so instead.
+    await expect(dashboard.locator('[data-admin-tile="cited"]')).toContainText(
+      /category prompts|No ledger run/,
+    );
     // 3 to 7, top to bottom, each with its hook.
     for (const hook of ['visits', 'assistants', 'content', 'engine', 'server']) {
       await expect(dashboard.locator(`[data-admin-dashboard-${hook}]`)).toBeVisible();
