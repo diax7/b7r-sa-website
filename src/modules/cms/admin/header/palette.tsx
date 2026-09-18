@@ -10,9 +10,9 @@ import { Kbd } from '@/components/ui/kbd';
 import { cn } from '@/lib/cn';
 import { entityIcon, groupIcon } from '@/modules/cms/admin/icons';
 import { PALETTE_EVENT } from '@/modules/cms/admin/header/palette-event';
-import { MIN_QUERY, rank } from '@/modules/cms/admin/header/palette-rank';
+import { MIN_QUERY, rank, searchTerm } from '@/modules/cms/admin/header/palette-rank';
 import type { NavEntity } from '@/modules/cms/admin/nav/groups';
-import { adminStrings } from '@/modules/cms/admin/strings';
+import { useAdminStrings } from '@/modules/cms/admin/use-admin-strings';
 
 export interface PaletteEntity extends Pick<NavEntity, 'type' | 'slug' | 'label' | 'href'> {
   group: string;
@@ -43,7 +43,6 @@ interface DocHit {
   href: string;
 }
 
-const s = adminStrings.palette;
 const RECENT_KEY = 'b7r-admin-recent';
 const RECENT_MAX = 5;
 const DEBOUNCE_MS = 200;
@@ -72,20 +71,14 @@ function inEditor(target: EventTarget | null): boolean {
   return target instanceof HTMLElement && !!target.closest('[contenteditable="true"]');
 }
 
-/** `like` reads `%` and `_` as wildcards: drop them, and search only when something is left. */
-export function searchTerm(query: string): string {
-  const term = query.replaceAll(/[%_]/g, '').trim();
-  return /[\p{L}\p{N}]/u.test(term) ? term : '';
-}
-
-const STATUS_LABEL = s.status;
-
 /**
  * Ctrl/⌘ K palette (ADR-039): every section the user may open, then documents of the main
  * collections by title through Payload's REST API (its access rules are the boundary).
  * Combobox semantics: the input owns focus, arrows move `aria-activedescendant`, Enter opens.
  */
 export function Palette({ entities, searchable, apiRoute }: PaletteProps) {
+  const s = useAdminStrings().palette;
+  const statusLabel = s.status;
   const router = useRouter();
   const listId = useId();
   const [open, setOpen] = useState(false);
@@ -146,7 +139,7 @@ export function Palette({ entities, searchable, apiRoute }: PaletteProps) {
               return {
                 key: `${c.slug}-${String(doc['id'])}`,
                 title: String(doc[c.titleField] ?? doc['id']),
-                detail: slug && slug !== doc[c.titleField] ? slug : (STATUS_LABEL[status] ?? ''),
+                detail: slug && slug !== doc[c.titleField] ? slug : (statusLabel[status] ?? ''),
                 collection: c.label,
                 slug: c.slug,
                 href: `${c.href}/${String(doc['id'])}`,
@@ -163,7 +156,7 @@ export function Palette({ entities, searchable, apiRoute }: PaletteProps) {
       setActive(0);
     }, DEBOUNCE_MS);
     return () => window.clearTimeout(timer);
-  }, [open, query, searchable, apiRoute]);
+  }, [open, query, searchable, apiRoute, statusLabel]);
 
   const sections = useMemo(() => {
     const q = query.trim();
@@ -314,7 +307,8 @@ export function Palette({ entities, searchable, apiRoute }: PaletteProps) {
         <DialogDescription className="flex items-center justify-between gap-3 border-t border-border px-4 py-2 text-caption text-text-muted">
           <span>{searchTerm(query).length < MIN_QUERY ? s.hint : s.shortcut}</span>
           <span className="flex items-center gap-1">
-            <Icon icon={CornerDownLeft} size={12} />
+            {/* The Enter key's own glyph: the same on an Arabic keyboard, so never mirrored. */}
+            <Icon icon={CornerDownLeft} size={12} mirror={false} />
             {s.open}
           </span>
         </DialogDescription>

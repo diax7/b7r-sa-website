@@ -1410,7 +1410,7 @@ export interface Connection {
     | 'bing-webmaster'
     | 'pagespeed';
   /**
-   * The model id exactly as the service docs write it: gpt-4.1, claude-sonnet-4-5, gemini-2.5-pro, deepseek-chat. Empty on save: the usual model of the service.
+   * The model id exactly as the service docs write it: gpt-4.1-mini, claude-haiku-4-5, gemini-3-flash-preview, deepseek-chat. Empty on save: the usual model of the service, the cheap one.
    */
   model?: string | null;
   /**
@@ -1548,7 +1548,7 @@ export interface Prompt {
    */
   order: number;
   /**
-   * How often this prompt is asked: 1 every morning, 7 weekly, 30 monthly. A daily prompt costs about $0.03 per engine per day with web search on.
+   * How often this prompt is asked: 7 weekly (the seed), 1 every morning, 30 monthly. With web search on, one ask costs about $0.02 on OpenAI, $0.01 on Gemini Flash and $0.03 on Claude Haiku: a weekly prompt is about $0.30 a month across the three, a daily one about $2.
    */
   everyDays: number;
   /**

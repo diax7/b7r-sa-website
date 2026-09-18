@@ -5,19 +5,19 @@ import { Icon } from '@/components/shared/icon';
 import type { LexicalState } from '@/lib/lexical';
 import { LexicalProse } from '@/modules/core/rich-text/lexical-prose';
 import { cn } from '@/lib/cn';
-import { adminStrings } from '@/modules/cms/admin/strings';
+import { type AdminStrings, adminStringsFor } from '@/modules/cms/admin/strings';
 import { AnswerDialog } from '@/modules/visibility/admin/answer-dialog';
 import { RunLedger } from '@/modules/visibility/admin/run-ledger-action';
 import type { CitationRow, LedgerReading } from '@/modules/visibility/ledger/reading';
 
-const s = adminStrings.visibility.ledger;
+type Strings = AdminStrings['visibility']['ledger'];
 
 const th = 'py-1 pe-3 text-start text-caption font-medium text-text-muted';
 const td = 'py-2 pe-3 align-top text-small text-text';
 const pct = (n: number, of: number) => (of > 0 ? `${Math.round((n / of) * 100)}%` : '');
 
 /** One engine's answer to one prompt: the verdict as a coloured badge, the link mark, and the whole answer behind "View answer". */
-function Cell({ row, engine }: { row: CitationRow | undefined; engine: string }) {
+function Cell({ row, engine, s }: { row: CitationRow | undefined; engine: string; s: Strings }) {
   if (!row) return <span className="text-caption text-text-muted">{s.notRun}</span>;
   return (
     <div className="flex flex-col items-start gap-1" data-admin-cited={row.mentioned}>
@@ -52,7 +52,16 @@ function Cell({ row, engine }: { row: CitationRow | undefined; engine: string })
  * column, the latest answers as collapsible excerpts, the competitors named most, and for a
  * prompt no engine names B7R on, the page to improve. "Run now" queues a batch.
  */
-export function Ledger({ reading, adminRoute }: { reading: LedgerReading; adminRoute: string }) {
+export function Ledger({
+  reading,
+  adminRoute,
+  language,
+}: {
+  reading: LedgerReading;
+  adminRoute: string;
+  language: string;
+}) {
+  const s = adminStringsFor(language).visibility.ledger;
   const engines = reading.engines;
   const empty = engines.length === 0;
   return (
@@ -124,7 +133,7 @@ export function Ledger({ reading, adminRoute }: { reading: LedgerReading; adminR
                             )}
                             {p.everyDays > 1 && (
                               <span className="ms-2 text-caption text-text-muted">
-                                {s.every.replace('{n}', String(p.everyDays))}
+                                {s.every(p.everyDays)}
                               </span>
                             )}
                           </span>
@@ -144,7 +153,7 @@ export function Ledger({ reading, adminRoute }: { reading: LedgerReading; adminR
                       </td>
                       {engines.map((e) => (
                         <td key={e.connection} className={td}>
-                          <Cell row={p.latest[e.connection]} engine={e.label} />
+                          <Cell row={p.latest[e.connection]} engine={e.label} s={s} />
                         </td>
                       ))}
                     </tr>

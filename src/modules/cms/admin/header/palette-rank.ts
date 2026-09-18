@@ -32,3 +32,9 @@ export function rank<T extends Rankable>(query: string, items: readonly T[]): T[
     .toSorted((a, b) => b.score - a.score || a.index - b.index)
     .map((r) => r.item);
 }
+
+/** `like` reads `%` and `_` as wildcards: drop them, and search only when something is left. */
+export function searchTerm(query: string): string {
+  const term = query.replaceAll(/[%_]/g, '').trim();
+  return /[\p{L}\p{N}]/u.test(term) ? term : '';
+}

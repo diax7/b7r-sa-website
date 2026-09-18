@@ -452,13 +452,13 @@ describe('side-by-side bilingual editing (ADR-057)', () => {
 });
 
 describe('dashboard recent list: a title for every row', () => {
-  it('shows the title, the id when the title is the id, and "Untitled" for an empty one', () => {
-    expect(titleOf('من نحن')).toBe('من نحن');
-    expect(titleOf(63)).toBe('63');
-    expect(titleOf('')).toBe('Untitled');
-    expect(titleOf('   ')).toBe('Untitled');
-    expect(titleOf(null)).toBe('Untitled');
-    expect(titleOf(undefined)).toBe('Untitled');
+  it('shows the title, the id when the title is the id, and the UI language\'s "Untitled" for an empty one', () => {
+    expect(titleOf('من نحن', 'Untitled')).toBe('من نحن');
+    expect(titleOf(63, 'Untitled')).toBe('63');
+    expect(titleOf('', 'Untitled')).toBe('Untitled');
+    expect(titleOf('   ', 'Untitled')).toBe('Untitled');
+    expect(titleOf(null, 'Untitled')).toBe('Untitled');
+    expect(titleOf(undefined, 'بلا عنوان')).toBe('بلا عنوان');
   });
 
   it('leaves out a draft nobody titled or saved (an abandoned "Create New")', () => {

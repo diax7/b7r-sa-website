@@ -66,7 +66,8 @@ note), `check:rtl` and the admin e2e.
    checks). Never add a second place to edit a value: no per-language duplicate field, no
    `titleEn` beside `title`, no widget of your own on a localized text. What stays on the
    locale switch (rich text, arrays, blocks, uploads, relationships, `hasMany`) is by design;
-   the locale note says so and its strings live in `admin/fields/bilingual/strings.ts`.
+   the locale note says so (`locale.legend`) and the field's own strings are the `bilingual`
+   branch of both trees in `strings.ts`, read per render like every other string.
 
 ## Adding an admin component
 
@@ -82,10 +83,17 @@ note), `check:rtl` and the admin e2e.
   neutral, documented in the design system) before writing a one-off.
 - Icons through `components/shared/icon.tsx`, from the registry when the icon stands for an
   entity. Icon-only buttons carry `aria-label` + `Tooltip`.
-- Strings: the panel is English (`src/modules/cms/admin/strings.ts`, never inline); config
-  labels and descriptions carry both `en` and `ar`, the Arabic under the ux-araby rules
-  (verb-first actions, nominal labels, no «تم», no «قم بـ», Arabic comma, no «!»); the writing
-  rules in `.claude/rules/writing.md` apply to both (no em dashes).
+- Strings: the panel speaks English and Arabic (ADR-056, design system §5a); every string
+  of ours lives in both trees of `src/modules/cms/admin/strings.ts` (`adminStrings` and
+  `adminStringsAr`, never inline), read per render with `adminStringsFor(i18n.language)` on
+  the server or `useAdminStrings()` on the client, never at module top level. A key missing
+  in one language is a type error and `tests/admin-strings.test.ts` refuses it, along with
+  Arabic that breaks the ux-araby rules (verb-first actions, nominal labels, no «تم», no
+  «قم بـ», Arabic comma, «أو» not «/», no «!», Western digits). Config labels and descriptions
+  carry both `en` and `ar` under the same rules; numbers and dates go through
+  `src/modules/cms/admin/format.ts`; a poor string of Payload's own pack is fixed in
+  `src/modules/cms/admin/payload-ar.ts`. The writing rules in `.claude/rules/writing.md`
+  apply to both languages (no em dashes).
 - Colour means one thing: blue = main action/active, green = publish/live, red = delete/
   failure, amber = careful. Set Payload's button colours through its custom properties.
 - Roots of our shell carry `data-admin-ui` (the scoped element reset in `admin.css`) and a

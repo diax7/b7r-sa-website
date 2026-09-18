@@ -32,7 +32,7 @@ import {
   type Translations,
 } from '@/modules/cms/fields/bilingual';
 import { useOtherLocale } from '@/modules/cms/admin/fields/bilingual/other-locale';
-import { bilingualStrings, pick } from '@/modules/cms/admin/fields/bilingual/strings';
+import { useAdminStrings } from '@/modules/cms/admin/use-admin-strings';
 
 type Props = SelectFieldClientProps | TextareaFieldClientProps | TextFieldClientProps;
 type ClientField = Props['field'];
@@ -56,6 +56,7 @@ function Bilingual(props: Props) {
   const locale = useLocale();
   const { config } = useConfig();
   const { i18n } = useTranslation();
+  const strings = useAdminStrings().bilingual;
   const info = useDocumentInfo();
   const other = otherOf(config.localization, locale.code);
   const pending = useField<Translations | null>({ path: TRANSLATIONS });
@@ -102,7 +103,7 @@ function Bilingual(props: Props) {
     setTranslations(Object.keys(rest).length > 0 ? { [other.code]: rest } : null);
   };
   const off = Boolean(readOnly) || Boolean(field.admin?.readOnly) || stored.status !== 'ready';
-  const language = i18n.language;
+  const otherName = strings.languages[other.code] ?? other.code;
   const otherPath = `${TRANSLATIONS}.${other.code}.${path}`;
   return (
     <div className="@container" data-admin-bilingual={path} style={width(field)}>
@@ -116,11 +117,9 @@ function Bilingual(props: Props) {
           onChange={setShown}
           readOnly={off}
           placeholder={
-            stored.status === 'loading' ? pick(bilingualStrings.loading(other.code), language) : ''
+            stored.status === 'loading' ? strings.loading.replace('{language}', otherName) : ''
           }
-          error={
-            stored.status === 'error' ? pick(bilingualStrings.failed(other.code), language) : ''
-          }
+          error={stored.status === 'error' ? strings.failed.replace('{language}', otherName) : ''}
           label={
             <label className="field-label" htmlFor={`field-${otherPath.replace(/\./g, '__')}`}>
               {labelOf(field, i18n)}

@@ -549,6 +549,139 @@ test.describe('CMS admin', () => {
     await expect(page.locator('[data-admin-saved-by]')).toContainText(/by .+ · /);
   });
 
+  test("the admin in Arabic (ADR-056): the account view switches the panel, it reads right-to-left in our strings and Payload's, the content locale stays put, axe is clean, English comes back", async ({
+    page,
+    request,
+    baseURL,
+  }) => {
+    test.setTimeout(120_000);
+    await page.setViewportSize({ width: 1600, height: 1000 });
+    expect((await page.request.post(`${API}/users/login`, { data: admin })).status()).toBe(200);
+    const html = page.locator('html');
+    // Payload keeps the choice in its `payload-lng` cookie (a year, path `/`), written by the
+    // account view's language select through a server action, then `router.refresh()`.
+    const pickLanguage = async (name: string) => {
+      await page.goto('/admin/account');
+      const select = page.locator('#language-select');
+      await select.click();
+      await page.keyboard.type(name);
+      await page.keyboard.press('Enter');
+    };
+    const languageCookie = async () =>
+      (await page.context().cookies()).find((c) => c.name === 'payload-lng')?.value;
+    try {
+      // An Arabic browser with no choice saved opens the Arabic panel at the login page.
+      const arabicBrowser = await page.context().browser()!.newContext({ locale: 'ar-SA' });
+      const loginPage = await arabicBrowser.newPage();
+      await loginPage.goto('/admin/login');
+      await expect(loginPage.locator('html')).toHaveAttribute('lang', 'ar');
+      await expect(loginPage.locator('html')).toHaveAttribute('dir', /rtl/i);
+      await arabicBrowser.close();
+      await pickLanguage('العربية');
+      await expect(html).toHaveAttribute('dir', /rtl/i);
+      await expect(html).toHaveAttribute('lang', 'ar');
+      await expect.poll(languageCookie).toBe('ar');
+      // The dashboard and the sidebar in our Arabic: the five groups in order, the greeting.
+      await page.goto('/admin');
+      const nav = page.locator('[data-admin-nav]');
+      await expect(nav.locator('[data-admin-group]')).toHaveText([
+        /الموقع/,
+        /الكتالوج/,
+        /المدونة/,
+        /الظهور/,
+        /الإدارة/,
+      ]);
+      const dashboard = page.locator('[data-admin-dashboard]');
+      await expect(dashboard.locator('h1')).toContainText('مرحباً');
+      await expect(dashboard.locator('[data-admin-health] h2')).toContainText('حالة النظام');
+      await expect(page.locator('[data-admin-palette-trigger]')).toContainText('ابحث');
+      await expect(page.locator('[data-admin-view-site]')).toContainText('عرض الموقع');
+      // The sidebar's rail sits at the start edge: on the right now, so its box starts past the middle.
+      const navBox = (await nav.boundingBox())!;
+      const viewport = page.viewportSize()!;
+      expect(navBox.x + navBox.width / 2).toBeGreaterThan(viewport.width / 2);
+      const { AxeBuilder } = await import('@axe-core/playwright');
+      const serious = async (...include: string[]) => {
+        let builder = new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']);
+        for (const sel of include) builder = builder.include(sel);
+        return (await builder.analyze()).violations
+          .filter((v) => ['serious', 'critical'].includes(v.impact ?? ''))
+          .map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`);
+      };
+      expect(
+        await serious('[data-admin-nav]', '.app-header', '[data-admin-dashboard]'),
+        'axe: the Arabic dashboard',
+      ).toEqual([]);
+      // A list view: our header in Arabic, Payload's own "Create New" in our Arabic over its pack.
+      await page.goto('/admin/collections/pages');
+      await expect(page.locator('[data-admin-header="pages"] [data-admin-shows]')).toContainText(
+        'يظهر في:',
+      );
+      await expect(page.getByText('إنشاء جديد').first()).toBeVisible();
+      await expect(nav.locator('a[aria-current="page"]')).toHaveText(/الصفحات/);
+      // An edit view: Payload's controls in Arabic; the content locale is untouched by the
+      // UI language (the note still says which content language is open, in Arabic now).
+      const auth = await login(request, admin);
+      const about = await request.get(`${API}/pages?where[slug][equals]=about&depth=0`, {
+        headers: auth,
+      });
+      const aboutId = ((await about.json()) as { docs: Array<{ id: number }> }).docs[0]?.id;
+      expect(aboutId).toBeDefined();
+      await page.goto(`/admin/collections/pages/${aboutId}`);
+      await expect(page.locator('#field-slug')).toHaveValue('about');
+      await expect(page.locator('[data-admin-locale-note]')).toHaveAttribute(
+        'data-admin-locale-note',
+        'ar',
+      );
+      await expect(page.locator('[data-admin-locale-note]')).toContainText('تحرير المحتوى العربي');
+      await expect(html).toHaveAttribute('data-content-locale', 'ar');
+      await expect(page.locator('#action-save')).toContainText(/نشر|حفظ/);
+      // Opening the English content changes the pills and the note, never the panel's language.
+      await page.goto(`/admin/collections/pages/${aboutId}?locale=en`);
+      await expect(html).toHaveAttribute('data-content-locale', 'en');
+      await expect(html).toHaveAttribute('dir', /rtl/i);
+      await expect(page.locator('[data-admin-locale-note]')).toContainText(
+        'تحرير المحتوى الإنجليزي',
+      );
+      // The note about the English content is itself written in Arabic: the UI language.
+      await expect(page.locator('[data-admin-locale-note]')).toContainText(/[؀-ۿ]/);
+      expect(
+        await serious(
+          '[data-admin-nav]',
+          '.app-header',
+          '[data-admin-locale-note]',
+          '[data-admin-header]',
+        ),
+        'axe: the Arabic shell on an edit view',
+      ).toEqual([]);
+      // `?locale=` is remembered per user (Payload's `locale` preference): back to Arabic content.
+      await page.goto(`/admin/collections/pages/${aboutId}?locale=ar`);
+      await expect(html).toHaveAttribute('data-content-locale', 'ar');
+      // Our two views, titled in Arabic, inside the shell.
+      await page.goto('/admin/traffic');
+      await expect(page.locator('[data-admin-traffic-page] h1')).toContainText('مصادر الزيارات');
+      await expect(page.locator('[data-admin-nav]')).toBeAttached();
+      await page.goto('/admin/visibility');
+      await expect(page.locator('[data-admin-visibility-page] h1')).toContainText('درجة الظهور');
+      expect(
+        await serious('[data-admin-nav]', '.app-header', '[data-admin-visibility-page]'),
+        'axe: the Arabic Score page',
+      ).toEqual([]);
+      // The digits stay Western in Arabic (design system §5): no Eastern digit anywhere on the page.
+      expect(await page.locator('[data-admin-visibility-page]').innerText()).not.toMatch(/[٠-٩]/);
+      // Back to English through the same control.
+      await pickLanguage('English');
+      await expect(html).toHaveAttribute('dir', /ltr/i);
+      await expect(html).toHaveAttribute('lang', 'en');
+      await expect.poll(languageCookie).toBe('en');
+      await page.goto('/admin');
+      await expect(page.locator('[data-admin-dashboard] h1')).toContainText('Welcome');
+    } finally {
+      // Whatever happened above, the context leaves the panel in English for the next test.
+      await page.context().addCookies([{ name: 'payload-lng', value: 'en', url: baseURL! }]);
+    }
+  });
+
   test('preview (ADR-039): a signed link shows a draft page that the public never sees', async ({
     page,
     request,
@@ -2423,7 +2556,7 @@ test.describe('CMS admin', () => {
       const ids: number[] = [];
       try {
         // A new connection: the key comes back as a mask, the empty model and rates as the
-        // service's usual ones.
+        // service's usual ones (the cheap model since Phase 3, 2026-09-18).
         const made = await request.post(`${API}/connections`, {
           headers: json,
           data: { label: 'OpenAI, e2e', kind: 'openai', apiKey: 'sk-e2e-not-a-real-key-7890' },
@@ -2432,9 +2565,9 @@ test.describe('CMS admin', () => {
         const openai = ((await made.json()) as { doc: Record<string, unknown> }).doc;
         ids.push(openai['id'] as number);
         expect(openai['apiKey']).toBe('••••7890');
-        expect(openai['model']).toBe('gpt-4.1');
-        expect(openai['inputPerMillionUsd']).toBe(2);
-        expect(openai['outputPerMillionUsd']).toBe(8);
+        expect(openai['model']).toBe('gpt-4.1-mini');
+        expect(openai['inputPerMillionUsd']).toBe(0.4);
+        expect(openai['outputPerMillionUsd']).toBe(1.6);
         expect(openai['spentThisMonthUsd']).toBe(0);
         expect(openai['callsThisMonth']).toBe(0);
         // Saving the mask keeps the key; the list never shows it either.
@@ -2721,7 +2854,9 @@ test.describe('CMS admin', () => {
           'data-admin-engine-state',
           'mock',
         );
-        await expect(page.locator('[data-admin-engine-recent] li').first()).toContainText(/done/);
+        await expect(
+          page.locator('[data-admin-engine-recent] li').first().locator('[data-admin-run-status]'),
+        ).toHaveAttribute('data-admin-run-status', 'done');
         await expect(page.locator('[data-health-row="engine"]')).toHaveAttribute(
           'data-tone',
           'warning',

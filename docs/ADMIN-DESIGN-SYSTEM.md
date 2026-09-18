@@ -10,12 +10,17 @@ is the checklist, `tests/admin-config.test.ts` is the gate.
 1. **One product.** The panel looks and reads like بحر برنت: the brand font, the 13 px radius,
    the accent blue, the same Arabic voice as the site. Payload's dark greys stay, Dhia's
    choice (dark only), the brand sits on top.
-2. **English panel, Arabic content.** The UI language is English for everyone (Dhia,
-   2026-09-13); labels and descriptions are written in English with an Arabic version kept in
-   the config. The content is Arabic: every text control follows the direction of its own
-   text (`unicode-bidi: plaintext`), so Arabic reads right-to-left inside the panel. Caveat:
-   the direction follows the first strong character, so a title that starts with a Latin
-   word aligns left; if that ever bites, an explicit `dir="rtl"` on that field is the fix.
+2. **Two languages, two axes.** The panel reads in English or in Arabic, chosen per person in
+   the account view (Payload's language select and its `payload-lng` cookie; ADR-056, which
+   reversed the English-only panel of 2026-09-13). Every string of ours exists in both
+   (`admin/strings.ts`), every config label and description is `{ ar, en }`, and Payload
+   sets `dir` on the document for Arabic. The UI language is not the content locale: the
+   AR / EN pills say which language of a document is open, and neither control moves the
+   other. Every text control follows the direction of its own text (`unicode-bidi:
+   plaintext`), so Arabic reads right-to-left and a slug left-to-right in both panels.
+   Caveat: the direction follows the first strong character, so a title that starts with a
+   Latin word aligns left; if that ever bites, an explicit `dir="rtl"` on that field is the
+   fix.
 3. **Icon + label, always.** An icon never stands alone except in an icon button with an
    `aria-label` and a tooltip. Every collection and global has one icon (§4) and it is the
    same icon everywhere it appears (nav, palette, dashboard, empty state).
@@ -110,8 +115,9 @@ published pill) is re-hued to the accent in `@layer payload`; its greys are unto
 
 The admin's strings are interface copy (ADR-031): written by us, under the ux-araby rules.
 
-- The panel's own strings are English (`modules/cms/admin/strings.ts`); the rules below apply
-  to the Arabic versions kept in the config and to any Arabic the panel shows.
+- The panel's own strings live in both languages in `modules/cms/admin/strings.ts` (§5a); the
+  rules below apply to every Arabic the panel shows: our strings, the config's labels and
+  descriptions, and our overrides of Payload's pack (`modules/cms/admin/payload-ar.ts`).
 - Labels are nouns: «المنتجات», «الصفحة الرئيسية», «إعدادات الموقع». Never a sentence.
 - Actions are verb-first imperatives: «أضف صفحة», «ارفع ملفاً», «عرض الموقع». No «قم بـ».
 - Descriptions are one sentence that says what the thing is *for the site*: «الأسئلة الشائعة
@@ -124,10 +130,12 @@ The admin's strings are interface copy (ADR-031): written by us, under the ux-ar
 - Success and status: light passives or nominal («حُفظت المسودة», «الوظائف تعمل»), never «تم».
 - Empty states: why it is empty + the next step: «لا صفحات بعد. أضف الأولى.»
 - Errors: what happened + how to recover, no blame: «تعذّر الحفظ. تحقق من الحقول المعلّمة.»
-- Numbers Western (`1, 2, 3`), dates relative when recent («قبل 3 دقائق»), otherwise
-  `dd/MM/yyyy`; the traffic count's day keys (`YYYY-MM-DD`, Riyadh) show as they are, since
-  they are keys that sort and match the rows. Brand and product names stay Latin: Salla, Zid,
-  Shopify, Turnstile, Resend.
+- Numbers Western (`1, 2, 3`) in both languages, dates relative when recent («قبل 3 دقائق»),
+  otherwise `dd/MM/yyyy`: all through `modules/cms/admin/format.ts` (§5a); the traffic
+  count's day keys (`YYYY-MM-DD`, Riyadh) show as they are, since they are keys that sort and
+  match the rows. Brand and product names stay Latin: Salla, Zid, Shopify, Turnstile, Resend.
+- Counts Arabic declines (one, two, three to ten, eleven and up) are functions in the strings
+  tree, never one template with a number dropped in («7 أيام», «30 يوماً»).
 - Punctuation: Arabic comma «،», «أو» not «/», no «!». **No em dash anywhere** (ADR-040,
   `.claude/rules/writing.md`, `pnpm check:dash`): a colon or two sentences instead.
 - Localised fields (ADR-043): a document reaches the English site when its title-like field
@@ -139,10 +147,42 @@ The admin's strings are interface copy (ADR-031): written by us, under the ux-ar
   document with per-language fields shows the `LocaleNote` line before its controls
   ("Editing the Arabic content. A field tagged AR has its English beside it: type the English
   next to the Arabic, one Save writes both. Rich text, lists and blocks stay per language:
-  switch the locale at the top to edit their English. Fields without a tag are shared.", the
-  strings in `admin/fields/bilingual/strings.ts` in both panel languages); register it
+  switch the locale at the top to edit their English. Fields without a tag are shared.",
+  `locale.editing` and `locale.legend` of both trees in `strings.ts`, §5a); register it
   through `admin/document/config.ts` on every new collection or global with a localised
   field (`tests/admin-config.test.ts` checks).
+
+### 5a. Two languages (ADR-056)
+
+The panel speaks English or Arabic; the person chooses in the account view (Payload's
+language select, kept in its `payload-lng` cookie) and Payload sets `lang` and `dir` on the
+document. Everything of ours follows the request's language, never the build's.
+
+- **Adding a string:** one key in `adminStrings` (English, the shape) and the same key in
+  `adminStringsAr` (`modules/cms/admin/strings.ts`). The Arabic tree is typed as the widened
+  English one, so a missing key fails `tsc`; `tests/admin-strings.test.ts` refuses a leaf
+  without an Arabic counterpart, a lost `{placeholder}`, and any Arabic that breaks the rules
+  above («تم», «قم بـ», «!», «/», a Latin comma, «بنجاح», «الخاص بك», Eastern digits).
+- **Reading a string:** a server component takes `i18n.language` from its props (Payload
+  hands `i18n` to every server component; a custom view reads
+  `initPageResult.req.i18n.language`, `viewLanguage()` in `views/gate.tsx`) and calls
+  `adminStringsFor(language)`; a client component calls `useAdminStrings()`
+  (`modules/cms/admin/use-admin-strings.ts`, over Payload's `useTranslation`) and
+  `useAdminLanguage()` for the code and the direction. Never `const s = adminStrings.x` at
+  module top level: that fixes the language at import.
+- **Numbers and dates:** `formatNumber`, `formatDate` and `relativeTime` in
+  `modules/cms/admin/format.ts` take the language and hand `Intl` a `-u-nu-latn` locale, so
+  the digits stay Western in Arabic; nothing else formats a number.
+- **Payload's own strings:** its `ar` pack, with ours merged on top from
+  `modules/cms/admin/payload-ar.ts` (`i18n.translations.ar`); fix a poor Payload string there,
+  keyed exactly as the `en` pack (a wrong key fails `tsc`).
+- **The content locale is a different axis:** `useLocale()`, the pills and
+  `html[data-content-locale]` say which language of a document is open, whatever the panel's
+  language. A component that needs both (the locale note) keys its sentence by the content
+  locale inside each UI language.
+- **Direction:** logical utilities only (§8), directional icons through `Icon` (mirrored by
+  name; `mirror={false}` for a glyph that must not flip, like the Enter key), Radix menus
+  take `dir` from `useAdminLanguage().direction`, tooltips beside the rail open away from it.
 
 ## 6. Components
 
@@ -171,7 +211,7 @@ Payload's own elements (buttons, fields, pills, toasts) are themed in `admin.css
 | Account menu | `modules/cms/admin/account/*` | Initials avatar, name, e-mail (LTR), role badge, "My account", "Log out" (red). In the rail only the avatar shows. |
 | Login | `modules/cms/admin/login/*` | One line under the form; the Turnstile widget above it (ADR-034). |
 
-| Dashboard | `modules/cms/admin/dashboard/*` | Greeting (name in the accent), quick-action tiles by permission in their entity's hue, health card (`healthReport()`, rows with a colour and a sentence), latest saves with who saved them and a relative time (`relative-time.ts`); a draft nobody titled or saved (an unused "Create New") is left out. Every in-admin link is Payload's `Link`: no reload. |
+| Dashboard | `modules/cms/admin/dashboard/*` | Greeting (name in the accent), quick-action tiles by permission in their entity's hue, health card (`healthReport()`, rows with a colour and a sentence), latest saves with who saved them and a relative time (`admin/format.ts`, in the UI language); a draft nobody titled or saved (an unused "Create New") is left out. Every in-admin link is Payload's `Link`: no reload. |
 | Forms as tabs | `globals/{home,site-settings}.ts`, `collections/{products,posts,pages}.ts` | One tab per section of the site, in site order (ADR-046): Home ten named tabs (Hero · Product strip · Designer · Three steps · Video · Why us · Testimonials · Integrations · FAQ · Ribbon, each opening on its switch where one exists; a named tab stores under the group's old path and columns), Product four (Basics · Photos & colours · Sizes · Print area), Post three (Content · Summary & cover · Search; the sidebar keeps author, dates, reading time, origin, engine actions, warnings), Page two (Content · Search), Site settings four (Brand · Contact & social · Menus & footer · Numbers & legal; the menus are the named tab `menu`). |
 | Page header | `modules/cms/admin/document/entity-header.tsx` | The description slot under Payload's title (`admin.components.Description` on collections, shared with the list view; `admin.components.elements.Description` on globals; registered per config with its `serverProps.entity` through `admin/document/config.ts`): a bar and a disc in the group's hue, the description, "Shows on:" from `admin.custom.shows` (both languages), a link to the public listing where one exists, and on the home page "10 sections, N on" from the saved document (`HomeSectionsCount`). The locale note stays before the document controls. |
 | Blog group | `modules/cms/collections/{posts,categories,authors,tags}.ts` | Posts, hubs, authors, tags (violet, the Blog hue); the post's sidebar carries author, publish and update dates, reading minutes, origin, the editorial warnings (`WarningsField`) and "Last saved"; a publish that breaks a hard rule is refused with the reason (`fields/editorial.ts`, ADR-041). |
@@ -225,8 +265,9 @@ place to edit a value.
   a refusal in the other language fails the whole save with a toast naming the field and
   the language ("Title in English: This field is required."). After a save the other
   input shows what was written, not the old prefill.
-- **Arabic strings** for the tag, the placeholder, the error and the locale note live in
-  `admin/fields/bilingual/strings.ts` as `{ en, ar }` pairs, under §5's rules.
+- **Strings.** The placeholder, the error and the language names are the `bilingual`
+  branch of both trees in `strings.ts`, the note's sentences `locale.legend` (§5a): read
+  per render through `useAdminStrings()`, the Arabic under §5's rules and the strings test.
 
 ## 7. States
 

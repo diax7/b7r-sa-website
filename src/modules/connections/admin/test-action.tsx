@@ -3,9 +3,7 @@
 import { useDocumentInfo, useFormModified } from '@payloadcms/ui';
 import { PlugZap } from 'lucide-react';
 import { ApiAction } from '@/modules/cms/admin/api-action';
-import { adminStrings } from '@/modules/cms/admin/strings';
-
-const s = adminStrings.connections;
+import { useAdminStrings } from '@/modules/cms/admin/use-admin-strings';
 
 /**
  * "Test connection" above a saved connection's form (ADR-047): one short call through the
@@ -14,6 +12,7 @@ const s = adminStrings.connections;
  * reads what is saved, not what is typed.
  */
 export function TestConnection() {
+  const s = useAdminStrings().connections;
   const { id } = useDocumentInfo();
   const modified = useFormModified();
   if (typeof id !== 'number') return null;

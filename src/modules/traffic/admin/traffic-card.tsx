@@ -1,12 +1,12 @@
 import { Link } from '@payloadcms/ui';
 import { Card } from '@/components/shared/card';
 import { Icon } from '@/components/shared/icon';
+import { formatNumber } from '@/modules/cms/admin/format';
 import { COLLECTION_ICONS } from '@/modules/cms/admin/icons';
-import { adminStrings } from '@/modules/cms/admin/strings';
-import { CHANNEL_GROUPS } from '@/modules/traffic/channels';
+import { type AdminStrings, adminStringsFor } from '@/modules/cms/admin/strings';
+import { type Channel, CHANNEL_GROUPS } from '@/modules/traffic/channels';
 import type { TrafficSummary } from '@/modules/traffic/summary';
 
-const s = adminStrings.traffic;
 const TrafficIcon = COLLECTION_ICONS.traffic;
 
 function stat(label: string, value: string) {
@@ -18,12 +18,26 @@ function stat(label: string, value: string) {
   );
 }
 
+/** A channel's name: a brand as it is, a word ("Direct", "Other sites") in the UI language. */
+export function channelLabel(channel: Channel, s: AdminStrings['traffic']): string {
+  return s.channels[channel.key] ?? channel.label;
+}
+
 /**
  * The "Traffic" card on the dashboard (ADR-048, admins): the last seven days' landings, one
  * bar per group with its share (the Visibility pink on the surface track: identity, not
  * meaning), the top channel and the crawler hits. Empty until the first visitor lands.
  */
-export function TrafficCard({ summary, href }: { summary: TrafficSummary; href: string }) {
+export function TrafficCard({
+  summary,
+  href,
+  language,
+}: {
+  summary: TrafficSummary;
+  href: string;
+  language: string;
+}) {
+  const s = adminStringsFor(language).traffic;
   const top = summary.byChannel[0];
   const empty = summary.landings === 0 && summary.crawls === 0;
   return (
@@ -52,9 +66,9 @@ export function TrafficCard({ summary, href }: { summary: TrafficSummary; href: 
       ) : (
         <>
           <div className="grid grid-cols-3 gap-4">
-            {stat(s.card.landings, String(summary.landings))}
-            {stat(s.card.topChannel, top ? top.channel.label : '')}
-            {stat(s.card.crawls, String(summary.crawls))}
+            {stat(s.card.landings, formatNumber(summary.landings, language))}
+            {stat(s.card.topChannel, top ? channelLabel(top.channel, s) : '')}
+            {stat(s.card.crawls, formatNumber(summary.crawls, language))}
           </div>
           <ul className="flex flex-col gap-2" data-admin-traffic-groups="">
             {CHANNEL_GROUPS.map((group) => {
@@ -75,7 +89,9 @@ export function TrafficCard({ summary, href }: { summary: TrafficSummary; href: 
                       style={{ width: `${share}%` }}
                     />
                   </span>
-                  <span className="text-end text-text-muted tabular-nums">{hits}</span>
+                  <span className="text-end text-text-muted tabular-nums">
+                    {formatNumber(hits, language)}
+                  </span>
                 </li>
               );
             })}

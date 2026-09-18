@@ -1140,7 +1140,7 @@ base URL, `mock` for tests, refused in production as before), `model`, `apiKey` 
 existing secret scheme: encrypted at rest with `PAYLOAD_SECRET`, masked on read, kept when
 the form posts the mask back), the two rates, `monthlyLimitUsd` (empty: no limit),
 `enabled`, and read-only `lastTestAt` / `lastTestOk` / `lastTestMessage` written only by
-the test. A new row that leaves the model or a rate empty gets its kind's usual value. Two
+the test. A new row that leaves the model or a rate empty gets its kind's usual value (since 2026-09-18 the cheap model: `gpt-4.1-mini`, `claude-haiku-4-5`, `gemini-3-flash-preview`). Two
 numbers are derived on every read and never stored: `spentThisMonthUsd` and
 `callsThisMonth`, the `ai-runs` rows naming the connection since the Riyadh month began,
 `skipped` left out. **No ledger**: the runs are the record; `ai-runs` gains a nullable
@@ -1426,6 +1426,18 @@ views (Traffic, the Score page) render inside Payload's `DefaultTemplate` throug
 `AdminShell` with the step nav: they had rendered bare, with no sidebar and no way back, a
 defect he reported.
 
+*Amended 2026-09-18 (Dhia's decision under the Phase 3 brief of the pre-launch programme,
+"minimise overall usage, daily to weekly", executed on the AI cost audit in
+`docs/audits/2026-09-18-ai-cost.md`; it reverses his 2026-09-16 "daily on every prompt"): every
+prompt weekly, the brand prompts included (the
+score reads four weeks and M3 a fortnight; a daily brand prompt would have cost $17 a month
+for nothing the rules read); Google on `gemini-3-flash-preview` and Anthropic on
+`claude-haiku-4-5` (the same search tools at half and a third of the price; OpenAI's cost is
+its search fee, so the mini stays); a monthly limit on every AI connection ($10 / $5 / $5);
+the kinds' defaults are the cheap models. Measured: $2.64 a batch on the old models, $1.42 on
+the new; about $6 a month weekly. Applied to the review and the production databases by
+`scripts/ai-spend.ts`, which also removed three queued jobs carrying a Riyadh-clock time.*
+
 ## ADR-050: The GEO content: FAQPage schema, the compare page, answer-first openings, the off-site kit (2026-09-16)
 
 **Context.** Project 4 of Dhia's 2026-09-15 programme: the content the visibility score
@@ -1576,6 +1588,102 @@ crosses the accent only during the 700 ms slide. The stops and the 280% size are
 make this true; a later "more shine" edit must re-check the numbers. The glint is the
 site's third continuous animation after ADR-037's two, transform-only and off under
 reduced motion.
+
+## ADR-055: Scroll reveal on every section, by the primitives (2026-09-18)
+
+Dhia: a subtle animation as things scroll into view, on every item and every page, and on
+future additions. Until now `Reveal` wrapped four lists by hand and hid them by CSS under
+`html.js`, which would have delayed the first paint anywhere a wrapped element sat above the
+fold. The rule now: `Section` carries `data-reveal` by default (`reveal={false}` for the hero,
+which is not a Section anyway, and for a section holding a `position: fixed` child, since a
+transformed ancestor becomes its containing block: the designer); a grid marks
+`data-reveal-stagger` and its children stagger 60 ms by index; `Reveal` stays for a hand-placed
+element and is a server component now. One client island in `PageExtras`
+(`RevealObserver`, the arming in `modules/core/reveal-arm`) runs once hydration is done, so
+React has finished with the DOM before a class is added (the CTO's review: an inline script
+before hydration adds classes the dev hydration diff reports on every section): an element
+already in view is marked visible at once and never hidden, so the LCP and the fold are never
+touched; one below the fold is hidden and fades up 12 px over 400 ms when it enters (an
+IntersectionObserver with an 8% bottom margin); the hide itself is instant, since a fade-out
+is what axe and Lighthouse read as half-transparent text (the first CI run's contrast
+failures on the product cards); a MutationObserver arms elements added later; the stagger
+delay is capped at the ninth child; a printed page shows everything. The CSS hides
+nothing by itself, so content is always there without JavaScript, and the arming exits under
+reduced motion; the graceful loss is a scroll in the first second, which shows plain content.
+`e2e/reveal.spec.ts` asserts the four rules and that the hero image has no hidden ancestor;
+new components inherit the behaviour through `Section`, which is what makes "future
+additions" true without anyone remembering.
+
+## ADR-056: The Arabic admin (2026-09-18)
+
+Dhia, in the pre-launch programme: "add Arabic language support to the admin; I can switch
+the language to see it in Arabic; it must support right-to-left". This reverses the "English
+panel, Arabic content" of ADR-039 (his review of 2026-09-13, recorded in ADR-040's amendment):
+the panel now reads in English or in Arabic, per person.
+
+**The switch is Payload's.** `i18n.supportedLanguages` is `{ en, ar }` with `en` the
+fallback. Payload resolves the language per request from its `payload-lng` cookie (set for a
+year by the account view's language select through a server action, then a refresh), else
+the browser's `Accept-Language`, else the fallback (so an Arabic browser opens the Arabic
+panel at the login page before anyone chooses, which the e2e asserts from a fresh Arabic
+context; the admin suite's own browser is English for that reason); it sets `lang` and `dir`
+on `<html>` itself (`dir="RTL"` for Arabic, from its `rtlLanguages`), and every label and
+description the configs carry as `{ ar, en }` already followed `i18n.language`. Nothing of
+ours stores the choice.
+
+**Two axes, never one control.** The UI language (the cookie, the account view) and the
+content locale (the AR / EN pills, `html[data-content-locale]`, `?locale=`, the user's
+`locale` preference) are different things: the first says what language the panel speaks,
+the second which language of a document is open. Switching one leaves the other alone; the
+code says so where they meet (`strings.ts`, `locale-note.tsx`, `actions-client.tsx`), and
+Payload's own «اللغة» is split into «لغة اللوحة» (the panel's) and «لغة المحتوى» (the
+document's) so the two selects never read alike. The e2e opens the English content of a page
+inside the Arabic panel and checks both attributes.
+
+**Our strings are two trees of one shape.** `adminStrings` (English) is the shape;
+`AdminStrings` widens its literals (a string leaf to `string`, a pair to a pair, a list to a
+list, a function keeps its signature) and `adminStringsAr` is typed as that, so a string
+added in one language without the other is a compile error. A component picks its tree per
+render, `adminStringsFor(i18n.language)` on the server and `useAdminStrings()` (a `'use
+client'` hook over Payload's `useTranslation`) on the client, never at module top level: the
+old `const s = adminStrings.x` at import time would have fixed the language at build. Counts
+that Arabic declines (days) are small functions rather than templates.
+`tests/admin-strings.test.ts` walks both trees (every leaf, the same kind, the same
+placeholders, nothing extra), reads the Arabic under the ux-araby rules a regular expression
+can hold (no «تم» + مصدر, no «قم بـ», no «!», no «/» or Latin comma between Arabic words, no
+«بنجاح», no «الخاص بك», no em dash, no Eastern digits), and checks the resolver.
+
+**Digits stay Western** (design system §5). One formatter, `admin/format.ts`, hands
+`Intl` a locale with `-u-nu-latn` (`ar-u-nu-latn`, `en-GB-u-nu-latn`): numbers, `dd/MM/yyyy`
+dates and "5 minutes ago" («قبل 5 دقائق», the Arabic plurals from `Intl.RelativeTimeFormat`)
+all read Western digits in both languages; `tests/admin-format.test.ts` asserts "1,234" in
+Arabic. Day keys (`YYYY-MM-DD`) are shown as they are. The `relative-time.ts` module is
+replaced by it.
+
+**Payload's `ar` pack is community work**, and the strings an editor meets daily carried
+«تم» + مصدر, «قم بـ», wrong hamzas («أنشاء جديد»), mistranslations («محصول» for crop,
+«واضح» for clear, «المواقع» for locales), an untranslated «Toggle block», a translated
+placeholder («{{العنوان}}») and one leaked instruction to a translation model
+(`general.restoring`). `admin/payload-ar.ts` holds ours on top, merged through
+`i18n.translations.ar` (a key there wins, the rest stays Payload's), typed against the `en`
+pack so a wrong key is a compile error, and read by the same test.
+
+**RTL of our own components.** `check:rtl` already forbids physical utilities; on top of it
+the `mirror-rtl` utility is declared in `admin.css` (the site sheet reached the admin by
+accident and the admin must not depend on it), the sidebar's tooltips open away from the
+rail on whichever side it sits, the account menu passes the document direction to Radix
+(which reads none from the page), the palette's Enter glyph is never mirrored (the key looks
+the same on an Arabic keyboard), a date pair in a table sits in a `dir="ltr"` span, and the
+sidebar's remembered group state is keyed by the group's registry key rather than its label,
+so it survives a change of language; a state saved under the old English labels is simply
+not found, so every group opens once after this ships (a refinement, not a regression). The
+e2e "the admin in Arabic" switches through the
+account view, asserts `html[dir="rtl"]`, the groups, the dashboard, a list, an edit view
+with its content locale, the two views, runs axe on the shell, and switches back.
+
+Not done here: the visibility rules' sentences (`modules/visibility/rules/*`, some seventy
+titles, guides and facts) are still English inside the Arabic Score page; they are the
+rules' own text (ADR-049) and a decision for the text review of Phase 2.
 
 ## ADR-057: Side-by-side bilingual editing (2026-09-18)
 

@@ -41,6 +41,7 @@ export async function DesignerSection({ locale }: { locale: Locale }) {
   return (
     <Section
       id="designer"
+      reveal={false}
       tone="ground"
       aria-labelledby="designer-title"
       className="pb-28 lg:pb-24"
