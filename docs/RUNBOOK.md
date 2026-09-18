@@ -398,33 +398,37 @@ CI writes its dummy ids into the settings (`scripts/ci/analytics-ids.ts`), the U
 - **The citation ledger.** Visibility → Prompts holds the questions a buyer asks an
   assistant (twenty-two seeded: fifteen category questions and seven about B7R by name; add,
   edit or switch off; a prompt that names the brand is ticked "Names the brand" and stays out
-  of the rate). Each prompt has a period, "Every (days)": 1 asks it every morning, 7 weekly,
-  30 monthly; the seed sets 1 on all. Every morning at 07:00 Riyadh, every enabled AI
-  connection under Admin → Connections is asked the prompts due on it, with the vendor's web
-  search on (OpenAI, Anthropic, Google; DeepSeek and a compatible endpoint are asked plain),
-  and the Score page's ledger shows who named B7R, who linked, and the competitors named
-  most; the rows sit under the page as Citations. "Run now" on the page asks every enabled
-  prompt whatever its period (one per ten minutes; a connection asked within the hour is
-  skipped).
-- **What it costs, measured.** The first real batch (2026-09-16, 22 prompts, web search on):
-  OpenAI `gpt-4.1-mini` about $0.22, Google `gemini-3.1-pro-preview` about $0.40, Anthropic
-  `claude-sonnet-4-5` $2.78 with three searches a prompt (the pages a search finds are fed to
-  the model as input: 20,000 tokens an answer). The number on a run is an **estimate**: the
-  tokens the vendor reported at the rates saved on the connection, plus the vendor's
-  published search fee; the bill is on the vendor's usage page. The rates follow the model
-  for the known ones (`MODEL_RATES`: picking `gpt-4.1-mini` on an OpenAI row brings its own
-  price); check them once against the vendor's page after you change a model. The levers, in
-  order: **a monthly limit on every AI connection** (Admin → Connections → the limit; the
-  ledger skips a connection at its limit, and a row without one has no brake, which the
-  engine's card says in amber), the period (a prompt every 7 days costs a seventh), one
-  search a prompt on Claude
-  (the setting since 2026-09-16), a cheaper model (`gpt-4.1-mini`, `gemini-2.5-flash`,
-  `claude-haiku-4-5`), fewer prompts. All 22 daily on those three models is about $1 to $1.5
-  a day; the seven brand prompts daily and the fifteen category prompts weekly is about
-  $0.50 a day. Each connection's monthly limit stops it at your number (Admin → Connections
-  → the limit; set one on every connection); the engine's daily cost cap does not count the
-  ledger (that cap guards the writing). One `citation` run per connection per morning lands
-  in Blog → Runs with its estimate.
+  of the rate). Each prompt has a period, "Every (days)": 7 asks it weekly (the seed sets 7
+  on all since 2026-09-18: the score reads four weeks and its freshest rule a fortnight, so
+  a week serves every rule), 1 every morning, 30 monthly; a prompt's week runs from the day
+  it was last asked. Every morning at 07:00 Riyadh, every enabled AI connection under Admin →
+  Connections is asked the prompts due on it, with the vendor's web search on (OpenAI,
+  Anthropic, Google; DeepSeek and a compatible endpoint are asked plain), and the Score
+  page's ledger shows who named B7R, who linked, and the competitors named most; the rows
+  sit under the page as Citations. "Run now" on the page asks every enabled prompt whatever
+  its period and restarts every week from that day (one per ten minutes; a connection asked
+  within the hour is skipped).
+- **What it costs, measured.** One batch of 22 prompts with web search on (runs of
+  2026-09-16, the estimate's fees corrected): OpenAI `gpt-4.1-mini` $0.45 (84% of it the
+  $25-a-thousand search fee, so no OpenAI model is cheaper), Google `gemini-3.1-pro-preview`
+  $0.57, Anthropic `claude-sonnet-4-5` $1.62 (two thirds of it the pages a search feeds back
+  as input, 15,800 tokens an answer): $2.64 a batch, $80 a month daily. Since 2026-09-18
+  (Phase 3): every prompt weekly, Google on `gemini-3-flash-preview` ($0.29 a batch, the
+  same grounding), Anthropic on `claude-haiku-4-5` ($0.68), OpenAI unchanged: **$1.42 a
+  batch, about $6 a month** (a band of $4 to $8), $3.20 with Claude off; the monthly limits
+  $10 / $5 / $5 cap it at $20. The number on a run is an **estimate**: the tokens the vendor
+  reported at the rates saved on the connection, plus the vendor's published search fee;
+  the bill is on the vendor's usage page. The rates follow the model for the known ones
+  (`MODEL_RATES`: picking a model on a row brings its own price; a new row starts on the
+  cheap model of its kind); check them once against the vendor's page after you change a
+  model. The levers, in order: the period (a weekly prompt costs a seventh), **a monthly
+  limit on every AI connection** (Admin → Connections → the limit; the ledger skips a
+  connection at its limit, and a row without one has no brake, which the engine's card says
+  in amber), the cheaper models above (`gemini-2.5-flash` saves nothing: its grounding is
+  $35 a thousand), one search a prompt on Claude (the setting since 2026-09-16), fewer
+  prompts. The engine's daily cost cap does not count the ledger (that cap guards the
+  writing). One `citation` run per connection per morning lands in Blog → Runs with its
+  estimate.
 - **OpenRouter and the like.** An "OpenAI-compatible endpoint" connection reaches any model
   through one key (`https://openrouter.ai/api/v1`, the model as `openai/gpt-4.1-mini`), at the
   vendors' token prices plus the broker's fee: no cheaper per token. The ledger asks such a
@@ -506,8 +510,11 @@ ignore when 2.0.2 ships.
 - **Keys.** Admin → Connections → Create: a name, the service (OpenAI, Anthropic, Google,
   DeepSeek, or "OpenAI-compatible endpoint" with the service's `https://` address for any
   other AI that serves the OpenAI API), the key, the model id (empty: the service's usual
-  one), the two rates from its pricing page (empty: the published ones), a monthly limit in
-  USD if you want one. Save, then press "Test connection": one short call through the stored
+  one, the cheap one since 2026-09-18: `gpt-4.1-mini`, `claude-haiku-4-5`,
+  `gemini-3-flash-preview`), the two rates from its pricing page (empty: the published
+  ones), a monthly limit in USD (set one on every AI connection: it is the only brake). A
+  post costs about $0.02 to $0.03 on `gpt-4.1-mini` (four to six calls, 20,000 to 36,000
+  input tokens); read the first live runs for the real number. Save, then press "Test connection": one short call through the stored
   key; the answer shows beside the button and is recorded on the row (last test, passed,
   what the service said). The key is stored encrypted and reads back as a mask; leave the
   mask to keep it, clear the field to remove it. Then Blog → Engine settings → Cadence →

@@ -35,9 +35,10 @@ export interface KindInfo {
   /** What the secret is, for the field's label and its guide. */
   secret: 'apiKey' | 'serviceAccount';
   /**
-   * What the vendor charges per web search beyond tokens, in USD (the ledger, ADR-049 D5):
-   * OpenAI and Anthropic $10 per thousand searches, Google $35 per thousand grounded prompts;
-   * DeepSeek, a compatible endpoint and the mock search nothing through us.
+   * What the vendor charges per web search beyond tokens, in USD (the ledger, ADR-049 D5),
+   * for a model family `searchFeeFor` does not know; `searchFeeFor` decides for the known
+   * ones (OpenAI's mini and nano at $25 a thousand, Gemini 3 at $14). DeepSeek, a compatible
+   * endpoint and the mock search nothing through us.
    */
   searchFeeUsd: number;
 }
@@ -46,8 +47,8 @@ export const KINDS: Record<ConnectionKind, KindInfo> = {
   openai: {
     label: { ar: 'OpenAI', en: 'OpenAI' },
     speaks: 'ai',
-    defaultModel: 'gpt-4.1',
-    rates: { input: 2, output: 8 },
+    defaultModel: 'gpt-4.1-mini',
+    rates: { input: 0.4, output: 1.6 },
     needsBaseUrl: false,
     secret: 'apiKey',
     searchFeeUsd: 0.01,
@@ -55,8 +56,8 @@ export const KINDS: Record<ConnectionKind, KindInfo> = {
   anthropic: {
     label: { ar: 'Anthropic (Claude)', en: 'Anthropic (Claude)' },
     speaks: 'ai',
-    defaultModel: 'claude-sonnet-4-5',
-    rates: { input: 3, output: 15 },
+    defaultModel: 'claude-haiku-4-5',
+    rates: { input: 1, output: 5 },
     needsBaseUrl: false,
     secret: 'apiKey',
     searchFeeUsd: 0.01,
@@ -64,8 +65,8 @@ export const KINDS: Record<ConnectionKind, KindInfo> = {
   google: {
     label: { ar: 'Google (Gemini)', en: 'Google (Gemini)' },
     speaks: 'ai',
-    defaultModel: 'gemini-2.5-pro',
-    rates: { input: 1.25, output: 10 },
+    defaultModel: 'gemini-3-flash-preview',
+    rates: { input: 0.5, output: 3 },
     needsBaseUrl: false,
     secret: 'apiKey',
     searchFeeUsd: 0.035,
