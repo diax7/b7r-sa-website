@@ -806,6 +806,8 @@ const descriptionOf = (f: Field | undefined) =>
   (f as { admin?: { description?: { ar?: string; en?: string } } } | undefined)?.admin?.description;
 const LIGHT = ['text', 'textarea', 'select', 'number'];
 const HEAVY = new Set(['richText', 'upload']);
+/** A field named by its entity: what the census lists. */
+const placedName = (p: Placed & { slug: string }) => `${p.slug}.${p.path}`;
 
 /** A localized light field an editor can type in: what the rule says must be bilingual. */
 function editableLight(p: Placed): boolean {
@@ -959,54 +961,64 @@ describe('side-by-side bilingual editing (ADR-057)', () => {
     });
   }
 
-  it('the census (PR A and B): 55 localized light fields inside rows are bilingual; every localized rich text and upload has its twin right after it', () => {
+  /**
+   * The census gate of PR C (`docs/plans/2026-09-18-no-locale-switch.md`): the locale switch
+   * may go only when nothing an editor types depends on it. Every localized field across the
+   * 23 configs is either paired (a light field wearing `BilingualField`, a heavy field followed
+   * by its `<name>Twin` with the same editor or collection) or one of the post's two computed
+   * facts (`warnings`, the one list localized as a whole, and `readingMinutes`), which the
+   * post's own `beforeChange` hook writes for the language of each write and nobody edits.
+   * Anything else is listed by name so the failure says what remains.
+   */
+  it('the census gate (PR C): 129 localized fields paired, 55 of them inside rows, the four heavy ones by their twins; the two computed facts of the post are the only ones without a pair; no list is localized as a whole but the warnings', () => {
     const placed = configs.flatMap((c) =>
       everyField(c.fields).map((p) => ({ ...p, slug: c.slug })),
     );
-    const inRows = placed.filter((p) => p.inList && widgetOf(p.field) === BILINGUAL_FIELD);
-    expect(inRows.length).toBe(55);
-    const heavy = placed.filter(
-      (p) =>
-        !p.inLocalizedList &&
-        (p.field as { localized?: boolean }).localized === true &&
-        HEAVY.has(p.field.type),
+    const localized = placed.filter(
+      (p) => !p.inLocalizedList && (p.field as { localized?: boolean }).localized === true,
     );
-    expect(heavy.map((p) => `${p.slug}.${p.path}`)).toEqual([
+    const pairedLight = localized.filter(
+      (p) => LIGHT.includes(p.field.type) && widgetOf(p.field) === BILINGUAL_FIELD,
+    );
+    const pairedHeavy = localized.filter(
+      (p) => HEAVY.has(p.field.type) && isTwinOf(p.next, p.field),
+    );
+    expect(pairedLight.length).toBe(125);
+    expect(pairedLight.filter((p) => p.inList).length).toBe(55);
+    expect(pairedHeavy.map(placedName)).toEqual([
       'pages.blocks.richText.content',
       'posts.body',
       'home.hero.slides.imageDesktop',
       'home.hero.slides.imageMobile',
     ]);
-    // Covered: the twin follows, same editor or collection, and the config's walk agrees.
-    const uncovered = heavy.filter((p) => !isTwinOf(p.next, p.field)).map((p) => p.path);
-    expect(uncovered).toEqual([]);
+    for (const p of pairedHeavy) {
+      expect((p.next as { name?: string }).name).toBe(twinName((p.field as { name: string }).name));
+    }
     expect(twinPaths(Pages.fields)).toEqual(['blocks.richText.content']);
     expect(twinPaths(Posts.fields)).toEqual(['body']);
     expect(twinPaths(Home.fields)).toEqual(['hero.slides.imageDesktop', 'hero.slides.imageMobile']);
-    for (const p of heavy) {
-      expect((p.next as { name?: string }).name).toBe(twinName((p.field as { name: string }).name));
+    // What remains: the two computed facts, read-only, and nothing else. A new localized
+    // field that lands here is a field an editor could only reach through a locale switch
+    // that no longer exists (a heavy field without its twin, a light field with a widget of
+    // its own, a hasMany, a relationship, a list localized as a whole).
+    const paired = new Set([...pairedLight, ...pairedHeavy]);
+    const remaining = localized.filter((p) => !paired.has(p));
+    expect(remaining.map((p) => `${placedName(p)} (${p.field.type})`)).toEqual([
+      'posts.warnings (array)',
+      'posts.readingMinutes (number)',
+    ]);
+    for (const p of remaining) {
+      expect((p.field as { admin?: { readOnly?: boolean } }).admin?.readOnly, placedName(p)).toBe(
+        true,
+      );
     }
-    // Every other localized field of one value is light and bilingual: nothing is left on the
-    // locale control but the lists localized as a whole below.
-    const onSwitch = placed
-      .filter(
-        (p) =>
-          !p.inLocalizedList &&
-          (p.field as { localized?: boolean }).localized === true &&
-          !LIGHT.includes(p.field.type) &&
-          !HEAVY.has(p.field.type) &&
-          !['array', 'blocks', 'group'].includes(p.field.type),
-      )
-      .map((p) => `${p.slug}.${p.path}`);
-    expect(onSwitch).toEqual([]);
-    // The lists localized as a whole: only the post's computed warnings (a fact, read-only).
     const wholeLists = placed
       .filter(
         (p) =>
           (p.field.type === 'array' || p.field.type === 'blocks') &&
           (p.field as { localized?: boolean }).localized === true,
       )
-      .map((p) => `${p.slug}.${p.path}`);
+      .map(placedName);
     expect(wholeLists).toEqual(['posts.warnings']);
   });
 });
