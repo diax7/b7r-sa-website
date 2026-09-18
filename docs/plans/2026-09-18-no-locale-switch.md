@@ -79,6 +79,9 @@ Payload's own component renders.
   `DELETE FROM payload_preferences WHERE key = 'locale'`, rewrites the visibility guides
   that link a field in the missing locale to link the field and name the column, and adds
   a check that no `?locale=` survives under `src/`; and the removal lands last.
+- Wording that names an "open language" goes with the switch: `SHARED_ROWS_NOTE` becomes
+  "a duplicated row copies the Arabic only; its English starts empty" and `locale.legend`
+  reads Arabic / English without a current locale (the CTO's PR A review).
 - Docs: ADR-057 amended with Dhia's sentence and the light/heavy rule; design system §6a
   rewritten; admin-ui rules 2b and 12; the e2e asserts no localizer, both columns in one
   form, an English text and an English row landing in `?locale=en` REST reads after one

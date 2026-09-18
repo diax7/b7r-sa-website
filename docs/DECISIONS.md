@@ -1846,7 +1846,9 @@ slug, the Arabic never copied into an untouched English row), the hook with a bl
 with a made-up row, the census in `tests/admin-config.test.ts` (55 in rows; the three heavy
 row fields; the one whole-localized list); two e2e (a comparison row's text in both
 languages, a fourth row with its English and a keyboard move in one Publish; a hero slide's
-line on the home page).
+line on the home page). The mechanism is built for exactly two locales: with a third, the
+pair resolver returns nothing and every field falls back to Payload's switch (a decision to
+take the day a third language is added, not a bug).
 
 ## ADR-058: The sidebar: one tree, one breakpoint (2026-09-18)
 

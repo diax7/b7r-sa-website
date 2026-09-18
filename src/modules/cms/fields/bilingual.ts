@@ -385,7 +385,9 @@ export function otherLocaleRows(
     const id = row['id'];
     const shape = rowShapeOf(list, row);
     if (!shape || typeof id !== 'string') {
-      out.push({ ...row });
+      // A row whose block type the config no longer has: the stored English row by id, never
+      // the Arabic one, so a removed block never carries Arabic text into English.
+      out.push({ ...((typeof id === 'string' && rowById(storedRows, id)) || row) });
       continue;
     }
     out.push(
