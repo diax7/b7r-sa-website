@@ -118,9 +118,15 @@ scripts keep it current, both taking `--env <file>` for another database and buc
 `curl -I` on 2026-09-19; `media-to-bucket.mjs` set that header on the objects it uploaded),
 and `next/image` caches its transforms by URL for a year (`images.minimumCacheTTL`): an
 object replaced under its old name keeps serving the old bytes to the optimizer and to the
-browser for up to a year. The document's `url` changes with the name, the pages pick it up
-on the next revalidation, and the old object goes when Payload deletes it. An upload from the
-admin is safe for the same reason: Payload names a new file uniquely.
+browser for up to a year. The document's `url` changes with the name and the old object goes
+when Payload deletes it. **The production run ends with a redeploy** (the script says so
+when it changed anything): a media document revalidates no page of its own, so the
+prerendered pages keep the old names until their 60 s timer runs (ADR-030), and in that
+minute a photo not cached at the CDN edge or by the optimizer answers 404, the old file
+being gone; the rebuild prerenders every page with the new names at once and clears the
+optimizer's cache. An upload from the admin is safe for the same reason as the rename:
+Payload names a new file uniquely; the page that uses it is saved after, and its own hook
+revalidates it.
 
 ## Docker
 
@@ -674,7 +680,16 @@ its English editor or picker under the Arabic one. Type the English next to the 
 one Save writes both. There is no locale switch in the panel and no admin URL takes
 `?locale=` (an old link is redirected without it); the REST API keeps `?locale=`, and a
 `locale` preference left from before the switch went is purged by migration
-`20260918_142817_purge_locale_preference`. The Publish rule: touching one English field on a
+`20260918_142817_purge_locale_preference`. A REST write on `?locale=en` must carry
+`fallback-locale=none`, or every omitted empty English field is filled with the Arabic:
+Payload fills what the request omits from the document read with the request's fallback
+locale, the default one unless the request says otherwise. A global (the home page, the
+site settings) is the one exposed: its update reads the original that way, while a
+collection's update by id reads it without fallback (`payload`'s `updateDocument`, verified
+2026-09-19). The read that captures a global for a restore takes the same parameter, or its
+copy already holds the Arabic. The panel writes in the default locale, where the fallback is
+the locale itself; the bilingual mechanism's second write passes `fallbackLocale: false`
+(`hooks/translations.ts`). The Publish rule: touching one English field on a
 Publish validates the whole English document, the collection's own rules included (on a
 post: the English excerpt, the three English takeaways and the two internal links of the
 English body), exactly as a Publish from the English locale does; a half-filled English side

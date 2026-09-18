@@ -326,10 +326,30 @@ backfills the field; `scripts/media-requality.ts` re-uploads the seeded photos a
 encode under a **new name** (the seed's name plus 8 hex of the file's sha256), because the
 bucket's CDN caches an object for a year as `immutable` and the optimizer caches its
 transforms by URL for as long (RUNBOOK, "Assets"), and deletes the old renditions beside the
-file. **Share images.** A q92 cover is 400 to 530 KB and WhatsApp drops a preview image over
-roughly 300 KB, so the `og:image` of a CMS photo is the optimizer's URL at 1200 wide (the
-JPEG a scraper without an `Accept` header gets, about 60 KB), its declared size scaled to
-match; the `/og/*.png` renders are unchanged.
+file. **A media rename ends with a redeploy** (the CTO's review): the media collection has
+no revalidation hook, so a renamed file reaches the prerendered pages through ADR-030's 60 s
+timer only, while the old file is already gone from the bucket; for that minute a photo not
+cached at the CDN edge or by the optimizer is a 404 (the optimizer caches no failure, so
+nothing outlives the minute). The rebuild prerenders every page with the new names at once
+and clears the optimizer's cache; the script prints the reminder when it changed anything.
+`deviceSizes` also gains 1536, the 2x candidate of the 760 px reading column, so a blog
+cover's 2x fetch is the 1536 rendition (60,515 B for the pricing cover) rather than the
+1920 one (120,197 B). **Share images.** A q92
+cover is 400 to 530 KB and WhatsApp drops a preview image over roughly 300 KB, so the
+`og:image` of a CMS photo is the optimizer's URL at 1200 wide (the JPEG a scraper without
+an `Accept` header gets, about 60 KB), its declared size scaled to match; the `/og/*.png`
+renders are unchanged. **Two findings of the same review, outside the photos.** The
+bilingual hook's `inOtherLocale` (ADR-057) takes `req.file` off the request for the other
+language's write and puts it back after: Payload's Local API clears it itself on this
+version (`local/update.js`), so no second copy was ever uploaded (verified with a bilingual
+upload and a replacement through REST: the names stay), but the guarantee is now the hook's
+own, and the outer operation's `unlinkTempFiles` sees the file again. And the hook's second
+write passes `fallbackLocale: false`, as its read did: a **global's** update reads its
+original with the request's fallback locale and fills every omitted localized field from
+that copy, so a write on `?locale=en` without `fallback-locale=none` copies the Arabic
+into each empty English field (a collection's update by id reads without fallback, verified
+2026-09-19); the e2e's restores of the home and site-settings globals carry the parameter
+(RUNBOOK, "The English site").
 
 ## ADR-030: Publish → live: a 60 s timer plus `revalidatePath` on static routes (2026-09-13)
 

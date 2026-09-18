@@ -62,14 +62,16 @@ What the browser fetches, through the URLs the pages emit (`Accept: image/avif,.
 | Hero mobile, 1200w | 19,262 B, 1080 by 1350 | 16,371 B, 794 by 992 |
 | Product card on `/products`, 828w | 6,648 B, 828 by 828 (q75 over q82) | 8,835 B, 828 by 828 (q90 over q92) |
 | Product page gallery, 1200w | 7,133 B, 1000 by 1000 | 10,380 B, 1000 by 1000 |
-| Blog cover on the post, 1920w (2x of 760 px) | 33,783 B, 1600 by 900 | 120,197 B, 1920 by 1080 |
+| Blog cover on the post, 2x of 760 px | 33,783 B, 1600 by 900 (the 1920w candidate) | 60,515 B, 1536 by 864 (the 1536w candidate `deviceSizes` gained in the review; the 1920w is 120,197 B) |
 
 The hero AVIF at 1920 stays far under the 220 KB budget of BRD 7.8 (38,662 B for set A,
 52,406 B for set B, both from the server), so the budget line in
 `e2e/a11y-and-budgets.spec.ts` is unchanged and the 85 fallback the CTO allowed for the hero
 was not needed. The blog cover's 2x candidate is the one that grew (the source is now 2000
 by 1125 instead of 1600 by 900, and the encode keeps the print's edges); a 3x phone fetches
-the 1200w candidate at 29,434 B and a 1x desktop the 828w at 12,185 B.
+the 1200w candidate at 29,434 B and a 1x desktop the 828w at 12,185 B. Before the review
+added 1536 to `deviceSizes`, the 2x desktop fetched the 1920w candidate at 120,197 B for a
+760 px box.
 
 What is stored (the library, 33 files): 1,638.8 KB before, 3,739.9 KB after. A product photo
 is 61 to 128 KB instead of 25 to 47; a cover 410 to 530 KB instead of 70 to 106. The bucket
@@ -120,8 +122,12 @@ the PSDs in `resources/source-files` is served at 2000. When they land:
    `pnpm assets`, or upload them through the admin (the hook computes the blur, the
    optimizer resizes; no rendition to wait for).
 2. `pnpm exec tsx scripts/media-requality.ts --dry-run`, then without the flag, on the
-   review database; after the merge, `--env .env.cranl.local` for production (RUNBOOK,
-   "Assets"). A replaced photo gets a new name on purpose.
+   review database; after the merge, `--env .env.cranl.local` for production, **then a
+   redeploy** (RUNBOOK, "Assets"): a replaced photo gets a new name on purpose, the media
+   collection revalidates no page, and the rebuild prerenders every page with the new
+   names at once instead of the 60 s timer.
+3. Re-run the measurement above at 2x on the real photographs and re-read the 220 KB
+   budget: a 3000 px AVIF at q90 above about 250 KB puts the hero alone at 85.
 
 Not touched, on purpose: the designer's mock-up (`optimizedSrc` at 82, drawn on a canvas),
 the video poster (a stock still under a scrim), the author avatars (48 and 112 px).
