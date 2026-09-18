@@ -619,6 +619,10 @@ Phases: (1) foundation: this ADR, tokens, primitives, icons, descriptions; (2) t
 sidebar, header, palette, account, login; (3) the dashboard, the preview button (Next draft
 mode; the proxy passes requests carrying the draft cookie), `lastSavedBy`, field widgets.
 
+Amended 2026-09-18: the dashboard's seven sections, its range control and its readers are
+ADR-059; the quick-action tiles, the health card and the latest-changes list below are as
+Phase 3 shipped them.
+
 Phase 3 (2026-09-13, as shipped). **Dashboard** (`views.dashboard.Component`, rendered inside
 Payload's template): a greeting, quick-action tiles filtered by the user's permissions, the
 system health card from `healthReport()` (the same function `/api/health` answers; no HTTP
@@ -1765,3 +1769,78 @@ with `?locale=all`, the refusal of a blanked English title). Migration
 `20260918_033852_translations`: one nullable `jsonb` on the fourteen tables and the five
 version tables. The bilingual root carries no `data-admin-ui`: it hosts Payload's inputs,
 which the shell's element reset would strip; `data-admin-bilingual` is the e2e hook.
+
+## ADR-059: The dashboard: what matters at a glance (2026-09-18)
+
+**Context.** The admin audit (`docs/audits/2026-09-18-admin.md`, §5) found the dashboard a
+server report and a save log: an owner could not answer "how is the site doing" from it (no
+visits over a range or trend, no cited rate, no drafts waiting, no published this week, no
+spend against limits, no next runs), the system-status card mixed what an owner acts on
+with what the environment is, the engine card listed the ledger's runs, and nothing had a
+range. The audit's section 5 proposed seven sections and named the reader behind every
+number; the CTO agreed with four edits.
+
+**Decision.** The dashboard (`modules/cms/admin/dashboard/*`, still Payload's
+`views.dashboard` inside its template) is seven sections, top to bottom: (1) the greeting
+by the Riyadh hour, the 7 / 30 / 90 day range at the trailing edge and the "needs a hand"
+line (failed runs this week, a connection at its limit, an enabled connection whose last
+Test failed, documents without English, drafts older than a week); (2) four tiles: visits
+with the change against the previous range, the cited rate, the visibility score with its
+trend, "went live" in the range (a post by its publish date, a page or product by the last
+save of the live document, which the hint says) with the drafts waiting; (3)
+where visits come from; (4) what the assistants say; (5) the content; (6) the engine and
+the spend; (7) the server. The quick-action tiles fold into section 5 as the home tile and
+two bordered buttons ("Write a post", "Add a product"); "Add a page" and "Add a question"
+are one click away in the sidebar and leave the dashboard. The four edits: the cited-rate
+tile says "on the category prompts" (the brand prompts are outside the rate, cost audit §2);
+section 4's next run is the next morning a prompt is due, computed by the run's own
+`duePrompts` against the last citation day per prompt and connection over the ledger's
+window (`schedule.ts`), or the plain sentence "07:00 Riyadh, when a prompt is due" when
+there is no prompt or no enabled connection; section 6's spend bar turns amber with "No
+monthly limit" when a connection has none, as the ledger card does, and red at the limit;
+"drafts waiting" is the one number the documents table cannot answer (a newer draft over a
+published version lives in the versions table), so it is two `countVersions` on
+`latest: true` per content collection, the dashboard's one non-trivial query, and every
+count links to the list filtered on `_status`. "Run now" stays off the dashboard: it costs
+money and lives on the Score page.
+
+**The range control** is a search param (`/admin?days=30`), rendered by the server as links
+with `aria-current`, no client state; anything but 7, 30 or 90 is the week. It drives the
+visits tile, the published tile and the visits section; the cited rate keeps the ledger's
+28-day window and the engine its month, as the audit sequenced. The previous range is the
+double range minus the current (`trafficSummary` twice).
+
+**The readers.** The existing ones are reused as the audit's table names them
+(`trafficSummary`, `reading` and `scoreTrend`, `ledgerReading`, `engineSummary`,
+`healthReport`, `recentActivity`); four are new (`readers.ts`): published in the range
+(posts by `publishedAt`, pages and products by the last published save), drafts waiting and
+stale, documents without their English title (`locale: 'all'`, no fallback, nothing while
+the site is Arabic only) and one row per AI connection with `connectionSpend`; plus the
+failed runs of the week and the next occurrence of each scheduled task, computed on the
+Riyadh clock from the cron each task exports beside itself (`visibility/schedule.ts`,
+`visibility/ledger/schedule.ts`, `ai-content/schedule.ts`: one constant read by the task and
+by the dashboard, so the two cannot drift). One server render, every read in one `Promise.all`, each guarded: a failing reader
+logs and its section shows the "not available" word; a reader the user may not run is
+skipped and its section is not rendered (the editor's dashboard is the greeting, the
+published tile, the content and the server). Nothing new is cached: the score reading keeps
+its minute per process and user; a render of an admin's dashboard is about fifty-five small
+Local API calls (sixty-five when the score's minute has lapsed), the largest shares the
+latest-saves walk, the health report's engine state and the score snapshot, all parallel.
+
+**The engine card** loses its run list and its average score (the runs page holds them; a
+failed run reaches the "needs a hand" line) and gains the caps: posts against the monthly
+cap, today's cost against the daily cap. `engineState` reports the two caps.
+
+**Both languages.** Every string in both trees; the Arabic counts (runs, documents, drafts,
+engines) decline through `arabicCount`; the greeting is «صباح الخير» in the morning and
+«مساء الخير» from noon (Arabic has no afternoon greeting); `formatSlot` says "today 07:00",
+"tomorrow 04:00" or the date, the hour on the Riyadh clock, Western digits. Bars grow from
+the start edge (`inline-size`); the server section is a native `details`, so it folds
+without JavaScript and opens itself when a row is red.
+
+**Tests.** `tests/dashboard.test.ts` covers the range with its default and bounds, the
+greeting, the "needs a hand" rules, the crons against the tasks, the next occurrences, the
+ledger's next morning, the four readers against a recorded fake Payload, the tiles and the
+actions by permission; `tests/admin-format.test.ts` covers `formatSlot`. The admin e2e walks
+the seven sections, the range as a link, the drafts link with its `_status` filter, the
+server folded unless red, the editor's view, and axe on the dashboard in both languages.
