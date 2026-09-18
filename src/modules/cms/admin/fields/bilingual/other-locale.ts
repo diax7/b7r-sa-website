@@ -59,9 +59,15 @@ function entryFor(url: string, lastUpdateTime: number): Entry {
   const key = keyOf(url, lastUpdateTime);
   let entry = entries.get(key);
   if (!entry) {
-    // One live entry per document: the reads of earlier saves are no longer wanted.
-    for (const stale of entries.keys()) if (stale.startsWith(`${url}@`)) entries.delete(stale);
-    entry = { state: LOADING, started: false, listeners: new Set() };
+    // One live entry per document: after a save the earlier read stands in (no empty,
+    // disabled input while the fresh one is on its way) and is dropped once it lands.
+    let previous: OtherLocaleState = LOADING;
+    for (const [stale, old] of entries) {
+      if (!stale.startsWith(`${url}@`)) continue;
+      if (old.state.status === 'ready') previous = old.state;
+      entries.delete(stale);
+    }
+    entry = { state: previous, started: false, listeners: new Set() };
     entries.set(key, entry);
   }
   return entry;
