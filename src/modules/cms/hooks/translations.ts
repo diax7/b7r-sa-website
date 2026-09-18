@@ -9,11 +9,10 @@ import type {
 } from 'payload';
 import { Refused } from '@/modules/cms/refused';
 import {
-  bilingualPaths,
   entriesOf,
   nestPaths,
   plannedWrites,
-  readPath,
+  shapeOf,
   TRANSLATIONS,
 } from '@/modules/cms/fields/bilingual';
 
@@ -34,8 +33,11 @@ import {
  *
  * The second write runs this hook again with `context.skipTranslations`, so it returns at
  * once; the collection's other hooks (revalidation, the stamps) run for the other language
- * as they would on the locale switch. Only paths `bilingualPaths` names are ever written:
- * the JSON comes from the client.
+ * as they would on the locale switch. Only keys the config resolves are ever written
+ * (`resolveKey`: a bilingual field, a row the saved document has): the JSON comes from the
+ * client. An entry inside a shared list sends the whole list in the other locale, its rows
+ * built from the saved document by id (`otherLocaleRows`): Payload's array write is
+ * positional and a partial list would drop the other rows.
  */
 export const SKIP_TRANSLATIONS = 'skipTranslations';
 
@@ -178,9 +180,8 @@ async function apply(req: PayloadRequest, doc: Doc, target: Target): Promise<Doc
   if (!pair) return doc;
   const entries = entriesOf(doc[TRANSLATIONS], pair.other);
   if (Object.keys(entries).length === 0) return doc;
-  const allowed = new Set(bilingualPaths(target.fields));
   const stored = await readOther(req, target, pair.other);
-  const writes = plannedWrites(entries, allowed, (path) => readPath(stored, path));
+  const writes = plannedWrites(entries, shapeOf(target.fields), doc, stored);
   if (writes.length === 0) return doc;
   const data = { ...nestPaths(writes), [TRANSLATIONS]: null };
   try {

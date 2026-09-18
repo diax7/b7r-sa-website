@@ -72,10 +72,12 @@ const readOnlyShown = (field: Field): boolean => {
  *
  * The same pass, per field and in this order: the description, the collision refusal, the
  * checkbox's list badge, the read-only JSON's block and cell, the read-only scalar's line,
- * then `BilingualField` (ADR-057) on every localized text, textarea and select that has no
- * widget by then (a read-only localized text is a line, never a twin). When a config has any
- * bilingual field the hidden `translations` JSON the hook reads is appended once; the
- * config's `afterChange` must then list `applyTranslations` (the config test checks).
+ * then `BilingualField` (ADR-057) on every localized text, textarea, select and number that
+ * has no widget by then (a read-only localized text is a line, never a twin), inside the
+ * rows of arrays and blocks too; such a list's description ends with what duplicating a
+ * row does to the other language. When a config has any bilingual field the hidden
+ * `translations` JSON the hook reads is appended once; the config's `afterChange` must then
+ * list `applyTranslations` (the config test checks).
  */
 export function describeFields(fields: Field[], map: Described, applied?: Set<string>): Field[] {
   const bilingual = new Set(bilingualPaths(fields));
@@ -119,6 +121,9 @@ function named(field: Field & { name: string }, pass: Pass, name: string): Field
   if (pass.bilingual.has(name) && !adminOf(next).components?.Field) {
     next = withComponent(next, 'Field', BILINGUAL_FIELD);
   }
+  if ((next.type === 'array' || next.type === 'blocks') && hasBilingualRow(pass, name)) {
+    next = withSharedRowsNote(next);
+  }
   if ('fields' in next && Array.isArray(next.fields)) {
     next = { ...next, fields: walk(next.fields, pass, `${name}.`) } as Field;
   }
@@ -132,6 +137,30 @@ function named(field: Field & { name: string }, pass: Pass, name: string): Field
     };
   }
   return next;
+}
+
+/**
+ * What duplicating a row does in a list whose rows are edited in both languages (ADR-057,
+ * PR A): the form copies the open language with a new row id, so the other language of the
+ * copy starts empty. Said on the list, after its own sentence.
+ */
+export const SHARED_ROWS_NOTE = {
+  ar: 'تكرار الصف ينسخ اللغة المفتوحة فقط؛ واللغة الأخرى تبدأ فارغة.',
+  en: 'Duplicating a row copies the open language only; the other one starts empty.',
+};
+
+const hasBilingualRow = (pass: Pass, name: string): boolean =>
+  [...pass.bilingual].some((path) => path.startsWith(`${name}.`));
+
+function withSharedRowsNote(field: Field): Field {
+  const own = adminOf(field).description as { ar?: unknown; en?: unknown } | undefined;
+  if (own !== undefined && (typeof own.ar !== 'string' || typeof own.en !== 'string')) {
+    return field;
+  }
+  const description = own
+    ? { ar: `${own.ar} ${SHARED_ROWS_NOTE.ar}`, en: `${own.en} ${SHARED_ROWS_NOTE.en}` }
+    : SHARED_ROWS_NOTE;
+  return { ...field, admin: { ...field.admin, description } } as Field;
 }
 
 /** The map's sentence on the field; an inline one beside it is refused (audit 2026-09-18, 2.9). */
