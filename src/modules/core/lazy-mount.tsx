@@ -1,10 +1,10 @@
 'use client';
 
 import {
-  startTransition,
   Suspense,
   useCallback,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
   type ReactNode,
@@ -18,6 +18,8 @@ interface NearViewportProps {
   rootMargin?: string;
   /** Mount immediately regardless of position (e.g. a deep link targets the island). */
   eager?: boolean;
+  /** Runs once the island has committed (after the stand-in left, before the paint). */
+  onMounted?: () => void;
   className?: string;
 }
 
@@ -27,31 +29,46 @@ const focusables = (el: HTMLElement) =>
     (c) => c.tabIndex >= 0 && !c.hasAttribute('disabled'),
   );
 
+/** Tells the host the island's tree has committed: a layout effect, so the host can drop the
+ *  stand-in in the same frame, before the browser paints. */
+function Committed({ onCommit, children }: { onCommit: () => void; children: ReactNode }) {
+  useLayoutEffect(onCommit, [onCommit]);
+  return children;
+}
+
 /**
  * Mounts `children` (a `lazy()` island) only when the host element approaches the viewport,
  * or the moment a person reaches for the stand-in (a Tab onto one of its controls, a finger
  * or a pointer on it), keeping the first-paint JS within the BRD 7.8 budget. Until then the
  * `fallback` (server-rendered) is what visitors and crawlers see; its controls are
- * `aria-disabled`, not `disabled`, so they can take focus and the reach is noticed. The mount
- * is a transition: React keeps the stand-in on screen while the chunk downloads and swaps it
- * once, so the box never empties (a `next/dynamic` island with no `loading` renders nothing
- * in that window, a layout shift when the box has height); the Suspense fallback is the same
- * stand-in, a net for the cases a transition does not cover. A control focused in the
- * stand-in hands its focus to the island's control at the same index after the swap, so a
- * keyboard user is never dropped to the body. The children never render on the server,
- * `eager` included: `React.lazy` would otherwise run the island's module in Node.
+ * `aria-disabled`, not `disabled`, so they can take focus and the reach is noticed. The host
+ * renders the stand-in itself, outside the island's Suspense boundary (whose own fallback is
+ * empty), and drops it in the island's layout effect: so there is exactly one stand-in in the
+ * DOM at any moment and the box never empties or doubles while the chunk downloads (a
+ * Suspense boundary that shows the same node as its fallback duplicated the stand-in on a
+ * dehydrated boundary, PR #38's CI). A control focused in the stand-in hands its focus to the
+ * island's control at the same index after the swap, so a keyboard user is never dropped to
+ * the body. The children never render on the server, `eager` included: `React.lazy` would
+ * otherwise run the island's module in Node.
  */
 export function NearViewport({
   children,
   fallback = null,
   rootMargin = '400px 0px',
   eager = false,
+  onMounted,
   className,
 }: NearViewportProps) {
   const host = useRef<HTMLDivElement>(null);
   const [near, setNear] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const focusedIndex = useRef<number | null>(null);
-  const mount = useCallback(() => startTransition(() => setNear(true)), []);
+  const mount = useCallback(() => setNear(true), []);
+  const onCommit = useCallback(() => setMounted(true), []);
+  const mountedCallback = useRef(onMounted);
+  useEffect(() => {
+    mountedCallback.current = onMounted;
+  }, [onMounted]);
 
   useEffect(() => {
     if (eager) {
@@ -80,45 +97,68 @@ export function NearViewport({
 
   useEffect(() => {
     const el = host.current;
-    if (!el || near) return;
+    if (!el || mounted) return;
     const onFocusIn = () => {
       focusedIndex.current = focusables(el).indexOf(document.activeElement as HTMLElement);
       mount();
     };
+    // A focus that leaves for another element is not to be brought back (a Tab through the
+    // stand-in into the next island's rows). The swap's removal of the focused control fires
+    // a focusout with no related target, so only a move to a named element outside clears.
+    const onFocusOut = (e: FocusEvent) => {
+      if (e.relatedTarget instanceof Node && !el.contains(e.relatedTarget)) {
+        focusedIndex.current = null;
+      }
+    };
     el.addEventListener('focusin', onFocusIn);
+    el.addEventListener('focusout', onFocusOut);
     el.addEventListener('pointerdown', mount, { passive: true });
+    // A Tab that landed in the stand-in before hydration (the listeners arrive with it).
+    if (el.contains(document.activeElement)) onFocusIn();
     return () => {
       el.removeEventListener('focusin', onFocusIn);
+      el.removeEventListener('focusout', onFocusOut);
       el.removeEventListener('pointerdown', mount);
     };
-  }, [near, mount]);
+  }, [mounted, mount]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const el = host.current;
-    if (!el || !near) return;
-    // The focused stand-in control leaves the DOM at the swap and the browser drops focus to
-    // the body; a focus that moved elsewhere on purpose is left alone. The transition commits
-    // the swap together with `near`, so this effect runs right after it; the observer is the
-    // net for the Suspense-fallback path, where the island arrives in a later commit.
-    const restore = () => {
-      const index = focusedIndex.current;
-      if (index === null || index < 0) return;
-      const active = document.activeElement;
-      if (active && active !== document.body) return;
+    if (!el || !mounted) return;
+    mountedCallback.current?.();
+    const index = focusedIndex.current;
+    if (index === null || index < 0) return;
+    // The focused stand-in control left the DOM at the swap. The browser drops the focus to
+    // the body, in the same task or at its next frame (the focus fixup), so the hand-over
+    // runs now, in the layout effect, and again on the next frame: a focus that moved to
+    // another element on purpose is left alone, and the index is kept until the island's
+    // control holds the focus.
+    const settle = () => {
       const target = focusables(el)[index];
-      if (!target || target.getAttribute('aria-disabled') === 'true') return;
-      target.focus();
-      focusedIndex.current = null;
+      const active = document.activeElement;
+      if (!target || active === target) {
+        focusedIndex.current = null;
+        return;
+      }
+      if (!active || active === document.body || !active.isConnected) target.focus();
     };
-    restore();
-    const observer = new MutationObserver(restore);
-    observer.observe(el, { childList: true, subtree: true });
-    return () => observer.disconnect();
-  }, [near]);
+    settle();
+    const frame = requestAnimationFrame(settle);
+    const later = window.setTimeout(settle, 100);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.clearTimeout(later);
+    };
+  }, [mounted]);
 
   return (
     <div ref={host} className={className}>
-      <Suspense fallback={fallback}>{near ? children : fallback}</Suspense>
+      {!mounted && fallback}
+      {near && (
+        <Suspense fallback={null}>
+          <Committed onCommit={onCommit}>{children}</Committed>
+        </Suspense>
+      )}
     </div>
   );
 }
