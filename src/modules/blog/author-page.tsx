@@ -82,7 +82,11 @@ export async function AuthorPage({
             {blogCopy.authorIntro.replace('{name}', author.name)}
           </h2>
           {listing.posts.length > 0 ? (
-            <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3" data-post-grid="">
+            <ul
+              className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3"
+              data-reveal-stagger=""
+              data-post-grid=""
+            >
               {listing.posts.map((post) => (
                 <li key={post.slug}>
                   <PostCard post={post} locale={locale} headingLevel="h3" />
