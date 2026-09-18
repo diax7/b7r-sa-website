@@ -42,6 +42,36 @@ test.describe('hero (BRD 6.4.1)', () => {
     ).toBeGreaterThanOrEqual(1);
   });
 
+  // Blur-up (ADR-029, amended 2026-09-19): the media library's placeholder is inlined as the
+  // photo's background in the server HTML and cleared once the photo decodes; the preloads
+  // and the fetch priority of the LCP photo are what they were.
+  test('the first hero photo carries its blur placeholder before load, and the preload is unchanged', async ({
+    page,
+    baseURL,
+  }) => {
+    const html = await (await page.request.get(`${baseURL}/`)).text();
+    const img = /<img[^>]*data-hero-image="0"[^>]*>/.exec(html)?.[0];
+    expect(img, 'the first hero img in the server HTML').toBeTruthy();
+    expect(img).toContain('data-blur=""');
+    expect(img).toContain('--hero-blur-desktop:url(');
+    expect(img).toContain('--hero-blur-mobile:url(');
+    expect(img).toContain('data:image/webp;base64,');
+    expect(img).toContain('fetchpriority="high"');
+    expect(img).toContain('loading="eager"');
+    // A preload per breakpoint, neither carrying the placeholder.
+    const preloads = [...html.matchAll(/<link[^>]*rel="preload"[^>]*as="image"[^>]*>/g)].map(
+      (m) => m[0],
+    );
+    expect(preloads.some((l) => l.includes('media="(min-width: 768px)"'))).toBe(true);
+    expect(preloads.some((l) => l.includes('media="(max-width: 767px)"'))).toBe(true);
+    expect(preloads.every((l) => !l.includes('data:image'))).toBe(true);
+
+    await page.goto('/');
+    const first = page.locator('[data-hero-image="0"]');
+    await expect.poll(() => first.evaluate((el: HTMLImageElement) => el.complete)).toBe(true);
+    await expect(first).not.toHaveAttribute('data-blur');
+  });
+
   test('header never overlaps the H1 and does not shift layout when it shrinks', async ({
     page,
   }) => {

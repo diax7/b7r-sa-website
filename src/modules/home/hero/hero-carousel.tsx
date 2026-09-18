@@ -19,11 +19,20 @@ import { cn } from '@/lib/cn';
 import { useReducedMotion } from '@/lib/reduced-motion';
 import { DESKTOP_SIZES } from '@/modules/home/hero/renditions';
 
+interface HeroImage {
+  src: string;
+  srcSet: string | undefined;
+  width: number;
+  height: number;
+  /** The blur-up placeholder as a CSS `background-image` value (ADR-029), when the media has one. */
+  blur?: string;
+}
+
 export interface HeroImageSet {
   /** Props from `getImageProps` for the desktop 16:9 rendition. */
-  desktop: { src: string; srcSet: string | undefined; width: number; height: number };
+  desktop: HeroImage;
   /** Props from `getImageProps` for the mobile 4:5 rendition. */
-  mobile: { src: string; srcSet: string | undefined; width: number; height: number };
+  mobile: HeroImage;
 }
 
 export interface HeroCarouselProps {
@@ -66,8 +75,14 @@ export function HeroCarousel({ slides, images, overlay, copy }: HeroCarouselProp
   const [othersReady, setOthersReady] = useState(false);
   // The first paint is static (the H1 is the LCP element); copy animates only on slide changes.
   const [animated, setAnimated] = useState(false);
+  // The blur-up placeholder stays under a photo until it decodes (like next/image's).
+  const [decoded, setDecoded] = useState<Record<string, true>>({});
   const pointerStart = useRef<number | null>(null);
   const total = slides.length;
+
+  const markDecoded = useCallback((id: string) => {
+    setDecoded((prev) => (prev[id] ? prev : { ...prev, [id]: true }));
+  }, []);
 
   const go = useCallback(
     (next: number) => {
@@ -157,6 +172,20 @@ export function HeroCarousel({ slides, images, overlay, copy }: HeroCarouselProp
                 fetchPriority={i === 0 ? 'high' : 'auto'}
                 className="hero-image h-full w-full"
                 data-hero-image={i}
+                data-blur={
+                  (img.mobile.blur || img.desktop.blur) && !decoded[slide.id] ? '' : undefined
+                }
+                style={
+                  {
+                    '--hero-blur-mobile': img.mobile.blur,
+                    '--hero-blur-desktop': img.desktop.blur,
+                  } as CSSProperties
+                }
+                onLoad={() => markDecoded(slide.id)}
+                ref={(el) => {
+                  // Loaded before hydration (eager, preloaded): no load event will come.
+                  if (el?.complete && el.naturalWidth > 0) markDecoded(slide.id);
+                }}
               />
             </picture>
           );

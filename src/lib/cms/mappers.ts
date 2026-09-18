@@ -64,12 +64,40 @@ function measurements(size: NonNullable<ProductDoc['sizes']>[number]) {
   return entries.length > 0 ? Object.fromEntries(entries) : undefined;
 }
 
+/**
+ * The blur-up placeholder of a populated upload (ADR-029, amended 2026-09-19): the data URL
+ * the media library computed on upload, or nothing (depth 0, or a file uploaded before the
+ * field existed and not yet backfilled by `scripts/media-blur.ts`).
+ */
+export function mediaBlur(value: number | Media | null | undefined): string | undefined {
+  return value && typeof value !== 'number' && value.blur ? value.blur : undefined;
+}
+
+/** `{ [key]: blur }` when the upload has a placeholder, `{}` otherwise (exactOptionalPropertyTypes). */
+function blurOf<K extends string>(
+  key: K,
+  value: number | Media | null | undefined,
+): Partial<Record<K, string>> {
+  const blur = mediaBlur(value);
+  return blur ? ({ [key]: blur } as Record<K, string>) : {};
+}
+
 export function toProduct(doc: ProductDoc): Product {
   const colors = (doc.colors ?? []).map((c) => {
     const front = mediaUrl(c.front);
     if (!front) throw new Error(`Product ${doc.slug}: colour ${c.slug} has no front photo`);
     const back = mediaUrl(c.back);
-    return { slug: c.slug, name: c.name, hex: c.hex, images: { front, ...(back ? { back } : {}) } };
+    return {
+      slug: c.slug,
+      name: c.name,
+      hex: c.hex,
+      images: {
+        front,
+        ...(back ? { back } : {}),
+        ...blurOf('frontBlur', c.front),
+        ...(back ? blurOf('backBlur', c.back) : {}),
+      },
+    };
   });
   return ProductSchema.parse({
     slug: doc.slug,
@@ -209,6 +237,8 @@ export function toHome(doc: HomeDoc, options: MapOptions = {}): Home {
         subline: slide.subline,
         imageDesktop: requiredMedia(slide.imageDesktop, `home.hero.slides[${i}].imageDesktop`),
         imageMobile: requiredMedia(slide.imageMobile, `home.hero.slides[${i}].imageMobile`),
+        ...blurOf('blurDesktop', slide.imageDesktop),
+        ...blurOf('blurMobile', slide.imageMobile),
         alt: mediaAlt(slide.imageDesktop),
       })),
       primaryCta: doc.hero.primaryCta,
@@ -325,7 +355,11 @@ function toBlock(block: BlockDoc, where: string, index: number): Block {
         heading: block.heading,
         text: block.text,
         line: block.line,
-        photo: { src: requiredMedia(block.photo, `${where}.photo`), alt: mediaAlt(block.photo) },
+        photo: {
+          src: requiredMedia(block.photo, `${where}.photo`),
+          alt: mediaAlt(block.photo),
+          ...blurOf('blur', block.photo),
+        },
         withFacts: block.withFacts ?? true,
       };
     case 'cards':
@@ -416,7 +450,11 @@ function toBlock(block: BlockDoc, where: string, index: number): Block {
       return {
         id,
         blockType: 'mediaBanner',
-        media: { src: requiredMedia(block.media, `${where}.media`), alt: mediaAlt(block.media) },
+        media: {
+          src: requiredMedia(block.media, `${where}.media`),
+          alt: mediaAlt(block.media),
+          ...blurOf('blur', block.media),
+        },
         ...(block.caption ? { caption: block.caption } : {}),
       };
     default:

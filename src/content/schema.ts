@@ -57,6 +57,12 @@ export type Navigation = z.infer<typeof NavigationSchema>;
 
 /** A site path, or an absolute URL once the photo lives in the CMS media store (S3). */
 const imageSrc = publicPath.or(z.url());
+/**
+ * The blur-up placeholder of a CMS photo (ADR-029, amended 2026-09-19): a data URL the media
+ * library computed on upload, inlined by `next/image` until the photo arrives. Absent for the
+ * seed's paths and for a media document uploaded before the field existed.
+ */
+const blurDataUrl = z.string().startsWith('data:image/');
 
 export const HeroSlideSchema = z.object({
   /** Stable key: the CMS row id, or the seed's slug. */
@@ -65,6 +71,8 @@ export const HeroSlideSchema = z.object({
   subline: nonEmpty,
   imageDesktop: imageSrc,
   imageMobile: imageSrc,
+  blurDesktop: blurDataUrl.optional(),
+  blurMobile: blurDataUrl.optional(),
   alt: z.string(),
 });
 export type HeroSlide = z.infer<typeof HeroSlideSchema>;
@@ -133,7 +141,12 @@ export const ProductColorSchema = z.object({
   slug: slug,
   name: nonEmpty,
   hex,
-  images: z.object({ front: imageSrc, back: imageSrc.optional() }),
+  images: z.object({
+    front: imageSrc,
+    back: imageSrc.optional(),
+    frontBlur: blurDataUrl.optional(),
+    backBlur: blurDataUrl.optional(),
+  }),
 });
 export type ProductColor = z.infer<typeof ProductColorSchema>;
 
@@ -251,7 +264,7 @@ export const BlockSchema = z.discriminatedUnion('blockType', [
     heading: nonEmpty,
     text: nonEmpty,
     line: nonEmpty,
-    photo: z.object({ src: imageSrc, alt: z.string() }),
+    photo: z.object({ src: imageSrc, alt: z.string(), blur: blurDataUrl.optional() }),
     withFacts: z.boolean(),
   }),
   z.object({
@@ -329,7 +342,7 @@ export const BlockSchema = z.discriminatedUnion('blockType', [
   z.object({
     ...blockId,
     blockType: z.literal('mediaBanner'),
-    media: z.object({ src: imageSrc, alt: z.string() }),
+    media: z.object({ src: imageSrc, alt: z.string(), blur: blurDataUrl.optional() }),
     caption: optionalText,
   }),
 ]);

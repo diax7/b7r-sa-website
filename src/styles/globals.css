@@ -458,12 +458,23 @@
   object-fit: cover;
   object-position: 50% 70%;
 }
+/* Blur-up (ADR-029): the placeholder the media library computed, as the photo's background
+   until it decodes, one per breakpoint like the photo, anchored where the photo is. */
+.hero-image[data-blur] {
+  background: var(--hero-blur-mobile) 50% 70% / cover no-repeat;
+}
 @media (min-width: 768px) {
   .hero-image {
     object-position: 20% 60%;
   }
+  .hero-image[data-blur] {
+    background: var(--hero-blur-desktop) 20% 60% / cover no-repeat;
+  }
   [dir='ltr'] .hero-image {
     object-position: 80% 60%;
+  }
+  [dir='ltr'] .hero-image[data-blur] {
+    background-position: 80% 60%;
   }
 }
 

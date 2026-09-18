@@ -48,6 +48,17 @@ export function s3RemotePatterns(raw: RawEnv = process.env): RemotePattern[] {
   ];
 }
 
+/**
+ * `next/image`'s blur-up props for a media placeholder (ADR-029, amended 2026-09-19): the
+ * data URL the library computed on upload becomes the image's background until it decodes.
+ * Nothing without one, so a seed path or an older upload renders as before.
+ */
+export function blurPlaceholder(
+  blur: string | undefined,
+): { placeholder: 'blur'; blurDataURL: string } | Record<never, never> {
+  return blur ? { placeholder: 'blur', blurDataURL: blur } : {};
+}
+
 /** The optimizer URL `next/image` would request for `src` at `width`; for raw `<img>`/Konva loads. */
 export function optimizedSrc(src: string, width: number, quality = 82): string {
   return `/_next/image?url=${encodeURIComponent(src)}&w=${width}&q=${quality}`;

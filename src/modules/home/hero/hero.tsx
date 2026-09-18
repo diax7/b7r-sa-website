@@ -1,23 +1,51 @@
 import { getImageProps } from 'next/image';
 import { preload } from 'react-dom';
 import { copyFor } from '@/content/copy';
+import type { HeroSlide } from '@/content/schema';
 import { getHome, getSiteSettings } from '@/lib/cms';
 import { env } from '@/lib/env';
 import { type Locale, localePath } from '@/lib/i18n';
+import { blurPlaceholder } from '@/lib/image-url';
 import { PHOTO_QUALITY } from '@/lib/photo';
 import { registerUrl } from '@/lib/utm';
 import { HeroCarousel, type HeroImageSet } from '@/modules/home/hero/hero-carousel';
 import { DESKTOP, DESKTOP_SIZES, MOBILE } from '@/modules/home/hero/renditions';
 
 // `priority` is deliberately not passed: it would call ReactDOM.preload() without a media
-// query and fetch both renditions. The media-gated <link>s below do the preloading.
-function imageSet(desktopSrc: string, mobileSrc: string): HeroImageSet {
+// query and fetch both renditions. The media-gated <link>s below do the preloading. The
+// blur-up placeholder (ADR-029) rides along as the `background-image` value Next computes
+// for `placeholder="blur"`; the carousel applies it per breakpoint until the photo decodes.
+function imageSet(slide: HeroSlide): HeroImageSet {
   const common = { alt: '', quality: PHOTO_QUALITY };
-  const d = getImageProps({ ...common, sizes: DESKTOP_SIZES, src: desktopSrc, ...DESKTOP }).props;
-  const m = getImageProps({ ...common, sizes: '100vw', src: mobileSrc, ...MOBILE }).props;
+  const d = getImageProps({
+    ...common,
+    sizes: DESKTOP_SIZES,
+    src: slide.imageDesktop,
+    ...blurPlaceholder(slide.blurDesktop),
+    ...DESKTOP,
+  }).props;
+  const m = getImageProps({
+    ...common,
+    sizes: '100vw',
+    src: slide.imageMobile,
+    ...blurPlaceholder(slide.blurMobile),
+    ...MOBILE,
+  }).props;
   return {
-    desktop: { src: d.src, srcSet: d.srcSet, width: DESKTOP.width, height: DESKTOP.height },
-    mobile: { src: m.src, srcSet: m.srcSet, width: MOBILE.width, height: MOBILE.height },
+    desktop: {
+      src: d.src,
+      srcSet: d.srcSet,
+      width: DESKTOP.width,
+      height: DESKTOP.height,
+      ...(d.style?.backgroundImage ? { blur: d.style.backgroundImage } : {}),
+    },
+    mobile: {
+      src: m.src,
+      srcSet: m.srcSet,
+      width: MOBILE.width,
+      height: MOBILE.height,
+      ...(m.style?.backgroundImage ? { blur: m.style.backgroundImage } : {}),
+    },
   };
 }
 
@@ -29,7 +57,7 @@ function imageSet(desktopSrc: string, mobileSrc: string): HeroImageSet {
 export async function Hero({ locale }: { locale: Locale }) {
   const [{ hero }, site] = await Promise.all([getHome(locale), getSiteSettings(locale)]);
   const messages = copyFor(locale);
-  const images = hero.slides.map((s) => imageSet(s.imageDesktop, s.imageMobile));
+  const images = hero.slides.map(imageSet);
   const first = images[0];
 
   // The H1 is the only Black-weight text; preloading it here (home only) removes a font swap

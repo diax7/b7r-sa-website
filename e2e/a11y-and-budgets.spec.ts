@@ -207,9 +207,13 @@ test.describe('budgets (BRD 7.8, constitution IV)', () => {
     expect(await page.locator('link[rel="preload"][as="image"][media]').count()).toBe(0);
   });
 
-  test('the LCP photo of each template is fetched at high priority', async ({ page }) => {
+  test('the LCP photo of each template is fetched at high priority, with its blur placeholder inlined', async ({
+    page,
+    baseURL,
+  }) => {
     // `priority` on next/image only preloads; the fetchpriority attribute is what lets the
-    // browser start the LCP image ahead of the scripts (site audit 2026-09-18, item 3).
+    // browser start the LCP image ahead of the scripts (site audit 2026-09-18, item 3). The
+    // blur-up placeholder (ADR-029) is in the server HTML as the image's background.
     for (const path of [
       '/products/tee-essential',
       '/products',
@@ -217,6 +221,10 @@ test.describe('budgets (BRD 7.8, constitution IV)', () => {
       '/blog',
       '/about',
     ]) {
+      const html = await (await page.request.get(`${baseURL}${path}`)).text();
+      const lcp = /<img[^>]*fetchpriority="high"[^>]*>/.exec(html)?.[0];
+      expect(lcp, `${path}: the LCP img in the server HTML`).toBeTruthy();
+      expect(lcp, path).toContain('data:image/webp;base64,');
       await page.goto(path);
       const high = page.locator('main img[fetchpriority="high"]');
       await expect(high, path).toHaveCount(1);

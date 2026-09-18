@@ -3,14 +3,23 @@ import { navigation } from '@/content/seed/navigation';
 import { products } from '@/content/seed/products';
 import { seo } from '@/content/seed/seo';
 import { site } from '@/content/seed/site';
-import { mediaUrl, toNavigation, toProduct, toSeoRows, toSiteSettings } from '@/lib/cms/mappers';
+import {
+  mediaBlur,
+  mediaUrl,
+  toNavigation,
+  toProduct,
+  toSeoRows,
+  toSiteSettings,
+} from '@/lib/cms/mappers';
 import type { Media, Product as ProductDoc, SeoDefault, SiteSetting } from '@/payload-types';
 
 const SERVER = 'http://localhost:3004';
 
-function media(url: string, id = 1): Media {
-  return { id, alt: 'صورة', url, updatedAt: '', createdAt: '' };
+function media(url: string, id = 1, blur?: string): Media {
+  return { id, alt: 'صورة', url, updatedAt: '', createdAt: '', ...(blur ? { blur } : {}) };
 }
+
+const BLUR = 'data:image/webp;base64,UklGRiIAAABXRUJQVlA4IBYAAAAwAQCdASoBAAEADsD+JaQAA3AAAAAA';
 
 function seedProduct(slug: string) {
   const found = products.find((p) => p.slug === slug);
@@ -95,6 +104,35 @@ describe('toProduct', () => {
     const product = toProduct(doc);
     expect(product.sizes).toEqual([{ label: 'M' }]);
     expect(product.colors[0]?.images).toEqual({ front: '/f.jpg' });
+  });
+
+  it('carries the blur-up placeholder of each photo when the media has one (ADR-029)', () => {
+    const doc = productDoc({
+      colors: [
+        {
+          slug: 'black',
+          name: 'أسود',
+          hex: '#000000',
+          front: media('/f.jpg', 1, BLUR),
+          back: media('/b.jpg', 2),
+        },
+      ],
+    });
+    expect(toProduct(doc).colors[0]?.images).toEqual({
+      front: '/f.jpg',
+      back: '/b.jpg',
+      frontBlur: BLUR,
+    });
+    expect(mediaBlur(media('/f.jpg', 1, BLUR))).toBe(BLUR);
+    expect(mediaBlur(media('/f.jpg'))).toBeUndefined();
+    expect(mediaBlur(3)).toBeUndefined();
+  });
+
+  it('refuses a blur that is not a data URL', () => {
+    const doc = productDoc({
+      colors: [{ slug: 'black', name: 'أسود', hex: '#000000', front: media('/f.jpg', 1, '/x') }],
+    });
+    expect(() => toProduct(doc)).toThrow();
   });
 
   it('fails loudly when a colour has no populated front photo', () => {

@@ -2,6 +2,7 @@ import Image from 'next/image';
 import { Container } from '@/components/shared/container';
 import { Section } from '@/components/shared/section';
 import { SectionHeader } from '@/components/shared/section-header';
+import { blurPlaceholder } from '@/lib/image-url';
 import { PHOTO_QUALITY } from '@/lib/photo';
 import type { BlockProps } from '@/modules/pages/blocks/types';
 
@@ -30,6 +31,7 @@ export function MediaBannerBlock({ block, tone, anchor, heading }: BlockProps<'m
               alt={block.media.alt}
               fill
               quality={PHOTO_QUALITY}
+              {...blurPlaceholder(block.media.blur)}
               sizes="(min-width: 1280px) 1200px, 100vw"
               className="object-cover"
             />

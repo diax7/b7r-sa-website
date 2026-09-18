@@ -17,6 +17,7 @@ import { cn } from '@/lib/cn';
 import { formatDate, isoDay } from '@/lib/dates';
 import { env, siteBase } from '@/lib/env';
 import { type Locale, localePath } from '@/lib/i18n';
+import { blurPlaceholder } from '@/lib/image-url';
 import { headingIds, headings, splitAfterSecondHeading } from '@/lib/lexical';
 import { PHOTO_QUALITY } from '@/lib/photo';
 import { registerUrl } from '@/lib/utm';
@@ -123,6 +124,7 @@ export async function BlogPostPage({ post, locale }: { post: Post; locale: Local
                   alt={post.cover.alt}
                   fill
                   quality={PHOTO_QUALITY}
+                  {...blurPlaceholder(post.cover.blur)}
                   priority
                   fetchPriority="high"
                   sizes="(min-width: 800px) 760px, 100vw"
