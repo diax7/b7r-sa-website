@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload';
 import { canDeleteVersioned, isEditorOrAdmin, publishedOrStaff } from '@/modules/cms/access';
 import { revalidateProducts } from '@/modules/cms/hooks/revalidate';
+import { applyTranslations } from '@/modules/cms/hooks/translations';
 import { savedByField, stampSavedBy } from '@/modules/cms/fields/saved-by';
 import { localePath, requestLocale } from '@/lib/i18n';
 import { previewUrl } from '@/lib/preview-token';
@@ -55,7 +56,7 @@ export const Products: CollectionConfig = {
   },
   hooks: {
     beforeChange: [stampSavedBy],
-    afterChange: [revalidateProducts],
+    afterChange: [revalidateProducts, applyTranslations],
     afterDelete: [revalidateProducts],
   },
   fields: describeFields(

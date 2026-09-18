@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload';
 import { canDeleteVersioned, isEditorOrAdmin, publishedOrStaff } from '@/modules/cms/access';
 import { revalidateRoutes } from '@/modules/cms/hooks/revalidate';
+import { applyTranslations } from '@/modules/cms/hooks/translations';
 import { savedByField, stampSavedBy } from '@/modules/cms/fields/saved-by';
 import { collectionComponents } from '@/modules/cms/admin/document/config';
 import { adminGroup } from '@/modules/cms/admin/icons';
@@ -44,7 +45,7 @@ export const Testimonials: CollectionConfig = {
   },
   hooks: {
     beforeChange: [stampSavedBy],
-    afterChange: [revalidateRoutes(['/'])],
+    afterChange: [revalidateRoutes(['/']), applyTranslations],
     afterDelete: [revalidateRoutes(['/'])],
   },
   fields: describeFields(

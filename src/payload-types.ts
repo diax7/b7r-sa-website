@@ -239,6 +239,15 @@ export interface Media {
     name?: string | null;
     at?: string | null;
   };
+  translations?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   prefix?: string | null;
   updatedAt: string;
   createdAt: string;
@@ -425,6 +434,15 @@ export interface Product {
     name?: string | null;
     at?: string | null;
   };
+  translations?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
@@ -798,6 +816,15 @@ export interface Page {
     name?: string | null;
     at?: string | null;
   };
+  translations?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
@@ -841,6 +868,15 @@ export interface Faq {
     name?: string | null;
     at?: string | null;
   };
+  translations?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -883,6 +919,15 @@ export interface Testimonial {
     name?: string | null;
     at?: string | null;
   };
+  translations?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
@@ -918,6 +963,15 @@ export interface Integration {
     name?: string | null;
     at?: string | null;
   };
+  translations?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1037,6 +1091,15 @@ export interface Post {
     name?: string | null;
     at?: string | null;
   };
+  translations?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
@@ -1080,6 +1143,15 @@ export interface Category {
     name?: string | null;
     at?: string | null;
   };
+  translations?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1106,6 +1178,15 @@ export interface Tag {
     name?: string | null;
     at?: string | null;
   };
+  translations?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1156,6 +1237,15 @@ export interface Author {
     name?: string | null;
     at?: string | null;
   };
+  translations?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1905,6 +1995,7 @@ export interface MediaSelect<T extends boolean = true> {
         name?: T;
         at?: T;
       };
+  translations?: T;
   prefix?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -2018,6 +2109,7 @@ export interface ProductsSelect<T extends boolean = true> {
         name?: T;
         at?: T;
       };
+  translations?: T;
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
@@ -2196,6 +2288,7 @@ export interface PagesSelect<T extends boolean = true> {
         name?: T;
         at?: T;
       };
+  translations?: T;
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
@@ -2217,6 +2310,7 @@ export interface FaqsSelect<T extends boolean = true> {
         name?: T;
         at?: T;
       };
+  translations?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -2237,6 +2331,7 @@ export interface TestimonialsSelect<T extends boolean = true> {
         name?: T;
         at?: T;
       };
+  translations?: T;
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
@@ -2256,6 +2351,7 @@ export interface IntegrationsSelect<T extends boolean = true> {
         name?: T;
         at?: T;
       };
+  translations?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -2302,6 +2398,7 @@ export interface PostsSelect<T extends boolean = true> {
         name?: T;
         at?: T;
       };
+  translations?: T;
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
@@ -2323,6 +2420,7 @@ export interface CategoriesSelect<T extends boolean = true> {
         name?: T;
         at?: T;
       };
+  translations?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -2348,6 +2446,7 @@ export interface AuthorsSelect<T extends boolean = true> {
         name?: T;
         at?: T;
       };
+  translations?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -2364,6 +2463,7 @@ export interface TagsSelect<T extends boolean = true> {
         name?: T;
         at?: T;
       };
+  translations?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -2874,6 +2974,15 @@ export interface Home {
     name?: string | null;
     at?: string | null;
   };
+  translations?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   _status?: ('draft' | 'published') | null;
   updatedAt?: string | null;
   createdAt?: string | null;
@@ -3042,6 +3151,15 @@ export interface SiteSetting {
     name?: string | null;
     at?: string | null;
   };
+  translations?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -3103,6 +3221,15 @@ export interface SeoDefault {
     name?: string | null;
     at?: string | null;
   };
+  translations?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -3214,6 +3341,15 @@ export interface AiSetting {
     name?: string | null;
     at?: string | null;
   };
+  translations?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -3396,6 +3532,7 @@ export interface HomeSelect<T extends boolean = true> {
         name?: T;
         at?: T;
       };
+  translations?: T;
   _status?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -3468,6 +3605,7 @@ export interface SiteSettingsSelect<T extends boolean = true> {
         name?: T;
         at?: T;
       };
+  translations?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;
@@ -3500,6 +3638,7 @@ export interface SeoDefaultsSelect<T extends boolean = true> {
         name?: T;
         at?: T;
       };
+  translations?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;
@@ -3553,6 +3692,7 @@ export interface AiSettingsSelect<T extends boolean = true> {
         name?: T;
         at?: T;
       };
+  translations?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;
