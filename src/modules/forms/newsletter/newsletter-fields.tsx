@@ -22,7 +22,11 @@ interface NewsletterFieldsProps {
   id: string;
   status: NewsletterStatus;
   email: string;
-  /** The server-rendered rows before the island mounts: nothing can be typed or sent. */
+  /**
+   * The server-rendered rows before the island mounts: the field is read-only and the button
+   * `aria-disabled`, both focusable, so a Tab or a tap on them mounts the island
+   * (`NearViewport`) and nothing typed is lost at the swap.
+   */
   inert?: boolean;
   onChange?: (e: ChangeEvent<HTMLInputElement>) => void;
   onSubmit?: (e: FormEvent<HTMLFormElement>) => void;
@@ -80,7 +84,9 @@ export function NewsletterFields({
           onChange={onChange}
           invalid={status === 'invalid'}
           aria-describedby={`${id}-msg`}
-          disabled={inert || status === 'submitting' || status === 'success'}
+          readOnly={inert}
+          aria-disabled={inert || undefined}
+          disabled={status === 'submitting' || status === 'success'}
           className={cn(
             dark &&
               'border-white/15 bg-white/5 text-white placeholder:text-white/40 focus:border-accent',
@@ -91,9 +97,8 @@ export function NewsletterFields({
           variant={dark ? 'inverse' : 'primary'}
           size="md"
           loading={status === 'submitting'}
-          disabled={inert || status === 'success'}
-          // The stand-in is disabled, not dimmed: it paints exactly as the island will.
-          className={cn(inert && 'disabled:opacity-100')}
+          aria-disabled={inert || undefined}
+          disabled={status === 'success'}
         >
           {copy.button}
         </Button>

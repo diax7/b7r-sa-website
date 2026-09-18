@@ -172,6 +172,32 @@ test.describe('FAQ page (BRD 6.10)', () => {
     for (const [i, height] of served.entries())
       expect(Math.abs(height - hydrated[i]!)).toBeLessThanOrEqual(1);
   });
+
+  test('a Tab onto a group the island has not reached lands on a live trigger', async ({
+    page,
+    request,
+  }) => {
+    // The server's rows are `aria-disabled`, never `disabled`: a disabled control cannot take
+    // focus, so a keyboard user would skip every trigger of a group the island has not
+    // reached and land one Tab too late (the CTO's review of the JS floor, 2026-09-18).
+    const html = await (await request.get('/faq')).text();
+    expect(html).toMatch(/<button[^>]*aria-disabled="true"[^>]*aria-expanded="false"/);
+    expect(html).not.toMatch(/<button[^>]*\sdisabled=""[^>]*aria-expanded=/);
+    await page.goto('/faq');
+    await expect(page.locator('#faq-group-1 button[aria-expanded]').first()).toBeVisible();
+    // From the last trigger of the group before, Tab onto the last group's first trigger:
+    // the focus mounts the island and is handed to its trigger, enabled and closed.
+    const groups = page.locator('section[id^="faq-group-"]');
+    const last = groups.last();
+    const trigger = last.getByRole('button').first();
+    await groups.nth(-2).getByRole('button').last().focus();
+    await page.keyboard.press('Tab');
+    await expect(trigger).toBeFocused();
+    await expect(trigger).not.toHaveAttribute('aria-disabled', 'true');
+    await expect(trigger).toHaveAttribute('aria-expanded', 'false');
+    await page.keyboard.press('Enter');
+    await expect(trigger).toHaveAttribute('aria-expanded', 'true');
+  });
 });
 
 test.describe('legal pages (BRD 6.12)', () => {

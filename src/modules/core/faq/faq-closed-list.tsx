@@ -20,9 +20,11 @@ interface FaqClosedListProps {
 /**
  * The FAQ rows as the server renders them: the same boxes and classes as the Radix
  * accordion in its closed state (every answer in the DOM for crawlers, hidden from view),
- * shown until `FaqAccordionLoader` mounts the island near the viewport. The buttons are
- * disabled until then: a tap lands on the real accordion or on nothing, never on a control
- * that looks live and is not. Same height before and after, so the swap moves nothing.
+ * shown until `FaqAccordionLoader` mounts the island near the viewport, or the moment a Tab
+ * or a finger reaches a row (`NearViewport`). The buttons are `aria-disabled` until then: they
+ * can take focus, which is what mounts the island and carries the focus over, and nothing
+ * lands on a control that looks live and is not. Same height before and after, so the swap
+ * moves nothing.
  */
 export function FaqClosedList({ items }: FaqClosedListProps) {
   const id = useId();
@@ -34,7 +36,7 @@ export function FaqClosedList({ items }: FaqClosedListProps) {
             <button
               type="button"
               id={`${id}-q${index}`}
-              disabled
+              aria-disabled="true"
               aria-expanded="false"
               data-state="closed"
               className={ACCORDION_TRIGGER}
