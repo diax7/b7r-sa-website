@@ -72,7 +72,11 @@ export async function BlogIndex({
             {rest.length > 0 && (
               <>
                 {page === 1 && <h2 className="text-h3 text-text">{blogCopy.latest}</h2>}
-                <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3" data-post-grid="">
+                <ul
+                  className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3"
+                  data-reveal-stagger=""
+                  data-post-grid=""
+                >
                   {rest.map((post) => (
                     <li key={post.slug}>
                       <PostCard

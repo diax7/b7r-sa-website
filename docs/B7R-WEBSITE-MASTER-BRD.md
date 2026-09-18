@@ -265,7 +265,7 @@ Motion is a signal, not decoration. Defaults:
 | `--ease-exit` | cubic-bezier(.4, 0, 1, 1) |
 | `--ease-expand` | cubic-bezier(.2, .8, .2, 1) (product strip only) |
 
-Scroll-reveal: elements fade up 12 px over 400 ms, once, when 20% visible, staggered 60 ms inside a group. No parallax, no scroll-jacking, no bouncing, no continuous background animations except the wave shapes (§6.3.4), which move slowly (20 s loop) and stop under reduced motion. Number changes (profit calculator) count up over 300 ms. Use the `motion` library (the successor of framer-motion) or CSS transitions; keep bundle impact minimal.
+Scroll-reveal: elements fade up 12 px over 400 ms, once, when 20% visible, staggered 60 ms inside a group. *Amended 2026-09-18 (Dhia, ADR-055): every `Section` reveals by default, on every page, present and future (`reveal={false}` opts out: the hero, a section holding a fixed child); a grid marks `data-reveal-stagger` and its children stagger; one inline observer at the end of the body arms them, hides only what is below the fold (the first paint and the LCP are never touched) and reveals as they enter; nothing hides without JavaScript or under reduced motion.* No parallax, no scroll-jacking, no bouncing, no continuous background animations except the wave shapes (§6.3.4), which move slowly (20 s loop) and stop under reduced motion. Number changes (profit calculator) count up over 300 ms. Use the `motion` library (the successor of framer-motion) or CSS transitions; keep bundle impact minimal.
 
 Under `prefers-reduced-motion: reduce`: disable auto-advance, parallax-like effects, waves, stagger, and count-ups; keep opacity transitions ≤ 150 ms.
 

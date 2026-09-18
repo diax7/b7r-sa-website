@@ -1589,6 +1589,31 @@ make this true; a later "more shine" edit must re-check the numbers. The glint i
 site's third continuous animation after ADR-037's two, transform-only and off under
 reduced motion.
 
+## ADR-055: Scroll reveal on every section, by the primitives (2026-09-18)
+
+Dhia: a subtle animation as things scroll into view, on every item and every page, and on
+future additions. Until now `Reveal` wrapped four lists by hand and hid them by CSS under
+`html.js`, which would have delayed the first paint anywhere a wrapped element sat above the
+fold. The rule now: `Section` carries `data-reveal` by default (`reveal={false}` for the hero,
+which is not a Section anyway, and for a section holding a `position: fixed` child, since a
+transformed ancestor becomes its containing block: the designer); a grid marks
+`data-reveal-stagger` and its children stagger 60 ms by index; `Reveal` stays for a hand-placed
+element and is a server component now. One client island in `PageExtras`
+(`RevealObserver`, the arming in `modules/core/reveal-arm`) runs once hydration is done, so
+React has finished with the DOM before a class is added (the CTO's review: an inline script
+before hydration adds classes the dev hydration diff reports on every section): an element
+already in view is marked visible at once and never hidden, so the LCP and the fold are never
+touched; one below the fold is hidden and fades up 12 px over 400 ms when it enters (an
+IntersectionObserver with an 8% bottom margin); the hide itself is instant, since a fade-out
+is what axe and Lighthouse read as half-transparent text (the first CI run's contrast
+failures on the product cards); a MutationObserver arms elements added later; the stagger
+delay is capped at the ninth child; a printed page shows everything. The CSS hides
+nothing by itself, so content is always there without JavaScript, and the arming exits under
+reduced motion; the graceful loss is a scroll in the first second, which shows plain content.
+`e2e/reveal.spec.ts` asserts the four rules and that the hero image has no hidden ancestor;
+new components inherit the behaviour through `Section`, which is what makes "future
+additions" true without anyone remembering.
+
 ## ADR-056: The Arabic admin (2026-09-18)
 
 Dhia, in the pre-launch programme: "add Arabic language support to the admin; I can switch
