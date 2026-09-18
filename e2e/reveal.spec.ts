@@ -24,7 +24,9 @@ test.describe('scroll reveal (ADR-055)', () => {
     )) {
       expect(box).toBeGreaterThan(height * 0.9);
     }
-    const first = hidden.first();
+    // Pin one section by id: `hidden.first()` re-resolves once it reveals.
+    const id = await hidden.first().getAttribute('id');
+    const first = page.locator(`section#${id}`);
     await first.scrollIntoViewIfNeeded();
     await expect(first).toHaveClass(/is-visible/);
     await expect(first).not.toHaveClass(/is-hidden/);

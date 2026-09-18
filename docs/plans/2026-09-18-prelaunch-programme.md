@@ -19,19 +19,19 @@ box is ticked only when its criteria below are met and named in the PR.
 Outputs in `docs/audits/2026-09-18-*.md`, findings graded blocker / major / minor with
 `file:line` and the route, and a fix list in order.
 
-- [ ] **Site audit** (`site.md`): every route in Arabic and English on the review server;
+- [x] **Site audit** (`site.md`): every route in Arabic and English on the review server;
   content (typos, placeholders, ar/en parity, tone), SEO (titles, descriptions, canonicals,
   hreflang, JSON-LD validity, sitemap, robots, OG), GEO (llms.txt, FAQPage, answer-first
   openings, the compare page), photos (format, `sizes`, LCP element, lazy loading, CLS),
   speed (Lighthouse mobile and desktop on every route), responsive (screenshots at 360,
   390, 768, 1024, 1280, 1920; overflow, wrapping, tap targets), bugs (console errors,
   broken links, forms, 404/410, the designer, the language switch, the header island).
-- [ ] **Admin audit** (`admin.md`): every collection, global and view walked as admin and as
+- [x] **Admin audit** (`admin.md`): every collection, global and view walked as admin and as
   editor; the sidebar and its groups; the text of every label and description (clarity,
   consistency, ux-araby for Arabic); the edit forms' organisation (tabs, rows, order);
   what the dashboard shows and what it should; where bilingual editing hurts today; a
   Cloudflare-style sidebar proposal; the RTL readiness of our custom components.
-- [ ] **AI cost audit** (`ai-cost.md`): every scheduled job and its cost driver; the prompts'
+- [x] **AI cost audit** (`ai-cost.md`): every scheduled job and its cost driver; the prompts'
   periods; the models on each connection and cheaper equivalents; the engine's model; a
   monthly estimate before and after.
 
@@ -114,12 +114,12 @@ field); the design system doc and the admin rules updated; the CTO's GO per PR.
 
 ## Phase 3: The AI spend
 
-- [ ] Prompts' periods weekly (the seed default and the rows on the review and production
+- [x] Prompts' periods weekly (the seed default and the rows on the review and production
   databases); the brand prompts too unless the audit argues for one daily.
-- [ ] Cheaper models on each connection where the audit shows equal signal (Gemini 3 Flash,
+- [x] Cheaper models on each connection where the audit shows equal signal (Gemini 3 Flash,
   Claude Haiku 4.5 or Claude off), a monthly limit on every AI connection; the engine's
   default model reviewed.
-- [ ] The visibility pull and the traffic pull kept daily (no spend).
+- [x] The visibility pull and the traffic pull kept daily (no spend).
 
 Criteria: the RUNBOOK's "What it costs" table updated with the new estimate; the rows
 changed on both databases by a script that prints what it changed; no ledger run triggered.
@@ -136,3 +136,4 @@ changed on both databases by a script that prints what it changed; no ledger run
 
 - 2026-09-18 02:30 UTC: programme written; Phase 0 agents launched.
 - 2026-09-18 02:50 UTC: the CTO's memo on Phase 2 recorded above; `site/reveal` (ADR-055) committed, its e2e waits for the review server.
+- 2026-09-18 05:30 UTC: the three audits delivered with the CTO's notes (Phase 0 complete); Phase 3 executed on both databases (PR #35, CTO 93); `site/reveal` e2e green on three projects; agents building `admin/arabic`, `admin/side-by-side`, `admin/audit-fixes` in worktrees.
