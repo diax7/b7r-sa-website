@@ -158,4 +158,9 @@ Checked on 2026-09-18 in the installed packages (Payload 3.89.0), one line each:
   `locale` strings gone, the row notes reworded, the guides linking the field's anchor and
   naming the column, migration `20260918_142817_purge_locale_preference`, the proxy
   answering an admin `?locale=` with a 307 without it; thirteen e2e run on a private server
-  and database (port 3014, `b7r_noswitch`).
+  and database (port 3014, `b7r_noswitch`). CTO review (89): the post's two facts now show
+  both languages through their widgets (`WarningsField`, `ReadOnlyLine` with the shared
+  read), so the gate lists no exception; the 307's `Location` stays absolute on the
+  request's origin (Next's adapter answers a relative one with a 500, checked on the
+  server) and is relativised by the adapter. Later polish: a guide's field anchor scrolls only when the field's tab is
+  active (the guides name the tab); a click that opens the tab first would finish it.

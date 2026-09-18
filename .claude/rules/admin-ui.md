@@ -74,10 +74,13 @@ bilingual census), `check:rtl` and the admin e2e.
    a row's subfields, never on the array or the blocks field itself (a list localized as a
    whole has one row set per language and cannot be paired; the census test refuses one
    that is not `posts.warnings`). There is no locale switch to fall back on (ADR-057,
-   PR C): a localized field that is neither a light field with the component nor a heavy
-   field with its twin (rule 15) is unreachable, and the census gate in
-   `tests/admin-config.test.ts` names it; the field's own strings are the `bilingual`
-   branch of both trees in `strings.ts`, read per render like every other string.
+   PR C): a localized field that is neither a light field with the component, nor a heavy
+   field with its twin (rule 15), nor a read-only fact whose widget shows the other
+   language under the open one (`ReadOnlyLine`, `WarningsField`, through
+   `useOtherLanguage` and `OtherValue` in `admin/fields/bilingual/`) has no place that
+   shows its other language, and the census gate in `tests/admin-config.test.ts` names it;
+   the field's own strings are the `bilingual` branch of both trees in `strings.ts`, read
+   per render like every other string.
 14. The sidebar shows no document count (ADR-058). A number that asks for action is a badge:
    a kind in `src/modules/cms/admin/nav/badges.ts` (its reader, a cheap query with the
    user's access, the dashboard's own from `dashboard/readers.ts` when the dashboard shows

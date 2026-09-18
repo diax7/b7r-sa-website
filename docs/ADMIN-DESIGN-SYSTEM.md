@@ -301,6 +301,12 @@ per language, no switch, no note.
   disabled with "Loading English…" as its placeholder; if the read fails the input stays
   disabled and a red caption says what happened and the way out ("The English text could
   not be loaded. Reload the page to edit it."). Read-only fields disable both inputs.
+- **Read-only facts.** A localized value nobody edits (the post's `readingMinutes`, its
+  `warnings`, the one list localized as a whole) shows both languages too: the open one
+  under its pill, the other under its own from the same shared read (`OtherValue`,
+  `LocaleTag` in `fields/bilingual/`), "Loading English…" while it is on its way and "The
+  English value could not be loaded. Reload the page." when it is not; `ReadOnlyLine` does
+  this for any localized read-only scalar, `WarningsField` for the warnings.
 - **Saving.** The other language's edits wait in the hidden `translations` JSON and are
   written by the entity's `afterChange` hook on a Save or Publish, never on an autosave;
   a refusal in the other language fails the whole save with a toast naming the field and
