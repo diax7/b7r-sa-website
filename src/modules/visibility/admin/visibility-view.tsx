@@ -28,7 +28,7 @@ const STATUS: Record<Status, { icon: LucideIcon; className: string }> = {
   missing: { icon: CircleX, className: 'text-error' },
 };
 
-function FindingRow({ finding, s }: { finding: Finding; s: Strings }) {
+function FindingRow({ finding, s }: { finding: Finding<string>; s: Strings }) {
   const status = STATUS[finding.status];
   const count =
     finding.count && finding.count.total > 0
@@ -50,7 +50,7 @@ function FindingRow({ finding, s }: { finding: Finding; s: Strings }) {
           aria-label={s.status[finding.status]}
         />
         <div className="flex min-w-0 flex-col gap-0.5">
-          <span className="text-small text-text">
+          <span className="text-small text-text" data-admin-finding-title="">
             {finding.title}
             {count}
             <span className="ms-2 text-caption text-text-muted tabular-nums">
@@ -58,7 +58,7 @@ function FindingRow({ finding, s }: { finding: Finding; s: Strings }) {
             </span>
           </span>
           {finding.status !== 'done' && (
-            <span className="text-caption text-text-muted">
+            <span className="text-caption text-text-muted" data-admin-finding-guide="">
               {finding.guide}
               {finding.href && (
                 <>
@@ -100,7 +100,7 @@ function FindingRow({ finding, s }: { finding: Finding; s: Strings }) {
   );
 }
 
-function SectionCard({ section, s }: { section: SectionScore; s: Strings }) {
+function SectionCard({ section, s }: { section: SectionScore<string>; s: Strings }) {
   const byStatus = (status: Status) => section.findings.filter((f) => f.status === status);
   const done = byStatus('done');
   return (
@@ -156,7 +156,8 @@ function SectionCard({ section, s }: { section: SectionScore; s: Strings }) {
  * The Score page (`/admin/visibility`, ADR-049): the overall ring, the site-only number, one
  * card per section with its findings in the order next, missing, done, each with its guide,
  * its link and its documents; the facts the site guarantees at the foot of each card. Admins
- * only; the reads run with the user's access. "Recompute" bypasses the minute's cache.
+ * only; the reads run with the user's access. "Recompute" bypasses the minute's cache. The
+ * rules' sentences come picked in the panel's language (ADR-056).
  */
 export async function VisibilityView(props: AdminViewServerProps) {
   const language = viewLanguage(props);
@@ -164,7 +165,7 @@ export async function VisibilityView(props: AdminViewServerProps) {
   const refused = adminView(props, ADMIN_VIEWS.visibility.path, s.page.title);
   if (refused) return refused;
   const fresh = props.searchParams?.['fresh'] !== undefined;
-  const { score, at } = await reading(props.payload, { user: viewUser(props), fresh });
+  const { score, at } = await reading(props.payload, { user: viewUser(props), fresh, language });
   const [signals, trend, ledger] = await Promise.all([
     signalRows(props.payload),
     scoreTrend(props.payload, score.overall),

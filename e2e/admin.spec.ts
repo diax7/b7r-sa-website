@@ -933,6 +933,19 @@ test.describe('CMS admin', () => {
       await expect(page.locator('[data-admin-nav]')).toBeAttached();
       await page.goto('/admin/visibility');
       await expect(page.locator('[data-admin-visibility-page] h1')).toContainText('درجة الظهور');
+      // The rules' own sentences read in Arabic too (the Phase 2 text review): the first open
+      // finding's title and guide are Arabic script, and the guide names a place in words.
+      const openFinding = page.locator('[data-admin-finding]:not([data-status="done"])').first();
+      await expect(openFinding.locator('[data-admin-finding-title]')).toContainText(/[؀-ۿ]/);
+      await expect(openFinding.locator('[data-admin-finding-guide]')).toContainText(/[؀-ۿ]/);
+      await expect(openFinding.locator('[data-admin-finding-guide]')).not.toContainText('→');
+      // A listed document's label is a pair too («عنوان (مقال)», the checklist's boxes): the
+      // first item of the first rule that lists any reads Arabic script. A database on which
+      // no rule lists a document has nothing to assert here.
+      const listedItems = page.locator('[data-admin-finding-items] li a');
+      if ((await listedItems.count()) > 0) {
+        await expect(listedItems.first()).toContainText(/[؀-ۿ]/);
+      }
       expect(
         await serious('[data-admin-nav]', '.app-header', '[data-admin-visibility-page]'),
         'axe: the Arabic Score page',

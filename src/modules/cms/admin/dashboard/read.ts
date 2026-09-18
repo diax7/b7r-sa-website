@@ -35,7 +35,7 @@ export interface DashboardData {
   health: Read<HealthReport>;
   recent: Read<RecentItem[]>;
   traffic: Read<{ current: TrafficSummary; double: TrafficSummary }>;
-  score: Read<{ score: Score; trend: ScoreTrend | null }>;
+  score: Read<{ score: Score<string>; trend: ScoreTrend | null }>;
   ledger: Read<LedgerReading>;
   engine: Read<EngineSummary>;
   connections: Read<ConnectionRow[]>;
@@ -117,7 +117,7 @@ export async function readDashboard(args: {
       'score',
       can(permissions, 'globals', 'visibility-checklist', 'read'),
       async () => {
-        const r = await reading(payload, { user: user ?? null });
+        const r = await reading(payload, { user: user ?? null, language: i18n.language });
         return { score: r.score, trend: await scoreTrend(payload, r.score.overall) };
       },
     ),

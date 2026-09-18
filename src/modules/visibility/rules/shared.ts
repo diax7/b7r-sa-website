@@ -1,6 +1,6 @@
 import type { Locale } from '@/lib/i18n';
 import { headings, type LexicalState, plainText } from '@/lib/lexical';
-import type { Finding, Item, Loc, Section, Status } from '@/modules/visibility/types';
+import type { Finding, Item, Loc, Section, Status, Text } from '@/modules/visibility/types';
 import { INTERROGATIVES, weightOf } from '@/modules/visibility/rules/weights';
 
 /** The value in one language, trimmed, or an empty string. */
@@ -14,13 +14,48 @@ export function has(value: string | null | undefined): boolean {
   return typeof value === 'string' && value.trim() !== '';
 }
 
+/** The same words in both languages: a name, a file, a brand. */
+export function same(text: string): Text {
+  return { en: text, ar: text };
+}
+
+/** The language a document is judged in, as a listed document names it. */
+export const LANGUAGE_NAMES: Record<Locale, Text> = {
+  ar: { en: 'Arabic', ar: 'العربية' },
+  en: { en: 'English', ar: 'الإنجليزية' },
+};
+
+export type DocKind = 'page' | 'product' | 'post' | 'hub' | 'author';
+
+const KIND_NAMES: Record<DocKind, Text> = {
+  page: { en: 'page', ar: 'صفحة' },
+  product: { en: 'product', ar: 'منتج' },
+  post: { en: 'post', ar: 'مقال' },
+  hub: { en: 'hub', ar: 'قسم' },
+  author: { en: 'author', ar: 'كاتب' },
+};
+
+/**
+ * How a finding names a listed document: its title, then in brackets its kind and the
+ * language judged, whichever apply ("Hoodie (product, English)", «هودي (منتج، الإنجليزية)»).
+ */
+export function docLabel(title: string, kind?: DocKind, locale?: Locale): Text {
+  const tags = (language: keyof Text) =>
+    [kind ? KIND_NAMES[kind][language] : null, locale ? LANGUAGE_NAMES[locale][language] : null]
+      .filter((t): t is string => t !== null)
+      .join(language === 'ar' ? '، ' : ', ');
+  const en = tags('en');
+  const ar = tags('ar');
+  return { en: en ? `${title} (${en})` : title, ar: ar ? `${title} (${ar})` : title };
+}
+
 /** A rule with one answer: done, next or missing, by its own judgment. */
 export function finding(args: {
   key: string;
   section: Section;
   status: Status;
-  title: string;
-  guide: string;
+  title: Text;
+  guide: Text;
   href?: string;
 }): Finding {
   const weight = weightOf(args.key);
@@ -36,9 +71,9 @@ export function finding(args: {
 export function prorata(args: {
   key: string;
   section: Section;
-  checks: Array<{ ok: boolean; label: string; href: string }>;
-  title: string;
-  guide: string;
+  checks: Array<{ ok: boolean; label: Text; href: string }>;
+  title: Text;
+  guide: Text;
   href?: string;
 }): Finding {
   const weight = weightOf(args.key);
