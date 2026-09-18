@@ -34,7 +34,7 @@ export async function Dashboard(props: AdminViewServerProps) {
     recentActivity({ payload, req, user, permissions, i18n }),
     engineAllowed ? engineSummary(payload) : Promise.resolve(null),
     trafficAllowed ? trafficSummary(payload, { days: 7 }) : Promise.resolve(null),
-    scoreAllowed ? reading(payload, { user: user ?? null }) : Promise.resolve(null),
+    scoreAllowed ? reading(payload, { user: user ?? null, language }) : Promise.resolve(null),
   ]);
   const name = String(user?.['name'] ?? user?.email ?? '');
   const [before, after] = s.greeting.split('{name}');

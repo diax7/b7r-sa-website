@@ -28,20 +28,20 @@ function cache(): { last: Cached | null } {
 }
 
 /** The panel's UI language as the rules know it: Arabic, else English (ADR-056). */
-export function ruleLanguage(language: string | undefined): Language {
+export function ruleLanguage(language: string): Language {
   return language === 'ar' ? 'ar' : 'en';
 }
 
 /**
  * The score as the page and the card show it (ADR-049): a fresh snapshot judged by the rules,
  * cached for a minute per process and per user (the reads run under the user's access), or
- * recomputed on demand; its sentences picked in the panel's language (`language`, English
- * when none is given). Never stored: the score is a function of the content; the nightly
- * snapshot keeps the history.
+ * recomputed on demand; its sentences picked in the panel's language. `language` is
+ * required so a call site cannot forget it and render English inside the Arabic panel. Never
+ * stored: the score is a function of the content; the nightly snapshot keeps the history.
  */
 export async function reading(
   payload: Payload,
-  options: { user?: TypedUser | null; fresh?: boolean; language?: string } = {},
+  options: { user?: TypedUser | null; fresh?: boolean; language: string },
 ): Promise<Reading> {
   const c = cache();
   const by = options.user ? String(options.user.id) : 'server';
