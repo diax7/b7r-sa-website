@@ -30,10 +30,12 @@ export const adminStrings = {
     viewSite: 'View website',
     language: 'Panel language',
     languages: { en: 'English', ar: 'العربية' },
-    /** The badges (ADR-058): read to a screen reader after the entry's name. */
+    /**
+     * The badges (ADR-058), read to a screen reader after the entry's name. The runs and the
+     * drafts badges say what the dashboard says (`dashboard.hand.failedRuns`,
+     * `dashboard.tiles.drafts`): one number, one sentence.
+     */
     badges: {
-      failedRuns: (n: number) => `${n} failed ${n === 1 ? 'run' : 'runs'} this month`,
-      drafts: (n: number) => `${n} ${n === 1 ? 'draft' : 'drafts'} waiting`,
       overLimit: (n: number) =>
         `${n} ${n === 1 ? 'connection' : 'connections'} over the monthly limit`,
     },
@@ -480,8 +482,8 @@ type Widen<T> = T extends (...args: infer A) => infer R
 export type AdminStrings = Widen<typeof adminStrings>;
 
 /**
- * An Arabic count in its four plurals: one and two carry their own forms, three to ten take
- * the plural with the number, eleven and up the singular with the number.
+ * A counted noun in the four Arabic plurals: the singular carries «واحد» or «واحدة», the dual
+ * stands alone, three to ten take the plural, eleven and up the accusative singular.
  */
 function arabicCount(
   n: number,
@@ -496,20 +498,6 @@ function arabicCount(
 /** Arabic counts of days («يوم», «يومين», «7 أيام», «30 يوماً»). */
 function arabicDays(n: number): string {
   return arabicCount(n, { one: 'يوم', two: 'يومين', few: 'أيام', many: 'يوماً' });
-}
-
-/**
- * A counted noun under the same four plurals: the singular carries «واحد» or «واحدة», the dual
- * stands alone, three to ten take the plural, eleven and up the accusative singular.
- */
-function arabicCount(
-  n: number,
-  forms: { one: string; two: string; few: string; many: string },
-): string {
-  if (n === 1) return forms.one;
-  if (n === 2) return forms.two;
-  if (n >= 3 && n <= 10) return `${n} ${forms.few}`;
-  return `${n} ${forms.many}`;
 }
 
 /**
@@ -530,20 +518,6 @@ export const adminStringsAr: AdminStrings = {
     language: 'لغة اللوحة',
     languages: { en: 'English', ar: 'العربية' },
     badges: {
-      failedRuns: (n) =>
-        `${arabicCount(n, {
-          one: 'جولة فاشلة واحدة',
-          two: 'جولتان فاشلتان',
-          few: 'جولات فاشلة',
-          many: 'جولة فاشلة',
-        })} هذا الشهر`,
-      drafts: (n) =>
-        `${arabicCount(n, {
-          one: 'مسودة واحدة',
-          two: 'مسودتان',
-          few: 'مسودات',
-          many: 'مسودة',
-        })} بانتظار النشر`,
       overLimit: (n) =>
         arabicCount(n, {
           one: 'اتصال واحد تجاوز حدّه الشهري',

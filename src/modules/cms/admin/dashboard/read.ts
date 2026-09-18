@@ -11,6 +11,7 @@ import {
   type ContentSlug,
   type DraftCount,
   draftsWaiting,
+  FAILED_RUNS_DAYS,
   failedRuns,
   type MissingEnglish,
   missingEnglish,
@@ -23,8 +24,6 @@ import { type LedgerReading, ledgerReading } from '@/modules/visibility/ledger/r
 import { reading } from '@/modules/visibility/reading';
 import type { Score } from '@/modules/visibility/score';
 import { type ScoreTrend, scoreTrend } from '@/modules/visibility/signals';
-
-const FAILED_RUNS_DAYS = 7;
 
 /**
  * A reader's answer: `undefined` when the user may not run it (its section is not rendered),

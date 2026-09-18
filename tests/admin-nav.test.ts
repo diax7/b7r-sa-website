@@ -20,6 +20,7 @@ import {
   tabbableRow,
   treeRows,
 } from '@/modules/cms/admin/nav/keyboard';
+import { badgeStrings } from '@/modules/cms/admin/nav/badge-strings';
 import { adminStrings, adminStringsAr } from '@/modules/cms/admin/strings';
 import { overLimitConnections } from '@/modules/connections/spend';
 
@@ -208,27 +209,48 @@ describe('the badge rule: a number only where it asks for action', () => {
     for (const tone of Object.values(BADGE_TONE)) expect(['error', 'warning']).toContain(tone);
   });
 
-  it('has a sentence in both languages for every kind, declined by the count', () => {
+  it('says what the dashboard says, in both languages, declined by the count', () => {
     for (const strings of [adminStrings, adminStringsAr]) {
+      const sentences = badgeStrings(strings);
       for (const kind of Object.keys(BADGE_TONE) as Array<keyof typeof BADGE_TONE>) {
-        for (const n of [1, 2, 3, 11]) expect(strings.nav.badges[kind](n)).toMatch(/\S/);
+        for (const n of [1, 2, 3, 11]) expect(sentences[kind](n)).toMatch(/\S/);
       }
+      expect(sentences.failedRuns).toBe(strings.dashboard.hand.failedRuns);
+      expect(sentences.drafts).toBe(strings.dashboard.tiles.drafts);
     }
-    expect(adminStrings.nav.badges.drafts(1)).toBe('1 draft waiting');
-    expect(adminStrings.nav.badges.drafts(4)).toBe('4 drafts waiting');
-    expect(adminStringsAr.nav.badges.drafts(2)).toBe('مسودتان بانتظار النشر');
-    expect(adminStringsAr.nav.badges.failedRuns(1)).toBe('جولة فاشلة واحدة هذا الشهر');
-    expect(adminStringsAr.nav.badges.failedRuns(5)).toBe('5 جولات فاشلة هذا الشهر');
-    expect(adminStringsAr.nav.badges.overLimit(11)).toBe('11 اتصالاً تجاوز حدّه الشهري');
+    const en = badgeStrings(adminStrings);
+    const ar = badgeStrings(adminStringsAr);
+    expect(en.drafts(1)).toBe('1 draft waiting');
+    expect(en.failedRuns(3)).toBe('3 failed runs this week');
+    expect(ar.drafts(2)).toBe('مسودتان بانتظارك');
+    expect(ar.failedRuns(1)).toBe('جولة فاشلة واحدة هذا الأسبوع');
+    expect(ar.overLimit(11)).toBe('11 اتصالاً تجاوز حدّه الشهري');
   });
 
-  it('reads only the badges of the entries the user sees, and survives a failed read', async () => {
+  it('reads the dashboard readers for the entries the user sees, and survives a failed read', async () => {
     const asked: string[] = [];
+    const now = new Date('2026-09-18T09:00:00Z');
     const payload = {
-      count: async ({ collection }: { collection: string }) => {
-        asked.push(collection);
-        if (collection === 'ai-runs') throw new Error('boom');
-        return { totalDocs: collection === 'posts' ? 2 : 0 };
+      count: async (args: { collection: string; where: unknown }) => {
+        asked.push(`count:${args.collection}`);
+        if (args.collection === 'ai-runs') {
+          expect(args.where).toEqual({
+            and: [
+              { status: { equals: 'failed' } },
+              { startedAt: { greater_than_equal: '2026-09-11T09:00:00.000Z' } },
+            ],
+          });
+          throw new Error('boom');
+        }
+        return { totalDocs: 0 };
+      },
+      countVersions: async (args: { collection: string; where: { and: unknown[] } }) => {
+        asked.push(`versions:${args.collection}`);
+        expect(args.where.and.slice(0, 2)).toEqual([
+          { latest: { equals: true } },
+          { 'version._status': { equals: 'draft' } },
+        ]);
+        return { totalDocs: args.where.and.length === 2 ? 2 : 1 };
       },
       find: async () => ({ docs: [] }),
       logger: { error: () => {} },
@@ -237,9 +259,10 @@ describe('the badge rule: a number only where it asks for action', () => {
       payload,
       user: undefined,
       visible: new Set(['posts', 'ai-runs', 'pages']),
+      now,
     });
     expect(badges).toEqual({ posts: { kind: 'drafts', count: 2, tone: 'warning' } });
-    expect(asked.toSorted()).toEqual(['ai-runs', 'posts']);
+    expect(asked.toSorted()).toEqual(['count:ai-runs', 'versions:posts', 'versions:posts']);
   });
 
   it('counts the enabled connections whose month has reached the limit, in two queries', async () => {

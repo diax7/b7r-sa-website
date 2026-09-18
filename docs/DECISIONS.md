@@ -1800,16 +1800,20 @@ two corrections kept from the design memo and two settlements.
   `nav` preference, per user and server side, never `localStorage`; the hues and the active
   tint are ADR-046's, not Cloudflare's single grey. The registry `ADMIN_NAV` is untouched.
 - **Counts out, badges only for action.** No entry shows a document count (ADR-046 amended).
-  A badge stays for a number that asks for action: runs that failed this month on Runs (red),
-  posts still in draft on Posts (amber; `_status` is the cheap proxy, a newer draft over a
-  published post is not counted, the CTO's budget for the dashboard), connections past their
-  monthly limit on Connections (red; two queries whatever their number). Read in parallel
-  with the user's access, never cached, a failed read logs and leaves the entry bare. A
-  badge's sentence is read to a screen reader after the entry's name, in both languages.
-  The cost, counted the way ADR-059 counts the dashboard's: four queries per page render
-  for an admin (a `count` of the month's failed runs, a `count` of the draft posts, a `find`
-  of the limited connections and a `find` of their month's runs), one for an editor (the
-  drafts; the other entries are not in the editor's sidebar), each a few milliseconds warm.
+  A badge stays for a number that asks for action: runs that failed this week on Runs (red),
+  posts whose newest version is a draft on Posts (amber), connections past their monthly
+  limit on Connections (red). One number per thing (the CTO's review): the first two are
+  the dashboard's own readers (ADR-059, `dashboard/readers.ts`): `failedRuns` over its
+  `FAILED_RUNS_DAYS` window and `draftsWaiting` for posts through `countVersions` with
+  `latest: true`, so the badge, the dashboard's tile and its hand line show the same figure
+  and say it in the same sentence (`dashboard.hand.failedRuns`, `dashboard.tiles.drafts`);
+  the third is `overLimitConnections` beside `connectionSpend`. Read in parallel with the
+  user's access, never cached, a failed read logs and leaves the entry bare. The cost,
+  counted the way ADR-059 counts the dashboard's: five queries per page render for an admin
+  (the runs' one `count`, the drafts' two `countVersions`, of which the badge shows the
+  waiting one and not the stale one, and the connections' two `find`s), two for an editor
+  (the drafts; the other entries are not in the editor's sidebar), each a few milliseconds
+  warm.
 - **One breakpoint, Payload's `m` (1024 px).** Above it the sidebar is inline: open at 264 px,
   or the 64 px rail when collapsed by the one button above the account (« open, » collapsed,
   mirrored in RTL): the brand mark, the dashboard icon, the five group icons (the active

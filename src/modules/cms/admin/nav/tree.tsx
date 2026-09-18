@@ -21,10 +21,10 @@ import {
   type GroupState,
   isActive,
 } from '@/modules/cms/admin/nav/active';
+import { type BadgeStrings, badgeStrings } from '@/modules/cms/admin/nav/badge-strings';
 import type { NavBadge } from '@/modules/cms/admin/nav/badges';
 import type { NavEntity, NavGroup } from '@/modules/cms/admin/nav/groups';
 import { nextRowIndex, rowKey, tabbableRow, treeRows } from '@/modules/cms/admin/nav/keyboard';
-import type { AdminStrings } from '@/modules/cms/admin/strings';
 import { useAdminStrings } from '@/modules/cms/admin/use-admin-strings';
 
 const row =
@@ -45,8 +45,6 @@ const subList = 'ms-[19px] flex flex-col gap-0.5 border-s-2 border-border ps-1.5
 export const entityId = (e: Pick<NavEntity, 'type' | 'slug'>) =>
   `nav-${e.type === 'globals' ? 'global-' : e.type === 'views' ? 'view-' : ''}${e.slug}`;
 
-type BadgeStrings = AdminStrings['nav']['badges'];
-
 export interface TreeProps {
   groups: NavGroup[];
   groupState: Record<string, GroupState>;
@@ -63,7 +61,9 @@ export interface TreeProps {
  * own. The active entry carries `aria-current="page"` and its group is forced open.
  */
 export function Tree({ groups, groupState, onToggleGroup, pathname, adminRoute }: TreeProps) {
-  const s = useAdminStrings().nav;
+  const strings = useAdminStrings();
+  const s = strings.nav;
+  const badges = badgeStrings(strings);
   const ref = useRef<HTMLDivElement>(null);
   const [focused, setFocused] = useState<{ key: string; at: string } | null>(null);
   const activeGroup = activeGroupKey(groups, pathname);
@@ -124,7 +124,7 @@ export function Tree({ groups, groupState, onToggleGroup, pathname, adminRoute }
           onToggle={(next) => onToggleGroup(group.key, next)}
           pathname={pathname}
           tabbable={tabbable}
-          badges={s.badges}
+          badges={badges}
         />
       ))}
     </div>

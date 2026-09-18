@@ -69,9 +69,11 @@ note), `check:rtl` and the admin e2e.
    the locale note says so (`locale.legend`) and the field's own strings are the `bilingual`
    branch of both trees in `strings.ts`, read per render like every other string.
 14. The sidebar shows no document count (ADR-058). A number that asks for action is a badge:
-   a kind in `src/modules/cms/admin/nav/badges.ts` (its reader, one cheap query with the
-   user's access; its tone, red or amber, never grey; its entry) and its sentence in both
-   string trees (`nav.badges`). The sidebar's shape itself (the tree, the rail, the drawer,
+   a kind in `src/modules/cms/admin/nav/badges.ts` (its reader, a cheap query with the
+   user's access, the dashboard's own from `dashboard/readers.ts` when the dashboard shows
+   the same number; its tone, red or amber, never grey; its entry) and its sentence in
+   both string trees, picked in `nav/badge-strings.ts` (the dashboard's sentence when the
+   number is the dashboard's). The sidebar's shape itself (the tree, the rail, the drawer,
    the keyboard model) is the design system's shell section; a new entry only needs its
    place in `ADMIN_NAV`.
 

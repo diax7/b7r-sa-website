@@ -1,13 +1,14 @@
 import type { Payload, TypedUser } from 'payload';
-import { riyadhMonthStart } from '@/lib/riyadh';
+import { draftsWaiting, FAILED_RUNS_DAYS, failedRuns } from '@/modules/cms/admin/dashboard/readers';
 import type { CollectionSlug } from '@/modules/cms/admin/icons';
 import { overLimitConnections } from '@/modules/connections/spend';
 
 /**
  * The sidebar's badges (ADR-058): a number only where it asks for action, never a count of
- * documents. Three exist: runs that failed this month on Runs (red), posts still in draft
- * on Posts (amber; `_status` is the cheap proxy, a newer draft over a published post is not
- * counted) and connections past their monthly limit on Connections (red). Zero is no badge.
+ * documents. Three exist: runs that failed this week on Runs (red), posts whose newest
+ * version is a draft on Posts (amber) and connections past their monthly limit on
+ * Connections (red). The first two are the dashboard's own readers (ADR-059), so the badge,
+ * the tile and the hand line show one number. Zero is no badge.
  */
 export type NavBadgeKind = 'failedRuns' | 'drafts' | 'overLimit';
 
@@ -42,36 +43,19 @@ type Reader = (args: {
 }) => Promise<number>;
 
 const READERS: Record<NavBadgeKind, Reader> = {
-  failedRuns: async ({ payload, user, now }) =>
-    (
-      await payload.count({
-        collection: 'ai-runs',
-        where: {
-          and: [
-            { status: { equals: 'failed' } },
-            { startedAt: { greater_than_equal: riyadhMonthStart(now).toISOString() } },
-          ],
-        },
-        overrideAccess: false,
-        user,
-      })
-    ).totalDocs,
-  drafts: async ({ payload, user }) =>
-    (
-      await payload.count({
-        collection: 'posts',
-        where: { _status: { equals: 'draft' } },
-        overrideAccess: false,
-        user,
-      })
-    ).totalDocs,
+  failedRuns: ({ payload, user, now }) =>
+    failedRuns(payload, { days: FAILED_RUNS_DAYS, now, user: user ?? null }),
+  drafts: async ({ payload, user, now }) =>
+    (await draftsWaiting(payload, { collections: ['posts'], now, user: user ?? null }))[0]
+      ?.waiting ?? 0,
   overLimit: ({ payload, now }) => overLimitConnections(payload, now),
 };
 
 /**
- * The badges for the entries this user sees, read in parallel with the user's access, one
- * cheap query each (the connections one is two), never cached: a badge that lags a fix is
- * worse than none. A failed read logs and leaves that entry without a badge.
+ * The badges for the entries this user sees, read in parallel with the user's access (one
+ * `count` for the runs, two `countVersions` for the drafts, two `find`s for the
+ * connections), never cached: a badge that lags a fix is worse than none. A failed read
+ * logs and leaves that entry without a badge.
  */
 export async function navBadges(args: {
   payload: Payload;

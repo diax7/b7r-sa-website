@@ -24,8 +24,8 @@ import {
 } from '@/modules/cms/admin/icons';
 import { groupEntities, isActive, isDashboard } from '@/modules/cms/admin/nav/active';
 import type { NavEntity, NavGroup } from '@/modules/cms/admin/nav/groups';
+import { type BadgeStrings, badgeStrings } from '@/modules/cms/admin/nav/badge-strings';
 import { BadgeMark } from '@/modules/cms/admin/nav/tree';
-import type { AdminStrings } from '@/modules/cms/admin/strings';
 import { useAdminStrings } from '@/modules/cms/admin/use-admin-strings';
 
 /** Where a flyout or a tooltip opens: away from the rail, which sits at the start edge; Radix's `side` is physical. */
@@ -54,7 +54,9 @@ export interface RailProps {
  * the aside's open class, so a collapsed sidebar paints as a rail on the first frame.
  */
 export function Rail({ groups, pathname, adminRoute, direction, live }: RailProps) {
-  const s = useAdminStrings().nav;
+  const strings = useAdminStrings();
+  const s = strings.nav;
+  const badges = badgeStrings(strings);
   const side: AwaySide = direction === 'rtl' ? 'left' : 'right';
   const dashboardActive = isDashboard(pathname, adminRoute);
   return (
@@ -81,7 +83,7 @@ export function Rail({ groups, pathname, adminRoute, direction, live }: RailProp
             direction={direction}
             side={side}
             live={live}
-            badges={s.badges}
+            badges={badges}
           />
         </li>
       ))}
@@ -131,7 +133,7 @@ function RailGroup({
   direction: 'ltr' | 'rtl';
   side: AwaySide;
   live: boolean;
-  badges: AdminStrings['nav']['badges'];
+  badges: BadgeStrings;
 }) {
   const active = groupEntities(group).some((e) => isActive(pathname, e.href));
   const attention = groupEntities(group).find((e) => e.badge)?.badge;
@@ -220,7 +222,7 @@ function FlyoutEntry({
   entity: NavEntity;
   hue: Hue;
   pathname: string;
-  badges: AdminStrings['nav']['badges'];
+  badges: BadgeStrings;
   secondary?: boolean;
 }) {
   const EntityIcon = entityIcon(entity.type, entity.slug);
