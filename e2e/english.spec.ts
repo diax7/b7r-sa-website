@@ -104,7 +104,9 @@ test.describe('the English site (Level 5a, ADR-043)', () => {
     expect(xml).toContain(
       'hreflang="en" href="https://b7r.sa/en/blog/how-to-price-printed-tshirt-saudi"',
     );
-    expect(xml).toContain('<loc>https://b7r.sa/en/blog/category/seasons</loc>');
+    expect(xml).toContain('<loc>https://b7r.sa/en/blog/category/pricing-profit</loc>');
+    // A hub with no English post is a thin page: out of the sitemap (item 10 of the audit).
+    expect(xml).not.toContain('<loc>https://b7r.sa/en/blog/category/seasons</loc>');
     expect(xml).toContain('<loc>https://b7r.sa/en/author/dhia</loc>');
   });
 

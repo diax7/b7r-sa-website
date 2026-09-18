@@ -37,6 +37,8 @@ export interface PageMeta {
   modifiedTime?: string;
   /** The home page uses the full title without the « | بحر برنت» template. */
   absoluteTitle?: boolean;
+  /** A listing with nothing to list yet (an empty hub or author): `noindex, follow`. */
+  noindex?: boolean;
 }
 
 /**
@@ -92,10 +94,15 @@ export function pageMetadata(meta: PageMeta): Metadata {
     },
     openGraph,
     twitter: { card: 'summary_large_image', site: '@b7rprint' },
-    robots: env.isProductionSite
-      ? { index: true, follow: true, 'max-image-preview': 'large' }
-      : { index: false, follow: false },
+    robots: robotsFor(meta.noindex ?? false),
   };
+}
+
+/** `noindex` on any host other than https://b7r.sa (BRD 7.2); on it, an empty listing follows. */
+function robotsFor(noindex: boolean): NonNullable<Metadata['robots']> {
+  if (!env.isProductionSite) return { index: false, follow: false };
+  if (noindex) return { index: false, follow: true };
+  return { index: true, follow: true, 'max-image-preview': 'large' };
 }
 
 /** Static routes: title/description from the `seo-defaults` global (BRD 4.16). */
@@ -183,8 +190,16 @@ export async function postMetadata(locale: Locale, post: Post): Promise<Metadata
   });
 }
 
-/** A hub page; page 2 and up carry the page number and a canonical of their own. */
-export async function hubMetadata(locale: Locale, hub: Hub, page = 1): Promise<Metadata> {
+/**
+ * A hub page; page 2 and up carry the page number and a canonical of their own. A hub with
+ * no post in the language is `noindex, follow` (and out of the sitemap) until it has one.
+ */
+export async function hubMetadata(
+  locale: Locale,
+  hub: Hub,
+  page = 1,
+  options: { empty?: boolean } = {},
+): Promise<Metadata> {
   const [site, locales] = await Promise.all([
     getSiteSettings(locale),
     documentLocales('categories', hub.slug, 'name'),
@@ -198,6 +213,7 @@ export async function hubMetadata(locale: Locale, hub: Hub, page = 1): Promise<M
     title: page > 1 ? `${hub.name} (${page})` : hub.name,
     description: hub.description,
     ...(hub.cover ? { ogImage: hub.cover } : {}),
+    ...(options.empty ? { noindex: true } : {}),
   });
 }
 
@@ -219,8 +235,12 @@ export async function blogPageMetadata(locale: Locale, page: number): Promise<Me
   });
 }
 
-/** The author page. */
-export async function authorMetadata(locale: Locale, author: Author): Promise<Metadata> {
+/** The author page; an author with no post in the language is `noindex, follow` until they have one. */
+export async function authorMetadata(
+  locale: Locale,
+  author: Author,
+  options: { empty?: boolean } = {},
+): Promise<Metadata> {
   const [site, locales] = await Promise.all([
     getSiteSettings(locale),
     documentLocales('authors', author.slug, 'name'),
@@ -233,6 +253,7 @@ export async function authorMetadata(locale: Locale, author: Author): Promise<Me
     title: author.name,
     description: author.bio ?? author.role,
     ...(author.photo ? { ogImage: author.photo } : {}),
+    ...(options.empty ? { noindex: true } : {}),
   });
 }
 
