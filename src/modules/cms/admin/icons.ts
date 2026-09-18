@@ -120,6 +120,26 @@ export const HUE_CLASSES: Record<Hue, string> = {
   green: 'bg-success-tint text-success',
 };
 
+/** Text (and `currentColor`) in the hue alone: the rail's active icon and its bar (ADR-058). */
+export const HUE_TEXT_CLASSES: Record<Hue, string> = {
+  blue: 'text-accent',
+  teal: 'text-teal',
+  violet: 'text-violet',
+  pink: 'text-pink',
+  slate: 'text-slate',
+  green: 'text-success',
+};
+
+/** The 8 px dot before a sidebar group's name (ADR-058): the group's mark, in its hue. */
+export const HUE_DOT_CLASSES: Record<Hue, string> = {
+  blue: 'bg-accent',
+  teal: 'bg-teal',
+  violet: 'bg-violet',
+  pink: 'bg-pink',
+  slate: 'bg-slate',
+  green: 'bg-success',
+};
+
 /** The bar beside a page header, in the entity's hue (literal classes). */
 export const HUE_BAR_CLASSES: Record<Hue, string> = {
   blue: 'border-accent',

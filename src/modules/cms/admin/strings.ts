@@ -22,11 +22,23 @@ export const adminStrings = {
   nav: {
     label: 'Main navigation',
     brand: 'B7R Print Website',
+    dashboard: 'Dashboard',
     expand: 'Expand the sidebar',
     collapse: 'Collapse the sidebar',
+    openMenu: 'Open the menu',
     closeMenu: 'Close the menu',
-    groupToggle: 'collapse or expand the group',
     viewSite: 'View website',
+    language: 'Panel language',
+    languages: { en: 'English', ar: 'العربية' },
+    /**
+     * The badges (ADR-058), read to a screen reader after the entry's name. The runs and the
+     * drafts badges say what the dashboard says (`dashboard.hand.failedRuns`,
+     * `dashboard.tiles.drafts`): one number, one sentence.
+     */
+    badges: {
+      overLimit: (n: number) =>
+        `${n} ${n === 1 ? 'connection' : 'connections'} over the monthly limit`,
+    },
   },
   entityHeader: {
     shows: 'Shows on:',
@@ -469,16 +481,8 @@ type Widen<T> = T extends (...args: infer A) => infer R
 
 export type AdminStrings = Widen<typeof adminStrings>;
 
-/** Arabic counts of days: one, two, three to ten, eleven and up (the four Arabic plurals). */
-function arabicDays(n: number): string {
-  if (n === 1) return 'يوم';
-  if (n === 2) return 'يومين';
-  if (n >= 3 && n <= 10) return `${n} أيام`;
-  return `${n} يوماً`;
-}
-
 /**
- * A counted noun under the same four plurals: the singular carries «واحد» or «واحدة», the dual
+ * A counted noun in the four Arabic plurals: the singular carries «واحد» or «واحدة», the dual
  * stands alone, three to ten take the plural, eleven and up the accusative singular.
  */
 function arabicCount(
@@ -491,6 +495,11 @@ function arabicCount(
   return `${n} ${forms.many}`;
 }
 
+/** Arabic counts of days («يوم», «يومين», «7 أيام», «30 يوماً»). */
+function arabicDays(n: number): string {
+  return arabicCount(n, { one: 'يوم', two: 'يومين', few: 'أيام', many: 'يوماً' });
+}
+
 /**
  * The Arabic tree, under the ux-araby rules (design system §5): nominal labels, verb-first
  * actions, light passives and never «تم», the Arabic comma, «أو» not «/», no «!», Western
@@ -500,11 +509,23 @@ export const adminStringsAr: AdminStrings = {
   nav: {
     label: 'التنقل الرئيسي',
     brand: 'موقع بحر برنت',
+    dashboard: 'لوحة التحكم',
     expand: 'وسّع الشريط الجانبي',
     collapse: 'اطوِ الشريط الجانبي',
+    openMenu: 'افتح القائمة',
     closeMenu: 'أغلق القائمة',
-    groupToggle: 'اطوِ المجموعة أو وسّعها',
     viewSite: 'عرض الموقع',
+    language: 'لغة اللوحة',
+    languages: { en: 'English', ar: 'العربية' },
+    badges: {
+      overLimit: (n) =>
+        arabicCount(n, {
+          one: 'اتصال واحد تجاوز حدّه الشهري',
+          two: 'اتصالان تجاوزا حدّهما الشهري',
+          few: 'اتصالات تجاوزت حدّها الشهري',
+          many: 'اتصالاً تجاوز حدّه الشهري',
+        }),
+    },
   },
   entityHeader: {
     shows: 'يظهر في:',

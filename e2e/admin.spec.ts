@@ -273,7 +273,7 @@ test.describe('CMS admin', () => {
     }
   });
 
-  test('the shell (ADR-039): icons per entity, remembered groups, the icon rail, the palette, the account menu, the phone drawer', async ({
+  test('the shell (ADR-039, ADR-058): the dashboard entry, group rows, the active bar, the keyboard model, the rail and its flyout, one breakpoint, the drawer, the palette, the account menu', async ({
     page,
     browser,
     request,
@@ -294,6 +294,16 @@ test.describe('CMS admin', () => {
     await page.goto('/admin/collections/pages');
     const nav = page.locator('[data-admin-nav]');
     await expect(nav).toHaveClass(/nav--nav-open/);
+    // axe on OUR surfaces (Payload's own edit-view chrome has known gaps: unnamed drag handles
+    // and popup buttons, its engine, not the shell).
+    const { AxeBuilder } = await import('@axe-core/playwright');
+    const serious = async (...include: string[]) => {
+      let builder = new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']);
+      for (const sel of include) builder = builder.include(sel);
+      return (await builder.analyze()).violations
+        .filter((v) => ['serious', 'critical'].includes(v.impact ?? ''))
+        .map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`);
+    };
     // Every entity link carries its icon; the current section is marked.
     const links = nav.locator('a[id^="nav-"]');
     expect(await links.count()).toBeGreaterThanOrEqual(12);
@@ -326,23 +336,91 @@ test.describe('CMS admin', () => {
       'id',
       'nav-global-home',
     );
-    // Secondary entries sit under their parent; the engine is a section inside Blog; a
-    // collection shows its count; the active entry wears its group's hue.
+    // Secondary entries sit under their parent; the engine is a section inside Blog; no
+    // entry shows a document count, a badge only asks for action (red or amber); the
+    // active entry wears its group's hue; the dashboard is a real entry, active on /admin.
     await expect(nav.locator('#nav-categories')).toHaveAttribute('data-admin-entry', 'secondary');
     await expect(
       nav.locator('[data-admin-group="Blog"] [data-admin-section="engine"] #nav-ai-topics'),
     ).toBeVisible();
-    await expect(nav.locator('#nav-products [data-admin-count]')).toHaveText(/^\d+$/);
+    await expect(nav.locator('[data-admin-count]')).toHaveCount(0);
+    for (const badge of await nav.locator('[data-admin-badge]').all()) {
+      await expect(badge).toHaveAttribute('data-admin-badge', /^(error|warning)$/);
+      await expect(badge).toHaveText(/^\d+/);
+    }
     await expect(nav.locator('a[aria-current="page"]')).toHaveAttribute('data-hue', 'blue');
-    // A collapsed group stays collapsed across a reload (Payload's `nav` pref).
+    await expect(nav.locator('#nav-dashboard')).not.toHaveAttribute('aria-current', 'page');
+    await page.goto('/admin');
+    await expect(nav.locator('#nav-dashboard')).toHaveAttribute('aria-current', 'page');
+    await page.goto('/admin/collections/pages');
+    // A group row is a button with aria-expanded owning a role="group" labelled by it; the
+    // whole row toggles, and a collapsed group stays collapsed across a reload (the `nav` pref).
     const visibilityGroup = () => page.locator('[data-admin-group="Visibility"]');
-    await visibilityGroup().locator('button').first().click();
+    const visibilityToggle = () => visibilityGroup().locator('[data-admin-group-toggle]');
+    await expect(visibilityToggle()).toHaveAttribute('aria-expanded', 'true');
+    const toggleId = await visibilityToggle().getAttribute('id');
+    await expect(
+      visibilityGroup().locator(`[role="group"][aria-labelledby="${toggleId}"]`),
+    ).toBeVisible();
+    expect((await visibilityToggle().boundingBox())!.height).toBe(40);
+    expect((await nav.locator('#nav-pages').boundingBox())!.height).toBe(36);
+    expect((await nav.locator('#nav-categories').boundingBox())!.height).toBe(32);
+    await visibilityToggle().click();
+    await expect(visibilityToggle()).toHaveAttribute('aria-expanded', 'false');
     await expect(visibilityGroup().locator('#nav-redirects')).toBeHidden();
+    await expect
+      .poll(async () => {
+        const res = await request.get(`${API}/payload-preferences/nav`, { headers: adminAuth });
+        return ((await res.json()) as { value?: { groups?: Record<string, { open?: boolean }> } })
+          .value?.groups?.['visibility']?.open;
+      })
+      .toBe(false);
     await page.reload();
     await expect(page.locator('[data-admin-nav]')).toHaveClass(/nav--nav-open/);
     await expect(visibilityGroup().locator('#nav-redirects')).toBeHidden();
-    await visibilityGroup().locator('button').first().click();
+    await visibilityToggle().click();
     await expect(visibilityGroup().locator('#nav-redirects')).toBeVisible();
+    // The active entry's group is forced open: close Site here, open Home (in Site), and the
+    // group is open again with Home marked.
+    await page.locator('[data-admin-group="Site"] [data-admin-group-toggle]').click();
+    await expect(nav.locator('#nav-pages')).toBeHidden();
+    await page.goto('/admin/globals/home');
+    await expect(nav.locator('#nav-global-home')).toHaveAttribute('aria-current', 'page');
+    await page.goto('/admin/collections/pages');
+    // The keyboard model: one tab stop on the current entry; arrows, Home, End and a typed
+    // letter move between rows; Enter toggles a group; Tab leaves the tree.
+    const focusedRow = () =>
+      page.evaluate(() => (document.activeElement as HTMLElement | null)?.dataset['adminRow']);
+    await expect(nav.locator('#nav-pages')).toHaveAttribute('tabindex', '0');
+    await expect(nav.locator('#nav-global-home')).toHaveAttribute('tabindex', '-1');
+    await nav.locator('#nav-pages').focus();
+    await page.keyboard.press('ArrowDown');
+    expect(await focusedRow()).toBe('globals:site-settings');
+    await page.keyboard.press('ArrowUp');
+    await page.keyboard.press('ArrowUp');
+    expect(await focusedRow()).toBe('globals:home');
+    await page.keyboard.press('Home');
+    expect(await focusedRow()).toBe('dashboard');
+    await page.keyboard.press('p');
+    expect(await focusedRow()).toBe('collections:pages');
+    await page.keyboard.press('p');
+    expect(await focusedRow()).toBe('collections:products');
+    await page.keyboard.press('End');
+    expect(await focusedRow()).toBe('collections:connections');
+    await page.keyboard.press('Home');
+    await page.keyboard.press('ArrowDown');
+    expect(await focusedRow()).toBe('group:site');
+    await page.keyboard.press('Enter');
+    await expect(
+      page.locator('[data-admin-group="Site"] [data-admin-group-toggle]'),
+    ).toHaveAttribute('aria-expanded', 'false');
+    await page.keyboard.press('Space');
+    await expect(
+      page.locator('[data-admin-group="Site"] [data-admin-group-toggle]'),
+    ).toHaveAttribute('aria-expanded', 'true');
+    await nav.locator('#nav-pages').focus();
+    await page.keyboard.press('Tab');
+    await expect(page.locator('[data-admin-collapse]')).toBeFocused();
     // The page header (the description slot): the entity's disc and bar in its hue, where the
     // thing shows on the site, and the public listing on a list view.
     const header = page.locator('[data-admin-header="pages"]');
@@ -361,13 +439,38 @@ test.describe('CMS admin', () => {
       /10 sections, \d+ on/,
     );
     await page.goto('/admin/collections/pages');
-    // Collapsed on a desktop the sidebar is an icon rail, still usable, and it stays a rail
-    // across a reload; the expand button brings the labels back.
+    // Collapsed on a desktop the sidebar is the 64 px rail of groups: the dashboard's icon,
+    // the five group icons (the active group with the bar) and the avatar; a click on a
+    // group opens its flyout with focus inside, Esc closes it and hands focus back. The
+    // state survives a reload; the one button at the foot brings the tree back.
     await page.locator('[data-admin-collapse]').click();
     await expect(nav).toHaveAttribute('data-admin-rail', '');
-    await expect(nav.locator('#nav-pages')).toBeVisible();
-    await expect(nav.locator('#nav-pages')).toHaveAttribute('aria-label', /Pages/);
-    expect((await nav.boundingBox())!.width).toBeLessThan(100);
+    await expect(nav.locator('#nav-pages')).toBeHidden();
+    await expect(nav.locator('[data-admin-rail-group]')).toHaveCount(5);
+    await expect(nav.locator('[data-admin-rail-dashboard]')).toBeVisible();
+    await expect(nav.locator('[data-admin-account]')).toBeVisible();
+    expect(Math.round((await nav.boundingBox())!.width)).toBe(64);
+    await nav.locator('[data-admin-rail-group="Site"]').click();
+    const flyout = page.locator('[data-admin-flyout="Site"]');
+    await expect(flyout).toBeVisible();
+    expect(Math.round((await flyout.boundingBox())!.width)).toBe(224);
+    await expect(flyout.locator('[data-admin-flyout-entry="pages"]')).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
+    await expect(flyout.locator('[role="menuitem"]')).toHaveCount(4);
+    expect(
+      await page.evaluate(() => document.activeElement?.closest('[data-admin-flyout]') !== null),
+    ).toBe(true);
+    await page.keyboard.press('ArrowDown');
+    await expect(flyout.locator('[data-admin-flyout-entry="home"]')).toBeFocused();
+    expect(
+      await serious('[data-admin-nav]', '[data-admin-flyout]'),
+      'axe: the rail with a flyout open',
+    ).toEqual([]);
+    await page.keyboard.press('Escape');
+    await expect(flyout).toBeHidden();
+    await expect(nav.locator('[data-admin-rail-group="Site"]')).toBeFocused();
     // The collapse writes the `nav` preference; wait for it before the reload reads it.
     await expect
       .poll(async () => {
@@ -377,12 +480,34 @@ test.describe('CMS admin', () => {
       .toBe(false);
     await page.reload();
     await expect(page.locator('[data-admin-nav]')).toHaveAttribute('data-admin-rail', '');
+    // One breakpoint: a 1440 px laptop is a desktop like 1600, the rail and the button stay,
+    // no hamburger.
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.reload();
+    await expect(page.locator('[data-admin-nav]')).toHaveAttribute('data-admin-rail', '');
+    await expect(page.locator('[data-admin-menu]')).toBeHidden();
     await page.locator('[data-admin-expand]').click();
     await expect(nav).toHaveClass(/nav--nav-open/);
     await expect(nav.locator('#nav-pages')).toContainText(/Pages/);
-    // The header: a bordered search box and the site link, both with text on a desktop.
+    expect(Math.round((await nav.boundingBox())!.width)).toBe(264);
+    await expect
+      .poll(async () => {
+        const res = await request.get(`${API}/payload-preferences/nav`, { headers: adminAuth });
+        return ((await res.json()) as { value?: { open?: boolean } }).value?.open;
+      })
+      .toBe(true);
+    await page.reload();
+    await expect(nav).toHaveClass(/nav--nav-open/);
+    await expect(nav.locator('#nav-pages')).toBeVisible();
+    await page.setViewportSize({ width: 1600, height: 900 });
+    // The header: a 240 px search box and the site link, both with text on a desktop;
+    // Payload's avatar is gone (our account block is the one door).
     await expect(page.locator('[data-admin-palette-trigger]')).toContainText(/Search or jump/);
+    expect(
+      Math.round((await page.locator('[data-admin-palette-trigger]').boundingBox())!.width),
+    ).toBe(240);
     await expect(page.locator('[data-admin-view-site]')).toContainText(/View website/);
+    await expect(page.locator('.app-header__account')).toBeHidden();
     // The palette: Ctrl+K, a document by title, Enter opens it.
     await page.keyboard.press('Control+k');
     const palette = page.locator('[data-admin-palette]');
@@ -391,16 +516,6 @@ test.describe('CMS admin', () => {
     await expect(palette.getByRole('option', { name: /سياسة الخصوصية/ })).toBeVisible({
       timeout: 10_000,
     });
-    // axe on OUR surfaces (Payload's own edit-view chrome has known gaps: unnamed drag handles
-    // and popup buttons, its engine, not the shell).
-    const { AxeBuilder } = await import('@axe-core/playwright');
-    const serious = async (...include: string[]) => {
-      let builder = new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']);
-      for (const sel of include) builder = builder.include(sel);
-      return (await builder.analyze()).violations
-        .filter((v) => ['serious', 'critical'].includes(v.impact ?? ''))
-        .map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`);
-    };
     expect(await serious('[data-admin-palette]', '.app-header'), 'axe: palette open').toEqual([]);
     await page.keyboard.press('Enter');
     await page.waitForURL(/\/admin\/collections\/pages\/\d+/);
@@ -446,16 +561,66 @@ test.describe('CMS admin', () => {
       await editorContext.close();
       await request.delete(`${API}/users/${editor.id}`, { headers: adminAuth });
     }
-    // On a phone the sidebar is a drawer: the header opens it, its own button closes it,
-    // and the desktop's collapse control stays out of it.
-    await page.setViewportSize({ width: 412, height: 915 });
+    // At 1024 px and under the sidebar is a drawer over the page: the hamburger opens it,
+    // focus lands on its X, the X, Esc or a tap outside closes it and focus comes back; the
+    // full tree at 44 px rows, the language switch at the foot, no collapse control.
+    await page.setViewportSize({ width: 1024, height: 800 });
     await page.goto('/admin/collections/pages');
     await expect(nav).not.toHaveClass(/nav--nav-open/);
-    await page.locator('.app-header__mobile-nav-toggler').click({ force: true });
+    await expect(page.locator('[data-admin-collapse]')).toBeHidden();
+    const menu = page.locator('[data-admin-menu]');
+    await expect(menu).toBeVisible();
+    await expect(menu).toHaveAttribute('aria-label', 'Open the menu');
+    await expect(menu).toHaveAttribute('aria-expanded', 'false');
+    // Icon-only at this width, the two header controls keep their labels.
+    await expect(page.locator('[data-admin-palette-trigger]')).toHaveAttribute(
+      'aria-label',
+      /Search or jump/,
+    );
+    await expect(page.locator('[data-admin-view-site]')).toHaveAttribute(
+      'aria-label',
+      'View website',
+    );
+    await menu.click();
     await expect(nav).toHaveClass(/nav--nav-open/);
+    await expect(menu).toHaveAttribute('aria-expanded', 'true');
+    await expect(menu).toHaveAttribute('aria-label', 'Close the menu');
+    await expect(nav.locator('[data-admin-menu-close]')).toBeFocused();
     await expect(nav.locator('#nav-pages')).toBeVisible();
-    await expect(nav.locator('[data-admin-collapse]')).toBeHidden();
-    await nav.locator('.nav__mobile-close').click();
+    expect((await nav.locator('#nav-pages').boundingBox())!.height).toBe(44);
+    expect(Math.round((await nav.boundingBox())!.width)).toBe(320);
+    await expect(nav.locator('[data-admin-language] [aria-pressed="true"]')).toHaveText('English');
+    await expect(nav.locator('[data-admin-toggle]')).toBeHidden();
+    expect(await serious('[data-admin-nav]'), 'axe: the drawer open').toEqual([]);
+    await nav.locator('[data-admin-menu-close]').click();
+    await expect(nav).not.toHaveClass(/nav--nav-open/);
+    await expect(menu).toBeFocused();
+    await menu.click();
+    await expect(nav).toHaveClass(/nav--nav-open/);
+    await page.keyboard.press('Escape');
+    await expect(nav).not.toHaveClass(/nav--nav-open/);
+    await expect(menu).toBeFocused();
+    await menu.click();
+    await expect(nav).toHaveClass(/nav--nav-open/);
+    await page.mouse.click(900, 600);
+    await expect(nav).not.toHaveClass(/nav--nav-open/);
+    // A navigation from the drawer closes it.
+    await menu.click();
+    await nav.locator('#nav-products').click();
+    await page.waitForURL(/\/admin\/collections\/products/);
+    await expect(nav).not.toHaveClass(/nav--nav-open/);
+    // On a phone the drawer is the full width, the two header controls are icons.
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/admin/collections/pages');
+    await expect(nav).not.toHaveClass(/nav--nav-open/);
+    expect((await page.locator('[data-admin-palette-trigger]').boundingBox())!.width).toBeLessThan(
+      60,
+    );
+    await menu.click();
+    await expect(nav).toHaveClass(/nav--nav-open/);
+    expect(Math.round((await nav.boundingBox())!.width)).toBe(390);
+    await expect(nav.locator('#nav-pages')).toBeVisible();
+    await nav.locator('[data-admin-menu-close]').click();
     await expect(nav).not.toHaveClass(/nav--nav-open/);
   });
 
@@ -680,10 +845,23 @@ test.describe('CMS admin', () => {
       expect(await dashboard.innerText()).not.toMatch(/[٠-٩]/);
       await expect(page.locator('[data-admin-palette-trigger]')).toContainText('ابحث');
       await expect(page.locator('[data-admin-view-site]')).toContainText('عرض الموقع');
-      // The sidebar's rail sits at the start edge: on the right now, so its box starts past the middle.
+      // The sidebar sits at the start edge: on the right now, so its box starts past the middle.
       const navBox = (await nav.boundingBox())!;
       const viewport = page.viewportSize()!;
       expect(navBox.x + navBox.width / 2).toBeGreaterThan(viewport.width / 2);
+      // Collapsed, the rail's flyout opens away from the rail: to the left; the groups keep
+      // their Arabic names on the icons (ADR-058).
+      await page.locator('[data-admin-collapse]').click();
+      await expect(nav).toHaveAttribute('data-admin-rail', '');
+      await nav.locator('[data-admin-rail-group="الموقع"]').click();
+      const flyout = page.locator('[data-admin-flyout="الموقع"]');
+      await expect(flyout).toBeVisible();
+      await expect(flyout).toHaveAttribute('data-side', 'left');
+      await expect(flyout.locator('[data-admin-flyout-entry="pages"]')).toHaveText(/الصفحات/);
+      await page.keyboard.press('Escape');
+      await expect(flyout).toBeHidden();
+      await page.locator('[data-admin-expand]').click();
+      await expect(nav).toHaveClass(/nav--nav-open/);
       const { AxeBuilder } = await import('@axe-core/playwright');
       const serious = async (...include: string[]) => {
         let builder = new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']);
@@ -753,6 +931,19 @@ test.describe('CMS admin', () => {
       ).toEqual([]);
       // The digits stay Western in Arabic (design system §5): no Eastern digit anywhere on the page.
       expect(await page.locator('[data-admin-visibility-page]').innerText()).not.toMatch(/[٠-٩]/);
+      // On a phone the drawer reads right-to-left, its language switch marks Arabic.
+      await page.setViewportSize({ width: 390, height: 844 });
+      await page.goto('/admin');
+      await page.locator('[data-admin-menu]').click();
+      await expect(nav).toHaveClass(/nav--nav-open/);
+      await expect(nav.locator('[data-admin-language] [aria-pressed="true"]')).toHaveText(
+        'العربية',
+      );
+      await expect(nav.locator('[data-admin-group]').first()).toContainText('الموقع');
+      expect(await serious('[data-admin-nav]'), 'axe: the Arabic drawer').toEqual([]);
+      await page.keyboard.press('Escape');
+      await expect(nav).not.toHaveClass(/nav--nav-open/);
+      await page.setViewportSize({ width: 1600, height: 1000 });
       // Back to English through the same control.
       await pickLanguage('English');
       await expect(html).toHaveAttribute('dir', /ltr/i);
@@ -2358,7 +2549,11 @@ test.describe('CMS admin', () => {
         },
       });
       expect(created.status(), await created.text()).toBe(201);
-      const id = ((await created.json()) as { doc: { id: number } }).doc.id;
+      const createdDoc = (
+        (await created.json()) as { doc: { id: number; blocks: Array<{ id: string }> } }
+      ).doc;
+      const id = createdDoc.id;
+      const blockId = createdDoc.blocks[0]!.id;
       try {
         // The proxy's allowlist of published slugs refreshes within seconds (ADR-032).
         await expect.poll(async () => (await request.get(`/${slug}`)).status(), POLL).toBe(200);
@@ -2383,14 +2578,16 @@ test.describe('CMS admin', () => {
             .filter((v) => ['serious', 'critical'].includes(v.impact ?? ''))
             .map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`),
         ).toEqual([]);
-        // The English form of the same page renders the same table.
-        await request.patch(`${API}/pages/${id}?locale=en`, {
+        // The English form of the same page renders the same table: the same block row (its
+        // id) takes the English values, so the Arabic side keeps its own.
+        const english = await request.patch(`${API}/pages/${id}?locale=en`, {
           headers: json,
           data: {
             title: `Test comparison ${stamp}`,
             blocks: [
               {
                 ...comparison,
+                id: blockId,
                 intro: 'A test comparison.',
                 ours: 'B7R Print',
                 rows: [
@@ -2406,9 +2603,13 @@ test.describe('CMS admin', () => {
             seo: { title: 'Test comparison', description: 'A test comparison of B7R Print.' },
           },
         });
+        expect(english.status(), await english.text()).toBe(200);
+        // The English page carries the block's table once the publish has revalidated it (the
+        // header names the brand on every page, so the table is the marker).
         await expect
           .poll(
-            async () => (await (await request.get(`/en/${slug}`)).text()).includes('B7R Print'),
+            async () =>
+              (await (await request.get(`/en/${slug}`)).text()).includes('data-block="compare"'),
             POLL,
           )
           .toBe(true);
