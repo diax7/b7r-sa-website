@@ -45,7 +45,7 @@ import type {
  * image optimizer accepts without a remote pattern (S3 URLs keep their host, ADR-029).
  */
 export function mediaUrl(
-  value: number | Media | null | undefined,
+  value: number | Pick<Media, 'url'> | null | undefined,
   serverUrl = process.env['PAYLOAD_PUBLIC_SERVER_URL'] || process.env['NEXT_PUBLIC_SITE_URL'] || '',
 ): string | undefined {
   if (!value || typeof value === 'number') return undefined;
