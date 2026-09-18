@@ -19,6 +19,12 @@
 @source '../../modules/traffic/admin';
 @source '../../modules/visibility/admin';
 @source '../../components';
+/* The word "table" in a description or a comment would generate Tailwind's `table` utility
+   (`display: table`), which lands on Payload's `div.table`, the list view's scroller, and
+   Chrome drops `overflow: auto` on a table box: the list then scrolled the whole page
+   sideways on a phone. Nothing of ours uses the utility. globals.css, which reaches /admin
+   too, blocks it as well. */
+@source not inline('table');
 
 @theme inline {
   --color-*: initial;
@@ -284,6 +290,30 @@
   }
   .app-header__localizer.localizer {
     inset-inline-end: var(--gutter-h);
+    /* Payload keeps a physical `right` on the switcher under 768 px; in the Arabic panel it
+       met our end inset and stretched the switcher across the header, its button over the
+       crumbs and 40 px in from the wrong edge. The start side is free at every width. */
+    inset-inline-start: auto;
+  }
+  /* The header's row shrinks instead of spilling (the CTO's 390 px check, 2026-09-18).
+     Payload's crumbs wrapper is `width: 100%` with the flex default `min-width: auto`, so a
+     long title pushed the two controls and the switcher's spacer past the edge (482 px on a
+     390 px phone; the same from 1025 to 1150 px with the controls at their full width), and
+     the switcher itself, absolute at the gutter, painted over "View website". The crumbs
+     shrink first, the last one truncating with Payload's own ellipsis and the wrapper
+     clipping what a 320 px phone still cannot hold; the controls and the spacer keep their
+     width, so the spacer stays under the switcher at every width. */
+  .app-header__step-nav-wrapper,
+  .app-header__step-nav,
+  .step-nav__last {
+    min-width: 0;
+  }
+  .app-header__step-nav-wrapper {
+    overflow: hidden;
+  }
+  .app-header__actions-wrapper,
+  .app-header__localizer-spacing {
+    flex-shrink: 0;
   }
 
   /* On the page colour, like the page: the identity hues sit on their tints at 4.5:1 and
@@ -625,6 +655,17 @@
     outline: none;
     box-shadow: 0 0 0 2px var(--admin-ring);
     border-radius: 4px;
+  }
+
+  /* At Payload's `m` breakpoint and under, the list's table bleeds to the screen's edges
+     (a scroller of its own) through a physical offset and a physical padding on its left;
+     in the Arabic panel the block sat 32 px past the left edge of the screen and the page
+     scrolled sideways to it. The same bleed, in logical properties. */
+  @media (max-width: 1024px) {
+    .collection-list .table {
+      inset-inline: calc(var(--gutter-h) * -1) auto;
+      padding-inline: var(--gutter-h) 0;
+    }
   }
 }
 

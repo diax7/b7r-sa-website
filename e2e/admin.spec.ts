@@ -34,6 +34,19 @@ type Box = { x: number; y: number; width: number; height: number };
 const disjoint = (a: Box, b: Box) =>
   a.x + a.width <= b.x || b.x + b.width <= a.x || a.y + a.height <= b.y || b.y + b.height <= a.y;
 
+/** How far the document could scroll sideways: zero on a page that fits its screen. */
+const sidewaysOverflow = (page: Page) =>
+  page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+
+/** The id of the first document of a collection, read with the admin's token. */
+async function firstDocId(request: APIRequestContext, auth: Record<string, string>, slug: string) {
+  const res = await request.get(`${API}/${slug}?limit=1&depth=0`, { headers: auth });
+  expect(res.status(), `${slug} list`).toBe(200);
+  const { docs } = (await res.json()) as { docs: Array<{ id: number }> };
+  expect(docs[0], `a ${slug} document`).toBeDefined();
+  return docs[0]!.id;
+}
+
 async function recordViolations(page: Page) {
   await page.addInitScript(() => {
     window.__cspViolations = [];
@@ -630,6 +643,22 @@ test.describe('CMS admin', () => {
     await expect(nav.locator('#nav-pages')).toBeVisible();
     await nav.locator('[data-admin-menu-close]').click();
     await expect(nav).not.toHaveClass(/nav--nav-open/);
+    // At every width the shell fits its screen: a localized document (the header's crumbs
+    // and locale switcher), a global (the locale note beside Save) and a list (the table
+    // scrolls inside its wrapper) never scroll the page sideways.
+    const pageId = await firstDocId(request, adminAuth, 'pages');
+    for (const width of [390, 1024, 1280, 1440]) {
+      await page.setViewportSize({ width, height: 900 });
+      for (const path of [
+        `/admin/collections/pages/${pageId}`,
+        '/admin/globals/site-settings',
+        '/admin/collections/pages',
+      ]) {
+        await page.goto(path);
+        await expect(page.locator('.app-header__localizer')).toBeVisible();
+        expect(await sidewaysOverflow(page), `${path} at ${width} px`).toBe(0);
+      }
+    }
   });
 
   test("the dashboard (ADR-039, ADR-059): the seven sections, the range, the figures as links, the editor's view", async ({
@@ -964,6 +993,15 @@ test.describe('CMS admin', () => {
       expect(await serious('[data-admin-nav]'), 'axe: the Arabic drawer').toEqual([]);
       await page.keyboard.press('Escape');
       await expect(nav).not.toHaveClass(/nav--nav-open/);
+      // A document on an Arabic phone: the page fits its screen and the locale switcher sits
+      // at the leading gutter (Payload's physical `right` once stretched it over the crumbs).
+      await page.goto(`/admin/collections/pages/${aboutId}`);
+      const switcher = page.locator('.app-header__localizer .popup__trigger-wrap');
+      await expect(switcher).toBeVisible();
+      expect(await sidewaysOverflow(page), 'no horizontal overflow on an Arabic phone').toBe(0);
+      expect((await switcher.boundingBox())!.x, 'the switcher at the leading edge').toBeLessThan(
+        60,
+      );
       await page.setViewportSize({ width: 1600, height: 1000 });
       // Back to English through the same control.
       await pickLanguage('English');
@@ -1249,10 +1287,12 @@ test.describe('CMS admin', () => {
 
   test('a phone form (audit 2026-09-18, 3.1): the locale note stays clear of Publish, the tab strip scrolls, nothing overflows', async ({
     page,
+    request,
   }) => {
     test.setTimeout(90_000);
     await page.setViewportSize({ width: 390, height: 844 });
     expect((await page.request.post(`${API}/users/login`, { data: admin })).status()).toBe(200);
+    const auth = await login(request, admin);
     await page.goto('/admin/globals/home');
     const note = page.locator('[data-admin-locale-note]');
     const publish = page.locator('.doc-controls #action-save');
@@ -1285,14 +1325,24 @@ test.describe('CMS admin', () => {
     await expect(active).toHaveCSS('color', 'rgb(0, 152, 224)');
     await active.scrollIntoViewIfNeeded();
     await expect(active).toBeInViewport();
-    const overflow = await page.evaluate(() => ({
-      document: document.documentElement.scrollWidth - document.documentElement.clientWidth,
-      body: document.body.scrollWidth - document.body.clientWidth,
-    }));
-    expect(overflow.document, 'no horizontal overflow on the document').toBeLessThanOrEqual(0);
-    expect(overflow.body, 'no horizontal overflow on the body').toBeLessThanOrEqual(0);
+    expect(await sidewaysOverflow(page), 'no horizontal overflow on the home form').toBe(0);
     // No entity shows the API tab any more (3.10).
     await expect(page.locator('.doc-tab', { hasText: /^API$/ })).toHaveCount(0);
+    // A document with a long title: the header's crumbs shrink, the locale switcher stays at
+    // the gutter, and the page never scrolls sideways (the CTO's 390 px check, 2026-09-18).
+    for (const slug of ['products', 'pages', 'posts']) {
+      await page.goto(`/admin/collections/${slug}/${await firstDocId(request, auth, slug)}`);
+      await expect(page.locator('.app-header__localizer')).toBeVisible();
+      expect(await sidewaysOverflow(page), `no horizontal overflow on a ${slug} form`).toBe(0);
+      const [switcher, viewSite] = await Promise.all([
+        page.locator('.app-header__localizer').boundingBox(),
+        page.locator('[data-admin-view-site]').boundingBox(),
+      ]);
+      expect(switcher!.x + switcher!.width, 'the switcher inside the screen').toBeLessThanOrEqual(
+        390,
+      );
+      expect(disjoint(switcher!, viewSite!), 'the switcher over "View website"').toBe(true);
+    }
   });
 
   test('an outsider holding no credential reads published content and nothing else', async ({
