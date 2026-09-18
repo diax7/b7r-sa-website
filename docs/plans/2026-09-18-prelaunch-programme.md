@@ -40,7 +40,7 @@ them and agreed the fix list (a written note in each report's foot).
 
 ## Phase 1: The site (scroll reveal, then the audit's fixes)
 
-- [ ] **Scroll reveal everywhere** (ADR to write): one observer mounted once, every
+- [x] **Scroll reveal everywhere** (ADR-055, PR #36, CTO 92): one observer mounted once, every
   `Section`, `SectionHeader`, card and block carries `data-reveal` by default (an opt-out
   prop), staggered inside grids, off under reduced motion, never the hero or anything above
   the fold, hidden only under `html.js` so content is always there without JavaScript;
@@ -137,3 +137,4 @@ changed on both databases by a script that prints what it changed; no ledger run
 - 2026-09-18 02:30 UTC: programme written; Phase 0 agents launched.
 - 2026-09-18 02:50 UTC: the CTO's memo on Phase 2 recorded above; `site/reveal` (ADR-055) committed, its e2e waits for the review server.
 - 2026-09-18 05:30 UTC: the three audits delivered with the CTO's notes (Phase 0 complete); Phase 3 executed on both databases (PR #35, CTO 93); `site/reveal` e2e green on three projects; agents building `admin/arabic`, `admin/side-by-side`, `admin/audit-fixes` in worktrees.
+- 2026-09-18 07:10 UTC: PR #36 reviewed (CTO 92, GO with two minors): the arming moved from an inline script to a client island after hydration, the print rule, the stagger cap, a unit test and the client-navigation e2e; PR #35's one red test fixed (the e2e expected the old default model), its merge waiting on CI; `admin/arabic` delivered (ADR-056, 272 strings, 198 overrides of Payload's pack), awaiting review; `site/audit-fixes` building.

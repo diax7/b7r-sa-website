@@ -831,15 +831,17 @@
 
 /* ---------------------------------------------------------------------------------------
    Scroll reveal (§3.7, ADR-055). `[data-reveal]` on every Section and on the children of a
-   `[data-reveal-stagger]` group. The CSS hides nothing by itself: the inline observer
-   (modules/core/reveal-script) adds `is-hidden` only to elements below the fold, then
-   `is-visible` as they enter, staggered 60 ms by `--i` inside a group.
+   `[data-reveal-stagger]` group. The CSS hides nothing by itself: the observer
+   (modules/core/reveal-arm, mounted after hydration) adds `is-hidden` only to elements
+   below the fold, then `is-visible` as they enter, staggered 60 ms by `--i` inside a group
+   (capped at the ninth child, so a long grid never waits past half a second). A printed
+   page shows everything.
    --------------------------------------------------------------------------------------- */
 [data-reveal] {
   transition:
     opacity 400ms var(--ease-standard),
     transform 400ms var(--ease-standard);
-  transition-delay: calc(var(--i, 0) * 60ms);
+  transition-delay: calc(min(var(--i, 0), 8) * 60ms);
 }
 [data-reveal].is-hidden {
   opacity: 0;
@@ -848,6 +850,14 @@
 [data-reveal].is-visible {
   opacity: 1;
   transform: none;
+}
+@media print {
+  [data-reveal],
+  [data-reveal].is-hidden {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
 }
 
 /* ---------------------------------------------------------------------------------------

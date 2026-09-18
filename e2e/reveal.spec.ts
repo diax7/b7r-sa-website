@@ -10,11 +10,19 @@ test.describe('scroll reveal (ADR-055)', () => {
     page,
   }) => {
     await page.goto('/');
-    await page.waitForLoadState('load');
+    // The arming runs after hydration and says so on the root.
+    await expect(page.locator('html[data-reveal-armed]')).toHaveCount(1);
     const sections = page.locator('section[data-reveal]');
     expect(await sections.count()).toBeGreaterThan(3);
-    // The hero is not a Section and carries no reveal.
+    // The hero is not a Section and carries no reveal, and its image (the LCP) has no hidden
+    // ancestor.
     await expect(page.locator('section.hero[data-reveal]')).toHaveCount(0);
+    expect(
+      await page
+        .locator('section.hero img')
+        .first()
+        .evaluate((el) => el.closest('.is-hidden') !== null),
+    ).toBe(false);
     const hidden = page.locator('section[data-reveal].is-hidden');
     expect(await hidden.count()).toBeGreaterThan(0);
     // Every hidden section starts below the viewport.
@@ -34,10 +42,22 @@ test.describe('scroll reveal (ADR-055)', () => {
 
   test('a grid staggers its children', async ({ page }) => {
     await page.goto('/products');
+    await expect(page.locator('html[data-reveal-armed]')).toHaveCount(1);
     const cards = page.locator('[data-reveal-stagger] > *');
     expect(await cards.count()).toBeGreaterThan(1);
     await expect(cards.nth(1)).toHaveAttribute('data-reveal', '');
     expect(await cards.nth(1).evaluate((el) => el.style.getPropertyValue('--i'))).toBe('1');
+  });
+
+  test('a page reached by client navigation is armed too', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.locator('html[data-reveal-armed]')).toHaveCount(1);
+    // The footer's link is visible on every layout (the header's sits in the phone menu).
+    await page.locator('footer a[href="/products"]').first().click();
+    await expect(page).toHaveURL(/\/products$/);
+    const cards = page.locator('[data-reveal-stagger] > *');
+    await expect(cards.first()).toHaveAttribute('data-armed', '');
+    expect(await page.locator('[data-reveal][data-armed]').count()).toBeGreaterThan(3);
   });
 
   test('nothing is hidden without JavaScript', async ({ browser, baseURL }) => {
@@ -58,6 +78,9 @@ test.describe('scroll reveal (ADR-055)', () => {
     const page = await ctx.newPage();
     await page.goto(`${baseURL}/`);
     await page.waitForLoadState('load');
+    // Hydrated (the WhatsApp island has mounted, 1.5 s after the extras) and nothing armed.
+    await expect(page.getByTestId('whatsapp-button')).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator('html[data-reveal-armed]')).toHaveCount(0);
     await expect(page.locator('.is-hidden')).toHaveCount(0);
     await ctx.close();
   });
