@@ -663,6 +663,12 @@ test.describe('CMS admin', () => {
       await expect(page.locator('[data-admin-nav]')).toBeAttached();
       await page.goto('/admin/visibility');
       await expect(page.locator('[data-admin-visibility-page] h1')).toContainText('درجة الظهور');
+      // The rules' own sentences read in Arabic too (the Phase 2 text review): the first open
+      // finding's title and guide are Arabic script, and the guide names a place in words.
+      const openFinding = page.locator('[data-admin-finding]:not([data-status="done"])').first();
+      await expect(openFinding.locator('[data-admin-finding-title]')).toContainText(/[؀-ۿ]/);
+      await expect(openFinding.locator('[data-admin-finding-guide]')).toContainText(/[؀-ۿ]/);
+      await expect(openFinding.locator('[data-admin-finding-guide]')).not.toContainText('→');
       expect(
         await serious('[data-admin-nav]', '.app-header', '[data-admin-visibility-page]'),
         'axe: the Arabic Score page',
