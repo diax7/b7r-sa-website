@@ -57,7 +57,9 @@ export const AiTopics: CollectionConfig = {
     components: {
       ...collectionComponents('ai-topics', { localized: false }),
       edit: { beforeDocumentControls: ['@/modules/ai-content/admin/generate-now#GenerateNow'] },
-      beforeList: ['@/modules/ai-content/admin/import-topics#ImportTopics'],
+      // Under the list controls, above the rows it feeds (audit 2026-09-18, 2.13); Payload
+      // offers no slot beside "Create New" short of a custom list view.
+      beforeListTable: ['@/modules/ai-content/admin/import-topics#ImportTopics'],
     },
   },
   access: { read: isAdmin, create: isAdmin, update: isAdmin, delete: isAdmin },
@@ -161,45 +163,51 @@ export const AiTopics: CollectionConfig = {
           },
         ],
       },
-      {
-        type: 'row',
-        fields: [
-          {
-            name: 'status',
-            type: 'select',
-            required: true,
-            defaultValue: 'backlog',
-            options: TOPIC_STATUSES.map((value) => ({ value, label: TOPIC_STATUS_LABELS[value] })),
-            label: { ar: 'الحالة', en: 'Status' },
-          },
-          {
-            name: 'source',
-            type: 'select',
-            required: true,
-            defaultValue: 'manual',
-            options: [
-              { value: 'seed', label: { ar: 'القائمة الأولى', en: 'Seed' } },
-              { value: 'manual', label: { ar: 'يدوي', en: 'Manual' } },
-              { value: 'searchConsole', label: { ar: 'Search Console', en: 'Search Console' } },
-            ],
-            label: { ar: 'المصدر', en: 'Source' },
-          },
-        ],
-      },
       { name: 'notes', type: 'textarea', label: { ar: 'ملاحظات', en: 'Notes' } },
+      {
+        name: 'status',
+        type: 'select',
+        required: true,
+        defaultValue: 'backlog',
+        options: TOPIC_STATUSES.map((value) => ({ value, label: TOPIC_STATUS_LABELS[value] })),
+        label: { ar: 'الحالة', en: 'Status' },
+        admin: { position: 'sidebar' },
+      },
+      {
+        name: 'source',
+        type: 'select',
+        required: true,
+        defaultValue: 'manual',
+        options: [
+          { value: 'seed', label: { ar: 'القائمة الأولى', en: 'Seed' } },
+          { value: 'manual', label: { ar: 'يدوي', en: 'Manual' } },
+          { value: 'searchConsole', label: { ar: 'Search Console', en: 'Search Console' } },
+        ],
+        label: { ar: 'المصدر', en: 'Source' },
+        admin: { position: 'sidebar' },
+      },
+      // The trail back to what the engine produced: shown once there is something to show.
       {
         name: 'post',
         type: 'relationship',
         relationTo: 'posts',
         label: { ar: 'المقال الناتج', en: 'Resulting post' },
-        admin: { position: 'sidebar', readOnly: true },
+        admin: {
+          position: 'sidebar',
+          readOnly: true,
+          condition: (data) => Boolean(data?.['post']),
+        },
       },
       {
         name: 'lastRun',
         type: 'relationship',
         relationTo: 'ai-runs',
         label: { ar: 'آخر جولة', en: 'Last run' },
-        admin: { position: 'sidebar', readOnly: true },
+        admin: {
+          position: 'sidebar',
+          readOnly: true,
+          condition: (data) => Boolean(data?.['lastRun']),
+        },
       },
       {
         name: 'lastError',

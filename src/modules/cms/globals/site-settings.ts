@@ -81,29 +81,44 @@ const menu: NamedTab = {
       label: { ar: 'زر الترويسة', en: 'Header button' },
     },
 
+    // Three strings an editor rarely touches (audit 2026-09-18, 2.15, 3.8): a collapsed
+    // group at the foot of the tab, still editable (Dhia's exception to ADR-031).
     {
-      type: 'row',
+      type: 'collapsible',
+      label: { ar: 'متقدّم', en: 'Advanced' },
+      admin: {
+        initCollapsed: true,
+        description: {
+          ar: 'ثلاث عبارات يقرؤها قارئ الشاشة ولوحة المفاتيح؛ نادراً ما تتغيّر.',
+          en: 'Three strings a screen reader and the keyboard use; they rarely change.',
+        },
+      },
       fields: [
         {
-          name: 'skipLinkLabel',
-          type: 'text',
-          required: true,
-          localized: true,
-          label: { ar: 'رابط التخطي', en: 'Skip link' },
-        },
-        {
-          name: 'menuOpenLabel',
-          type: 'text',
-          required: true,
-          localized: true,
-          label: { ar: 'فتح القائمة', en: 'Menu open' },
-        },
-        {
-          name: 'menuCloseLabel',
-          type: 'text',
-          required: true,
-          localized: true,
-          label: { ar: 'إغلاق القائمة', en: 'Menu close' },
+          type: 'row',
+          fields: [
+            {
+              name: 'skipLinkLabel',
+              type: 'text',
+              required: true,
+              localized: true,
+              label: { ar: 'رابط التخطي', en: 'Skip link' },
+            },
+            {
+              name: 'menuOpenLabel',
+              type: 'text',
+              required: true,
+              localized: true,
+              label: { ar: 'فتح القائمة', en: 'Menu open' },
+            },
+            {
+              name: 'menuCloseLabel',
+              type: 'text',
+              required: true,
+              localized: true,
+              label: { ar: 'إغلاق القائمة', en: 'Menu close' },
+            },
+          ],
         },
       ],
     },

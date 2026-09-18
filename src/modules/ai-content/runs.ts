@@ -163,21 +163,33 @@ export const AiRuns: CollectionConfig = {
         type: 'relationship',
         relationTo: 'connections',
         label: { ar: 'الاتصال', en: 'Connection' },
-        admin: { position: 'sidebar', readOnly: true },
+        admin: {
+          position: 'sidebar',
+          readOnly: true,
+          condition: (data) => Boolean(data?.['connection']),
+        },
       },
       {
         name: 'topic',
         type: 'relationship',
         relationTo: 'ai-topics',
         label: { ar: 'الموضوع', en: 'Topic' },
-        admin: { position: 'sidebar', readOnly: true },
+        admin: {
+          position: 'sidebar',
+          readOnly: true,
+          condition: (data) => Boolean(data?.['topic']),
+        },
       },
       {
         name: 'post',
         type: 'relationship',
         relationTo: 'posts',
         label: { ar: 'المقال', en: 'Post' },
-        admin: { position: 'sidebar', readOnly: true },
+        admin: {
+          position: 'sidebar',
+          readOnly: true,
+          condition: (data) => Boolean(data?.['post']),
+        },
       },
       {
         name: 'error',

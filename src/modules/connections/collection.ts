@@ -217,35 +217,43 @@ export const Connections: CollectionConfig = {
             'serviceAccount',
         },
       ),
+      // The rates fill themselves from the model (audit 2026-09-18, 3.8): folded, still there.
       {
-        type: 'row',
-        admin: { condition: (data) => !isServiceKind(data?.['kind']) },
+        type: 'collapsible',
+        label: { ar: 'الأسعار', en: 'Rates' },
+        admin: { initCollapsed: true, condition: (data) => !isServiceKind(data?.['kind']) },
         fields: [
           {
-            name: 'inputPerMillionUsd',
-            type: 'number',
-            min: 0,
-            label: {
-              ar: 'سعر مليون رمز إدخال (دولار)',
-              en: 'Price per million input tokens (USD)',
-            },
-          },
-          {
-            name: 'outputPerMillionUsd',
-            type: 'number',
-            min: 0,
-            label: {
-              ar: 'سعر مليون رمز إخراج (دولار)',
-              en: 'Price per million output tokens (USD)',
-            },
-          },
-          {
-            name: 'monthlyLimitUsd',
-            type: 'number',
-            min: 0,
-            label: { ar: 'الحد الشهري (دولار)', en: 'Monthly limit (USD)' },
+            type: 'row',
+            fields: [
+              {
+                name: 'inputPerMillionUsd',
+                type: 'number',
+                min: 0,
+                label: {
+                  ar: 'سعر مليون رمز إدخال (دولار)',
+                  en: 'Price per million input tokens (USD)',
+                },
+              },
+              {
+                name: 'outputPerMillionUsd',
+                type: 'number',
+                min: 0,
+                label: {
+                  ar: 'سعر مليون رمز إخراج (دولار)',
+                  en: 'Price per million output tokens (USD)',
+                },
+              },
+            ],
           },
         ],
+      },
+      {
+        name: 'monthlyLimitUsd',
+        type: 'number',
+        min: 0,
+        label: { ar: 'الحد الشهري (دولار)', en: 'Monthly limit (USD)' },
+        admin: { condition: (data) => !isServiceKind(data?.['kind']) },
       },
       {
         name: 'enabled',

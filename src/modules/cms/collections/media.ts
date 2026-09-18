@@ -31,8 +31,8 @@ export const Media: CollectionConfig = {
       },
     },
     description: {
-      ar: 'صور الموقع وأيقوناته: المنتجات، الرئيسية، أغلفة المدونة. لكل صورة نص بديل باللغتين.',
-      en: 'The photos and icons the site shows: products, the home page, the blog covers. Every image needs its alt text in both languages.',
+      ar: 'صور الموقع وأيقوناته: المنتجات، الرئيسية، أغلفة المدونة. لكل صورة نص بديل باللغتين؛ صور المنتجات مربّعة 1000×1000، وتُولَّد أربعة مقاسات عند الرفع.',
+      en: 'The photos and icons the site shows: products, the home page, the blog covers. Every image needs its alt text in both languages; product photos are 1000 by 1000 squares, and four sizes are generated on upload.',
     },
     defaultColumns: ['filename', 'alt', 'updatedAt'],
     useAsTitle: 'filename',

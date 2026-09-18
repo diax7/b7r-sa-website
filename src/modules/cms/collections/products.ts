@@ -3,6 +3,8 @@ import { canDeleteVersioned, isEditorOrAdmin, publishedOrStaff } from '@/modules
 import { revalidateProducts } from '@/modules/cms/hooks/revalidate';
 import { inLanguage } from '@/modules/cms/fields/message';
 import { savedByField, stampSavedBy } from '@/modules/cms/fields/saved-by';
+import { PRINT_AREA_LABEL_EN, PRINT_METHOD_EN } from '@/content/seed/en/products';
+import { PRINT_AREA_LABEL, PRINT_METHOD } from '@/content/seed/products';
 import { localePath, requestLocale } from '@/lib/i18n';
 import { previewUrl } from '@/lib/preview-token';
 import { collectionComponents } from '@/modules/cms/admin/document/config';
@@ -63,6 +65,73 @@ export const Products: CollectionConfig = {
       {
         type: 'tabs',
         tabs: [
+          {
+            label: { ar: 'الصور والألوان', en: 'Photos & colours' },
+            fields: [
+              {
+                name: 'colors',
+                type: 'array',
+                required: true,
+                minRows: 1,
+                label: { ar: 'الألوان', en: 'Colours' },
+                labels: {
+                  singular: { ar: 'لون', en: 'Colour' },
+                  plural: { ar: 'الألوان', en: 'Colours' },
+                },
+                fields: [
+                  {
+                    type: 'row',
+                    fields: [
+                      {
+                        name: 'slug',
+                        type: 'text',
+                        required: true,
+                        label: { ar: 'معرّف اللون', en: 'Colour id' },
+                      },
+                      {
+                        name: 'name',
+                        type: 'text',
+                        required: true,
+                        localized: true,
+                        label: { ar: 'اسم اللون', en: 'Name' },
+                      },
+                      {
+                        name: 'hex',
+                        type: 'text',
+                        required: true,
+                        label: { ar: 'اللون (hex)', en: 'Hex' },
+                        validate: (value: unknown, { req }: Validation) =>
+                          typeof value === 'string' && /^#[0-9A-Fa-f]{6}$/.test(value)
+                            ? true
+                            : inLanguage(req, {
+                                ar: 'لون بصيغة #FFFFFF',
+                                en: 'A colour written as #FFFFFF',
+                              }),
+                      },
+                    ],
+                  },
+                  {
+                    type: 'row',
+                    fields: [
+                      {
+                        name: 'front',
+                        type: 'upload',
+                        relationTo: 'media',
+                        required: true,
+                        label: { ar: 'صورة الواجهة الأمامية', en: 'Front photo' },
+                      },
+                      {
+                        name: 'back',
+                        type: 'upload',
+                        relationTo: 'media',
+                        label: { ar: 'صورة الواجهة الخلفية', en: 'Back photo' },
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
           {
             label: { ar: 'الأساسيات', en: 'Basics' },
             fields: [
@@ -135,80 +204,6 @@ export const Products: CollectionConfig = {
                       }
                       return true;
                     },
-                  },
-                  {
-                    name: 'sortOrder',
-                    type: 'number',
-                    required: true,
-                    defaultValue: 1,
-                    label: { ar: 'الترتيب', en: 'Order' },
-                  },
-                ],
-              },
-            ],
-          },
-          {
-            label: { ar: 'الصور والألوان', en: 'Photos & colours' },
-            fields: [
-              {
-                name: 'colors',
-                type: 'array',
-                required: true,
-                minRows: 1,
-                label: { ar: 'الألوان', en: 'Colours' },
-                labels: {
-                  singular: { ar: 'لون', en: 'Colour' },
-                  plural: { ar: 'الألوان', en: 'Colours' },
-                },
-                fields: [
-                  {
-                    type: 'row',
-                    fields: [
-                      {
-                        name: 'slug',
-                        type: 'text',
-                        required: true,
-                        label: { ar: 'معرّف اللون', en: 'Colour id' },
-                      },
-                      {
-                        name: 'name',
-                        type: 'text',
-                        required: true,
-                        localized: true,
-                        label: { ar: 'اسم اللون', en: 'Name' },
-                      },
-                      {
-                        name: 'hex',
-                        type: 'text',
-                        required: true,
-                        label: { ar: 'اللون (hex)', en: 'Hex' },
-                        validate: (value: unknown, { req }: Validation) =>
-                          typeof value === 'string' && /^#[0-9A-Fa-f]{6}$/.test(value)
-                            ? true
-                            : inLanguage(req, {
-                                ar: 'لون بصيغة #FFFFFF',
-                                en: 'A colour written as #FFFFFF',
-                              }),
-                      },
-                    ],
-                  },
-                  {
-                    type: 'row',
-                    fields: [
-                      {
-                        name: 'front',
-                        type: 'upload',
-                        relationTo: 'media',
-                        required: true,
-                        label: { ar: 'صورة الواجهة الأمامية', en: 'Front photo' },
-                      },
-                      {
-                        name: 'back',
-                        type: 'upload',
-                        relationTo: 'media',
-                        label: { ar: 'صورة الواجهة الخلفية', en: 'Back photo' },
-                      },
-                    ],
                   },
                 ],
               },
@@ -298,7 +293,9 @@ export const Products: CollectionConfig = {
                     type: 'text',
                     required: true,
                     localized: true,
-                    defaultValue: 'الواجهة الأمامية، 28 × 38 سم',
+                    // Per language (audit 2026-09-18, 3.7): the English form never shows the Arabic default.
+                    defaultValue: ({ locale }) =>
+                      requestLocale(locale) === 'en' ? PRINT_AREA_LABEL_EN : PRINT_AREA_LABEL,
                     label: { ar: 'الوصف', en: 'Label' },
                   },
                   {
@@ -388,12 +385,21 @@ export const Products: CollectionConfig = {
                 type: 'text',
                 required: true,
                 localized: true,
-                defaultValue: 'طباعة رقمية عالية الجودة',
+                defaultValue: ({ locale }) =>
+                  requestLocale(locale) === 'en' ? PRINT_METHOD_EN : PRINT_METHOD,
                 label: { ar: 'طريقة الطباعة', en: 'Print method' },
               },
             ],
           },
         ],
+      },
+      {
+        name: 'sortOrder',
+        type: 'number',
+        required: true,
+        defaultValue: 1,
+        label: { ar: 'الترتيب', en: 'Order' },
+        admin: { position: 'sidebar', step: 1 },
       },
       savedByField,
     ],

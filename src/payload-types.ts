@@ -217,7 +217,7 @@ export interface User {
   collection: 'users';
 }
 /**
- * The photos and icons the site shows: products, the home page, the blog covers. Every image needs its alt text in both languages.
+ * The photos and icons the site shows: products, the home page, the blog covers. Every image needs its alt text in both languages; product photos are 1000 by 1000 squares, and four sizes are generated on upload.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "media".
@@ -295,34 +295,6 @@ export interface Media {
 export interface Product {
   id: number;
   /**
-   * The product's name on its card, its page title, the designer's picker and llms.txt.
-   */
-  name: string;
-  /**
-   * The last part of the page address: b7r.sa/products/tee-essential. Lowercase letters and hyphens only; changing it after publishing breaks old links.
-   */
-  slug: string;
-  /**
-   * One line under the name on the product card, the description of the product page's Google result, and the product's line in llms.txt.
-   */
-  shortDescription: string;
-  /**
-   * The paragraph at the top of the product's page, under the name.
-   */
-  description: string;
-  /**
-   * What the merchant pays per piece: the product page, the calculator, the home strip and llms.txt. Must equal the app's price: there is no sync.
-   */
-  baseCost: number;
-  /**
-   * The sell price we suggest to the merchant: the product page, the calculator and llms.txt. Must equal the app's: there is no sync.
-   */
-  suggestedPrice: number;
-  /**
-   * Where the product sits on the products page and in llms.txt: 1 shows first. The home strip has its own order (Home page, Product strip tab).
-   */
-  sortOrder: number;
-  /**
    * The product's colours: the swatches on the card, the colour choice on the page and in the designer. The first is the default.
    */
   colors: {
@@ -348,6 +320,30 @@ export interface Product {
     back?: (number | null) | Media;
     id?: string | null;
   }[];
+  /**
+   * The product's name on its card, its page title, the designer's picker and llms.txt.
+   */
+  name: string;
+  /**
+   * The last part of the page address: b7r.sa/products/tee-essential. Lowercase letters and hyphens only; changing it after publishing breaks old links.
+   */
+  slug: string;
+  /**
+   * One line under the name on the product card, the description of the product page's Google result, and the product's line in llms.txt.
+   */
+  shortDescription: string;
+  /**
+   * The paragraph at the top of the product's page, under the name.
+   */
+  description: string;
+  /**
+   * What the merchant pays per piece: the product page, the calculator, the home strip and llms.txt. Must equal the app's price: there is no sync.
+   */
+  baseCost: number;
+  /**
+   * The sell price we suggest to the merchant: the product page, the calculator and llms.txt. Must equal the app's: there is no sync.
+   */
+  suggestedPrice: number;
   /**
    * The sizes on offer: the size table on the product's page, in this order.
    */
@@ -418,6 +414,10 @@ export interface Product {
    * The print method in the product page's facts line: high-quality digital print.
    */
   printMethodLabel: string;
+  /**
+   * Where the product sits on the products page and in llms.txt: 1 shows first. The home strip has its own order (Home page, Product strip tab).
+   */
+  sortOrder: number;
   /**
    * Who saved the current version and when. Drafts do not change it.
    */
@@ -1010,6 +1010,12 @@ export interface Post {
    * Shown on the post when its content really changed.
    */
   contentUpdatedAt?: string | null;
+  warnings?:
+    | {
+        text?: string | null;
+        id?: string | null;
+      }[]
+    | null;
   readingMinutes?: number | null;
   /**
    * A change by an editor to an engine post marks it "engine, then edited" and exempts it from the freshness job.
@@ -1023,12 +1029,6 @@ export interface Post {
     | string
     | number
     | boolean
-    | null;
-  warnings?:
-    | {
-        text?: string | null;
-        id?: string | null;
-      }[]
     | null;
   /**
    * Who saved the current version and when. Drafts do not change it.
@@ -1212,6 +1212,10 @@ export interface AiTopic {
    */
   windowEnd?: string | null;
   /**
+   * Notes for the engine before it writes: an angle, an example, what to avoid. Not shown on the site.
+   */
+  notes?: string | null;
+  /**
    * Where the topic is in the cycle: in the backlog, scheduled, being written, published, failed, rejected.
    */
   status: 'backlog' | 'scheduled' | 'generating' | 'published' | 'failed' | 'rejected';
@@ -1220,11 +1224,16 @@ export interface AiTopic {
    */
   source: 'seed' | 'manual' | 'searchConsole';
   /**
-   * Notes for the engine before it writes: an angle, an example, what to avoid. Not shown on the site.
+   * The post the engine wrote for this topic; opens the post itself.
    */
-  notes?: string | null;
   post?: (number | null) | Post;
+  /**
+   * The last run that worked on this topic: its steps, score and cost.
+   */
   lastRun?: (number | null) | AiRun;
+  /**
+   * Why the last run failed, as the engine recorded it; cleared when a run succeeds.
+   */
   lastError?: string | null;
   /**
    * Who saved the current version and when. Drafts do not change it.
@@ -1244,15 +1253,45 @@ export interface AiTopic {
  */
 export interface AiRun {
   id: number;
+  /**
+   * What the run did, in a line: its kind and the topic, as the list and the dashboard show it.
+   */
   label: string;
+  /**
+   * A new post written, an existing post refreshed when the facts changed, or a morning run of the citation ledger.
+   */
   kind: 'generate' | 'freshness' | 'citation';
+  /**
+   * Running now, done, failed (the reason is under Error), or skipped before it started (a cap or the switch).
+   */
   status: 'running' | 'done' | 'failed' | 'skipped';
+  /**
+   * The AI service used at the time, as it was: OpenAI, Anthropic, Google.
+   */
   provider?: string | null;
+  /**
+   * The model id at the time: gpt-4.1-mini.
+   */
   model?: string | null;
+  /**
+   * The self-review score out of 100; the post publishes when it reaches the quality threshold in the engine settings.
+   */
   score?: number | null;
+  /**
+   * The input tokens the model read over the whole run; the cost estimate starts here.
+   */
   tokensIn?: number | null;
+  /**
+   * The output tokens the model wrote over the whole run; the cost estimate starts here.
+   */
   tokensOut?: number | null;
+  /**
+   * The estimated cost in USD from the tokens and the connection's rates; counted against the daily cap and the connection's monthly limit.
+   */
   costUsd?: number | null;
+  /**
+   * How long the run took, in milliseconds from start to finish (1000 is one second).
+   */
   durationMs?: number | null;
   /**
    * The self-review score, criterion by criterion: what the post lost on each.
@@ -1290,12 +1329,33 @@ export interface AiRun {
     | number
     | boolean
     | null;
+  /**
+   * The version of the system prompt the post was written with; it rises whenever the prompt changes in the engine settings.
+   */
   systemPromptVersion?: number | null;
+  /**
+   * The connection the cost counted against; emptied when the connection is deleted.
+   */
   connection?: (number | null) | Connection;
+  /**
+   * The topic it wrote about.
+   */
   topic?: (number | null) | AiTopic;
+  /**
+   * The post the run produced, as a draft or published.
+   */
   post?: (number | null) | Post;
+  /**
+   * Why the run failed or was skipped, as the engine recorded it, keys and links removed.
+   */
   error?: string | null;
+  /**
+   * When the run started.
+   */
   startedAt?: string | null;
+  /**
+   * When the run finished; empty while it is still running.
+   */
   finishedAt?: string | null;
   updatedAt: string;
   createdAt: string;
@@ -1598,15 +1658,30 @@ export interface Citation {
  */
 export interface Redirect {
   id: number;
+  /**
+   * The old address as a visitor arrives on it, one segment starting with /: /showcase. A live page of the site cannot be redirected.
+   */
   from: string;
   to?: {
+    /**
+     * A page of the site (follows the page if its address ending changes), or a path or link typed by hand.
+     */
     type?: ('reference' | 'custom') | null;
+    /**
+     * The page the visitor lands on.
+     */
     reference?: {
       relationTo: 'pages';
       value: number | Page;
     } | null;
+    /**
+     * A path on the site starting with /, or an https:// link elsewhere. Never the From of another redirect (no chains).
+     */
     url?: string | null;
   };
+  /**
+   * Permanent: search engines move the old address to the new one (the usual choice). Temporary: they keep the old address on file.
+   */
   type: '301' | '302';
   updatedAt: string;
   createdAt: string;
@@ -1973,13 +2048,6 @@ export interface MediaSelect<T extends boolean = true> {
  * via the `definition` "products_select".
  */
 export interface ProductsSelect<T extends boolean = true> {
-  name?: T;
-  slug?: T;
-  shortDescription?: T;
-  description?: T;
-  baseCost?: T;
-  suggestedPrice?: T;
-  sortOrder?: T;
   colors?:
     | T
     | {
@@ -1990,6 +2058,12 @@ export interface ProductsSelect<T extends boolean = true> {
         back?: T;
         id?: T;
       };
+  name?: T;
+  slug?: T;
+  shortDescription?: T;
+  description?: T;
+  baseCost?: T;
+  suggestedPrice?: T;
   sizes?:
     | T
     | {
@@ -2018,6 +2092,7 @@ export interface ProductsSelect<T extends boolean = true> {
             };
       };
   printMethodLabel?: T;
+  sortOrder?: T;
   lastSavedBy?:
     | T
     | {
@@ -2293,15 +2368,15 @@ export interface PostsSelect<T extends boolean = true> {
   author?: T;
   publishedAt?: T;
   contentUpdatedAt?: T;
-  readingMinutes?: T;
-  origin?: T;
-  factsBaseline?: T;
   warnings?:
     | T
     | {
         text?: T;
         id?: T;
       };
+  readingMinutes?: T;
+  origin?: T;
+  factsBaseline?: T;
   lastSavedBy?:
     | T
     | {
@@ -2392,9 +2467,9 @@ export interface AiTopicsSelect<T extends boolean = true> {
       };
   windowStart?: T;
   windowEnd?: T;
+  notes?: T;
   status?: T;
   source?: T;
-  notes?: T;
   post?: T;
   lastRun?: T;
   lastError?: T;

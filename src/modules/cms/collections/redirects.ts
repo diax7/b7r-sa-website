@@ -68,8 +68,13 @@ export function redirectProblem(
   return null;
 }
 
-const label = (name: string, ar: string, en: string) => (field: Field) =>
-  'name' in field && field.name === name ? { ...field, label: { ar, en } } : field;
+/** A label and a sentence on one of the plugin's fields, both languages (audit 2026-09-18, 3.9). */
+const describe =
+  (name: string, label: Bilingual, description: Bilingual) =>
+  (field: Field): Field =>
+    'name' in field && field.name === name
+      ? ({ ...field, label, admin: { ...field.admin, description } } as Field)
+      : field;
 
 /** The redirect types this site allows, as an admin reads them (the plugin says "301 - Permanent"). */
 export const REDIRECT_TYPE_LABELS: Record<string, Bilingual> = {
@@ -78,18 +83,32 @@ export const REDIRECT_TYPE_LABELS: Record<string, Bilingual> = {
 };
 
 /**
- * Arabic labels on the plugin's fields (it ships no `ar` translations), the types named in
- * both languages, and a permanent redirect by default: the plugin's `type` select is
- * required but starts empty.
+ * Labels and sentences in both languages on the plugin's fields (it ships no `ar`
+ * translations and no descriptions), the types named in words, and a permanent redirect by
+ * default: the plugin's `type` select is required but starts empty.
  */
 export function redirectFields(defaultFields: Field[]): Field[] {
   return defaultFields.map((field) => {
-    const withLabel = label('from', 'المصدر (المسار القديم)', 'From (old path)')(field);
+    const withLabel = describe(
+      'from',
+      { ar: 'المصدر (المسار القديم)', en: 'From (old path)' },
+      {
+        ar: 'الرابط القديم كما يصل إليه الزائر، مقطع واحد يبدأ بـ /: /showcase. لا يمكن تحويل صفحة حيّة في الموقع.',
+        en: 'The old address as a visitor arrives on it, one segment starting with /: /showcase. A live page of the site cannot be redirected.',
+      },
+    )(field);
     if ('name' in withLabel && withLabel.name === 'type' && withLabel.type === 'select') {
       return {
         ...withLabel,
         defaultValue: '301',
         label: { ar: 'نوع التحويل', en: 'Redirect type' },
+        admin: {
+          ...withLabel.admin,
+          description: {
+            ar: 'دائم: محركات البحث تنقل الرابط القديم إلى الجديد (الأصل). مؤقت: يبقى الرابط القديم مسجّلاً عندها.',
+            en: 'Permanent: search engines move the old address to the new one (the usual choice). Temporary: they keep the old address on file.',
+          },
+        },
         options: withLabel.options.map((option) => {
           const value = typeof option === 'string' ? option : option.value;
           return { value, label: REDIRECT_TYPE_LABELS[value] ?? { ar: value, en: value } };
@@ -101,9 +120,36 @@ export function redirectFields(defaultFields: Field[]): Field[] {
         ...withLabel,
         label: { ar: 'الوجهة', en: 'To' },
         fields: withLabel.fields
-          .map(label('type', 'نوع الوجهة', 'Target type'))
-          .map(label('reference', 'صفحة في الموقع', 'A page'))
-          .map(label('url', 'مسار أو رابط', 'Path or URL')),
+          .map(
+            describe(
+              'type',
+              { ar: 'نوع الوجهة', en: 'Target type' },
+              {
+                ar: 'صفحة من صفحات الموقع (تتبع الصفحة إن تغيّر معرّفها)، أو مسار أو رابط يُكتب بنفسك.',
+                en: 'A page of the site (follows the page if its address ending changes), or a path or link typed by hand.',
+              },
+            ),
+          )
+          .map(
+            describe(
+              'reference',
+              { ar: 'صفحة في الموقع', en: 'A page' },
+              {
+                ar: 'الصفحة التي يصل إليها الزائر.',
+                en: 'The page the visitor lands on.',
+              },
+            ),
+          )
+          .map(
+            describe(
+              'url',
+              { ar: 'مسار أو رابط', en: 'Path or URL' },
+              {
+                ar: 'مسار في الموقع يبدأ بـ / أو رابط https:// خارجه. لا يكون مصدر تحويل آخر (لا سلاسل).',
+                en: 'A path on the site starting with /, or an https:// link elsewhere. Never the From of another redirect (no chains).',
+              },
+            ),
+          ),
       };
     }
     return withLabel;

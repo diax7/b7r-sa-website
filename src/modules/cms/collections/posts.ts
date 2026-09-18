@@ -1,7 +1,9 @@
 import {
   BlockquoteFeature,
   BoldFeature,
+  FixedToolbarFeature,
   HeadingFeature,
+  InlineToolbarFeature,
   ItalicFeature,
   lexicalEditor,
   LinkFeature,
@@ -40,21 +42,25 @@ import { describeFields } from '@/modules/cms/admin/descriptions/describe';
 /**
  * The post body's editor: exactly the features the Markdown transformers cover, so the
  * content engine's Markdown converts to the same tree an editor produces (no tables, no H1:
- * the post owns its H1).
+ * the post owns its H1), plus the two toolbars (admin audit 2026-09-18, 2.3): a fixed one
+ * above the body and one that follows a selection, so bold, a heading or a link never need
+ * the slash menu.
  */
-export const postEditor = lexicalEditor({
-  features: [
-    ParagraphFeature(),
-    HeadingFeature({ enabledHeadingSizes: ['h2', 'h3'] }),
-    BoldFeature(),
-    ItalicFeature(),
-    UnorderedListFeature(),
-    OrderedListFeature(),
-    BlockquoteFeature(),
-    LinkFeature({ enabledCollections: ['pages', 'products', 'posts'] }),
-    UploadFeature({ enabledCollections: ['media'] }),
-  ],
-});
+export const POST_FEATURES = [
+  ParagraphFeature(),
+  HeadingFeature({ enabledHeadingSizes: ['h2', 'h3'] }),
+  BoldFeature(),
+  ItalicFeature(),
+  UnorderedListFeature(),
+  OrderedListFeature(),
+  BlockquoteFeature(),
+  LinkFeature({ enabledCollections: ['pages', 'products', 'posts'] }),
+  UploadFeature({ enabledCollections: ['media'] }),
+  FixedToolbarFeature(),
+  InlineToolbarFeature(),
+];
+
+export const postEditor = lexicalEditor({ features: POST_FEATURES });
 
 export const POST_ORIGINS = ['manual', 'ai', 'ai-edited'] as const;
 export type PostOrigin = (typeof POST_ORIGINS)[number];
@@ -351,67 +357,106 @@ export const Posts: CollectionConfig = {
           },
         ],
       },
+      // The sidebar in three groups (audit 2026-09-18, 3.5): who and when, what the checks
+      // say, and the engine's part. Collapsibles keep the stored shape: no migration.
       {
-        name: 'author',
-        type: 'relationship',
-        relationTo: 'authors',
-        required: true,
-        defaultValue: defaultAuthor,
-        label: { ar: 'الكاتب', en: 'Author' },
+        type: 'collapsible',
+        label: { ar: 'النشر', en: 'Publishing' },
         admin: { position: 'sidebar' },
-      },
-      {
-        name: 'publishedAt',
-        type: 'date',
-        label: { ar: 'تاريخ النشر', en: 'Published at' },
-        admin: {
-          position: 'sidebar',
-          date: { pickerAppearance: 'dayAndTime' },
-          description: {
-            ar: 'يُملأ عند أول نشر إن تُرك فارغاً.',
-            en: 'Filled on the first publish when left empty.',
+        fields: [
+          {
+            name: 'author',
+            type: 'relationship',
+            relationTo: 'authors',
+            required: true,
+            defaultValue: defaultAuthor,
+            label: { ar: 'الكاتب', en: 'Author' },
           },
-        },
-      },
-      {
-        name: 'contentUpdatedAt',
-        type: 'date',
-        label: { ar: 'تاريخ التحديث (اختياري)', en: 'Updated at (optional)' },
-        admin: {
-          position: 'sidebar',
-          date: { pickerAppearance: 'dayAndTime' },
-          description: {
-            ar: 'يُعرض على المقال عندما يتغيّر محتواه فعلاً.',
-            en: 'Shown on the post when its content really changed.',
+          {
+            name: 'publishedAt',
+            type: 'date',
+            label: { ar: 'تاريخ النشر', en: 'Published at' },
+            admin: {
+              date: { pickerAppearance: 'dayAndTime' },
+              description: {
+                ar: 'يُملأ عند أول نشر إن تُرك فارغاً.',
+                en: 'Filled on the first publish when left empty.',
+              },
+            },
           },
-        },
-      },
-      {
-        name: 'readingMinutes',
-        type: 'number',
-        localized: true,
-        label: { ar: 'مدة القراءة (دقائق)', en: 'Reading time (minutes)' },
-        admin: { position: 'sidebar', readOnly: true },
-      },
-      {
-        name: 'origin',
-        type: 'select',
-        required: true,
-        defaultValue: 'manual',
-        options: [
-          { label: { ar: 'كتابة يدوية', en: 'Written by hand' }, value: 'manual' },
-          { label: { ar: 'المحرّك الآلي', en: 'Content engine' }, value: 'ai' },
-          { label: { ar: 'آلي ثم عُدّل', en: 'Engine, then edited' }, value: 'ai-edited' },
+          {
+            name: 'contentUpdatedAt',
+            type: 'date',
+            label: { ar: 'تاريخ التحديث (اختياري)', en: 'Updated at (optional)' },
+            admin: {
+              date: { pickerAppearance: 'dayAndTime' },
+              description: {
+                ar: 'يُعرض على المقال عندما يتغيّر محتواه فعلاً.',
+                en: 'Shown on the post when its content really changed.',
+              },
+            },
+          },
         ],
-        label: { ar: 'المصدر', en: 'Origin' },
-        access: { update: adminField },
-        admin: {
-          position: 'sidebar',
-          description: {
-            ar: 'تعديل محرّر على مقال آلي يجعله "آلي ثم عُدّل" ويستثنيه من التحديث الآلي.',
-            en: 'A change by an editor to an engine post marks it "engine, then edited" and exempts it from the freshness job.',
+      },
+      {
+        type: 'collapsible',
+        label: { ar: 'الفحوص', en: 'Checks' },
+        admin: { position: 'sidebar' },
+        fields: [
+          {
+            name: 'warnings',
+            type: 'array',
+            localized: true,
+            label: { ar: 'تنبيهات التحرير', en: 'Editorial warnings' },
+            admin: {
+              readOnly: true,
+              components: { Field: '@/modules/cms/admin/fields/warnings-field#WarningsField' },
+            },
+            fields: [{ name: 'text', type: 'text' }],
           },
-        },
+          {
+            name: 'readingMinutes',
+            type: 'number',
+            localized: true,
+            label: { ar: 'مدة القراءة (دقائق)', en: 'Reading time (minutes)' },
+            admin: { readOnly: true },
+          },
+        ],
+      },
+      {
+        type: 'collapsible',
+        label: { ar: 'المحرّك', en: 'Engine' },
+        admin: { position: 'sidebar' },
+        fields: [
+          {
+            name: 'origin',
+            type: 'select',
+            required: true,
+            defaultValue: 'manual',
+            options: [
+              { label: { ar: 'كتابة يدوية', en: 'Written by hand' }, value: 'manual' },
+              { label: { ar: 'المحرّك الآلي', en: 'Content engine' }, value: 'ai' },
+              { label: { ar: 'آلي ثم عُدّل', en: 'Engine, then edited' }, value: 'ai-edited' },
+            ],
+            label: { ar: 'المصدر', en: 'Origin' },
+            access: { update: adminField },
+            admin: {
+              description: {
+                ar: 'تعديل محرّر على مقال آلي يجعله "آلي ثم عُدّل" ويستثنيه من التحديث الآلي.',
+                en: 'A change by an editor to an engine post marks it "engine, then edited" and exempts it from the freshness job.',
+              },
+            },
+          },
+          {
+            name: 'engineActions',
+            type: 'ui',
+            admin: {
+              components: {
+                Field: '@/modules/ai-content/admin/post-engine-actions#PostEngineActions',
+              },
+            },
+          },
+        ],
       },
       {
         // The facts sheet's numbers when the engine (or the seed) wrote the post: the freshness
@@ -421,26 +466,6 @@ export const Posts: CollectionConfig = {
         type: 'json',
         access: { update: adminField },
         admin: { hidden: true },
-      },
-      {
-        name: 'engineActions',
-        type: 'ui',
-        admin: {
-          position: 'sidebar',
-          components: { Field: '@/modules/ai-content/admin/post-engine-actions#PostEngineActions' },
-        },
-      },
-      {
-        name: 'warnings',
-        type: 'array',
-        localized: true,
-        label: { ar: 'تنبيهات التحرير', en: 'Editorial warnings' },
-        admin: {
-          position: 'sidebar',
-          readOnly: true,
-          components: { Field: '@/modules/cms/admin/fields/warnings-field#WarningsField' },
-        },
-        fields: [{ name: 'text', type: 'text' }],
       },
       savedByField,
     ],

@@ -784,11 +784,13 @@ test.describe('CMS admin', () => {
       await request.get(`${API}/products?limit=1`, { headers: auth })
     ).json()) as { docs: Array<{ id: number }> };
     expect(await tabsOf(`/admin/collections/products/${products.docs[0]?.id}`)).toEqual([
-      'Basics',
       'Photos & colours',
+      'Basics',
       'Sizes',
       'Print area',
     ]);
+    // The order is a per-document number: the sidebar (audit 2026-09-18, 3.3).
+    await expect(page.locator('.document-fields__sidebar #field-sortOrder')).toBeVisible();
     // Every field on a tab says what it does on the site (the description line under it).
     await page.locator('.tabs-field__tab-button', { hasText: 'Sizes' }).click();
     await expect(page.locator('#field-sizesSummary')).toBeVisible();
@@ -805,9 +807,14 @@ test.describe('CMS admin', () => {
       'Summary & cover',
       'Search',
     ]);
-    // The post's sidebar keeps the author and the dates.
+    // The post's sidebar keeps the author and the dates, in three groups (3.5).
     await expect(page.locator('.document-fields__sidebar #field-author')).toBeVisible();
     await expect(page.locator('.document-fields__sidebar #field-publishedAt')).toBeVisible();
+    await expect(page.locator('.document-fields__sidebar .collapsible-field')).toHaveCount(3);
+    // The body has a toolbar (2.3), and a read-only number reads as a line (2.11).
+    await page.locator('.tabs-field__tab-button', { hasText: 'Content' }).click();
+    await expect(page.locator('.fixed-toolbar').first()).toBeVisible();
+    await expect(page.locator('[data-admin-read-only="readingMinutes"]')).toHaveCount(1);
     const pages = (await (await request.get(`${API}/pages?limit=1`, { headers: auth })).json()) as {
       docs: Array<{ id: number }>;
     };

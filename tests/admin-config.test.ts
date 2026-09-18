@@ -20,6 +20,7 @@ import {
   describeFields,
   JSON_VIEW_CELL,
   JSON_VIEW_FIELD,
+  READ_ONLY_LINE,
 } from '@/modules/cms/admin/descriptions/describe';
 import { PAGE_DESCRIPTIONS } from '@/modules/cms/admin/descriptions/pages';
 import {
@@ -52,7 +53,7 @@ import { Faqs } from '@/modules/cms/collections/faqs';
 import { Integrations } from '@/modules/cms/collections/integrations';
 import { Media } from '@/modules/cms/collections/media';
 import { Pages } from '@/modules/cms/collections/pages';
-import { Posts } from '@/modules/cms/collections/posts';
+import { POST_FEATURES, Posts } from '@/modules/cms/collections/posts';
 import { Products } from '@/modules/cms/collections/products';
 import { REDIRECT_OVERRIDES } from '@/modules/cms/collections/redirects';
 import { Tags } from '@/modules/cms/collections/tags';
@@ -62,6 +63,8 @@ import { Home } from '@/modules/cms/globals/home';
 import { SeoDefaults } from '@/modules/cms/globals/seo-defaults';
 import { SiteSettings } from '@/modules/cms/globals/site-settings';
 import { AiRuns } from '@/modules/ai-content/runs';
+import { PAGE_TEXT_FEATURES } from '@/modules/cms/blocks';
+import { Citations } from '@/modules/visibility/ledger/citations';
 import { AiSettings } from '@/modules/ai-content/settings';
 import { AiTopics } from '@/modules/ai-content/topics';
 import { COLLECTIONS, GLOBALS } from '@/modules/cms/entities';
@@ -553,6 +556,165 @@ describe('read-only JSON fields render as JsonView (audit 2026-09-18)', () => {
     expect(componentsOf(editable!)).toBeUndefined();
     expect(componentsOf(custom!)).toEqual({ Field: 'x#Y', Cell: JSON_VIEW_CELL });
     expect(componentsOf(checkbox!)).toEqual({ Cell: BOOL_CELL });
+  });
+});
+
+/**
+ * The forms (admin audit 2026-09-18, section 3): the product's tabs in the card's order with
+ * its order number in the sidebar; the post's sidebar in three groups; the site settings'
+ * three accessibility labels folded away; both rich-text editors with their toolbars; the
+ * topics' CSV import under the list controls; a log row's empty links hidden.
+ */
+type TabsLike = { tabs: Array<{ name?: string; label: { en: string }; fields: Field[] }> };
+type CollapsibleLike = {
+  type: string;
+  label: { en: string };
+  admin?: { initCollapsed?: boolean };
+  fields: Field[];
+};
+const adminOf = (field: Field) =>
+  (field as { admin?: Record<string, unknown> }).admin ?? ({} as Record<string, unknown>);
+const tabsOf = (config: { fields: Field[] }) =>
+  (config.fields[0] as unknown as TabsLike).tabs.map((t) => t.label.en);
+const sidebarOf = (config: { fields: Field[] }) =>
+  config.fields.filter(
+    (f) => (f as { admin?: { position?: string } }).admin?.position === 'sidebar',
+  );
+const namesIn = (fields: Field[]) => walkFields(fields).map((f) => f.path);
+
+describe('the forms (audit 2026-09-18)', () => {
+  it('products: photos first, the order in the sidebar, prices as a row of two', () => {
+    expect(tabsOf(Products)).toEqual(['Photos & colours', 'Basics', 'Sizes', 'Print area']);
+    expect(sidebarOf(Products).map((f) => ('name' in f ? f.name : f.type))).toEqual([
+      'sortOrder',
+      'lastSavedBy',
+    ]);
+    const basics = (Products.fields[0] as unknown as TabsLike).tabs[1]!;
+    const priceRow = basics.fields.find(
+      (f) => f.type === 'row' && namesIn(f.fields).includes('baseCost'),
+    ) as { fields: Field[] };
+    expect(namesIn(priceRow.fields)).toEqual(['baseCost', 'suggestedPrice']);
+  });
+
+  it('products: the print area label and method default per language', () => {
+    const defaults = walkFields(Products.fields)
+      .filter(({ path }) => path === 'printArea.label' || path === 'printMethodLabel')
+      .map(
+        ({ field }) => (field as { defaultValue: (a: { locale: string }) => string }).defaultValue,
+      );
+    expect(defaults).toHaveLength(2);
+    for (const defaultValue of defaults) {
+      expect(ARABIC.test(defaultValue({ locale: 'ar' }))).toBe(true);
+      expect(ARABIC.test(defaultValue({ locale: 'en' }))).toBe(false);
+    }
+  });
+
+  it('posts: the sidebar is three collapsibles, Publishing, Checks and Engine', () => {
+    const groups = sidebarOf(Posts).filter(
+      (f) => f.type === 'collapsible',
+    ) as unknown as CollapsibleLike[];
+    expect(groups.map((g) => [g.label.en, namesIn(g.fields)])).toEqual([
+      ['Publishing', ['author', 'publishedAt', 'contentUpdatedAt']],
+      ['Checks', ['warnings', 'warnings.text', 'readingMinutes']],
+      ['Engine', ['origin']],
+    ]);
+  });
+
+  it('site settings: the accessibility labels sit in a collapsed Advanced group', () => {
+    const menu = (SiteSettings.fields[0] as unknown as TabsLike).tabs.find(
+      (t) => t.name === 'menu',
+    )!;
+    const advanced = menu.fields.at(-1) as unknown as CollapsibleLike;
+    expect(advanced.type).toBe('collapsible');
+    expect(advanced.label.en).toBe('Advanced');
+    expect(advanced.admin?.initCollapsed).toBe(true);
+    expect(namesIn(advanced.fields)).toEqual(['skipLinkLabel', 'menuOpenLabel', 'menuCloseLabel']);
+  });
+
+  it('both rich-text editors carry the fixed and the inline toolbar', () => {
+    for (const features of [POST_FEATURES, PAGE_TEXT_FEATURES]) {
+      const keys = features.map((f) => f.key);
+      expect(keys).toContain('toolbarFixed');
+      expect(keys).toContain('toolbarInline');
+    }
+  });
+
+  it('topics: the CSV import sits under the list controls, not above the title', () => {
+    const components = AiTopics.admin?.components as {
+      beforeList?: string[];
+      beforeListTable?: string[];
+    };
+    expect(components.beforeListTable).toEqual([
+      '@/modules/ai-content/admin/import-topics#ImportTopics',
+    ]);
+    expect(components.beforeList).toBeUndefined();
+  });
+
+  it('a read-only link in a sidebar hides while it is empty', () => {
+    const links: Array<[{ fields: Field[] }, string]> = [
+      [AiRuns, 'connection'],
+      [AiRuns, 'topic'],
+      [AiRuns, 'post'],
+      [AiTopics, 'post'],
+      [AiTopics, 'lastRun'],
+      [Citations, 'prompt'],
+      [Citations, 'connection'],
+      [Citations, 'run'],
+    ];
+    for (const [config, name] of links) {
+      const field = walkFields(config.fields).find((f) => f.path === name)?.field;
+      const condition = adminOf(field!)['condition'] as
+        | ((data: Record<string, unknown>) => boolean)
+        | undefined;
+      expect(condition, name).toBeDefined();
+      expect(condition!({})).toBe(false);
+      expect(condition!({ [name]: 12 })).toBe(true);
+    }
+  });
+});
+
+/**
+ * A read-only scalar reads as a line (audit 2026-09-18, 2.11, 2.12): every read-only text,
+ * number, date, checkbox or select of every entity carries `ReadOnlyLine`, unless a widget
+ * of its own is set (the post's warnings, the enabled switch), set by `describeFields()`.
+ */
+describe('read-only scalars render as ReadOnlyLine (audit 2026-09-18)', () => {
+  const scalar = new Set(['text', 'textarea', 'email', 'number', 'date', 'checkbox', 'select']);
+  it('every read-only scalar of every entity carries it; an editable one does not', () => {
+    let count = 0;
+    for (const c of [...collections, ...globals]) {
+      for (const { path, field } of walkFields(c.fields)) {
+        if (!scalar.has(field.type)) continue;
+        const admin = adminOf(field);
+        const readOnly = admin['readOnly'] === true && !admin['hidden'];
+        const ours = componentsOf(field)?.Field === READ_ONLY_LINE;
+        if (readOnly && !ours) {
+          expect(componentsOf(field)?.Field, `${c.slug}.${path}: a widget of its own`).toBeTruthy();
+        } else {
+          expect(ours, `${c.slug}.${path}`).toBe(readOnly);
+        }
+        if (ours) count += 1;
+      }
+    }
+    // The runs' columns, the connection's summary, the snapshots, the counts, the citations.
+    expect(count).toBeGreaterThan(30);
+  });
+  it('the rule: read-only scalars get the line, editable and hidden ones and a set widget keep theirs', () => {
+    const [line, editable, hidden, custom, relationship] = describeFields(
+      [
+        { name: 'a', type: 'number', admin: { readOnly: true } },
+        { name: 'b', type: 'number' },
+        { name: 'c', type: 'text', admin: { readOnly: true, hidden: true } },
+        { name: 'd', type: 'checkbox', admin: { readOnly: true, components: { Field: 'x#Y' } } },
+        { name: 'e', type: 'relationship', relationTo: 'pages', admin: { readOnly: true } },
+      ],
+      {},
+    );
+    expect(componentsOf(line!)?.Field).toBe(READ_ONLY_LINE);
+    expect(componentsOf(editable!)).toBeUndefined();
+    expect(componentsOf(hidden!)).toBeUndefined();
+    expect(componentsOf(custom!)?.Field).toBe('x#Y');
+    expect(componentsOf(relationship!)).toBeUndefined();
   });
 });
 

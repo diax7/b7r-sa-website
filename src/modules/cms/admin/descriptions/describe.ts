@@ -4,14 +4,6 @@ import type { Field, Tab } from 'payload';
 export type Described = Record<string, { ar: string; en: string }>;
 
 /**
- * Sets `admin.description` on every field the map names (ADR-046): the path is the field's
- * names joined by dots, through named tabs, groups and arrays, with a block's slug after the
- * blocks field (`blocks.cards.items.title`); rows, collapsibles and unnamed groups are
- * transparent, `ui` fields are not fields. A field that already carries a description keeps
- * it unless the map names it. `applied` collects the keys used, so
- * `tests/admin-config.test.ts` can refuse a key that names nothing.
- */
-/**
  * The list cell for every checkbox (design system: green yes, red no). `describeFields` sets
  * it beside the descriptions: the one pass every collection's fields go through.
  */
@@ -42,6 +34,49 @@ function withJsonView(field: Field): Field {
   };
 }
 
+/**
+ * The field for every read-only scalar (admin audit 2026-09-18, 2.11, 2.12): a value an
+ * editor cannot change reads as one line of text, never as a disabled control.
+ */
+export const READ_ONLY_LINE = '@/modules/cms/admin/fields/read-only-line#ReadOnlyLine';
+
+const SCALAR_TYPES = new Set<Field['type']>([
+  'text',
+  'textarea',
+  'email',
+  'number',
+  'date',
+  'checkbox',
+  'select',
+  'radio',
+]);
+
+/** A read-only scalar field reads as a line, unless a widget of its own is already set. */
+function withReadOnlyLine(field: Field): Field {
+  const admin = (field.admin ?? {}) as {
+    readOnly?: boolean;
+    hidden?: boolean;
+    components?: { Field?: unknown };
+  };
+  if (!SCALAR_TYPES.has(field.type) || admin.readOnly !== true || admin.hidden) return field;
+  const components = admin.components ?? {};
+  if (components.Field) return field;
+  return {
+    ...field,
+    admin: { ...admin, components: { ...components, Field: READ_ONLY_LINE } },
+  } as Field;
+}
+
+/**
+ * Sets `admin.description` on every field the map names (ADR-046): the path is the field's
+ * names joined by dots, through named tabs, groups and arrays, with a block's slug after the
+ * blocks field (`blocks.cards.items.title`); rows, collapsibles and unnamed groups are
+ * transparent, `ui` fields are not fields. A field that already carries a description keeps
+ * it unless the map names it, in which case the config is refused. The same pass gives every
+ * checkbox its list badge, every read-only JSON its block and every read-only scalar its line.
+ * `applied` collects the keys used, so `tests/admin-config.test.ts` can refuse a key that
+ * names nothing.
+ */
 export function describeFields(
   fields: Field[],
   map: Described,
@@ -94,7 +129,7 @@ export function describeFields(
         },
       };
     }
-    next = withJsonView(next);
+    next = withReadOnlyLine(withJsonView(next));
     if ('fields' in next && Array.isArray(next.fields)) {
       next = { ...next, fields: describeFields(next.fields, map, applied, `${name}.`) } as Field;
     }
