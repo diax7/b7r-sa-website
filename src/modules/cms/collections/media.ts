@@ -1,5 +1,6 @@
 import type { CollectionConfig } from 'payload';
 import { isAdmin, isEditorOrAdmin } from '@/modules/cms/access';
+import { inLanguage } from '@/modules/cms/fields/message';
 import { savedByField, stampSavedBy } from '@/modules/cms/fields/saved-by';
 import { applyTranslations } from '@/modules/cms/hooks/translations';
 import { collectionComponents } from '@/modules/cms/admin/document/config';
@@ -9,16 +10,19 @@ import { describeFields } from '@/modules/cms/admin/descriptions/describe';
 
 const ARABIC = /[؀-ۿ]/;
 
+type Validation = { req: { locale?: string; i18n?: { language?: string } } };
+
 /**
- * Media library (BRD 9.2, 9.5): originals kept, four generated sizes with focal-point
- * cropping, Arabic alt text required. Storage is S3 when configured (payload.config) and
- * `public/media` on disk otherwise; either way the site requests images only through
- * `next/image` (ADR-029).
+ * The image library (BRD 9.2, 9.5): originals kept, four generated sizes with focal-point
+ * cropping, alt text required per language. Called "Images" in the panel since it accepts
+ * raster images only. Storage is S3 when configured (payload.config) and `public/media` on
+ * disk otherwise; either way the site requests images only through `next/image` (ADR-029).
  */
 export const Media: CollectionConfig = {
   slug: 'media',
-  labels: { singular: { ar: 'ملف وسائط', en: 'Media' }, plural: { ar: 'الوسائط', en: 'Media' } },
+  labels: { singular: { ar: 'صورة', en: 'Image' }, plural: { ar: 'الصور', en: 'Images' } },
   admin: {
+    hideAPIURL: true,
     components: collectionComponents('media', { localized: true }),
     group: adminGroup('site'),
     custom: {
@@ -28,8 +32,8 @@ export const Media: CollectionConfig = {
       },
     },
     description: {
-      ar: 'الصور والملفات المستخدمة في الصفحات والمنتجات. اكتب نصاً بديلاً لكل صورة.',
-      en: 'Images and files used by pages and products. Give every image alt text.',
+      ar: 'صور الموقع وأيقوناته: المنتجات، الرئيسية، أغلفة المدونة. لكل صورة نص بديل باللغتين؛ صور المنتجات مربّعة 1000×1000، وتُولَّد أربعة مقاسات عند الرفع.',
+      en: 'The photos and icons the site shows: products, the home page, the blog covers. Every image needs its alt text in both languages; product photos are 1000 by 1000 squares, and four sizes are generated on upload.',
     },
     defaultColumns: ['filename', 'alt', 'updatedAt'],
     useAsTitle: 'filename',
@@ -63,16 +67,17 @@ export const Media: CollectionConfig = {
         required: true,
         localized: true,
         label: { ar: 'النص البديل', en: 'Alt text' },
-        admin: {
-          description: {
-            ar: 'وصف الصورة كما يقرؤه قارئ الشاشة، بلغة التبويب المفتوح. مطلوب.',
-            en: 'Describe the image in the language of the open locale tab; required.',
-          },
-        },
         // Arabic in the Arabic locale, any script in English (ADR-043).
-        validate: (value: unknown, { req }: { req: { locale?: string } }) => {
-          if (typeof value !== 'string' || value.trim().length < 3) return 'اكتب نصاً بديلاً';
-          if (req.locale !== 'en' && !ARABIC.test(value)) return 'النص البديل يجب أن يكون بالعربية';
+        validate: (value: unknown, { req }: Validation) => {
+          if (typeof value !== 'string' || value.trim().length < 3) {
+            return inLanguage(req, { ar: 'اكتب نصاً بديلاً', en: 'Write the alt text' });
+          }
+          if (req.locale !== 'en' && !ARABIC.test(value)) {
+            return inLanguage(req, {
+              ar: 'النص البديل العربي يُكتب بالحروف العربية',
+              en: 'The Arabic alt text must be in Arabic script',
+            });
+          }
           return true;
         },
       },

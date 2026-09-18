@@ -1,18 +1,16 @@
-import type { Field, GlobalConfig, NamedTab } from 'payload';
+import type { Field, GlobalConfig, NamedTab, PayloadRequest } from 'payload';
 import { hiddenUnlessAdmin, isAdmin } from '@/modules/cms/access';
 import { revalidateGlobal } from '@/modules/cms/hooks/revalidate';
 import { applyGlobalTranslations } from '@/modules/cms/hooks/translations';
 import { umamiSrcAllowed } from '@/lib/security-headers';
+import { inLanguage } from '@/modules/cms/fields/message';
 import { savedByField, stampSavedByGlobal } from '@/modules/cms/fields/saved-by';
 import { globalComponents } from '@/modules/cms/admin/document/config';
 import { adminGroup } from '@/modules/cms/admin/icons';
 import { SITE_SETTINGS_DESCRIPTIONS } from '@/modules/cms/admin/descriptions/site';
 import { describeFields } from '@/modules/cms/admin/descriptions/describe';
 
-const APP_HELP = {
-  ar: 'يجب أن يطابق التطبيق (لا مزامنة آلية).',
-  en: 'Must match the app; no automatic sync.',
-};
+type Validation = { req: PayloadRequest };
 
 /** One link of the header or the footer: its label per language, its path, and what counts as active. */
 const navItem: Field[] = [
@@ -31,19 +29,15 @@ const navItem: Field[] = [
         type: 'text',
         required: true,
         label: { ar: 'الرابط', en: 'Link' },
-        validate: (value: unknown) =>
-          typeof value === 'string' && value.startsWith('/') ? true : 'الرابط يبدأ بـ /',
+        validate: (value: unknown, { req }: Validation) =>
+          typeof value === 'string' && value.startsWith('/')
+            ? true
+            : inLanguage(req, { ar: 'الرابط يبدأ بـ /', en: 'The link starts with /' }),
       },
       {
         name: 'matchPrefix',
         type: 'text',
-        label: { ar: 'يُعدّ نشطاً لكل ما يبدأ بـ', en: 'Active prefix' },
-        admin: {
-          description: {
-            ar: 'يبقى الرابط مُعلَّماً في الترويسة لكل صفحة يبدأ مسارها بهذا. مثال: /products',
-            en: 'The link stays marked as the current one on every page whose path starts with this. Example: /products',
-          },
-        },
+        label: { ar: 'يبقى مُعلَّماً للمسارات التي تبدأ بـ', en: 'Highlight on paths starting with' },
       },
     ],
   },
@@ -68,13 +62,7 @@ const menu: NamedTab = {
       required: true,
       minRows: 6,
       maxRows: 6,
-      label: { ar: 'القائمة الرئيسية (6)', en: 'Primary (6)' },
-      admin: {
-        description: {
-          ar: 'روابط الترويسة بترتيبها، وقائمة الجوال، وعمود «روابط» في التذييل.',
-          en: 'The header links in order, the phone menu, and the "Links" column of the footer.',
-        },
-      },
+      label: { ar: 'روابط الترويسة (6)', en: 'Header links (6)' },
       fields: navItem,
     },
     {
@@ -83,13 +71,7 @@ const menu: NamedTab = {
       required: true,
       minRows: 4,
       maxRows: 4,
-      label: { ar: 'روابط السياسات (4)', en: 'Policies (4)' },
-      admin: {
-        description: {
-          ar: 'عمود «السياسات» في التذييل: الشروط، الشحن، الخصوصية، الأسئلة الشائعة.',
-          en: 'The "Policies" column of the footer: terms, shipping, privacy, FAQ.',
-        },
-      },
+      label: { ar: 'روابط السياسات في التذييل (4)', en: 'Footer policy links (4)' },
       fields: navItem,
     },
     {
@@ -97,56 +79,47 @@ const menu: NamedTab = {
       type: 'text',
       required: true,
       localized: true,
-      label: { ar: 'زر الدعوة', en: 'CTA label' },
-      admin: {
-        description: {
-          ar: 'نص الزر الأزرق في الترويسة وفي قائمة الجوال.',
-          en: 'The blue button in the header and in the phone menu.',
-        },
-      },
+      label: { ar: 'زر الترويسة', en: 'Header button' },
     },
 
+    // Three strings an editor rarely touches (audit 2026-09-18, 2.15, 3.8): a collapsed
+    // group at the foot of the tab, still editable (Dhia's exception to ADR-031).
     {
-      type: 'row',
+      type: 'collapsible',
+      label: { ar: 'متقدّم', en: 'Advanced' },
+      admin: {
+        initCollapsed: true,
+        description: {
+          ar: 'ثلاث عبارات يقرؤها قارئ الشاشة ولوحة المفاتيح؛ نادراً ما تتغيّر.',
+          en: 'Three strings a screen reader and the keyboard use; they rarely change.',
+        },
+      },
       fields: [
         {
-          name: 'skipLinkLabel',
-          type: 'text',
-          required: true,
-          localized: true,
-          label: { ar: 'رابط التخطي', en: 'Skip link' },
-          admin: {
-            description: {
-              ar: 'رابط يظهر عند الضغط على Tab أول مرة، يقفز إلى المحتوى.',
-              en: 'The link a keyboard user sees on the first Tab, jumping past the header to the content.',
+          type: 'row',
+          fields: [
+            {
+              name: 'skipLinkLabel',
+              type: 'text',
+              required: true,
+              localized: true,
+              label: { ar: 'رابط التخطي', en: 'Skip link' },
             },
-          },
-        },
-        {
-          name: 'menuOpenLabel',
-          type: 'text',
-          required: true,
-          localized: true,
-          label: { ar: 'فتح القائمة', en: 'Menu open' },
-          admin: {
-            description: {
-              ar: 'الاسم الذي يقرؤه قارئ الشاشة لزر القائمة في الجوال وهي مغلقة.',
-              en: "What a screen reader calls the phone menu's burger while the menu is closed.",
+            {
+              name: 'menuOpenLabel',
+              type: 'text',
+              required: true,
+              localized: true,
+              label: { ar: 'فتح القائمة', en: 'Menu open' },
             },
-          },
-        },
-        {
-          name: 'menuCloseLabel',
-          type: 'text',
-          required: true,
-          localized: true,
-          label: { ar: 'إغلاق القائمة', en: 'Menu close' },
-          admin: {
-            description: {
-              ar: 'الاسم الذي يقرؤه قارئ الشاشة لزر القائمة في الجوال وهي مفتوحة.',
-              en: "What a screen reader calls the phone menu's button while the menu is open.",
+            {
+              name: 'menuCloseLabel',
+              type: 'text',
+              required: true,
+              localized: true,
+              label: { ar: 'إغلاق القائمة', en: 'Menu close' },
             },
-          },
+          ],
         },
       ],
     },
@@ -158,6 +131,7 @@ export const SiteSettings: GlobalConfig = {
   slug: 'site-settings',
   label: { ar: 'إعدادات الموقع', en: 'Site settings' },
   admin: {
+    hideAPIURL: true,
     components: globalComponents('site-settings', { localized: true }),
     group: adminGroup('site'),
     custom: {
@@ -209,7 +183,7 @@ export const SiteSettings: GlobalConfig = {
                 type: 'text',
                 required: true,
                 localized: true,
-                label: { ar: 'الشعار النصي', en: 'Tagline' },
+                label: { ar: 'الجملة التعريفية', en: 'Tagline' },
               },
               {
                 name: 'ctaShiny',
@@ -240,7 +214,7 @@ export const SiteSettings: GlobalConfig = {
                         name: 'phoneIntl',
                         type: 'text',
                         required: true,
-                        label: { ar: 'الهاتف (دولي)', en: 'Phone (intl)' },
+                        label: { ar: 'الهاتف (دولي)', en: 'Phone (international)' },
                       },
                       {
                         name: 'whatsapp',
@@ -272,7 +246,7 @@ export const SiteSettings: GlobalConfig = {
           },
           menu,
           {
-            label: { ar: 'الأرقام والكيان', en: 'Numbers & legal' },
+            label: { ar: 'الأرقام والتوصيل', en: 'Numbers and delivery' },
             fields: [
               {
                 type: 'row',
@@ -283,7 +257,7 @@ export const SiteSettings: GlobalConfig = {
                     required: true,
                     min: 0,
                     label: { ar: 'الرصيد الترحيبي (ريال)', en: 'Welcome credit (SAR)' },
-                    admin: { description: APP_HELP, step: 1 },
+                    admin: { step: 1 },
                   },
                   {
                     name: 'deliveryMaxDays',
@@ -291,7 +265,7 @@ export const SiteSettings: GlobalConfig = {
                     required: true,
                     min: 1,
                     label: { ar: 'أقصى مدة توصيل (أيام)', en: 'Max delivery days' },
-                    admin: { description: APP_HELP, step: 1 },
+                    admin: { step: 1 },
                   },
                 ],
               },
@@ -303,26 +277,23 @@ export const SiteSettings: GlobalConfig = {
                     type: 'text',
                     required: true,
                     localized: true,
-                    label: { ar: 'مدينة الإنتاج', en: 'Origin city' },
+                    label: { ar: 'مدينة الشحن', en: 'Shipping city' },
                   },
                   {
                     name: 'deliveryRegion',
                     type: 'text',
                     required: true,
                     localized: true,
-                    label: { ar: 'المنطقة (للبيانات المنظمة)', en: 'Region (structured data)' },
+                    label: { ar: 'المنطقة (لمحركات البحث)', en: 'Region (for search engines)' },
                   },
                 ],
               },
               {
                 name: 'bookingUrl',
                 type: 'text',
-                label: { ar: 'رابط حجز الاستشارة (Cal.com)', en: 'Booking URL' },
-                admin: {
-                  description: {
-                    ar: 'اتركه فارغاً لاستخدام واتساب',
-                    en: 'Leave empty to use WhatsApp',
-                  },
+                label: {
+                  ar: 'رابط حجز الاستشارة (Cal.com)',
+                  en: 'Consultation booking link (Cal.com)',
                 },
               },
               {
@@ -345,8 +316,13 @@ export const SiteSettings: GlobalConfig = {
                     name: 'gaId',
                     type: 'text',
                     label: { ar: 'معرّف القياس في Google Analytics', en: 'GA4 measurement id' },
-                    validate: (value: unknown) =>
-                      !value || /^G-[A-Z0-9]{4,}$/.test(String(value)) || 'G-XXXXXXXXXX',
+                    validate: (value: unknown, { req }: Validation) =>
+                      !value ||
+                      /^G-[A-Z0-9]{4,}$/.test(String(value)) ||
+                      inLanguage(req, {
+                        ar: 'بصيغة G-XXXXXXXXXX',
+                        en: 'In the form G-XXXXXXXXXX',
+                      }),
                   },
                   {
                     type: 'row',
@@ -355,10 +331,13 @@ export const SiteSettings: GlobalConfig = {
                         name: 'umamiSrc',
                         type: 'text',
                         label: { ar: 'رابط سكربت Umami', en: 'Umami script URL' },
-                        validate: (value: unknown) =>
+                        validate: (value: unknown, { req }: Validation) =>
                           !value ||
                           umamiSrcAllowed(String(value)) ||
-                          'https://cloud.umami.is/script.js or https://umami.b7r.app/script.js',
+                          inLanguage(req, {
+                            ar: 'https://cloud.umami.is/script.js أو https://umami.b7r.app/script.js',
+                            en: 'https://cloud.umami.is/script.js or https://umami.b7r.app/script.js',
+                          }),
                       },
                       {
                         name: 'umamiId',

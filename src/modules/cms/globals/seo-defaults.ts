@@ -1,6 +1,7 @@
-import type { GlobalConfig } from 'payload';
+import type { GlobalConfig, PayloadRequest } from 'payload';
 import { adminField, hiddenUnlessAdmin, isAdmin } from '@/modules/cms/access';
 import { revalidateGlobal } from '@/modules/cms/hooks/revalidate';
+import { inLanguage } from '@/modules/cms/fields/message';
 import { applyGlobalTranslations } from '@/modules/cms/hooks/translations';
 import { savedByField, stampSavedByGlobal } from '@/modules/cms/fields/saved-by';
 import { globalComponents } from '@/modules/cms/admin/document/config';
@@ -13,6 +14,7 @@ export const SeoDefaults: GlobalConfig = {
   slug: 'seo-defaults',
   label: { ar: 'إعدادات البحث', en: 'Search defaults' },
   admin: {
+    hideAPIURL: true,
     components: globalComponents('seo-defaults', { localized: true }),
     group: adminGroup('visibility'),
     custom: {
@@ -40,19 +42,15 @@ export const SeoDefaults: GlobalConfig = {
         required: true,
         localized: true,
         label: { ar: 'قالب العنوان', en: 'Title template' },
-        admin: { description: { ar: '%s يُستبدل بعنوان الصفحة', en: '%s is the page title' } },
       },
       {
         name: 'routes',
         type: 'array',
         required: true,
-        label: { ar: 'الصفحات', en: 'Routes' },
-        labels: { singular: { ar: 'صفحة', en: 'Route' }, plural: { ar: 'الصفحات', en: 'Routes' } },
-        admin: {
-          description: {
-            ar: 'العنوان والوصف لكل صفحة ثابتة (BRD 4.16)',
-            en: 'Title and description per static route',
-          },
+        label: { ar: 'الصفحات الثابتة', en: 'Fixed pages' },
+        labels: {
+          singular: { ar: 'صفحة', en: 'Page' },
+          plural: { ar: 'الصفحات الثابتة', en: 'Fixed pages' },
         },
         fields: [
           {
@@ -62,19 +60,18 @@ export const SeoDefaults: GlobalConfig = {
                 name: 'route',
                 type: 'text',
                 required: true,
-                label: { ar: 'المسار', en: 'Route' },
-                validate: (value: unknown) =>
-                  typeof value === 'string' && value.startsWith('/') ? true : 'المسار يبدأ بـ /',
+                label: { ar: 'المسار', en: 'Path' },
+                validate: (value: unknown, { req }: { req: PayloadRequest }) =>
+                  typeof value === 'string' && value.startsWith('/')
+                    ? true
+                    : inLanguage(req, { ar: 'المسار يبدأ بـ /', en: 'The path starts with /' }),
               },
               {
                 name: 'updatedAt',
                 type: 'date',
                 required: true,
                 label: { ar: 'آخر تحديث للمحتوى', en: 'Content updated' },
-                admin: {
-                  date: { pickerAppearance: 'dayOnly' },
-                  description: { ar: 'يظهر في خريطة الموقع', en: 'Used for the sitemap' },
-                },
+                admin: { date: { pickerAppearance: 'dayOnly' } },
               },
             ],
           },
@@ -93,28 +90,19 @@ export const SeoDefaults: GlobalConfig = {
             localized: true,
             label: { ar: 'الوصف', en: 'Description' },
             maxLength: 160,
-            admin: {
-              description: { ar: '155 حرفاً كحد أقصى للأفضل', en: 'Aim for ≤ 155 characters' },
-            },
           },
           {
             name: 'ogImage',
             type: 'text',
-            label: { ar: 'صورة المشاركة (اختياري)', en: 'OG image (optional)' },
+            label: { ar: 'صورة المشاركة (اختياري)', en: 'Share image (optional)' },
           },
         ],
       },
       {
         name: 'verification',
         type: 'group',
-        label: { ar: 'رموز التحقق (للمدير فقط)', en: 'Verification tokens (admin only)' },
+        label: { ar: 'رموز التحقق', en: 'Verification tokens' },
         access: { read: adminField, update: adminField },
-        admin: {
-          description: {
-            ar: 'اختياري: وسم التحقق في كل صفحة؛ فارغ يعني لا وسم.',
-            en: 'Optional: the verification meta tag on every page; empty means no tag.',
-          },
-        },
         fields: [
           { name: 'google', type: 'text', label: 'Google Search Console' },
           { name: 'bing', type: 'text', label: 'Bing Webmaster Tools' },

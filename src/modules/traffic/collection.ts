@@ -19,10 +19,11 @@ const never = () => false;
 export const Traffic: CollectionConfig = {
   slug: TRAFFIC,
   labels: {
-    singular: { ar: 'عدّاد يوم', en: 'Daily count' },
+    singular: { ar: 'عدّاد يومي', en: 'Daily count' },
     plural: { ar: 'العدّادات', en: 'Counts' },
   },
   admin: {
+    hideAPIURL: true,
     useAsTitle: 'path',
     defaultColumns: ['date', 'kind', 'source', 'path', 'hits'],
     listSearchableFields: ['source', 'path'],
@@ -69,7 +70,7 @@ export const Traffic: CollectionConfig = {
             name: 'hits',
             type: 'number',
             required: true,
-            label: { ar: 'العدد', en: 'Hits' },
+            label: { ar: 'العدد', en: 'Count' },
             admin: { readOnly: true },
           },
         ],

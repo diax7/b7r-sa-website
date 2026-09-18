@@ -1,5 +1,5 @@
 import { RIYADH, riyadh } from '@/lib/riyadh';
-import { adminStringsFor } from '@/modules/cms/admin/strings';
+import { adminStringsFor, isArabic } from '@/modules/cms/admin/strings';
 
 /**
  * Numbers, dates and "5 minutes ago" in the panel's UI language (ADR-056), the digits always
@@ -10,7 +10,7 @@ import { adminStringsFor } from '@/modules/cms/admin/strings';
  * the container runs UTC, and a save at 01:00 Riyadh must not read as the day before.
  */
 export function formatLocale(language: string): string {
-  return `${language === 'ar' ? 'ar' : 'en-GB'}-u-nu-latn`;
+  return `${isArabic(language) ? 'ar' : 'en-GB'}-u-nu-latn`;
 }
 
 const MINUTE = 60_000;
@@ -20,8 +20,12 @@ const DAY = 24 * HOUR;
 /** The Arabic patterns wrap their separators in bidi marks (U+200E, U+200F); the digits are the whole message. */
 const BIDI_MARKS = /[\u200E\u200F]/g;
 
-export function formatNumber(n: number, language: string): string {
-  return new Intl.NumberFormat(formatLocale(language)).format(n);
+export function formatNumber(
+  n: number,
+  language: string,
+  options: Intl.NumberFormatOptions = {},
+): string {
+  return new Intl.NumberFormat(formatLocale(language), options).format(n);
 }
 
 /** `dd/MM/yyyy` in both languages (design system §5), the day as Riyadh counts it. */
@@ -46,6 +50,11 @@ export function formatTime(date: Date, language: string): string {
   })
     .format(date)
     .replaceAll(BIDI_MARKS, '');
+}
+
+/** `dd/MM/yyyy HH:mm` in Riyadh, for a read-only value that carries a time of day. */
+export function formatDateTime(date: Date, language: string): string {
+  return `${formatDate(date, language)} ${formatTime(date, language)}`;
 }
 
 /**

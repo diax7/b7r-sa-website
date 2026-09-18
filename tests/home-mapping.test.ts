@@ -187,7 +187,8 @@ describe('faqs', () => {
   });
 
   it(`refuses a ${HOME_FAQ_LIMIT + 1}th «show on home» and nothing else`, () => {
-    expect(homeFlagProblem(true, HOME_FAQ_LIMIT)).toMatch(/at most/);
+    expect(homeFlagProblem(true, HOME_FAQ_LIMIT)?.en).toMatch(/at most/);
+    expect(homeFlagProblem(true, HOME_FAQ_LIMIT)?.ar).toMatch(/على الأكثر/);
     expect(homeFlagProblem(true, HOME_FAQ_LIMIT - 1)).toBeNull();
     expect(homeFlagProblem(false, 99)).toBeNull();
   });
