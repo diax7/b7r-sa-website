@@ -196,6 +196,7 @@ export function Footer({
               alt={copy.media.trustBadges.misk}
               width={400}
               height={230}
+              sizes="64px"
               className="h-10 w-auto rounded-inner bg-white p-1"
             />
           </div>

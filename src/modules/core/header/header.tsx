@@ -86,7 +86,7 @@ export function Header({ navigation, site, locale, locales, copy }: ShellData) {
                 alt=""
                 width={198}
                 height={72}
-                sizes="198px"
+                sizes="(min-width: 768px) 198px, 88px"
                 priority
                 className={cn(
                   'w-auto transition-[height] duration-(--duration-base) ease-(--ease-standard)',

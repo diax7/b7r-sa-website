@@ -28,6 +28,9 @@ const nextConfig: NextConfig = {
     formats: ['image/avif', 'image/webp'],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 2560],
     qualities: [75, 82],
+    // An optimised rendition is cached for a year (CMS media filenames are unique, ADR-029);
+    // a `public/` image that changes must change its name to reach a returning browser.
+    minimumCacheTTL: 31536000,
     // CMS media on S3 (ADR-029): the optimizer fetches it, the browser never does.
     remotePatterns: s3RemotePatterns(),
     // Next refuses to optimise images from a private IP (SSRF guard). Only the CI MinIO job

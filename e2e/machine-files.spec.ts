@@ -54,6 +54,18 @@ test.describe('machine files (BRD 7.2, 7.3, 7.5, 7.6)', () => {
     );
   });
 
+  test('the renders, icons and brand images are cached for a day; the fonts for a year', async ({
+    request,
+  }) => {
+    for (const path of ['/og/default.png', '/icons/icon-192.png', '/images/logo/icon.png']) {
+      const res = await request.get(path);
+      expect(res.status(), path).toBe(200);
+      expect(res.headers()['cache-control'], path).toBe('public, max-age=86400');
+    }
+    const font = await request.get('/fonts/ITFRayatRound-Regular.woff2');
+    expect(font.headers()['cache-control']).toBe('public, max-age=31536000, immutable');
+  });
+
   test('robots.txt disallows everything on a non-production host', async ({ request }) => {
     // Local builds leave NEXT_PUBLIC_SITE_URL unset; CI sets the production origin and checks
     // the full rule set in the Lighthouse SEO audit instead.

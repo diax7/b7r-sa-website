@@ -91,7 +91,7 @@ export function MobileMenu({
               alt=""
               width={198}
               height={72}
-              sizes="198px"
+              sizes="88px"
               className="h-8 w-auto"
             />
           </Link>
