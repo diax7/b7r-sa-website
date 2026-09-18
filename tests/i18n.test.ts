@@ -150,17 +150,38 @@ describe('page metadata (BRD 7.3, ADR-043)', () => {
     expect(defaultOgImage('en')).toBe('/og/en/default.png');
   });
 
-  it('declares the real size of a CMS image and 1200×630 for a render (site audit 2026-09-18)', () => {
+  it('serves a CMS image through the optimizer at 1200 wide with its scaled size, a render as is', () => {
+    // A q92 cover is 400 to 530 KB; WhatsApp drops a preview image over about 300 KB
+    // (ADR-029, amended 2026-09-19). The optimizer's JPEG at 1200 is about 100 KB.
     expect(
       ogImages(
         pageMetadata({
           ...base,
           locale: 'ar',
           locales: ['ar'],
-          ogImage: { url: '/media/cover.jpg', width: 1600, height: 900 },
+          ogImage: { url: '/media/cover.jpg', width: 2000, height: 1125 },
         }),
       ),
-    ).toEqual([{ url: '/media/cover.jpg', width: 1600, height: 900 }]);
+    ).toEqual([
+      { url: '/_next/image?url=%2Fmedia%2Fcover.jpg&w=1200&q=82', width: 1200, height: 675 },
+    ]);
+    // A smaller image keeps its size: the optimizer never enlarges.
+    expect(
+      ogImages(
+        pageMetadata({
+          ...base,
+          locale: 'ar',
+          locales: ['ar'],
+          ogImage: { url: 'https://media.b7r.sa/media/me.jpg', width: 112, height: 112 },
+        }),
+      ),
+    ).toEqual([
+      {
+        url: '/_next/image?url=https%3A%2F%2Fmedia.b7r.sa%2Fmedia%2Fme.jpg&w=1200&q=82',
+        width: 112,
+        height: 112,
+      },
+    ]);
     expect(
       ogImages(
         pageMetadata({
@@ -176,6 +197,6 @@ describe('page metadata (BRD 7.3, ADR-043)', () => {
       ogImages(
         pageMetadata({ ...base, locale: 'ar', locales: ['ar'], ogImage: { url: '/media/x.jpg' } }),
       ),
-    ).toEqual([{ url: '/media/x.jpg', width: 1200, height: 630 }]);
+    ).toEqual([{ url: '/_next/image?url=%2Fmedia%2Fx.jpg&w=1200&q=82', width: 1200, height: 630 }]);
   });
 });

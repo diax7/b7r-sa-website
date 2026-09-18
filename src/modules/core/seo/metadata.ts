@@ -8,6 +8,7 @@ import { getPage, getSeo, getSeoDefaults, getSiteSettings } from '@/lib/cms';
 import { documentLocales, siteLocales } from '@/lib/cms/locales';
 import { env, siteBase } from '@/lib/env';
 import { type Locale, languageTag, localePath, ogLocale, otherLocale } from '@/lib/i18n';
+import { optimizedSrc } from '@/lib/image-url';
 
 const FEED_PATH = '/feed.xml';
 
@@ -99,15 +100,31 @@ export function pageMetadata(meta: PageMeta): Metadata {
   };
 }
 
+/** A CMS share image is served through the optimizer at this width (a `deviceSizes` entry). */
+const OG_WIDTH = 1200;
+/** The optimizer quality of a share image: an `images.qualities` entry, the designer's. */
+const OG_QUALITY = 82;
+
 /**
  * The page's image with the dimensions it really has: the `/og/*.png` renders are 1200×630;
  * a CMS image (a post cover, a hub cover, an author photo) declares its own size so a scraper
- * never reads 1200×630 for a 1600×900 JPEG (site audit 2026-09-18, item 15).
+ * never reads 1200×630 for a 16:9 JPEG (site audit 2026-09-18, item 15). Since the media
+ * library keeps photos at q92 and full size (ADR-029, amended 2026-09-19: a cover is 400 to
+ * 530 KB), a CMS image is served through the image optimizer at 1200 wide, the JPEG a scraper
+ * without an `Accept` header gets, about 100 KB: WhatsApp drops a preview image over
+ * roughly 300 KB. A smaller image keeps its size, the optimizer never enlarges.
  */
 function ogImageOf(meta: PageMeta): { url: string; width: number; height: number } {
   const image = meta.ogImage ?? defaultOgImage(meta.locale);
   if (typeof image === 'string') return { url: image, width: 1200, height: 630 };
-  return { url: image.url, width: image.width ?? 1200, height: image.height ?? 630 };
+  const width = image.width ?? 1200;
+  const height = image.height ?? 630;
+  const scale = Math.min(1, OG_WIDTH / width);
+  return {
+    url: optimizedSrc(image.url, OG_WIDTH, OG_QUALITY),
+    width: Math.round(width * scale),
+    height: Math.round(height * scale),
+  };
 }
 
 /** `noindex` on any host other than https://b7r.sa (BRD 7.2); on it, an empty listing follows. */
