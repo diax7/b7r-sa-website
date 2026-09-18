@@ -380,7 +380,8 @@
      with a pill changes per language, a field without one is shared. The span's own text
      (an em dash and the name) is hidden from sight and from readers; the pill is drawn by
      ::after from `html[data-content-locale]`, set by the header, so before hydration there
-     is no pill rather than a wrong one. */
+     is no pill rather than a wrong one. The same pill, as `.admin-locale-tag`, marks the
+     other language's input beside a bilingual field (ADR-057). */
   .field-label .localized {
     display: inline-grid;
     vertical-align: 2px;
@@ -388,7 +389,12 @@
     font-size: 0;
     visibility: hidden;
   }
-  .field-label .localized::after {
+  .field-label .admin-locale-tag {
+    vertical-align: 2px;
+    margin-inline-start: 8px;
+  }
+  .field-label .localized::after,
+  .field-label .admin-locale-tag {
     visibility: visible;
     grid-area: 1 / 1;
     display: inline-grid;

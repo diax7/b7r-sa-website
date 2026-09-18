@@ -2,16 +2,23 @@ import { Link } from '@payloadcms/ui';
 import { Bot } from 'lucide-react';
 import type { Payload } from 'payload';
 import { Badge } from '@/components/shared/badge';
-import { Card } from '@/components/shared/card';
-import { Icon } from '@/components/shared/icon';
+import { cn } from '@/lib/cn';
 import { riyadh, riyadhDayStart, riyadhMonthStart } from '@/lib/riyadh';
+import { costTodayOf } from '@/modules/ai-content/caps';
 import {
   ENGINE_STATE_TONE,
   type EngineConnectionSummary,
   type EngineState,
   engineState,
 } from '@/modules/ai-content/state';
-import { relativeTime } from '@/modules/cms/admin/format';
+import type { ConnectionRow } from '@/modules/cms/admin/dashboard/readers';
+import {
+  Bar,
+  type BarTone,
+  DashboardSection,
+  SectionLink,
+} from '@/modules/cms/admin/dashboard/section';
+import { formatNumber, relativeTime } from '@/modules/cms/admin/format';
 import { type AdminStrings, adminStringsFor } from '@/modules/cms/admin/strings';
 
 /** When the engine next writes: a fact, worded by the card in the UI language. */
@@ -25,95 +32,71 @@ export interface EngineSummary {
   state: EngineState;
   connection: EngineConnectionSummary | null;
   postsThisMonth: number;
-  averageScore: number | null;
-  failures: number;
-  costUsd: number;
+  maxPostsPerMonth: number;
+  costTodayUsd: number;
+  dailyCostCapUsd: number;
+  costThisMonthUsd: number;
   nextSlot: NextSlot;
-  recent: Array<{ id: number; label: string; status: string; score: number | null; at: string }>;
 }
 
-/** The numbers behind the card (BRD 10.2.7), read once per dashboard render. */
+/** The numbers behind the card (BRD 10.2.7): the month's posts and cost, today's cost, the next slot. */
 export async function engineSummary(payload: Payload, now = new Date()): Promise<EngineSummary> {
   const {
     state,
     connection,
     publishHourRiyadh: hour,
     postsPerDay,
+    maxPostsPerMonth,
+    dailyCostCapUsd,
   } = await engineState(payload, now);
-  const month = riyadhMonthStart(now).toISOString();
-  const [monthRuns, recent, today] = await Promise.all([
+  const [month, today] = await Promise.all([
     payload.find({
-      collection: 'ai-runs',
-      where: {
-        and: [{ kind: { equals: 'generate' } }, { startedAt: { greater_than_equal: month } }],
-      },
-      depth: 0,
-      limit: 500,
-      pagination: false,
-      overrideAccess: true,
-    }),
-    payload.find({
-      collection: 'ai-runs',
-      depth: 0,
-      limit: 5,
-      sort: '-startedAt',
-      overrideAccess: true,
-    }),
-    payload.count({
       collection: 'ai-runs',
       where: {
         and: [
           { kind: { equals: 'generate' } },
+          { startedAt: { greater_than_equal: riyadhMonthStart(now).toISOString() } },
+        ],
+      },
+      depth: 0,
+      limit: 500,
+      pagination: false,
+      select: { status: true, costUsd: true },
+      overrideAccess: true,
+    }),
+    payload.find({
+      collection: 'ai-runs',
+      where: {
+        and: [
           { startedAt: { greater_than_equal: riyadhDayStart(now).toISOString() } },
           { status: { not_equals: 'skipped' } },
         ],
       },
+      depth: 0,
+      limit: 200,
+      pagination: false,
+      select: { kind: true, costUsd: true },
       overrideAccess: true,
     }),
   ]);
-  const done = monthRuns.docs.filter((r) => r.status === 'done');
-  const scores = done.map((r) => r.score).filter((n): n is number => typeof n === 'number');
+  const runsToday = today.docs.filter((r) => r.kind === 'generate').length;
   let nextSlot: NextSlot = { kind: 'off' };
   if (state === 'noConnection' || state === 'connectionOff') nextSlot = { kind: 'noConnection' };
   else if (state !== 'off') {
-    if (today.totalDocs >= postsPerDay) nextSlot = { kind: 'done', hour };
+    if (runsToday >= postsPerDay) nextSlot = { kind: 'done', hour };
     else if (riyadh(now).hour < hour) nextSlot = { kind: 'today', hour };
     else nextSlot = { kind: 'soon' };
   }
   return {
     state,
     connection,
-    postsThisMonth: done.length,
-    averageScore: scores.length
-      ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
-      : null,
-    failures: monthRuns.docs.filter((r) => r.status === 'failed').length,
-    costUsd: Math.round(monthRuns.docs.reduce((n, r) => n + (r.costUsd ?? 0), 0) * 100) / 100,
+    postsThisMonth: month.docs.filter((r) => r.status === 'done').length,
+    maxPostsPerMonth,
+    costTodayUsd: Math.round(costTodayOf(today.docs) * 100) / 100,
+    dailyCostCapUsd,
+    costThisMonthUsd: Math.round(month.docs.reduce((n, r) => n + (r.costUsd ?? 0), 0) * 100) / 100,
     nextSlot,
-    recent: recent.docs.map((r) => ({
-      id: r.id,
-      label: r.label,
-      status: r.status,
-      score: r.score ?? null,
-      at: r.startedAt ?? r.createdAt,
-    })),
   };
-}
-
-const STATUS_TONE = {
-  done: 'success',
-  failed: 'error',
-  running: 'warning',
-  skipped: 'muted',
-} as const;
-
-function stat(label: string, value: string) {
-  return (
-    <div className="flex flex-col gap-0.5">
-      <span className="text-caption text-text-muted">{label}</span>
-      <span className="text-h4 text-text">{value}</span>
-    </div>
-  );
 }
 
 function nextSlotText(slot: NextSlot, s: AdminStrings['engine']['card']): string {
@@ -124,93 +107,206 @@ function nextSlotText(slot: NextSlot, s: AdminStrings['engine']['card']): string
   return template.replace('{hour}', String(slot.hour));
 }
 
-/** The "Content engine" card on the dashboard (admins): the monitoring §10.2.7 asks for. */
+const usd = (n: number) => `$${n.toFixed(2)}`;
+const share = (n: number, cap: number) => (cap > 0 ? Math.round((n / cap) * 100) : 0);
+
+/** A figure against its cap with a bar: the Blog violet (identity), amber from 80 %, red at the cap. */
+function Cap({
+  label,
+  value,
+  n,
+  cap,
+  hook,
+}: {
+  label: string;
+  value: string;
+  n: number;
+  cap: number;
+  hook: string;
+}) {
+  const percent = share(n, cap);
+  const tone: BarTone = percent >= 100 ? 'error' : percent >= 80 ? 'warning' : 'violet';
+  return (
+    <div className="flex flex-col gap-1" data-admin-engine-cap={hook}>
+      <span className="text-caption text-text-muted">{label}</span>
+      <span className="text-h4 text-text tabular-nums">{value}</span>
+      <Bar percent={percent} tone={tone} />
+    </div>
+  );
+}
+
+/** The spend bar of a connection: amber with "no monthly limit" when it has none (the ledger card's rule), red at the limit. */
+function SpendCell({
+  row,
+  s,
+  noLimit,
+}: {
+  row: ConnectionRow;
+  s: AdminStrings['engine']['card'];
+  noLimit: string;
+}) {
+  const over = row.limitUsd !== null && row.spentUsd >= row.limitUsd;
+  const percent = row.limitUsd === null ? 100 : share(row.spentUsd, row.limitUsd);
+  const tone: BarTone = row.limitUsd === null ? 'warning' : over ? 'error' : 'slate';
+  return (
+    <div className="flex min-w-40 flex-col gap-1" data-admin-connection-spend={row.spentUsd}>
+      <span className="flex items-center justify-between gap-2 text-small tabular-nums">
+        <span className="text-text">
+          {usd(row.spentUsd)}
+          {row.limitUsd !== null && <span className="text-text-muted"> / {usd(row.limitUsd)}</span>}
+        </span>
+        {row.limitUsd === null ? (
+          <Badge tone="warning" data-admin-no-limit="">
+            {noLimit}
+          </Badge>
+        ) : over ? (
+          <Badge tone="error" data-admin-over-limit="">
+            {s.overLimit}
+          </Badge>
+        ) : null}
+      </span>
+      <Bar percent={percent} tone={tone} />
+    </div>
+  );
+}
+
+const th = 'py-1 pe-3 text-start text-caption font-medium text-text-muted';
+const td = 'py-2 pe-3 align-top text-small text-text';
+
+/**
+ * "Engine and spend" on the dashboard (ADR-042, ADR-047, ADR-059, admins): the engine's
+ * state, the month's posts against the monthly cap, today's cost against the daily cap, the
+ * next slot, then one row per AI connection with its spend against its limit as a bar (amber
+ * and "no monthly limit" when it has none, the CTO's edit), its runs and its last test. The
+ * links at the foot open the settings, the topics and the runs. No run list here: a failed
+ * run reaches the "needs a hand" line, and the runs page holds the rest.
+ */
 export function EngineCard({
   summary,
+  connections,
   adminRoute,
   language,
+  now,
 }: {
   summary: EngineSummary;
+  connections: ConnectionRow[] | null;
   adminRoute: string;
   language: string;
+  /** The render's clock, one for every section. */
+  now: Date;
 }) {
-  const s = adminStringsFor(language).engine.card;
-  const stateTone = ENGINE_STATE_TONE[summary.state];
-  const stateLabel = s.state[summary.state];
+  const strings = adminStringsFor(language);
+  const s = strings.engine.card;
   const c = summary.connection;
   return (
-    <Card
-      className="flex flex-col gap-4 p-5"
+    <DashboardSection
+      hook="engine"
+      title={s.title}
+      icon={Bot}
+      end={<Badge tone={ENGINE_STATE_TONE[summary.state]}>{s.state[summary.state]}</Badge>}
       data-admin-engine=""
       data-admin-engine-state={summary.state}
     >
-      <div className="flex items-center justify-between gap-3">
-        <h2 className="flex items-center gap-2 text-h4 text-text">
-          <Icon icon={Bot} size={20} className="text-accent" />
-          {s.title}
-        </h2>
-        <Badge tone={stateTone}>{stateLabel}</Badge>
-      </div>
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        {stat(s.postsThisMonth, String(summary.postsThisMonth))}
-        {stat(s.averageScore, summary.averageScore === null ? '·' : String(summary.averageScore))}
-        {stat(s.failures, String(summary.failures))}
-        {stat(s.cost, `$${summary.costUsd.toFixed(2)}`)}
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+        <Cap
+          label={s.postsThisMonth}
+          value={s.ofCap
+            .replace('{n}', formatNumber(summary.postsThisMonth, language))
+            .replace('{cap}', formatNumber(summary.maxPostsPerMonth, language))}
+          n={summary.postsThisMonth}
+          cap={summary.maxPostsPerMonth}
+          hook="posts"
+        />
+        <Cap
+          label={s.costToday}
+          value={`${usd(summary.costTodayUsd)} / ${usd(summary.dailyCostCapUsd)}`}
+          n={summary.costTodayUsd}
+          cap={summary.dailyCostCapUsd}
+          hook="cost-today"
+        />
+        <div className="flex flex-col gap-1">
+          <span className="text-caption text-text-muted">{s.cost}</span>
+          <span className="text-h4 text-text tabular-nums">{usd(summary.costThisMonthUsd)}</span>
+        </div>
       </div>
       <p className="text-small text-text-muted">
         <span className="font-medium text-text">{s.nextSlot}:</span>{' '}
         {nextSlotText(summary.nextSlot, s)}
       </p>
-      <p className="text-small text-text-muted" data-admin-engine-connection={c ? c.id : 'none'}>
-        <span className="font-medium text-text">{s.connection}:</span>{' '}
-        {c ? (
-          <>
-            <Link
-              href={`${adminRoute}/collections/connections/${c.id}`}
-              className="text-accent underline underline-offset-2"
-            >
-              {c.label}
-            </Link>
-            {c.enabled ? '' : ` (${s.connectionOff})`} · ${c.spentUsd.toFixed(2)}
-            {c.limitUsd === null ? ` ${s.noLimit}` : ` / $${c.limitUsd}`}
-          </>
-        ) : (
+      {!c && (
+        <p className="text-small text-text-muted" data-admin-engine-connection="none">
           <Link
             href={`${adminRoute}/collections/connections`}
             className="text-accent underline underline-offset-2"
           >
             {s.pickConnection}
           </Link>
-        )}
-      </p>
-      {summary.recent.length === 0 ? (
-        <p className="text-small text-text-muted">{s.empty}</p>
-      ) : (
-        <ul className="flex flex-col divide-y divide-border" data-admin-engine-recent="">
-          {summary.recent.map((run) => (
-            <li key={run.id}>
-              <Link
-                href={`${adminRoute}/collections/ai-runs/${run.id}`}
-                className="flex items-center gap-3 py-2 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-accent/40"
-              >
-                <Badge
-                  tone={STATUS_TONE[run.status as keyof typeof STATUS_TONE] ?? 'muted'}
-                  data-admin-run-status={run.status}
-                >
-                  {s.runStatus[run.status] ?? run.status}
-                </Badge>
-                <span className="min-w-0 flex-1 truncate text-small text-text">{run.label}</span>
-                {run.score !== null && (
-                  <span className="text-caption text-text-muted">{run.score}</span>
-                )}
-                <time dateTime={run.at} className="shrink-0 text-caption text-text-muted">
-                  {relativeTime(run.at, language)}
-                </time>
-              </Link>
-            </li>
-          ))}
-        </ul>
+        </p>
       )}
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-caption text-text-muted">{s.connections}</span>
+          <SectionLink href={`${adminRoute}/collections/connections`}>
+            {s.allConnections}
+          </SectionLink>
+        </div>
+        {connections === null || connections.length === 0 ? (
+          <p className="text-small text-text-muted" data-admin-engine-connections="0">
+            {s.noConnections}
+          </p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table
+              className="w-full border-collapse"
+              data-admin-engine-connections={connections.length}
+            >
+              <thead>
+                <tr>
+                  <th className={th}>{s.connection}</th>
+                  <th className={th}>{s.spend}</th>
+                  <th className={cn(th, 'text-end')}>{s.runsThisMonth}</th>
+                  <th className={th}>{s.lastTest}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {connections.map((row) => (
+                  <tr
+                    key={row.id}
+                    data-admin-connection={row.id}
+                    data-admin-engine-connection={c?.id === row.id ? row.id : undefined}
+                  >
+                    <td className={td}>
+                      <Link
+                        href={`${adminRoute}/collections/connections/${row.id}`}
+                        className="text-accent underline underline-offset-2"
+                      >
+                        {row.label}
+                      </Link>
+                      {!row.enabled && (
+                        <span className="text-text-muted"> ({s.connectionOff})</span>
+                      )}
+                    </td>
+                    <td className={td}>
+                      <SpendCell row={row} s={s} noLimit={strings.visibility.ledger.noLimit} />
+                    </td>
+                    <td className={cn(td, 'text-end tabular-nums')}>
+                      {formatNumber(row.runs, language)}
+                    </td>
+                    <td className={cn(td, 'text-text-muted')}>
+                      {row.lastTestAt === null
+                        ? s.neverTested
+                        : (row.lastTestOk ? s.testPassed : s.testFailed).replace(
+                            '{when}',
+                            relativeTime(row.lastTestAt, language, now),
+                          )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
       <div className="flex flex-wrap gap-4 text-caption">
         <Link href={`${adminRoute}/globals/ai-settings`} className="text-accent hover:underline">
           {s.settings}
@@ -222,6 +318,6 @@ export function EngineCard({
           {s.runs}
         </Link>
       </div>
-    </Card>
+    </DashboardSection>
   );
 }

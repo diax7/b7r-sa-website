@@ -619,6 +619,10 @@ Phases: (1) foundation: this ADR, tokens, primitives, icons, descriptions; (2) t
 sidebar, header, palette, account, login; (3) the dashboard, the preview button (Next draft
 mode; the proxy passes requests carrying the draft cookie), `lastSavedBy`, field widgets.
 
+Amended 2026-09-18: the dashboard's seven sections, its range control and its readers are
+ADR-059; the quick-action tiles, the health card and the latest-changes list below are as
+Phase 3 shipped them.
+
 Phase 3 (2026-09-13, as shipped). **Dashboard** (`views.dashboard.Component`, rendered inside
 Payload's template): a greeting, quick-action tiles filtered by the user's permissions, the
 system health card from `healthReport()` (the same function `/api/health` answers; no HTTP
@@ -1686,6 +1690,87 @@ Not done here: the visibility rules' sentences (`modules/visibility/rules/*`, so
 titles, guides and facts) are still English inside the Arabic Score page; they are the
 rules' own text (ADR-049) and a decision for the text review of Phase 2.
 
+## ADR-057: Side-by-side bilingual editing (2026-09-18)
+
+Dhia's brief, from the pre-launch programme (Phase 2): "I do not want to edit English and
+Arabic separately by switching the page language. Put the Arabic and English sections side
+by side so both are visible at the same time." Settled with the CTO before code as
+**approach A**: no change to how Payload stores or validates a locale, a custom field on top.
+**What is side by side.** Every localized `text`, `textarea` and `select` field that holds
+one value and sits outside an array or a blocks field: `describeFields()`, the one pass every
+config's fields go through (ADR-046), renders it with `BilingualField`
+(`modules/cms/admin/fields/bilingual/*`), Payload's own field for the open locale beside the
+same input for the other locale, tagged with the other code by the same pill ADR-044 draws
+on localized labels (`.admin-locale-tag` shares the declarations in `admin.css`). In a row
+the pair takes the full line unless the config gives the field a width; under 32 rem of
+container width the two stack. Seventy fields across fourteen collections and globals (the
+home page's 28, the site settings' 8, the products' 7, the pages' and the posts' 4 each, the
+engine settings' 4, and so on) became bilingual with no config edit. **What stays on the
+switch.** Rich text (Lexical), arrays and blocks (their rows are shared and their text per
+language, ADR-044), uploads and relationships, a `hasMany` text or select, and a localized
+field that has a widget of its own; the locale note before the document controls now says
+so in words ("A field tagged AR has its English beside it: type the English next to the
+Arabic, one Save writes both. Rich text, lists and blocks stay per language: switch the
+locale at the top to edit their English. Fields without a tag are shared."). **Why a second
+write.** Payload 3.89 writes one locale per request: `beforeChange/promise.js` keeps the
+stored value for every locale but `req.locale`, and there is no all-locales write. So the
+other language's edits wait in `translations`, a hidden non-localized JSON on the same
+document (`admin.hidden`, out of the description maps, a `Diff` component that renders
+nothing keeps it out of the versions view, read by signed-in staff only), shaped
+`{ [otherLocale]: { [fieldPath]: { value, base } } }` where `base` is what the other locale
+held when the editor started (read once per document view through the REST API in the other
+locale, `fallback-locale=none` so an empty English reads as empty, `draft=true`, and again
+after every save, by a small store shared by every bilingual field on the page). The locale
+key is not decoration: a session that typed English while editing Arabic, autosaved, then
+switched the locale must never write that English into the Arabic; the hook applies only the
+entries of the locale that is not being saved. The collection's and the global's
+`afterChange` hook (`hooks/translations.ts`, listed after the entity's own hooks) applies
+them with `payload.update({ locale: other, req, draft: doc._status === 'draft' })`
+(`updateGlobal` for a global), with `translations: null` in the same write (non-localized,
+so it rides along; no third write), inside the same transaction because it carries `req`,
+with `overrideAccess: false` so the second write is exactly what the editor could do
+themselves. Payload's `createLocalReq` writes `locale`, `fallbackLocale`, `context` and
+`query.depth` onto the `req` it is handed, so the hook puts them back in a `finally`; the
+hooks after it and the response still need the request's own. **The three guard rails.**
+(1) A Save or Publish applies; an autosave (`?autosave=true`) never does: the entries ride
+along in the draft version until a real save, and survive a reload. (2) An entry applies
+only when the editor changed it (`value !== base`) and the other locale still holds `base`
+at apply time (read first): a stale prefill loses nothing, the stored edit wins, and the
+client drops the entry the next time it reads the other locale. When entries exist but none
+applies (all stale), that save makes no second write and the row's JSON is not cleared: the
+base check keeps the entries inert and the client's reconcile drops them on the next open,
+so a stale entry lives in the row until the next applying save. (3) A refusal in the other
+locale fails the whole save: the second write throws, the transaction rolls back (Payload's
+nested operation kills it), and the editor reads a `Refused` naming each field and the
+language ("Title in English: This field is required."); a collection's own rule (a post's
+publish rules) is prefixed with the language. The second write runs the hook again with
+`context.skipTranslations`, which returns at once; the entity's other hooks run for the other
+language as they would on the locale switch (the revalidation pings the other language's
+URLs, which did change). Only paths `bilingualPaths()` names are ever written: the JSON
+comes from the client, so `_status`, a slug, a secret or a row inside a block cannot be
+smuggled through it; and the row stores whatever a signed-in user sends, so the field's
+`validate` refuses more than 200 entries or 64 KB serialised, with the reason in the panel's
+language. A bilingual Save leaves two version rows, one per language write, so the history
+is measured in language writes and the cap doubles: `maxPerDoc` 50 on products, pages and
+posts (was 25), 20 on testimonials (was 10), `max` 50 on the home page (was 25).
+**Known limits, as on the switch.** A draft save skips validation, so
+a blanked required English text lands in the draft and a later Publish from Arabic does not
+re-validate English (Payload validates the request's locale only); the English site's gate
+(a document reaches it when its title-like field has an English value, ADR-043) is the net.
+Touching any English field on a Publish validates the whole English document, exactly as a
+Publish from the English locale does: an English side half filled fails with the fields
+named. **Tests.** `tests/translations-hook.test.ts` (the apply's table: changed, unchanged,
+stale, a required blank, a collection's refusal, an autosave, a draft, the re-entry guard,
+the locale key, a nested path and a smuggled one, a global, the request put back after a
+throw); `tests/admin-config.test.ts` (the component sits on exactly the bilingual paths of
+every config, never on rich text, arrays, blocks, uploads or relationships; the JSON and the
+hook go together; the hidden field needs no description); two e2e in `e2e/admin.spec.ts`
+(a page's title and the site settings' tagline in both languages in one Save, read back
+with `?locale=all`, the refusal of a blanked English title). Migration
+`20260918_033852_translations`: one nullable `jsonb` on the fourteen tables and the five
+version tables. The bilingual root carries no `data-admin-ui`: it hosts Payload's inputs,
+which the shell's element reset would strip; `data-admin-bilingual` is the e2e hook.
+
 ## ADR-058: The sidebar: one tree, one breakpoint (2026-09-18)
 
 **Context.** The admin audit of 2026-09-18 (section 1) found two open/close systems by
@@ -1765,3 +1850,78 @@ two corrections kept from the design memo and two settlements.
 
 **Not done here.** Palette hits ranked by match quality (the audit's 1.9) is the palette's
 own change; `g` then a letter to jump to a group, the audit's "later, not now".
+
+## ADR-059: The dashboard: what matters at a glance (2026-09-18)
+
+**Context.** The admin audit (`docs/audits/2026-09-18-admin.md`, §5) found the dashboard a
+server report and a save log: an owner could not answer "how is the site doing" from it (no
+visits over a range or trend, no cited rate, no drafts waiting, no published this week, no
+spend against limits, no next runs), the system-status card mixed what an owner acts on
+with what the environment is, the engine card listed the ledger's runs, and nothing had a
+range. The audit's section 5 proposed seven sections and named the reader behind every
+number; the CTO agreed with four edits.
+
+**Decision.** The dashboard (`modules/cms/admin/dashboard/*`, still Payload's
+`views.dashboard` inside its template) is seven sections, top to bottom: (1) the greeting
+by the Riyadh hour, the 7 / 30 / 90 day range at the trailing edge and the "needs a hand"
+line (failed runs this week, a connection at its limit, an enabled connection whose last
+Test failed, documents without English, drafts older than a week); (2) four tiles: visits
+with the change against the previous range, the cited rate, the visibility score with its
+trend, "went live" in the range (a post by its publish date, a page or product by the last
+save of the live document, which the hint says) with the drafts waiting; (3)
+where visits come from; (4) what the assistants say; (5) the content; (6) the engine and
+the spend; (7) the server. The quick-action tiles fold into section 5 as the home tile and
+two bordered buttons ("Write a post", "Add a product"); "Add a page" and "Add a question"
+are one click away in the sidebar and leave the dashboard. The four edits: the cited-rate
+tile says "on the category prompts" (the brand prompts are outside the rate, cost audit §2);
+section 4's next run is the next morning a prompt is due, computed by the run's own
+`duePrompts` against the last citation day per prompt and connection over the ledger's
+window (`schedule.ts`), or the plain sentence "07:00 Riyadh, when a prompt is due" when
+there is no prompt or no enabled connection; section 6's spend bar turns amber with "No
+monthly limit" when a connection has none, as the ledger card does, and red at the limit;
+"drafts waiting" is the one number the documents table cannot answer (a newer draft over a
+published version lives in the versions table), so it is two `countVersions` on
+`latest: true` per content collection, the dashboard's one non-trivial query, and every
+count links to the list filtered on `_status`. "Run now" stays off the dashboard: it costs
+money and lives on the Score page.
+
+**The range control** is a search param (`/admin?days=30`), rendered by the server as links
+with `aria-current`, no client state; anything but 7, 30 or 90 is the week. It drives the
+visits tile, the published tile and the visits section; the cited rate keeps the ledger's
+28-day window and the engine its month, as the audit sequenced. The previous range is the
+double range minus the current (`trafficSummary` twice).
+
+**The readers.** The existing ones are reused as the audit's table names them
+(`trafficSummary`, `reading` and `scoreTrend`, `ledgerReading`, `engineSummary`,
+`healthReport`, `recentActivity`); four are new (`readers.ts`): published in the range
+(posts by `publishedAt`, pages and products by the last published save), drafts waiting and
+stale, documents without their English title (`locale: 'all'`, no fallback, nothing while
+the site is Arabic only) and one row per AI connection with `connectionSpend`; plus the
+failed runs of the week and the next occurrence of each scheduled task, computed on the
+Riyadh clock from the cron each task exports beside itself (`visibility/schedule.ts`,
+`visibility/ledger/schedule.ts`, `ai-content/schedule.ts`: one constant read by the task and
+by the dashboard, so the two cannot drift). One server render, every read in one `Promise.all`, each guarded: a failing reader
+logs and its section shows the "not available" word; a reader the user may not run is
+skipped and its section is not rendered (the editor's dashboard is the greeting, the
+published tile, the content and the server). Nothing new is cached: the score reading keeps
+its minute per process and user; a render of an admin's dashboard is about fifty-five small
+Local API calls (sixty-five when the score's minute has lapsed), the largest shares the
+latest-saves walk, the health report's engine state and the score snapshot, all parallel.
+
+**The engine card** loses its run list and its average score (the runs page holds them; a
+failed run reaches the "needs a hand" line) and gains the caps: posts against the monthly
+cap, today's cost against the daily cap. `engineState` reports the two caps.
+
+**Both languages.** Every string in both trees; the Arabic counts (runs, documents, drafts,
+engines) decline through `arabicCount`; the greeting is «صباح الخير» in the morning and
+«مساء الخير» from noon (Arabic has no afternoon greeting); `formatSlot` says "today 07:00",
+"tomorrow 04:00" or the date, the hour on the Riyadh clock, Western digits. Bars grow from
+the start edge (`inline-size`); the server section is a native `details`, so it folds
+without JavaScript and opens itself when a row is red.
+
+**Tests.** `tests/dashboard.test.ts` covers the range with its default and bounds, the
+greeting, the "needs a hand" rules, the crons against the tasks, the next occurrences, the
+ledger's next morning, the four readers against a recorded fake Payload, the tiles and the
+actions by permission; `tests/admin-format.test.ts` covers `formatSlot`. The admin e2e walks
+the seven sections, the range as a link, the drafts link with its `_status` filter, the
+server folded unless red, the editor's view, and axe on the dashboard in both languages.

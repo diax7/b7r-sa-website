@@ -34,6 +34,9 @@ export interface EngineStateReport {
   connection: EngineConnectionSummary | null;
   publishHourRiyadh: number;
   postsPerDay: number;
+  /** The caps the dashboard shows the month's posts and today's cost against. */
+  maxPostsPerMonth: number;
+  dailyCostCapUsd: number;
 }
 
 export async function engineState(payload: Payload, now = new Date()): Promise<EngineStateReport> {
@@ -45,6 +48,8 @@ export async function engineState(payload: Payload, now = new Date()): Promise<E
   const base = {
     publishHourRiyadh: settings.publishHourRiyadh ?? 9,
     postsPerDay: settings.postsPerDay ?? 1,
+    maxPostsPerMonth: settings.maxPostsPerMonth ?? 31,
+    dailyCostCapUsd: settings.dailyCostCapUsd ?? 5,
   };
   const id = connectionIdOf(settings);
   const doc = id === null ? null : await findConnection(payload, id);

@@ -15,6 +15,7 @@ import {
   searchConsoleClient,
   type SearchConsoleSnapshot,
 } from '@/modules/visibility/services/search-console';
+import { PULL_CRON } from '@/modules/visibility/schedule';
 import { buildSnapshot } from '@/modules/visibility/snapshot';
 
 export const VISIBILITY_PULL = 'visibility-pull' as const;
@@ -212,8 +213,7 @@ export const visibilityPullTask: TaskConfig<{
 }> = {
   slug: VISIBILITY_PULL,
   label: 'Visibility: nightly pull',
-  // 04:00 Riyadh on a UTC clock (the production runtime; Riyadh has no DST).
-  schedule: [{ cron: '0 1 * * *', queue: AI_QUEUE }],
+  schedule: [{ cron: PULL_CRON, queue: AI_QUEUE }],
   inputSchema: [],
   outputSchema: [
     { name: 'pulled', type: 'text' },

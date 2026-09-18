@@ -1,16 +1,16 @@
 import { getTranslation } from '@payloadcms/translations';
 import type { I18nClient } from '@payloadcms/translations';
 import type { LucideIcon } from 'lucide-react';
-import { CirclePlus } from 'lucide-react';
 import type { Field, Payload, PayloadRequest, SanitizedPermissions, TypedUser } from 'payload';
 import { formatAdminURL } from 'payload/shared';
 import {
-  ACTION_ICONS,
+  type AdminGroupKey,
   COLLECTION_ICONS,
   entityHue,
   entityIcon,
   GLOBAL_ICONS,
   type Hue,
+  navPlacement,
 } from '@/modules/cms/admin/icons';
 import { flattenNav, navGroups } from '@/modules/cms/admin/nav/groups';
 import { adminStringsFor } from '@/modules/cms/admin/strings';
@@ -23,11 +23,10 @@ export interface QuickAction {
   text: string;
   icon: LucideIcon;
   hue: Hue;
-  external?: boolean;
 }
 
 /**
- * "Latest changes" lists what a person saves: a collection without the `lastSavedBy` stamp is
+ * "Latest saves" lists what a person saves: a collection without the `lastSavedBy` stamp is
  * written by a machine (the runs log, the traffic count, whose upsert touches `updatedAt` every
  * ten seconds) and stays out. Views are not entities and never reach here.
  */
@@ -35,67 +34,51 @@ export function savesByPeople(collection: { fields: Field[] }): boolean {
   return collection.fields.some((f) => 'name' in f && f.name === SAVED_BY);
 }
 
-/** The actions this user may take, in the order an editor needs them, in the UI language. */
-export function quickActions(args: {
+/**
+ * Sanitized permissions hold `true` for an allowed operation (or an object with `permission`
+ * before sanitising); both read as allowed.
+ */
+export function can(
+  permissions: SanitizedPermissions | undefined,
+  kind: 'collections' | 'globals',
+  slug: string,
+  op: 'create' | 'read' | 'update',
+): boolean {
+  const value = (permissions?.[kind] as Record<string, Record<string, unknown>> | undefined)?.[
+    slug
+  ]?.[op];
+  return (
+    value === true ||
+    (typeof value === 'object' && value !== null && 'permission' in value
+      ? Boolean((value as { permission?: boolean }).permission)
+      : false)
+  );
+}
+
+/**
+ * The content section's actions (ADR-059): the home page as a tile when the user may edit
+ * it, and the two buttons an editor presses most, by permission, in the UI language.
+ */
+export function contentActions(args: {
   permissions: SanitizedPermissions | undefined;
   adminRoute: string;
   language: string;
-}): QuickAction[] {
+}): { home: QuickAction | null; buttons: QuickAction[] } {
   const { permissions, adminRoute, language } = args;
   const s = adminStringsFor(language).dashboard;
-  // Sanitized permissions hold `true` for an allowed operation (or an object with `permission`
-  // before sanitising); both read as allowed here.
-  const can = (kind: 'collections' | 'globals', slug: string, op: 'create' | 'update') => {
-    const value = (permissions?.[kind] as Record<string, Record<string, unknown>> | undefined)?.[
-      slug
-    ]?.[op];
-    return (
-      value === true ||
-      (typeof value === 'object' && value !== null && 'permission' in value
-        ? Boolean((value as { permission?: boolean }).permission)
-        : false)
-    );
-  };
   const url = (path: `/${string}`) => formatAdminURL({ adminRoute, path });
-  const actions: QuickAction[] = [];
-  if (can('globals', 'home', 'update')) {
-    actions.push({
-      key: 'home',
-      href: url('/globals/home'),
-      icon: GLOBAL_ICONS.home,
-      hue: entityHue('globals', 'home'),
-      ...s.actions.home,
-    });
-  }
-  if (can('collections', 'pages', 'create')) {
-    actions.push({
-      key: 'add-page',
-      href: url('/collections/pages/create'),
-      icon: COLLECTION_ICONS.pages,
-      hue: entityHue('collections', 'pages'),
-      ...s.actions.addPage,
-    });
-  }
-  if (can('collections', 'products', 'create')) {
-    actions.push({
-      key: 'add-product',
-      href: url('/collections/products/create'),
-      icon: COLLECTION_ICONS.products,
-      hue: entityHue('collections', 'products'),
-      ...s.actions.addProduct,
-    });
-  }
-  if (can('collections', 'faqs', 'create')) {
-    actions.push({
-      key: 'add-faq',
-      href: url('/collections/faqs/create'),
-      icon: CirclePlus,
-      hue: entityHue('collections', 'faqs'),
-      ...s.actions.addFaq,
-    });
-  }
-  if (can('collections', 'posts', 'create')) {
-    actions.push({
+  const home: QuickAction | null = can(permissions, 'globals', 'home', 'update')
+    ? {
+        key: 'home',
+        href: url('/globals/home'),
+        icon: GLOBAL_ICONS.home,
+        hue: entityHue('globals', 'home'),
+        ...s.actions.home,
+      }
+    : null;
+  const buttons: QuickAction[] = [];
+  if (can(permissions, 'collections', 'posts', 'create')) {
+    buttons.push({
       key: 'add-post',
       href: url('/collections/posts/create'),
       icon: COLLECTION_ICONS.posts,
@@ -103,21 +86,23 @@ export function quickActions(args: {
       ...s.actions.addPost,
     });
   }
-  actions.push({
-    key: 'site',
-    href: '/',
-    icon: ACTION_ICONS.viewSite,
-    hue: 'green',
-    external: true,
-    ...s.actions.site,
-  });
-  return actions;
+  if (can(permissions, 'collections', 'products', 'create')) {
+    buttons.push({
+      key: 'add-product',
+      href: url('/collections/products/create'),
+      icon: COLLECTION_ICONS.products,
+      hue: entityHue('collections', 'products'),
+      ...s.actions.addProduct,
+    });
+  }
+  return { home, buttons };
 }
 
 export interface RecentItem {
   key: string;
   href: string;
   title: string;
+  /** The entity's name under a document's title; empty for a global, whose title is its name. */
   entity: string;
   icon: LucideIcon | undefined;
   hue: Hue;
@@ -126,8 +111,10 @@ export interface RecentItem {
   status: 'draft' | 'published' | null;
 }
 
-const RECENT_LIMIT = 8;
 const PER_ENTITY = 4;
+
+/** The groups whose saves are content: the Visibility and Admin groups hold settings and keys. */
+export const CONTENT_GROUPS: readonly AdminGroupKey[] = ['site', 'catalogue', 'blog'];
 
 type Doc = Record<string, unknown> & { id?: number | string; updatedAt?: string };
 
@@ -155,14 +142,20 @@ export function isAbandonedDraft(doc: Doc, title: unknown): boolean {
   return doc['_status'] === 'draft' && !hasTitle(title) && savedByName(doc) === null;
 }
 
+/** A post the engine wrote and nobody touched: a machine row, not a save by a person. */
+export function isMachineRow(doc: Doc): boolean {
+  return doc['origin'] === 'ai' && savedByName(doc) === null;
+}
+
 function statusOf(doc: Doc): RecentItem['status'] {
   const status = doc['_status'];
   return status === 'draft' || status === 'published' ? status : null;
 }
 
 /**
- * The last documents anyone saved, across every entity this user may open, read through
- * the Local API with the user's own access (`overrideAccess: false`), newest first.
+ * The last documents anyone saved across the content groups this user may open, read through
+ * the Local API with the user's own access (`overrideAccess: false`), newest first, every
+ * global of those groups included (the home page tile reads its own row from here).
  */
 export async function recentActivity(args: {
   payload: Payload;
@@ -174,10 +167,10 @@ export async function recentActivity(args: {
   const { payload, req, user, permissions, i18n } = args;
   if (!user) return [];
   const { untitled } = adminStringsFor(i18n.language).common;
-  // Views are pages of ours, not documents: nothing to list from them.
-  const entities = flattenNav(await navGroups({ payload, permissions, user, i18n })).filter(
-    (e) => e.type !== 'views',
-  );
+  const entities = flattenNav(await navGroups({ payload, permissions, user, i18n })).filter((e) => {
+    const group = navPlacement(e.type, e.slug)?.group;
+    return e.type !== 'views' && group !== undefined && CONTENT_GROUPS.includes(group);
+  });
   const items: RecentItem[] = [];
   await Promise.all(
     entities.map(async (entity) => {
@@ -195,7 +188,7 @@ export async function recentActivity(args: {
             key: `g-${entity.slug}`,
             href: entity.href,
             title: entity.label,
-            entity: entity.label,
+            entity: '',
             icon: entityIcon('globals', entity.slug),
             hue: entityHue('globals', entity.slug),
             savedBy: savedByName(doc),
@@ -217,7 +210,9 @@ export async function recentActivity(args: {
           overrideAccess: false,
         });
         for (const raw of docs as unknown as Doc[]) {
-          if (!raw.updatedAt || isAbandonedDraft(raw, raw[titleField])) continue;
+          if (!raw.updatedAt || isAbandonedDraft(raw, raw[titleField]) || isMachineRow(raw)) {
+            continue;
+          }
           items.push({
             key: `c-${entity.slug}-${String(raw.id)}`,
             href: `${entity.href}/${String(raw.id)}`,
@@ -232,9 +227,9 @@ export async function recentActivity(args: {
         }
       } catch (error) {
         // A read the access rules refuse is not an error on the dashboard; log and skip.
-        payload.logger.info({ msg: 'dashboard: recent activity skipped an entity', error });
+        payload.logger.info({ msg: 'dashboard: latest saves skipped an entity', error });
       }
     }),
   );
-  return items.toSorted((a, b) => b.updatedAt.localeCompare(a.updatedAt)).slice(0, RECENT_LIMIT);
+  return items.toSorted((a, b) => b.updatedAt.localeCompare(a.updatedAt));
 }

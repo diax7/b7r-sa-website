@@ -6,6 +6,7 @@ import { plainText } from '@/lib/lexical';
 import { envAllows } from '@/modules/ai-content/caps';
 import { statedNumbers } from '@/modules/ai-content/checks';
 import type { FactNumber } from '@/modules/ai-content/facts';
+import { FRESHNESS_CRON } from '@/modules/ai-content/schedule';
 import { payloadStore } from '@/modules/ai-content/store/payload-store';
 import { AI_QUEUE, queueGeneratePost } from '@/modules/ai-content/workflow';
 import type { Post } from '@/payload-types';
@@ -136,8 +137,7 @@ export const freshnessTask: TaskConfig<{
 }> = {
   slug: FRESHNESS_TASK,
   label: 'Content engine: weekly freshness',
-  // Monday 06:00 Riyadh on a UTC clock (the production runtime; Riyadh has no DST).
-  schedule: [{ cron: '0 3 * * 1', queue: AI_QUEUE }],
+  schedule: [{ cron: FRESHNESS_CRON, queue: AI_QUEUE }],
   inputSchema: [],
   outputSchema: [
     { name: 'checked', type: 'number' },

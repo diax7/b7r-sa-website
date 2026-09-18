@@ -88,10 +88,16 @@ export const adminStrings = {
   time: {
     /** Under a minute; the rest comes from `Intl.RelativeTimeFormat` (`admin/format.ts`). */
     justNow: 'just now',
+    /** A moment ahead (`formatSlot`): the day word, then the hour, then the clock it is read on. */
+    today: 'today',
+    tomorrow: 'tomorrow',
+    dayAt: '{day} {time}',
+    riyadh: '{when} Riyadh',
   },
   locale: {
     /**
-     * One line before the document controls of anything with per-language fields (ADR-044),
+     * One line before the document controls of anything with per-language fields (ADR-044,
+     * the legend by ADR-057: what sits side by side and what stays on the locale switch),
      * keyed by the CONTENT locale being edited, written in the UI language.
      */
     editing: { ar: 'Editing the Arabic content.', en: 'Editing the English content.' } as Record<
@@ -99,9 +105,17 @@ export const adminStrings = {
       string
     >,
     legend: {
-      ar: 'Fields marked AR are per language; the rest is shared with English.',
-      en: 'Fields marked EN are per language; the rest is shared with Arabic.',
+      ar: 'A field tagged AR has its English beside it: type the English next to the Arabic, one Save writes both. Rich text, lists and blocks stay per language: switch the locale at the top to edit their English. Fields without a tag are shared.',
+      en: 'A field tagged EN has its Arabic beside it: type the Arabic next to the English, one Save writes both. Rich text, lists and blocks stay per language: switch the locale at the top to edit their Arabic. Fields without a tag are shared.',
     } as Record<string, string>,
+  },
+  bilingual: {
+    /** The content locales by code, as nouns, for the two lines below (ADR-057). */
+    languages: { ar: 'Arabic', en: 'English' } as Record<string, string>,
+    /** The other language's input while its stored text is on its way. */
+    loading: 'Loading {language}…',
+    /** The other language's input when the read failed: what happened, then the way out. */
+    failed: 'The {language} text could not be loaded. Reload the page to edit it.',
   },
   engine: {
     generateNow: 'Generate now',
@@ -122,7 +136,7 @@ export const adminStrings = {
       'Built live from the site settings, the products and the integrations, in Arabic and in English; every number a draft states is checked against this list.',
     factsNumbers: '{n} numbers on the sheet.',
     card: {
-      title: 'Content engine',
+      title: 'Engine and spend',
       state: {
         off: 'Off',
         on: 'On',
@@ -138,20 +152,27 @@ export const adminStrings = {
       } as Record<string, string>,
       connection: 'Connection',
       connectionOff: 'off',
-      noLimit: 'this month, no limit',
       pickConnection: 'None picked: add one under Connections, then pick it in the engine settings',
       postsThisMonth: 'Posts this month',
-      averageScore: 'Average score',
-      failures: 'Failed runs',
+      costToday: 'Cost today',
       cost: 'Cost this month (estimate)',
+      ofCap: '{n} of {cap}',
       nextSlot: 'Next slot',
       nextSlotOff: 'No run while the engine is off',
       nextSlotNoConnection: 'No run without a working connection',
       nextSlotToday: 'Today at {hour}:00 Riyadh',
       nextSlotDone: 'Done for today; tomorrow at {hour}:00 Riyadh',
       nextSlotSoon: 'Within the hour',
-      recent: 'Latest runs',
-      empty: 'No run yet. Add topics and switch the engine on, or press "Generate now" on a topic.',
+      connections: 'Connections',
+      spend: 'Spend this month',
+      runsThisMonth: 'Runs',
+      lastTest: 'Last test',
+      testPassed: 'passed {when}',
+      testFailed: 'failed {when}',
+      neverTested: 'never tested',
+      overLimit: 'over the limit',
+      noConnections: 'No AI connection yet. Add one under Connections.',
+      allConnections: 'All connections',
       settings: 'Settings',
       topics: 'Topics',
       runs: 'Runs',
@@ -188,11 +209,6 @@ export const adminStrings = {
       corroboration: 'Corroboration',
       measurement: 'Measurement',
       signals: 'Outside signals',
-    },
-    card: {
-      title: 'Visibility score',
-      link: 'The full score',
-      hint: 'Search engines and AI assistants: what they can read, and what they say.',
     },
     page: {
       title: 'Visibility score',
@@ -272,10 +288,11 @@ export const adminStrings = {
       direct: 'Direct',
     } as Record<string, string>,
     card: {
-      title: 'Traffic, last 7 days',
+      title: 'Where visits come from',
       landings: 'Landings',
       topChannel: 'Top channel',
       crawls: 'Crawler reads',
+      pages: 'Top entry pages',
       empty: 'No landings yet: the count starts with the first visitor.',
       link: 'All traffic',
     },
@@ -332,19 +349,78 @@ export const adminStrings = {
     },
   },
   dashboard: {
-    greeting: 'Welcome, {name}',
-    intro: 'Everything on the site starts here.',
-    quick: 'Start here',
+    /** By the Riyadh hour (ADR-059): morning from 5, afternoon from 12, evening from 17. */
+    greeting: {
+      morning: 'Good morning, {name}',
+      afternoon: 'Good afternoon, {name}',
+      evening: 'Good evening, {name}',
+    },
+    range: 'Range',
+    /** One line under the greeting: what needs a person today, each item a link to its place. */
+    hand: {
+      title: 'Needs a hand today',
+      none: 'Nothing needs a hand today.',
+      failedRuns: (n: number) => `${n} failed run${n === 1 ? '' : 's'} this week`,
+      overLimit: '{label} is over its monthly limit',
+      failedTest: 'The {label} connection failed its last test',
+      missingEnglish: (n: number) => `${n} document${n === 1 ? '' : 's'} without English`,
+      staleDrafts: (n: number, collection: string) =>
+        `${n} draft${n === 1 ? '' : 's'} in ${collection} older than a week`,
+    },
+    /** The four numbers at a glance, each tile a link to its place. */
+    tiles: {
+      visits: 'Visits',
+      visitsUp: (n: number, days: number) => `${n}% more than the previous ${days} days`,
+      visitsDown: (n: number, days: number) => `${n}% fewer than the previous ${days} days`,
+      visitsSame: (days: number) => `the same as the previous ${days} days`,
+      visitsFirst: (days: number) => `none in the previous ${days} days`,
+      cited: 'Cited rate',
+      citedDetail: (engines: number) =>
+        `on the category prompts, 28 days, ${engines} engine${engines === 1 ? '' : 's'}`,
+      citedNone: 'No ledger run in the last 28 days',
+      score: 'Visibility score',
+      published: 'Went live',
+      publishedDetail: (days: number) => `posts, pages and products in ${days} days`,
+      drafts: (n: number) =>
+        n === 0 ? 'no drafts waiting' : `${n} draft${n === 1 ? '' : 's'} waiting`,
+      unavailable: 'Not available',
+    },
+    assistants: {
+      title: 'What the assistants say',
+      lastRun: 'Last run',
+      nextRun: 'Next run',
+      nextRunDue: '07:00 Riyadh, when a prompt is due',
+      link: 'The full ledger',
+      notYet: 'No run yet',
+    },
+    content: {
+      title: 'Content',
+      kind: 'Kind',
+      homePublished: 'published {when}',
+      homeDraft: 'draft saved {when}',
+      published: 'Published',
+      drafts: 'Drafts',
+      missingEnglish: 'Missing English',
+      saves: 'Latest saves',
+      empty: 'No saves yet. Start with the home page.',
+      by: 'by {name}',
+      draft: 'Draft',
+      publishedBadge: 'Published',
+    },
     actions: {
       home: { title: 'Home page', text: 'Edit the sections and publish' },
-      addPage: { title: 'Add a page', text: 'A new page with its own URL' },
       addProduct: { title: 'Add a product', text: 'Prices, photos and sizes' },
-      addFaq: { title: 'Add a question', text: 'A new entry in the FAQ' },
       addPost: { title: 'Write a post', text: 'A new article on the blog' },
-      site: { title: 'View website', text: 'As a visitor sees it' },
     },
     health: {
-      title: 'System status',
+      title: 'Server',
+      queue: 'Jobs queue',
+      schedules: {
+        pull: 'Nightly pull',
+        ledger: 'Citation ledger',
+        freshness: 'Weekly freshness',
+        digest: 'Weekly digest',
+      },
       engine: {
         on: 'Content engine on',
         off: 'Content engine off',
@@ -380,13 +456,6 @@ export const adminStrings = {
           off: 'Newsletter off',
         },
       },
-    },
-    recent: {
-      title: 'Latest changes',
-      empty: 'No changes yet. Start with the home page.',
-      by: 'by {name}',
-      draft: 'Draft',
-      published: 'Published',
     },
   },
 } as const;
@@ -427,6 +496,20 @@ function arabicCount(
 /** Arabic counts of days («يوم», «يومين», «7 أيام», «30 يوماً»). */
 function arabicDays(n: number): string {
   return arabicCount(n, { one: 'يوم', two: 'يومين', few: 'أيام', many: 'يوماً' });
+}
+
+/**
+ * A counted noun under the same four plurals: the singular carries «واحد» or «واحدة», the dual
+ * stands alone, three to ten take the plural, eleven and up the accusative singular.
+ */
+function arabicCount(
+  n: number,
+  forms: { one: string; two: string; few: string; many: string },
+): string {
+  if (n === 1) return forms.one;
+  if (n === 2) return forms.two;
+  if (n >= 3 && n <= 10) return `${n} ${forms.few}`;
+  return `${n} ${forms.many}`;
 }
 
 /**
@@ -517,13 +600,22 @@ export const adminStringsAr: AdminStrings = {
   },
   time: {
     justNow: 'الآن',
+    today: 'اليوم',
+    tomorrow: 'غداً',
+    dayAt: '{day} الساعة {time}',
+    riyadh: '{when} بتوقيت الرياض',
   },
   locale: {
     editing: { ar: 'تحرير المحتوى العربي.', en: 'تحرير المحتوى الإنجليزي.' },
     legend: {
-      ar: 'الحقول المعلّمة AR تختلف بحسب اللغة؛ والبقية مشتركة مع الإنجليزية.',
-      en: 'الحقول المعلّمة EN تختلف بحسب اللغة؛ والبقية مشتركة مع العربية.',
+      ar: 'الحقل المعلَّم AR إلى جانبه نصه الإنجليزي: اكتب الإنجليزية بجانب العربية، وحفظ واحد يكتب اللغتين. النص المنسّق والقوائم والأقسام لكل لغة على حدة: بدّل اللغة من أعلى الصفحة لتحرير الإنجليزية فيها. الحقول بلا علامة مشتركة بين اللغتين.',
+      en: 'الحقل المعلَّم EN إلى جانبه نصه العربي: اكتب العربية بجانب الإنجليزية، وحفظ واحد يكتب اللغتين. النص المنسّق والقوائم والأقسام لكل لغة على حدة: بدّل اللغة من أعلى الصفحة لتحرير العربية فيها. الحقول بلا علامة مشتركة بين اللغتين.',
     },
+  },
+  bilingual: {
+    languages: { ar: 'العربية', en: 'الإنجليزية' },
+    loading: 'تحميل {language}…',
+    failed: 'تعذّر تحميل نص اللغة {language}. أعد تحميل الصفحة لتحريره.',
   },
   engine: {
     generateNow: 'ولّد الآن',
@@ -544,7 +636,7 @@ export const adminStringsAr: AdminStrings = {
       'تُبنى مباشرة من إعدادات الموقع والمنتجات والتكاملات، بالعربية والإنجليزية؛ وكل رقم تذكره المسودة يُراجع على هذه القائمة.',
     factsNumbers: 'الأرقام في الورقة: {n}.',
     card: {
-      title: 'محرّك المحتوى',
+      title: 'المحرّك والإنفاق',
       state: {
         off: 'متوقف',
         on: 'يعمل',
@@ -560,20 +652,27 @@ export const adminStringsAr: AdminStrings = {
       },
       connection: 'الاتصال',
       connectionOff: 'متوقف',
-      noLimit: 'هذا الشهر، بلا حد',
       pickConnection: 'لم يُختر اتصال: أضف واحداً في الاتصالات، ثم اختره في إعدادات المحرّك',
       postsThisMonth: 'مقالات هذا الشهر',
-      averageScore: 'متوسط الدرجة',
-      failures: 'جولات فاشلة',
+      costToday: 'تكلفة اليوم',
       cost: 'تكلفة هذا الشهر (تقديرية)',
+      ofCap: '{n} من {cap}',
       nextSlot: 'الموعد التالي',
       nextSlotOff: 'لا جولة والمحرّك متوقف',
       nextSlotNoConnection: 'لا جولة بلا اتصال يعمل',
       nextSlotToday: 'اليوم الساعة {hour}:00 بتوقيت الرياض',
       nextSlotDone: 'اكتمل اليوم؛ غداً الساعة {hour}:00 بتوقيت الرياض',
       nextSlotSoon: 'خلال ساعة',
-      recent: 'آخر الجولات',
-      empty: 'لا جولات بعد. أضف مواضيع وشغّل المحرّك، أو اضغط «ولّد الآن» في موضوع.',
+      connections: 'الاتصالات',
+      spend: 'إنفاق هذا الشهر',
+      runsThisMonth: 'الجولات',
+      lastTest: 'آخر اختبار',
+      testPassed: 'نجح {when}',
+      testFailed: 'فشل {when}',
+      neverTested: 'لم يُختبر بعد',
+      overLimit: 'تجاوز الحد',
+      noConnections: 'لا اتصال ذكاء اصطناعي بعد. أضف واحداً في الاتصالات.',
+      allConnections: 'كل الاتصالات',
       settings: 'الإعدادات',
       topics: 'المواضيع',
       runs: 'السجل',
@@ -610,11 +709,6 @@ export const adminStringsAr: AdminStrings = {
       corroboration: 'الإسناد',
       measurement: 'القياس',
       signals: 'الإشارات الخارجية',
-    },
-    card: {
-      title: 'درجة الظهور',
-      link: 'الدرجة كاملة',
-      hint: 'محركات البحث ومساعدو الذكاء الاصطناعي: ما يقرؤونه، وما يقولونه.',
     },
     page: {
       title: 'درجة الظهور',
@@ -692,10 +786,11 @@ export const adminStringsAr: AdminStrings = {
       direct: 'مباشر',
     },
     card: {
-      title: 'الزيارات، آخر 7 أيام',
+      title: 'من أين تأتي الزيارات',
       landings: 'الزيارات',
       topChannel: 'القناة الأولى',
       crawls: 'قراءات الزواحف',
+      pages: 'أكثر صفحات الدخول',
       empty: 'لا زيارات بعد: يبدأ العدّ مع أول زائر.',
       link: 'كل الزيارات',
     },
@@ -752,19 +847,79 @@ export const adminStringsAr: AdminStrings = {
     },
   },
   dashboard: {
-    greeting: 'مرحباً، {name}',
-    intro: 'كل ما في الموقع يبدأ من هنا.',
-    quick: 'ابدأ من هنا',
+    greeting: {
+      morning: 'صباح الخير، {name}',
+      afternoon: 'مساء الخير، {name}',
+      evening: 'مساء الخير، {name}',
+    },
+    range: 'المدة',
+    hand: {
+      title: 'يحتاج انتباهك اليوم',
+      none: 'لا شيء يحتاج انتباهك اليوم.',
+      failedRuns: (n) =>
+        `${arabicCount(n, { one: 'جولة فاشلة واحدة', two: 'جولتان فاشلتان', few: 'جولات فاشلة', many: 'جولة فاشلة' })} هذا الأسبوع`,
+      overLimit: '{label} تجاوز حده الشهري',
+      failedTest: 'فشل اتصال {label} في آخر اختبار',
+      missingEnglish: (n) =>
+        `${arabicCount(n, { one: 'مستند واحد', two: 'مستندان', few: 'مستندات', many: 'مستنداً' })} بلا نسخة إنجليزية`,
+      staleDrafts: (n, collection) =>
+        `${arabicCount(n, { one: 'مسودة واحدة', two: 'مسودتان', few: 'مسودات', many: 'مسودة' })} في ${collection} أقدم من أسبوع`,
+    },
+    tiles: {
+      visits: 'الزيارات',
+      visitsUp: (n, days) => `أكثر بنسبة ${n}% من المدة السابقة (${arabicDays(days)})`,
+      visitsDown: (n, days) => `أقل بنسبة ${n}% من المدة السابقة (${arabicDays(days)})`,
+      visitsSame: (days) => `مثل المدة السابقة (${arabicDays(days)})`,
+      visitsFirst: (days) => `لا زيارات في المدة السابقة (${arabicDays(days)})`,
+      cited: 'نسبة الاستشهاد',
+      citedDetail: (engines) =>
+        `على أسئلة الفئة، 28 يوماً، ${arabicCount(engines, { one: 'محرّك واحد', two: 'محرّكان', few: 'محرّكات', many: 'محرّكاً' })}`,
+      citedNone: 'لا جولة للسجل في آخر 28 يوماً',
+      score: 'درجة الظهور',
+      published: 'نُشر',
+      publishedDetail: (days) => `مقالات وصفحات ومنتجات خلال ${arabicDays(days)}`,
+      drafts: (n) =>
+        n === 0
+          ? 'لا مسودات بانتظارك'
+          : `${arabicCount(n, { one: 'مسودة واحدة', two: 'مسودتان', few: 'مسودات', many: 'مسودة' })} بانتظارك`,
+      unavailable: 'غير متاح',
+    },
+    assistants: {
+      title: 'ماذا يقول المساعدون',
+      lastRun: 'آخر جولة',
+      nextRun: 'الجولة التالية',
+      nextRunDue: 'الساعة 07:00 بتوقيت الرياض حين يحين موعد أحد الأسئلة',
+      link: 'السجل كاملاً',
+      notYet: 'لا جولة بعد',
+    },
+    content: {
+      title: 'المحتوى',
+      kind: 'النوع',
+      homePublished: 'نُشرت {when}',
+      homeDraft: 'مسودة حُفظت {when}',
+      published: 'منشور',
+      drafts: 'مسودات',
+      missingEnglish: 'بلا إنجليزية',
+      saves: 'آخر عمليات الحفظ',
+      empty: 'لا حفظ بعد. ابدأ بالصفحة الرئيسية.',
+      by: 'بواسطة {name}',
+      draft: 'مسودة',
+      publishedBadge: 'منشور',
+    },
     actions: {
       home: { title: 'الصفحة الرئيسية', text: 'عدّل الأقسام وانشر' },
-      addPage: { title: 'أضف صفحة', text: 'صفحة جديدة برابطها الخاص' },
       addProduct: { title: 'أضف منتجاً', text: 'الأسعار والصور والمقاسات' },
-      addFaq: { title: 'أضف سؤالاً', text: 'سؤال جديد في الأسئلة الشائعة' },
       addPost: { title: 'اكتب مقالاً', text: 'مقال جديد في المدونة' },
-      site: { title: 'عرض الموقع', text: 'كما يراه الزائر' },
     },
     health: {
-      title: 'حالة النظام',
+      title: 'الخادم',
+      queue: 'طابور المهام',
+      schedules: {
+        pull: 'السحب الليلي',
+        ledger: 'سجل الاستشهادات',
+        freshness: 'التحديث الأسبوعي',
+        digest: 'الملخص الأسبوعي',
+      },
       engine: {
         on: 'محرّك المحتوى يعمل',
         off: 'محرّك المحتوى متوقف',
@@ -800,13 +955,6 @@ export const adminStringsAr: AdminStrings = {
           off: 'النشرة البريدية متوقفة',
         },
       },
-    },
-    recent: {
-      title: 'آخر التغييرات',
-      empty: 'لا تغييرات بعد. ابدأ بالصفحة الرئيسية.',
-      by: 'بواسطة {name}',
-      draft: 'مسودة',
-      published: 'منشور',
     },
   },
 };
