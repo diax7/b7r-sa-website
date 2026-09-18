@@ -304,7 +304,7 @@ export interface Media {
 export interface Product {
   id: number;
   /**
-   * The product's colours: the swatches on the card, the colour choice on the page and in the designer. The first is the default.
+   * The product's colours: the swatches on the card, the colour choice on the page and in the designer. The first is the default. Duplicating a row copies the open language only; the other one starts empty.
    */
   colors: {
     /**
@@ -354,7 +354,7 @@ export interface Product {
    */
   suggestedPrice: number;
   /**
-   * The sizes on offer: the size table on the product's page, in this order.
+   * The sizes on offer: the size table on the product's page, in this order. Duplicating a row copies the open language only; the other one starts empty.
    */
   sizes: {
     /**
@@ -468,7 +468,7 @@ export interface Page {
    */
   lead?: string | null;
   /**
-   * The page's sections, top to bottom; drag to reorder. Each type has its own fields.
+   * The page's sections, top to bottom; drag to reorder. Each type has its own fields. Duplicating a row copies the open language only; the other one starts empty.
    */
   blocks: (
     | {
@@ -494,6 +494,24 @@ export interface Page {
           };
           [k: string]: unknown;
         };
+        /**
+         * The English of this text, as the English site shows it; one Save writes both languages.
+         */
+        contentTwin?: {
+          root: {
+            type: string;
+            children: {
+              type: any;
+              version: number;
+              [k: string]: unknown;
+            }[];
+            direction: ('ltr' | 'rtl') | null;
+            format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+            indent: number;
+            version: number;
+          };
+          [k: string]: unknown;
+        } | null;
         id?: string | null;
         blockName?: string | null;
         blockType: 'richText';
@@ -529,7 +547,7 @@ export interface Page {
          */
         title?: string | null;
         /**
-         * The cards in grid order: an icon, a title, a text. Three per row on a desktop.
+         * The cards in grid order: an icon, a title, a text. Three per row on a desktop. Duplicating a row copies the open language only; the other one starts empty.
          */
         items: {
           /**
@@ -556,7 +574,7 @@ export interface Page {
       }
     | {
         /**
-         * The numbered steps on the how-it-works page, in order: a 3D icon, a title, a text.
+         * The numbered steps on the how-it-works page, in order: a 3D icon, a title, a text. Duplicating a row copies the open language only; the other one starts empty.
          */
         items: {
           /**
@@ -746,7 +764,7 @@ export interface Page {
          */
         asOf: string;
         /**
-         * The table’s rows in order: the criterion, then ours and theirs. Three at least; every claim about the other side is one a reader can check on its pages.
+         * The table’s rows in order: the criterion, then ours and theirs. Three at least; every claim about the other side is one a reader can check on its pages. Duplicating a row copies the open language only; the other one starts empty.
          */
         rows: {
           /**
@@ -764,7 +782,7 @@ export interface Page {
           id?: string | null;
         }[];
         /**
-         * Who B7R suits best: one item per case, in the affirmative.
+         * Who B7R suits best: one item per case, in the affirmative. Duplicating a row copies the open language only; the other one starts empty.
          */
         bestFor: {
           /**
@@ -774,7 +792,7 @@ export interface Page {
           id?: string | null;
         }[];
         /**
-         * Who B7R does not suit: what makes the page honest, and the assistants cite the honest.
+         * Who B7R does not suit: what makes the page honest, and the assistants cite the honest. Duplicating a row copies the open language only; the other one starts empty.
          */
         notBestFor: {
           /**
@@ -1010,6 +1028,24 @@ export interface Post {
     [k: string]: unknown;
   };
   /**
+   * The English of this text, as the English site shows it; one Save writes both languages.
+   */
+  bodyTwin?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
    * One or two sentences on the post card and in search results.
    */
   excerpt: string;
@@ -1026,7 +1062,7 @@ export interface Post {
    */
   cover: number | Media;
   /**
-   * The "key takeaways" box above the body: three short sentences for the reader in a hurry and for answer engines.
+   * The "key takeaways" box above the body: three short sentences for the reader in a hurry and for answer engines. Duplicating a row copies the open language only; the other one starts empty.
    */
   takeaways: {
     /**
@@ -2211,6 +2247,7 @@ export interface PagesSelect<T extends boolean = true> {
           | {
               title?: T;
               content?: T;
+              contentTwin?: T;
               id?: T;
               blockName?: T;
             };
@@ -2444,6 +2481,7 @@ export interface PostsSelect<T extends boolean = true> {
   title?: T;
   slug?: T;
   body?: T;
+  bodyTwin?: T;
   excerpt?: T;
   hub?: T;
   tags?: T;
@@ -2807,7 +2845,7 @@ export interface Home {
   id: number;
   hero: {
     /**
-     * The four slides at the top of the home page, rotating; the first is what a visitor sees first. Each has a headline, a subline and two photos per language.
+     * The four slides at the top of the home page, rotating; the first is what a visitor sees first. Each has a headline, a subline and two photos per language. Duplicating a row copies the open language only; the other one starts empty.
      */
     slides: {
       /**
@@ -2823,9 +2861,17 @@ export interface Home {
        */
       imageDesktop: number | Media;
       /**
+       * The photo the English site shows here, from the library; one Save writes both languages.
+       */
+      imageDesktopTwin?: (number | null) | Media;
+      /**
        * Per language (the English site has no fallback). English: the mirrored composition, calm area under the copy.
        */
       imageMobile: number | Media;
+      /**
+       * The photo the English site shows here, from the library; one Save writes both languages.
+       */
+      imageMobileTwin?: (number | null) | Media;
       id?: string | null;
     }[];
     /**
@@ -2854,7 +2900,7 @@ export interface Home {
      */
     microcopy: string;
     /**
-     * Zero to 6; none hides the row. The rows are shared by both languages, the text is per language: a row without an English text does not show on the English site.
+     * Zero to 6; none hides the row. The rows are shared by both languages, the text is per language: a row without an English text does not show on the English site. Duplicating a row copies the open language only; the other one starts empty.
      */
     chips?:
       | {
@@ -2928,7 +2974,7 @@ export interface Home {
      */
     link: string;
     /**
-     * The three steps in order: a 3D icon, a title, a text.
+     * The three steps in order: a 3D icon, a title, a text. Duplicating a row copies the open language only; the other one starts empty.
      */
     items: {
       /**
@@ -2974,7 +3020,7 @@ export interface Home {
      */
     title: string;
     /**
-     * The three cards in order: an icon, a title, a text. Also the facts band of the About page.
+     * The three cards in order: an icon, a title, a text. Also the facts band of the About page. Duplicating a row copies the open language only; the other one starts empty.
      */
     items: {
       /**
@@ -3097,7 +3143,7 @@ export interface SiteSetting {
    */
   contact: {
     /**
-     * The number as a visitor sees it in the footer and on the contact page: 0501699572.
+     * The number as a visitor of the Arabic site sees it in the footer and on the contact page: 0501699572; the English site shows the international number.
      */
     phone: string;
     /**
@@ -3132,7 +3178,7 @@ export interface SiteSetting {
   };
   menu: {
     /**
-     * The header links in order, the phone menu, and the "Links" column of the footer.
+     * The header links in order, the phone menu, and the "Links" column of the footer. Duplicating a row copies the open language only; the other one starts empty.
      */
     primary: {
       /**
@@ -3150,7 +3196,7 @@ export interface SiteSetting {
       id?: string | null;
     }[];
     /**
-     * The "Policies" column of the footer: terms, shipping, privacy, FAQ.
+     * The "Policies" column of the footer: terms, shipping, privacy, FAQ. Duplicating a row copies the open language only; the other one starts empty.
      */
     policies: {
       /**
@@ -3257,7 +3303,7 @@ export interface SeoDefault {
    */
   titleTemplate: string;
   /**
-   * One row per fixed page: its search title, its description and the date its content last changed.
+   * One row per fixed page: its search title, its description and the date its content last changed. Duplicating a row copies the open language only; the other one starts empty.
    */
   routes: {
     /**
@@ -3504,7 +3550,9 @@ export interface HomeSelect<T extends boolean = true> {
               headline?: T;
               subline?: T;
               imageDesktop?: T;
+              imageDesktopTwin?: T;
               imageMobile?: T;
+              imageMobileTwin?: T;
               id?: T;
             };
         overlay?:

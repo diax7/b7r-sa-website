@@ -1,4 +1,13 @@
-import type { Field, NumberField, SelectField, TextareaField, TextField } from 'payload';
+import type {
+  Field,
+  NumberField,
+  PayloadRequest,
+  RichTextField,
+  SelectField,
+  TextareaField,
+  TextField,
+  UploadField,
+} from 'payload';
 
 /**
  * Side-by-side bilingual editing (ADR-057). A localized light field (text, textarea, select,
@@ -10,6 +19,13 @@ import type { Field, NumberField, SelectField, TextareaField, TextField } from '
  * `hooks/translations.ts` applies them with a second write and clears the JSON. Payload 3
  * writes one locale per request, so the second write is the mechanism.
  *
+ * A localized heavy field (rich text, upload) gets a real sibling twin instead (`twinField`,
+ * PR B of the plan): `<name>Twin`, non-localized, rendered by Payload's own component right
+ * under the original. The twin holds the English only between the read that fills it
+ * (`fields/twins.ts`) and the save that applies it; at rest it is null. Its entry in the JSON
+ * carries the base alone (`{ base }`: a hash of the English rich text, an upload's id), the
+ * value being the twin field itself.
+ *
  * A key is the field's path (`seo.title`), and through a list the row's id, never its index
  * (`hero.slides.<rowId>.headline`, `blocks.<rowId>.items.<itemId>.question`): the admin form
  * makes the id when a row is added, so a reorder keeps the entry with its row, a deleted
@@ -19,20 +35,165 @@ export const TRANSLATIONS = 'translations';
 export const BILINGUAL_FIELD = '@/modules/cms/admin/fields/bilingual/field#BilingualField';
 const NO_DIFF = '@/modules/cms/admin/fields/bilingual/no-diff#NoDiff';
 
+/** The re-entry flag: a read or write the mechanism makes for itself carries it in `req.context`. */
+export const SKIP_TRANSLATIONS = 'skipTranslations';
+
+/** A light field's pending edit: what the editor typed and what the other locale held. */
 export interface TranslationEntry {
   value: string | null;
   base: string | null;
 }
-/** The pending edits of one language, keyed by the field's key (`seo.title`, `blocks.<id>.title`). */
+/** A twin's entry: the base alone; the value is the twin field (`fields/twins.ts`). */
+export interface TwinBase {
+  base: string | null;
+}
+/** The light entries of one language, keyed by the field's key (`seo.title`, `blocks.<id>.title`). */
 export type TranslationEntries = Record<string, TranslationEntry>;
+/** One language's branch of the JSON as stored: light entries and twin bases side by side. */
+export type PendingEntries = Record<string, TranslationEntry | TwinBase>;
 /** The hidden field's value: the pending edits per target locale. */
-export type Translations = Record<string, TranslationEntries>;
+export type Translations = Record<string, PendingEntries>;
 
 type Doc = Record<string, unknown>;
 
 type LightField = NumberField | SelectField | TextareaField | TextField;
 const LIGHT_TYPES = new Set<Field['type']>(['text', 'textarea', 'select', 'number']);
 const isLight = (field: Field): field is LightField => LIGHT_TYPES.has(field.type);
+
+export type HeavyKind = 'richText' | 'upload';
+type HeavyField = RichTextField | UploadField;
+const isHeavy = (field: Field | undefined): field is HeavyField =>
+  field !== undefined && (field.type === 'richText' || field.type === 'upload');
+
+/** An autosave (`?autosave=true`; Payload parses the flag to a boolean on collections). */
+export function isAutosave(req: PayloadRequest): boolean {
+  const autosave = req.query?.['autosave'];
+  return autosave === true || autosave === 'true';
+}
+
+/** The locale being saved or read and the other one; null when the config has no other. */
+export function localePair(
+  req: PayloadRequest,
+): { current: string; other: string; isDefault: boolean } | null {
+  const localization = req.payload.config.localization;
+  if (!localization) return null;
+  const current = typeof req.locale === 'string' ? req.locale : localization.defaultLocale;
+  const others = localization.localeCodes.filter((code) => code !== current);
+  if (others.length !== 1 || !others[0]) return null;
+  return { current, other: others[0], isDefault: current === localization.defaultLocale };
+}
+
+/** The name of a heavy field's twin: `content` becomes `contentTwin`. */
+export const twinName = (name: string): string => `${name}Twin`;
+
+/** The class the twin's wrapper carries; `admin.css` draws its pill and turns the text LTR. */
+export const TWIN_CLASS = 'admin-twin';
+
+const TWIN_LABEL = {
+  richText: { ar: 'النص بالإنجليزية', en: 'English text' },
+  upload: { ar: 'الصورة بالإنجليزية', en: 'English photo' },
+};
+const TWIN_DESCRIPTION = {
+  richText: {
+    ar: 'النص الإنجليزي لهذا الحقل كما يعرضه الموقع الإنجليزي؛ حفظ واحد يكتب اللغتين.',
+    en: 'The English of this text, as the English site shows it; one Save writes both languages.',
+  },
+  upload: {
+    ar: 'الصورة التي يعرضها الموقع الإنجليزي هنا، من المكتبة؛ حفظ واحد يكتب اللغتين.',
+    en: 'The photo the English site shows here, from the library; one Save writes both languages.',
+  },
+};
+
+/** The feature keys of a rich-text editor, provider (the config) or sanitized adapter alike. */
+function editorFeatures(editor: unknown): string | null {
+  const features = (editor as { features?: unknown } | undefined)?.features;
+  if (!Array.isArray(features)) return null;
+  return features.map((f: { key?: unknown }) => String(f?.key ?? '')).join(',');
+}
+
+/**
+ * Whether two rich-text editors are the same: the one provider in the config, or two
+ * sanitized adapters made from it (Payload turns `lexicalEditor()` into one adapter per
+ * field) with the same features.
+ */
+function sameEditor(a: unknown, b: unknown): boolean {
+  if (a === b) return true;
+  const keys = editorFeatures(a);
+  return keys !== null && keys === editorFeatures(b);
+}
+
+/**
+ * Whether `candidate` is the twin of `original`: the twin's name, the same type, not
+ * localized, and the same editor (rich text) or collection (upload), so the two render and
+ * validate alike. The census in `tests/admin-config.test.ts` counts a localized heavy field as
+ * covered when its twin follows it in the same field list; the hooks ask the same of the
+ * sanitized config at run time.
+ */
+export function isTwinOf(candidate: Field | undefined, original: Field): boolean {
+  if (!isHeavy(candidate) || !isHeavy(original) || !original.name) return false;
+  if (candidate.name !== twinName(original.name) || candidate.localized === true) return false;
+  if (candidate.type !== original.type) return false;
+  if (candidate.type === 'richText' && original.type === 'richText') {
+    return sameEditor(candidate.editor, original.editor);
+  }
+  if (candidate.type === 'upload' && original.type === 'upload') {
+    return candidate.relationTo === original.relationTo;
+  }
+  return false;
+}
+
+/**
+ * The twin of a localized rich text or upload: `<name>Twin`, non-localized, the same editor
+ * or collection, labelled as the English, rendered by Payload's own component under the
+ * original (place it right after the original in the config). Read by signed-in staff only
+ * and out of the versions diff, like the JSON. It holds a value only between an admin read
+ * (`populateTwins` fills it) and the save that applies it: a Save or Publish stores null and
+ * the `afterChange` hook reads what was typed from the request; an autosave keeps it, so a
+ * draft carries the pending English across a reload.
+ */
+export function twinField(original: HeavyField): Field {
+  if (!original.name || original.localized !== true) {
+    throw new Error(
+      `twinField: "${String(original.name)}" must be a localized rich text or upload`,
+    );
+  }
+  const shared = {
+    name: twinName(original.name),
+    localized: false,
+    required: false,
+    access: { read: ({ req }: { req: PayloadRequest }) => Boolean(req.user) },
+    hooks: {
+      beforeChange: [
+        ({ req, value }: { req: PayloadRequest; value?: unknown }) =>
+          isAutosave(req) ? value : null,
+      ],
+    },
+  };
+  if (original.type === 'richText') {
+    return {
+      ...shared,
+      type: 'richText',
+      editor: original.editor,
+      label: TWIN_LABEL.richText,
+      admin: {
+        className: TWIN_CLASS,
+        description: TWIN_DESCRIPTION.richText,
+        components: { Diff: NO_DIFF },
+      },
+    } as Field;
+  }
+  return {
+    ...shared,
+    type: 'upload',
+    relationTo: original.relationTo,
+    label: TWIN_LABEL.upload,
+    admin: {
+      className: TWIN_CLASS,
+      description: TWIN_DESCRIPTION.upload,
+      components: { Diff: NO_DIFF },
+    },
+  } as Field;
+}
 
 /**
  * Whether a field is edited in both languages at once: a localized light field (or one inside
@@ -52,12 +213,14 @@ export function isBilingualField(field: Field, parentLocalized = false): boolean
 /**
  * A document, or one row of a list, as the mechanism sees it: the localized fields by name
  * (`true` when bilingual: light and editable; a rich text, an upload, a localized group or
- * list as a whole read `false`), the named groups and tabs to descend into, and the shared
- * lists (a non-localized array or blocks field with a localized subfield somewhere in its
- * rows). Rows, collapsibles and unnamed groups are transparent.
+ * list as a whole read `false`), the heavy fields whose twin follows them (by kind), the
+ * named groups and tabs to descend into, and the shared lists (a non-localized array or
+ * blocks field with a localized subfield somewhere in its rows). Rows, collapsibles and
+ * unnamed groups are transparent.
  */
 export interface Shape {
   localized: Record<string, boolean>;
+  twins: Record<string, HeavyKind>;
   groups: Record<string, Shape>;
   lists: Record<string, ListShape>;
 }
@@ -67,22 +230,40 @@ export interface ListShape {
   rows: Record<string, Shape>;
 }
 
-const emptyShape = (): Shape => ({ localized: {}, groups: {}, lists: {} });
+const emptyShape = (): Shape => ({ localized: {}, twins: {}, groups: {}, lists: {} });
 
 const hasLocalized = (shape: Shape): boolean =>
   Object.keys(shape.localized).length > 0 ||
   Object.values(shape.groups).some(hasLocalized) ||
   Object.keys(shape.lists).length > 0;
 
+/** Whether a shape has a twin anywhere: the population and the apply skip a config without one. */
+export const hasTwins = (shape: Shape): boolean =>
+  Object.keys(shape.twins).length > 0 ||
+  Object.values(shape.groups).some(hasTwins) ||
+  Object.values(shape.lists).some((list) => Object.values(list.rows).some(hasTwins));
+
+/**
+ * The walk of a config's top-level fields, once per field list: the hooks ask for it on every
+ * read and every save and a config's field array never changes after boot. Nothing writes to
+ * a shape.
+ */
+const shapes = new WeakMap<Field[], Shape>();
+
 /** The config walk behind `bilingualPaths`, the hook's allow-list and the row builder. */
 export function shapeOf(fields: Field[], parentLocalized = false): Shape {
+  if (!parentLocalized) {
+    const known = shapes.get(fields);
+    if (known) return known;
+  }
   const shape = emptyShape();
   collect(fields, shape, parentLocalized);
+  if (!parentLocalized) shapes.set(fields, shape);
   return shape;
 }
 
 function collect(fields: Field[], shape: Shape, parentLocalized: boolean): void {
-  for (const field of fields) {
+  for (const [i, field] of fields.entries()) {
     if (field.type === 'tabs') {
       for (const tab of field.tabs) {
         const localized = parentLocalized || ('localized' in tab && tab.localized === true);
@@ -111,6 +292,11 @@ function collect(fields: Field[], shape: Shape, parentLocalized: boolean): void 
       }
     } else if (localized) {
       shape.localized[field.name] = isBilingualField(field, parentLocalized);
+      // A heavy field's twin must follow it in the same list; under a localized parent the
+      // whole group is per language and no twin pairs with it.
+      if (isHeavy(field) && !parentLocalized && isTwinOf(fields[i + 1], field)) {
+        shape.twins[field.name] = field.type;
+      }
     }
   }
 }
@@ -130,20 +316,27 @@ function listShape(field: Field & { type: 'array' | 'blocks' }): ListShape | nul
  * lists, each in config order.
  */
 export function bilingualPaths(fields: Field[]): string[] {
-  return flatten(shapeOf(fields), '');
+  return flatten(shapeOf(fields), '', (shape) =>
+    Object.entries(shape.localized)
+      .filter(([, bilingual]) => bilingual)
+      .map(([name]) => name),
+  );
 }
 
-function flatten(shape: Shape, prefix: string): string[] {
-  const out: string[] = [];
-  for (const [name, bilingual] of Object.entries(shape.localized)) {
-    if (bilingual) out.push(`${prefix}${name}`);
-  }
+/** Every localized heavy field of a config that has its twin, in the same path form. */
+export function twinPaths(fields: Field[]): string[] {
+  return flatten(shapeOf(fields), '', (shape) => Object.keys(shape.twins));
+}
+
+function flatten(shape: Shape, prefix: string, leaves: (shape: Shape) => string[]): string[] {
+  const out: string[] = leaves(shape).map((name) => `${prefix}${name}`);
   for (const [name, group] of Object.entries(shape.groups)) {
-    out.push(...flatten(group, `${prefix}${name}.`));
+    out.push(...flatten(group, `${prefix}${name}.`, leaves));
   }
   for (const [name, list] of Object.entries(shape.lists)) {
     for (const [slug, row] of Object.entries(list.rows)) {
-      out.push(...flatten(row, slug ? `${prefix}${name}.${slug}.` : `${prefix}${name}.`));
+      const at = slug ? `${prefix}${name}.${slug}.` : `${prefix}${name}.`;
+      out.push(...flatten(row, at, leaves));
     }
   }
   return out;
@@ -207,14 +400,14 @@ export function textOf(value: unknown): string {
   return typeof value === 'string' ? value : '';
 }
 
-const isDoc = (value: unknown): value is Doc =>
+export const isDoc = (value: unknown): value is Doc =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
 
 /** An own key of a plain record: a crafted `constructor` or `toString` names nothing. */
 const own = (record: object, key: string): boolean => Object.hasOwn(record, key);
 
 /** The shape of a row by its block type (an array's one shape under ''), or undefined. */
-function rowShapeOf(list: ListShape, row: Doc): Shape | undefined {
+export function rowShapeOf(list: ListShape, row: Doc): Shape | undefined {
   const slug = list.type === 'blocks' ? String(row['blockType']) : '';
   return own(list.rows, slug) ? list.rows[slug] : undefined;
 }
@@ -237,6 +430,18 @@ export function readKey(doc: unknown, key: string): unknown {
     node = Array.isArray(node) ? rowById(node, segment) : (node as Doc)[segment];
   }
   return node;
+}
+
+/**
+ * Sets the value at a key of a document in place, the same walk as `readKey` (a segment that
+ * meets an array is a row id). Nothing happens when the path or the row is not there: a
+ * parent is never created.
+ */
+export function writeKey(doc: unknown, key: string, value: unknown): void {
+  const segments = key.split('.');
+  const last = segments.pop();
+  const parent = segments.length > 0 ? readKey(doc, segments.join('.')) : doc;
+  if (last && isDoc(parent)) parent[last] = value;
 }
 
 /**
@@ -276,17 +481,44 @@ export function nestPaths(values: Iterable<[string, unknown]>): Doc {
 
 const isText = (v: unknown): v is string | null => v === null || typeof v === 'string';
 
-/** The pending entries of one locale, with anything that is not an entry dropped. */
-export function entriesOf(translations: unknown, locale: string): TranslationEntries {
+/** One locale's branch of the JSON as stored, or an empty one. */
+export function pendingOf(translations: unknown, locale: string): PendingEntries {
   const byLocale = (translations as Record<string, unknown> | null | undefined)?.[locale];
-  if (!byLocale || typeof byLocale !== 'object') return {};
+  return byLocale && typeof byLocale === 'object' && !Array.isArray(byLocale)
+    ? (byLocale as PendingEntries)
+    : {};
+}
+
+/** A light field's pending edit, as opposed to a twin's base (which carries no `value`). */
+export const isLightEntry = (entry: unknown): entry is TranslationEntry =>
+  typeof entry === 'object' &&
+  entry !== null &&
+  'value' in entry &&
+  isText((entry as TranslationEntry).value) &&
+  isText((entry as TranslationEntry).base);
+
+/** A twin's base entry: a `base` and no `value`. */
+export const isTwinBase = (entry: unknown): entry is TwinBase =>
+  typeof entry === 'object' &&
+  entry !== null &&
+  !('value' in entry) &&
+  isText((entry as TwinBase).base);
+
+/** The light entries of one locale, with anything that is not one dropped (a twin's base too). */
+export function entriesOf(translations: unknown, locale: string): TranslationEntries {
   const out: TranslationEntries = {};
-  for (const [key, entry] of Object.entries(byLocale as Record<string, unknown>)) {
-    if (!entry || typeof entry !== 'object') continue;
-    const { value, base } = entry as Record<string, unknown>;
-    if (isText(value) && isText(base)) out[key] = { value, base };
+  for (const [key, entry] of Object.entries(pendingOf(translations, locale))) {
+    if (isLightEntry(entry)) out[key] = { value: entry.value, base: entry.base };
   }
   return out;
+}
+
+/** A twin's base as the JSON holds it for a key, or null (no English seen, or no entry). */
+export function twinBaseOf(translations: unknown, locale: string, key: string): string | null {
+  const pending = pendingOf(translations, locale);
+  const entry = own(pending, key) ? pending[key] : undefined;
+  const base = entry && typeof entry === 'object' ? (entry as TwinBase).base : null;
+  return typeof base === 'string' ? base : null;
 }
 
 /**
@@ -298,19 +530,22 @@ export function stillApplies(entry: TranslationEntry, stored: unknown): boolean 
   return textOf(entry.value) !== textOf(entry.base) && textOf(entry.base) === textOf(stored);
 }
 
+/** Where a key lands: the outermost shared list it runs through (or null), and the field's kind. */
+export interface Resolved {
+  list: string | null;
+  kind: 'light' | HeavyKind;
+}
+
 /**
  * Where an entry key lands, checked against the config and the saved document: `list` is the
  * path of the outermost shared list the key runs through (`hero.slides`, sent whole in the
- * other locale), null for a scalar outside any list. Null for a key that names no bilingual
- * field (a slug, a rich text, a `blockType`, a made-up name), a block type the row does not
- * have, or a row whose id is not in the document (deleted, or made up): the rows written
- * are always the document's own.
+ * other locale), null for a scalar outside any list; `kind` says whether the key names a
+ * light field (a JSON entry) or a heavy one with a twin. Null for a key that names neither
+ * (a slug, a rich text without a twin, a `blockType`, a made-up name), a block type the row
+ * does not have, or a row whose id is not in the document (deleted, or made up): the rows
+ * written are always the document's own.
  */
-export function resolveKey(
-  shape: Shape,
-  doc: unknown,
-  key: string,
-): { list: string | null } | null {
+export function resolveKey(shape: Shape, doc: unknown, key: string): Resolved | null {
   const segments = key.split('.');
   let current = shape;
   let node: unknown = doc;
@@ -319,7 +554,10 @@ export function resolveKey(
   for (let i = 0; i < segments.length; i += 1) {
     const segment = segments[i]!;
     if (own(current.localized, segment)) {
-      return i === segments.length - 1 && current.localized[segment] ? { list } : null;
+      if (i !== segments.length - 1) return null;
+      if (current.localized[segment]) return { list, kind: 'light' };
+      const kind = own(current.twins, segment) ? current.twins[segment] : undefined;
+      return kind ? { list, kind } : null;
     }
     if (own(current.groups, segment)) {
       current = current.groups[segment]!;
@@ -375,7 +613,7 @@ export function otherLocaleRows(
   list: ListShape,
   docRows: unknown,
   storedRows: unknown,
-  writes: ReadonlyMap<string, string | null>,
+  writes: ReadonlyMap<string, unknown>,
   prefix: string,
 ): Doc[] {
   if (!Array.isArray(docRows)) return [];
@@ -401,7 +639,7 @@ function otherLocaleNode(
   shape: Shape,
   docNode: Doc,
   storedNode: Doc | null,
-  writes: ReadonlyMap<string, string | null>,
+  writes: ReadonlyMap<string, unknown>,
   prefix: string,
 ): Doc {
   const out: Doc = { ...docNode };
@@ -429,31 +667,46 @@ function otherLocaleNode(
   return out;
 }
 
+/** A twin's write that passed the base check (`fields/twins.ts`): the original's key, the value. */
+export interface TwinWrite {
+  key: string;
+  value: unknown;
+}
+
 /**
  * The writes a save makes in the other locale, as `[path, value]` pairs for `nestPaths`: a
  * scalar entry that still applies is its own pair (an empty text as null, Payload's own
  * empty); an entry inside a shared list makes the whole list a pair, its rows built by
- * `otherLocaleRows` with every applying entry of that list on top. An entry on a key the
- * config or the document does not resolve is ignored.
+ * `otherLocaleRows` with every applying entry of that list on top. A twin's write (checked
+ * against its base by the caller) lands on the original's key the same way. An entry on a
+ * key the config or the document does not resolve is ignored, and so is a light entry on a
+ * heavy key or a twin on a light one.
  */
 export function plannedWrites(
   entries: TranslationEntries,
   shape: Shape,
   doc: unknown,
   stored: unknown,
+  twins: readonly TwinWrite[] = [],
 ): Array<[string, unknown]> {
   const scalars: Array<[string, unknown]> = [];
-  const rowWrites = new Map<string, string | null>();
+  const rowWrites = new Map<string, unknown>();
   const lists: string[] = [];
-  for (const [key, entry] of Object.entries(entries)) {
-    const where = resolveKey(shape, doc, key);
-    if (!where || !stillApplies(entry, readKey(stored, key))) continue;
-    const value = textOf(entry.value) === '' ? null : entry.value;
-    if (where.list === null) scalars.push([key, value]);
+  const place = (key: string, value: unknown, list: string | null) => {
+    if (list === null) scalars.push([key, value]);
     else {
       rowWrites.set(key, value);
-      if (!lists.includes(where.list)) lists.push(where.list);
+      if (!lists.includes(list)) lists.push(list);
     }
+  };
+  for (const [key, entry] of Object.entries(entries)) {
+    const where = resolveKey(shape, doc, key);
+    if (where?.kind !== 'light' || !stillApplies(entry, readKey(stored, key))) continue;
+    place(key, textOf(entry.value) === '' ? null : entry.value, where.list);
+  }
+  for (const { key, value } of twins) {
+    const where = resolveKey(shape, doc, key);
+    if (where && where.kind !== 'light') place(key, value, where.list);
   }
   const whole = lists.map((path): [string, unknown] => {
     const list = listAt(shape, path)!;
@@ -473,15 +726,18 @@ export function plannedWrites(
  * The entries worth keeping after the other locale is read again (on open, after every save):
  * the ones the editor changed and that still apply. An applied entry (the stored value is
  * now the typed one) and a stale one (someone else wrote there) both drop; an entry of a row
- * the other locale has not seen yet (added since) stays, its base null.
+ * the other locale has not seen yet (added since) stays, its base null. A twin's base rides
+ * untouched: the server sets and checks it, the client never reads it.
  */
 export function reconcile(
-  entries: TranslationEntries,
+  entries: PendingEntries,
   storedAt: (key: string) => unknown,
-): TranslationEntries {
-  const kept: TranslationEntries = {};
+): PendingEntries {
+  const kept: PendingEntries = {};
   for (const [key, entry] of Object.entries(entries)) {
-    if (stillApplies(entry, storedAt(key))) kept[key] = entry;
+    if (isTwinBase(entry) || (isLightEntry(entry) && stillApplies(entry, storedAt(key)))) {
+      kept[key] = entry;
+    }
   }
   return kept;
 }

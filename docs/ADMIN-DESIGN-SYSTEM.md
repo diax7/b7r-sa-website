@@ -253,10 +253,13 @@ by switching the page language. `describeFields()` gives every localised `text`,
 `select` and `number` field (one value, no widget of its own) the `BilingualField`
 component, outside a list and inside the rows of arrays and blocks alike (the amendment of
 ADR-057), so a new config gets it with no work and there is never a second place to edit a
-value. What still follows the locale control: rich text and uploads (their twins are PR B of
-`docs/plans/2026-09-18-no-locale-switch.md`), and a list localised as a whole (its rows are
-per language and cannot be paired; a new config never adds one: `localized` goes on the
-row's subfields, never on the array).
+value. A localised rich text or upload (a heavy field) gets a real sibling field instead,
+`twinField(original)` placed right after it in the config (PR B of
+`docs/plans/2026-09-18-no-locale-switch.md`): Payload's own editor or picker renders the
+English under the Arabic. What still follows the locale control: a list localised as a
+whole (its rows are per language and cannot be paired; a new config never adds one:
+`localized` goes on the row's subfields, never on the array), until PR C removes the
+control itself.
 
 - **Layout.** Payload's own field for the open locale at the start, the same input for the
   other locale at the end, in a two-column grid that stacks under 32 rem of container width
@@ -269,8 +272,20 @@ row's subfields, never on the array).
 - **The tag.** The other input's label repeats the field's label, the required star, and
   the other locale's code in the locale pill (`.admin-locale-tag`, the same declarations as
   ADR-044's `::after` pill, one rule in `admin.css`). A field with two pills is per language
-  and both are in front of you; a field with one pill (rich text, an image) follows the
-  locale control; a field with none is shared.
+  and both are in front of you; a field with none is shared.
+- **Stacked editors (the heavy twins).** A localised rich text or photo is followed by its
+  twin: the Arabic full width, then the English full width under it, each Payload's own
+  component (Lexical, the upload picker) with its own pill: the original's AR pill from the
+  locale, the twin's EN pill from its class (`.admin-twin`, `admin.css`), whose label reads
+  "English text" or "English photo" and whose description says one Save writes both. The
+  twin's editor runs left to right whatever the panel's direction. The twin is filled from
+  the document's own English on every admin read (`populateTwins`, a `beforeRead` hook, no
+  extra query) and is null at rest: it carries the English only between typing and the
+  save that applies it (an autosave keeps it in the draft). While the English locale itself
+  is open the twins are hidden: there the original is the English. A row duplicated in a
+  list keeps its twin (the form copies the row), so an English rich text or photo comes
+  along while the English beside the light fields starts empty; the list's description
+  says so (`SHARED_ROWS_WITH_TWINS_NOTE`).
 - **Rows.** Inside an array or a blocks field the pair sits in the row like any other field
   and its entry is keyed by the row's id from the form state, never by the index
   (`hero.slides.<id>.headline`, `blocks.<id>.items.<id>.title`; `data-admin-bilingual`
@@ -294,7 +309,11 @@ row's subfields, never on the array).
   the whole list in the other locale, its rows built from the saved document by id, so a
   Publish that touches any English field of a list validates the whole English list: a
   row added without its English is refused with the field named. After a save the other
-  input shows what was written, not the old prefill.
+  input shows what was written, not the old prefill. A twin rides the same save: the JSON
+  holds its base only (a hash of the English rich text, the English photo's id), the value
+  is the field; it applies when it differs from the base and the English still matches the
+  base, an emptied required English is refused the same way ("Content in English: This
+  field is required."), and after the save the twin shows the English as it now stands.
 - **Strings.** The placeholder, the error and the language names are the `bilingual`
   branch of both trees in `strings.ts`, the note's sentences `locale.legend` (§5a): read
   per render through `useAdminStrings()`, the Arabic under §5's rules and the strings test.

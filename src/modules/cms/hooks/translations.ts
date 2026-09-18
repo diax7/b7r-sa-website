@@ -10,11 +10,19 @@ import type {
 import { Refused } from '@/modules/cms/refused';
 import {
   entriesOf,
+  isAutosave,
+  isDoc,
+  localePair,
   nestPaths,
+  pendingOf,
   plannedWrites,
+  readKey,
   shapeOf,
+  SKIP_TRANSLATIONS,
   TRANSLATIONS,
+  twinBaseOf,
 } from '@/modules/cms/fields/bilingual';
+import { showTwins, twinApplies, type TwinValue, twinValues } from '@/modules/cms/fields/twins';
 
 /**
  * Applies the other language's edits after a save (ADR-057). Payload writes one locale per
@@ -38,14 +46,14 @@ import {
  * client. An entry inside a shared list sends the whole list in the other locale, its rows
  * built from the saved document by id (`otherLocaleRows`): Payload's array write is
  * positional and a partial list would drop the other rows.
+ *
+ * A heavy field's twin (PR B: a rich text's `contentTwin`, a photo's `imageDesktopTwin`) is
+ * one more entry: its value is read from the request's data (the field stores null on a Save
+ * or Publish), its base from the JSON (`fields/twins.ts`), the same three rails; the response
+ * shows every twin as the English now stands, with a fresh base, so the form the admin
+ * rebuilds from it is ready for the next save.
  */
-export const SKIP_TRANSLATIONS = 'skipTranslations';
-
-/** An autosave (`?autosave=true`; Payload parses the flag to a boolean on collections). */
-export function isAutosave(req: PayloadRequest): boolean {
-  const autosave = req.query?.['autosave'];
-  return autosave === true || autosave === 'true';
-}
+export { isAutosave, SKIP_TRANSLATIONS };
 
 type Doc = Record<string, unknown>;
 
@@ -54,15 +62,6 @@ interface Target {
   slug: string;
   fields: Field[];
   id?: number | string | undefined;
-}
-
-/** The locale being saved and the one to write next; null when the config has no other. */
-export function localePair(req: PayloadRequest): { current: string; other: string } | null {
-  const localization = req.payload.config.localization;
-  if (!localization) return null;
-  const current = typeof req.locale === 'string' ? req.locale : localization.defaultLocale;
-  const others = localization.localeCodes.filter((code) => code !== current);
-  return others.length === 1 && others[0] ? { current, other: others[0] } : null;
 }
 
 /**
@@ -174,33 +173,99 @@ function languageName(req: PayloadRequest, code: string): string {
   return en ?? code;
 }
 
-async function apply(req: PayloadRequest, doc: Doc, target: Target): Promise<Doc> {
+/** What a save hands the hook: the written document, the request's data, the document before. */
+interface Save {
+  doc: Doc;
+  data: unknown;
+  previousDoc: unknown;
+}
+
+async function apply(req: PayloadRequest, save: Save, target: Target): Promise<Doc> {
+  const { doc, data, previousDoc } = save;
   if (req.context?.[SKIP_TRANSLATIONS] || isAutosave(req)) return doc;
   const pair = localePair(req);
   if (!pair) return doc;
-  const entries = entriesOf(doc[TRANSLATIONS], pair.other);
-  if (Object.keys(entries).length === 0) return doc;
+  const shape = shapeOf(target.fields);
+  const translations = doc[TRANSLATIONS];
+  const entries = entriesOf(translations, pair.other);
+  // The twins are the English: they pair with a save from the default locale only. A publish
+  // that sends `_status` alone (the schedule, a script) carries the draft's pending twins.
+  const twins = pair.isDefault ? twinValues(shape, data, doc, previousDoc) : [];
+  if (Object.keys(entries).length === 0 && twins.length === 0) return doc;
   const stored = await readOther(req, target, pair.other);
-  const writes = plannedWrites(entries, shapeOf(target.fields), doc, stored);
-  if (writes.length === 0) return doc;
-  const data = { ...nestPaths(writes), [TRANSLATIONS]: null };
-  try {
-    await writeOther(req, target, pair.other, data, doc['_status'] === 'draft');
-  } catch (error) {
-    throw refusalFor(error, languageName(req, pair.other)) ?? error;
+  const applying = twins.filter((t) =>
+    twinApplies(
+      t.kind,
+      t.value,
+      twinBaseOf(translations, pair.other, t.key),
+      readKey(stored, t.key),
+    ),
+  );
+  const writes = plannedWrites(entries, shape, doc, stored, applying);
+  if (writes.length > 0) {
+    const written = { ...nestPaths(writes), [TRANSLATIONS]: null };
+    try {
+      await writeOther(req, target, pair.other, written, doc['_status'] === 'draft');
+    } catch (error) {
+      throw refusalFor(error, languageName(req, pair.other)) ?? error;
+    }
   }
-  return { ...doc, [TRANSLATIONS]: null };
+  const written = writes.length > 0;
+  if (!written && twins.length === 0) return doc;
+  return shown({ doc, twins, applied: new Set(applying.map((t) => t.key)), stored, written }, pair);
+}
+
+interface Shown {
+  doc: Doc;
+  twins: TwinValue[];
+  applied: ReadonlySet<string>;
+  stored: Doc;
+  written: boolean;
+}
+
+/**
+ * The document as the response carries it: the JSON cleared when the other locale was
+ * written (the client reads that locale again and rebuilds its light entries), the twins
+ * shown as the English now stands with their bases in the JSON.
+ */
+function shown({ doc, twins, applied, stored, written }: Shown, pair: { other: string }): Doc {
+  const out: Doc = { ...doc, [TRANSLATIONS]: written ? null : doc[TRANSLATIONS] };
+  if (twins.length === 0) return out;
+  const bases = showTwins(out, twins, applied, stored);
+  const json = isDoc(out[TRANSLATIONS]) ? out[TRANSLATIONS] : {};
+  out[TRANSLATIONS] = { ...json, [pair.other]: { ...pendingOf(json, pair.other), ...bases } };
+  return out;
 }
 
 /** Collections: after a Save or Publish, the other language's pending edits are written too. */
-export const applyTranslations: CollectionAfterChangeHook = ({ doc, req, collection }) =>
-  apply(req, doc as Doc, {
-    type: 'collections',
-    slug: collection.slug,
-    fields: collection.fields,
-    id: (doc as Doc)['id'] as number | string | undefined,
-  });
+export const applyTranslations: CollectionAfterChangeHook = ({
+  doc,
+  data,
+  previousDoc,
+  req,
+  collection,
+}) =>
+  apply(
+    req,
+    { doc: doc as Doc, data, previousDoc },
+    {
+      type: 'collections',
+      slug: collection.slug,
+      fields: collection.fields,
+      id: (doc as Doc)['id'] as number | string | undefined,
+    },
+  );
 
 /** Globals: the same, through `updateGlobal`. */
-export const applyGlobalTranslations: GlobalAfterChangeHook = ({ doc, req, global }) =>
-  apply(req, doc as Doc, { type: 'globals', slug: global.slug, fields: global.fields });
+export const applyGlobalTranslations: GlobalAfterChangeHook = ({
+  doc,
+  data,
+  previousDoc,
+  req,
+  global,
+}) =>
+  apply(
+    req,
+    { doc: doc as Doc, data, previousDoc },
+    { type: 'globals', slug: global.slug, fields: global.fields },
+  );

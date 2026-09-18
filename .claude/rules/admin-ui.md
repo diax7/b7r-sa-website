@@ -81,6 +81,16 @@ note), `check:rtl` and the admin e2e.
    the keyboard model) is the design system's shell section; a new entry only needs its
    place in `ADMIN_NAV`.
 
+13. A localized `richText` or `upload` (ADR-057, PR B) is followed, in the same field list,
+   by `twinField(original)` from `src/modules/cms/fields/bilingual.ts`: the English the
+   editor types under the Arabic, filled on read and applied on save by the mechanism. The
+   entity lists `populateTwins` / `populateGlobalTwins` (`fields/twins.ts`) in
+   `hooks.beforeRead` beside `applyTranslations` in `afterChange`; the twin's column rides
+   a migration; `tests/admin-config.test.ts` refuses a localized heavy field without its
+   twin and a config with a twin without the hook. A localized light field needs nothing
+   (rule 4's pass makes it bilingual); a localized array is never added (the design system
+   §6a: `localized` goes on a row's subfields, never on the array).
+
 ## Adding an admin component
 
 - Location: `src/modules/cms/admin/<area>/` (a feature module's own under

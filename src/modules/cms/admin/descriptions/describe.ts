@@ -4,6 +4,7 @@ import {
   bilingualPaths,
   TRANSLATIONS,
   translationsField,
+  twinPaths,
 } from '@/modules/cms/fields/bilingual';
 
 /** What a field does on the site, in both languages, keyed by the field's path. */
@@ -45,6 +46,8 @@ interface Pass {
   applied: Set<string> | undefined;
   /** The paths edited in both languages at once (ADR-057), from `bilingualPaths`. */
   bilingual: ReadonlySet<string>;
+  /** The heavy paths whose twin follows them (PR B), from `twinPaths`. */
+  twins: ReadonlySet<string>;
 }
 
 /** The admin block of a field as the steps below read it, whatever the field's type. */
@@ -75,13 +78,16 @@ const readOnlyShown = (field: Field): boolean => {
  * then `BilingualField` (ADR-057) on every localized text, textarea, select and number that
  * has no widget by then (a read-only localized text is a line, never a twin), inside the
  * rows of arrays and blocks too; such a list's description ends with what duplicating a
- * row does to the other language. When a config has any bilingual field the hidden
- * `translations` JSON the hook reads is appended once; the config's `afterChange` must then
- * list `applyTranslations` (the config test checks).
+ * row does to the other language. A localized rich text or upload is not touched: its
+ * English is the sibling `twinField` the config places after it, rendered by Payload's own
+ * component (the census in `tests/admin-config.test.ts` counts it). When a config has any
+ * bilingual field the hidden `translations` JSON the hook reads is appended once; the
+ * config's `afterChange` must then list `applyTranslations` (the config test checks).
  */
 export function describeFields(fields: Field[], map: Described, applied?: Set<string>): Field[] {
   const bilingual = new Set(bilingualPaths(fields));
-  const described = walk(fields, { map, applied, bilingual }, '');
+  const twins = new Set(twinPaths(fields));
+  const described = walk(fields, { map, applied, bilingual, twins }, '');
   const carried = described.some((f) => 'name' in f && f.name === TRANSLATIONS);
   return bilingual.size > 0 && !carried ? [...described, translationsField()] : described;
 }
@@ -121,8 +127,8 @@ function named(field: Field & { name: string }, pass: Pass, name: string): Field
   if (pass.bilingual.has(name) && !adminOf(next).components?.Field) {
     next = withComponent(next, 'Field', BILINGUAL_FIELD);
   }
-  if ((next.type === 'array' || next.type === 'blocks') && hasBilingualRow(pass, name)) {
-    next = withSharedRowsNote(next);
+  if ((next.type === 'array' || next.type === 'blocks') && rowsUnder(pass.bilingual, name)) {
+    next = withSharedRowsNote(next, rowsUnder(pass.twins, name));
   }
   if ('fields' in next && Array.isArray(next.fields)) {
     next = { ...next, fields: walk(next.fields, pass, `${name}.`) } as Field;
@@ -149,17 +155,25 @@ export const SHARED_ROWS_NOTE = {
   en: 'Duplicating a row copies the open language only; the other one starts empty.',
 };
 
-const hasBilingualRow = (pass: Pass, name: string): boolean =>
-  [...pass.bilingual].some((path) => path.startsWith(`${name}.`));
+/**
+ * The same for a list whose rows also hold a heavy twin (PR B): the English rich text or
+ * photo under a field is a real field of the row, so the copy keeps it.
+ */
+export const SHARED_ROWS_WITH_TWINS_NOTE = {
+  ar: 'تكرار الصف ينسخ اللغة المفتوحة والنص أو الصورة بالإنجليزية تحت الحقل؛ والإنجليزية بجانب الحقول الأخرى تبدأ فارغة.',
+  en: 'Duplicating a row copies the open language and the English text or photo under a field; the English beside the other fields starts empty.',
+};
 
-function withSharedRowsNote(field: Field): Field {
+const rowsUnder = (paths: ReadonlySet<string>, name: string): boolean =>
+  [...paths].some((path) => path.startsWith(`${name}.`));
+
+function withSharedRowsNote(field: Field, withTwins: boolean): Field {
   const own = adminOf(field).description as { ar?: unknown; en?: unknown } | undefined;
   if (own !== undefined && (typeof own.ar !== 'string' || typeof own.en !== 'string')) {
     return field;
   }
-  const description = own
-    ? { ar: `${own.ar} ${SHARED_ROWS_NOTE.ar}`, en: `${own.en} ${SHARED_ROWS_NOTE.en}` }
-    : SHARED_ROWS_NOTE;
+  const note = withTwins ? SHARED_ROWS_WITH_TWINS_NOTE : SHARED_ROWS_NOTE;
+  const description = own ? { ar: `${own.ar} ${note.ar}`, en: `${own.en} ${note.en}` } : note;
   return { ...field, admin: { ...field.admin, description } } as Field;
 }
 

@@ -11,9 +11,10 @@ import {
   UnorderedListFeature,
   UploadFeature,
 } from '@payloadcms/richtext-lexical';
-import type { Block, Field } from 'payload';
+import type { Block, Field, RichTextField } from 'payload';
 import { CARD_ICONS, FAQ_SELECTIONS } from '@/content/schema';
 import { iconOptions } from '@/modules/cms/admin/icons';
+import { twinField } from '@/modules/cms/fields/bilingual';
 
 /**
  * The rich-text feature set (BRD 9.5): H2/H3 (the page owns its H1), bold, italic, lists,
@@ -82,6 +83,16 @@ const items = (
   fields,
 });
 
+/** The block's body, per language; its English is the twin right under it (ADR-057, PR B). */
+const content: RichTextField = {
+  name: 'content',
+  type: 'richText',
+  required: true,
+  localized: true,
+  editor: richTextEditor,
+  label: { ar: 'المحتوى', en: 'Content' },
+};
+
 export const RichTextBlock: Block = {
   slug: 'richText',
   labels: {
@@ -90,14 +101,8 @@ export const RichTextBlock: Block = {
   },
   fields: [
     text('title', { ar: 'العنوان (اختياري)', en: 'Title (optional)' }, false),
-    {
-      name: 'content',
-      type: 'richText',
-      required: true,
-      localized: true,
-      editor: richTextEditor,
-      label: { ar: 'المحتوى', en: 'Content' },
-    },
+    content,
+    twinField(content),
   ],
 };
 

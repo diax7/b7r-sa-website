@@ -106,6 +106,10 @@ const paragraph = (text: string) => ({
   },
 });
 
+type Body = { root: { children: Array<{ children: Array<{ text: string }> }> } };
+/** The first run of text of a one-paragraph body. */
+const textOf = (body: Body | undefined) => body?.root.children[0]?.children[0]?.text;
+
 /** A Lexical inline run: text, or a link around text. */
 const run = (t: string) => ({
   type: 'text',
@@ -1870,7 +1874,7 @@ test.describe('CMS admin', () => {
         // The twin's first read lands after the form; a loaded runner needs the longer wait.
         await expect(other).toHaveValue('Bilingual page', { timeout: 15_000 });
         // The block's title is a bilingual row field (PR A), keyed by the block's id; its rich
-        // text body stays on the switch, so the block carries exactly one pair.
+        // text body has a twin of its own (PR B), so the block carries exactly one pair.
         await expect(page.locator('[data-admin-bilingual^="blocks."]')).toHaveCount(1);
         await expect(
           page.locator(`[data-admin-bilingual="blocks.${blockId}.title"]`),
@@ -2196,6 +2200,342 @@ test.describe('CMS admin', () => {
       } finally {
         expect((await restore('ar')).status()).toBe(200);
         expect((await restore('en')).status()).toBe(200);
+      }
+    });
+
+    // Heavy twins (ADR-057, PR B): a localized rich text or photo has its English in a real
+    // sibling field under it, filled by the admin read and applied by the same Publish; at
+    // rest the twin is null and the pending JSON cleared; an English left empty is refused.
+    test("a rich-text block's body edited in Arabic and English in one Publish; the English emptied is refused (ADR-057, PR B)", async ({
+      page,
+      request,
+    }) => {
+      test.setTimeout(180_000);
+      const auth = await login(request, ADMIN);
+      const slug = `bilingual-twin-e2e-${Date.now()}`;
+      const created = await request.post(`${API}/pages?locale=ar`, {
+        headers: auth,
+        data: {
+          title: 'صفحة التوأم',
+          slug,
+          blocks: [{ blockType: 'richText', title: 'المقدمة', content: paragraph('فقرة عربية.') }],
+          seo: { title: 'صفحة التوأم', description: 'وصف للاختبار.' },
+          _status: 'published',
+        },
+      });
+      expect(created.status(), await created.text()).toBe(201);
+      const createdDoc = (
+        (await created.json()) as { doc: { id: number; blocks: Array<{ id: string }> } }
+      ).doc;
+      const id = createdDoc.id;
+      const blockId = createdDoc.blocks[0]!.id;
+      type Block = {
+        id: string;
+        content: { ar?: Body; en?: Body };
+        contentTwin?: unknown;
+      };
+      const both = async () => {
+        const res = await request.get(`${API}/pages/${id}?locale=all&depth=0`, { headers: auth });
+        expect(res.status()).toBe(200);
+        return (await res.json()) as { blocks: Block[]; translations?: unknown };
+      };
+      try {
+        const english = await request.patch(`${API}/pages/${id}?locale=en`, {
+          headers: auth,
+          data: {
+            title: 'Twin page',
+            blocks: [
+              {
+                id: blockId,
+                blockType: 'richText',
+                title: 'Introduction',
+                content: paragraph('An English paragraph.'),
+              },
+            ],
+            seo: { title: 'Twin page', description: 'For the test.' },
+          },
+        });
+        expect(english.status(), await english.text()).toBe(200);
+        // The admin read fills the twin and writes its base into the hidden JSON.
+        const read = await request.get(`${API}/pages/${id}?locale=ar&draft=true&depth=0`, {
+          headers: auth,
+        });
+        const filled = (await read.json()) as {
+          blocks: Array<{ contentTwin: Body }>;
+          translations: { en: Record<string, { base: string }> };
+        };
+        expect(textOf(filled.blocks[0]!.contentTwin)).toBe('An English paragraph.');
+        expect(filled.translations.en[`blocks.${blockId}.content`]?.base).toMatch(/^[0-9a-f]{64}$/);
+        // An outsider's read carries neither the twin nor the JSON.
+        const outside = (await (await request.get(`${API}/pages/${id}?depth=0`)).json()) as {
+          blocks: Array<Record<string, unknown>>;
+        } & Record<string, unknown>;
+        expect(outside.blocks[0]).not.toHaveProperty('contentTwin');
+        expect(outside).not.toHaveProperty('translations');
+
+        await page.goto('/admin/login');
+        await page.locator('#field-email').fill(admin.email);
+        await page.locator('#field-password').fill(admin.password);
+        await page.locator('form button[type="submit"]').first().click();
+        await page.waitForURL((u) => !u.pathname.endsWith('/login'));
+        await page.goto(`/admin/collections/pages/${id}?locale=ar`);
+        await page.locator('.tabs-field__tab-button', { hasText: 'Content' }).click();
+        await expect(page.locator('[data-admin-locale-note="ar"]')).toContainText(
+          'a rich text or a photo has its English under it',
+        );
+        // The Arabic editor, then the English twin right under it: Payload's own editor,
+        // labelled as the English with the EN pill, running left to right, prefilled.
+        const arabic = page.locator('[data-field-path="blocks.0.content"]');
+        const twin = page.locator('[data-field-path="blocks.0.contentTwin"]');
+        await expect(twin).toHaveClass(/admin-twin/);
+        const twinBox = await twin.boundingBox();
+        const arabicBox = await arabic.boundingBox();
+        expect(twinBox!.y).toBeGreaterThan(arabicBox!.y + arabicBox!.height - 1);
+        expect(Math.abs(twinBox!.width - arabicBox!.width)).toBeLessThan(2);
+        const twinLabel = twin.locator('.field-label').first();
+        await expect(twinLabel).toHaveText('English text');
+        expect(await twinLabel.evaluate((el) => getComputedStyle(el, '::after').content)).toBe(
+          '"EN"',
+        );
+        const arabicEditor = arabic.locator('[data-lexical-editor="true"]');
+        const twinEditor = twin.locator('[data-lexical-editor="true"]');
+        await expect(twinEditor).toHaveText('An English paragraph.', { timeout: 15_000 });
+        expect(
+          await twin
+            .locator('.rich-text-lexical__wrap')
+            .evaluate((el) => getComputedStyle(el).direction),
+        ).toBe('ltr');
+        // Both bodies edited, one Publish.
+        await arabicEditor.click();
+        await page.keyboard.press('Control+A');
+        await page.keyboard.type('فقرة عربية محدّثة.');
+        await twinEditor.click();
+        await page.keyboard.press('Control+A');
+        await page.keyboard.type('An updated English paragraph.');
+        await expect(twinEditor).toHaveText('An updated English paragraph.');
+        await page.locator('#action-save').click();
+        await expect(page.locator('.payload-toast-container')).toContainText(
+          /updated successfully/i,
+        );
+        await expect
+          .poll(async () => textOf((await both()).blocks[0]!.content.en), POLL)
+          .toBe('An updated English paragraph.');
+        const doc = await both();
+        expect(textOf(doc.blocks[0]!.content.ar)).toBe('فقرة عربية محدّثة.');
+        // At rest the twin is null and the pending JSON cleared; the form keeps showing the
+        // English it wrote.
+        expect(doc.blocks[0]!.contentTwin ?? null).toBeNull();
+        expect(doc.translations ?? null).toBeNull();
+        await expect(twinEditor).toHaveText('An updated English paragraph.');
+        // The English emptied on a Publish is refused with the field and the language named,
+        // and the Arabic change of the same save does not land either.
+        await twinEditor.click();
+        await page.keyboard.press('Control+A');
+        await page.keyboard.press('Delete');
+        await expect(twinEditor).toHaveText('');
+        await arabicEditor.click();
+        await page.keyboard.press('Control+A');
+        await page.keyboard.type('لا تُحفظ');
+        await page.locator('#action-save').click();
+        await expect(page.locator('.payload-toast-container')).toContainText(
+          /Content in English: This field is required/,
+        );
+        const after = await both();
+        expect(textOf(after.blocks[0]!.content.en)).toBe('An updated English paragraph.');
+        expect(textOf(after.blocks[0]!.content.ar)).toBe('فقرة عربية محدّثة.');
+      } finally {
+        expect((await request.delete(`${API}/pages/${id}`, { headers: auth })).status()).toBe(200);
+      }
+    });
+
+    test("a hero slide's English photo picked through the twin lands in the English locale by one Publish (ADR-057, PR B)", async ({
+      page,
+      request,
+    }) => {
+      test.setTimeout(150_000);
+      const auth = await login(request, ADMIN);
+      type Slide = { id: string; imageDesktop: unknown; imageMobile: unknown };
+      const inLocale = async (locale: string) => {
+        const res = await request.get(`${API}/globals/home?locale=${locale}&depth=0&draft=true`, {
+          headers: auth,
+        });
+        expect(res.status()).toBe(200);
+        return (await res.json()) as { hero: { slides: Slide[] } };
+      };
+      const before = { ar: await inLocale('ar'), en: await inLocale('en') };
+      const first = before.ar.hero.slides[0]!;
+      const englishBefore = before.en.hero.slides[0]!.imageDesktop as number;
+      // Another image of the library to pick for the English side: the Arabic desktop photo
+      // of the second slide, whatever it is, is never the English one of the first.
+      const other = before.ar.hero.slides[1]!.imageDesktop as number;
+      expect(other).not.toBe(englishBefore);
+      const otherDoc = (await (
+        await request.get(`${API}/media/${other}?depth=0`, { headers: auth })
+      ).json()) as { filename: string };
+      const restore = (locale: 'ar' | 'en') =>
+        request.post(`${API}/globals/home?locale=${locale}`, {
+          headers: auth,
+          data: { hero: { slides: before[locale].hero.slides }, _status: 'published' },
+        });
+      try {
+        await page.goto('/admin/login');
+        await page.locator('#field-email').fill(admin.email);
+        await page.locator('#field-password').fill(admin.password);
+        await page.locator('form button[type="submit"]').first().click();
+        await page.waitForURL((u) => !u.pathname.endsWith('/login'));
+        await page.goto('/admin/globals/home?locale=ar');
+        const tab = page.locator('.tabs-field__tab-button', { hasText: 'Opening slides' });
+        await expect(async () => {
+          await tab.click();
+          await expect(tab).toHaveClass(/--active/, { timeout: 2_000 });
+        }).toPass({ timeout: 30_000 });
+        // The English photo's picker sits under the Arabic one, filled with the stored English.
+        const twin = page.locator('#field-hero__slides__0__imageDesktopTwin');
+        await expect(twin).toHaveClass(/admin-twin/);
+        const twinLabel = twin.locator('.field-label').first();
+        await expect(twinLabel).toHaveText('English photo');
+        expect(await twinLabel.evaluate((el) => getComputedStyle(el, '::after').content)).toBe(
+          '"EN"',
+        );
+        const englishBeforeDoc = (await (
+          await request.get(`${API}/media/${englishBefore}?depth=0`, { headers: auth })
+        ).json()) as { filename: string };
+        await expect(twin).toContainText(englishBeforeDoc.filename, { timeout: 15_000 });
+        // Pick another image through Payload's own picker: clear, then choose from the library.
+        await twin.locator('.upload-relationship-details__remove').click();
+        await twin.getByRole('button', { name: /Choose from existing/ }).click();
+        const drawer = page.locator('.list-drawer').last();
+        await expect(drawer).toBeVisible({ timeout: 15_000 });
+        await drawer.locator('#search-filter-input').fill(otherDoc.filename);
+        await drawer.locator('button', { hasText: otherDoc.filename }).first().click();
+        await expect(twin).toContainText(otherDoc.filename, { timeout: 15_000 });
+        await page.locator('#action-save').click();
+        await expect(page.locator('.payload-toast-container')).toContainText(
+          /updated successfully/i,
+        );
+        await expect
+          .poll(async () => (await inLocale('en')).hero.slides[0]!.imageDesktop, POLL)
+          .toBe(other);
+        // The Arabic photo is untouched, the other slides and the mobile photo too; the
+        // twin is null at rest and the JSON cleared.
+        const all = (await (
+          await request.get(`${API}/globals/home?locale=all&depth=0`, { headers: auth })
+        ).json()) as {
+          hero: {
+            slides: Array<Slide & { imageDesktopTwin?: unknown; imageMobileTwin?: unknown }>;
+          };
+          translations?: unknown;
+        };
+        expect(all.hero.slides[0]!.imageDesktop).toEqual({ ar: first.imageDesktop, en: other });
+        expect(all.hero.slides[0]!.imageMobile).toEqual({
+          ar: first.imageMobile,
+          en: before.en.hero.slides[0]!.imageMobile,
+        });
+        expect(all.hero.slides[1]!.imageDesktop).toEqual({
+          ar: before.ar.hero.slides[1]!.imageDesktop,
+          en: before.en.hero.slides[1]!.imageDesktop,
+        });
+        expect(all.hero.slides.map((s) => s.imageDesktopTwin ?? null)).toEqual([
+          null,
+          null,
+          null,
+          null,
+        ]);
+        expect(all.translations ?? null).toBeNull();
+      } finally {
+        expect((await restore('ar')).status()).toBe(200);
+        expect((await restore('en')).status()).toBe(200);
+      }
+    });
+
+    // The one premise that rests on Lexical's internals: mounting the twin's editor does not
+    // re-serialise the English (`OnChangePlugin` skips the initial state), so a save that
+    // touches only Arabic makes one version, the Arabic write, and never a second English one.
+    test('a Publish that touches only Arabic writes one version: the untouched English twin is not re-written (ADR-057, PR B)', async ({
+      page,
+      request,
+    }) => {
+      test.setTimeout(150_000);
+      const auth = await login(request, ADMIN);
+      const slug = `bilingual-twin-noop-e2e-${Date.now()}`;
+      const created = await request.post(`${API}/pages?locale=ar`, {
+        headers: auth,
+        data: {
+          title: 'صفحة بلا تغيير',
+          slug,
+          blocks: [{ blockType: 'richText', title: 'المقدمة', content: paragraph('فقرة عربية.') }],
+          seo: { title: 'صفحة بلا تغيير', description: 'وصف للاختبار.' },
+          _status: 'published',
+        },
+      });
+      expect(created.status(), await created.text()).toBe(201);
+      const createdDoc = (
+        (await created.json()) as { doc: { id: number; blocks: Array<{ id: string }> } }
+      ).doc;
+      const id = createdDoc.id;
+      const versions = async () => {
+        const res = await request.get(
+          `${API}/pages/versions?where[parent][equals]=${id}&limit=1&depth=0`,
+          { headers: auth },
+        );
+        expect(res.status()).toBe(200);
+        return ((await res.json()) as { totalDocs: number }).totalDocs;
+      };
+      const title = async (locale: string) => {
+        const res = await request.get(`${API}/pages/${id}?locale=${locale}&depth=0`, {
+          headers: auth,
+        });
+        return ((await res.json()) as { title: string }).title;
+      };
+      try {
+        const english = await request.patch(`${API}/pages/${id}?locale=en`, {
+          headers: auth,
+          data: {
+            title: 'Untouched page',
+            blocks: [
+              {
+                id: createdDoc.blocks[0]!.id,
+                blockType: 'richText',
+                title: 'Introduction',
+                content: paragraph('An English paragraph that stays.'),
+              },
+            ],
+            seo: { title: 'Untouched page', description: 'For the test.' },
+          },
+        });
+        expect(english.status(), await english.text()).toBe(200);
+        await page.goto('/admin/login');
+        await page.locator('#field-email').fill(admin.email);
+        await page.locator('#field-password').fill(admin.password);
+        await page.locator('form button[type="submit"]').first().click();
+        await page.waitForURL((u) => !u.pathname.endsWith('/login'));
+        await page.goto(`/admin/collections/pages/${id}?locale=ar`);
+        await page.locator('.tabs-field__tab-button', { hasText: 'Content' }).click();
+        const twinEditor = page.locator(
+          '[data-field-path="blocks.0.contentTwin"] [data-lexical-editor="true"]',
+        );
+        await expect(twinEditor).toHaveText('An English paragraph that stays.', {
+          timeout: 15_000,
+        });
+        // An Arabic edit alone; the autosave lands first, and the count settles.
+        const before = await versions();
+        await page.locator('#field-title').fill('صفحة بلا تغيير (محدّثة)');
+        await expect.poll(versions, POLL).toBeGreaterThan(before);
+        await page.waitForTimeout(3_000);
+        const settled = await versions();
+        await page.locator('#action-save').click();
+        await expect(page.locator('.payload-toast-container')).toContainText(
+          /updated successfully/i,
+        );
+        await expect.poll(() => title('ar'), POLL).toBe('صفحة بلا تغيير (محدّثة)');
+        await page.waitForTimeout(3_000);
+        // One version: the Arabic publish. A second one would be an English write the
+        // editor never asked for.
+        expect(await versions()).toBe(settled + 1);
+        expect(await title('en')).toBe('Untouched page');
+        await expect(twinEditor).toHaveText('An English paragraph that stays.');
+      } finally {
+        expect((await request.delete(`${API}/pages/${id}`, { headers: auth })).status()).toBe(200);
       }
     });
 

@@ -22,6 +22,7 @@ import {
   JSON_VIEW_FIELD,
   READ_ONLY_LINE,
   SHARED_ROWS_NOTE,
+  SHARED_ROWS_WITH_TWINS_NOTE,
 } from '@/modules/cms/admin/descriptions/describe';
 import { PAGE_DESCRIPTIONS } from '@/modules/cms/admin/descriptions/pages';
 import {
@@ -74,7 +75,16 @@ import { Connections } from '@/modules/connections/collection';
 import { CONNECTION_DESCRIPTIONS } from '@/modules/connections/descriptions';
 import { Traffic } from '@/modules/traffic/collection';
 import { TRAFFIC_DESCRIPTIONS } from '@/modules/traffic/descriptions';
-import { BILINGUAL_FIELD, bilingualPaths, TRANSLATIONS } from '@/modules/cms/fields/bilingual';
+import {
+  BILINGUAL_FIELD,
+  bilingualPaths,
+  isTwinOf,
+  TRANSLATIONS,
+  twinField,
+  twinName,
+  twinPaths,
+} from '@/modules/cms/fields/bilingual';
+import { populateGlobalTwins, populateTwins } from '@/modules/cms/fields/twins';
 import { applyGlobalTranslations, applyTranslations } from '@/modules/cms/hooks/translations';
 
 /**
@@ -738,15 +748,24 @@ describe('read-only scalars render as ReadOnlyLine (audit 2026-09-18)', () => {
  * Side-by-side bilingual editing (ADR-057): `describeFields` renders every localized light
  * field (text, textarea, select, number) with `BilingualField`, outside a list and inside
  * the rows of arrays and blocks alike (PR A), and adds the hidden `translations` JSON to a
- * config that has any; such a config lists the apply hook after its own. Rich text, uploads
- * and relationships stay on the locale switch, and so does a list that is localized as a
- * whole (its rows are per language and cannot be paired).
+ * config that has any; such a config lists the apply hook after its own. A localized heavy
+ * field (rich text, upload) is covered by the twin that follows it in the config (PR B), and
+ * such a config lists the population hook. A localized relationship stays on the locale
+ * switch, and so does a list that is localized as a whole (its rows are per language and
+ * cannot be paired).
  */
-type Placed = { path: string; field: Field; inList: boolean; inLocalizedList: boolean };
+type Placed = {
+  path: string;
+  field: Field;
+  inList: boolean;
+  inLocalizedList: boolean;
+  /** The field right after this one in the same list (a twin must follow its original). */
+  next: Field | undefined;
+};
 
 function everyField(fields: Field[], path = '', inList = false, inLocalized = false): Placed[] {
   const out: Placed[] = [];
-  for (const f of fields) {
+  for (const [i, f] of fields.entries()) {
     if (f.type === 'tabs') {
       for (const t of f.tabs) {
         const next = 'name' in t && t.name ? `${path}${t.name}.` : path;
@@ -765,7 +784,7 @@ function everyField(fields: Field[], path = '', inList = false, inLocalized = fa
     }
     if (!('name' in f) || !f.name) continue;
     const name = `${path}${f.name}`;
-    out.push({ path: name, field: f, inList, inLocalizedList: inLocalized });
+    out.push({ path: name, field: f, inList, inLocalizedList: inLocalized, next: fields[i + 1] });
     const isList = f.type === 'array' || f.type === 'blocks';
     const list = inList || isList;
     const localized = inLocalized || (isList && (f as { localized?: boolean }).localized === true);
@@ -786,6 +805,7 @@ const widgetOf = (f: Field) =>
 const descriptionOf = (f: Field | undefined) =>
   (f as { admin?: { description?: { ar?: string; en?: string } } } | undefined)?.admin?.description;
 const LIGHT = ['text', 'textarea', 'select', 'number'];
+const HEAVY = new Set(['richText', 'upload']);
 
 /** A localized light field an editor can type in: what the rule says must be bilingual. */
 function editableLight(p: Placed): boolean {
@@ -803,14 +823,16 @@ function editableLight(p: Placed): boolean {
 }
 
 describe('side-by-side bilingual editing (ADR-057)', () => {
-  it('describeFields attaches the component to localized light fields, inside rows and blocks too; a list localized as a whole stays out', () => {
+  it('describeFields attaches the component to localized light fields, inside rows and blocks too; a twin is never touched; a list localized as a whole stays out', () => {
+    const body: Field = { name: 'body', type: 'richText', localized: true };
     const fields: Field[] = [
       { name: 'title', type: 'text', localized: true },
       { name: 'excerpt', type: 'textarea', localized: true },
       { name: 'kind', type: 'select', localized: true, options: ['a'] },
       { name: 'stock', type: 'number', localized: true },
       { name: 'slug', type: 'text' },
-      { name: 'body', type: 'richText', localized: true },
+      body,
+      twinField(body as Extract<Field, { type: 'richText' }>),
       { name: 'cover', type: 'upload', relationTo: 'media', localized: true },
       { name: 'hub', type: 'relationship', relationTo: 'categories', localized: true },
       {
@@ -858,12 +880,34 @@ describe('side-by-side bilingual editing (ADR-057)', () => {
       type: 'json',
       admin: { hidden: true },
     });
+    // The twin keeps its own component slots and description; the pass adds nothing to it.
+    const twin = placed.find((p) => p.path === 'bodyTwin')!.field;
+    expect(widgetOf(twin)).toBeUndefined();
+    expect(descriptionOf(twin)?.en).toMatch(/one Save writes both/);
+    expect(twinPaths(described)).toEqual(['body']);
     // A list whose rows are bilingual says what duplicating a row does; the other lists do not.
     const noteOn = (path: string) => descriptionOf(placed.find((p) => p.path === path)?.field)?.en;
     expect(noteOn('items')).toBe(SHARED_ROWS_NOTE.en);
     expect(noteOn('blocks')).toBe(SHARED_ROWS_NOTE.en);
     expect(noteOn('blocks.cards.rows')).toBe(SHARED_ROWS_NOTE.en);
     expect(noteOn('warnings')).toBeUndefined();
+    // A list whose rows hold a twin says the copy keeps the English under a field.
+    const photo: Field = { name: 'photo', type: 'upload', relationTo: 'media', localized: true };
+    const [withTwin] = describeFields(
+      [
+        {
+          name: 'slides',
+          type: 'array',
+          fields: [
+            { name: 'caption', type: 'text', localized: true },
+            photo,
+            twinField(photo as Extract<Field, { type: 'upload' }>),
+          ],
+        },
+      ],
+      {},
+    );
+    expect(descriptionOf(withTwin)).toEqual(SHARED_ROWS_WITH_TWINS_NOTE);
     // The note follows the map's own sentence on the list.
     const [withOwn] = describeFields(
       [{ name: 'items', type: 'array', fields: [{ name: 'text', type: 'text', localized: true }] }],
@@ -903,29 +947,58 @@ describe('side-by-side bilingual editing (ADR-057)', () => {
       const hooks = c.hooks?.afterChange ?? [];
       const hooked = hooks.includes(applyTranslations) || hooks.includes(applyGlobalTranslations);
       expect(hooked, 'applyTranslations in hooks.afterChange').toBe(carried);
+      // A twin never wears the component, and a config with a twin lists the population hook.
+      const originals = placed.filter((p) => isTwinOf(p.next, p.field));
+      for (const p of originals) {
+        const twin = placed.find((o) => o.field === p.next)!;
+        expect(widgetOf(twin.field), twin.path).toBeUndefined();
+      }
+      const reads = (c.hooks as { beforeRead?: unknown[] } | undefined)?.beforeRead ?? [];
+      const populates = reads.includes(populateTwins) || reads.includes(populateGlobalTwins);
+      expect(populates, 'populateTwins in hooks.beforeRead').toBe(originals.length > 0);
     });
   }
 
-  it('the census (PR A): 55 localized light fields inside rows are bilingual; rich text and uploads in rows stay on the switch', () => {
+  it('the census (PR A and B): 55 localized light fields inside rows are bilingual; every localized rich text and upload has its twin right after it', () => {
     const placed = configs.flatMap((c) =>
       everyField(c.fields).map((p) => ({ ...p, slug: c.slug })),
     );
     const inRows = placed.filter((p) => p.inList && widgetOf(p.field) === BILINGUAL_FIELD);
     expect(inRows.length).toBe(55);
-    const heavy = placed
-      .filter(
-        (p) =>
-          p.inList &&
-          !p.inLocalizedList &&
-          (p.field as { localized?: boolean }).localized === true &&
-          !LIGHT.includes(p.field.type),
-      )
-      .map((p) => `${p.slug}.${p.path}`);
-    expect(heavy).toEqual([
+    const heavy = placed.filter(
+      (p) =>
+        !p.inLocalizedList &&
+        (p.field as { localized?: boolean }).localized === true &&
+        HEAVY.has(p.field.type),
+    );
+    expect(heavy.map((p) => `${p.slug}.${p.path}`)).toEqual([
       'pages.blocks.richText.content',
+      'posts.body',
       'home.hero.slides.imageDesktop',
       'home.hero.slides.imageMobile',
     ]);
+    // Covered: the twin follows, same editor or collection, and the config's walk agrees.
+    const uncovered = heavy.filter((p) => !isTwinOf(p.next, p.field)).map((p) => p.path);
+    expect(uncovered).toEqual([]);
+    expect(twinPaths(Pages.fields)).toEqual(['blocks.richText.content']);
+    expect(twinPaths(Posts.fields)).toEqual(['body']);
+    expect(twinPaths(Home.fields)).toEqual(['hero.slides.imageDesktop', 'hero.slides.imageMobile']);
+    for (const p of heavy) {
+      expect((p.next as { name?: string }).name).toBe(twinName((p.field as { name: string }).name));
+    }
+    // Every other localized field of one value is light and bilingual: nothing is left on the
+    // locale control but the lists localized as a whole below.
+    const onSwitch = placed
+      .filter(
+        (p) =>
+          !p.inLocalizedList &&
+          (p.field as { localized?: boolean }).localized === true &&
+          !LIGHT.includes(p.field.type) &&
+          !HEAVY.has(p.field.type) &&
+          !['array', 'blocks', 'group'].includes(p.field.type),
+      )
+      .map((p) => `${p.slug}.${p.path}`);
+    expect(onSwitch).toEqual([]);
     // The lists localized as a whole: only the post's computed warnings (a fact, read-only).
     const wholeLists = placed
       .filter(

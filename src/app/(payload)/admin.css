@@ -424,7 +424,9 @@
     margin-inline-start: 8px;
   }
   .field-label .localized::after,
-  .field-label .admin-locale-tag {
+  .field-label .admin-locale-tag,
+  .admin-twin > .field-label::after,
+  .admin-twin > .rich-text-lexical__label-row > .field-label::after {
     visibility: visible;
     grid-area: 1 / 1;
     display: inline-grid;
@@ -447,6 +449,25 @@
     content: 'EN';
   }
   html:not([data-content-locale]) .field-label .localized {
+    display: none;
+  }
+
+  /* A heavy field's twin (ADR-057, PR B): the English rich text or photo that Payload's own
+     component renders under the Arabic one (`twinField`, `admin.className`). Its label wears
+     the EN pill (the upload's label is a direct child, Lexical's sits in a label row), its
+     editor runs left to right (an English text, whatever the panel's direction), and it
+     stays out of sight while the English locale itself is open: there the original is the
+     English and the twin holds nothing. */
+  .admin-twin > .field-label::after,
+  .admin-twin > .rich-text-lexical__label-row > .field-label::after {
+    content: 'EN';
+    margin-inline-start: 8px;
+    vertical-align: 2px;
+  }
+  .admin-twin .rich-text-lexical__wrap {
+    direction: ltr;
+  }
+  html[data-content-locale='en'] .admin-twin {
     display: none;
   }
 

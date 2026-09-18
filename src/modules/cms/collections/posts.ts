@@ -12,7 +12,7 @@ import {
   UnorderedListFeature,
   UploadFeature,
 } from '@payloadcms/richtext-lexical';
-import type { CollectionConfig, PayloadRequest } from 'payload';
+import type { CollectionConfig, PayloadRequest, RichTextField } from 'payload';
 import { localePath, requestLocale } from '@/lib/i18n';
 import { previewUrl } from '@/lib/preview-token';
 import {
@@ -31,8 +31,10 @@ import {
   TAKEAWAYS,
   TITLE_MAX,
 } from '@/modules/cms/fields/editorial';
+import { twinField } from '@/modules/cms/fields/bilingual';
 import { type Bilingual, inLanguage } from '@/modules/cms/fields/message';
 import { savedByField, stampSavedBy } from '@/modules/cms/fields/saved-by';
+import { populateTwins } from '@/modules/cms/fields/twins';
 import { isDraftSave, revalidatePosts } from '@/modules/cms/hooks/revalidate';
 import { applyTranslations } from '@/modules/cms/hooks/translations';
 import { collectionComponents } from '@/modules/cms/admin/document/config';
@@ -106,6 +108,22 @@ async function defaultAuthor({ req }: { req: PayloadRequest }): Promise<number |
 
 const EDITED_FIELDS = ['title', 'excerpt', 'body', 'takeaways'] as const;
 
+/** The post's body, per language; its English is the twin right under it (ADR-057, PR B). */
+const body: RichTextField = {
+  name: 'body',
+  type: 'richText',
+  required: true,
+  localized: true,
+  editor: postEditor,
+  label: { ar: 'المتن', en: 'Body' },
+  admin: {
+    description: {
+      ar: 'عناوين H2 بصيغة أسئلة، فقرات قصيرة، رابطان على الأقل إلى صفحات الموقع.',
+      en: 'H2s as questions, short paragraphs, at least two links to pages of this site.',
+    },
+  },
+};
+
 /**
  * Blog posts (BRD 10.1; ADR-041): drafts with autosave and scheduled publishing, the
  * editorial rules enforced on publish, reading time and warnings computed on every save,
@@ -150,6 +168,7 @@ export const Posts: CollectionConfig = {
     delete: canDeleteVersioned,
   },
   hooks: {
+    beforeRead: [populateTwins],
     beforeValidate: [
       ({ data, originalDoc, req }) => {
         const slug = data?.['slug'];
@@ -221,20 +240,8 @@ export const Posts: CollectionConfig = {
                   },
                 ],
               },
-              {
-                name: 'body',
-                type: 'richText',
-                required: true,
-                localized: true,
-                editor: postEditor,
-                label: { ar: 'المتن', en: 'Body' },
-                admin: {
-                  description: {
-                    ar: 'عناوين H2 بصيغة أسئلة، فقرات قصيرة، رابطان على الأقل إلى صفحات الموقع.',
-                    en: 'H2s as questions, short paragraphs, at least two links to pages of this site.',
-                  },
-                },
-              },
+              body,
+              twinField(body),
             ],
           },
           {

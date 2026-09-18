@@ -10,13 +10,20 @@ import {
   resolveKey,
   shapeOf,
   type TranslationEntries,
+  twinField,
+  twinPaths,
+  writeKey,
 } from '@/modules/cms/fields/bilingual';
 
 /**
  * Bilingual rows (ADR-057, PR A): an entry inside an array or a blocks field is keyed by the
  * row's id, the other locale's write sends the whole list built from the saved document by
- * id, and only a bilingual subfield of a row the document has can be written.
+ * id, and only a bilingual subfield of a row the document has can be written. A heavy twin
+ * inside a row (PR B: the slide's photo, the FAQ item's rich-text answer) rides the same
+ * build on the original's key.
  */
+const image: Field = { name: 'image', type: 'upload', relationTo: 'media', localized: true };
+const answer: Field = { name: 'answer', type: 'richText', localized: true };
 const fields: Field[] = [
   {
     name: 'hero',
@@ -29,7 +36,7 @@ const fields: Field[] = [
           { name: 'eyebrow', type: 'text', localized: true },
           { name: 'headline', type: 'text', localized: true },
           { name: 'href', type: 'text' },
-          { name: 'image', type: 'upload', relationTo: 'media', localized: true },
+          { type: 'row', fields: [image, twinField(image as Extract<Field, { type: 'upload' }>)] },
           { name: 'weight', type: 'number', localized: true },
         ],
       },
@@ -48,7 +55,8 @@ const fields: Field[] = [
             type: 'array',
             fields: [
               { name: 'question', type: 'text', localized: true },
-              { name: 'answer', type: 'richText', localized: true },
+              answer,
+              twinField(answer as Extract<Field, { type: 'richText' }>),
             ],
           },
         ],
@@ -123,48 +131,56 @@ const stored = {
 };
 
 describe('the config walk', () => {
-  it('lists the shared lists with their localized subfields per block, and a list localized as a whole as one value', () => {
+  it('lists the shared lists with their localized subfields per block, the twins by kind, and a list localized as a whole as one value', () => {
     expect(Object.keys(shape.groups)).toEqual(['hero']);
     expect(Object.keys(shape.groups['hero']!.lists)).toEqual(['slides']);
-    expect(shape.groups['hero']!.lists['slides']!.rows['']!.localized).toEqual({
-      eyebrow: true,
-      headline: true,
-      image: false,
-      weight: true,
-    });
+    const slide = shape.groups['hero']!.lists['slides']!.rows['']!;
+    expect(slide.localized).toEqual({ eyebrow: true, headline: true, image: false, weight: true });
+    expect(slide.twins).toEqual({ image: 'upload' });
     const blocks = shape.lists['blocks']!;
     expect(blocks.type).toBe('blocks');
     expect(Object.keys(blocks.rows)).toEqual(['faqList', 'contact', 'divider']);
-    expect(blocks.rows['faqList']!.lists['items']!.rows['']!.localized).toEqual({
-      question: true,
-      answer: false,
-    });
+    const item = blocks.rows['faqList']!.lists['items']!.rows['']!;
+    expect(item.localized).toEqual({ question: true, answer: false });
+    expect(item.twins).toEqual({ answer: 'richText' });
     expect(blocks.rows['contact']!.groups['booking']!.localized).toEqual({ title: true });
     expect(shape.localized).toEqual({ tags: false });
+    expect(shape.twins).toEqual({});
+    expect(twinPaths(fields)).toEqual(['hero.slides.image', 'blocks.faqList.items.answer']);
     expect(listAt(shape, 'hero.slides')?.type).toBe('array');
     expect(listAt(shape, 'blocks')?.type).toBe('blocks');
     expect(listAt(shape, 'tags')).toBeUndefined();
   });
 });
 
+const light = (list: string) => ({ list, kind: 'light' });
+
 describe('resolveKey: the allow-list at apply time', () => {
-  it('a bilingual subfield of a row the document has resolves to its outermost list', () => {
-    expect(resolveKey(shape, doc, 'hero.slides.s1.eyebrow')).toEqual({ list: 'hero.slides' });
-    expect(resolveKey(shape, doc, 'hero.slides.s3.weight')).toEqual({ list: 'hero.slides' });
-    expect(resolveKey(shape, doc, 'blocks.b1.title')).toEqual({ list: 'blocks' });
-    expect(resolveKey(shape, doc, 'blocks.b1.items.q2.question')).toEqual({ list: 'blocks' });
-    expect(resolveKey(shape, doc, 'blocks.b2.booking.title')).toEqual({ list: 'blocks' });
+  it('a bilingual subfield of a row the document has resolves to its outermost list; a heavy one with a twin to its kind', () => {
+    expect(resolveKey(shape, doc, 'hero.slides.s1.eyebrow')).toEqual(light('hero.slides'));
+    expect(resolveKey(shape, doc, 'hero.slides.s3.weight')).toEqual(light('hero.slides'));
+    expect(resolveKey(shape, doc, 'blocks.b1.title')).toEqual(light('blocks'));
+    expect(resolveKey(shape, doc, 'blocks.b1.items.q2.question')).toEqual(light('blocks'));
+    expect(resolveKey(shape, doc, 'blocks.b2.booking.title')).toEqual(light('blocks'));
+    expect(resolveKey(shape, doc, 'hero.slides.s1.image')).toEqual({
+      list: 'hero.slides',
+      kind: 'upload',
+    });
+    expect(resolveKey(shape, doc, 'blocks.b1.items.q1.answer')).toEqual({
+      list: 'blocks',
+      kind: 'richText',
+    });
   });
 
-  it('refuses a crafted id, a non-localized subfield, a heavy subfield, a block type the row is not, an index, a whole-localized list', () => {
+  it('refuses a crafted id, a non-localized subfield, the twin itself, a block type the row is not, an index, a whole-localized list', () => {
     expect(resolveKey(shape, doc, 'hero.slides.made-up.eyebrow')).toBeNull();
     expect(resolveKey(shape, doc, 'hero.slides.s1.href')).toBeNull();
-    expect(resolveKey(shape, doc, 'hero.slides.s1.image')).toBeNull();
+    expect(resolveKey(shape, doc, 'hero.slides.s1.imageTwin')).toBeNull();
     expect(resolveKey(shape, doc, 'hero.slides.s1.id')).toBeNull();
     expect(resolveKey(shape, doc, 'blocks.b1.blockType')).toBeNull();
     expect(resolveKey(shape, doc, 'blocks.b2.title')).toBeNull();
     expect(resolveKey(shape, doc, 'blocks.b3.tone')).toBeNull();
-    expect(resolveKey(shape, doc, 'blocks.b1.items.q1.answer')).toBeNull();
+    expect(resolveKey(shape, doc, 'blocks.b1.items.q1.answerTwin')).toBeNull();
     expect(resolveKey(shape, doc, 'blocks.b1.items.nope.question')).toBeNull();
     expect(resolveKey(shape, doc, 'hero.slides.0.eyebrow')).toBeNull();
     expect(resolveKey(shape, doc, 'hero.slides')).toBeNull();
@@ -213,16 +229,33 @@ describe('readKey and keyOfPath: the client side of the id key', () => {
     expect(keyOfPath('blocks.1.items.9.question', idAt)).toBeNull();
   });
 
-  it('reconcile keeps an entry of a row the other locale has not seen yet (a new row), drops an applied one', () => {
-    const entries: TranslationEntries = {
+  it('reconcile keeps an entry of a row the other locale has not seen yet (a new row), drops an applied one, and lets a twin base ride', () => {
+    const entries = {
       'hero.slides.s3.eyebrow': { value: 'New', base: null },
       'hero.slides.s1.eyebrow': { value: 'First', base: 'Old first' },
       'hero.slides.s2.eyebrow': { value: 'Second', base: null },
-    };
+      'hero.slides.s1.image': { base: '11' },
+      'blocks.b1.items.q1.answer': { base: null },
+      junk: 'no',
+    } as unknown as TranslationEntries;
     expect(Object.keys(reconcile(entries, (at) => readKey(stored, at)))).toEqual([
       'hero.slides.s3.eyebrow',
       'hero.slides.s2.eyebrow',
+      'hero.slides.s1.image',
+      'blocks.b1.items.q1.answer',
     ]);
+  });
+
+  it('writeKey sets a value through rows by id and never creates a parent', () => {
+    const target = structuredClone(stored);
+    writeKey(target, 'hero.slides.s2.imageTwin', 12);
+    writeKey(target, 'blocks.b1.items.q2.answerTwin', { root: 'x' });
+    writeKey(target, 'hero.slides.s9.imageTwin', 1);
+    writeKey(target, 'nowhere.deep.key', 1);
+    expect(readKey(target, 'hero.slides.s2.imageTwin')).toBe(12);
+    expect(readKey(target, 'blocks.b1.items.q2.answerTwin')).toEqual({ root: 'x' });
+    expect(target).not.toHaveProperty('nowhere');
+    expect(target.hero.slides).toHaveLength(2);
   });
 });
 
@@ -283,12 +316,13 @@ describe('otherLocaleRows and plannedWrites: the whole list in the other locale'
     expect(plannedWrites(gone, shape, doc, stored)).toEqual([]);
   });
 
-  it('a crafted id and a crafted non-localized path (a link, a block type) never reach the write', () => {
+  it('a crafted id and a crafted non-localized path (a link, a block type, a light entry on a heavy key) never reach the write', () => {
     const crafted: TranslationEntries = {
       'hero.slides.s1.href': { value: '/evil', base: '/a' },
       'blocks.b1.blockType': { value: 'contact', base: 'faqList' },
       'blocks.b3.tone': { value: 'b', base: 'a' },
       'blocks.b1.items.q1.answer': { value: 'x', base: null },
+      'hero.slides.s1.image': { value: '99', base: '11' },
       'hero.slides.made-up.eyebrow': { value: 'x', base: null },
       'hero.slides.s2.eyebrow': { value: 'Second', base: null },
     };
@@ -296,7 +330,34 @@ describe('otherLocaleRows and plannedWrites: the whole list in the other locale'
     expect(writes.map(([p]) => p)).toEqual(['hero.slides']);
     const rows = writes[0]![1] as Array<Record<string, unknown>>;
     expect(rows.map((r) => r['id'])).toEqual(['s2', 's1', 's3']);
-    expect(rows[1]).toMatchObject({ href: '/a' });
+    expect(rows[1]).toMatchObject({ href: '/a', image: 11 });
+  });
+
+  it('a twin write lands on the original key inside its row; one on a light key, a crafted key or a missing row is ignored', () => {
+    const twins = [
+      { key: 'hero.slides.s3.image', value: 31 },
+      { key: 'blocks.b1.items.q2.answer', value: { root: 'en2' } },
+      { key: 'hero.slides.s1.eyebrow', value: 'never' },
+      { key: 'hero.slides.s1.href', value: '/evil' },
+      { key: 'hero.slides.s9.image', value: 1 },
+      { key: 'blocks.b1.items.q1.answerTwin', value: { root: 'x' } },
+    ];
+    const writes = plannedWrites({}, shape, doc, stored, twins);
+    expect(writes.map(([p]) => p)).toEqual(['hero.slides', 'blocks']);
+    const slides = writes[0]![1] as Array<Record<string, unknown>>;
+    expect(slides.map((r) => [r['id'], r['image'], r['eyebrow'], r['href']])).toEqual([
+      ['s2', 12, null, '/b'],
+      ['s1', 11, 'First', '/a'],
+      ['s3', 31, null, '/c'],
+    ]);
+    // The twin field itself is a shared subfield: it travels as the document has it (null at rest).
+    expect(slides[2]).not.toHaveProperty('imageTwin');
+    const blocks = writes[1]![1] as Array<Record<string, unknown>>;
+    const items = (blocks[0] as { items: Array<Record<string, unknown>> }).items;
+    expect(items.map((i) => [i['id'], i['answer']])).toEqual([
+      ['q1', { root: 'en' }],
+      ['q2', { root: 'en2' }],
+    ]);
   });
 
   it('a nested block array: the whole blocks list, the nested rows by id inside their block, a block the config does not know sent as it is', () => {
