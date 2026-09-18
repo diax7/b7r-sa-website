@@ -33,7 +33,7 @@ export type AwaySide = 'left' | 'right';
 
 const railButton =
   'relative grid size-[40px] place-items-center rounded-inner text-text-muted transition-colors duration-(--duration-fast) hover:bg-surface-2 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-accent/40 data-[state=open]:bg-surface-2';
-/** The active group's or the dashboard's icon carries the bar on the leading edge. */
+/** The active group's or the dashboard's icon, and the flyout's active entry, carry the bar on the leading edge. */
 const railActive =
   "before:absolute before:inset-y-2 before:start-0 before:w-[3px] before:rounded-pill before:bg-current before:content-['']";
 
@@ -135,8 +135,10 @@ function RailGroup({
 }) {
   const active = groupEntities(group).some((e) => isActive(pathname, e.href));
   const attention = groupEntities(group).find((e) => e.badge)?.badge;
+  // Not modal: a modal menu marks the rest of the page `aria-hidden`, the rail and its
+  // focused trigger included, which axe refuses (an `aria-hidden` element holding focus).
   return (
-    <DropdownMenu dir={direction}>
+    <DropdownMenu dir={direction} modal={false}>
       <WithTooltip label={group.label} side={side} live={live}>
         <DropdownMenuTrigger
           aria-label={group.label}
@@ -203,7 +205,11 @@ function RailGroup({
   );
 }
 
-/** A flyout entry: a menu item that is a link; secondary entries indented under their parent. */
+/**
+ * A flyout entry: a menu item that is a link; secondary entries indented under their parent.
+ * The active one carries the hue, weight 500 and the bar, but no tint: the menu sits on the
+ * surface, where a hue on its own tint falls under 4.5:1 (the tints are tuned for the page).
+ */
 function FlyoutEntry({
   entity,
   hue,
@@ -223,7 +229,11 @@ function FlyoutEntry({
     <>
       <DropdownMenuItem
         asChild
-        className={cn(secondary && 'ms-4 text-caption text-text-muted', active && HUE_CLASSES[hue])}
+        className={cn(
+          'relative',
+          secondary && 'ms-4 text-caption text-text-muted',
+          active && cn(HUE_TEXT_CLASSES[hue], 'font-medium', railActive),
+        )}
       >
         <Link
           href={entity.href}

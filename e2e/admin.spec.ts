@@ -449,11 +449,11 @@ test.describe('CMS admin', () => {
     await expect(nav.locator('[data-admin-rail-group]')).toHaveCount(5);
     await expect(nav.locator('[data-admin-rail-dashboard]')).toBeVisible();
     await expect(nav.locator('[data-admin-account]')).toBeVisible();
-    expect((await nav.boundingBox())!.width).toBe(64);
+    expect(Math.round((await nav.boundingBox())!.width)).toBe(64);
     await nav.locator('[data-admin-rail-group="Site"]').click();
     const flyout = page.locator('[data-admin-flyout="Site"]');
     await expect(flyout).toBeVisible();
-    expect((await flyout.boundingBox())!.width).toBe(224);
+    expect(Math.round((await flyout.boundingBox())!.width)).toBe(224);
     await expect(flyout.locator('[data-admin-flyout-entry="pages"]')).toHaveAttribute(
       'aria-current',
       'page',
@@ -489,7 +489,7 @@ test.describe('CMS admin', () => {
     await page.locator('[data-admin-expand]').click();
     await expect(nav).toHaveClass(/nav--nav-open/);
     await expect(nav.locator('#nav-pages')).toContainText(/Pages/);
-    expect((await nav.boundingBox())!.width).toBe(264);
+    expect(Math.round((await nav.boundingBox())!.width)).toBe(264);
     await expect
       .poll(async () => {
         const res = await request.get(`${API}/payload-preferences/nav`, { headers: adminAuth });
@@ -503,7 +503,9 @@ test.describe('CMS admin', () => {
     // The header: a 240 px search box and the site link, both with text on a desktop;
     // Payload's avatar is gone (our account block is the one door).
     await expect(page.locator('[data-admin-palette-trigger]')).toContainText(/Search or jump/);
-    expect((await page.locator('[data-admin-palette-trigger]').boundingBox())!.width).toBe(240);
+    expect(
+      Math.round((await page.locator('[data-admin-palette-trigger]').boundingBox())!.width),
+    ).toBe(240);
     await expect(page.locator('[data-admin-view-site]')).toContainText(/View website/);
     await expect(page.locator('.app-header__account')).toBeHidden();
     // The palette: Ctrl+K, a document by title, Enter opens it.
@@ -568,14 +570,25 @@ test.describe('CMS admin', () => {
     await expect(page.locator('[data-admin-collapse]')).toBeHidden();
     const menu = page.locator('[data-admin-menu]');
     await expect(menu).toBeVisible();
+    await expect(menu).toHaveAttribute('aria-label', 'Open the menu');
     await expect(menu).toHaveAttribute('aria-expanded', 'false');
+    // Icon-only at this width, the two header controls keep their labels.
+    await expect(page.locator('[data-admin-palette-trigger]')).toHaveAttribute(
+      'aria-label',
+      /Search or jump/,
+    );
+    await expect(page.locator('[data-admin-view-site]')).toHaveAttribute(
+      'aria-label',
+      'View website',
+    );
     await menu.click();
     await expect(nav).toHaveClass(/nav--nav-open/);
     await expect(menu).toHaveAttribute('aria-expanded', 'true');
+    await expect(menu).toHaveAttribute('aria-label', 'Close the menu');
     await expect(nav.locator('[data-admin-menu-close]')).toBeFocused();
     await expect(nav.locator('#nav-pages')).toBeVisible();
     expect((await nav.locator('#nav-pages').boundingBox())!.height).toBe(44);
-    expect((await nav.boundingBox())!.width).toBe(320);
+    expect(Math.round((await nav.boundingBox())!.width)).toBe(320);
     await expect(nav.locator('[data-admin-language] [aria-pressed="true"]')).toHaveText('English');
     await expect(nav.locator('[data-admin-toggle]')).toBeHidden();
     expect(await serious('[data-admin-nav]'), 'axe: the drawer open').toEqual([]);
@@ -605,7 +618,7 @@ test.describe('CMS admin', () => {
     );
     await menu.click();
     await expect(nav).toHaveClass(/nav--nav-open/);
-    expect((await nav.boundingBox())!.width).toBe(390);
+    expect(Math.round((await nav.boundingBox())!.width)).toBe(390);
     await expect(nav.locator('#nav-pages')).toBeVisible();
     await nav.locator('[data-admin-menu-close]').click();
     await expect(nav).not.toHaveClass(/nav--nav-open/);

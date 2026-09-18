@@ -1721,6 +1721,10 @@ two corrections kept from the design memo and two settlements.
   monthly limit on Connections (red; two queries whatever their number). Read in parallel
   with the user's access, never cached, a failed read logs and leaves the entry bare. A
   badge's sentence is read to a screen reader after the entry's name, in both languages.
+  The cost, counted the way ADR-059 counts the dashboard's: four queries per page render
+  for an admin (a `count` of the month's failed runs, a `count` of the draft posts, a `find`
+  of the limited connections and a `find` of their month's runs), one for an editor (the
+  drafts; the other entries are not in the editor's sidebar), each a few milliseconds warm.
 - **One breakpoint, Payload's `m` (1024 px).** Above it the sidebar is inline: open at 264 px,
   or the 64 px rail when collapsed by the one button above the account (« open, » collapsed,
   mirrored in RTL): the brand mark, the dashboard icon, the five group icons (the active
@@ -1749,10 +1753,15 @@ two corrections kept from the design memo and two settlements.
   arrow away.
 - **The header.** The search box is 240 px and grows to 320 on focus; "View website" keeps
   its text; both fold to icons at the drawer widths, where Payload caps the actions at
-  300 px. The locale switcher stays in the header (it leaves for the document header with
-  the side-by-side editing, section 4 of the audit) and moves into the gutter the avatar left, so it no
-  longer overlaps our controls. The sidebar sits on `surface`, one step above the page, as
-  the design system's token table always said.
+  300 px, and icon-only carry a tooltip beside their label (the icon-only rule). The locale
+  switcher stays in the header (it leaves for the document header with the side-by-side
+  editing, section 4 of the audit) and moves into the gutter the avatar left, so it no
+  longer overlaps our controls. The sidebar stays on the page colour, not one step above
+  it: the identity hues on their tints reach 4.5:1 there (blue 4.9, violet 5.3) and fall
+  under it on the surface (4.1, 4.5), which is also why the flyout, a menu on the surface,
+  marks its active entry with the hue, the weight and the bar and no tint; and the flyout is
+  not modal, because a modal menu marks the rest of the page `aria-hidden` with the focused
+  icon inside it, which axe refuses.
 
 **Not done here.** Palette hits ranked by match quality (the audit's 1.9) is the palette's
 own change; `g` then a letter to jump to a group, the audit's "later, not now".

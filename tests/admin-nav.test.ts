@@ -217,6 +217,7 @@ describe('the badge rule: a number only where it asks for action', () => {
     expect(adminStrings.nav.badges.drafts(1)).toBe('1 draft waiting');
     expect(adminStrings.nav.badges.drafts(4)).toBe('4 drafts waiting');
     expect(adminStringsAr.nav.badges.drafts(2)).toBe('مسودتان بانتظار النشر');
+    expect(adminStringsAr.nav.badges.failedRuns(1)).toBe('جولة فاشلة واحدة هذا الشهر');
     expect(adminStringsAr.nav.badges.failedRuns(5)).toBe('5 جولات فاشلة هذا الشهر');
     expect(adminStringsAr.nav.badges.overLimit(11)).toBe('11 اتصالاً تجاوز حدّه الشهري');
   });

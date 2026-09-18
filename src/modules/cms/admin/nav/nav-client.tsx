@@ -153,7 +153,7 @@ export function NavClient({ groups, prefs, account, adminRoute }: NavClientProps
         id="admin-nav"
         ref={aside}
         className={cn(
-          'nav bg-surface',
+          'nav',
           navOpen && 'nav--nav-open',
           shouldAnimate && 'nav--nav-animate',
           hydrated && 'nav--nav-hydrated',

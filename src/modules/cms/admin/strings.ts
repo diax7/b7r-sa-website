@@ -449,7 +449,7 @@ export const adminStringsAr: AdminStrings = {
     badges: {
       failedRuns: (n) =>
         `${arabicCount(n, {
-          one: 'جولة واحدة فاشلة',
+          one: 'جولة فاشلة واحدة',
           two: 'جولتان فاشلتان',
           few: 'جولات فاشلة',
           many: 'جولة فاشلة',
