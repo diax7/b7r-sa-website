@@ -1426,8 +1426,10 @@ views (Traffic, the Score page) render inside Payload's `DefaultTemplate` throug
 `AdminShell` with the step nav: they had rendered bare, with no sidebar and no way back, a
 defect he reported.
 
-*Amended 2026-09-18 (Phase 3 of the pre-launch programme, the AI cost audit in
-`docs/audits/2026-09-18-ai-cost.md`): every prompt weekly, the brand prompts included (the
+*Amended 2026-09-18 (Dhia's decision under the Phase 3 brief of the pre-launch programme,
+"minimise overall usage, daily to weekly", executed on the AI cost audit in
+`docs/audits/2026-09-18-ai-cost.md`; it reverses his 2026-09-16 "daily on every prompt"): every
+prompt weekly, the brand prompts included (the
 score reads four weeks and M3 a fortnight; a daily brand prompt would have cost $17 a month
 for nothing the rules read); Google on `gemini-3-flash-preview` and Anthropic on
 `claude-haiku-4-5` (the same search tools at half and a third of the price; OpenAI's cost is

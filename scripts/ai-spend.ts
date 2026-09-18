@@ -82,6 +82,8 @@ async function main(): Promise<void> {
         { taskSlug: { in: ['citation-ledger', 'content-freshness', 'content-digest'] } },
         { completedAt: { exists: false } },
         { hasError: { not_equals: true } },
+        // Never a batch under way: its handler must close its own row.
+        { processing: { not_equals: true } },
       ],
     },
     limit: 50,

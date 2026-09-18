@@ -407,7 +407,8 @@ CI writes its dummy ids into the settings (`scripts/ci/analytics-ids.ts`), the U
   page's ledger shows who named B7R, who linked, and the competitors named most; the rows
   sit under the page as Citations. "Run now" on the page asks every enabled prompt whatever
   its period and restarts every week from that day (one per ten minutes; a connection asked
-  within the hour is skipped).
+  within the hour is skipped). After the 2026-09-18 change the prompts' last asks are of
+  09-16, so the first weekly morning is 2026-09-23; a quiet 09-21 is not a failure.
 - **What it costs, measured.** One batch of 22 prompts with web search on (runs of
   2026-09-16, the estimate's fees corrected): OpenAI `gpt-4.1-mini` $0.45 (84% of it the
   $25-a-thousand search fee, so no OpenAI model is cheaper), Google `gemini-3.1-pro-preview`
