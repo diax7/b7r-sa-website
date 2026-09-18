@@ -101,6 +101,36 @@ Payload's own component renders.
 collection `afterRead` hook args (`findMany` present), `RscEntryLexicalField` reading its
 path from the config.
 
+Checked on 2026-09-18 in the installed packages (Payload 3.89.0), one line each:
+
+- `@payloadcms/ui/dist/forms/Form/fieldReducer.js:25`: `ADD_ROW` sets
+  `id: subFieldState?.id?.value || new ObjectId().toHexString()` and writes
+  `${path}.${rowIndex}.id` into the form state (line 53); the id is made on the client.
+- `@payloadcms/ui/dist/forms/Form/fieldReducer.js:141`: `DUPLICATE_ROW` gives the copy
+  `new ObjectId().toHexString()`, and every nested row id too (line 160).
+- `payload/dist/fields/hooks/beforeChange/getExistingRowDoc.js:7`: a row is matched by
+  `existingRow.id === incomingRow.id`, else `{}`; `beforeChange/promise.js:210` hands that
+  match to each row as `siblingDoc` and `siblingDocWithLocales`, so a localized subfield
+  keeps its other-locale value by the row's id.
+- `@payloadcms/drizzle/dist/transform/write/array.js:22`: a supplied row id is stored as the
+  row's `id` (moved to `_uuid` on a versions table); the server keeps the client's id.
+- `@payloadcms/next/dist/utilities/getRequestLocale.js:10`: `upsertPreferences({ key:
+  'locale' })` on every `?locale=` (PR C's trap).
+- `payload/dist/collections/config/types.d.ts:138`: `AfterReadHook` args carry
+  `findMany?: boolean`; `collections/operations/find.js:258` passes `findMany: true`.
+- `@payloadcms/richtext-lexical/dist/field/rscEntry.js:12`:
+  `const path = args.path ?? args.clientField.name`: the editor stands on a config path
+  (PR B's twin is a real field).
+- `@payloadcms/ui/dist/providers/DocumentInfo/index.js:298`: the admin saves with
+  `depth: 0` and `fallback-locale: null`; `payload/dist/collections/operations/utilities/
+  update.js:50` reads the original document of an update by id with `fallbackLocale: null`,
+  so an English write never fills an untouched English field from the Arabic.
+- `seo-defaults.routes` is already a non-localized array with localized `title` and
+  `description` (`src/migrations/20260913_091427_initial.ts:331`, `seo_defaults_routes` +
+  `seo_defaults_routes_locales`, paired by id): no restructure, no migration. Only
+  `posts.takeaways` is localized as a whole (`posts.warnings` is too, but computed and
+  read-only: a fact, not an edit).
+
 ## Status log
 
 - 2026-09-18: settled with the CTO; PR A building.
