@@ -319,6 +319,13 @@ seed fixtures. Run both after a product or tagline change and commit the PNGs;
 `tests/og-images.test.ts` fails when a product has no image. A product added in the admin
 has no OG image until this runs: the page falls back to the language's default image.
 
+**A changed file under `public/` keeps its old look for a year unless its name changes.**
+Since 2026-09-18 (site audit, item 16) `next/image` caches its transforms for a year
+(`images.minimumCacheTTL`) and `/og`, `/icons` and `/images` answer with `max-age=86400`, so
+`pnpm og` and `pnpm assets`, which rewrite files under the same names, are served stale by
+the optimiser until the name changes or a deploy clears `.next/cache`. A CMS upload is safe:
+Payload gives a new file a new name.
+
 ## Lighthouse
 
 `pnpm lhci` runs the five BRD 8.7 URLs on Ubuntu CI. On Windows use

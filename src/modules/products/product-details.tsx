@@ -55,7 +55,15 @@ export function SizeChart({
       <p className="text-small text-text-muted" data-size-chart-unit="">
         {copy.sizeChartUnit}
       </p>
-      <div className="overflow-x-auto rounded-base border border-border bg-surface">
+      {/* The chart scrolls sideways on a phone, so the region is keyboard-reachable (axe
+          scrollable-region-focusable) and named after the table's caption. */}
+      <div
+        className="overflow-x-auto rounded-base border border-border bg-surface focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-accent/40"
+        // oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- a scrollable region must take focus for keyboard users (WCAG 2.1.1, axe scrollable-region-focusable)
+        tabIndex={0}
+        role="region"
+        aria-label={caption}
+      >
         <table className="w-full min-w-[420px] text-start text-body">
           <caption className="sr-only">{caption}</caption>
           <thead className="bg-ground text-small text-text-muted">

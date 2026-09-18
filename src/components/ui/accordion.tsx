@@ -66,7 +66,7 @@ export function AccordionContent({
       className="group/panel data-[state=closed]:invisible"
       {...rest}
     >
-      <div className="grid grid-rows-[0fr] transition-[grid-template-rows,visibility] duration-(--duration-base) ease-(--ease-standard) group-data-[state=closed]/panel:invisible group-data-[state=open]/panel:visible group-data-[state=open]/panel:grid-rows-[1fr]">
+      <div className="grid grid-rows-[0fr] transition-[grid-template-rows,visibility] duration-(--duration-base) ease-(--ease-standard) motion-reduce:transition-none group-data-[state=closed]/panel:invisible group-data-[state=open]/panel:visible group-data-[state=open]/panel:grid-rows-[1fr]">
         <div className="min-h-0 overflow-hidden">
           <div className={cn('pb-5 text-text-muted', className)}>{children}</div>
         </div>

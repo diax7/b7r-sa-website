@@ -20,6 +20,7 @@ export function CompareBlock({ block, locale, tone, anchor, heading }: BlockProp
   const ListHeading = heading ? 'h2' : 'h3';
   const messages = copyFor(locale).compare;
   const title = heading?.title ?? block.title;
+  const caption = messages.caption.replace('{ours}', block.ours).replace('{theirs}', block.theirs);
   return (
     <Section
       tone={tone}
@@ -40,11 +41,16 @@ export function CompareBlock({ block, locale, tone, anchor, heading }: BlockProp
           {heading?.lead && <p className="lead text-text-muted">{heading.lead}</p>}
           {block.intro && <p className="text-body text-text-muted">{block.intro}</p>}
         </div>
-        <div className="overflow-x-auto rounded-lg border border-border bg-surface shadow-card">
+        {/* The table scrolls sideways on a phone: a keyboard-reachable region named by its caption. */}
+        <div
+          className="overflow-x-auto rounded-lg border border-border bg-surface shadow-card focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-accent/40"
+          // oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- a scrollable region must take focus for keyboard users (WCAG 2.1.1, axe scrollable-region-focusable)
+          tabIndex={0}
+          role="region"
+          aria-label={caption}
+        >
           <table className="w-full min-w-[36rem] border-collapse">
-            <caption className="sr-only">
-              {messages.caption.replace('{ours}', block.ours).replace('{theirs}', block.theirs)}
-            </caption>
+            <caption className="sr-only">{caption}</caption>
             <thead>
               <tr>
                 <th scope="col" className={cn(head, 'sticky start-0 z-10 bg-surface')}>

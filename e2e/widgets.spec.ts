@@ -46,6 +46,15 @@ test.describe('WhatsApp widget (BRD 6.15)', () => {
     const button = page.getByTestId('whatsapp-button');
     await expect(button).toBeVisible({ timeout: 5000 });
     const before = (await button.boundingBox())!;
+    // The card sits above the button at every width: the two boxes never intersect (on a
+    // desktop both dock at the inline end, where the button used to cover the card's corner).
+    const cardBox = (await bar.boundingBox())!;
+    const overlap =
+      before.x < cardBox.x + cardBox.width &&
+      before.x + before.width > cardBox.x &&
+      before.y < cardBox.y + cardBox.height &&
+      before.y + before.height > cardBox.y;
+    expect(overlap).toBe(false);
     await button.click();
     const panel = page.getByTestId('whatsapp-panel');
     await expect(panel).toBeVisible();

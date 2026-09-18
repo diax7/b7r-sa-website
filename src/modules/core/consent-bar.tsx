@@ -34,7 +34,7 @@ export function ConsentBar({ locale, copy }: { locale: Locale; copy: SiteCopy['c
       role="region"
       aria-label={copy.link}
       data-testid="consent-bar"
-      className="fixed inset-x-4 bottom-[calc(88px+var(--bottom-dock,0px))] z-40 flex flex-col gap-4 rounded-base border border-border bg-surface p-4 shadow-popover animate-rise-in motion-reduce:animate-none sm:inset-x-auto sm:end-6 sm:bottom-[calc(24px+var(--bottom-dock,0px))] sm:max-w-[420px]"
+      className="fixed inset-x-4 bottom-[calc(88px+var(--bottom-dock,0px))] z-40 flex flex-col gap-4 rounded-base border border-border bg-surface p-4 shadow-popover animate-rise-in motion-reduce:animate-none sm:inset-x-auto sm:end-6 sm:max-w-[420px]"
     >
       <p className="text-small text-text">{copy.text}</p>
       <div className="flex flex-wrap items-center gap-2">

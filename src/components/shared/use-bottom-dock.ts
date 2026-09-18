@@ -32,6 +32,10 @@ export function useBottomDock(visible: boolean) {
  * height above the widgets' base line (the viewport's bottom edge plus `--bottom-dock`), so
  * the WhatsApp panel opens above the card instead of over its buttons on a phone (site audit
  * 2026-09-18, item 6). Re-measured when the card's size changes (text wrap, breakpoint).
+ * Two constants move together: the widget's 24 px `bottom` above the dock line
+ * (`dockClass` in `whatsapp-widget.tsx`) and the panel's `-12px` in `panelBottom`, which
+ * turns this edge into "12 px above the card"; the card itself sits 88 px up, above the
+ * 56 px button, at every width.
  */
 export function useConsentDock(card: RefObject<HTMLElement | null>, visible: boolean) {
   useLayoutEffect(() => {
