@@ -33,6 +33,7 @@ describe('content security policy (BRD 8.10, ADR-016)', () => {
       'https://www.googletagmanager.com',
       'https://challenges.cloudflare.com',
       'https://cloud.umami.is',
+      'https://gateway.umami.is',
       'https://api-gateway.umami.dev',
       'https://umami.b7r.app',
     ]);
@@ -54,6 +55,7 @@ describe('content security policy (BRD 8.10, ADR-016)', () => {
       'https://region1.google-analytics.com',
       'https://www.googletagmanager.com',
       'https://cloud.umami.is',
+      'https://gateway.umami.is',
       'https://api-gateway.umami.dev',
       'https://umami.b7r.app',
     ]);

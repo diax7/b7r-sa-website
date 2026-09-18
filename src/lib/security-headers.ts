@@ -30,15 +30,18 @@ const TURNSTILE = 'https://challenges.cloudflare.com';
 const GA_HOSTS = ['https://*.google-analytics.com', 'https://*.analytics.google.com'];
 const GA_REGION = 'https://region1.google-analytics.com';
 /**
- * Where a Umami script and its events may live (ADR-052): Umami Cloud (its script and its
- * event gateway) or B7R's own Umami at umami.b7r.app (BRD 7.7). Exact hosts, never a
- * wildcard: a dangling subdomain must not become script on the site's origin. The admin's
- * Umami field accepts only these, so the policy never blocks a configured script; the policy
- * is static (ADR-016) and cannot follow an arbitrary URL. Another self-hosted Umami is one
- * line here.
+ * Where a Umami script and its events may live (ADR-052): Umami Cloud (its script on
+ * cloud.umami.is, its events on gateway.umami.is since 2026, on api-gateway.umami.dev
+ * before) or B7R's own Umami at umami.b7r.app (BRD 7.7). Exact hosts, never a wildcard: a
+ * dangling subdomain must not become script on the site's origin. The admin's Umami field
+ * accepts only these, so the policy never blocks a configured script; the policy is static
+ * (ADR-016) and cannot follow an arbitrary URL. Another self-hosted Umami is one line here.
+ * When Umami's script moves its gateway again, the first sign is a `connect-src` refusal in
+ * the browser console and zeros on the dashboard: `scripts/dev/analytics-probe.mjs` shows it.
  */
 export const UMAMI_HOSTS = [
   'https://cloud.umami.is',
+  'https://gateway.umami.is',
   'https://api-gateway.umami.dev',
   'https://umami.b7r.app',
 ] as const;

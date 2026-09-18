@@ -19,6 +19,12 @@
 @source '../../modules/traffic/admin';
 @source '../../modules/visibility/admin';
 @source '../../components';
+/* The word "table" in a description or a comment would generate Tailwind's `table` utility
+   (`display: table`), which lands on Payload's `div.table`, the list view's scroller, and
+   Chrome drops `overflow: auto` on a table box: the list then scrolled the whole page
+   sideways on a phone. Nothing of ours uses the utility. globals.css, which reaches /admin
+   too, blocks it as well. */
+@source not inline('table');
 
 @theme inline {
   --color-*: initial;
@@ -284,6 +290,30 @@
   }
   .app-header__localizer.localizer {
     inset-inline-end: var(--gutter-h);
+    /* Payload keeps a physical `right` on the switcher under 768 px; in the Arabic panel it
+       met our end inset and stretched the switcher across the header, its button over the
+       crumbs and 40 px in from the wrong edge. The start side is free at every width. */
+    inset-inline-start: auto;
+  }
+  /* The header's row shrinks instead of spilling (the CTO's 390 px check, 2026-09-18).
+     Payload's crumbs wrapper is `width: 100%` with the flex default `min-width: auto`, so a
+     long title pushed the two controls and the switcher's spacer past the edge (482 px on a
+     390 px phone; the same from 1025 to 1150 px with the controls at their full width), and
+     the switcher itself, absolute at the gutter, painted over "View website". The crumbs
+     shrink first, the last one truncating with Payload's own ellipsis and the wrapper
+     clipping what a 320 px phone still cannot hold; the controls and the spacer keep their
+     width, so the spacer stays under the switcher at every width. */
+  .app-header__step-nav-wrapper,
+  .app-header__step-nav,
+  .step-nav__last {
+    min-width: 0;
+  }
+  .app-header__step-nav-wrapper {
+    overflow: hidden;
+  }
+  .app-header__actions-wrapper,
+  .app-header__localizer-spacing {
+    flex-shrink: 0;
   }
 
   /* On the page colour, like the page: the identity hues sit on their tints at 4.5:1 and
@@ -529,33 +559,47 @@
   /* ----------------------------------------------------------------------------------------
      The locale note in the document controls (audit 2026-09-18, 3.1). It is a
      `beforeDocumentControls` slot, so it lives inside Payload's controls row beside Preview
-     and Publish. That row has a fixed height, and on a phone it scrolls sideways; a note that
-     wrapped painted over the status line and the Publish button. The note shrinks first on a
-     desktop (`min-width: 0` on the row lets it), and under Payload's `m` breakpoint the row
-     wraps: the buttons keep the first line, the note takes a full line under them, and the
+     and Publish. That row has a fixed height and scrolls sideways (Payload's wrapper is a
+     horizontal scroller), so a note on the same line never shrinks: it pushed Save and Publish
+     past the right edge of a 1440 px screen (2026-09-18, found on the temporary domain). The
+     note therefore takes a full line under the buttons at every width: the buttons keep the
+     first line, the note the second, truncating with the full text in its `title`, and the
      wrapper grows with it. `:has` keeps every document without a note as Payload lays it out.
      ---------------------------------------------------------------------------------------- */
   .doc-controls__controls {
     min-width: 0;
   }
-  @media (max-width: 1024px) {
-    .doc-controls__controls-wrapper:has([data-admin-locale-note]) {
-      height: auto;
-      min-height: var(--doc-controls-height);
-      align-items: flex-start;
-    }
-    .doc-controls__controls-wrapper:has([data-admin-locale-note]) .doc-controls__popup {
-      margin-block-start: 10px;
-    }
-    .doc-controls__controls:has([data-admin-locale-note]) {
-      flex-wrap: wrap;
-      row-gap: 6px;
-      padding-block: 8px;
-    }
-    .doc-controls__controls [data-admin-locale-note] {
-      flex: 1 1 100%;
-      order: 1;
-    }
+  /* The bar and its wrapper grow by the note's line; the controls wrapper takes the free
+     space so the note can use it, and `min-width: 0` stops the note's sentence from sizing
+     it (a flex child's `min-width: auto` is its content's width, which pushed the buttons
+     off the screen). */
+  .doc-controls:has([data-admin-locale-note]),
+  .doc-controls__wrapper:has([data-admin-locale-note]),
+  .doc-controls__controls-wrapper:has([data-admin-locale-note]) {
+    height: auto;
+    min-height: var(--doc-controls-height);
+  }
+  .doc-controls__controls-wrapper:has([data-admin-locale-note]) {
+    align-items: flex-start;
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  .doc-controls__controls-wrapper:has([data-admin-locale-note]) .doc-controls__popup {
+    margin-block-start: 10px;
+  }
+  .doc-controls__controls:has([data-admin-locale-note]) {
+    flex: 1 1 auto;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    row-gap: 6px;
+    padding-block: 8px;
+  }
+  .doc-controls__controls [data-admin-locale-note] {
+    flex: 1 1 100%;
+    order: 1;
+    max-width: 100%;
+    /* The note's intrinsic width is zero: it never claims room, it fills what is left. */
+    contain: inline-size;
   }
 
   /* ----------------------------------------------------------------------------------------
@@ -625,6 +669,17 @@
     outline: none;
     box-shadow: 0 0 0 2px var(--admin-ring);
     border-radius: 4px;
+  }
+
+  /* At Payload's `m` breakpoint and under, the list's table bleeds to the screen's edges
+     (a scroller of its own) through a physical offset and a physical padding on its left;
+     in the Arabic panel the block sat 32 px past the left edge of the screen and the page
+     scrolled sideways to it. The same bleed, in logical properties. */
+  @media (max-width: 1024px) {
+    .collection-list .table {
+      inset-inline: calc(var(--gutter-h) * -1) auto;
+      padding-inline: var(--gutter-h) 0;
+    }
   }
 }
 
