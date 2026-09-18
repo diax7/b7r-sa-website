@@ -1420,6 +1420,9 @@ test.describe('CMS admin', () => {
         await page.locator('form button[type="submit"]').first().click();
         await page.waitForURL((u) => !u.pathname.endsWith('/login'));
         await page.goto(`/admin/collections/pages/${id}?locale=ar`);
+        // The title sits in the Content tab; Payload restores the last active tab from the
+        // user's preferences after the first render, so the tab is chosen explicitly.
+        await page.locator('.tabs-field__tab-button', { hasText: 'Content' }).click();
         // The note says what is side by side; the title carries both inputs, the English one
         // tagged EN and prefilled from the stored English.
         await expect(page.locator('[data-admin-locale-note="ar"]')).toContainText(
@@ -1492,9 +1495,14 @@ test.describe('CMS admin', () => {
         await page.locator('form button[type="submit"]').first().click();
         await page.waitForURL((u) => !u.pathname.endsWith('/login'));
         await page.goto('/admin/globals/site-settings?locale=ar');
+        // The tagline sits in the Brand tab; Payload restores the last active tab from the
+        // user's preferences after the first render, so the tab is chosen explicitly.
+        await page.locator('.tabs-field__tab-button', { hasText: 'Brand' }).click();
         const arabic = page.locator('#field-tagline');
         const other = page.locator('#field-translations__en__tagline');
-        await expect(other).toHaveValue(before.en ?? '', { timeout: 15_000 });
+        await expect(arabic).toBeVisible();
+        await expect(other).toBeEnabled({ timeout: 15_000 });
+        await expect(other).toHaveValue(before.en ?? '');
         const stamp = Date.now();
         await arabic.fill(`شعار الاختبار ${stamp}`);
         await other.fill(`Tagline e2e ${stamp}`);
