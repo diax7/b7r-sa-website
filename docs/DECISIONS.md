@@ -1885,7 +1885,12 @@ English photo's id); a twin holding a value is the pending English of an autosav
 and is kept with its base. **At rest every twin is null.** The twin's own `beforeChange`
 stores null on a Save or Publish and keeps the value on an autosave (so a draft carries the
 pending English across a reload), and the apply reads what was typed from the request's
-data (Payload's field hooks run on a copy). The apply treats a twin as one more entry: the
+data (Payload's field hooks run on a copy), falling back to the document before the write
+for a twin the request did not send: Payload's scheduled publish and any script writes
+`data: { _status }` alone (`versions/schedule/job.js`), the JSON rides into it by field
+fallback, and `previousDoc` is the draft as stored, its twin the English an autosave kept
+or null at rest, so a pending English lands with the light entries while a null is never
+read as "cleared" (the CTO's review of this PR). The apply treats a twin as one more entry: the
 value from the data by row id, the stored English from the read in the other locale, and
 `twinApplies` (the value's base differs from the entry's and the stored English still
 hashes to it) decides as the light fields' base check does; a rich text or photo cleared
@@ -1917,8 +1922,13 @@ page's rich-text block edited in Arabic and in its twin by one Publish and read 
 `?locale=all`, both bodies, the twin null, the JSON cleared, then the English emptied and
 refused with the field and the language named; a hero slide's English photo cleared and
 picked again through the twin's own picker, landing in `?locale=en` with the Arabic and the
-other slides untouched). What still follows the locale control: nothing of one value; the
-switch itself goes in PR C.
+other slides untouched; a Publish that touches only Arabic making one version, not two:
+the one premise resting on Lexical's internals, that mounting the twin's editor does not
+re-serialise the English, pinned). A package upgrade that bumps Lexical's node versions
+makes one content-identical English write with a version on the first save of each
+document, and heals itself there. `shapeOf` is memoised per field array (a `WeakMap`), so
+a read or a save pays the walk once per process. What still follows the locale control:
+nothing of one value; the switch itself goes in PR C.
 
 **Amendment, 2026-09-18 (PR C of the same plan): no locale switch.** Dhia's sentence, the
 directive of the plan: "I don't want to be switching between them, one edit for both
