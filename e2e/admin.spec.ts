@@ -2549,7 +2549,11 @@ test.describe('CMS admin', () => {
         },
       });
       expect(created.status(), await created.text()).toBe(201);
-      const id = ((await created.json()) as { doc: { id: number } }).doc.id;
+      const createdDoc = (
+        (await created.json()) as { doc: { id: number; blocks: Array<{ id: string }> } }
+      ).doc;
+      const id = createdDoc.id;
+      const blockId = createdDoc.blocks[0]!.id;
       try {
         // The proxy's allowlist of published slugs refreshes within seconds (ADR-032).
         await expect.poll(async () => (await request.get(`/${slug}`)).status(), POLL).toBe(200);
@@ -2574,14 +2578,16 @@ test.describe('CMS admin', () => {
             .filter((v) => ['serious', 'critical'].includes(v.impact ?? ''))
             .map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`),
         ).toEqual([]);
-        // The English form of the same page renders the same table.
-        await request.patch(`${API}/pages/${id}?locale=en`, {
+        // The English form of the same page renders the same table: the same block row (its
+        // id) takes the English values, so the Arabic side keeps its own.
+        const english = await request.patch(`${API}/pages/${id}?locale=en`, {
           headers: json,
           data: {
             title: `Test comparison ${stamp}`,
             blocks: [
               {
                 ...comparison,
+                id: blockId,
                 intro: 'A test comparison.',
                 ours: 'B7R Print',
                 rows: [
@@ -2597,9 +2603,13 @@ test.describe('CMS admin', () => {
             seo: { title: 'Test comparison', description: 'A test comparison of B7R Print.' },
           },
         });
+        expect(english.status(), await english.text()).toBe(200);
+        // The English page carries the block's table once the publish has revalidated it (the
+        // header names the brand on every page, so the table is the marker).
         await expect
           .poll(
-            async () => (await (await request.get(`/en/${slug}`)).text()).includes('B7R Print'),
+            async () =>
+              (await (await request.get(`/en/${slug}`)).text()).includes('data-block="compare"'),
             POLL,
           )
           .toBe(true);
