@@ -326,7 +326,7 @@ describe('the ledger reading (ADR-049 D5)', () => {
     const candidates = [
       { title: 'كيف تسعّر تيشيرتاً مطبوعاً في السعودية', label: 'التسعير', href: '/p/1' },
       { title: 'الطباعة عند الطلب في السعودية: أمثلة', label: 'الطباعة', href: '/p/2' },
-      { title: 'Print on demand in Saudi Arabia: examples', label: 'POD', href: '/p/2?locale=en' },
+      { title: 'Print on demand in Saudi Arabia: examples', label: 'POD', href: '/p/2' },
       { title: 'About', label: 'About', href: '/p/3' },
     ];
     expect(bestMatch('أفضل موقع طباعة على الطلب في السعودية؟', candidates)).toEqual({
@@ -335,7 +335,7 @@ describe('the ledger reading (ADR-049 D5)', () => {
     });
     expect(bestMatch('Best print on demand service in Saudi Arabia?', candidates)).toEqual({
       label: 'POD',
-      href: '/p/2?locale=en',
+      href: '/p/2',
     });
     expect(bestMatch('hoodie riyadh', candidates)).toBeNull();
   });

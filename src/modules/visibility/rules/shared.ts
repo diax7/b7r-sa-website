@@ -136,17 +136,22 @@ export function emittedTitle(template: string, title: string, absolute = false):
   return template.replace('%s', title);
 }
 
-export function editHref(
-  adminRoute: string,
-  collection: string,
-  id: number,
-  locale?: Locale,
-): string {
-  return `${adminRoute}/collections/${collection}/${id}${locale === 'en' ? '?locale=en' : ''}`;
+/**
+ * The panel's form of a document, at the field that fixes the finding when one does: the
+ * fragment is Payload's input id (`field-<path>`, dots as `__`). Both languages sit in that
+ * one form (ADR-057: the English column beside the Arabic field, or the English editor
+ * under it), so the guide names the column and the link never carries a locale.
+ */
+export function editHref(adminRoute: string, collection: string, id: number, field?: string) {
+  return `${adminRoute}/collections/${collection}/${id}${fieldAnchor(field)}`;
 }
 
-export function globalHref(adminRoute: string, slug: string, locale?: Locale): string {
-  return `${adminRoute}/globals/${slug}${locale === 'en' ? '?locale=en' : ''}`;
+export function globalHref(adminRoute: string, slug: string, field?: string): string {
+  return `${adminRoute}/globals/${slug}${fieldAnchor(field)}`;
+}
+
+function fieldAnchor(field: string | undefined): string {
+  return field ? `#field-${field.replace(/\./g, '__')}` : '';
 }
 
 export function isHttps(value: string | null | undefined): boolean {

@@ -114,7 +114,7 @@ describe('the "needs a hand" line (ADR-059)', () => {
         ],
         missingEnglish: [
           { collection: 'posts', count: 0, href: null },
-          { collection: 'pages', count: 3, href: '/admin/collections/pages/8?locale=en' },
+          { collection: 'pages', count: 3, href: '/admin/collections/pages/8#field-title' },
         ],
         drafts: [
           { collection: 'posts', label: 'Posts', stale: 1 },
@@ -139,7 +139,7 @@ describe('the "needs a hand" line (ADR-059)', () => {
       text: 'OpenAI is over its monthly limit',
     });
     expect(items[2]).toMatchObject({
-      href: '/admin/collections/pages/8?locale=en',
+      href: '/admin/collections/pages/8#field-title',
       text: '3 documents without English',
     });
     expect(items[3]).toMatchObject({
@@ -376,7 +376,7 @@ describe('the content readers (ADR-059)', () => {
     const missing = await missingEnglish(payload, { collections: ['pages', 'products'], user });
     expect(missing).toEqual([
       { collection: 'pages', count: 0, href: null },
-      { collection: 'products', count: 2, href: '/admin/collections/products/2?locale=en' },
+      { collection: 'products', count: 2, href: '/admin/collections/products/2#field-name' },
     ]);
     const finds = calls.filter((c) => c.op === 'find');
     expect(finds).toHaveLength(2);

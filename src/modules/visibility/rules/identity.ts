@@ -12,7 +12,7 @@ import {
 
 /** Identity (ADR-049 I1 to I4): one brand the engines can name and disambiguate. */
 export function identity(s: Snapshot): Finding[] {
-  const settings = globalHref(s.adminRoute, 'site-settings', 'en');
+  const settings = globalHref(s.adminRoute, 'site-settings', 'tagline');
   const socials = (['x', 'instagram', 'tiktok'] as const).map((key) => ({
     ok: isHttps(s.site.social[key]),
     label: same(key === 'x' ? 'X' : key === 'instagram' ? 'Instagram' : 'TikTok'),
@@ -37,8 +37,8 @@ export function identity(s: Snapshot): Finding[] {
         ar: 'الشعار النصي مكتوب بالإنجليزية',
       },
       guide: {
-        en: 'One sentence that says what B7R is, the same everywhere: the footer, llms.txt, the app manifest and the store schema read it. Site settings, the Brand tab, in English.',
-        ar: 'جملة واحدة تعرّف بحر برنت، هي نفسها في كل مكان: يقرؤها التذييل وملف llms.txt وبيان التطبيق ومخطط المتجر. إعدادات الموقع، تبويب العلامة، بالإنجليزية.',
+        en: 'One sentence that says what B7R is, the same everywhere: the footer, llms.txt, the app manifest and the store schema read it. Site settings, the Brand tab, the English field beside the Arabic tagline.',
+        ar: 'جملة واحدة تعرّف بحر برنت، هي نفسها في كل مكان: يقرؤها التذييل وملف llms.txt وبيان التطبيق ومخطط المتجر. إعدادات الموقع، تبويب العلامة، الحقل الإنجليزي بجانب الشعار النصي العربي.',
       },
       href: settings,
     }),
@@ -64,10 +64,10 @@ export function identity(s: Snapshot): Finding[] {
         ar: 'صفحة «من نحن» منشورة باللغتين',
       },
       guide: {
-        en: 'The About page carries the facts an engine quotes (what, who for, since when, where from). Publish it, then fill its English version.',
-        ar: 'صفحة «من نحن» تحمل الحقائق التي يقتبسها المحرّك (ما هو، لمن، منذ متى، من أين). انشرها، ثم املأ نسختها الإنجليزية.',
+        en: 'The About page carries the facts an engine quotes (what, who for, since when, where from). Publish it, then fill the English fields beside the Arabic ones, the title first.',
+        ar: 'صفحة «من نحن» تحمل الحقائق التي يقتبسها المحرّك (ما هو، لمن، منذ متى، من أين). انشرها، ثم املأ الحقول الإنجليزية بجانب العربية، والعنوان أولاً.',
       },
-      ...(about ? { href: editHref(s.adminRoute, 'pages', about.id, 'en') } : {}),
+      ...(about ? { href: editHref(s.adminRoute, 'pages', about.id, 'title') } : {}),
     }),
     prorata({
       key: 'I4',

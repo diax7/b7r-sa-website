@@ -102,7 +102,7 @@ export async function draftsWaiting(
 export interface MissingEnglish {
   collection: ContentSlug;
   count: number;
-  /** The English form of the first document without it, the place that fixes the finding. */
+  /** The form of the first document without it, at its title: the English column beside it is the place that fixes the finding. */
   href: string | null;
 }
 
@@ -145,7 +145,7 @@ export async function missingEnglish(
       return {
         collection,
         count: without.length,
-        href: first ? editHref(adminRoute, collection, first.id, 'en') : null,
+        href: first ? editHref(adminRoute, collection, first.id, field) : null,
       };
     }),
   );

@@ -159,7 +159,7 @@ export function ContentCard({
                     <td className={cn(td, num)}>
                       <Figure
                         value={r.missingEnglish?.count ?? null}
-                        href={r.missingEnglish?.href ?? `${list}?locale=en`}
+                        href={r.missingEnglish?.href ?? list}
                         language={language}
                         hook="missing-english"
                       />

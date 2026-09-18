@@ -100,7 +100,7 @@ export function needsAHand(
     const first = missing[0]!;
     items.push({
       key: 'missing-english',
-      href: first.href ?? `${adminRoute}/collections/${first.collection}?locale=en`,
+      href: first.href ?? `${adminRoute}/collections/${first.collection}`,
       text: s.missingEnglish(missingCount),
     });
   }
