@@ -60,6 +60,15 @@ b7r.sa to go live.
 | 31 | An outsider's read of the API: `connections`, `prompts`, `citations`, `payload-jobs`, `users` answer 403 anonymously; GraphQL is off; drafts are not served | *code* | done | `tests/access.test.ts`; checked on the review server 2026-09-17 |
 | 32 | An external uptime monitor on `/api/health` every five minutes | Dhia | open | UptimeRobot or cron-job.org; the platform's own check restarts, the external one tells you |
 
+## Added 2026-09-18 (the site audit, `docs/audits/2026-09-18-site.md`)
+
+| # | Item | Owner | Status | Notes |
+|---|---|---|---|---|
+| 33 | English hero chips: Home → Hero → Proof chips → the English text on the three rows ("100% free", "No minimum order", "Kingdom-wide delivery in 5 days"); a row without English text is omitted from `/en` | Dhia | open | Audit item 8; check the production database the same way |
+| 34 | The ADR-050 drafts published in both languages (Posts → the three posts → the draft version): the answer-first opening and the question H2 on the pricing post, the English `seoTitle`s under 60 characters | Dhia | open | Audit item 9; the visibility rules E1, E3 and E4 stay open until then |
+| 35 | `GET /api/health` on the production host says `media: "s3"` | Dhia | open | Audit item 11: with local media every photo URL is `/api/payload/media/file/*`, served `noindex, nofollow` and `no-store`, so product photos never enter Google Images and a CDN caches nothing. If the answer is `local`, exempt `/api/payload/media/file/` from `adminHeaders()` (`src/lib/security-headers.ts`) with `public, max-age=31536000, immutable` (filenames are unique) |
+| 36 | Site settings → Analytics → Umami: the production script URL and website id (`cloud.umami.is` or `umami.b7r.app`), never the review stand-in `/umami-test.js` | Dhia | open | Audit item 17; row 6 covers GA4 |
+
 ## Also needed before any of the above
 
 - GitHub repository `diax7/b7r-sa-website` exists (its visibility is Dhia's); the platform project is still Dhia's.
