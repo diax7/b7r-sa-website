@@ -43,7 +43,7 @@ async function ping(spec: ConnectionSpec, services: ServiceTests): Promise<strin
     return test(spec.apiKey);
   }
   if (spec.kind === 'mock') {
-    if (!mockAllowed()) throw new Error('the mock kind needs AI_CONTENT_MOCK=1');
+    if (!mockAllowed()) throw new Error('mock kind: not enabled on this server');
     return 'mock';
   }
   if (!spec.apiKey) throw new Error('no API key saved on this connection');

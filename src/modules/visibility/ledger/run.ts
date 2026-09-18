@@ -141,7 +141,7 @@ async function refusal(
   now: Date,
   env: Record<string, string | undefined>,
 ): Promise<string | null> {
-  if (spec.kind === 'mock' && !mockAllowed(env)) return 'the mock kind needs AI_CONTENT_MOCK=1';
+  if (spec.kind === 'mock' && !mockAllowed(env)) return 'mock kind: not enabled on this server';
   if (spec.kind !== 'mock' && !spec.apiKey) return 'no API key saved on this connection';
   if (spec.kind !== 'mock' && !spec.model) return 'no model id on this connection';
   const spend = await connectionSpend(payload, spec.id, now);
