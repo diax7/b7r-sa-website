@@ -57,13 +57,16 @@ describe('B0: the proxy and the (site) routes agree on the code-owned segments (
     const stray = await proxy(
       new Request(`https://b7r.sa${ADMIN_PREFIX}/collections/pages/1?locale=en&foo=bar`),
     );
+    // The Location keeps the request's own origin, whatever it is (Next's adapter refuses a
+    // relative one and relativises an absolute one on the request's host, so the browser
+    // gets `/admin/...` in the container too, where `request.url` names the bind address).
     expect(stray?.status).toBe(307);
     expect(stray?.headers.get('location')).toBe(
       `https://b7r.sa${ADMIN_PREFIX}/collections/pages/1?foo=bar`,
     );
-    const root = await proxy(new Request(`https://b7r.sa${ADMIN_PREFIX}?locale=ar`));
+    const root = await proxy(new Request(`http://0.0.0.0:3004${ADMIN_PREFIX}?locale=ar`));
     expect(root?.status).toBe(307);
-    expect(root?.headers.get('location')).toBe(`https://b7r.sa${ADMIN_PREFIX}`);
+    expect(root?.headers.get('location')).toBe(`http://0.0.0.0:3004${ADMIN_PREFIX}`);
     for (const path of [
       ADMIN_PREFIX,
       `${ADMIN_PREFIX}/collections/pages/1`,

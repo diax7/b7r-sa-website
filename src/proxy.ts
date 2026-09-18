@@ -77,7 +77,15 @@ function allowlist(path: string) {
 /** The Arabic pages, and the English ones with the "is the site in English" flag (ADR-043). */
 const slugs = { ar: allowlist('/api/pages/slugs'), en: allowlist('/api/pages/slugs/en') };
 
-/** An admin URL with `?locale=`: a 307 to the same URL without it; any other admin URL passes. */
+/**
+ * An admin URL with `?locale=`: a 307 to the same URL without it; any other admin URL
+ * passes. The `Location` is absolute on purpose: Next's proxy adapter parses it with no
+ * base (`new NextURL(location)` in `server/web/adapter.js`) and answers a relative one with
+ * a 500 (`ERR_INVALID_URL`); it then relativises an absolute one whose host is the request's
+ * own, which holds by construction here (`clean` is `request.url` minus one parameter), so
+ * the browser receives `/admin/...` whatever host the request carried (the container's
+ * bind address included).
+ */
 function stripAdminLocale(url: URL): Response | undefined {
   if (!url.searchParams.has('locale')) return undefined;
   const clean = new URL(url);
