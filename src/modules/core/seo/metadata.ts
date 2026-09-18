@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import type { Metadata } from 'next';
 import { copyFor } from '@/content/copy';
 import type { Product } from '@/content/schema';
-import type { Author, Hub, Post } from '@/lib/cms/blog';
+import type { Author, Hub, OgImage, Post } from '@/lib/cms/blog';
 import { getPage, getSeo, getSeoDefaults, getSiteSettings } from '@/lib/cms';
 import { documentLocales, siteLocales } from '@/lib/cms/locales';
 import { env, siteBase } from '@/lib/env';
@@ -31,7 +31,8 @@ export interface PageMeta {
   title: string;
   description: string;
   ogType?: 'website' | 'article';
-  ogImage?: string;
+  /** A path to a 1200×630 render (`/og/…`), or a CMS image with its own dimensions. */
+  ogImage?: string | OgImage;
   /** Article dates, ISO `YYYY-MM-DD`. */
   publishedTime?: string;
   modifiedTime?: string;
@@ -50,7 +51,7 @@ export interface PageMeta {
  * JSON-LD carries the commerce data).
  */
 export function pageMetadata(meta: PageMeta): Metadata {
-  const ogImage = meta.ogImage ?? defaultOgImage(meta.locale);
+  const ogImage = ogImageOf(meta);
   const canonical = localePath(meta.locale, meta.route);
   const twin = otherLocale(meta.locale);
   const paired = meta.locales.includes('ar') && meta.locales.includes('en');
@@ -61,7 +62,7 @@ export function pageMetadata(meta: PageMeta): Metadata {
     title: meta.title,
     description: meta.description,
     url: canonical,
-    images: [{ url: ogImage, width: 1200, height: 630 }],
+    images: [ogImage],
   };
   const openGraph: NonNullable<Metadata['openGraph']> =
     meta.ogType === 'article'
@@ -96,6 +97,17 @@ export function pageMetadata(meta: PageMeta): Metadata {
     twitter: { card: 'summary_large_image', site: '@b7rprint' },
     robots: robotsFor(meta.noindex ?? false),
   };
+}
+
+/**
+ * The page's image with the dimensions it really has: the `/og/*.png` renders are 1200×630;
+ * a CMS image (a post cover, a hub cover, an author photo) declares its own size so a scraper
+ * never reads 1200×630 for a 1600×900 JPEG (site audit 2026-09-18, item 15).
+ */
+function ogImageOf(meta: PageMeta): { url: string; width: number; height: number } {
+  const image = meta.ogImage ?? defaultOgImage(meta.locale);
+  if (typeof image === 'string') return { url: image, width: 1200, height: 630 };
+  return { url: image.url, width: image.width ?? 1200, height: image.height ?? 630 };
 }
 
 /** `noindex` on any host other than https://b7r.sa (BRD 7.2); on it, an empty listing follows. */

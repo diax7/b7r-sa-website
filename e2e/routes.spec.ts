@@ -46,6 +46,27 @@ test.describe('routes (BRD 5.1, 7.1, 7.4)', () => {
     });
   }
 
+  test('og:image declares the size the image really has', async ({ request }) => {
+    // A render is 1200×630; a post's cover is the 1600×900 JPEG the CMS recorded (site audit
+    // 2026-09-18, item 15). The English home takes its own render, not the Arabic one.
+    const og = async (path: string) => {
+      const html = await (await request.get(path)).text();
+      const read = (name: string) =>
+        new RegExp(`<meta property="og:image${name}" content="([^"]+)"`).exec(html)?.[1];
+      return { url: read(''), width: read(':width'), height: read(':height') };
+    };
+    expect(await og('/products/hoodie')).toEqual({
+      url: 'https://b7r.sa/og/products/hoodie.png',
+      width: '1200',
+      height: '630',
+    });
+    const post = await og('/blog/how-to-price-printed-tshirt-saudi');
+    expect(post.url).toMatch(/cover-pricing/);
+    expect(post.width).toBe('1600');
+    expect(post.height).toBe('900');
+    expect((await og('/en')).url).toBe('https://b7r.sa/og/en/default.png');
+  });
+
   test('the home graph is OnlineStore + WebSite; a product page carries Product + Offer', async ({
     request,
   }) => {
