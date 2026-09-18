@@ -232,7 +232,7 @@ export const adminStrings = {
       close: 'Close',
       noLimit: 'No monthly limit',
       empty:
-        'No run yet. Add an AI connection under Admin, keep the prompts you want asked, then press Run now or wait for Monday.',
+        'No run yet. Add an AI connection under Admin, keep the prompts you want asked, then press Run now or wait for the morning run.',
       prompts: 'The prompts',
       prompt: 'Prompt',
       notRun: 'not run',

@@ -7,8 +7,12 @@ export interface SeedPrompt {
   namesBrand: boolean;
 }
 
-/** Every seeded prompt is asked daily (Dhia, 2026-09-16); the period is edited per prompt. */
-export const SEED_EVERY_DAYS = 1;
+/**
+ * Every seeded prompt is asked weekly (Phase 3, 2026-09-18: the score reads a four-week
+ * window and the M3 rule a fortnight, so a week serves every rule at a seventh of the daily
+ * spend); the period is edited per prompt.
+ */
+export const SEED_EVERY_DAYS = 7;
 
 /**
  * The buyer prompts (ADR-049 D5): the category questions a buyer types to an assistant, from

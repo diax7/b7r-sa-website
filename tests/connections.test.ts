@@ -82,7 +82,11 @@ describe('connections (ADR-047)', () => {
     ]);
     expect(isConnectionKind('openai-compatible')).toBe(true);
     expect(isConnectionKind('perplexity')).toBe(false);
-    expect(KINDS.openai.defaultModel).toBe('gpt-4.1');
+    // The kinds' defaults are the cheap models (Phase 3, 2026-09-18): the engine and the
+    // ledger alike start on them.
+    expect(KINDS.openai.defaultModel).toBe('gpt-4.1-mini');
+    expect(KINDS.anthropic.defaultModel).toBe('claude-haiku-4-5');
+    expect(KINDS.google.defaultModel).toBe('gemini-3-flash-preview');
     expect(KINDS['openai-compatible'].needsBaseUrl).toBe(true);
     expect(KINDS.mock.rates).toEqual({ input: 0, output: 0 });
   });
@@ -235,9 +239,9 @@ describe('connections (ADR-047)', () => {
       collection: Connections as never,
     } as never);
     expect(created).toMatchObject({
-      model: 'claude-sonnet-4-5',
+      model: 'claude-haiku-4-5',
       inputPerMillionUsd: 1,
-      outputPerMillionUsd: 15,
+      outputPerMillionUsd: 5,
     });
     // A partial update does not touch what it did not send; an emptied field refills.
     const updated = await fill({

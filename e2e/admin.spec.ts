@@ -2396,7 +2396,7 @@ test.describe('CMS admin', () => {
       const ids: number[] = [];
       try {
         // A new connection: the key comes back as a mask, the empty model and rates as the
-        // service's usual ones.
+        // service's usual ones (the cheap model since Phase 3, 2026-09-18).
         const made = await request.post(`${API}/connections`, {
           headers: json,
           data: { label: 'OpenAI, e2e', kind: 'openai', apiKey: 'sk-e2e-not-a-real-key-7890' },
@@ -2405,9 +2405,9 @@ test.describe('CMS admin', () => {
         const openai = ((await made.json()) as { doc: Record<string, unknown> }).doc;
         ids.push(openai['id'] as number);
         expect(openai['apiKey']).toBe('••••7890');
-        expect(openai['model']).toBe('gpt-4.1');
-        expect(openai['inputPerMillionUsd']).toBe(2);
-        expect(openai['outputPerMillionUsd']).toBe(8);
+        expect(openai['model']).toBe('gpt-4.1-mini');
+        expect(openai['inputPerMillionUsd']).toBe(0.4);
+        expect(openai['outputPerMillionUsd']).toBe(1.6);
         expect(openai['spentThisMonthUsd']).toBe(0);
         expect(openai['callsThisMonth']).toBe(0);
         // Saving the mask keeps the key; the list never shows it either.
