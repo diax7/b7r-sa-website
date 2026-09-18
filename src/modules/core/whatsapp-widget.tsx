@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import { X } from 'lucide-react';
 import { useEffect, useId, useRef, useState } from 'react';
-import { WhatsAppIcon } from '@/components/shared/brand-icons';
+import { WhatsAppIcon } from '@/components/shared/whatsapp-icon';
 import { Icon } from '@/components/shared/icon';
 import type { SiteCopy } from '@/content/copy';
 import { cn } from '@/lib/cn';

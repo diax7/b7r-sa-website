@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { WhatsAppIcon } from '@/components/shared/brand-icons';
+import { WhatsAppIcon } from '@/components/shared/whatsapp-icon';
 import { Button } from '@/components/shared/button';
 import { Container } from '@/components/shared/container';
 import { whatsappUrl } from '@/lib/utm';
