@@ -6,6 +6,7 @@ import { Refused } from '@/modules/cms/refused';
 import { PAGE_BLOCKS } from '@/modules/cms/blocks';
 import { isDraftSave, revalidatePages } from '@/modules/cms/hooks/revalidate';
 import { type Bilingual, inLanguage } from '@/modules/cms/fields/message';
+import { applyTranslations } from '@/modules/cms/hooks/translations';
 import { savedByField, stampSavedBy } from '@/modules/cms/fields/saved-by';
 import { localePath, requestLocale } from '@/lib/i18n';
 import { previewUrl } from '@/lib/preview-token';
@@ -76,7 +77,7 @@ export const Pages: CollectionConfig = {
       en: 'Site pages as editable blocks. The seven designed pages keep their URLs; add new ones freely.',
     },
   },
-  versions: { drafts: { autosave: { interval: 1500 }, schedulePublish: true }, maxPerDoc: 25 },
+  versions: { drafts: { autosave: { interval: 1500 }, schedulePublish: true }, maxPerDoc: 50 },
   access: {
     read: publishedOrStaff,
     create: isEditorOrAdmin,
@@ -134,7 +135,7 @@ export const Pages: CollectionConfig = {
         }
       },
     ],
-    afterChange: [revalidatePages],
+    afterChange: [revalidatePages, applyTranslations],
     afterDelete: [revalidatePages],
   },
   fields: describeFields(

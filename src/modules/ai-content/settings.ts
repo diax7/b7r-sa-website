@@ -1,6 +1,7 @@
 import type { Field, GlobalConfig } from 'payload';
 import { hiddenUnlessAdmin, isAdmin } from '@/modules/cms/access';
 import { savedByField, stampSavedByGlobal } from '@/modules/cms/fields/saved-by';
+import { applyGlobalTranslations } from '@/modules/cms/hooks/translations';
 import { requestLocale } from '@/lib/i18n';
 import { DEFAULT_IMAGE_STYLE, DEFAULT_STYLE } from '@/modules/ai-content/prompts/defaults';
 import { secretField } from '@/modules/cms/fields/secret-field';
@@ -75,6 +76,7 @@ export const AiSettings: GlobalConfig = {
         return data;
       },
     ],
+    afterChange: [applyGlobalTranslations],
   },
   fields: describeFields(
     [
@@ -164,8 +166,8 @@ export const AiSettings: GlobalConfig = {
             label: { ar: 'اللغة والأسلوب', en: 'Language and style' },
             name: 'style',
             description: {
-              ar: 'لكل لغة دليلها وتعليماتها وعباراتها الممنوعة.',
-              en: 'Each language has its own guide, instructions and banned phrases.',
+              ar: 'لكل لغة دليلها وتعليماتها وعباراتها الممنوعة: النصان جنباً إلى جنب، وحفظ واحد يكتب اللغتين.',
+              en: 'Each language has its own guide, instructions and banned phrases: both texts sit side by side, one Save writes both.',
             },
             fields: [
               {

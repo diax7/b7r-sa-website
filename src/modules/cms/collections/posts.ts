@@ -34,6 +34,7 @@ import {
 import { type Bilingual, inLanguage } from '@/modules/cms/fields/message';
 import { savedByField, stampSavedBy } from '@/modules/cms/fields/saved-by';
 import { isDraftSave, revalidatePosts } from '@/modules/cms/hooks/revalidate';
+import { applyTranslations } from '@/modules/cms/hooks/translations';
 import { collectionComponents } from '@/modules/cms/admin/document/config';
 import { adminGroup } from '@/modules/cms/admin/icons';
 import { POST_DESCRIPTIONS } from '@/modules/cms/admin/descriptions/blog';
@@ -141,7 +142,7 @@ export const Posts: CollectionConfig = {
     },
   },
   defaultSort: '-publishedAt',
-  versions: { drafts: { autosave: { interval: 1500 }, schedulePublish: true }, maxPerDoc: 25 },
+  versions: { drafts: { autosave: { interval: 1500 }, schedulePublish: true }, maxPerDoc: 50 },
   access: {
     read: publishedOrStaff,
     create: isEditorOrAdmin,
@@ -185,7 +186,7 @@ export const Posts: CollectionConfig = {
         return data;
       },
     ],
-    afterChange: [revalidatePosts],
+    afterChange: [revalidatePosts, applyTranslations],
     afterDelete: [revalidatePosts],
   },
   fields: describeFields(

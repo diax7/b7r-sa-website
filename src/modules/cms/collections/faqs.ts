@@ -4,6 +4,7 @@ import { isAdmin, isEditorOrAdmin } from '@/modules/cms/access';
 import { Refused } from '@/modules/cms/refused';
 import { PATHS_FOR_FAQS, revalidateRoutes } from '@/modules/cms/hooks/revalidate';
 import { type Bilingual, inLanguage } from '@/modules/cms/fields/message';
+import { applyTranslations } from '@/modules/cms/hooks/translations';
 import { savedByField, stampSavedBy } from '@/modules/cms/fields/saved-by';
 import { collectionComponents } from '@/modules/cms/admin/document/config';
 import { adminGroup } from '@/modules/cms/admin/icons';
@@ -100,7 +101,7 @@ export const Faqs: CollectionConfig = {
   hooks: {
     beforeValidate: [guardHomeLimit],
     beforeChange: [stampSavedBy],
-    afterChange: [revalidateRoutes(PATHS_FOR_FAQS)],
+    afterChange: [revalidateRoutes(PATHS_FOR_FAQS), applyTranslations],
     afterDelete: [revalidateRoutes(PATHS_FOR_FAQS)],
   },
   fields: describeFields(

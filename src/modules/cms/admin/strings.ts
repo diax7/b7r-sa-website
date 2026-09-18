@@ -81,7 +81,8 @@ export const adminStrings = {
   },
   locale: {
     /**
-     * One line before the document controls of anything with per-language fields (ADR-044),
+     * One line before the document controls of anything with per-language fields (ADR-044,
+     * the legend by ADR-057: what sits side by side and what stays on the locale switch),
      * keyed by the CONTENT locale being edited, written in the UI language.
      */
     editing: { ar: 'Editing the Arabic content.', en: 'Editing the English content.' } as Record<
@@ -89,9 +90,17 @@ export const adminStrings = {
       string
     >,
     legend: {
-      ar: 'Fields marked AR are per language; the rest is shared with English.',
-      en: 'Fields marked EN are per language; the rest is shared with Arabic.',
+      ar: 'A field tagged AR has its English beside it: type the English next to the Arabic, one Save writes both. Rich text, lists and blocks stay per language: switch the locale at the top to edit their English. Fields without a tag are shared.',
+      en: 'A field tagged EN has its Arabic beside it: type the Arabic next to the English, one Save writes both. Rich text, lists and blocks stay per language: switch the locale at the top to edit their Arabic. Fields without a tag are shared.',
     } as Record<string, string>,
+  },
+  bilingual: {
+    /** The content locales by code, as nouns, for the two lines below (ADR-057). */
+    languages: { ar: 'Arabic', en: 'English' } as Record<string, string>,
+    /** The other language's input while its stored text is on its way. */
+    loading: 'Loading {language}…',
+    /** The other language's input when the read failed: what happened, then the way out. */
+    failed: 'The {language} text could not be loaded. Reload the page to edit it.',
   },
   engine: {
     generateNow: 'Generate now',
@@ -482,9 +491,14 @@ export const adminStringsAr: AdminStrings = {
   locale: {
     editing: { ar: 'تحرير المحتوى العربي.', en: 'تحرير المحتوى الإنجليزي.' },
     legend: {
-      ar: 'الحقول المعلّمة AR تختلف بحسب اللغة؛ والبقية مشتركة مع الإنجليزية.',
-      en: 'الحقول المعلّمة EN تختلف بحسب اللغة؛ والبقية مشتركة مع العربية.',
+      ar: 'الحقل المعلَّم AR إلى جانبه نصه الإنجليزي: اكتب الإنجليزية بجانب العربية، وحفظ واحد يكتب اللغتين. النص المنسّق والقوائم والأقسام لكل لغة على حدة: بدّل اللغة من أعلى الصفحة لتحرير الإنجليزية فيها. الحقول بلا علامة مشتركة بين اللغتين.',
+      en: 'الحقل المعلَّم EN إلى جانبه نصه العربي: اكتب العربية بجانب الإنجليزية، وحفظ واحد يكتب اللغتين. النص المنسّق والقوائم والأقسام لكل لغة على حدة: بدّل اللغة من أعلى الصفحة لتحرير العربية فيها. الحقول بلا علامة مشتركة بين اللغتين.',
     },
+  },
+  bilingual: {
+    languages: { ar: 'العربية', en: 'الإنجليزية' },
+    loading: 'تحميل {language}…',
+    failed: 'تعذّر تحميل نص اللغة {language}. أعد تحميل الصفحة لتحريره.',
   },
   engine: {
     generateNow: 'ولّد الآن',

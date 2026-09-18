@@ -2,6 +2,7 @@ import type { CollectionConfig, PayloadRequest } from 'payload';
 import { canDeleteVersioned, isEditorOrAdmin, publishedOrStaff } from '@/modules/cms/access';
 import { revalidateProducts } from '@/modules/cms/hooks/revalidate';
 import { inLanguage } from '@/modules/cms/fields/message';
+import { applyTranslations } from '@/modules/cms/hooks/translations';
 import { savedByField, stampSavedBy } from '@/modules/cms/fields/saved-by';
 import { PRINT_AREA_LABEL_EN, PRINT_METHOD_EN } from '@/content/seed/en/products';
 import { PRINT_AREA_LABEL, PRINT_METHOD } from '@/content/seed/products';
@@ -47,7 +48,7 @@ export const Products: CollectionConfig = {
       en: 'Products on the site and in the designer: prices, photos, sizes and colours.',
     },
   },
-  versions: { drafts: { autosave: { interval: 1500 }, schedulePublish: true }, maxPerDoc: 25 },
+  versions: { drafts: { autosave: { interval: 1500 }, schedulePublish: true }, maxPerDoc: 50 },
   defaultSort: 'sortOrder',
   access: {
     read: publishedOrStaff,
@@ -57,7 +58,7 @@ export const Products: CollectionConfig = {
   },
   hooks: {
     beforeChange: [stampSavedBy],
-    afterChange: [revalidateProducts],
+    afterChange: [revalidateProducts, applyTranslations],
     afterDelete: [revalidateProducts],
   },
   fields: describeFields(
