@@ -24,6 +24,7 @@ import * as migration_20260916_180013_citation_answer from './20260916_180013_ci
 import * as migration_20260916_230030_site_analytics from './20260916_230030_site_analytics';
 import * as migration_20260917_192112_cta_shiny from './20260917_192112_cta_shiny';
 import * as migration_20260918_033852_translations from './20260918_033852_translations';
+import * as migration_20260918_114349_takeaways_rows_shared from './20260918_114349_takeaways_rows_shared';
 
 export const migrations = [
   {
@@ -155,5 +156,10 @@ export const migrations = [
     up: migration_20260918_033852_translations.up,
     down: migration_20260918_033852_translations.down,
     name: '20260918_033852_translations',
+  },
+  {
+    up: migration_20260918_114349_takeaways_rows_shared.up,
+    down: migration_20260918_114349_takeaways_rows_shared.down,
+    name: '20260918_114349_takeaways_rows_shared'
   },
 ];

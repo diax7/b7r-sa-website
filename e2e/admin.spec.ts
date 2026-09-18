@@ -2057,12 +2057,15 @@ test.describe('CMS admin', () => {
         // The English values, judged by the English rules: Arabic prose is the warning there,
         // the reading time follows the English pace, and the pair links both ways.
         const englishTitle = `Test post ${stamp}`;
+        // The takeaway rows are shared and their text per language (ADR-057, PR A): the
+        // English rides on the Arabic rows' ids; a row without an id would replace them.
+        const rows = doc['takeaways'] as Array<{ id: string }>;
         const enSaved = await request.patch(`${API}/posts/${id}?locale=en`, {
           headers: auth,
           data: {
             title: englishTitle,
             excerpt: 'A short excerpt for the test.',
-            takeaways: [{ text: 'First' }, { text: 'Second' }, { text: 'Third' }],
+            takeaways: ['First', 'Second', 'Third'].map((text, i) => ({ id: rows[i]!.id, text })),
             body: englishBody(),
           },
         });
@@ -2085,12 +2088,17 @@ test.describe('CMS admin', () => {
         await expect
           .poll(async () => (await request.get('/en/feed.xml')).text(), POLL)
           .toContain(englishTitle);
-        // The Arabic version kept its own warnings and reading time.
+        // The Arabic version kept its own warnings, reading time and takeaways.
         const arDoc = (await (
           await request.get(`${API}/posts/${id}?locale=ar&depth=0`, { headers: auth })
         ).json()) as Record<string, unknown>;
         expect(arDoc['warnings'] ?? []).toEqual([]);
         expect(arDoc['title']).toBe(title);
+        expect((arDoc['takeaways'] as Array<{ text: string }>).map((r) => r.text)).toEqual([
+          'أولاً',
+          'ثانياً',
+          'ثالثاً',
+        ]);
       } finally {
         expect((await request.delete(`${API}/posts/${id}`, { headers: auth })).status()).toBe(200);
       }
