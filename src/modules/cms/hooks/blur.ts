@@ -6,10 +6,13 @@ import { BLUR } from '@/lib/photo';
  * The blur-up placeholder of a media document (ADR-029, amended 2026-09-19): a `BLUR.width`
  * px wide WebP of the upload as a data URL, about 300 bytes, stored in the hidden `blur`
  * field and inlined by the photo components as `next/image`'s `blurDataURL`, so a photo's
- * box shows its colours before the AVIF arrives. Computed once, from the request's file, on
- * an upload or a replacement; a save that changes only the alt text keeps the stored value.
- * Never refuses a save: a file sharp cannot read (or a non-raster file) leaves the field
- * empty and logs why.
+ * box shows its colours before the AVIF arrives. Computed once, on an upload or a
+ * replacement, from `req.file` as it stands in `beforeChange`: the file Payload is about to
+ * store, a crop made in the admin already applied (`generateFileData` runs before the hooks
+ * and puts the cropped file back on the request), the focal point not (it moves no pixels
+ * of the stored file). A save that changes only the alt text keeps the stored value. Never
+ * refuses a save: a file sharp cannot read (or a non-raster file) leaves the field empty and
+ * logs why.
  */
 export const BLUR_FIELD = 'blur';
 

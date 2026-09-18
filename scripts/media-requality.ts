@@ -134,6 +134,18 @@ async function bucketStore(): Promise<Store> {
   };
 }
 
+/**
+ * A media document revalidates no page of its own; a renamed file reaches the prerendered
+ * pages through their 60 s timer only (ADR-029, ADR-030), and the old file is already gone
+ * from the bucket. A redeploy prerenders every page with the new names at once and clears
+ * the optimizer's cache, instead of a minute in which a photo not yet cached at the CDN
+ * edge or by the optimizer answers 404.
+ */
+const REDEPLOY =
+  'media-requality: the prerendered pages still name the old files until their 60 s timer ' +
+  'runs, and the old files are gone from the bucket. Redeploy the site now: the rebuild ' +
+  'prerenders every page with the new names at once (RUNBOOK, "Assets").';
+
 async function main(): Promise<void> {
   const payload = await openPayload();
   const user = await adminUser(payload);
@@ -195,6 +207,7 @@ async function main(): Promise<void> {
       `${unmatched} without a source in public/images, ${docs.length} documents; ` +
       `${kb(oldBytes)} -> ${kb(newBytes)} stored`,
   );
+  if (changed > 0 && !dryRun) console.log(REDEPLOY);
   process.exit(0);
 }
 

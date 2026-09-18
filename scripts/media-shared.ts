@@ -11,9 +11,27 @@ import { getPayload, type Payload } from 'payload';
 import type { Media, User } from '../src/payload-types';
 
 /**
+ * The `KEY=value` rows of an env file, a matching pair of quotes around a value removed
+ * (`S3_SECRET_ACCESS_KEY="x"` is `x`, as Next reads it); comments and blank lines skipped.
+ * The file wins over the shell on purpose: a script pointed at production must not be sent
+ * elsewhere by a `DATABASE_URL` left exported.
+ */
+export function parseEnvFile(text: string): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const line of text.split(/\r?\n/)) {
+    const m = /^([A-Z0-9_]+)=(.*)$/.exec(line);
+    if (!m) continue;
+    const raw = m[2]!.trim();
+    const quoted = /^(["'])(.*)\1$/s.exec(raw);
+    out[m[1]!] = quoted ? quoted[2]! : raw;
+  }
+  return out;
+}
+
+/**
  * `--env <file>` points the script at another database and bucket (production:
- * `.env.cranl.local`): every `KEY=value` row of that file becomes the environment, nothing
- * else is read. Without it the usual env files apply (the review database).
+ * `.env.cranl.local`): every row of that file becomes the environment, nothing else is
+ * read. Without it the usual env files apply (the review database).
  */
 export function loadEnvironment(argv: string[], usage: string): void {
   const flag = argv.indexOf('--env');
@@ -26,10 +44,7 @@ export function loadEnvironment(argv: string[], usage: string): void {
     console.error(usage);
     process.exit(2);
   }
-  for (const line of readFileSync(file, 'utf8').split(/\r?\n/)) {
-    const m = /^([A-Z0-9_]+)=(.*)$/.exec(line);
-    if (m) process.env[m[1]!] = m[2]!.trim();
-  }
+  Object.assign(process.env, parseEnvFile(readFileSync(file, 'utf8')));
 }
 
 export async function openPayload(): Promise<Payload> {
