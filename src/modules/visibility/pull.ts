@@ -6,7 +6,7 @@ import { riyadh } from '@/lib/riyadh';
 import { AI_QUEUE } from '@/modules/ai-content/workflow';
 import { readConnection } from '@/modules/connections/read';
 import { safeMessage } from '@/modules/connections/safe-message';
-import { type MetricSource, upsertMetric } from '@/modules/visibility/metrics';
+import { latestMetrics, type MetricSource, upsertMetric } from '@/modules/visibility/metrics';
 import { isBrandQuery } from '@/modules/visibility/rules/rest';
 import { scoreOf } from '@/modules/visibility/score';
 import { bingClient, type BingSnapshot } from '@/modules/visibility/services/bing';
@@ -15,6 +15,13 @@ import {
   searchConsoleClient,
   type SearchConsoleSnapshot,
 } from '@/modules/visibility/services/search-console';
+import {
+  riyadhDayBefore,
+  UMAMI_CALL_GAP_MS,
+  type UmamiDay,
+  umamiClient,
+  umamiWebsiteId,
+} from '@/modules/visibility/services/umami';
 import { PULL_CRON } from '@/modules/visibility/schedule';
 import { buildSnapshot } from '@/modules/visibility/snapshot';
 
@@ -26,6 +33,61 @@ export interface PullResult {
   failed: Array<{ source: MetricSource; error: string }>;
   topicsAdded: number;
   score: number | null;
+  /** The Riyadh days the Umami source wrote, oldest first; empty without the connection. */
+  umamiDays: string[];
+}
+
+/** How far back the first Umami pull reaches (the dashboard's longest range). */
+export const UMAMI_FIRST_RUN_DAYS = 90;
+/** The complete days re-read every night: yesterday and the day before (late hits land in it). */
+export const UMAMI_NIGHTLY_DAYS = 2;
+
+/**
+ * The Riyadh days the Umami pull reads, oldest first: through yesterday (today is not over),
+ * from 90 days back when no row exists yet, else from the day after the newest row or the
+ * day before yesterday, whichever is earlier, so a night missed is filled and a normal night
+ * re-reads two days. Never more than 90.
+ */
+export function umamiDaysToPull(latestDay: string | null, now: Date): string[] {
+  const days: string[] = [];
+  for (let n = UMAMI_FIRST_RUN_DAYS; n >= 1; n--) days.push(riyadhDayBefore(now, n));
+  const yesterday = days[days.length - 1]!;
+  if (latestDay === null || latestDay < days[0]!) return days;
+  const dayBefore = days[days.length - UMAMI_NIGHTLY_DAYS]!;
+  const from = latestDay < dayBefore ? days.find((d) => d > latestDay)! : dayBefore;
+  return days.filter((d) => d >= from && d <= yesterday);
+}
+
+const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+
+/**
+ * The Umami source (ADR-048 amended): one `stats` call per day to pull, each written as its
+ * own row the moment it lands, paced under the Cloud's limit; a day that fails stops the run
+ * and is named, the days before it stand.
+ */
+async function pullUmami(
+  payload: Payload,
+  connection: { apiKey: string; baseUrl: string | null },
+  now: Date,
+  gapMs = UMAMI_CALL_GAP_MS,
+): Promise<string[]> {
+  const websiteId = await umamiWebsiteId(payload);
+  if (!websiteId) throw new Error('no Umami website id in Site settings, Analytics');
+  const latest = await latestMetrics(payload, 'umami', 1);
+  const days = umamiDaysToPull(latest[0]?.date ?? null, now);
+  const client = umamiClient(connection.apiKey, websiteId, { baseUrl: connection.baseUrl });
+  const written: string[] = [];
+  for (const [i, date] of days.entries()) {
+    // Serial on purpose: the Cloud allows 50 calls per 15 s and each row lands on its own.
+    // oxlint-disable-next-line no-await-in-loop
+    if (i > 0 && gapMs > 0) await sleep(gapMs);
+    // oxlint-disable-next-line no-await-in-loop
+    const data: UmamiDay = await client.day(date);
+    // oxlint-disable-next-line no-await-in-loop
+    await upsertMetric(payload, { date, source: 'umami', data });
+    written.push(date);
+  }
+  return written;
 }
 
 /** The one enabled connection of a service kind, with its secret revealed, or null. */
@@ -139,13 +201,25 @@ export async function suggestTopics(
 
 /**
  * The nightly pull (ADR-049 D4): every connected service, one row per source for the day,
- * then the day's score row. A service whose pull fails writes no row and is named once; the
- * others go on. Runs on the `ai` queue, serial by ADR-033, so it never overlaps itself.
+ * then the day's score row; Umami writes one row per day it read (ADR-048 amended). A
+ * service whose pull fails writes no row and is named once; the others go on. Runs on the
+ * `ai` queue, serial by ADR-033, so it never overlaps itself.
  */
-export async function pull(payload: Payload, now = new Date()): Promise<PullResult> {
+export async function pull(
+  payload: Payload,
+  now = new Date(),
+  options: { umamiGapMs?: number } = {},
+): Promise<PullResult> {
   const date = riyadh(now).dateKey;
   const base = env.siteUrl ?? 'https://b7r.sa';
-  const result: PullResult = { date, pulled: [], failed: [], topicsAdded: 0, score: null };
+  const result: PullResult = {
+    date,
+    pulled: [],
+    failed: [],
+    topicsAdded: 0,
+    score: null,
+    umamiDays: [],
+  };
   const attempt = async (
     source: MetricSource,
     secret: string | null,
@@ -194,6 +268,24 @@ export async function pull(payload: Payload, now = new Date()): Promise<PullResu
         throw new Error(snapshot.errors[0]?.error ?? 'no audit came back');
       return snapshot;
     });
+  }
+  const umami = await serviceConnection(payload, 'umami');
+  if (umami?.apiKey) {
+    // Its rows are per day and written inside; the day's own row would be an empty duplicate.
+    try {
+      result.umamiDays = await pullUmami(
+        payload,
+        { apiKey: umami.apiKey, baseUrl: umami.baseUrl },
+        now,
+        options.umamiGapMs,
+      );
+      result.pulled.push('umami');
+    } catch (error) {
+      result.failed.push({ source: 'umami', error: safeMessage(error, umami.apiKey) });
+      payload.logger.warn({
+        msg: `visibility pull: umami failed: ${safeMessage(error, umami.apiKey)}`,
+      });
+    }
   }
   await attempt('score', null, async () => {
     const score = scoreOf(await buildSnapshot(payload, { now }));

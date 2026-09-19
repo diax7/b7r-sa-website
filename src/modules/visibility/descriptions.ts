@@ -31,12 +31,12 @@ export const METRICS_DESCRIPTIONS: Described = {
     en: 'In Riyadh time; one row per day and source, and a second pull the same day replaces it.',
   },
   source: {
-    ar: 'Search Console أو Bing أو PageSpeed، أو «الدرجة» لدرجة الظهور ذلك اليوم.',
-    en: 'Search Console, Bing or PageSpeed, or "Score" for that day’s visibility score.',
+    ar: 'Search Console أو Bing أو PageSpeed أو Umami، أو «الدرجة» لدرجة الظهور ذلك اليوم.',
+    en: 'Search Console, Bing, PageSpeed or Umami, or "Score" for that day’s visibility score.',
   },
   data: {
-    ar: 'إجابة الخدمة كما جاءت: الأرقام الكلية وأعلى الاستعلامات والصفحات، أو درجات الأداء لكل صفحة، أو نسب الأقسام.',
-    en: "The service's answer as it came: the totals and the top queries and pages, the performance scores per page, or the sections' percentages.",
+    ar: 'إجابة الخدمة كما جاءت: الأرقام الكلية وأعلى الاستعلامات والصفحات، أو درجات الأداء لكل صفحة، أو زوّار اليوم، أو نسب الأقسام.',
+    en: "The service's answer as it came: totals and top queries and pages, scores per page, a day's visitors, or the sections' percentages.",
   },
 };
 
