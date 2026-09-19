@@ -86,6 +86,7 @@ The key is served at `/indexnow/{INDEXNOW_KEY}.txt` by `app/indexnow/[key]/route
 | Budget | Value |
 |---|---|
 | JS shipped to the home page (gzip) | ≤ 180 kB total; designer chunk lazy-loaded on scroll into view |
+| JS shipped to the contact page (gzip) | ≤ 215 kB of the site's own chunks (207 measured on 2026-09-19, ADR-062); the booking picker lazy-loaded near the viewport, never in the first paint |
 | Fonts | Preloaded woff2 files ≤ 40 kB each (3 on the home page: Regular, Medium, Black); others lazy |
 | LCP image | ≤ 220 kB AVIF/WebP at 1920 w; responsive `srcset` 640–2560 |
 | Third-party scripts | Umami ≤ 5 kB; GA only after consent; Turnstile only on `/contact` |

@@ -55,6 +55,7 @@ export function memoryStore(settings: Partial<BookingSettings> = {}) {
         status: 'booked',
         meetLink: null,
         googleEventId: null,
+        meetRequestId: data.meetRequestId,
         calendar: data.calendar,
         calendarAttempts: 0,
         calendarAttemptAt: null,

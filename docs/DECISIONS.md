@@ -2397,7 +2397,11 @@ so the event is theirs on their own calendar if they use Google, but Google e-ma
 the site's own e-mails carry the link, in the merchant's language, with the calendar file
 attached. A Meet link still `pending` in the insert's answer is read again up to three
 times a second apart; an event without its link after that reads as failed with its id, so
-the sweep asks for the link rather than making a second event. The `mock-calendar` kind
+the sweep asks for the link rather than making a second event. The Meet `createRequest` id
+is minted on the row (`meetRequestId`) before the first insert and reused by every retry,
+so an insert that timed out on our side but reached Google is deduplicated by Google
+rather than doubled (the CTO's revision of the phase-1 review; a row from before the field
+existed gets its id written before its first retry). The `mock-calendar` kind
 serves the tests and the review server, refused in production like the AI mock; its `fail`
 flag (the row's `model` field) makes every call fail and drives the failed path end to end.
 
@@ -2431,7 +2435,12 @@ minute per day and, when the calendar fails to answer, read as free with a log l
 outage costs the Meet link (retried) and not every booking. A move obeys the notice on
 both ends: the current start must still be beyond it, and the new slot is one of the day's
 free slots; a cancel is allowed until the start. Every log line names the row's id and
-never a personal field; a mail that fails is a log line, never a failed booking.
+never a personal field; a mail that fails is a log line, never a failed booking; and every
+route catches its own failures (rule 18): an error that reached Next uncaught would be
+printed whole, and a failed query's message carries its parameters, the merchant's fields,
+so the route answers a 500 with a generic word and logs the route and the error's name
+alone. A staff status put back from cancelled is refused in the panel's language: the
+event is gone and the slot free, so the merchant books again.
 
 **The sweep** (`sweep.ts`, every fifteen minutes on a queue of its own with one job at a
 time, so two passes never send twice): `start <= now + 24 h AND start > now + 1 h AND NOT
@@ -2445,8 +2454,9 @@ the lesser harm. The dashboard's jobs list reads an every-N-minutes cron beside 
 and weekly ones.
 
 **The site.** `/book` and `/en/book` (the §4.19 copy, written under §0.5's fallback rule
-and listed for Dhia's read; a `WebPage` graph; in the sitemap while the switch is on,
-`noindex` while it is off) and `/book/manage`, never indexed. One client island
+and listed for Dhia's read; a `WebPage` graph; in the sitemap while the switch is on, a
+404 while it is off, as a page with nothing to offer should be) and `/book/manage`, never
+indexed and standing whatever the switch says, since a booking made earlier keeps its link. One client island
 (`modules/bookings/picker`), loaded near the viewport over a server-rendered stand-in like
 the newsletter island: the strip of days on the Riyadh clock (a closed day greyed with its
 reason), the day's free starts from the API with Western digits in both languages, the

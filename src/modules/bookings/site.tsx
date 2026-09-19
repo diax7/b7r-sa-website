@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Button } from '@/components/shared/button';
+import { notFound } from 'next/navigation';
 import { Card } from '@/components/shared/card';
 import { Container } from '@/components/shared/container';
 import { Section } from '@/components/shared/section';
@@ -21,7 +21,8 @@ import { getBooking } from '@/modules/bookings/read';
 
 /**
  * The picker as the pages and the contact card mount it (ADR-062): the island near the
- * viewport over its stand-in, or, with the switch off, the sentence and the WhatsApp button.
+ * viewport over its stand-in. Only while the switch is on: the contact card shows its
+ * WhatsApp button otherwise, and `/book` is a 404.
  */
 export async function BookingPicker({
   locale,
@@ -35,24 +36,6 @@ export async function BookingPicker({
   const site = await getSiteSettings(locale);
   const copy = pickerCopy(locale);
   const whatsappHref = whatsappUrl(site.contact.whatsapp, copy.booking.whatsappMessage);
-  if (!settings.enabled) {
-    return (
-      <div className="flex flex-col gap-4" data-booking-picker="off">
-        <p className="text-body text-text">{copy.booking.disabled}</p>
-        <Button asChild className="self-start" trailingArrow={false}>
-          <a
-            href={whatsappHref}
-            target="_blank"
-            rel="noopener"
-            data-track="whatsapp_click"
-            data-location="contact"
-          >
-            {copy.whatsapp}
-          </a>
-        </Button>
-      </div>
-    );
-  }
   const picker = pickerSettings(settings);
   return (
     <BookingLoader
@@ -88,9 +71,15 @@ async function bookSeo(
   }
 }
 
-/** `/book` (BRD 4.19): the H1 and the lead from the bank, the picker, the ribbon. */
+/**
+ * `/book` (BRD 4.19): the H1 and the lead from the bank, the picker, the ribbon; a 404 while
+ * the switch is off (the page is out of the sitemap then, and the contact card keeps the
+ * WhatsApp way). The manage page stays: a booking made before the switch went off keeps
+ * its link.
+ */
 export async function BookPage({ locale }: { locale: Locale }) {
   const [settings, seo] = await Promise.all([getBooking(locale), bookSeo(locale)]);
+  if (!settings.enabled) notFound();
   const { booking, productsPage } = copyFor(locale);
   const base = siteBase();
   return (
@@ -151,7 +140,7 @@ export async function ManagePage({ locale }: { locale: Locale }) {
   );
 }
 
-/** `/book`: the search row of the fixed page; `noindex` while the switch is off. */
+/** `/book`: the search row of the fixed page; a 404 while the switch is off, like the page. */
 export async function bookMetadata(locale: Locale): Promise<Metadata> {
   const [seo, site, locales, settings] = await Promise.all([
     bookSeo(locale),
@@ -159,6 +148,7 @@ export async function bookMetadata(locale: Locale): Promise<Metadata> {
     siteLocales(),
     getBooking(locale),
   ]);
+  if (!settings.enabled) notFound();
   return pageMetadata({
     locale,
     route: '/book',
@@ -167,7 +157,6 @@ export async function bookMetadata(locale: Locale): Promise<Metadata> {
     title: seo.title,
     description: seo.description,
     ...(seo.ogImage ? { ogImage: seo.ogImage } : {}),
-    ...(settings.enabled ? {} : { noindex: true }),
   });
 }
 

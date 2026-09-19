@@ -439,6 +439,36 @@ test.describe('bookings of our own (ADR-062)', () => {
     }
   });
 
+  test('switched off, /book is a 404 in both languages and out of the sitemap; the manage page and the contact card stand', async ({
+    request,
+  }) => {
+    await writeGlobal(admin, auth, { enabled: false });
+    for (const path of ['/book', '/en/book']) {
+      await expect
+        .poll(async () => (await request.get(path)).status(), { timeout: 15_000 })
+        .toBe(404);
+    }
+    await expect
+      .poll(
+        async () => (await (await request.get('/sitemap.xml')).text()).includes('/book</loc>'),
+        {
+          timeout: 15_000,
+        },
+      )
+      .toBe(false);
+    expect((await request.get('/book/manage?token=1.nope')).status()).toBe(200);
+    await expect
+      .poll(
+        async () =>
+          (await (await request.get('/contact')).text()).includes('data-booking-mode="whatsapp"'),
+        {
+          timeout: 15_000,
+        },
+      )
+      .toBe(true);
+    await writeGlobal(admin, auth, { enabled: true });
+  });
+
   for (const width of [1440, 390]) {
     for (const [locale, path] of [
       ['ar', '/book'],

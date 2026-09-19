@@ -156,6 +156,7 @@ export interface Config {
       'content-digest': TaskContentDigest;
       'visibility-pull': TaskVisibilityPull;
       'citation-ledger': TaskCitationLedger;
+      'bookings-sweep': TaskBookingsSweep;
       schedulePublish: TaskSchedulePublish;
       inline: {
         input: unknown;
@@ -1538,7 +1539,7 @@ export interface Connection {
   createdAt: string;
 }
 /**
- * A consultation booked on the site: who, when and the Meet link. The status and the notes are yours; a change or a cancel goes through the merchant's link.
+ * A consultation booked on the site: who, when, the Meet link. The status and the notes are yours; a move or a cancel is the merchant's.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "bookings".
@@ -1589,6 +1590,7 @@ export interface Booking {
    * Ties the booking to its event on the owner's calendar, for a move and a delete.
    */
   googleEventId?: string | null;
+  meetRequestId?: string | null;
   /**
    * How many times the sweep asked Google again after a refusal; it stops at 3.
    */
@@ -1946,6 +1948,7 @@ export interface PayloadJob {
           | 'content-digest'
           | 'visibility-pull'
           | 'citation-ledger'
+          | 'bookings-sweep'
           | 'schedulePublish';
         taskID: string;
         input?:
@@ -1989,6 +1992,7 @@ export interface PayloadJob {
         | 'content-digest'
         | 'visibility-pull'
         | 'citation-ledger'
+        | 'bookings-sweep'
         | 'schedulePublish'
       )
     | null;
@@ -2710,6 +2714,7 @@ export interface BookingsSelect<T extends boolean = true> {
   meetLink?: T;
   calendar?: T;
   googleEventId?: T;
+  meetRequestId?: T;
   calendarAttempts?: T;
   calendarAttemptAt?: T;
   reminded24h?: T;
@@ -4122,6 +4127,19 @@ export interface TaskCitationLedger {
   };
   output: {
     summary?: string | null;
+  };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TaskBookings-sweep".
+ */
+export interface TaskBookingsSweep {
+  input?: unknown;
+  output: {
+    reminded?: number | null;
+    completed?: number | null;
+    recovered?: number | null;
+    retried?: number | null;
   };
 }
 /**

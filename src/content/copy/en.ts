@@ -179,7 +179,6 @@ export const en: SiteCopy = {
     submitting: 'Booking',
     taken: 'That time was just taken. Pick another one.',
     failure: 'The booking did not go through. Try again or message us on WhatsApp.',
-    disabled: 'Booking is paused for now. Message us on WhatsApp and we will set a time.',
     confirmedTitle: 'Your consultation is booked',
     confirmedText:
       'The details are in your inbox: the meeting link and the link to change or cancel.',

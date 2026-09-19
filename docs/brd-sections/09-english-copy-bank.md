@@ -131,7 +131,6 @@ Every interface string of the English site, key for key with the Arabic bank of 
 | `booking.submitting` | Booking |
 | `booking.taken` | That time was just taken. Pick another one. |
 | `booking.failure` | The booking did not go through. Try again or message us on WhatsApp. |
-| `booking.disabled` | Booking is paused for now. Message us on WhatsApp and we will set a time. |
 | `booking.confirmedTitle` | Your consultation is booked |
 | `booking.confirmedText` | The details are in your inbox: the meeting link and the link to change or cancel. |
 | `booking.meetLink` | Meeting link |

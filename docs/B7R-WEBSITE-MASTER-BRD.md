@@ -679,7 +679,6 @@ The page and the picker (`content/copy/ar.ts`, `booking`):
 | `submitting` | جارٍ الحجز |
 | `taken` | حُجز هذا الموعد للتو. اختر موعداً آخر. |
 | `failure` | تعذّر الحجز. حاول مرة أخرى أو راسلنا على واتساب. |
-| `disabled` | الحجز متوقف حالياً. راسلنا على واتساب ونرتّب لك موعداً. |
 | `confirmedTitle` | موعدك محجوز |
 | `confirmedText` | أرسلنا التفاصيل إلى بريدك: رابط الاجتماع ورابط تغيير الموعد أو إلغائه. |
 | `meetLink` | رابط الاجتماع |
@@ -1123,6 +1122,7 @@ The key is served at `/indexnow/{INDEXNOW_KEY}.txt` by `app/indexnow/[key]/route
 | Budget | Value |
 |---|---|
 | JS shipped to the home page (gzip) | ≤ 180 kB total; designer chunk lazy-loaded on scroll into view |
+| JS shipped to the contact page (gzip) | ≤ 215 kB of the site's own chunks (207 measured on 2026-09-19, ADR-062); the booking picker lazy-loaded near the viewport, never in the first paint |
 | Fonts | Preloaded woff2 files ≤ 40 kB each (3 on the home page: Regular, Medium, Black); others lazy |
 | LCP image | ≤ 220 kB AVIF/WebP at 1920 w; responsive `srcset` 640–2560 |
 | Third-party scripts | Umami ≤ 5 kB; GA only after consent; Turnstile only on `/contact` |
@@ -2143,7 +2143,6 @@ Every interface string of the English site, key for key with the Arabic bank of 
 | `booking.submitting` | Booking |
 | `booking.taken` | That time was just taken. Pick another one. |
 | `booking.failure` | The booking did not go through. Try again or message us on WhatsApp. |
-| `booking.disabled` | Booking is paused for now. Message us on WhatsApp and we will set a time. |
 | `booking.confirmedTitle` | Your consultation is booked |
 | `booking.confirmedText` | The details are in your inbox: the meeting link and the link to change or cancel. |
 | `booking.meetLink` | Meeting link |

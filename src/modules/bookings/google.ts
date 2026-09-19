@@ -25,6 +25,8 @@ export interface EventInput {
   summary: string;
   description: string;
   attendeeEmail: string;
+  /** The Meet `createRequest` id; the same id on a retry makes Google deduplicate the insert. */
+  requestId: string;
 }
 
 export interface CreatedEvent {
@@ -94,8 +96,6 @@ export function parseEvent(body: unknown): ParsedEvent {
 export interface GoogleCalendarOptions {
   fetcher?: typeof fetch;
   sleep?: (ms: number) => Promise<void>;
-  /** A fresh id per `createRequest`; Google dedupes on it. */
-  requestId?: () => string;
 }
 
 const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
@@ -116,7 +116,6 @@ export function googleCalendarClient(
   const key: ServiceAccountKey = parsed;
   const fetcher = options.fetcher ?? fetch;
   const sleep = options.sleep ?? wait;
-  const requestId = options.requestId ?? (() => crypto.randomUUID());
   const calendar = `/calendars/${encodeURIComponent(hostEmail)}`;
 
   const call = async (path: string, init: RequestInit = {}): Promise<unknown> => {
@@ -164,7 +163,7 @@ export function googleCalendarClient(
           attendees: [{ email: input.attendeeEmail }],
           conferenceData: {
             createRequest: {
-              requestId: requestId(),
+              requestId: input.requestId,
               conferenceSolutionKey: { type: 'hangoutsMeet' },
             },
           },
@@ -201,6 +200,9 @@ export interface MockEvent extends EventInput {
   meetLink: string;
 }
 
+/** The mock's events by request id: a second insert with the same id answers the first event. */
+const mockByRequest = new Map<string, string>();
+
 const mockEvents = new Map<string, MockEvent>();
 let mockCounter = 0;
 
@@ -211,6 +213,7 @@ export function mockCalendarEvents(): ReadonlyMap<string, MockEvent> {
 
 export function resetMockCalendar(): void {
   mockEvents.clear();
+  mockByRequest.clear();
   mockCounter = 0;
 }
 
@@ -230,10 +233,15 @@ export function mockCalendarClient(options: { fail: boolean }): CalendarClient {
     },
     async createEvent(input) {
       guard();
+      // Google deduplicates on the request id; so does the mock.
+      const known = mockByRequest.get(input.requestId);
+      const existing = known ? mockEvents.get(known) : undefined;
+      if (existing) return { eventId: existing.eventId, meetLink: existing.meetLink };
       mockCounter += 1;
       const eventId = `mock-event-${mockCounter}`;
       const meetLink = `https://meet.google.com/mock-${mockCounter.toString(36).padStart(3, 'a')}`;
       mockEvents.set(eventId, { ...input, eventId, meetLink });
+      mockByRequest.set(input.requestId, eventId);
       return { eventId, meetLink };
     },
     async moveEvent(eventId, start, end) {

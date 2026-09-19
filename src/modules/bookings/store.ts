@@ -20,6 +20,8 @@ export interface BookingRow {
   status: BookingStatus;
   meetLink: string | null;
   googleEventId: string | null;
+  /** The Meet `createRequest` id, minted before the first insert and reused by a retry. */
+  meetRequestId: string | null;
   calendar: CalendarState;
   calendarAttempts: number;
   calendarAttemptAt: Date | null;
@@ -38,6 +40,7 @@ export interface NewBooking {
   start: Date;
   end: Date;
   calendar: CalendarState;
+  meetRequestId: string;
   page: string;
   utm: { source?: string; medium?: string; campaign?: string };
   notes: string;
@@ -49,6 +52,7 @@ export type BookingPatch = Partial<{
   status: BookingStatus;
   meetLink: string | null;
   googleEventId: string | null;
+  meetRequestId: string;
   calendar: CalendarState;
   calendarAttempts: number;
   calendarAttemptAt: Date | null;
@@ -92,6 +96,7 @@ export function toBookingRow(doc: BookingDoc): BookingRow {
     status: doc.status,
     meetLink: doc.meetLink ?? null,
     googleEventId: doc.googleEventId ?? null,
+    meetRequestId: doc.meetRequestId ?? null,
     calendar: doc.calendar,
     calendarAttempts: doc.calendarAttempts ?? 0,
     calendarAttemptAt: doc.calendarAttemptAt ? new Date(doc.calendarAttemptAt) : null,
@@ -103,11 +108,22 @@ export function toBookingRow(doc: BookingDoc): BookingRow {
   };
 }
 
+/**
+ * The words Payload's adapter puts on the validation error it makes of a Postgres unique
+ * violation (`handleUpsertError`: the translated `error:valueMustBeUnique`, "Value must be
+ * unique" in English, «يجب أن تكون القيمة فريدة» in Arabic), and the driver's own detail
+ * (`already exists`) should the wrapping ever change. A `validate` of our own on `start`
+ * would say something else and stays a 400.
+ */
+const UNIQUE_WORDS = /must be unique|already exists|فريد/i;
+
 /** The Postgres unique violation Payload wraps as a validation error on `start` (the partial index). */
-function isSlotTaken(error: unknown): boolean {
+export function isSlotTaken(error: unknown): boolean {
   if (!(error instanceof ValidationError)) return false;
-  const errors = (error.data as { errors?: Array<{ path?: string }> } | undefined)?.errors ?? [];
-  return errors.some((e) => e.path === 'start');
+  const errors =
+    (error.data as { errors?: Array<{ path?: string; message?: string }> } | undefined)?.errors ??
+    [];
+  return errors.some((e) => e.path === 'start' && UNIQUE_WORDS.test(e.message ?? ''));
 }
 
 const toIso = (date: Date | null | undefined) => (date ? date.toISOString() : date);

@@ -1,8 +1,15 @@
-import type { CollectionAfterChangeHook, CollectionConfig, Field } from 'payload';
+import type {
+  CollectionAfterChangeHook,
+  CollectionBeforeChangeHook,
+  CollectionConfig,
+  Field,
+} from 'payload';
 import { adminField, isAdmin, isEditorOrAdmin } from '@/modules/cms/access';
 import { describeFields } from '@/modules/cms/admin/descriptions/describe';
 import { collectionComponents } from '@/modules/cms/admin/document/config';
 import { adminGroup } from '@/modules/cms/admin/icons';
+import { inLanguage } from '@/modules/cms/fields/message';
+import { Refused } from '@/modules/cms/refused';
 import { BOOKINGS_DESCRIPTIONS } from '@/modules/bookings/descriptions';
 
 export const BOOKINGS = 'bookings' as const;
@@ -20,6 +27,24 @@ export type CalendarState = (typeof CALENDAR_STATES)[number];
 export const CALENDAR_RETRIES = 3;
 
 const never = () => false;
+
+/**
+ * A cancelled booking stays cancelled (ADR-062): its event is gone from the calendar and
+ * its slot is free again (the index no longer holds it), so a status put back to booked
+ * would stand on nothing. The merchant books again from the site.
+ */
+export const staysCancelled: CollectionBeforeChangeHook = ({ data, originalDoc, req }) => {
+  const next = data['status'];
+  if (originalDoc?.['status'] === 'cancelled' && next !== undefined && next !== 'cancelled') {
+    throw new Refused(
+      inLanguage(req, {
+        ar: 'الحجز الملغى يبقى ملغى؛ يحجز التاجر موعداً جديداً من الموقع',
+        en: 'A cancelled booking stays cancelled; the merchant books a new time on the site',
+      }),
+    );
+  }
+  return data;
+};
 
 /**
  * A status set to cancelled by a person in the panel (a request with a user; the routes and
@@ -84,7 +109,7 @@ export const Bookings: CollectionConfig = {
   },
   defaultSort: '-start',
   access: { read: isEditorOrAdmin, create: never, update: isEditorOrAdmin, delete: isAdmin },
-  hooks: { afterChange: [cancelledByStaff] },
+  hooks: { beforeChange: [staysCancelled], afterChange: [cancelledByStaff] },
   fields: describeFields(
     [
       {
@@ -194,6 +219,14 @@ export const Bookings: CollectionConfig = {
         },
         true,
       ),
+      // Minted before the first Google insert and reused by a retry, so Google deduplicates
+      // an insert that timed out on our side but reached it; the tests read it, nobody else.
+      {
+        name: 'meetRequestId',
+        type: 'text',
+        access: { update: never },
+        admin: { hidden: true },
+      },
       fact(
         {
           name: 'calendarAttempts',

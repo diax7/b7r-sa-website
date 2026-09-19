@@ -64,7 +64,10 @@ admin logs `PayloadComponent not found in importMap` and the field renders empty
 
 Schema changes: edit the collection, then `pnpm migrate:create <name>` (writes an SQL
 migration under `src/migrations/` and normalises its imports), `pnpm migrate`, commit both
-the migration and `src/payload-types.ts`. Migrations must be **additive** (add columns and
+the migration and `src/payload-types.ts`. The CLI loads the Payload config under plain
+Node, where `server-only` throws: a module that imports it (the transports, the env) must
+never be in the config's static graph (a task loads it with `await import()` when it runs);
+`pnpm tsx scripts/dev/import-chain.ts src/modules/cms/index.ts` prints any such chain. Migrations must be **additive** (add columns and
 tables, never drop or rename in the same release): the running image keeps serving on the
 old schema until the new image starts (ADR-025). Drop the old column in a later release.
 
@@ -373,8 +376,10 @@ wired.
    host's calendar, which proves the delegation; a `notFound` or a 403 here means step 3 is
    missing or names another scope.
 5. Site → Booking: the **calendar owner e-mail** (the Workspace user whose calendar takes
-   the events, `dhia@b7r.sa`), the hours and the numbers, then **Booking open**. The page
-   and the contact card switch the same minute.
+   the events, `dhia@b7r.sa`), the hours and the numbers, then flip **Booking open**: the
+   page is a 404 and out of the sitemap until then, and the contact card keeps its WhatsApp
+   button; both switch the same minute. A merchant's manage link works whatever the switch
+   says.
 6. A database seeded before this feature has no `/book` row in SEO settings: `pnpm
    content:migrate --force` appends it in both languages (the seed adds only what is
    missing), or add the row by hand from BRD §4.16. Without it the page still answers with

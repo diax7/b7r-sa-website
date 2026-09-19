@@ -60,6 +60,8 @@ export interface BookingPorts {
 const MINUTE_MS = 60_000;
 const HOUR_MS = 60 * MINUTE_MS;
 const DAY_MS = 24 * HOUR_MS;
+/** How long past the end the manage link keeps working (ADR-062): the calendar file, the state. */
+export const LINK_GRACE_MS = DAY_MS;
 /** How long a day's free/busy answer from the calendar is reused. */
 export const BUSY_CACHE_MS = 60_000;
 
@@ -167,7 +169,7 @@ export function stateOf(row: BookingRow, now: Date): BookingState {
 
 /** The manage link works until a day after the end (ADR-062): decided from the row, never the token. */
 export function linkExpired(row: BookingRow, now: Date): boolean {
-  return now.getTime() > row.end.getTime() + DAY_MS;
+  return now.getTime() > row.end.getTime() + LINK_GRACE_MS;
 }
 
 async function publicView(
@@ -278,12 +280,16 @@ export async function syncCalendar(
       await ports.calendar.moveEvent(eventId, row.start, row.end);
       meetLink ??= await ports.calendar.meetLinkOf(eventId);
     } else {
+      // The request id lives on the row before the insert, so a retry after a timeout that
+      // did reach Google makes it deduplicate rather than create a second event.
+      const requestId = row.meetRequestId ?? (await mintRequestId(ports, row));
       const created = await ports.calendar.createEvent({
         start: row.start,
         end: row.end,
         summary: `${settings.title}: ${row.name}`,
         description: [row.phone, row.email, note].filter(Boolean).join('\n'),
         attendeeEmail: row.email,
+        requestId,
       });
       eventId = created.eventId;
       meetLink = created.meetLink;
@@ -295,6 +301,13 @@ export async function syncCalendar(
   // keeps the id, reads as failed, and the sweep's next try asks for the link again.
   if (!meetLink) return failed('the event has no Meet link yet', eventId);
   return ports.store.update(row.id, { calendar: 'synced', googleEventId: eventId, meetLink });
+}
+
+/** A row from before the field existed gets its id now, written before the insert. */
+async function mintRequestId(ports: BookingPorts, row: BookingRow): Promise<string> {
+  const meetRequestId = crypto.randomUUID();
+  await ports.store.update(row.id, { meetRequestId });
+  return meetRequestId;
 }
 
 export interface BookInput {
@@ -338,6 +351,7 @@ export async function book(ports: BookingPorts, input: BookInput): Promise<BookR
     start: input.start,
     end: slotEnd(input.start, rules),
     calendar: ports.calendar ? 'failed' : 'off',
+    meetRequestId: crypto.randomUUID(),
     page: input.page,
     utm: input.utm,
     notes: input.note,

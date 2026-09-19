@@ -239,7 +239,7 @@ describe('the Google Calendar client', () => {
       TOKEN,
       ['POST', `/calendars/${encodeURIComponent(HOST)}/events`, EVENT_READY],
     ]);
-    const client = googleCalendarClient(secret, HOST, { fetcher, requestId: () => 'req-1' });
+    const client = googleCalendarClient(secret, HOST, { fetcher });
     const start = new Date('2026-09-22T07:00:00Z');
     const end = new Date('2026-09-22T07:30:00Z');
     const created = await client.createEvent({
@@ -248,6 +248,7 @@ describe('the Google Calendar client', () => {
       summary: 'استشارة مجانية، 30 دقيقة: ضياء',
       description: 'Phone: 0501699572',
       attendeeEmail: 'merchant@example.com',
+      requestId: 'req-1',
     });
     expect(created).toEqual({ eventId: 'evt-1', meetLink: 'https://meet.google.com/abc-defg-hij' });
     const call = calls[1]!;
@@ -278,6 +279,7 @@ describe('the Google Calendar client', () => {
       summary: 's',
       description: 'd',
       attendeeEmail: 'm@example.com',
+      requestId: 'req-1',
     };
     const ready = fakeFetch([
       TOKEN,
@@ -347,18 +349,27 @@ describe('the Google Calendar client', () => {
 describe('the mock calendar (tests and the review server)', () => {
   afterEach(() => resetMockCalendar());
 
-  it('creates, moves and deletes events in memory with a Meet-shaped link, and is never busy', async () => {
+  it('creates, moves and deletes events in memory with a Meet-shaped link, deduplicates on the request id, and is never busy', async () => {
     const client = mockCalendarClient({ fail: false });
     expect(await client.freeBusy(new Date(), new Date())).toEqual([]);
-    const created = await client.createEvent({
+    const input = {
       start: new Date('2026-09-22T07:00:00Z'),
       end: new Date('2026-09-22T07:30:00Z'),
       summary: 's',
       description: 'd',
       attendeeEmail: 'm@example.com',
-    });
+      requestId: 'req-a',
+    };
+    const created = await client.createEvent(input);
     expect(created.eventId).toBe('mock-event-1');
     expect(created.meetLink).toMatch(/^https:\/\/meet\.google\.com\/mock-/);
+    // The same request id again (a retry after a timeout that reached the calendar): the same event.
+    expect(await client.createEvent(input)).toEqual(created);
+    expect((await client.createEvent({ ...input, requestId: 'req-b' })).eventId).toBe(
+      'mock-event-2',
+    );
+    expect(mockCalendarEvents().size).toBe(2);
+    await client.deleteEvent('mock-event-2');
     expect(await client.meetLinkOf('mock-event-1')).toBe(created.meetLink);
     await client.moveEvent(
       'mock-event-1',
@@ -383,6 +394,7 @@ describe('the mock calendar (tests and the review server)', () => {
         summary: 's',
         description: 'd',
         attendeeEmail: 'm@example.com',
+        requestId: 'r',
       }),
     ).rejects.toThrow(/fail flag/);
     await expect(client.deleteEvent('x')).rejects.toThrow(/fail flag/);

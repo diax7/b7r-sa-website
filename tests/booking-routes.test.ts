@@ -20,7 +20,10 @@ import {
   stateOf,
 } from '@/modules/bookings/service';
 import { minuteOf, riyadhInstant } from '@/modules/bookings/slots';
+import { isSlotTaken } from '@/modules/bookings/store';
 import { signManageToken, verifyManageToken } from '@/modules/bookings/token';
+import { Bookings, staysCancelled } from '@/modules/bookings/collection';
+import { ValidationError } from 'payload';
 import { recordedCalendar, SECRET, testPorts } from './helpers/booking-store';
 
 /** Tuesday 2026-09-22 in Riyadh; `now` is Sunday the 20th at 09:00 Riyadh. */
@@ -121,6 +124,45 @@ describe('the bodies (ADR-062)', () => {
     expect(slotsQuerySchema.safeParse({ date: '2026-09-22' }).success).toBe(true);
     expect(slotsQuerySchema.safeParse({ date: '22/09/2026' }).success).toBe(false);
     expect(slotsQuerySchema.safeParse({ date: null }).success).toBe(false);
+  });
+});
+
+/** A validation error as Payload's adapter makes one of a refused write. */
+const refusal = (path: string, message: string) =>
+  new ValidationError({ collection: 'bookings', errors: [{ path, message }] });
+
+/** The before-change hook run on a status change in the panel's language. */
+const staffChange = (from: string, to: string | undefined, language: string) =>
+  staysCancelled({
+    data: to === undefined ? { notes: 'x' } : { status: to },
+    originalDoc: { status: from },
+    req: { i18n: { language } },
+    operation: 'update',
+  } as never);
+
+describe("the store's reading of a refused write", () => {
+  it('a unique violation on start is the slot taken, in either language; any other refusal on start is not', () => {
+    expect(isSlotTaken(refusal('start', 'Value must be unique'))).toBe(true);
+    expect(isSlotTaken(refusal('start', 'على القيمة أن تكون فريدة'))).toBe(true);
+    expect(
+      isSlotTaken(refusal('start', 'Key (start)=(2026-09-22 07:00:00+00) already exists.')),
+    ).toBe(true);
+    expect(isSlotTaken(refusal('start', 'The start must be on the grid'))).toBe(false);
+    expect(isSlotTaken(refusal('email', 'Value must be unique'))).toBe(false);
+    expect(isSlotTaken(new Error('Value must be unique'))).toBe(false);
+  });
+});
+
+describe('a cancelled booking stays cancelled (the panel)', () => {
+  it("refuses a status put back from cancelled, in the panel's language, and lets everything else through", () => {
+    expect(() => staffChange('cancelled', 'booked', 'ar')).toThrow(/الملغى يبقى ملغى/);
+    expect(() => staffChange('cancelled', 'rescheduled', 'en')).toThrow(/stays cancelled/);
+    expect(() => staffChange('cancelled', 'completed', 'en')).toThrow(/stays cancelled/);
+    expect(staffChange('cancelled', 'cancelled', 'en')).toEqual({ status: 'cancelled' });
+    expect(staffChange('cancelled', undefined, 'en')).toEqual({ notes: 'x' });
+    expect(staffChange('booked', 'cancelled', 'en')).toEqual({ status: 'cancelled' });
+    expect(staffChange('booked', 'completed', 'en')).toEqual({ status: 'completed' });
+    expect(Bookings.hooks?.beforeChange).toContain(staysCancelled);
   });
 });
 

@@ -34,6 +34,7 @@ const row = (extra: Partial<BookingRow> = {}): BookingRow => ({
   status: 'booked',
   meetLink: 'https://meet.google.com/x',
   googleEventId: 'evt-1',
+  meetRequestId: 'req-row',
   calendar: 'synced',
   calendarAttempts: 0,
   calendarAttemptAt: null,
@@ -243,6 +244,57 @@ describe('the sweep pass', () => {
         .replace('{when}', 'الثلاثاء، 22 سبتمبر 2026، 10:00 ص إلى 10:30 ص بتوقيت الرياض'),
     ]);
     expect(again.mailer.outbox[0]!.text).toContain('https://meet.google.com/test-1');
+  });
+
+  it('a retry sends the same Meet request id as the first insert, so Google deduplicates a timed-out insert that reached it', async () => {
+    const calendar = recordedCalendar({ fail: true });
+    const ports = testPorts({ calendar });
+    const booked = await book(ports, {
+      name: 'ضياء',
+      email: 'merchant@example.com',
+      phone: '966501699572',
+      note: '',
+      start: START,
+      locale: 'ar',
+      page: '/book',
+      utm: {},
+    });
+    expect(booked.status).toBe(201);
+    const first = calendar.calls.find((c) => c.method === 'createEvent')!.args[0] as {
+      requestId: string;
+    };
+    expect(first.requestId).toMatch(/^[0-9a-f-]{36}$/);
+    expect(ports.store.rows.get(1)!.meetRequestId).toBe(first.requestId);
+    calendar.fail = false;
+    ports.clock.now = new Date(ports.clock.now.getTime() + HOUR);
+    expect((await sweep(ports)).recovered).toEqual([1]);
+    const inserts = calendar.calls.filter((c) => c.method === 'createEvent');
+    expect(inserts).toHaveLength(2);
+    expect((inserts[1]!.args[0] as { requestId: string }).requestId).toBe(first.requestId);
+    // A row from before the field existed gets its id written before the insert.
+    const legacy = testPorts();
+    legacy.store.rows.set(
+      7,
+      row({
+        id: 7,
+        calendar: 'failed',
+        meetLink: null,
+        googleEventId: null,
+        meetRequestId: null,
+        calendarAttemptAt: before(50 * HOUR),
+      }),
+    );
+    legacy.clock.now = before(48 * HOUR);
+    expect((await sweep(legacy)).recovered).toEqual([7]);
+    const minted = legacy.store.rows.get(7)!.meetRequestId;
+    expect(minted).toMatch(/^[0-9a-f-]{36}$/);
+    expect(
+      (
+        legacy.calendar!.calls.find((c) => c.method === 'createEvent')!.args[0] as {
+          requestId: string;
+        }
+      ).requestId,
+    ).toBe(minted);
   });
 
   it('an event created without its Meet link reads as failed with its id, and the retry reads the link, never a second event', async () => {
