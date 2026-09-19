@@ -2263,3 +2263,97 @@ ledger's next morning, the four readers against a recorded fake Payload, the til
 actions by permission; `tests/admin-format.test.ts` covers `formatSlot`. The admin e2e walks
 the seven sections, the range as a link, the drafts link with its `_status` filter, the
 server folded unless red, the editor's view, and axe on the dashboard in both languages.
+
+## ADR-060: Icons and colour in the panel: two hue carriers per screen, a colour with its word (2026-09-19)
+
+**Context.** Dhia's second Arabic-panel brief (2026-09-19, `docs/plans/2026-09-19-arabic-panel-2.md`,
+PR 3): "more icons and colours inside the admin dashboard to improve the overall UI". The
+panel had ADR-046's identity hues in more places than the eye could rank: the page header
+carried its group's hue twice (a bar and a disc), the active form tab read in the accent
+whatever the group, the dashboard's content card mixed three hues (a page's disc blue, a
+product's teal, a post's violet, plus the action buttons), and a document's status in a
+list was Payload's plain word. Form tabs, collapsibles and groups had no icons at all. The
+CTO settled the rule before the build.
+
+**Decision: the colour rule** (design system §2, one sentence). A screen shows its group's
+hue in at most two places, the entity header's icon tile and the active tab's bar; a status
+colour appears only on the status pill and the `BoolCell`; every other icon is the text
+colour, every other surface neutral. Green is live, amber is draft or careful, red is failed
+or delete; a colour never appears without its word. On the dashboard the card's icon takes
+the group hue, the body stays neutral, never two hues in one card. The sidebar keeps
+ADR-046's group hues as they are. This amends ADR-046's "carried onto the page header's disc
+and bar and the dashboard's discs": the header's bar is neutral now, the dashboard's
+per-entity discs are neutral, and the hue moved to the card's title icon. Kept as they are,
+each a colour beside its word: the hand line's and the server rows' green and amber
+(ADR-059), the Score page's finding icons (ADR-049), the accent on Payload's Edit and
+Versions tabs (blue is "active", §2's table), and the report pages' one identity hue on the
+ring and the bars (ADR-048, ADR-049: a report, not a document). A bar inside a dashboard
+card keeps the card's one hue (the traffic bars pink, the engine's caps violet), amber and
+red at a cap beside the badge that says so.
+
+**Section icons.** A registry `SECTION_ICONS` in `admin/icons.ts` (a place for a section of
+the site, a noun for a thing, the entity's own icon where the section is one: the product
+strip is the products' shirt, a Search tab the search defaults' glass, the Engine group the
+engine's bot) and `sectionIcon('key')` on the `admin` of every tab, every collapsible and a
+labelled group with a noun of its own (the key rides `admin.custom.icon`, which Payload
+keeps on the client). Never twice in one strip, never the entity's own icon, always the
+text colour, 16 px. **How they are drawn, and why this way.** Payload 3.89 has no slot for a
+tab's label (a tab's `admin` carries `condition` and `description` only) and never renders
+a custom `Field` on a `tabs` field (`addFieldStatePromise` returns before `renderFieldFn`
+for that type; found by the first build, which had put the widget there). A JSX-returning
+`label` is passed through by `getTranslation` but breaks the words census and the diff
+view; a CSS mask keyed by tab order would copy the SVGs into `admin.css` outside the
+registry and shift when a tab is added. So `describeFields()` places a `ui` field
+(`tabIcons`) right after every tabs field, carrying the tabs' keys in order, whose
+`IconTabs` (`admin/fields/icon-tabs.tsx`) portals one icon into each
+`button.tabs-field__tab-button` by index, never by text: Payload renders every tab button
+in config order and keeps a hidden one in the DOM with `--hidden`, the button is a flex row
+with a gap (so `order: -1` puts the icon first in both directions), and a portal's node is
+left alone when the label or the error pill re-render. The icons mount after Payload's
+render (a layout effect keyed on the tab count), one portal per button keyed by its index,
+and when the tabs field is not the previous sibling or its buttons are not as many as the
+tabs, nothing mounts: plain tabs are the degraded state, never a thrown error. One file
+reaches into Payload's DOM, its header names the three package facts and the version they
+were read at (3.89); the e2e asserts buttons = tabs on every tabbed form, so a Payload
+release that drops hidden buttons fails a test, not a screen; when Payload ships a tab
+`Label` slot, the file is deleted and the pass stops placing the field. A collapsible or a
+group uses Payload's own `admin.components.Label` slot (`SectionLabel`, the fallback's own
+markup with the icon first). **The active tab's bar** takes the document's group hue: the
+portal span carries `data-admin-section-hue` (from `useDocumentInfo`), and `admin.css`
+reads it through `:has()` on the active button's `::after`; the active label is the text
+colour (it was the accent, a third carrier); a tab with errors stays red with its count.
+`tests/admin-config.test.ts` refuses a tab or a collapsible without an icon, an icon
+repeated in a strip, one that repeats the entity's, a strip out of place, and pins that the
+pass places it.
+
+**The status pill.** A document's `_status` in a list reads as a pill with its word
+(`StatusCell`): Published green, Draft amber, and **Changed amber, its own word («معدّل»,
+a glossary row), never folded into Draft**: a changed page is live with newer text waiting,
+a draft is not on the site. The third word comes from Payload 3.89's list view, which marks
+a draft row that has a published version `_displayStatus: 'changed'`
+(`@payloadcms/next/dist/views/List/enrichDocsWithVersionStatus.js`, one `findVersions` per
+list render) and hands that to the `_status` cell (`renderCell.js`); without our cell such
+a row read "Draft". `_status` is not in our configs (Payload appends it at sanitize when
+`versions.drafts` is on), so a drafted collection lists `statusColumn()`: Payload's
+`mergeBaseFields` deep-merges a same-named field over its base, and the field carries our
+cell and nothing of its own except the two keys sanitize insists on before the merge, the
+type (a field without one throws) and the label key (sanitize stamps a label from the name
+onto a field without one, which would then win the merge; ours is Payload's own
+`version:status`); the options and `Field: false` stay Payload's. The runs' outcome carries
+the same cell: Failed red, the rest neutral. `BoolCell` stays green and red. A status word
+is a glossary row and a pair in both string trees before it is a pill.
+
+**The dashboard.** `DashboardSection` takes a `hue` for its title icon (visits and
+assistants pink, content blue, engine violet, server slate; an empty section the same); the
+content card's home tile, its per-collection discs, the saves' discs and the action buttons
+go neutral and the per-entity hue leaves `data.ts`; a draft in the saves reads amber like
+every draft pill; a tile keeps its one disc.
+
+**Tests and gates.** The config test's gates above and its `_status` walk (the censuses
+leave Payload's merged column out); `tests/status-cell.test.tsx` for the tones and the
+words in both languages; the admin e2e asserts the tab icons on every tabbed form and the
+three collapsibles of a post, and, at 1440 and 390 in both languages, counts the hue
+carriers of a product and a global (one tile, one bar, in the group's colour, the labels in
+the text colour), reads the status pills' words in a list with a draft of its own, checks
+the amber pill's contrast against its row (≥ 4.5:1, computed from the rendered colours),
+and runs axe on a document, a global, a list and the dashboard.

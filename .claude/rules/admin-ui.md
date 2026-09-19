@@ -2,9 +2,9 @@
 
 Read `docs/ADMIN-DESIGN-SYSTEM.md` before touching anything under `src/modules/cms/**`,
 `src/app/(payload)/**` or a Payload collection/global config. These rules are enforced by
-`tests/admin-config.test.ts` (the config shape, the icons, the sidebar registry, the
-bilingual census, the description rule), `tests/admin-glossary.test.ts` (the glossary),
-`check:rtl` and the admin e2e.
+`tests/admin-config.test.ts` (the config shape, the icons, the section icons, the sidebar
+registry, the bilingual census, the description rule, the status column),
+`tests/admin-glossary.test.ts` (the glossary), `check:rtl` and the admin e2e.
 
 ## Adding or changing a collection or global
 
@@ -142,6 +142,22 @@ bilingual census, the description rule), `tests/admin-glossary.test.ts` (the glo
    a hook) is outside every gate above, since no test can call the closure; it is written
    under the same rules by hand, and a regex over `src/` for `inLanguage(` literals would
    feed those pairs to the checks when the gap is closed.
+17. **Icons and colour** (ADR-060, design system §2 and §4). A new tab, collapsible or
+   labelled group with a noun of its own carries its icon: a key of `SECTION_ICONS` in
+   `admin/icons.ts` (a new icon is a new row there first: a place for a section of the site,
+   a noun for a thing, the entity's own icon where the section is one), named through
+   `admin: sectionIcon('key')` (or `...sectionIcon('key')` beside `condition` or
+   `position`); never twice in one strip, never the entity's own; `describeFields()` draws
+   it (`IconTabs` after the tabs field, `SectionLabel` in the Label slot) and the config
+   test refuses a tab or a collapsible without one. A screen shows its group's hue in two
+   places only, the header's tile and the active tab's bar; on the dashboard a card's title
+   icon carries the hue and its body stays neutral; a new icon anywhere else is the text
+   colour. A status word is a glossary row and a pair in both trees before it is a pill:
+   a drafted collection lists `statusColumn()` (`fields/status.ts`) and a status select of
+   its own puts `STATUS_CELL` on its `admin.components.Cell`; the tone comes from
+   `STATUS_TONES` (green live, amber draft or changed, red failed, neutral otherwise), never
+   from a class in the config. A colour never appears without its word; the e2e counts the
+   carriers per document and runs axe at 1440 and 390 in both languages.
 
 ## Adding an admin component
 
@@ -169,7 +185,10 @@ bilingual census, the description rule), `tests/admin-glossary.test.ts` (the glo
   `src/modules/cms/admin/payload-ar.ts`. The writing rules in `.claude/rules/writing.md`
   apply to both languages (no em dashes).
 - Colour means one thing: blue = main action/active, green = publish/live, red = delete/
-  failure, amber = careful. Set Payload's button colours through its custom properties.
+  failure, amber = careful or a draft. Set Payload's button colours through its custom
+  properties. A group's identity hue sits on the header's tile, the active tab's bar and a
+  dashboard card's title icon, nowhere else on that screen (rule 17); a status colour on
+  the status pill and the `BoolCell` only.
 - Roots of our shell carry `data-admin-ui` (the scoped element reset in `admin.css`) and a
   `data-admin-*` hook for the e2e; the sidebar keeps Payload's outer `nav` classes.
 - After adding or renaming a component referenced from the Payload config, run
