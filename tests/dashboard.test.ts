@@ -194,9 +194,11 @@ describe('the scheduled jobs on the Riyadh clock (ADR-059)', () => {
       ['ledger', { hour: 7, weekday: null }],
       ['freshness', { hour: 6, weekday: 1 }],
       ['digest', { hour: 8, weekday: 0 }],
+      ['bookings', { everyMinutes: 15 }],
     ]);
     expect(riyadhSlot('0 22 * * 0')).toEqual({ hour: 1, weekday: 1 });
-    expect(() => riyadhSlot('*/5 * * * *')).toThrow(/cannot read the cron/);
+    expect(riyadhSlot('*/5 * * * *')).toEqual({ everyMinutes: 5 });
+    expect(() => riyadhSlot('5 * * * *')).toThrow(/cannot read the cron/);
   });
 
   it('finds the next daily slot: later today, else tomorrow', () => {

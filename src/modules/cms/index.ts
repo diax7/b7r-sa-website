@@ -14,6 +14,7 @@ import { contentTickTask } from '@/modules/ai-content/tick';
 import { citationLedgerTask } from '@/modules/visibility/ledger/run';
 import { visibilityPullTask } from '@/modules/visibility/pull';
 import { AI_QUEUE, generatePostWorkflow } from '@/modules/ai-content/workflow';
+import { BOOKINGS_QUEUE, bookingsSweepTask } from '@/modules/bookings/sweep';
 import { REDIRECT_OVERRIDES } from '@/modules/cms/collections/redirects';
 import { indexNowTask } from '@/modules/cms/jobs/indexnow';
 import { cmsEnv, isBuildPhase } from '@/lib/cms/env';
@@ -134,14 +135,17 @@ export default buildConfig({
       digestTask,
       visibilityPullTask,
       citationLedgerTask,
+      bookingsSweepTask,
     ],
     workflows: [generatePostWorkflow],
     // The default queue serves IndexNow and scheduled publishes; the `ai` queue runs one
     // content-engine job at a time and carries the engine's schedules: the hourly tick, the
-    // weekly freshness pass and the weekly digest (ADR-042).
+    // weekly freshness pass and the weekly digest (ADR-042); the `bookings` queue runs the
+    // sweep alone, one at a time, so two passes never send a reminder twice (ADR-062).
     autoRun: [
       { cron: '* * * * *', limit: 10 },
       { cron: '* * * * *', queue: AI_QUEUE, limit: 1 },
+      { cron: '* * * * *', queue: BOOKINGS_QUEUE, limit: 1 },
     ],
     shouldAutoRun: () => !isBuildPhase(),
     deleteJobOnComplete: true,

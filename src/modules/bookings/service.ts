@@ -262,34 +262,39 @@ export async function syncCalendar(
   attempt: number,
 ): Promise<BookingRow> {
   if (!ports.calendar) return row;
-  try {
-    if (row.googleEventId) {
-      await ports.calendar.moveEvent(row.googleEventId, row.start, row.end);
-      const meetLink = row.meetLink ?? (await ports.calendar.meetLinkOf(row.googleEventId));
-      return await ports.store.update(row.id, { calendar: 'synced', meetLink });
-    }
-    const created = await ports.calendar.createEvent({
-      start: row.start,
-      end: row.end,
-      summary: `${settings.title}: ${row.name}`,
-      description: [row.phone, row.email, note].filter(Boolean).join('\n'),
-      attendeeEmail: row.email,
-    });
-    return await ports.store.update(row.id, {
-      calendar: 'synced',
-      googleEventId: created.eventId,
-      meetLink: created.meetLink,
-    });
-  } catch (error) {
-    ports.logger.warn(
-      `booking ${row.id}: the calendar refused (attempt ${attempt}): ${reason(error)}`,
-    );
+  const failed = (why: string, googleEventId: string | null) => {
+    ports.logger.warn(`booking ${row.id}: the calendar refused (attempt ${attempt}): ${why}`);
     return ports.store.update(row.id, {
       calendar: 'failed',
       calendarAttempts: attempt,
       calendarAttemptAt: ports.now(),
+      googleEventId,
     });
+  };
+  let eventId = row.googleEventId;
+  let meetLink = row.meetLink;
+  try {
+    if (eventId) {
+      await ports.calendar.moveEvent(eventId, row.start, row.end);
+      meetLink ??= await ports.calendar.meetLinkOf(eventId);
+    } else {
+      const created = await ports.calendar.createEvent({
+        start: row.start,
+        end: row.end,
+        summary: `${settings.title}: ${row.name}`,
+        description: [row.phone, row.email, note].filter(Boolean).join('\n'),
+        attendeeEmail: row.email,
+      });
+      eventId = created.eventId;
+      meetLink = created.meetLink;
+    }
+  } catch (error) {
+    return failed(reason(error), eventId);
   }
+  // An event without its Meet link yet (Google still creating it) is not done: the row
+  // keeps the id, reads as failed, and the sweep's next try asks for the link again.
+  if (!meetLink) return failed('the event has no Meet link yet', eventId);
+  return ports.store.update(row.id, { calendar: 'synced', googleEventId: eventId, meetLink });
 }
 
 export interface BookInput {

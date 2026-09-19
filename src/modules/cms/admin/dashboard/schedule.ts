@@ -1,23 +1,25 @@
 import { riyadh } from '@/lib/riyadh';
 import { DIGEST_CRON, FRESHNESS_CRON } from '@/modules/ai-content/schedule';
+import { SWEEP_CRON } from '@/modules/bookings/schedule';
 import { duePrompts, type LedgerPrompt } from '@/modules/visibility/ledger/run';
 import { LEDGER_CRON } from '@/modules/visibility/ledger/schedule';
 import { PULL_CRON } from '@/modules/visibility/schedule';
 
-export type ScheduleKey = 'pull' | 'ledger' | 'freshness' | 'digest';
+export type ScheduleKey = 'pull' | 'ledger' | 'freshness' | 'digest' | 'bookings';
 
 /**
  * The scheduled jobs the server section lists, each with the cron its task declares (the
  * same constant, so the two cannot drift), on the UTC clock the runtime keeps (Riyadh is
  * UTC+3 with no daylight saving): the nightly pull, the citation ledger, the weekly freshness
- * and digest. The engine's hourly tick is not a slot: its next run is the engine card's,
- * judged by the caps.
+ * and digest, the bookings sweep every quarter hour. The engine's hourly tick is not a slot:
+ * its next run is the engine card's, judged by the caps.
  */
 export const SCHEDULES: ReadonlyArray<{ key: ScheduleKey; cron: string }> = [
   { key: 'pull', cron: PULL_CRON },
   { key: 'ledger', cron: LEDGER_CRON },
   { key: 'freshness', cron: FRESHNESS_CRON },
   { key: 'digest', cron: DIGEST_CRON },
+  { key: 'bookings', cron: SWEEP_CRON },
 ];
 
 const RIYADH_OFFSET_HOURS = 3;
@@ -29,10 +31,28 @@ export interface RiyadhSlot {
   weekday: number | null;
 }
 
-/** `0 H * * D` (the only shape the tasks use) as a Riyadh hour and an optional weekday. */
-export function riyadhSlot(cron: string): RiyadhSlot {
+/** Every N minutes of every hour (the bookings sweep). */
+export interface IntervalSlot {
+  everyMinutes: number;
+}
+
+export type Slot = RiyadhSlot | IntervalSlot;
+
+export const isInterval = (slot: Slot): slot is IntervalSlot => 'everyMinutes' in slot;
+
+/**
+ * A task's cron as the dashboard reads it: `0 H * * D` as a Riyadh hour and an optional
+ * weekday, or an every-N-minutes step; the two shapes the tasks use.
+ */
+export function riyadhSlot(cron: string): Slot {
+  const every = /^\*\/(\d{1,2}) \* \* \* \*$/.exec(cron);
+  if (every) return { everyMinutes: Number(every[1]) };
   const m = /^0 (\d{1,2}) \* \* (\*|[0-6])$/.exec(cron);
-  if (!m) throw new Error(`schedule: cannot read the cron "${cron}"; expected "0 H * * D"`);
+  if (!m) {
+    throw new Error(
+      `schedule: cannot read the cron "${cron}"; expected "0 H * * D" or an every-N-minutes step`,
+    );
+  }
   const utcHour = Number(m[1]);
   const hour = (utcHour + RIYADH_OFFSET_HOURS) % 24;
   const crossesMidnight = utcHour + RIYADH_OFFSET_HOURS >= 24;
@@ -55,7 +75,11 @@ function weekdayOf(dayKey: string): number {
 }
 
 /** The next time the slot comes round after `now`, on the Riyadh clock. */
-export function nextOccurrence(slot: RiyadhSlot, now: Date): Date {
+export function nextOccurrence(slot: Slot, now: Date): Date {
+  if (isInterval(slot)) {
+    const step = slot.everyMinutes * 60_000;
+    return new Date(Math.floor(now.getTime() / step) * step + step);
+  }
   let day = riyadh(now).dateKey;
   if (riyadhAt(day, slot.hour).getTime() <= now.getTime()) day = addDays(day, 1);
   if (slot.weekday !== null) {
@@ -64,7 +88,7 @@ export function nextOccurrence(slot: RiyadhSlot, now: Date): Date {
   return riyadhAt(day, slot.hour);
 }
 
-export const LEDGER_SLOT: RiyadhSlot = riyadhSlot(LEDGER_CRON);
+export const LEDGER_SLOT = riyadhSlot(LEDGER_CRON) as RiyadhSlot;
 
 /** A prompt as the ledger page reads it: its period and the latest citation per connection. */
 export type PromptWithLatest = LedgerPrompt & { latest: Record<number, { date: string }> };

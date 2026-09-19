@@ -436,6 +436,7 @@ export const adminStrings = {
         ledger: 'Citation ledger',
         freshness: 'Weekly freshness',
         digest: 'Weekly digest',
+        bookings: 'Booking reminders',
       },
       engine: {
         on: 'Content engine on',
@@ -919,6 +920,7 @@ export const adminStringsAr: AdminStrings = {
         ledger: 'سجل الاستشهادات',
         freshness: 'التحديث الأسبوعي',
         digest: 'الملخص الأسبوعي',
+        bookings: 'تذكيرات الحجز',
       },
       engine: {
         on: 'محرّك المحتوى يعمل',
