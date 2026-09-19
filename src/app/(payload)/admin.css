@@ -52,16 +52,20 @@
   --color-on-warning: var(--color-black);
   --color-error: #f26b6b;
   /* Identity hues (ADR-046): one per sidebar group, carried by the group's entities onto the
-     sidebar, the page header and the dashboard; never a meaning. Each is at least 5.8:1 on the
-     surface (rgb 34 34 34); the Site group uses the accent blue above. */
-  --color-teal: #2dd4bf;
-  --color-teal-tint: rgb(45 212 191 / 0.16);
-  --color-violet: #a78bfa;
-  --color-violet-tint: rgb(167 139 250 / 0.16);
-  --color-pink: #f472b6;
-  --color-pink-tint: rgb(244 114 182 / 0.16);
-  --color-slate: #cbd5e1;
-  --color-slate-tint: rgb(203 213 225 / 0.12);
+     sidebar, the page header's tile, the active tab's bar and the dashboard card's icon
+     (ADR-060); never a meaning. Each is at least 5.8:1 on the surface (rgb 34 34 34); the
+     Site group uses the accent blue above. The values live once, in the `@layer payload`
+     `:root` block below (`--admin-teal` and friends, which the active tab's bar reads): the
+     tokens reference them, since `@theme inline` inlines a token into its utilities and
+     emits no `--color-*` variable for a stylesheet rule to read. */
+  --color-teal: var(--admin-teal);
+  --color-teal-tint: color-mix(in srgb, var(--admin-teal) 16%, transparent);
+  --color-violet: var(--admin-violet);
+  --color-violet-tint: color-mix(in srgb, var(--admin-violet) 16%, transparent);
+  --color-pink: var(--admin-pink);
+  --color-pink-tint: color-mix(in srgb, var(--admin-pink) 16%, transparent);
+  --color-slate: var(--admin-slate);
+  --color-slate-tint: color-mix(in srgb, var(--admin-slate) 12%, transparent);
   --color-whatsapp: #25d366;
   --color-white: #ffffff;
   --color-black: #000000;
@@ -107,8 +111,8 @@
     --admin-red-ink: #2a0f0f;
     --admin-red-tint: rgb(242 107 107 / 0.14);
     --admin-amber: #f5b53f;
-    /* The identity hues (ADR-046) for the one Payload element that carries one: the active
-       tab's bar (ADR-060). The same values as the token block above. */
+    /* The identity hues (ADR-046), defined once: the token block above references these
+       for the utilities, and the active tab's bar reads them here (ADR-060). */
     --admin-teal: #2dd4bf;
     --admin-violet: #a78bfa;
     --admin-pink: #f472b6;

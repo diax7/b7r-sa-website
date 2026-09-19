@@ -1349,8 +1349,12 @@ describe('section icons (ADR-060)', () => {
       const own = entityIcon(e.type, e.slug);
       for (const s of sections) {
         if (s.kind === 'tabs' && s.field.type === 'tabs') {
+          // A partial set cannot ship: the tab without a key is named.
+          const unkeyed = s.field.tabs
+            .filter((t) => !sectionIconKeyOf(t.admin))
+            .map((t) => ('name' in t && t.name) || pairOf(t.label)?.en || '[tab]');
+          expect(unkeyed, `${e.slug}.${s.where}: tabs without an icon`).toEqual([]);
           const keys = s.field.tabs.map((t) => sectionIconKeyOf(t.admin));
-          expect(keys, `${e.slug}.${s.where}: a tab without an icon`).not.toContain(null);
           expect(new Set(keys).size, `${e.slug}.${s.where}: an icon repeated in the strip`).toBe(
             keys.length,
           );
@@ -1480,6 +1484,9 @@ describe('the status column (ADR-060)', () => {
     }
   });
   it("carries the cell and Payload's own name, type and label key, nothing else", () => {
+    // The key set is pinned because `mergeBaseFields` deep-merges the config's field over
+    // Payload's base (`fields/mergeBaseFields.js:20-22`): a key placed here wins over
+    // Payload's (an array is appended to Payload's), which is why `options` never appears.
     const column = statusColumn() as { label: (a: { t: (k: string) => string }) => string };
     expect(Object.keys(column).toSorted()).toEqual(['admin', 'label', 'name', 'type']);
     expect(column).toMatchObject({
