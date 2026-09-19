@@ -1,5 +1,11 @@
 import { AxeBuilder } from '@axe-core/playwright';
-import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
+import {
+  expect,
+  request as playwrightRequest,
+  test,
+  type APIRequestContext,
+  type Page,
+} from '@playwright/test';
 import { ADMIN, API, hasAdmin, login } from './helpers/cms';
 
 /**
@@ -135,28 +141,36 @@ test.describe('bookings of our own (ADR-062)', () => {
   let calendarId: number | null = null;
   const made: number[] = [];
   let manageToken = '';
+  /**
+   * The admin's own request context: the worker's shared one may hold the cookie of a
+   * session another spec signed in with (the admin suite's editor), and a cookie beside
+   * the JWT header made the global's write a 403.
+   */
+  let admin: APIRequestContext;
 
-  test.beforeAll(async ({ request }) => {
-    auth = await login(request, ADMIN);
-    before = await readGlobal(request, auth);
-    calendarId = await mockCalendar(request, auth, false);
-    await writeGlobal(request, auth, { enabled: true, noticeHours: 0 });
+  test.beforeAll(async ({ baseURL }) => {
+    admin = await playwrightRequest.newContext({ baseURL: baseURL! });
+    auth = await login(admin, ADMIN);
+    before = await readGlobal(admin, auth);
+    calendarId = await mockCalendar(admin, auth, false);
+    await writeGlobal(admin, auth, { enabled: true, noticeHours: 0 });
   });
 
-  test.afterAll(async ({ request }) => {
+  test.afterAll(async () => {
     for (const id of made) {
-      await request.delete(`${API}/bookings/${id}`, { headers: auth });
+      await admin.delete(`${API}/bookings/${id}`, { headers: auth });
     }
     if (calendarId !== null) {
-      await request.patch(`${API}/connections/${calendarId}`, {
+      await admin.patch(`${API}/connections/${calendarId}`, {
         headers: { ...auth, ...json },
         data: { enabled: false, model: 'ok' },
       });
     }
-    await writeGlobal(request, auth, {
+    await writeGlobal(admin, auth, {
       enabled: before.enabled === true,
       noticeHours: before['noticeHours'] ?? 24,
     });
+    await admin.dispose();
   });
 
   test('the contact card holds the picker inline while the switch is on; /book and /contact are in the sitemap', async ({
@@ -371,7 +385,7 @@ test.describe('bookings of our own (ADR-062)', () => {
     const id = Number(new URL(href, 'http://x').searchParams.get('token')?.split('.')[0]);
     made.push(id);
     const row = (await (
-      await request.get(`${API}/bookings/${id}?depth=0`, { headers: auth })
+      await admin.get(`${API}/bookings/${id}?depth=0`, { headers: auth })
     ).json()) as {
       locale: string;
       status: string;
@@ -386,7 +400,7 @@ test.describe('bookings of our own (ADR-062)', () => {
     request,
   }) => {
     test.skip(calendarId === null, 'the mock calendar kind is not in the table yet');
-    await mockCalendar(request, auth, true);
+    await mockCalendar(admin, auth, true);
     const { slots } = await firstFreeSlots(request);
     const res = await request.post('/api/bookings', {
       headers: { ...json, ...ip(96) },
@@ -397,25 +411,31 @@ test.describe('bookings of our own (ADR-062)', () => {
     made.push(booking.id);
     expect(booking.meetLink).toBeNull();
     const row = (await (
-      await request.get(`${API}/bookings/${booking.id}?depth=0`, { headers: auth })
+      await admin.get(`${API}/bookings/${booking.id}?depth=0`, { headers: auth })
     ).json()) as {
       calendar: string;
       calendarAttempts: number;
     };
     expect(row.calendar).toBe('failed');
     expect(row.calendarAttempts).toBe(0);
-    await mockCalendar(request, auth, false);
+    await mockCalendar(admin, auth, false);
   });
 
-  test('the outsider reads, lists and creates nothing on the bookings', async ({ request }) => {
-    for (const path of [`${API}/bookings`, `${API}/bookings/1`, `${API}/globals/booking`]) {
-      expect((await request.get(path)).status(), path).toBe(403);
+  test('the outsider reads, lists and creates nothing on the bookings', async ({ baseURL }) => {
+    // A context of its own: the worker's may hold a session's cookie from another spec.
+    const outsider = await playwrightRequest.newContext({ baseURL: baseURL! });
+    try {
+      for (const path of [`${API}/bookings`, `${API}/bookings/1`, `${API}/globals/booking`]) {
+        expect((await outsider.get(path)).status(), path).toBe(403);
+      }
+      const create = await outsider.post(`${API}/bookings`, {
+        headers: json,
+        data: { ...MERCHANT, start: new Date().toISOString(), end: new Date().toISOString() },
+      });
+      expect(create.status()).toBe(403);
+    } finally {
+      await outsider.dispose();
     }
-    const create = await request.post(`${API}/bookings`, {
-      headers: json,
-      data: { ...MERCHANT, start: new Date().toISOString(), end: new Date().toISOString() },
-    });
-    expect(create.status()).toBe(403);
   });
 
   for (const width of [1440, 390]) {
