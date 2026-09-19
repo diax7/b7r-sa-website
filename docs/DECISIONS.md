@@ -2409,7 +2409,9 @@ content locale; the panel's language never decides what the merchant reads), onl
 row has a phone; "Reply by e-mail" opens `mailto:` with a subject in that language; "Mark
 handled" is an `ApiAction` on `POST /api/inbox/messages/:id/handle`, which goes through
 `adminOnly()` with `roles: ['admin', 'editor']` (the guard gained a roles option and now
-hands the route the person, so the write runs with their access, never the route's), turns
+hands the route the person, so the write runs with their access, never the route's; a
+write Payload refuses answers its status with the panel's own sentence in the caller's
+language, `refusalOf`, never Payload's English under an Arabic button), turns
 the form's status select to Handled through a field `UPDATE` with its `initialValue` (the
 form stays clean, no unsaved-changes prompt) and disables itself with "Handled already."
 once the row is handled.
@@ -2425,12 +2427,17 @@ a link to its form, "All messages" at the end; «لا رسائل جديدة» wh
 Site blue on the title icon is its one hue. Editors see it (they read the messages); the
 hand line is untouched (ADR-059).
 
-**Personal-data rules** (the first rows holding a stranger's name, phone and e-mail): no
-personal field in any log line (a failure names the row's id; the store failure names
-nothing); the sender's fields carry field-level `access.update: () => false` and
-`readOnly`, so the record is what the form sent, for everyone: Payload answers a refused
-field by dropping it from the write, so an editor's PATCH that names the phone keeps the
-phone and the status change lands; `status` and `notes` are the two fields anyone writes;
+**Personal-data rules** (the first rows holding a stranger's name, phone and e-mail; rule
+18 of `.claude/rules/admin-ui.md`): no personal field in any log line (a failed send names
+the row's id; a failed store names the error's name alone, never `err:`, since a database
+error's message is the failed query with its parameters, drizzle's `Failed query: …
+params: …`, and pino's serializer would write the sender's fields out; the test reads
+every key of the entry); the sender's fields carry field-level `access.update: () =>
+false` and `readOnly`, so the record is what the form sent, for everyone: Payload answers
+a refused field by dropping it from the write, so an editor's PATCH that names the phone
+keeps the phone and the status change lands; `emailed` carries the same refusal on its
+own, and `markEmailed` passes it only because the Local API's `overrideAccess` skips
+field access; `status` and `notes` are the two fields anyone writes;
 admins and editors read and update, an admin alone deletes, nothing is deleted
 automatically (RUNBOOK); the outsider seat is proved in `tests/access.test.ts` and in the
 e2e (list, read, create, update and delete all refused for the public key). The public

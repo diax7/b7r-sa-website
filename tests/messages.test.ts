@@ -11,7 +11,8 @@ import { originOf, originOfReferer, utmFrom, utmOf } from '@/modules/inbox/origi
 const sends: SendResult[] = [];
 const outbox: unknown[] = [];
 const writes: Array<{ op: 'create' | 'update'; args: Record<string, unknown> }> = [];
-const logged: Array<{ level: string; msg: string }> = [];
+/** Every key of every entry, as pino would write it: the scrub is proved on the whole line. */
+const logged: Array<{ level: string; entry: Record<string, unknown> }> = [];
 let storeFails = false;
 
 vi.mock('@/lib/contact-transport', () => ({
@@ -32,7 +33,16 @@ vi.mock('@/lib/cms/payload', () => ({
   cms: async () =>
     ({
       create: async (args: Record<string, unknown>) => {
-        if (storeFails) throw new Error('database down');
+        if (storeFails) {
+          // Drizzle's shape (`DrizzleQueryError`): the failed query and its parameters,
+          // which are the sender's fields.
+          const data = args['data'] as Record<string, unknown>;
+          const error = new Error(
+            `Failed query: insert into "messages" ("name", "phone", "email", "message") values ($1, $2, $3, $4)\nparams: ${[data['name'], data['phone'], data['email'], data['message']].join(',')}`,
+          );
+          error.name = 'DrizzleQueryError';
+          throw error;
+        }
         writes.push({ op: 'create', args });
         return { id: 41 };
       },
@@ -41,8 +51,8 @@ vi.mock('@/lib/cms/payload', () => ({
         return { id: args['id'] };
       },
       logger: {
-        error: (entry: { msg: string }) => logged.push({ level: 'error', msg: entry.msg }),
-        warn: (entry: { msg: string }) => logged.push({ level: 'warn', msg: entry.msg }),
+        error: (entry: Record<string, unknown>) => logged.push({ level: 'error', entry }),
+        warn: (entry: Record<string, unknown>) => logged.push({ level: 'warn', entry }),
         info: () => {},
       },
     }) as unknown as Payload,
@@ -78,6 +88,19 @@ function post(body: unknown, headers: Record<string, string> = {}) {
 }
 
 const created = () => writes.filter((w) => w.op === 'create').map((w) => w.args['data']);
+
+/** The five values a log line must never carry, in the forms the route sees them. */
+const PERSONAL = [valid.name, valid.phone, '966501699572', valid.email, valid.message];
+
+/** Every log entry serialised whole, an `Error` by its message and stack too, like pino. */
+const wholeLog = () =>
+  logged.map(({ level, entry }) =>
+    JSON.stringify({ level, ...entry }, (_key, value: unknown) =>
+      value instanceof Error
+        ? { name: value.name, message: value.message, stack: value.stack }
+        : value,
+    ),
+  );
 
 beforeEach(() => {
   sends.length = 0;
@@ -127,21 +150,25 @@ describe('POST /api/contact stores, then sends (ADR-061)', () => {
     expect(logged).toEqual([
       {
         level: 'warn',
-        msg: 'contact: message 41 stored, the notification e-mail did not go out (503)',
+        entry: { msg: 'contact: message 41 stored, the notification e-mail did not go out (503)' },
       },
     ]);
-    for (const value of [valid.name, valid.phone, valid.email, valid.message, '966501699572']) {
-      expect(logged[0]!.msg).not.toContain(value);
-    }
+    for (const line of wholeLog()) for (const value of PERSONAL) expect(line).not.toContain(value);
   });
 
-  it('a failed store still tries the e-mail and logs nothing personal; both failing is the transport status', async () => {
+  it("a failed store still tries the e-mail and logs the error's name alone, never the query's parameters; both failing is the transport status", async () => {
     storeFails = true;
     const ok = await post(valid);
     expect(ok.status).toBe(200);
     expect(outbox).toHaveLength(1);
     expect(writes).toEqual([]);
-    expect(logged).toEqual([{ level: 'error', msg: 'contact: the message could not be stored' }]);
+    expect(logged).toEqual([
+      {
+        level: 'error',
+        entry: { msg: 'contact: the message could not be stored (DrizzleQueryError)' },
+      },
+    ]);
+    for (const line of wholeLog()) for (const value of PERSONAL) expect(line).not.toContain(value);
     sends.push({ ok: false, status: 503 });
     const down = await post(valid);
     expect(down.status).toBe(503);

@@ -22,7 +22,10 @@ const limiter = createRateLimiter(CONTACT_RATE_LIMIT, CONTACT_WINDOW_MS);
 /**
  * The row first, the e-mail second (ADR-061): the inbox is the record and the e-mail a
  * copy, so a transport that is down or unconfigured loses nothing. A failed store is
- * logged without a personal field and the e-mail is still tried; a failed send leaves the
+ * logged by the error's name alone and the e-mail is still tried: never `err:` here, since
+ * a database error's message carries the failed query and its parameters (drizzle's
+ * `DrizzleQueryError`: `Failed query: … params: …`), which are the sender's name, phone,
+ * e-mail and message, and pino's serializer would write it out. A failed send leaves the
  * row with `emailed: false` and names the row's id, nothing else.
  */
 async function storeThenSend(
@@ -33,7 +36,8 @@ async function storeThenSend(
   try {
     stored = await storeMessage(payload, message);
   } catch (error) {
-    payload.logger.error({ err: error, msg: 'contact: the message could not be stored' });
+    const name = error instanceof Error ? error.name : 'error';
+    payload.logger.error({ msg: `contact: the message could not be stored (${name})` });
   }
   // The recipient is the contact address in the site settings (ADR-052).
   const to = (await getSiteSettings('ar')).contact.email;

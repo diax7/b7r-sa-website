@@ -164,6 +164,15 @@ registry, the bilingual census, the description rule, the status column),
    from a class in the config. A colour never appears without its word; the e2e counts the
    carriers per document and runs axe at 1440 and 390 in both languages.
 
+18. **Personal data** (ADR-061): a row that holds a stranger's name, phone or e-mail (a
+   message, a booking) never reaches a log line. A failure names the row's id and the
+   error's name, never `err:` on such a row: a database error's message carries the failed
+   query and its parameters (drizzle's `Failed query: … params: …`), and pino's serializer
+   writes the message and the stack out. The sender's fields refuse every update
+   (field-level `access.update`, read-only lines); a route that writes them does so with
+   access overridden and nothing else; an admin deletes, nothing deletes itself; the test
+   that proves the log clean reads every key of the entry, not the `msg` alone.
+
 ## Adding an admin component
 
 - Location: `src/modules/cms/admin/<area>/` (a feature module's own under

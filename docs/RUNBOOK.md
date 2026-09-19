@@ -365,8 +365,10 @@ bodies and the sender's fields are never logged; a failure names the row's id.
 - **`emailed: false`** ("Notification sent: No") means the row is here and the
   notification e-mail did not go out: no `RESEND_API_KEY`, no contact address in Site
   settings → Contact, or Resend refused. Nothing retries it; answer from the inbox. The
-  log line names the row's id and the transport's status, never the sender. On a fresh
-  host before Resend is configured, every message reads this way and none is lost.
+  log line names the row's id and the transport's status, never the sender; a store that
+  failed names the error's name alone (a database error's message would carry the
+  sender's fields). On a fresh host before Resend is configured, every message reads this
+  way and none is lost.
 - **Deleting** is an admin's act, one row at a time or a filtered bulk delete through the
   API; nothing deletes itself. A stranger's name, phone and e-mail live in these rows:
   export nothing, and remove a row when its sender asks.
