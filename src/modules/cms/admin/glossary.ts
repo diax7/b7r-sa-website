@@ -655,7 +655,7 @@ export const GLOSSARY: readonly GlossaryRow[] = [
     ar: 'الزوّار',
     latin: false,
     refused: ['الزائرون', 'الزائرين'],
-    note: 'The dashboard’s visits tile and the people row when Umami counts (ADR-048 amended); a landing stays «زيارة», a user «مستخدم».',
+    note: 'The dashboard’s visits tile and the people row when Umami counts (ADR-048 amended); a landing stays «زيارة», a user «مستخدم». Counted, the four forms of `arabicCount`: «زائر واحد», «زائران», «5 زوّار», «25 زائراً».',
   },
   {
     area: 'traffic',
