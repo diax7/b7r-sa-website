@@ -316,6 +316,11 @@ export const adminStrings = {
       pages: 'Top entry pages',
       empty: 'No landings yet: the count starts with the first visitor.',
       link: 'All traffic',
+      /** The people row (ADR-048 amended): Umami's numbers for the range, through yesterday. */
+      visitors: 'Visitors',
+      pageViews: 'Page views',
+      averageTime: 'Average visit',
+      people: 'People, by Umami through yesterday',
     },
     families: {
       openai: 'OpenAI',
@@ -392,6 +397,12 @@ export const adminStrings = {
     /** The four numbers at a glance, each tile a link to its place. */
     tiles: {
       visits: 'Visits',
+      /**
+       * When Umami counts (ADR-048 amended) the tile is its visitors and our landings move to
+       * the line under: the number is the people, the landings the site's own count.
+       */
+      visitors: 'Visitors',
+      landings: (n: number, text: string) => `${text} ${n === 1 ? 'landing' : 'landings'}`,
       visitsUp: (n: number, days: number) => `${n}% more than the previous ${days} days`,
       visitsDown: (n: number, days: number) => `${n}% fewer than the previous ${days} days`,
       visitsSame: (days: number) => `the same as the previous ${days} days`,
@@ -803,6 +814,10 @@ export const adminStringsAr: AdminStrings = {
       pages: 'أكثر صفحات الدخول',
       empty: 'لا زيارات بعد: يبدأ العدّ مع أول زائر.',
       link: 'كل الزيارات',
+      visitors: 'الزوّار',
+      pageViews: 'مشاهدات الصفحات',
+      averageTime: 'متوسط الزيارة',
+      people: 'الأشخاص، بحسب Umami حتى أمس',
     },
     families: {
       openai: 'OpenAI',
@@ -878,6 +893,8 @@ export const adminStringsAr: AdminStrings = {
     },
     tiles: {
       visits: 'الزيارات',
+      visitors: 'الزوّار',
+      landings: (_n, text) => `الزيارات: ${text}`,
       visitsUp: (n, days) => `أكثر بنسبة ${n}% من المدة السابقة (${arabicDays(days)})`,
       visitsDown: (n, days) => `أقل بنسبة ${n}% من المدة السابقة (${arabicDays(days)})`,
       visitsSame: (days) => `مثل المدة السابقة (${arabicDays(days)})`,

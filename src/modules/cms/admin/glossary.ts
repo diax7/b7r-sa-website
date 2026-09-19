@@ -651,6 +651,21 @@ export const GLOSSARY: readonly GlossaryRow[] = [
   { area: 'traffic', en: 'visit / landing', ar: 'زيارة', latin: false, refused: ['هبوط'] },
   {
     area: 'traffic',
+    en: 'visitors (the people, by Umami)',
+    ar: 'الزوّار',
+    latin: false,
+    refused: ['الزائرون', 'الزائرين'],
+    note: 'The dashboard’s visits tile and the people row when Umami counts (ADR-048 amended); a landing stays «زيارة», a user «مستخدم».',
+  },
+  {
+    area: 'traffic',
+    en: 'page views',
+    ar: 'مشاهدات الصفحات',
+    latin: false,
+    refused: ['الصفحات المعروضة'],
+  },
+  {
+    area: 'traffic',
     en: 'entry page',
     ar: 'صفحة الدخول',
     latin: false,

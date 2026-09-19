@@ -158,6 +158,8 @@ test refuses (translations of a Latin term, or synonyms of the settled word).
 | Visibility | verification token | رمز التحقق |  | كود التحقق |  |
 | Traffic | traffic (the page) | مصادر الزيارات |  | حركة المرور، ترافيك، حركة الزيارات |  |
 | Traffic | visit / landing | زيارة |  | هبوط |  |
+| Traffic | visitors (the people, by Umami) | الزوّار |  | الزائرون، الزائرين | The dashboard’s visits tile and the people row when Umami counts (ADR-048 amended); a landing stays «زيارة», a user «مستخدم». |
+| Traffic | page views | مشاهدات الصفحات |  | الصفحات المعروضة |  |
 | Traffic | entry page | صفحة الدخول |  | صفحة الهبوط، صفحات الهبوط |  |
 | Traffic | crawl | زحف |  |  |  |
 | Traffic | crawler (a bot) | زاحف |  | عنكبوت |  |

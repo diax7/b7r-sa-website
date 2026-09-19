@@ -86,3 +86,12 @@ export function relativeTime(iso: string | Date, language: string, now: Date = n
   if (diff < 7 * DAY) return relative.format(-Math.floor(diff / DAY), 'day');
   return formatDate(date, language);
 }
+
+/**
+ * A duration in seconds as `m:ss` (`2:07`), Western digits in both languages, for the average
+ * visit on the dashboard; an hour and more keeps counting minutes (`75:12`). Never negative.
+ */
+export function formatMinutesSeconds(seconds: number): string {
+  const whole = Math.max(0, Math.round(seconds));
+  return `${Math.floor(whole / 60)}:${String(whole % 60).padStart(2, '0')}`;
+}

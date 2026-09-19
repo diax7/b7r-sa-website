@@ -3,7 +3,9 @@ import { localeEnabledWith } from '@/lib/cms/locale-enabled';
 import { kindsThat } from '@/modules/connections/kinds';
 import { connectionSpend } from '@/modules/connections/spend';
 import { sinceDay } from '@/modules/traffic/summary';
+import { METRICS } from '@/modules/visibility/metrics';
 import { editHref } from '@/modules/visibility/rules/shared';
+import type { UmamiDay } from '@/modules/visibility/services/umami';
 
 /** The collections with drafts (`versions.drafts`), the ones the content section counts. */
 export const CONTENT_COLLECTIONS = ['posts', 'pages', 'products'] as const;
@@ -28,6 +30,50 @@ function accessOf(user: TypedUser | null | undefined): Access {
 /** The Riyadh midnight that opens a range of `days` (today and the days before it). */
 export function rangeStart(days: number, now: Date): Date {
   return new Date(`${sinceDay(days, now)}T00:00:00+03:00`);
+}
+
+/** Umami's numbers summed over a range (ADR-048 amended); `days` says how many of its days have a row. */
+export interface PeopleSummary extends UmamiDay {
+  days: number;
+}
+
+/**
+ * The people of the last `days` days by Umami: the `umami` rows of `metrics` from the range's
+ * first Riyadh day, summed (the pull writes through yesterday, so today is never in it). No
+ * row at all reads `days: 0`, and the visits tile and card then read as they do without the
+ * connection. Admins: the caller has checked the collection's read.
+ */
+export async function peopleSummary(
+  payload: Payload,
+  args: { days: number; now?: Date },
+): Promise<PeopleSummary> {
+  const since = sinceDay(args.days, args.now ?? new Date());
+  const { docs } = await payload.find({
+    collection: METRICS,
+    where: { and: [{ source: { equals: 'umami' } }, { date: { greater_than_equal: since } }] },
+    depth: 0,
+    pagination: false,
+    select: { data: true },
+    overrideAccess: true,
+  });
+  const summary: PeopleSummary = {
+    visitors: 0,
+    pageviews: 0,
+    visits: 0,
+    bounces: 0,
+    totaltime: 0,
+    days: 0,
+  };
+  for (const doc of docs) {
+    const day = (doc.data ?? {}) as Partial<UmamiDay>;
+    summary.visitors += Number(day.visitors ?? 0);
+    summary.pageviews += Number(day.pageviews ?? 0);
+    summary.visits += Number(day.visits ?? 0);
+    summary.bounces += Number(day.bounces ?? 0);
+    summary.totaltime += Number(day.totaltime ?? 0);
+    summary.days += 1;
+  }
+  return summary;
 }
 
 export interface PublishedCount {

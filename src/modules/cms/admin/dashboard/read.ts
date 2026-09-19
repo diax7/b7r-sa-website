@@ -15,6 +15,8 @@ import {
   failedRuns,
   type MissingEnglish,
   missingEnglish,
+  type PeopleSummary,
+  peopleSummary,
   type PublishedCount,
   publishedInRange,
 } from '@/modules/cms/admin/dashboard/readers';
@@ -35,6 +37,8 @@ export interface DashboardData {
   health: Read<HealthReport>;
   recent: Read<RecentItem[]>;
   traffic: Read<{ current: TrafficSummary; double: TrafficSummary }>;
+  /** Umami's people for the range and the double range (ADR-048 amended); `days: 0` without the connection. */
+  people: Read<{ current: PeopleSummary; double: PeopleSummary }>;
   score: Read<{ score: Score<string>; trend: ScoreTrend | null }>;
   ledger: Read<LedgerReading>;
   engine: Read<EngineSummary>;
@@ -68,9 +72,9 @@ async function guarded<T>(
 
 /**
  * Every number the dashboard shows (ADR-059), read once per render, in parallel, with the
- * user's permissions deciding which readers run: the traffic, the score, the ledger, the
- * engine, the connections and the runs need an admin (the collections and globals they read
- * are admin-only); the content readers run on the collections the user may read; the health
+ * user's permissions deciding which readers run: the traffic, the people, the score, the
+ * ledger, the engine, the connections and the runs need an admin (the collections and globals
+ * they read are admin-only); the content readers run on the collections the user may read; the health
  * report and the latest saves run for everyone. Nothing here is cached beyond what the
  * readers cache themselves (the score reading keeps its minute).
  */
@@ -92,6 +96,7 @@ export async function readDashboard(args: {
     health,
     recent,
     traffic,
+    people,
     score,
     ledger,
     engine,
@@ -109,6 +114,13 @@ export async function readDashboard(args: {
       const [current, double] = await Promise.all([
         trafficSummary(payload, { days, now }),
         trafficSummary(payload, { days: days * 2, now }),
+      ]);
+      return { current, double };
+    }),
+    guarded(payload, 'people', reads('metrics'), async () => {
+      const [current, double] = await Promise.all([
+        peopleSummary(payload, { days, now }),
+        peopleSummary(payload, { days: days * 2, now }),
       ]);
       return { current, double };
     }),
@@ -141,6 +153,7 @@ export async function readDashboard(args: {
     health,
     recent,
     traffic,
+    people,
     score,
     ledger,
     engine,
