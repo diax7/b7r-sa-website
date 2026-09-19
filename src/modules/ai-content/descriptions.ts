@@ -7,7 +7,7 @@ export const AI_SETTINGS_DESCRIPTIONS: Described = {
     en: 'The engine writes with it; its key, model, rates and monthly limit live under Connections. None, or one that is off, refuses every run.',
   },
   enabled: {
-    ar: 'عند الإيقاف لا تبدأ أي جولة جديدة خلال ساعة.',
+    ar: 'لا تبدأ أي جولة جديدة خلال ساعة من الإيقاف.',
     en: 'Off: no new run starts within the hour.',
   },
   postsPerDay: {
@@ -19,7 +19,7 @@ export const AI_SETTINGS_DESCRIPTIONS: Described = {
     en: 'A scheduled run does not start before this hour of the day (0 to 23); "Generate now" ignores it.',
   },
   maxPostsPerMonth: {
-    ar: 'عند بلوغه يتوقف المحرّك حتى الشهر التالي.',
+    ar: 'يتوقف المحرّك عند بلوغه حتى الشهر التالي.',
     en: 'Reached, the engine waits for the next month.',
   },
   dailyCostCapUsd: {
@@ -219,7 +219,7 @@ export const AI_TOPICS_DESCRIPTIONS: Described = {
     en: 'For the engine before it writes: an angle, an example, what to avoid. Not shown on the site.',
   },
   status: {
-    ar: 'في القائمة، أو مجدول، أو يُكتب الآن، أو منشور، أو فشل، أو مرفوض.',
+    ar: 'الموضوع في القائمة، أو مجدول، أو يُكتب الآن، أو منشور، أو فشل، أو مرفوض.',
     en: 'In the backlog, scheduled, being written, published, failed or rejected.',
   },
   source: {

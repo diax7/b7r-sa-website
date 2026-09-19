@@ -11,7 +11,7 @@ export const PAGE_DESCRIPTIONS: Described = {
     en: 'The end of the page address: b7r.sa/about. Lowercase letters and hyphens; a change after publishing breaks old links.',
   },
   lead: {
-    ar: 'تحت العنوان بخط أخف. فارغ يخفيه.',
+    ar: 'يظهر تحت العنوان بخط أخف؛ فارغ يخفيه.',
     en: 'One line under the title, in a lighter weight. Empty hides it.',
   },
   blocks: {
@@ -27,19 +27,19 @@ export const PAGE_DESCRIPTIONS: Described = {
     en: 'The formatted text: paragraphs, subheadings, lists, links.',
   },
   'blocks.story.heading': {
-    ar: 'فوق الصورة والنص في قسم الحكاية بصفحة «من نحن».',
+    ar: 'يعلو الصورة والنص في قسم الحكاية بصفحة «من نحن».',
     en: 'Above the photo and the text of the story section on the About page.',
   },
   'blocks.story.text': {
-    ar: 'بجانب الصورة: فقرة أو فقرتان.',
+    ar: 'يظهر بجانب الصورة: فقرة أو فقرتان.',
     en: 'Beside the photo: one or two paragraphs.',
   },
   'blocks.story.line': {
-    ar: 'تحت النص: «جدة، السعودية».',
+    ar: 'يظهر تحت النص: «جدة، السعودية».',
     en: 'Under the text: "Jeddah, Saudi Arabia".',
   },
   'blocks.story.photo': {
-    ar: 'بجانب النص، بنسبة 4:5.',
+    ar: 'تظهر بجانب النص، بنسبة 4:5.',
     en: 'Beside the text, portrait 4:5.',
   },
   'blocks.story.withFacts': {
@@ -47,7 +47,7 @@ export const PAGE_DESCRIPTIONS: Described = {
     en: 'On: the welcome credit and the why-us cards from the home page follow the story.',
   },
   'blocks.cards.title': {
-    ar: 'فوق شبكة البطاقات. فارغ يعرض البطاقات وحدها.',
+    ar: 'يعلو شبكة البطاقات؛ فارغ يعرض البطاقات وحدها.',
     en: 'Above the card grid. Empty shows the cards alone.',
   },
   'blocks.cards.items': {
@@ -59,11 +59,11 @@ export const PAGE_DESCRIPTIONS: Described = {
     en: "At the card's top, from the fixed set.",
   },
   'blocks.cards.items.title': {
-    ar: 'تحت الأيقونة؛ كلمتان إلى أربع.',
+    ar: 'يظهر تحت الأيقونة؛ كلمتان إلى أربع.',
     en: 'Under the icon; two to four words.',
   },
   'blocks.cards.items.text': {
-    ar: 'تحت العنوان: جملة أو جملتان.',
+    ar: 'يظهر تحت العنوان: جملة أو جملتان.',
     en: 'Under the title: one or two sentences.',
   },
   'blocks.cards.items.art': {
@@ -75,11 +75,11 @@ export const PAGE_DESCRIPTIONS: Described = {
     en: 'Numbered, in order, on the how-it-works page: a 3D icon, a title, a text.',
   },
   'blocks.steps.items.title': {
-    ar: 'بجانب رقم الخطوة؛ كلمتان إلى أربع.',
+    ar: 'يظهر بجانب رقم الخطوة؛ كلمتان إلى أربع.',
     en: "Beside the step's number; two to four words.",
   },
   'blocks.steps.items.text': {
-    ar: 'تحت عنوانها: جملة أو جملتان.',
+    ar: 'يظهر تحت عنوان الخطوة: جملة أو جملتان.',
     en: 'Under the title: one or two sentences.',
   },
   'blocks.steps.items.icon': {
@@ -87,7 +87,7 @@ export const PAGE_DESCRIPTIONS: Described = {
     en: 'From the image library (icons-3d-*).',
   },
   'blocks.profitEquation.title': {
-    ar: 'فوق شريط معادلة الربح في صفحة «كيف تعمل».',
+    ar: 'يعلو شريط معادلة الربح في صفحة «كيف تعمل».',
     en: 'Above the profit-equation band on the how-it-works page.',
   },
   'blocks.profitEquation.sell': {
@@ -103,7 +103,7 @@ export const PAGE_DESCRIPTIONS: Described = {
     en: 'The result, after the equals sign: "Your profit".',
   },
   'blocks.profitEquation.exampleLine': {
-    ar: 'تحت المعادلة بأرقام حقيقية من الكتالوج: «تيشيرت بـ 89 ريالاً…».',
+    ar: 'يظهر تحت المعادلة بأرقام حقيقية من الكتالوج: «تيشيرت بـ 89 ريالاً…».',
     en: 'Under the equation, with real catalogue numbers: "A tee at 89 SAR…".',
   },
   'blocks.compare.title': {
@@ -128,7 +128,7 @@ export const PAGE_DESCRIPTIONS: Described = {
   },
   'blocks.compare.rows': {
     ar: 'بترتيبها: المعيار ثم ما عندنا وما عندهم. ثلاثة على الأقل؛ وكل ادعاء عن الطرف الآخر يمكن التحقق منه على صفحاته.',
-    en: 'In order: the criterion, then ours and theirs. Three at least; every claim about the other side is one a reader can check on its pages.',
+    en: 'In order: the criterion, then ours and theirs. Three at least; every claim about them is one a reader can check on their pages.',
   },
   'blocks.compare.rows.criterion': {
     ar: 'ما تُقارَن عليه: «من أين يُشحن»، «الحد الأدنى للطلب».',
@@ -175,11 +175,11 @@ export const PAGE_DESCRIPTIONS: Described = {
     en: 'The most questions shown. Empty: all of them.',
   },
   'blocks.faqList.title': {
-    ar: 'فوق القائمة. فارغ يعرض القائمة وحدها.',
+    ar: 'يعلو القائمة؛ فارغ يعرض القائمة وحدها.',
     en: 'Above the list. Empty shows the list alone.',
   },
   'blocks.faqList.linkLabel': {
-    ar: 'تحت القائمة، مثل «كل الأسئلة». فارغ يخفي الرابط.',
+    ar: 'يظهر تحت القائمة، مثل «كل الأسئلة»؛ فارغ يخفي الرابط.',
     en: 'Under the list, such as "All questions". Empty hides the link.',
   },
   'blocks.faqList.linkHref': {
@@ -187,7 +187,7 @@ export const PAGE_DESCRIPTIONS: Described = {
     en: 'Where the link under the list goes: /faq.',
   },
   'blocks.faqList.bottomLine': {
-    ar: 'تحت القائمة، وفيه كلمة واحدة تحمل رابطاً. فارغ يخفي الجملة.',
+    ar: 'يظهر تحت القائمة، وفيه كلمة واحدة تحمل رابطاً؛ فارغ يخفي الجملة.',
     en: 'Under the list, with one word carrying a link. Empty hides the sentence.',
   },
   'blocks.faqList.bottomLinkWord': {
@@ -195,11 +195,11 @@ export const PAGE_DESCRIPTIONS: Described = {
     en: 'Becomes the link in the closing line; it must appear there exactly.',
   },
   'blocks.miskCredential.title': {
-    ar: 'على بطاقة مسك في صفحة «من نحن».',
+    ar: 'يعلو بطاقة مسك في صفحة «من نحن».',
     en: 'On the Misk Launchpad card on the About page.',
   },
   'blocks.miskCredential.text': {
-    ar: 'تحت العنوان: ما البرنامج وما يعنيه لبحر.',
+    ar: 'يظهر تحت العنوان: ما البرنامج وما يعنيه لبحر.',
     en: 'Under the title: what the programme is and what it means for B7R.',
   },
   'blocks.contact.whatsappTitle': {
@@ -207,19 +207,19 @@ export const PAGE_DESCRIPTIONS: Described = {
     en: 'At the top of the card on the contact page.',
   },
   'blocks.contact.whatsappText': {
-    ar: 'تحت العنوان: متى نرد.',
+    ar: 'يظهر تحت العنوان: متى نرد.',
     en: 'Under the title: when we answer.',
   },
   'blocks.contact.emailTitle': {
-    ar: 'في صفحة التواصل؛ العنوان نفسه من إعدادات الموقع.',
+    ar: 'يعلو بطاقة البريد في صفحة التواصل؛ العنوان نفسه من إعدادات الموقع.',
     en: 'On the contact page; the address itself comes from Site settings.',
   },
   'blocks.contact.phoneTitle': {
-    ar: 'في صفحة التواصل؛ الرقم نفسه من إعدادات الموقع.',
+    ar: 'يعلو بطاقة الهاتف في صفحة التواصل؛ الرقم نفسه من إعدادات الموقع.',
     en: 'On the contact page; the number itself comes from Site settings.',
   },
   'blocks.contact.followTitle': {
-    ar: 'في صفحة التواصل؛ الروابط من إعدادات الموقع.',
+    ar: 'يعلو بطاقة الحسابات في صفحة التواصل؛ الروابط من إعدادات الموقع.',
     en: 'On the contact page; the links come from Site settings.',
   },
   'blocks.contact.booking': {
@@ -231,11 +231,11 @@ export const PAGE_DESCRIPTIONS: Described = {
     en: 'At the top of the booking card on the contact page.',
   },
   'blocks.contact.booking.text': {
-    ar: 'تحت العنوان: المدة والمجانية.',
+    ar: 'يظهر تحت العنوان: المدة والمجانية.',
     en: 'Under the title: the length and that it is free.',
   },
   'blocks.contact.booking.button': {
-    ar: 'في أسفل بطاقة الحجز.',
+    ar: 'يظهر أسفل بطاقة الحجز.',
     en: 'At the bottom of the booking card.',
   },
   'blocks.contact.booking.whatsappMessage': {
@@ -255,7 +255,7 @@ export const PAGE_DESCRIPTIONS: Described = {
     en: 'Wide, the full width of the page.',
   },
   'blocks.mediaBanner.caption': {
-    ar: 'تحت الصورة. فارغ يخفيه.',
+    ar: 'يظهر تحت الصورة؛ فارغ يخفيه.',
     en: 'Under the image. Empty hides it.',
   },
   seo: {
@@ -263,11 +263,11 @@ export const PAGE_DESCRIPTIONS: Described = {
     en: 'The title and description in the Google result, and the image when the link is shared.',
   },
   'seo.title': {
-    ar: 'في نتيجة البحث وتبويب المتصفح؛ يُضاف إليه اسم الموقع من إعدادات البحث.',
+    ar: 'يظهر في نتيجة البحث وتبويب المتصفح؛ يُضاف إليه اسم الموقع من إعدادات البحث.',
     en: 'In the search result and the browser tab; the site name from Search defaults is appended.',
   },
   'seo.description': {
-    ar: 'تحت العنوان في نتيجة البحث. جملة أو جملتان.',
+    ar: 'يظهر تحت العنوان في نتيجة البحث؛ جملة أو جملتان.',
     en: 'Under the title in the search result. One or two sentences.',
   },
   'seo.ogImage': {

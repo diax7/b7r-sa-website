@@ -35,7 +35,7 @@ export const CONNECTION_DESCRIPTIONS: Described = {
     en: 'Estimated from the rates; past it nothing runs on this connection until next month. Empty: no limit.',
   },
   enabled: {
-    ar: 'عند الإيقاف يرفض المحرّك كل جولة على هذا الاتصال ويقول ذلك في لوحة التحكم؛ الاختبار يبقى ممكناً.',
+    ar: 'يرفض المحرّك عند الإيقاف كل جولة على هذا الاتصال ويقول ذلك في لوحة التحكم؛ الاختبار يبقى ممكناً.',
     en: 'Off refuses every engine run on this connection and says so on the dashboard; Test still works.',
   },
   spentThisMonthUsd: {

@@ -3,7 +3,7 @@ import type { Described } from '@/modules/cms/admin/descriptions/describe';
 
 /** What a section's switch removes from the home page (ADR-039); one sentence per switch. */
 const sectionSwitch = (section: { ar: string; en: string }) => ({
-  ar: `عند الإيقاف يختفي قسم «${section.ar}» من الصفحة الرئيسية.`,
+  ar: `يختفي قسم «${section.ar}» من الصفحة الرئيسية عند الإيقاف.`,
   en: `Off hides the “${section.en}” section from the home page.`,
 });
 
@@ -17,22 +17,22 @@ const eyebrow = (section: { ar: string; en: string }) => ({
 export const HOME_DESCRIPTIONS: Described = {
   'hero.slides': {
     ar: 'تتبدّل أعلى الصفحة الرئيسية، والأولى ما يراه الزائر أولاً. لكل شريحة عنوان وسطر وصورتان لكل لغة.',
-    en: 'Rotate at the top of the home page; the first is what a visitor sees first. Each has a headline, a subline and two photos per language.',
+    en: 'Rotate at the top of the home page, the first seen first; each has a headline, a subline and two photos per language.',
   },
   'hero.slides.headline': {
     ar: 'النص الكبير على الشريحة، وH1 الصفحة في الأولى. حتى 6 كلمات: سطران على الحاسوب.',
     en: "The big text on the slide, and the page's H1 on the first one. Up to 6 words: two rows on a desktop.",
   },
   'hero.slides.subline': {
-    ar: 'تحت العنوان على الشريحة، سطر واحد على الحاسوب: حتى 10 كلمات.',
+    ar: 'يظهر تحت العنوان على الشريحة، سطراً واحداً على الحاسوب: حتى 10 كلمات.',
     en: 'Under the headline on the slide, one row on a desktop: up to 10 words.',
   },
   'hero.slides.imageDesktop': {
-    ar: 'خلف الشريحة على الحاسوب. الموقع الإنجليزي يعكس التخطيط: اختر له صورة معكوسة مساحتها الهادئة تحت النص.',
+    ar: 'تظهر خلف الشريحة على الحاسوب. الموقع الإنجليزي يعكس التخطيط: اختر له صورة معكوسة مساحتها الهادئة تحت النص.',
     en: 'Behind the slide on a desktop. The English site mirrors the layout: give it a mirrored photo with its calm area under the text.',
   },
   'hero.slides.imageMobile': {
-    ar: 'خلف الشريحة على الجوال، بنسبة 4:5؛ والموقع الإنجليزي يحتاج صورته المعكوسة.',
+    ar: 'تظهر خلف الشريحة على الجوال بنسبة 4:5؛ والموقع الإنجليزي يحتاج صورته المعكوسة.',
     en: 'Behind the slide on a phone, portrait 4:5; the English site needs its own, mirrored.',
   },
   'hero.overlay': {
@@ -40,7 +40,7 @@ export const HOME_DESCRIPTIONS: Described = {
     en: 'A one-colour fade from the text side over the photo, so the headline reads on any photo.',
   },
   'hero.overlay.enabled': {
-    ar: 'عند الإيقاف تظهر الصورة كما هي خلف النص، بلا تدرّج.',
+    ar: 'تظهر الصورة كما هي خلف النص عند الإيقاف، بلا تدرّج.',
     en: 'Off shows the photo as it is behind the text, with no fade.',
   },
   'hero.overlay.color': {
@@ -48,7 +48,7 @@ export const HOME_DESCRIPTIONS: Described = {
     en: 'The fade takes this colour; white is the default. Written as #rrggbb.',
   },
   'hero.primaryCta': {
-    ar: 'تحت الشرائح، أزرق؛ يفتح تسجيل حساب في التطبيق. لامع أو كلاسيكي: إعدادات الموقع، العلامة، أزرار لامعة.',
+    ar: 'يظهر أزرق تحت الشرائح ويفتح تسجيل حساب في التطبيق. لامع أو كلاسيكي: إعدادات الموقع، العلامة، أزرار لامعة.',
     en: "The blue button under the slides; opens the app's sign-up. Shiny or classic: Site settings, Brand, Shiny buttons.",
   },
   'hero.secondaryCta': {
@@ -73,7 +73,7 @@ export const HOME_DESCRIPTIONS: Described = {
     en: "The product strip's heading (H2) on the home page.",
   },
   'productStrip.lead': {
-    ar: 'تحت عنوان الشريط؛ جملة واحدة.',
+    ar: 'يظهر تحت عنوان الشريط؛ جملة واحدة.',
     en: "Under the strip's heading; one sentence.",
   },
   'productStrip.pricePrefix': {
@@ -81,7 +81,7 @@ export const HOME_DESCRIPTIONS: Described = {
     en: 'The word before every price: the strip, the products page, the product page and its sticky bar. Usually "from".',
   },
   'productStrip.button': {
-    ar: 'تحت الشريط؛ يفتح صفحة المنتجات. عادةً «كل المنتجات».',
+    ar: 'يظهر تحت الشريط ويفتح صفحة المنتجات؛ عادةً «كل المنتجات».',
     en: 'Under the strip; opens the products page. Usually "all products".',
   },
   'productStrip.products': {
@@ -94,11 +94,11 @@ export const HOME_DESCRIPTIONS: Described = {
     en: "The designer section's heading (H2).",
   },
   'designer.lead': {
-    ar: 'تحت عنوان المصمّم: ما يفعله الزائر هنا.',
+    ar: 'يظهر تحت عنوان المصمّم: ما يفعله الزائر هنا.',
     en: "Under the designer's heading: what a visitor does here.",
   },
   'designer.cta': {
-    ar: 'في نهاية المصمّم؛ يفتح تسجيل حساب في التطبيق. لامع أو كلاسيكي: إعدادات الموقع، العلامة، أزرار لامعة.',
+    ar: 'يظهر في نهاية المصمّم ويفتح تسجيل حساب في التطبيق. لامع أو كلاسيكي: إعدادات الموقع، العلامة، أزرار لامعة.',
     en: "At the end of the designer; opens the app's sign-up. Shiny or classic: Site settings, Brand, Shiny buttons.",
   },
   'steps.enabled': sectionSwitch({ ar: 'الخطوات الثلاث', en: 'Three steps' }),
@@ -108,7 +108,7 @@ export const HOME_DESCRIPTIONS: Described = {
     en: "The three steps' heading (H2).",
   },
   'steps.link': {
-    ar: 'تحت الخطوات؛ يفتح صفحة «كيف تعمل».',
+    ar: 'يظهر تحت الخطوات ويفتح صفحة «كيف تعمل».',
     en: 'Under the steps; opens the how-it-works page.',
   },
   'steps.items': {
@@ -116,11 +116,11 @@ export const HOME_DESCRIPTIONS: Described = {
     en: 'In order, each with a 3D icon, a title and a text.',
   },
   'steps.items.title': {
-    ar: 'بجانب رقم الخطوة؛ كلمتان إلى أربع.',
+    ar: 'يظهر بجانب رقم الخطوة؛ كلمتان إلى أربع.',
     en: "Beside the step's number; two to four words.",
   },
   'steps.items.text': {
-    ar: 'تحت العنوان: جملة واحدة.',
+    ar: 'يظهر تحت العنوان: جملة واحدة.',
     en: 'Under the title: one sentence.',
   },
   'steps.items.icon': {
@@ -129,11 +129,11 @@ export const HOME_DESCRIPTIONS: Described = {
   },
   'video.enabled': sectionSwitch({ ar: 'الفيديو', en: 'Video' }),
   'video.title': {
-    ar: 'فوق الفيديو؛ المقطع نفسه ملف ثابت في الموقع.',
+    ar: 'يعلو الفيديو؛ المقطع نفسه ملف ثابت في الموقع.',
     en: 'Above the video; the loop itself ships with the site.',
   },
   'video.lead': {
-    ar: 'تحت عنوان الفيديو مباشرة.',
+    ar: 'يظهر تحت عنوان الفيديو مباشرة.',
     en: "Under the video's heading.",
   },
   'whyUs.enabled': sectionSwitch({ ar: 'لماذا بحر', en: 'Why us' }),
@@ -151,7 +151,7 @@ export const HOME_DESCRIPTIONS: Described = {
     en: 'One of three fixed icons.',
   },
   'whyUs.items.title': {
-    ar: 'على البطاقة؛ كلمتان إلى أربع.',
+    ar: 'يظهر على البطاقة؛ كلمتان إلى أربع.',
     en: 'On the card; two to four words.',
   },
   'whyUs.items.text': {
@@ -170,7 +170,7 @@ export const HOME_DESCRIPTIONS: Described = {
     en: 'The connected-stores heading (H2); the logos come from Connected stores.',
   },
   'integrations.lead': {
-    ar: 'تحت عنوان المتاجر المتصلة.',
+    ar: 'يظهر تحت عنوان المتاجر المتصلة.',
     en: 'Under the connected-stores heading.',
   },
   'faq.enabled': sectionSwitch({ ar: 'الأسئلة الشائعة', en: 'FAQ' }),
@@ -179,7 +179,7 @@ export const HOME_DESCRIPTIONS: Described = {
     en: 'The home FAQ heading (H2); the entries come from the FAQ flagged "show on the home page".',
   },
   'faq.link': {
-    ar: 'تحت القسم؛ يفتح صفحة الأسئلة الشائعة.',
+    ar: 'يظهر تحت القسم ويفتح صفحة الأسئلة الشائعة.',
     en: 'Under the section; opens the FAQ page.',
   },
   'ribbon.title': {
@@ -187,7 +187,7 @@ export const HOME_DESCRIPTIONS: Described = {
     en: 'At the bottom of every page, above the footer (H2).',
   },
   'ribbon.lead': {
-    ar: 'تحت عنوان شريط الدعوة.',
+    ar: 'يظهر تحت عنوان شريط الدعوة.',
     en: "Under the banner's heading.",
   },
   'ribbon.button': {
@@ -231,7 +231,7 @@ export const SITE_SETTINGS_DESCRIPTIONS: Described = {
     en: 'No + and no spaces, for the wa.me link in the widget and every WhatsApp button: 966501699572.',
   },
   'contact.email': {
-    ar: 'في التذييل وصفحة التواصل؛ ورابط mailto عند النقر: contact@b7r.sa.',
+    ar: 'يظهر في التذييل وصفحة التواصل، ويُفتح رابط mailto عند النقر: contact@b7r.sa.',
     en: 'In the footer and on the contact page; the mailto link on a tap: contact@b7r.sa.',
   },
   social: {
@@ -303,7 +303,7 @@ export const SITE_SETTINGS_DESCRIPTIONS: Described = {
     en: 'In SAR: the credit line in the About facts band and in llms.txt. Must equal the app; nothing syncs them.',
   },
   deliveryMaxDays: {
-    ar: 'داخل المملكة: وعد «خلال N أيام» في llms.txt، وبيانات الشحن لمحركات البحث، وورقة الحقائق. يساوي التطبيق.',
+    ar: 'يظهر وعد «خلال N أيام» داخل المملكة في llms.txt، وبيانات الشحن لمحركات البحث، وورقة الحقائق؛ يساوي التطبيق.',
     en: 'Inside the Kingdom: the "within N days" promise in llms.txt, the shipping data for search engines, the facts sheet. Must equal the app.',
   },
   deliveryOrigin: {
@@ -311,7 +311,7 @@ export const SITE_SETTINGS_DESCRIPTIONS: Described = {
     en: 'The map-pin chip in the About facts band, the shipping line of llms.txt, the address in the search data, the facts sheet: Jeddah.',
   },
   deliveryRegion: {
-    ar: 'في بيانات البحث (addressRegion): منطقة مكة المكرمة. لا تظهر للزائر.',
+    ar: 'تظهر في بيانات البحث (addressRegion) لا للزائر: منطقة مكة المكرمة.',
     en: 'The origin region in the search data (addressRegion): Makkah Region. Not shown to a visitor.',
   },
   bookingUrl: {
@@ -331,7 +331,7 @@ export const SITE_SETTINGS_DESCRIPTIONS: Described = {
     en: 'Starts with G-. Set, the consent bar shows and GA4 loads after consent; empty, no tracking and no bar.',
   },
   'analytics.umamiSrc': {
-    ar: 'على cloud.umami.is أو umami.b7r.app، ولا يقبل الموقع غيرهما. يُحمَّل في كل صفحة مع معرّف الموقع؛ بلا موافقة.',
+    ar: 'يُحمَّل في كل صفحة مع معرّف الموقع، بلا موافقة؛ على cloud.umami.is أو umami.b7r.app فقط، فلا يقبل الموقع غيرهما.',
     en: 'On cloud.umami.is or umami.b7r.app, the only two the site allows. Loads on every page when set with the website id; no consent needed.',
   },
   'analytics.umamiId': {
@@ -359,11 +359,11 @@ export const SEO_DEFAULTS_DESCRIPTIONS: Described = {
     en: 'The date the content last really changed: the sitemap lastmod for this path, which search engines recrawl on.',
   },
   'routes.title': {
-    ar: 'في نتيجة البحث وتبويب المتصفح لهذا المسار؛ يُضاف إليه اسم الموقع من القالب. حتى 70 حرفاً.',
+    ar: 'يظهر في نتيجة البحث وتبويب المتصفح لهذا المسار؛ يُضاف إليه اسم الموقع من القالب. حتى 70 حرفاً.',
     en: "The search result's title and the browser tab for this path; the site name from the template is appended. Up to 70 characters.",
   },
   'routes.description': {
-    ar: 'تحت العنوان في نتيجة Google لهذا المسار. جملة أو جملتان، حتى 155 حرفاً.',
+    ar: 'يظهر تحت العنوان في نتيجة Google لهذا المسار؛ جملة أو جملتان، حتى 155 حرفاً.',
     en: 'Under the title in the Google result for this path. One or two sentences, up to 155 characters.',
   },
   'routes.ogImage': {

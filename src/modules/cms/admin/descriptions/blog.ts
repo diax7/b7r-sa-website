@@ -27,7 +27,7 @@ export const POST_DESCRIPTIONS: Described = {
     en: 'Sort posts inside the panel (the list filters by them). Not shown on the site; related posts are chosen by hub.',
   },
   cover: {
-    ar: 'في بطاقة المقال وأعلى المقال وبطاقة المشاركة؛ تُختار من المكتبة مع نصها البديل العربي.',
+    ar: 'يظهر في بطاقة المقال وأعلاه وبطاقة المشاركة؛ يُختار من المكتبة مع نصه البديل العربي.',
     en: 'On the post card, at the top of the post and on the share card; picked from the library with its Arabic alt text.',
   },
   takeaways: {
@@ -43,11 +43,11 @@ export const POST_DESCRIPTIONS: Described = {
     en: 'Optional: the title and the excerpt are used when left empty.',
   },
   'seo.title': {
-    ar: 'في نتيجة البحث وتبويب المتصفح. فارغ يستخدم عنوان المقال.',
+    ar: 'يظهر في نتيجة البحث وتبويب المتصفح؛ فارغ يستخدم عنوان المقال.',
     en: "In the search result and the browser tab. Empty uses the post's title.",
   },
   'seo.description': {
-    ar: 'تحت العنوان في نتيجة البحث. فارغ يستخدم المقتطف.',
+    ar: 'يظهر تحت العنوان في نتيجة البحث؛ فارغ يستخدم المقتطف.',
     en: 'Under the title in the search result. Empty uses the excerpt.',
   },
   'seo.ogImage': {
@@ -55,7 +55,7 @@ export const POST_DESCRIPTIONS: Described = {
     en: 'Shown when the link is shared on WhatsApp and X. Empty uses the cover.',
   },
   author: {
-    ar: 'في سطر التوقيع تحت العنوان وفي بيانات البحث؛ يفتح صفحة الكاتب.',
+    ar: 'يظهر في سطر التوقيع تحت العنوان وفي بيانات البحث؛ يفتح صفحة الكاتب.',
     en: "In the byline under the title and in the search data; opens the author's page.",
   },
   publishedAt: {
@@ -87,7 +87,7 @@ export const CATEGORY_DESCRIPTIONS: Described = {
     en: 'One sentence under the hub title and on the blog cards.',
   },
   lead: {
-    ar: 'تحت اسم القسم في صفحته. فارغ يخفي السطر.',
+    ar: 'يظهر تحت اسم القسم في صفحته؛ فارغ يخفيه.',
     en: "Under the hub's name on its page. Empty hides the line.",
   },
   defaultCover: {
@@ -95,7 +95,7 @@ export const CATEGORY_DESCRIPTIONS: Described = {
     en: 'Used when a post has no cover of its own.',
   },
   order: {
-    ar: 'في قائمة أقسام المدونة: 1 أولاً.',
+    ar: 'يرتّب القسم في قائمة أقسام المدونة: 1 أولاً.',
     en: "In the blog's hub list: 1 first.",
   },
 };
@@ -103,7 +103,7 @@ export const CATEGORY_DESCRIPTIONS: Described = {
 /** Authors. */
 export const AUTHOR_DESCRIPTIONS: Described = {
   name: {
-    ar: 'في سطر التوقيع تحت عنوان المقال وفي صفحة الكاتب.',
+    ar: 'يظهر في سطر التوقيع تحت عنوان المقال وفي صفحة الكاتب.',
     en: "In the byline under a post's title and on the author's page.",
   },
   slug: {
@@ -111,11 +111,11 @@ export const AUTHOR_DESCRIPTIONS: Described = {
     en: 'The end of the author page address: b7r.sa/author/dhia. Lowercase letters and hyphens.',
   },
   role: {
-    ar: 'تحت الاسم في سطر التوقيع وفي صفحته: «مؤسس بحر برنت».',
+    ar: 'تظهر تحت الاسم في سطر التوقيع وفي صفحة الكاتب: «مؤسس بحر برنت».',
     en: 'Under the name in the byline and on the page: "Founder of B7R Print".',
   },
   bio: {
-    ar: 'في صفحة الكاتب وبيانات البحث. جملتان إلى ثلاث. فارغة تخفي الفقرة.',
+    ar: 'تظهر في صفحة الكاتب وبيانات البحث؛ جملتان إلى ثلاث. فارغة تخفي الفقرة.',
     en: "On the author's page and in the search data. Two or three sentences. Empty hides the paragraph.",
   },
   photo: {
@@ -135,7 +135,7 @@ export const AUTHOR_DESCRIPTIONS: Described = {
 /** Tags: an admin-side grouping of posts; nothing on the site reads them today. */
 export const TAG_DESCRIPTIONS: Described = {
   name: {
-    ar: 'في قائمة المقالات ومرشّحاتها داخل اللوحة. لا يظهر في الموقع.',
+    ar: 'يظهر في قائمة المقالات ومرشّحاتها داخل اللوحة، لا في الموقع.',
     en: 'In the posts list and its filters inside the panel. Not shown on the site.',
   },
   slug: {

@@ -9,7 +9,7 @@ const SIZE_MEASURE = {
 /** Products: what each field does on the site (ADR-046). */
 export const PRODUCT_DESCRIPTIONS: Described = {
   name: {
-    ar: 'في البطاقة، وعنوان صفحته، وقائمة المصمّم، وملف llms.txt.',
+    ar: 'يظهر في البطاقة، وعنوان صفحته، وقائمة المصمّم، وملف llms.txt.',
     en: "On the card, the page title, the designer's picker and llms.txt.",
   },
   slug: {
@@ -57,7 +57,7 @@ export const PRODUCT_DESCRIPTIONS: Described = {
     en: "In this colour: the «back» toggle of the page's gallery. Leave empty if there is none.",
   },
   sizes: {
-    ar: 'في صفحة المنتج، بهذا الترتيب.',
+    ar: 'تظهر في صفحة المنتج بهذا الترتيب.',
     en: "On the product's page, in this order.",
   },
   'sizes.label': {
@@ -72,11 +72,11 @@ export const PRODUCT_DESCRIPTIONS: Described = {
     en: 'Shows on the product card under the price. Short: "S – 2XL", "One size".',
   },
   material: {
-    ar: 'في سطر مواصفات صفحة المنتج: قطن 100%، كانفاس.',
+    ar: 'تظهر في سطر مواصفات صفحة المنتج: قطن 100%، كانفاس.',
     en: "In the product page's facts line: 100% cotton, canvas.",
   },
   weightGrams: {
-    ar: 'في سطر المواصفات؛ التجار يسألون عنه قبل الطلب.',
+    ar: 'يظهر في سطر المواصفات؛ التجار يسألون عنه قبل الطلب.',
     en: 'In the facts line; merchants ask for it before ordering.',
   },
   printArea: {
@@ -108,11 +108,11 @@ export const PRODUCT_DESCRIPTIONS: Described = {
     en: "As a fraction of the photo's height (0 to 1): the tallest a design can be.",
   },
   printMethodLabel: {
-    ar: 'في سطر مواصفات صفحة المنتج: طباعة رقمية عالية الجودة.',
+    ar: 'تظهر في سطر مواصفات صفحة المنتج: طباعة رقمية عالية الجودة.',
     en: "In the product page's facts line: high-quality digital print.",
   },
   sortOrder: {
-    ar: 'في صفحة المنتجات وملف llms.txt: 1 يظهر أولاً. شريط الرئيسية له ترتيبه (الصفحة الرئيسية، شريط المنتجات).',
+    ar: 'يرتّب المنتج في صفحة المنتجات وملف llms.txt: 1 أولاً. شريط الرئيسية له ترتيبه (الصفحة الرئيسية، شريط المنتجات).',
     en: 'On the products page and in llms.txt: 1 shows first. The home strip has its own order (Home page, Product strip).',
   },
 };
@@ -124,7 +124,7 @@ export const FAQ_DESCRIPTIONS: Described = {
     en: 'As it reads on the FAQ page, and in the home section when flagged for it.',
   },
   answer: {
-    ar: 'تحت السؤال في صفحة الأسئلة وقسم الرئيسية: نص عادي بلا روابط، جملتان إلى أربع.',
+    ar: 'تظهر تحت السؤال في صفحة الأسئلة وقسم الرئيسية: نص عادي بلا روابط، جملتان إلى أربع.',
     en: 'Under the question on the FAQ page and in the home section: plain text, no links, two to four sentences.',
   },
   group: {
@@ -132,7 +132,7 @@ export const FAQ_DESCRIPTIONS: Described = {
     en: 'Where the question is listed on the FAQ page; the group headings are fixed.',
   },
   order: {
-    ar: 'داخل مجموعته في صفحة الأسئلة الشائعة: 1 أولاً.',
+    ar: 'يرتّب السؤال داخل مجموعته في صفحة الأسئلة الشائعة: 1 أولاً.',
     en: 'Inside its group on the FAQ page: 1 first.',
   },
   showOnHome: {
@@ -140,7 +140,7 @@ export const FAQ_DESCRIPTIONS: Described = {
     en: 'On: the question also shows in the home FAQ section (five at most, by "Order on the home page").',
   },
   homeOrder: {
-    ar: 'في قسم الرئيسية، للأسئلة المعلَّمة «يظهر في الرئيسية»: 1 أولاً.',
+    ar: 'يرتّب السؤال في قسم الرئيسية، للمعلَّم «يظهر في الرئيسية»: 1 أولاً.',
     en: 'In the home section, for questions flagged "show on the home page": 1 first.',
   },
 };
@@ -152,11 +152,11 @@ export const TESTIMONIAL_DESCRIPTIONS: Described = {
     en: "The merchant's words on the card on the home page. Two or three sentences, no numbers that cannot be proven.",
   },
   name: {
-    ar: 'تحت الرأي في الرئيسية.',
+    ar: 'يظهر تحت الرأي في الرئيسية.',
     en: 'Under the quote on the home page.',
   },
   store: {
-    ar: 'تحت اسم التاجر في البطاقة.',
+    ar: 'يظهر تحت اسم التاجر في البطاقة.',
     en: "Under the merchant's name on the card.",
   },
   avatar: {
@@ -164,7 +164,7 @@ export const TESTIMONIAL_DESCRIPTIONS: Described = {
     en: 'Read by nothing on the site today: the card shows the name and the store, no photo. Kept for the day the cards carry photos.',
   },
   order: {
-    ar: 'في قسم الرئيسية: 1 أولاً.',
+    ar: 'يرتّب البطاقة في قسم الرئيسية: 1 أولاً.',
     en: 'In the home page section: 1 first.',
   },
   placeholder: {
@@ -180,7 +180,7 @@ export const INTEGRATION_DESCRIPTIONS: Described = {
     en: 'Picks the logo shown in the connected-stores section; the name fields say how it is written.',
   },
   order: {
-    ar: 'في قسم الرئيسية: 1 أولاً.',
+    ar: 'يرتّب الشعار في قسم الرئيسية: 1 أولاً.',
     en: 'In the home page section: 1 first.',
   },
   name: {
@@ -188,7 +188,7 @@ export const INTEGRATION_DESCRIPTIONS: Described = {
     en: "The platform's name as a visitor reads it under the logo: Salla, Zid.",
   },
   nameLatin: {
-    ar: 'في بيانات البحث والنص البديل للشعار: Salla، Zid، Shopify.',
+    ar: 'يظهر في بيانات البحث والنص البديل للشعار: Salla، Zid، Shopify.',
     en: "In the search data and the logo's alt text: Salla, Zid, Shopify.",
   },
 };
