@@ -2428,8 +2428,11 @@ inbox) or close it (the engine under Blog) without the four disagreeing.
 
 **The status words** are three glossary rows and three pills through `StatusCell`: **New**
 blue («جديد», the one that asks for a person; blue because it is the thing to act on, not a
-draft and not a failure), **Following** amber («قيد المتابعة», a reply pending, like a
-draft), **Handled** green («معالَج», done). «تمت المعالجة», BRD §11.1's word, is «تم» +
+draft and not a failure; the `Badge`'s `accent` tone, `accent-on-tint` #33a8e6 on the
+accent's 10 % tint, since `text-primary` is never used on dark and the accent itself on a
+blue tint over the surface reads 4.1:1; this reads 5.3:1, and the e2e composites the pill
+over its row through a canvas and asserts 4.5:1, CI's finding of 2026-09-19), **Following**
+amber («قيد المتابعة», a reply pending, like a draft), **Handled** green («معالَج», done). «تمت المعالجة», BRD §11.1's word, is «تم» +
 مصدر and the ux-araby gate refuses it; the passive participle is the panel's word and the
 action reads «علّم كمعالَج» ("Mark handled"). The list is name · inquiry · status ·
 created, newest first, searchable by name, e-mail and phone.

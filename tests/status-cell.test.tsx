@@ -43,7 +43,7 @@ describe('StatusCell', () => {
     expect(statusTone('draft')).toBe('warning');
     expect(statusTone('changed')).toBe('warning');
     expect(statusTone('failed')).toBe('error');
-    expect(statusTone('new')).toBe('primary');
+    expect(statusTone('new')).toBe('accent');
     expect(statusTone('following')).toBe('warning');
     expect(statusTone('handled')).toBe('success');
     for (const other of ['running', 'done', 'skipped', 'anything']) {
@@ -55,8 +55,9 @@ describe('StatusCell', () => {
     expect(cell(messageField, 'new')).toMatchObject({
       text: 'New',
       status: 'new',
-      cls: expect.stringContaining('text-primary'),
+      cls: expect.stringContaining('text-accent-on-tint'),
     });
+    expect(cell(messageField, 'new').cls).not.toContain('text-primary');
     expect(cell(messageField, 'following')).toMatchObject({
       text: 'Following',
       cls: expect.stringContaining('text-warning'),

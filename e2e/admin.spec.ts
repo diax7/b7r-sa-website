@@ -45,37 +45,40 @@ const umamiNumbers = (visitors: number) => ({
 });
 /**
  * The text's contrast against the pill's tint composited over the row behind it (WCAG).
- * Runs in the browser through `evaluate`, so its helpers must travel inside it.
+ * Runs in the browser through `evaluate`, so its helpers must travel inside it. The
+ * compositing is the browser's own: every ancestor's background is painted, outermost
+ * first, over black into a one-pixel canvas, then the pill's, and the pixel is read; a
+ * Tailwind `/10` tint computes to `lab(… / 0.1)` in Chromium, which no digits regex reads.
  */
 /* oxlint-disable unicorn/consistent-function-scoping -- serialised into the page as one function */
 const contrast = (el: Element) => {
-  type Rgba = { r: number; g: number; b: number; a: number };
-  const rgba = (s: string): Rgba => {
-    const m = s.match(/[\d.]+/g)?.map(Number) ?? [0, 0, 0, 1];
-    return { r: m[0]!, g: m[1]!, b: m[2]!, a: m[3] ?? 1 };
+  const canvas = document.createElement('canvas');
+  canvas.width = 1;
+  canvas.height = 1;
+  const ctx = canvas.getContext('2d')!;
+  const paint = (colour: string) => {
+    ctx.fillStyle = colour;
+    ctx.fillRect(0, 0, 1, 1);
   };
-  const over = (top: Rgba, under: Rgba): Rgba => ({
-    r: top.r * top.a + under.r * (1 - top.a),
-    g: top.g * top.a + under.g * (1 - top.a),
-    b: top.b * top.a + under.b * (1 - top.a),
-    a: 1,
-  });
-  let ground = rgba('rgb(0, 0, 0)');
-  const layers: Rgba[] = [];
+  const pixel = () => [...ctx.getImageData(0, 0, 1, 1).data].slice(0, 3);
+  const layers: string[] = [];
   for (let node = el.parentElement; node; node = node.parentElement) {
-    const bg = rgba(getComputedStyle(node).backgroundColor);
-    if (bg.a > 0) layers.push(bg);
-    if (bg.a === 1) break;
+    layers.push(getComputedStyle(node).backgroundColor);
   }
-  for (const layer of layers.toReversed()) ground = over(layer, ground);
-  const behind = over(rgba(getComputedStyle(el).backgroundColor), ground);
+  paint('rgb(0, 0, 0)');
+  for (const layer of layers.toReversed()) paint(layer);
+  paint(getComputedStyle(el).backgroundColor);
+  const behind = pixel();
+  paint('rgb(0, 0, 0)');
+  paint(getComputedStyle(el).color);
+  const ink = pixel();
   const weights = [0.2126, 0.7152, 0.0722];
-  const luminance = (c: Rgba) =>
-    [c.r, c.g, c.b]
+  const luminance = (c: number[]) =>
+    c
       .map((v) => v / 255)
       .map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4))
       .reduce((sum, v, i) => sum + v * weights[i]!, 0);
-  const text = luminance(rgba(getComputedStyle(el).color));
+  const text = luminance(ink);
   const back = luminance(behind);
   return (Math.max(text, back) + 0.05) / (Math.min(text, back) + 0.05);
 };
@@ -91,6 +94,34 @@ async function switchPanelLanguage(page: Page, code: 'ar' | 'en') {
   if (await name.isVisible()) await name.click();
   else await actions.locator('[data-admin-language-toggle]').click();
   await expect(page.locator('html')).toHaveAttribute('lang', code);
+}
+
+/**
+ * One message through `POST /api/contact` (ADR-061), from a fresh address for the limiter,
+ * and the id of the row it left, read with the admin's token. The caller deletes the row.
+ */
+async function submitMessage(
+  request: APIRequestContext,
+  auth: Record<string, string>,
+  body: Record<string, unknown> & { email: string },
+): Promise<number> {
+  const seed = Math.floor(Math.random() * 65_536);
+  const res = await request.post('/api/contact', {
+    headers: {
+      'Content-Type': 'application/json',
+      'x-forwarded-for': `10.61.${seed >> 8}.${seed & 255}`,
+    },
+    data: body,
+  });
+  expect(res.status(), await res.text()).toBe(200);
+  const found = await request.get(
+    `${API}/messages?where[email][equals]=${encodeURIComponent(body.email)}&depth=0&limit=1`,
+    { headers: auth },
+  );
+  expect(found.status()).toBe(200);
+  const { docs } = (await found.json()) as { docs: Array<{ id: number }> };
+  expect(docs[0], `the row of ${body.email}`).toBeDefined();
+  return docs[0]!.id;
 }
 
 /** The id of the first document of a collection, read with the admin's token. */
@@ -1675,6 +1706,15 @@ test.describe('CMS admin', () => {
     });
     expect(created.status(), await created.text()).toBe(201);
     const draftId = ((await created.json()) as { doc: { id: number } }).doc.id;
+    // A message of the test's own, so the inbox list shows a New pill (blue, ADR-061).
+    const messageId = await submitMessage(request, auth, {
+      name: `E2E Colour ${Date.now()}`,
+      email: `colour-e2e-${Date.now()}@example.com`,
+      phone: '0501699572',
+      inquiry: 'تاجر',
+      message: 'رسالة للألوان.',
+      locale: 'ar',
+    });
     const { AxeBuilder } = await import('@axe-core/playwright');
     const serious = async (...include: string[]) => {
       let builder = new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']);
@@ -1693,6 +1733,7 @@ test.describe('CMS admin', () => {
       en: { published: 'Published', draft: 'Draft', changed: 'Changed' },
       ar: { published: 'منشور', draft: 'مسودة', changed: 'معدّل' },
     };
+    const NEW = { en: 'New', ar: 'جديد' };
     const TEXT = 'rgb(255, 255, 255)';
     try {
       for (const width of [1440, 390] as const) {
@@ -1761,6 +1802,21 @@ test.describe('CMS admin', () => {
             await serious('[data-admin-header]', 'td.cell-_status'),
             `axe: a list ${at}`,
           ).toEqual([]);
+          // The inbox list: the New pill is the accent on its tint (never `text-primary` on
+          // dark), its word in the panel's language, readable against its row.
+          await page.goto('/admin/collections/messages');
+          const newPill = page
+            .locator(`.collection-list tr:has(a[href$="/messages/${messageId}"])`)
+            .locator('td.cell-status [data-admin-status="new"]');
+          await expect(newPill).toHaveText(NEW[lang]);
+          expect(
+            await newPill.evaluate(contrast),
+            `the New pill's contrast ${at}`,
+          ).toBeGreaterThanOrEqual(4.5);
+          expect(
+            await serious('[data-admin-header]', 'td.cell-status'),
+            `axe: the inbox list ${at}`,
+          ).toEqual([]);
           // The dashboard: one hue per card, on its icon.
           await page.goto('/admin');
           const dashboard = page.locator('[data-admin-dashboard]');
@@ -1779,6 +1835,7 @@ test.describe('CMS admin', () => {
       await page.goto('/admin');
       await switchPanelLanguage(page, 'en');
       await request.delete(`${API}/pages/${draftId}`, { headers: auth });
+      await request.delete(`${API}/messages/${messageId}`, { headers: auth });
     }
   });
 
@@ -1796,6 +1853,22 @@ test.describe('CMS admin', () => {
     const sender = { name: `E2E Inbox ${stamp}`, email: `inbox-e2e-${stamp}@example.com` };
     const message = `أرغب بربط متجري بمنصة بحر برنت والاطلاع على الأسعار وطريقة الطباعة عند الطلب، وهل يوجد حد أدنى للطلب؟ ${stamp}`;
     const health = (await (await request.get('/api/health')).json()) as { contact: string };
+    // Two more rows that stay New, submitted first so the main one stays the newest: the
+    // list's axe pass then reads several blue pills, not one row that happens to be amber by
+    // then (the CI defect of 2026-09-19).
+    const extras: number[] = [];
+    for (const n of [2, 3]) {
+      extras.push(
+        await submitMessage(request, auth, {
+          name: `E2E Extra ${stamp} ${n}`,
+          email: `inbox-e2e-${stamp}-${n}@example.com`,
+          phone: '0501699572',
+          inquiry: 'شراكة',
+          message: `رسالة إضافية ${n}`,
+          locale: 'ar',
+        }),
+      );
+    }
     const submitted = await request.post('/api/contact', {
       headers: {
         'Content-Type': 'application/json',
@@ -1975,8 +2048,8 @@ test.describe('CMS admin', () => {
       expect((await read(auth))[0]!.status, 'the outsider changed nothing').toBe('following');
       // Axe on the list and the document, both languages, desktop and phone; the words.
       const WORDS = {
-        en: { following: 'Following', reply: 'Reply on WhatsApp' },
-        ar: { following: 'قيد المتابعة', reply: 'رد على WhatsApp' },
+        en: { following: 'Following', new: 'New', reply: 'Reply on WhatsApp' },
+        ar: { following: 'قيد المتابعة', new: 'جديد', reply: 'رد على WhatsApp' },
       };
       for (const width of [1440, 390] as const) {
         await page.setViewportSize({ width, height: 900 });
@@ -1988,6 +2061,12 @@ test.describe('CMS admin', () => {
           await expect(
             listRow.locator('td.cell-status [data-admin-status="following"]'),
           ).toHaveText(WORDS[lang].following);
+          const newPills = page.locator('td.cell-status [data-admin-status="new"]');
+          expect(await newPills.count(), `New pills ${at}`).toBeGreaterThanOrEqual(2);
+          for (const pill of await newPills.all()) {
+            await expect(pill).toHaveText(WORDS[lang].new);
+            expect(await pill.evaluate(contrast), `a New pill ${at}`).toBeGreaterThanOrEqual(4.5);
+          }
           expect(
             await serious('[data-admin-header]', 'td.cell-status'),
             `axe: the list ${at}`,
@@ -2011,6 +2090,8 @@ test.describe('CMS admin', () => {
       await page.goto('/admin');
       await switchPanelLanguage(page, 'en');
       await request.delete(`${API}/users/${editor.id}`, { headers: auth });
+      for (const extra of extras)
+        await request.delete(`${API}/messages/${extra}`, { headers: auth });
       const removed = await request.delete(`${API}/messages/${id}`, { headers: auth });
       expect(removed.status(), 'an admin deletes the row').toBe(200);
     }

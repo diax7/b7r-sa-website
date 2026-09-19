@@ -45,6 +45,7 @@ render in both worlds without a fork. Raw hex lives only in the token block.
 | `primary-hover` | `#1a6ac0` | Hover of a blue fill. |
 | `accent` | `#0098e0` | Blue **text, icons, links, focus rings, active nav** (5.7:1 on the page). Never white text on it. |
 | `accent-tint` | `rgb(0 152 224 / .14)` | Active/hover background behind accent text. |
+| `accent-on-tint` | `#33a8e6` | The accent as **text on its own tint**: the New message pill (ADR-061), lifted one step because `accent` on a blue tint over the surface reads 4.1:1; this reads 5.3:1 there (the e2e measures the pill). Links and icons keep `accent`. |
 | `ground` | `--theme-elevation-0` | Page background (rgb 20 20 20). |
 | `surface` | `--theme-elevation-50` | Cards, menus, the flyouts (rgb 34 34 34). Not the sidebar, which stays on `ground` (ADR-058): the identity hues on their tints reach AA on the page colour (blue 4.9:1, violet 5.3:1) and fall under it on the surface (4.1, 4.5); a hue never sits on its tint on a surface, only bare. |
 | `text` | `--theme-elevation-1000` | Body text (white). |
@@ -61,7 +62,8 @@ render in both worlds without a fork. Raw hex lives only in the token block.
 **Blue rule on dark:** `primary` is a fill, `accent` is a colour for text. `text-primary` is
 never used in an admin component; `bg-accent` is never used behind white text. The `Badge`
 `primary` tone (blue text on a blue tint) is not used in the admin; use `success`, `warning`,
-`error` or `muted`.
+`error`, `muted`, or `accent` (`accent-on-tint` on the accent's 10 % tint; the New message
+pill, ADR-061, at least 4.5:1 on its row, the e2e computes it).
 
 **The colour rule** (the CTO, 2026-09-19, ADR-060): a screen shows its group's hue in at most
 two places, the entity header's icon tile and the active tab's bar; a status colour appears
@@ -158,9 +160,9 @@ published pill) is re-hued to the accent in `@layer payload`; its greys are unto
   'changed'`), the words the glossary's in both languages (`cells.status` in the trees); a
   drafted collection lists `statusColumn()` (`fields/status.ts`) to put the cell on
   Payload's own column. The same cell on a run's outcome: Failed red, the rest neutral; and
-  on a message's state (ADR-061): New blue («جديد», the one that asks for a person),
-  Following amber («قيد المتابعة»), Handled green («معالَج»; never «تمت المعالجة», §5). A
-  status word is a glossary row first.
+  on a message's state (ADR-061): New blue («جديد», the one that asks for a person; the
+  `accent` tone, `accent-on-tint` text, never `text-primary` on dark), Following amber («قيد المتابعة»), Handled
+  green («معالَج»; never «تمت المعالجة», §5). A status word is a glossary row first.
 - Colour: icons inherit text colour. An entity's tile takes its group's hue (§2) in the
   sidebar and the page header; on the dashboard a card's title icon takes the hue and the
   entities' discs inside it stay neutral (ADR-060).
@@ -289,7 +291,7 @@ Payload's `switchLanguage`, kept in its `payload-lng` cookie) and Payload sets `
 |---|---|---|
 | `Button` | `shared/button.tsx` | `primary` only for the one main action; `secondary`/`ghost`/`link` variants are blue text → **not** on dark; use `variant="inverse"` for a white-on-blue exception. |
 | `Card` | `shared/card.tsx` | Dashboard tiles and sections. `hoverable` for tiles that are links. |
-| `Badge` | `shared/badge.tsx` | Status: `success` (live, running), `warning` (off, console), `error` (failed), `muted` (n/a). Every checkbox in a list renders as one (`BoolCell`, set by `describeFields`): green Yes / On, red No / Off, never Payload's `true` / `false` pill; a status column renders as one (`StatusCell`, §4): the word in its colour. The sidebar's count badge (`BadgeMark` in `nav/tree.tsx`) is a different thing: a 16 px solid pill, red or amber, for a number that asks for action (ADR-058), never grey and never a document count. |
+| `Badge` | `shared/badge.tsx` | Status: `success` (live, running), `warning` (off, console), `error` (failed), `muted` (n/a), `accent` (a message nobody opened: `accent-on-tint` on the blue tint, the panel's blue for text on dark). Every checkbox in a list renders as one (`BoolCell`, set by `describeFields`): green Yes / On, red No / Off, never Payload's `true` / `false` pill; a status column renders as one (`StatusCell`, §4): the word in its colour. The sidebar's count badge (`BadgeMark` in `nav/tree.tsx`) is a different thing: a 16 px solid pill, red or amber, for a number that asks for action (ADR-058), never grey and never a document count. |
 | `Icon` | `shared/icon.tsx` | Every icon. |
 | `Tooltip` | `ui/tooltip.tsx` | Icon-only buttons and truncated titles. Not for essential information. |
 | `DropdownMenu` | `ui/dropdown-menu.tsx` | Account menu, row actions, the rail's flyouts (a menu of links: focus in, arrows and a typed letter, Esc back to the trigger). Icon before each item. |

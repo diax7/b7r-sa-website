@@ -28,6 +28,8 @@
   --color-navy: #0a2f5e;
   --color-accent: #0098e0;
   --color-accent-tint: #e6f5fc;
+  /* The accent as text on its own tint (a Badge's `accent` tone): darkened for the light tint. */
+  --color-accent-on-tint: #00639c;
   --color-ground: #f6f8fb;
   --color-surface: #ffffff;
   --color-text: #14181f;

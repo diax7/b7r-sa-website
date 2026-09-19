@@ -16,6 +16,7 @@ WebKit projects (taps landed late, a stepper click was lost) and the interaction
 CI keeps Playwright's default. Do not raise the cap to save a minute.
 - `island-shots.mjs <out dir>`, the header at rest and scrolled on desktop and iPhone (ADR-053); `cta-shot.mjs <out dir>`, the header CTA at rest and hovered.
 - `cta-shiny-toggle.ts on|off`, the header's shiny switch on the local database (ADR-054).
+- `pill-contrast.mjs [origin] [.env.local]`, the New message pill's contrast on the inbox list as built and for a few candidate colourings (ADR-061: the accent on its tint read 4.1:1 on the surface; `accent-on-tint` reads 5.3:1), on a server with at least one New message.
 - `analytics-probe.mjs [origin]`, a real browser visits the live site, accepts the consent bar, walks two pages and lists every request to Umami and GA4 with its status (a `connect-src` refusal in the console is the sign Umami moved its gateway again).
 - `cranl-smoke.mjs [origin]`, the temporary domain (or `https://b7r.sa` after the cutover) after a deploy: the admin in both languages, the sidebar, the dashboard, a bilingual twin, one publish and one upload through the API, both undone (launch checklist row 39).
 - `metric-row.ts upsert|delete <source> <YYYY-MM-DD> [json]`, one snapshot row by hand through the local API (the collection refuses API writes); the admin e2e seeds and removes an Umami day with it (PR 4c).
