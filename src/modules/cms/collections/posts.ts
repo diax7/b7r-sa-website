@@ -34,6 +34,7 @@ import {
 import { twinField } from '@/modules/cms/fields/bilingual';
 import { type Bilingual, inLanguage } from '@/modules/cms/fields/message';
 import { savedByField, stampSavedBy } from '@/modules/cms/fields/saved-by';
+import { statusColumn } from '@/modules/cms/fields/status';
 import { populateTwins } from '@/modules/cms/fields/twins';
 import { isDraftSave, revalidatePosts } from '@/modules/cms/hooks/revalidate';
 import { applyTranslations } from '@/modules/cms/hooks/translations';
@@ -445,6 +446,7 @@ export const Posts: CollectionConfig = {
         admin: { hidden: true },
       },
       savedByField,
+      statusColumn(),
     ],
     POST_DESCRIPTIONS,
   ),

@@ -5,6 +5,7 @@ import { SavedByField as SavedByField_46120640bb11e96d61a3a62a5294d80c } from '@
 import { NoDiff as NoDiff_662eeae41683300b50909d58e1fcdcd1 } from '@/modules/cms/admin/fields/bilingual/no-diff'
 import { ReadOnlyLine as ReadOnlyLine_165e879dbcaac6b97e5e0fd657bff438 } from '@/modules/cms/admin/fields/read-only-line'
 import { IconTabs as IconTabs_e2533967c91c899f8470dbfa73627ba9 } from '@/modules/cms/admin/fields/icon-tabs'
+import { StatusCell as StatusCell_dc7988b3230e6019cca13ba81bda1ad2 } from '@/modules/cms/admin/fields/status-cell'
 import { RscEntryLexicalCell as RscEntryLexicalCell_44fe37237e0ebf4470c9990d8cb7b07e } from '@payloadcms/richtext-lexical/rsc'
 import { RscEntryLexicalField as RscEntryLexicalField_44fe37237e0ebf4470c9990d8cb7b07e } from '@payloadcms/richtext-lexical/rsc'
 import { LexicalDiffComponent as LexicalDiffComponent_44fe37237e0ebf4470c9990d8cb7b07e } from '@payloadcms/richtext-lexical/rsc'
@@ -64,6 +65,7 @@ export const importMap = {
   "@/modules/cms/admin/fields/bilingual/no-diff#NoDiff": NoDiff_662eeae41683300b50909d58e1fcdcd1,
   "@/modules/cms/admin/fields/read-only-line#ReadOnlyLine": ReadOnlyLine_165e879dbcaac6b97e5e0fd657bff438,
   "@/modules/cms/admin/fields/icon-tabs#IconTabs": IconTabs_e2533967c91c899f8470dbfa73627ba9,
+  "@/modules/cms/admin/fields/status-cell#StatusCell": StatusCell_dc7988b3230e6019cca13ba81bda1ad2,
   "@payloadcms/richtext-lexical/rsc#RscEntryLexicalCell": RscEntryLexicalCell_44fe37237e0ebf4470c9990d8cb7b07e,
   "@payloadcms/richtext-lexical/rsc#RscEntryLexicalField": RscEntryLexicalField_44fe37237e0ebf4470c9990d8cb7b07e,
   "@payloadcms/richtext-lexical/rsc#LexicalDiffComponent": LexicalDiffComponent_44fe37237e0ebf4470c9990d8cb7b07e,

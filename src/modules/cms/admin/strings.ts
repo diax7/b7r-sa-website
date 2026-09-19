@@ -192,6 +192,8 @@ export const adminStrings = {
     yesNo: ['Yes', 'No'] as const,
     onOff: ['On', 'Off'] as const,
     notYet: 'Not yet',
+    /** The document's status in a list (ADR-060): the glossary's words, one pill each. */
+    status: { published: 'Published', draft: 'Draft', changed: 'Changed' },
   },
   readOnly: {
     /** A read-only date the jobs have not written yet (a connection never tested). */
@@ -676,6 +678,7 @@ export const adminStringsAr: AdminStrings = {
     yesNo: ['نعم', 'لا'],
     onOff: ['مفعّل', 'معطّل'],
     notYet: 'ليس بعد',
+    status: { published: 'منشور', draft: 'مسودة', changed: 'معدّل' },
   },
   readOnly: {
     noDate: 'ليس بعد',

@@ -8,6 +8,7 @@ import { isDraftSave, revalidatePages } from '@/modules/cms/hooks/revalidate';
 import { type Bilingual, inLanguage } from '@/modules/cms/fields/message';
 import { applyTranslations } from '@/modules/cms/hooks/translations';
 import { savedByField, stampSavedBy } from '@/modules/cms/fields/saved-by';
+import { statusColumn } from '@/modules/cms/fields/status';
 import { populateTwins } from '@/modules/cms/fields/twins';
 import { localePath, requestLocale } from '@/lib/i18n';
 import { previewUrl } from '@/lib/preview-token';
@@ -233,6 +234,7 @@ export const Pages: CollectionConfig = {
         ],
       },
       savedByField,
+      statusColumn(),
     ],
     PAGE_DESCRIPTIONS,
   ),

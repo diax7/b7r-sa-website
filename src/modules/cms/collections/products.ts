@@ -4,6 +4,7 @@ import { revalidateProducts } from '@/modules/cms/hooks/revalidate';
 import { inLanguage } from '@/modules/cms/fields/message';
 import { applyTranslations } from '@/modules/cms/hooks/translations';
 import { savedByField, stampSavedBy } from '@/modules/cms/fields/saved-by';
+import { statusColumn } from '@/modules/cms/fields/status';
 import { PRINT_AREA_LABEL_EN, PRINT_METHOD_EN } from '@/content/seed/en/products';
 import { PRINT_AREA_LABEL, PRINT_METHOD } from '@/content/seed/products';
 import { localePath, requestLocale } from '@/lib/i18n';
@@ -407,6 +408,7 @@ export const Products: CollectionConfig = {
         admin: { position: 'sidebar', step: 1 },
       },
       savedByField,
+      statusColumn(),
     ],
     PRODUCT_DESCRIPTIONS,
   ),

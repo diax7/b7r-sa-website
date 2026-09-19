@@ -23,6 +23,7 @@ test refuses (translations of a Latin term, or synonyms of the settled word).
 | The panel | account | حساب |  |  |  |
 | The panel | publish / published | نشر / منشور |  | إطلاق | The status pill's word everywhere: the list, the dashboard, the palette. |
 | The panel | draft | مسودة |  | مسودة أولية، النسخة الأولية | One spelling, no shadda; the status pill, the dashboard tile, the rules. |
+| The panel | changed (a draft over a published version) | معدّل |  | متغيّر، معدل جزئياً | The list pill of a live document with newer text waiting (ADR-060); amber, never folded into Draft. |
 | The panel | save / last saved | حفظ / آخر حفظ |  |  |  |
 | The panel | settings | الإعدادات |  | الضبط، التهيئة |  |
 | The panel | field | حقل |  | الفيلد |  |

@@ -3,6 +3,7 @@ import { hiddenUnlessAdmin, isAdmin } from '@/modules/cms/access';
 import { describeFields } from '@/modules/cms/admin/descriptions/describe';
 import { collectionComponents } from '@/modules/cms/admin/document/config';
 import { adminGroup } from '@/modules/cms/admin/icons';
+import { STATUS_CELL } from '@/modules/cms/fields/status';
 import { AI_RUNS_DESCRIPTIONS } from '@/modules/ai-content/descriptions';
 
 export const RUN_STATUSES = ['running', 'done', 'failed', 'skipped'] as const;
@@ -83,7 +84,8 @@ export const AiRuns: CollectionConfig = {
             defaultValue: 'running',
             options: RUN_STATUSES.map((value) => ({ value, label: RUN_STATUS_LABELS[value] })),
             label: { ar: 'الحالة', en: 'Status' },
-            admin: { readOnly: true },
+            // The list reads the outcome as a pill: a failed run red, the rest neutral (ADR-060).
+            admin: { readOnly: true, components: { Cell: STATUS_CELL } },
           },
           {
             name: 'provider',

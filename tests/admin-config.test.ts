@@ -96,6 +96,7 @@ import {
   twinName,
   twinPaths,
 } from '@/modules/cms/fields/bilingual';
+import { isStatusColumn, STATUS_CELL, statusColumn } from '@/modules/cms/fields/status';
 import { populateGlobalTwins, populateTwins } from '@/modules/cms/fields/twins';
 import { applyGlobalTranslations, applyTranslations } from '@/modules/cms/hooks/translations';
 
@@ -257,10 +258,15 @@ describe('the sidebar registry (ADR-046)', () => {
   });
 });
 
-/** Every named field of a config at any depth, with its path (the description maps' keys). */
+/**
+ * Every named field of a config at any depth, with its path (the description maps' keys).
+ * The status column (ADR-060) is Payload's own `_status`, merged over its base at sanitize:
+ * not a field of ours, so the censuses leave it out (`describe('the status column')` reads it).
+ */
 function walkFields(fields: Field[], path = ''): Array<{ path: string; field: Field }> {
   const out: Array<{ path: string; field: Field }> = [];
   for (const f of fields) {
+    if (isStatusColumn(f)) continue;
     if (f.type === 'tabs') {
       for (const t of f.tabs) {
         out.push(...walkFields(t.fields, 'name' in t && t.name ? `${path}${t.name}.` : path));
@@ -1440,5 +1446,51 @@ describe('section icons (ADR-060)', () => {
     expect(labelOf(out[3]!)).toBeUndefined();
     expect(labelOf(out[4]!)).toBe('x#Y');
     expect(labelOf(out[5]!)).toBe(SECTION_LABEL);
+  });
+});
+
+/**
+ * The status column (ADR-060): every drafted collection lists `statusColumn()`: our cell
+ * and Payload's own name, type and label key (sanitize runs before the merge and would
+ * stamp a label from the name), the options and `Field: false` staying Payload's through
+ * `mergeBaseFields`; a collection without drafts has none; the runs' outcome carries the
+ * same cell.
+ */
+describe('the status column (ADR-060)', () => {
+  const drafted = collections.filter(
+    (c) => c.versions && typeof c.versions === 'object' && c.versions.drafts,
+  );
+  it('the four drafted collections carry it, no other does', () => {
+    expect(drafted.map((c) => c.slug).toSorted()).toEqual([
+      'pages',
+      'posts',
+      'products',
+      'testimonials',
+    ]);
+    for (const c of collections) {
+      const column = c.fields.find(isStatusColumn);
+      if (drafted.includes(c)) {
+        expect(Object.keys(column ?? {}).toSorted(), c.slug).toEqual(
+          Object.keys(statusColumn()).toSorted(),
+        );
+        expect(column, c.slug).toMatchObject({ admin: { components: { Cell: STATUS_CELL } } });
+      } else {
+        expect(column, c.slug).toBeUndefined();
+      }
+    }
+  });
+  it("carries the cell and Payload's own name, type and label key, nothing else", () => {
+    const column = statusColumn() as { label: (a: { t: (k: string) => string }) => string };
+    expect(Object.keys(column).toSorted()).toEqual(['admin', 'label', 'name', 'type']);
+    expect(column).toMatchObject({
+      name: '_status',
+      type: 'select',
+      admin: { components: { Cell: STATUS_CELL } },
+    });
+    expect(column.label({ t: (k) => `<${k}>` })).toBe('<version:status>');
+  });
+  it("the runs' outcome reads through the same cell", () => {
+    const status = walkFields(AiRuns.fields).find((f) => f.path === 'status')!.field;
+    expect(componentsOf(status)?.Cell).toBe(STATUS_CELL);
   });
 });
