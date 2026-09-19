@@ -2,7 +2,7 @@ import { copyFor } from '@/content/copy';
 import { buildIcs } from '@/lib/ics';
 import { htmlDir, type Locale } from '@/lib/i18n';
 import { formatSaudiPhone } from '@/lib/phone';
-import { riyadhDayLabel, riyadhTimeLabel } from '@/lib/riyadh';
+import { riyadhSpanLabel } from '@/lib/riyadh';
 
 /**
  * The booking e-mails (ADR-062, BRD 4.19), beside the contact transport: to the merchant in
@@ -77,10 +77,7 @@ const fill = (template: string, values: Record<string, string>) =>
 
 /** «الثلاثاء، 22 سبتمبر 2026، 10:00 ص إلى 10:30 ص بتوقيت الرياض», the same shape in English. */
 export function whenLabel(locale: Locale, start: Date, end: Date): string {
-  const { dateLocale, booking } = copyFor(locale);
-  const joiner = locale === 'ar' ? ' إلى ' : ' to ';
-  const comma = locale === 'ar' ? '،' : ',';
-  return `${riyadhDayLabel(start, dateLocale)}${comma} ${riyadhTimeLabel(start, dateLocale)}${joiner}${riyadhTimeLabel(end, dateLocale)} ${booking.riyadhTime}`;
+  return `${riyadhSpanLabel(start, end, locale)} ${copyFor(locale).booking.riyadhTime}`;
 }
 
 type Row = [label: string, value: string, ltr: boolean];

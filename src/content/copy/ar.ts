@@ -1,4 +1,5 @@
 import { ERROR_PAGE } from '@/content/copy/error-page';
+import { DATE_LOCALES } from '@/lib/riyadh';
 
 /**
  * The Arabic interface copy (BRD 4, Appendix G; ADR-031, ADR-043): every string the code
@@ -359,5 +360,5 @@ export const ar = {
     otherLanguage: 'النسخة الإنجليزية',
   },
   /** The `Intl` tag for dates: Gregorian, Western digits (BRD 3.9). */
-  dateLocale: 'ar-u-nu-latn-ca-gregory',
+  dateLocale: DATE_LOCALES.ar as string,
 };

@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { accessToken, forgetTokens, signJwt } from '@/lib/google-jwt';
 import { parseServiceAccount, type ServiceAccountKey } from '@/lib/service-account';
 import {
@@ -11,6 +11,7 @@ import {
   parseFreeBusy,
   resetMockCalendar,
 } from '@/modules/bookings/google';
+import { CALENDAR_TESTS } from '@/modules/bookings/tests';
 
 const HOST = 'dhia@b7r.sa';
 
@@ -399,5 +400,62 @@ describe('the mock calendar (tests and the review server)', () => {
     ).rejects.toThrow(/fail flag/);
     await expect(client.deleteEvent('x')).rejects.toThrow(/fail flag/);
     expect(mockCalendarEvents().size).toBe(0);
+  });
+});
+
+/** A Test's context: a payload whose booking global names this host, the row's `model`. */
+const context = (hostEmail: string | null, model = '') => ({
+  payload: { findGlobal: async () => ({ hostEmail }) } as never,
+  language: 'en',
+  baseUrl: null,
+  model,
+});
+
+describe('the calendar Tests on the connection row (ADR-062)', () => {
+  afterEach(() => {
+    forgetTokens();
+    vi.unstubAllGlobals();
+    vi.unstubAllEnvs();
+  });
+
+  it("reads the host's free/busy for today through the delegated key and answers the count, never a block", async () => {
+    const secret = keyFile(await freshKey());
+    const { fetcher, calls } = fakeFetch([TOKEN, ['POST', '/calendar/v3/freeBusy', FREE_BUSY]]);
+    vi.stubGlobal('fetch', fetcher);
+    const test = CALENDAR_TESTS['google-calendar']!;
+    expect(await test(secret, context(` ${HOST} `))).toBe(`${HOST}: 2 busy blocks today`);
+    const asked = calls[1]!.body as { timeMin: string; timeMax: string; items: unknown[] };
+    // The Riyadh day: 24 hours from a midnight at UTC+3, the host's calendar alone.
+    expect(asked.timeMin).toMatch(/T21:00:00\.000Z$/);
+    expect(new Date(asked.timeMax).getTime() - new Date(asked.timeMin).getTime()).toBe(86_400_000);
+    expect(asked.items).toEqual([{ id: HOST }]);
+    expect(claimsOf((calls[0]!.body as { assertion: string }).assertion)['sub']).toBe(HOST);
+    // In Arabic, with the count declined.
+    forgetTokens();
+    vi.stubGlobal('fetch', fakeFetch([TOKEN, ['POST', '/freeBusy', FREE_BUSY]]).fetcher);
+    expect(await test(secret, { ...context(HOST), language: 'ar' })).toBe(
+      `${HOST}: فترتان مشغولتان اليوم`,
+    );
+  });
+
+  it('refuses a settings global without a calendar owner in the tester’s language, before any call', async () => {
+    const { fetcher, calls } = fakeFetch([]);
+    vi.stubGlobal('fetch', fetcher);
+    const test = CALENDAR_TESTS['google-calendar']!;
+    await expect(test('{}', context(''))).rejects.toThrow(
+      'No calendar owner in Booking: fill the e-mail first, then test.',
+    );
+    await expect(test('{}', { ...context(null), language: 'ar' })).rejects.toThrow(
+      /^لا بريد لصاحب التقويم/,
+    );
+    expect(calls).toEqual([]);
+  });
+
+  it("answers the mock calendar where the server allows it, and fails on the row's fail flag", async () => {
+    const test = CALENDAR_TESTS['mock-calendar']!;
+    await expect(test(null, context(HOST))).rejects.toThrow(/not enabled on this server/);
+    vi.stubEnv('AI_CONTENT_MOCK', '1');
+    expect(await test(null, context(HOST))).toBe('mock calendar: nobody busy today');
+    await expect(test(null, context(HOST, 'fail'))).rejects.toThrow(/fail flag/);
   });
 });

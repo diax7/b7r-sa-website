@@ -6,17 +6,19 @@ import {
   type APIRequestContext,
   type Page,
 } from '@playwright/test';
-import { ADMIN, API, hasAdmin, login } from './helpers/cms';
+import { ADMIN, API, createEditor, hasAdmin, login } from './helpers/cms';
 
 /**
  * Bookings of our own (ADR-062) from the merchant's seat: `/book` in both languages books a
  * slot, the confirmation, the manage page's move and cancel, an off-grid start refused, the
  * contact card's inline picker, the `/contact` JS budget with the island out of the first
- * paint, axe at 1440 and 390 in both languages. Runs in the `cms-bookings` project (serial,
- * after the admin suite, never beside it: the one admin account's parallel logins race on
- * its sessions list): it switches the booking global on and restores it, and removes the
- * rows it made. The calendar is the mock connection where the kind exists (PR 4b phase 2), else
- * off: the booking then stands without a Meet link and says the link follows.
+ * paint, axe at 1440 and 390 in both languages; then the panel's side (phase 2): the row in
+ * the inbox section with its pill, the dashboard card and the badge, the WhatsApp reminder,
+ * the editor's limits. Runs in the `cms-bookings` project (serial, after the admin suite,
+ * never beside it: the one admin account's parallel logins race on its sessions list): it
+ * switches the booking global on and restores it, and removes the rows it made. The
+ * calendar is the mock connection (its fail flag drives the failed path), else off: the
+ * booking then stands without a Meet link and says the link follows.
  */
 declare global {
   interface Window {
@@ -395,6 +397,177 @@ test.describe('bookings of our own (ADR-062)', () => {
     };
     expect(row).toMatchObject({ locale: 'en', status: 'booked', page: '/en/book' });
     expect(row.calendar).toBe(calendarId === null ? 'off' : 'synced');
+  });
+
+  test('the panel: the row in the inbox section with its pill, the dashboard card and the badge, the WhatsApp reminder, the editor and the cancelled seats, axe in both languages at 1440 and 390', async ({
+    page,
+    baseURL,
+  }) => {
+    test.setTimeout(240_000);
+    test.skip(made.length < 2, 'no booking was made');
+    const id = made[1]!;
+    const cancelledId = made[0]!;
+    expect((await page.request.post(`${API}/users/login`, { data: ADMIN })).status()).toBe(200);
+    const row = (await (
+      await admin.get(`${API}/bookings/${id}?depth=0`, { headers: auth })
+    ).json()) as { name: string; phone: string; start: string; status: string };
+    expect(row.status).toBe('booked');
+    const { AxeBuilder: Axe } = await import('@axe-core/playwright');
+    const seriousIn = async (...include: string[]) => {
+      let builder = new Axe({ page }).withTags(['wcag2a', 'wcag2aa']);
+      for (const sel of include) builder = builder.include(sel);
+      return (await builder.analyze()).violations
+        .filter((v) => ['serious', 'critical'].includes(v.impact ?? ''))
+        .map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`);
+    };
+    const speak = async (lang: 'ar' | 'en') => {
+      await page.context().addCookies([{ name: 'payload-lng', value: lang, url: baseURL! }]);
+    };
+    const editor = await createEditor(admin, auth);
+    try {
+      // The dashboard: the card's second line counts today's bookings, the next three list
+      // this one when it is among them, and the badge on the inbox entry adds the two lines.
+      await speak('en');
+      await page.goto('/admin');
+      const card = page.locator('[data-admin-dashboard-inbox]');
+      await expect(card).toBeVisible();
+      const newCount = Number(await card.getAttribute('data-admin-inbox-new'));
+      const todayCount = Number(await card.getAttribute('data-admin-inbox-today'));
+      const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Riyadh' });
+      const starts = new Date(row.start).toLocaleDateString('en-CA', { timeZone: 'Asia/Riyadh' });
+      if (starts === today) expect(todayCount).toBeGreaterThanOrEqual(1);
+      if (todayCount > 0) {
+        await expect(card.locator('[data-admin-figure="today-bookings"]')).toHaveText(
+          todayCount === 1 ? '1 booking today' : `${todayCount} bookings today`,
+        );
+      } else {
+        await expect(card.locator('[data-admin-inbox-no-bookings]')).toHaveText(
+          'No bookings today',
+        );
+      }
+      const soonest = (await (
+        await admin.get(
+          `${API}/bookings?where[status][in]=booked,rescheduled&where[end][greater_than]=${encodeURIComponent(new Date().toISOString())}&sort=start&limit=3&depth=0`,
+          { headers: auth },
+        )
+      ).json()) as { docs: Array<{ id: number }> };
+      if (soonest.docs.some((d) => d.id === id)) {
+        const line = card.locator(`[data-admin-inbox-booking="${id}"]`);
+        await expect(line).toBeVisible();
+        await expect(line).toContainText(row.name);
+        await expect(line.locator('[data-admin-status="booked"]')).toHaveText('Booked');
+        await expect(line).toContainText('Riyadh');
+      }
+      const badge = page.locator('#nav-messages [data-admin-badge]');
+      const waiting = newCount + todayCount;
+      if (waiting > 0) {
+        await expect(badge.locator('[aria-hidden="true"]')).toHaveText(String(waiting));
+      } else {
+        await expect(badge).toHaveCount(0);
+      }
+      // The section: the bookings entry after the messages, inside Site.
+      const nav = page.locator('[data-admin-nav]');
+      await expect(
+        nav.locator('[data-admin-group="Site"] [data-admin-section="inbox"] #nav-bookings'),
+      ).toBeVisible();
+      const words = {
+        en: { booked: 'Booked', cancelled: 'Cancelled', remind: 'Remind on WhatsApp' },
+        ar: { booked: 'محجوز', cancelled: 'ملغى', remind: 'ذكّر على WhatsApp' },
+      } as const;
+      for (const width of [1440, 390] as const) {
+        await page.setViewportSize({ width, height: 900 });
+        for (const lang of ['en', 'ar'] as const) {
+          const at = `at ${width} in ${lang}`;
+          await speak(lang);
+          // The list: the pills with their words, green and red.
+          await page.goto('/admin/collections/bookings');
+          await expect(page.locator('html')).toHaveAttribute('lang', lang);
+          const listRow = page.locator('.collection-list tr', { hasText: row.name });
+          await expect(listRow.first()).toBeVisible();
+          await expect(
+            listRow.first().locator('td.cell-status [data-admin-status="booked"]'),
+          ).toHaveText(words[lang].booked);
+          await expect(
+            page
+              .locator('.collection-list tr', { hasText: MERCHANT.name })
+              .first()
+              .locator('td.cell-status [data-admin-status="cancelled"]'),
+          ).toHaveText(words[lang].cancelled);
+          expect(
+            await seriousIn('[data-admin-header]', 'td.cell-status'),
+            `axe: the list ${at}`,
+          ).toEqual([]);
+          // The document: the reminder in the merchant's language, whatever the panel's.
+          await page.goto(`/admin/collections/bookings/${id}`);
+          const actions = page.locator('[data-admin-booking-actions]');
+          await expect(actions).toBeVisible();
+          const wa = actions.locator('[data-admin-action="remind-whatsapp"]');
+          await expect(wa).toHaveText(words[lang].remind);
+          await expect(wa).toHaveAttribute('target', '_blank');
+          const href = (await wa.getAttribute('href')) ?? '';
+          expect(href).toMatch(
+            new RegExp(`^https://wa\\.me/${row.phone.replace(/^\\+/, '')}\\?text=`),
+          );
+          const text = decodeURIComponent(href.split('?text=')[1] ?? '');
+          expect(text).toContain(`Hello ${row.name}, this is B7R Print`);
+          expect(text).toContain('Riyadh time');
+          if (calendarId !== null) expect(text).toMatch(/Meet link: https:\/\/meet\.google\.com\//);
+          expect(
+            await seriousIn(
+              '[data-admin-header]',
+              '[data-admin-booking-actions]',
+              '.document-fields__main',
+            ),
+            `axe: the document ${at}`,
+          ).toEqual([]);
+          if (width === 1440) {
+            await page.goto('/admin');
+            expect(await seriousIn('[data-admin-dashboard-inbox]'), `axe: the card ${at}`).toEqual(
+              [],
+            );
+          }
+        }
+      }
+      // The cancelled row: no reminder (nothing to remind), and the status stays cancelled.
+      await page.goto(`/admin/collections/bookings/${cancelledId}`);
+      await expect(page.locator('#field-status')).toBeVisible();
+      await expect(page.locator('[data-admin-booking-actions]')).toHaveCount(0);
+      const back = await admin.patch(`${API}/bookings/${cancelledId}`, {
+        headers: { ...auth, ...json },
+        data: { status: 'booked' },
+      });
+      expect(back.status(), await back.text()).toBe(400);
+      // The editor: sees the bookings, changes the status and the notes, never the
+      // merchant's name (the field's rule drops it), never deletes, never creates.
+      const editorAuth = await login(admin, editor);
+      const seen = await admin.get(`${API}/bookings/${id}?depth=0`, { headers: editorAuth });
+      expect(seen.status(), 'the editor reads it').toBe(200);
+      const worked = await admin.patch(`${API}/bookings/${id}`, {
+        headers: { ...editorAuth, ...json },
+        data: { status: 'rescheduled', notes: 'اتصلت به', name: 'Somebody Else' },
+      });
+      expect(worked.status(), await worked.text()).toBe(200);
+      const after = (await (
+        await admin.get(`${API}/bookings/${id}?depth=0`, { headers: auth })
+      ).json()) as { status: string; notes: string; name: string };
+      expect(after).toMatchObject({ status: 'rescheduled', notes: 'اتصلت به', name: row.name });
+      expect((await admin.delete(`${API}/bookings/${id}`, { headers: editorAuth })).status()).toBe(
+        403,
+      );
+      expect(
+        (
+          await admin.post(`${API}/bookings`, {
+            headers: { ...editorAuth, ...json },
+            data: { ...MERCHANT, start: row.start, end: row.start, locale: 'ar' },
+          })
+        ).status(),
+        'nobody creates through the API',
+      ).toBe(403);
+    } finally {
+      await page.setViewportSize({ width: 1280, height: 800 });
+      await speak('en');
+      await admin.delete(`${API}/users/${editor.id}`, { headers: auth });
+    }
   });
 
   test('the fail flag on the mock calendar: the booking stands as failed and the merchant hears the link follows', async ({

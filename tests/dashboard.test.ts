@@ -420,28 +420,72 @@ describe('the content readers (ADR-059)', () => {
     });
   });
 
-  it("reads the inbox with the user's access: the count of new messages and the newest three of them (ADR-061)", async () => {
+  it("reads the inbox with the user's access: the new messages and the newest three (ADR-061), today's bookings and the next three (ADR-062), the badge's sum", async () => {
     const { payload, calls } = fakePayload({
-      find: () => [
-        { id: 3, name: 'ضياء', inquiry: 'تاجر', message: 'أرغب بربط متجري.', createdAt: 'c' },
-        { id: 2, name: 'Sara', inquiry: 'Partnership', message: 'Hi', createdAt: 'b' },
-      ],
+      find: (args) =>
+        args['collection'] === 'messages'
+          ? [
+              { id: 3, name: 'ضياء', inquiry: 'تاجر', message: 'أرغب بربط متجري.', createdAt: 'c' },
+              { id: 2, name: 'Sara', inquiry: 'Partnership', message: 'Hi', createdAt: 'b' },
+            ]
+          : [
+              { id: 7, name: 'Nora', start: '2026-09-18T07:00:00.000Z', status: 'booked' },
+              { id: 8, name: 'سعد', start: '2026-09-19T08:00:00.000Z', status: 'rescheduled' },
+            ],
+      count: (args) => (args['collection'] === 'bookings' ? 1 : 0),
     });
-    const reading = await inboxReading(payload, { user });
+    const reading = await inboxReading(payload, { user, now: NOW });
     expect(reading).toEqual({
       newCount: 2,
       newest: [
         { id: 3, name: 'ضياء', inquiry: 'تاجر', message: 'أرغب بربط متجري.', createdAt: 'c' },
         { id: 2, name: 'Sara', inquiry: 'Partnership', message: 'Hi', createdAt: 'b' },
       ],
+      todayCount: 1,
+      next: [
+        { id: 7, name: 'Nora', start: '2026-09-18T07:00:00.000Z', status: 'booked' },
+        { id: 8, name: 'سعد', start: '2026-09-19T08:00:00.000Z', status: 'rescheduled' },
+      ],
+      waiting: 3,
     });
-    expect(calls).toHaveLength(1);
+    expect(calls).toHaveLength(3);
     expect(calls[0]!.args).toMatchObject({
       collection: 'messages',
       where: { status: { equals: 'new' } },
       sort: '-createdAt',
       limit: INBOX_PREVIEW,
       select: { name: true, inquiry: true, message: true, createdAt: true },
+      user,
+      overrideAccess: false,
+    });
+    // Today in Riyadh (UTC+3) around `NOW`, on the bookings still ahead; the user's access.
+    expect(calls[1]).toMatchObject({
+      op: 'count',
+      args: {
+        collection: 'bookings',
+        where: {
+          and: [
+            { status: { in: ['booked', 'rescheduled'] } },
+            { start: { greater_than_equal: '2026-09-17T21:00:00.000Z' } },
+            { start: { less_than: '2026-09-18T21:00:00.000Z' } },
+          ],
+        },
+        user,
+        overrideAccess: false,
+      },
+    });
+    // The next three: still running or ahead, soonest first, whichever day.
+    expect(calls[2]!.args).toMatchObject({
+      collection: 'bookings',
+      where: {
+        and: [
+          { status: { in: ['booked', 'rescheduled'] } },
+          { end: { greater_than: NOW.toISOString() } },
+        ],
+      },
+      sort: 'start',
+      limit: INBOX_PREVIEW,
+      select: { name: true, start: true, status: true },
       user,
       overrideAccess: false,
     });

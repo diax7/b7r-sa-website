@@ -9,22 +9,13 @@ import { describeFields } from '@/modules/cms/admin/descriptions/describe';
 import { collectionComponents } from '@/modules/cms/admin/document/config';
 import { adminGroup } from '@/modules/cms/admin/icons';
 import { inLanguage } from '@/modules/cms/fields/message';
+import { STATUS_CELL } from '@/modules/cms/fields/status';
 import { Refused } from '@/modules/cms/refused';
 import { BOOKINGS_DESCRIPTIONS } from '@/modules/bookings/descriptions';
+import { BOOKING_STATUS_LABELS, BOOKING_STATUSES, BOOKINGS } from '@/modules/bookings/status';
 
-export const BOOKINGS = 'bookings' as const;
-
-export const BOOKING_STATUSES = ['booked', 'rescheduled', 'cancelled', 'completed'] as const;
-export type BookingStatus = (typeof BOOKING_STATUSES)[number];
-
-/** The statuses that hold their slot: everything but a cancellation. */
-export const ACTIVE_STATUSES: readonly BookingStatus[] = ['booked', 'rescheduled', 'completed'];
-
-export const CALENDAR_STATES = ['synced', 'failed', 'off'] as const;
-export type CalendarState = (typeof CALENDAR_STATES)[number];
-
-/** How many times the sweep asks Google again for a failed event before it stays failed. */
-export const CALENDAR_RETRIES = 3;
+/** The reminder action above a booking (ADR-062), after the form's sentinel. */
+const BOOKING_ACTIONS = '@/modules/bookings/admin/booking-actions#BookingActions';
 
 const never = () => false;
 
@@ -95,7 +86,7 @@ export const Bookings: CollectionConfig = {
     defaultColumns: ['name', 'start', 'status'],
     listSearchableFields: ['name', 'email', 'phone'],
     group: adminGroup('site'),
-    components: collectionComponents(BOOKINGS),
+    components: collectionComponents(BOOKINGS, { beforeDocumentControls: [BOOKING_ACTIONS] }),
     custom: {
       shows: {
         ar: 'لا يظهر في الموقع: الاستشارات التي حجزها التجار',
@@ -173,14 +164,12 @@ export const Bookings: CollectionConfig = {
         name: 'status',
         type: 'select',
         required: true,
+        // The badge and the dashboard card read today's and the next ones on every render.
+        index: true,
         defaultValue: 'booked',
-        options: [
-          { value: 'booked', label: { ar: 'محجوز', en: 'Booked' } },
-          { value: 'rescheduled', label: { ar: 'مُعاد جدولته', en: 'Rescheduled' } },
-          { value: 'cancelled', label: { ar: 'ملغى', en: 'Cancelled' } },
-          { value: 'completed', label: { ar: 'مكتمل', en: 'Completed' } },
-        ],
+        options: BOOKING_STATUSES.map((value) => ({ value, label: BOOKING_STATUS_LABELS[value] })),
         label: { ar: 'الحالة', en: 'Status' },
+        admin: { position: 'sidebar', components: { Cell: STATUS_CELL } },
       },
       {
         name: 'notes',

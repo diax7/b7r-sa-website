@@ -141,11 +141,14 @@ export default buildConfig({
     // The default queue serves IndexNow and scheduled publishes; the `ai` queue runs one
     // content-engine job at a time and carries the engine's schedules: the hourly tick, the
     // weekly freshness pass and the weekly digest (ADR-042); the `bookings` queue runs the
-    // sweep alone, one at a time, so two passes never send a reminder twice (ADR-062).
+    // sweep alone, one at a time, so two passes never send a reminder twice (ADR-062). Its
+    // tick sits at second 30: Payload's scheduler reads the jobs-stats global once per tick
+    // and writes it back whole, so two queues ticking in the same second overwrite each
+    // other's "last scheduled" time, and the loser's schedule fires every minute.
     autoRun: [
       { cron: '* * * * *', limit: 10 },
       { cron: '* * * * *', queue: AI_QUEUE, limit: 1 },
-      { cron: '* * * * *', queue: BOOKINGS_QUEUE, limit: 1 },
+      { cron: '30 * * * * *', queue: BOOKINGS_QUEUE, limit: 1 },
     ],
     shouldAutoRun: () => !isBuildPhase(),
     deleteJobOnComplete: true,

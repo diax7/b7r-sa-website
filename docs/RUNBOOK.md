@@ -443,6 +443,15 @@ list; a delete touches neither the calendar nor the merchant (set the status to 
 first). The public API creates, reads and lists nothing on the collection; the booking
 routes are the only writers.
 
+**The day's work.** The red badge on the inbox entry counts the new messages and the
+bookings still ahead today, one number; the dashboard's Inbox card says which is which and
+lists the next three bookings with their time in Riyadh and their status. On a booking,
+**Remind on WhatsApp** opens the merchant's chat with the reminder prefilled in the
+merchant's language (the moment on the Riyadh clock and the Meet link when the row has
+one); it shows while the booking is still ahead. The status words: booked (green),
+rescheduled (amber, the merchant moved it), cancelled (red, stays cancelled), completed
+(neutral, the sweep sets it).
+
 ## Open Graph images
 
 `pnpm og` re-renders `public/og/default.png` and `public/og/products/*.png` with Playwright

@@ -6,12 +6,13 @@ import { adminStringsFor } from '@/modules/cms/admin/strings';
 type Tone = 'accent' | 'success' | 'warning' | 'error' | 'muted';
 
 /**
- * The colour of a status word (design system §2, ADR-060): green is live or done, amber is
- * a draft, a change waiting or a reply pending, red is failed, blue is a message nobody has
- * opened (ADR-061: the one that asks for a person; the accent on its tint, lifted for the
- * word, the panel's blue for text on dark, never `text-primary`); every other state is
- * neutral. A colour never
- * appears without its word, and never elsewhere than this pill and the `BoolCell` badge.
+ * The colour of a status word (design system §2, ADR-060): green is live, done or a booking
+ * that stands, amber is a draft, a change waiting, a reply pending or a booking the merchant
+ * moved, red is failed or cancelled, blue is a message nobody has opened (ADR-061: the one
+ * that asks for a person; the accent on its tint, lifted for the word, the panel's blue for
+ * text on dark, never `text-primary`); every other state (a completed booking) is neutral.
+ * A colour never appears without its word, and never elsewhere than this pill and the
+ * `BoolCell` badge.
  */
 export const STATUS_TONES: Record<string, Tone> = {
   published: 'success',
@@ -21,6 +22,9 @@ export const STATUS_TONES: Record<string, Tone> = {
   new: 'accent',
   following: 'warning',
   handled: 'success',
+  booked: 'success',
+  rescheduled: 'warning',
+  cancelled: 'error',
 };
 
 export const statusTone = (value: string): Tone => STATUS_TONES[value] ?? 'muted';

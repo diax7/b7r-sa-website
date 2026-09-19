@@ -49,7 +49,7 @@ export interface DashboardData {
   published: Read<PublishedCount[]>;
   drafts: Read<DraftCount[]>;
   missingEnglish: Read<MissingEnglish[]>;
-  /** The new messages and the newest three (ADR-061); admins and editors. */
+  /** The new messages and the newest three (ADR-061), today's bookings and the next three (ADR-062); admins and editors. */
   inbox: Read<InboxReading>;
   /** The content collections the user may read, in the audit's order. */
   contentCollections: ContentSlug[];
@@ -149,7 +149,7 @@ export async function readDashboard(args: {
     guarded(payload, 'drafts', someContent, () => draftsWaiting(payload, content)),
     guarded(payload, 'missing English', someContent, () => missingEnglish(payload, content)),
     guarded(payload, 'inbox', reads('messages'), () =>
-      inboxReading(payload, { user: user ?? null }),
+      inboxReading(payload, { user: user ?? null, now }),
     ),
   ]);
   return {

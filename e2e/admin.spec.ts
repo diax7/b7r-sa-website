@@ -585,9 +585,12 @@ test.describe('CMS admin', () => {
     expect(
       await page.evaluate(() => document.activeElement?.closest('[data-admin-flyout]') !== null),
     ).toBe(true);
-    // The flyout follows the tree's order: the inbox section first, then the home page.
+    // The flyout follows the tree's order: the inbox section first (messages, then the
+    // bookings, ADR-062), then the home page.
     await page.keyboard.press('ArrowDown');
     await expect(flyout.locator('[data-admin-flyout-entry="messages"]')).toBeFocused();
+    await page.keyboard.press('ArrowDown');
+    await expect(flyout.locator('[data-admin-flyout-entry="bookings"]')).toBeFocused();
     await page.keyboard.press('ArrowDown');
     await expect(flyout.locator('[data-admin-flyout-entry="home"]')).toBeFocused();
     expect(
@@ -1946,6 +1949,12 @@ test.describe('CMS admin', () => {
       await expect(card.locator('[data-admin-hue]')).toHaveCount(1);
       const newBefore = Number(await card.getAttribute('data-admin-inbox-new'));
       expect(newBefore).toBeGreaterThanOrEqual(1);
+      // The badge adds today's bookings to the new messages (ADR-062); the card says which.
+      const todayBefore = Number(await card.getAttribute('data-admin-inbox-today'));
+      await expect(card).toHaveAttribute(
+        'data-admin-inbox-waiting',
+        String(newBefore + todayBefore),
+      );
       await expect(card.locator('[data-admin-figure="new-messages"]')).toHaveText(
         newBefore === 1 ? '1 new message' : `${newBefore} new messages`,
       );
@@ -1957,7 +1966,7 @@ test.describe('CMS admin', () => {
       await expect(row).toContainText('أرغب بربط متجري بمنصة بحر برنت');
       await expect(row).toContainText('…');
       await expect(row).not.toContainText(`؟ ${stamp}`);
-      expect(await badgeCount(), 'the badge').toBe(newBefore);
+      expect(await badgeCount(), 'the badge').toBe(newBefore + todayBefore);
       await expect(page.locator('#nav-messages [data-admin-badge]')).toHaveAttribute(
         'data-admin-badge',
         'error',
@@ -2010,7 +2019,7 @@ test.describe('CMS admin', () => {
       await expect(listRow.locator('td.cell-status [data-admin-status="handled"]')).toHaveText(
         'Handled',
       );
-      expect(await badgeCount(), 'the badge after').toBe(newBefore - 1);
+      expect(await badgeCount(), 'the badge after').toBe(newBefore - 1 + todayBefore);
       await page.goto('/admin');
       await expect(card).toHaveAttribute('data-admin-inbox-new', String(newBefore - 1));
       if (newBefore === 1) {

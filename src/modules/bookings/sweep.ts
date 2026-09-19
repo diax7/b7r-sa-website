@@ -1,5 +1,5 @@
 import type { Payload, TaskConfig, Where } from 'payload';
-import { CALENDAR_RETRIES } from '@/modules/bookings/collection';
+import { CALENDAR_RETRIES, UPCOMING_STATUSES } from '@/modules/bookings/status';
 import { SWEEP_CRON } from '@/modules/bookings/schedule';
 import { type BookingPorts, sendPair, syncCalendar } from '@/modules/bookings/service';
 import type { BookingRow } from '@/modules/bookings/store';
@@ -25,8 +25,7 @@ export const HOUR_REMINDER_MS = HOUR_MS;
 /** The gap between two calendar retries. */
 export const RETRY_GAP_MS = HOUR_MS;
 
-const active = (row: Pick<BookingRow, 'status'>) =>
-  row.status === 'booked' || row.status === 'rescheduled';
+const active = (row: Pick<BookingRow, 'status'>) => UPCOMING_STATUSES.includes(row.status);
 
 /** `start <= now + 24 h AND start > now + 1 h AND NOT reminded24h`, on an active booking. */
 export function due24h(row: BookingRow, now: Date): boolean {
@@ -67,7 +66,7 @@ export function dueRetry(row: BookingRow, now: Date): boolean {
   );
 }
 
-const ACTIVE: Where = { status: { in: ['booked', 'rescheduled'] } };
+const ACTIVE: Where = { status: { in: [...UPCOMING_STATUSES] } };
 
 /** The same windows as the predicates, for the database. */
 export function sweepWindows(

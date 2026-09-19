@@ -193,6 +193,28 @@ export const adminStrings = {
       yesterday: (date: string, visitors: number, pageviews: number) =>
         `${date}: ${visitors} visitors, ${pageviews} page views`,
     },
+    /** The Google Calendar Test (ADR-062): a refusal of ours before the call, and today's busy blocks after it. */
+    googleCalendar: {
+      noHost: 'No calendar owner in Booking: fill the e-mail first, then test.',
+      today: (host: string, busy: number) =>
+        `${host}: ${busy} busy block${busy === 1 ? '' : 's'} today`,
+    },
+  },
+  bookings: {
+    /** The action above a booking (ADR-062): a `wa.me` link with a reminder in the merchant's language. */
+    remindWhatsApp: 'Remind on WhatsApp',
+    /**
+     * The reminder's text, keyed by the merchant's language (the booking's `locale`) like
+     * `inbox.reply`; the Meet sentence follows it when the row has a link.
+     */
+    reminder: {
+      ar: 'مرحباً {name}، معك بحر برنت: نذكّرك بموعد استشارتك {when} بتوقيت الرياض.',
+      en: 'Hello {name}, this is B7R Print: a reminder of your consultation on {when}, Riyadh time.',
+    } as Record<string, string>,
+    reminderLink: {
+      ar: 'رابط Meet: {link}',
+      en: 'Meet link: {link}',
+    } as Record<string, string>,
   },
   inbox: {
     /** The three actions above a message (ADR-061); the outcome beside the third. */
@@ -448,12 +470,21 @@ export const adminStrings = {
         n === 0 ? 'no drafts waiting' : `${n} draft${n === 1 ? '' : 's'} waiting`,
       unavailable: 'Not available',
     },
-    /** The inbox card (ADR-061): the new messages and the newest three; its count is the sidebar's badge. */
+    /**
+     * The inbox card (ADR-061, ADR-062): the new messages and the newest three, today's
+     * bookings and the next three; the two counts added are the sidebar's badge, whose
+     * sentence is `waiting`.
+     */
     inbox: {
       title: 'Inbox',
       newMessages: (n: number) =>
         n === 0 ? 'No new messages' : `${n} new message${n === 1 ? '' : 's'}`,
       link: 'All messages',
+      waiting: (n: number) =>
+        n === 0 ? 'Nothing waiting in the inbox' : `${n} waiting in the inbox`,
+      todayBookings: (n: number) =>
+        n === 0 ? 'No bookings today' : `${n} booking${n === 1 ? '' : 's'} today`,
+      bookingsLink: 'All bookings',
     },
     assistants: {
       title: 'What the assistants say',
@@ -733,6 +764,22 @@ export const adminStringsAr: AdminStrings = {
       yesterday: (date, visitors, pageviews) =>
         `${date}: ${arabicCount(visitors, { one: 'زائر واحد', two: 'زائران', few: 'زوّار', many: 'زائراً' })}، ${arabicCount(pageviews, { one: 'مشاهدة صفحة واحدة', two: 'مشاهدتا صفحة', few: 'مشاهدات صفحات', many: 'مشاهدة صفحة' })}`,
     },
+    googleCalendar: {
+      noHost: 'لا بريد لصاحب التقويم في إعدادات الحجز: املأه أولاً، ثم اختبر.',
+      today: (host, busy) =>
+        `${host}: ${busy === 0 ? 'لا فترات مشغولة' : arabicCount(busy, { one: 'فترة مشغولة واحدة', two: 'فترتان مشغولتان', few: 'فترات مشغولة', many: 'فترة مشغولة' })} اليوم`,
+    },
+  },
+  bookings: {
+    remindWhatsApp: 'ذكّر على WhatsApp',
+    reminder: {
+      ar: 'مرحباً {name}، معك بحر برنت: نذكّرك بموعد استشارتك {when} بتوقيت الرياض.',
+      en: 'Hello {name}, this is B7R Print: a reminder of your consultation on {when}, Riyadh time.',
+    },
+    reminderLink: {
+      ar: 'رابط Meet: {link}',
+      en: 'Meet link: {link}',
+    },
   },
   inbox: {
     replyWhatsApp: 'رد على WhatsApp',
@@ -984,6 +1031,15 @@ export const adminStringsAr: AdminStrings = {
               many: 'رسالة جديدة',
             }),
       link: 'كل الرسائل',
+      waiting: (n) =>
+        n === 0
+          ? 'لا شيء بانتظارك في الوارد'
+          : `${arabicCount(n, { one: 'عنصر واحد', two: 'عنصران', few: 'عناصر', many: 'عنصراً' })} بانتظارك في الوارد`,
+      todayBookings: (n) =>
+        n === 0
+          ? 'لا حجوزات اليوم'
+          : `${arabicCount(n, { one: 'حجز واحد', two: 'حجزان', few: 'حجوزات', many: 'حجزاً' })} اليوم`,
+      bookingsLink: 'كل الحجوزات',
     },
     assistants: {
       title: 'ماذا يقول المساعدون',

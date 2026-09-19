@@ -244,7 +244,7 @@ describe('the badge rule: a number only where it asks for action', () => {
       }
       expect(sentences.failedRuns).toBe(strings.dashboard.hand.failedRuns);
       expect(sentences.drafts).toBe(strings.dashboard.tiles.drafts);
-      expect(sentences.inbox).toBe(strings.dashboard.inbox.newMessages);
+      expect(sentences.inbox).toBe(strings.dashboard.inbox.waiting);
     }
     const en = badgeStrings(adminStrings);
     const ar = badgeStrings(adminStringsAr);
@@ -253,14 +253,18 @@ describe('the badge rule: a number only where it asks for action', () => {
     expect(ar.drafts(2)).toBe('مسودتان بانتظارك');
     expect(ar.failedRuns(1)).toBe('جولة فاشلة واحدة هذا الأسبوع');
     expect(ar.overLimit(11)).toBe('11 اتصالاً تجاوز حدّه الشهري');
-    expect(en.inbox(1)).toBe('1 new message');
-    expect(en.inbox(3)).toBe('3 new messages');
-    expect(ar.inbox(1)).toBe('رسالة جديدة واحدة');
-    expect(ar.inbox(2)).toBe('رسالتان جديدتان');
-    expect(ar.inbox(3)).toBe('3 رسائل جديدة');
-    expect(ar.inbox(11)).toBe('11 رسالة جديدة');
-    expect(en.inbox(0)).toBe('No new messages');
-    expect(ar.inbox(0)).toBe('لا رسائل جديدة');
+    // The inbox's number is the new messages and today's bookings added (ADR-062): the
+    // badge counts what waits; the card's two lines say which is which.
+    expect(en.inbox(1)).toBe('1 waiting in the inbox');
+    expect(en.inbox(3)).toBe('3 waiting in the inbox');
+    expect(ar.inbox(1)).toBe('عنصر واحد بانتظارك في الوارد');
+    expect(ar.inbox(2)).toBe('عنصران بانتظارك في الوارد');
+    expect(ar.inbox(3)).toBe('3 عناصر بانتظارك في الوارد');
+    expect(ar.inbox(11)).toBe('11 عنصراً بانتظارك في الوارد');
+    expect(en.inbox(0)).toBe('Nothing waiting in the inbox');
+    expect(ar.inbox(0)).toBe('لا شيء بانتظارك في الوارد');
+    expect(adminStrings.dashboard.inbox.newMessages(2)).toBe('2 new messages');
+    expect(adminStringsAr.dashboard.inbox.todayBookings(2)).toBe('حجزان اليوم');
   });
 
   it('reads the dashboard readers for the entries the user sees, and survives a failed read', async () => {
@@ -278,6 +282,17 @@ describe('the badge rule: a number only where it asks for action', () => {
           });
           throw new Error('boom');
         }
+        if (args.collection === 'bookings') {
+          // Today's bookings still ahead, the Riyadh day of `now` (ADR-062).
+          expect(args.where).toEqual({
+            and: [
+              { status: { in: ['booked', 'rescheduled'] } },
+              { start: { greater_than_equal: '2026-09-17T21:00:00.000Z' } },
+              { start: { less_than: '2026-09-18T21:00:00.000Z' } },
+            ],
+          });
+          return { totalDocs: 2 };
+        }
         return { totalDocs: 0 };
       },
       countVersions: async (args: { collection: string; where: { and: unknown[] } }) => {
@@ -294,7 +309,7 @@ describe('the badge rule: a number only where it asks for action', () => {
           expect(args.where).toEqual({ status: { equals: 'new' } });
           return { docs: [{ id: 9 }], totalDocs: 5 };
         }
-        return { docs: [] };
+        return { docs: [], totalDocs: 0 };
       },
       logger: { error: () => {} },
     } as unknown as Payload;
@@ -306,10 +321,13 @@ describe('the badge rule: a number only where it asks for action', () => {
     });
     expect(badges).toEqual({
       posts: { kind: 'drafts', count: 2, tone: 'warning' },
-      messages: { kind: 'inbox', count: 5, tone: 'error' },
+      // Five new messages and two bookings today: one number on the inbox entry.
+      messages: { kind: 'inbox', count: 7, tone: 'error' },
     });
     expect(asked.toSorted()).toEqual([
       'count:ai-runs',
+      'count:bookings',
+      'find:bookings',
       'find:messages',
       'versions:posts',
       'versions:posts',

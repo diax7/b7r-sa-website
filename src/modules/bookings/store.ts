@@ -2,7 +2,7 @@ import { type Payload, ValidationError, type Where } from 'payload';
 import type { BookingSettings } from '@/content/schema';
 import type { Locale } from '@/lib/i18n';
 import { publicRead } from '@/lib/cms/read';
-import { BOOKINGS, type BookingStatus, type CalendarState } from '@/modules/bookings/collection';
+import { BOOKINGS, type BookingStatus, type CalendarState } from '@/modules/bookings/status';
 import { BOOKING } from '@/modules/bookings/global';
 import { toBookingSettings } from '@/modules/bookings/settings';
 import type { Interval } from '@/modules/bookings/slots';

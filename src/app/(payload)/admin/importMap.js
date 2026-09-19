@@ -32,6 +32,7 @@ import { JsonViewCell as JsonViewCell_afe30ab840bcb4afa8cd7d87c7b2b4c4 } from '@
 import { JsonView as JsonView_afe30ab840bcb4afa8cd7d87c7b2b4c4 } from '@/modules/cms/admin/fields/json-view'
 import { EnabledSwitch as EnabledSwitch_03ac396f6de2d0be4878206afb42629c } from '@/modules/cms/admin/fields/enabled-switch'
 import { TestConnection as TestConnection_6bc1140fcd0b4d5e9418ec5f5b37ea23 } from '@/modules/connections/admin/test-action'
+import { BookingActions as BookingActions_adb03da70e5256f3029a8534c9232b48 } from '@/modules/bookings/admin/booking-actions'
 import { HorizontalRuleFeatureClient as HorizontalRuleFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { RelationshipFeatureClient as RelationshipFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { ChecklistFeatureClient as ChecklistFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
@@ -93,6 +94,7 @@ export const importMap = {
   "@/modules/cms/admin/fields/json-view#JsonView": JsonView_afe30ab840bcb4afa8cd7d87c7b2b4c4,
   "@/modules/cms/admin/fields/enabled-switch#EnabledSwitch": EnabledSwitch_03ac396f6de2d0be4878206afb42629c,
   "@/modules/connections/admin/test-action#TestConnection": TestConnection_6bc1140fcd0b4d5e9418ec5f5b37ea23,
+  "@/modules/bookings/admin/booking-actions#BookingActions": BookingActions_adb03da70e5256f3029a8534c9232b48,
   "@payloadcms/richtext-lexical/client#HorizontalRuleFeatureClient": HorizontalRuleFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@payloadcms/richtext-lexical/client#RelationshipFeatureClient": RelationshipFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@payloadcms/richtext-lexical/client#ChecklistFeatureClient": ChecklistFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,

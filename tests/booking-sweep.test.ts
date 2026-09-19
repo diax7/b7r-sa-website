@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { copyFor } from '@/content/copy';
-import { CALENDAR_RETRIES } from '@/modules/bookings/collection';
+import { CALENDAR_RETRIES } from '@/modules/bookings/status';
 import { SWEEP_CRON } from '@/modules/bookings/schedule';
 import { book } from '@/modules/bookings/service';
 import { minuteOf, riyadhInstant } from '@/modules/bookings/slots';

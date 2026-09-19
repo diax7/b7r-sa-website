@@ -1,5 +1,6 @@
 import type { SiteCopy } from '@/content/copy';
 import { ERROR_PAGE } from '@/content/copy/error-page';
+import { DATE_LOCALES } from '@/lib/riyadh';
 
 /**
  * The English interface copy (BRD, the English copy bank section; ADR-043): the same shape as
@@ -356,5 +357,5 @@ export const en: SiteCopy = {
     otherLanguages: 'Other languages',
     otherLanguage: 'Arabic version',
   },
-  dateLocale: 'en-GB',
+  dateLocale: DATE_LOCALES.en,
 };

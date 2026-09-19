@@ -9,7 +9,7 @@ import {
 } from '@/lib/booking-mail';
 import { type Locale, localePath } from '@/lib/i18n';
 import { riyadh } from '@/lib/riyadh';
-import type { BookingStatus } from '@/modules/bookings/collection';
+import type { BookingStatus } from '@/modules/bookings/status';
 import type { CalendarClient } from '@/modules/bookings/google';
 import {
   daySlots,

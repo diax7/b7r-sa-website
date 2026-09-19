@@ -2609,20 +2609,38 @@ routes write read as lines. A status set to cancelled by a person (a request wit
 the routes and the sweep write with none) does what the merchant's own cancel does, the
 event deleted and both e-mails sent, through a hook that loads the mailer and the calendar
 on demand, since the config is loaded by the CLI under plain Node where `server-only`
-throws; a delete of the row touches nothing. The same personal-data rules as the messages (ADR-061). In the
-Inbox section beside the messages with the status pill, the WhatsApp reminder action, the
-inbox badge counting today's bookings and the dashboard's Inbox card listing the next
-three, once PR 4a's section is on main.
+throws; a delete of the row touches nothing. The same personal-data rules as the messages (ADR-061).
+
+**In the panel (phase 2, on PR 4a's inbox section).** `bookings` is the second entry of the
+Inbox section with the status pill (`booked` green, `rescheduled` amber, `cancelled` red,
+`completed` neutral; the words are glossary rows) and one action above the form,
+"Remind on WhatsApp": a `wa.me` link to the merchant's phone with the reminder prefilled in
+the merchant's language (the span on the Riyadh clock, the Meet link when the row has one),
+shown while the booking is still ahead; nothing automatic (the Business API is a later
+block). The inbox badge counts the new messages and the bookings still ahead that start
+today (Riyadh) as one number, its sentence "{n} waiting in the inbox"; the dashboard's
+Inbox card splits it in two lines and lists, after the newest three messages, the next
+three bookings with the moment on the Riyadh clock and the status word. The Google Calendar
+connection's Test reads the host's free/busy for today through the delegated key (the key
+file, the API and the delegation proved in one call) and answers the host and the count of
+busy blocks; a settings global without a calendar owner is refused in the tester's language
+before any call; the mock calendar's Test fails on its fail flag. The words the merchant
+reads (`DATE_LOCALES`, `riyadhSpanLabel` in `lib/riyadh.ts`) are one place for the e-mails,
+the picker and the reminder.
 
 **Tests and gates.** `booking-slots` (the grid, the gap, the notice, the horizon, the closed
 dates, the cap, the busy blocks, the Riyadh day boundary), `booking-google` (the delegated
 assertion, the parsers over recorded bodies, the poll, the mock), `booking-mail` (every body
 in both languages, the calendar file), `booking-routes` (the order, the 409 twice, the
 failed-Google path, the manage link's refusals, no personal field in a log line),
-`booking-sweep` (the windows, idempotence, the retries), the outsider's rows in
+`booking-sweep` (the windows, idempotence, the retries), `booking-actions` (the reminder's
+text and link, the tones, the day query), the calendar Tests in `booking-google`, the badge
+and the card reader in `admin-nav` and `dashboard`, the outsider's rows in
 `access.test.ts`, the config census; the e2e books in both languages on the review server
 with the mock calendar, moves and cancels on the manage page, refuses an off-grid start,
-runs axe at 1440 and 390.
+runs axe at 1440 and 390, then reads the panel's side: the row and its pill in the inbox
+section, the card and the badge, the reminder's href, the editor's limits, the cancelled
+row that stays cancelled, axe in both languages at 1440 and 390.
 
 **Dhia's side, once:** enable the Calendar API on the service account's Cloud project; in
 the Workspace Admin console add domain-wide delegation for the account's client id with the
