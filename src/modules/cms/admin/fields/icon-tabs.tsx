@@ -30,9 +30,10 @@ import { entityHue, type Hue, SECTION_ICONS, type SectionIconKey } from '@/modul
  * the tabs, nothing mounts: the degraded state is Payload's own tab, never a thrown error
  * in the edit view. The span also carries the document's group hue, which `admin.css` reads
  * through `:has()` to colour the active tab's bar (one of the screen's two hue carriers).
- * The e2e asserts buttons = tabs on the configs with a conditional tab, so a Payload
- * release that drops hidden buttons fails a test, not a screen. When Payload ships a tab
- * `Label` slot, this file is deleted and `describeFields()` stops placing the field.
+ * The e2e asserts buttons = tabs on every tabbed form (no config has a conditional tab
+ * today; one that does is the same count), so a Payload release that stops rendering a
+ * hidden button fails a test, not a screen. When Payload ships a tab `Label` slot, this
+ * file is deleted and `describeFields()` stops placing the field.
  */
 export function IconTabs(props: UIFieldClientProps) {
   const marker = useRef<HTMLSpanElement>(null);
