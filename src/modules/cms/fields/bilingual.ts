@@ -95,12 +95,12 @@ const TWIN_LABEL = {
 };
 const TWIN_DESCRIPTION = {
   richText: {
-    ar: 'النص الإنجليزي لهذا الحقل كما يعرضه الموقع الإنجليزي؛ حفظ واحد يكتب اللغتين.',
-    en: 'The English of this text, as the English site shows it; one Save writes both languages.',
+    ar: 'ما يعرضه الموقع الإنجليزي هنا؛ حفظ واحد يكتب اللغتين.',
+    en: 'What the English site shows here; one Save writes both languages.',
   },
   upload: {
-    ar: 'الصورة التي يعرضها الموقع الإنجليزي هنا، من المكتبة؛ حفظ واحد يكتب اللغتين.',
-    en: 'The photo the English site shows here, from the library; one Save writes both languages.',
+    ar: 'ما يعرضه الموقع الإنجليزي هنا، من المكتبة؛ حفظ واحد يكتب اللغتين.',
+    en: 'What the English site shows here, from the library; one Save writes both languages.',
   },
 };
 

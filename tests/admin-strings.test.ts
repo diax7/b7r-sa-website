@@ -7,6 +7,7 @@ import {
   adminStringsFor,
 } from '@/modules/cms/admin/strings';
 import { ARABIC, LATIN_ONLY, RULES } from './helpers/arabic-rules';
+import { configTexts } from './helpers/config-texts';
 
 /**
  * The panel's two languages (ADR-056): every leaf of the English tree has an Arabic
@@ -84,6 +85,33 @@ describe('the Arabic strings under the ux-araby rules', () => {
           .filter((text) => rule.bad.test(text))
           .map((text) => `${path}: ${text}`),
       );
+      expect(offenders).toEqual([]);
+    });
+  }
+});
+
+/**
+ * The configs' Arabic (every label, description, option, tab, collapsible and header
+ * sentence of every entity, the plugin's redirects included) under the same rules: the set
+ * the glossary gate reads (`tests/helpers/config-texts.ts`), so a sentence that lives only
+ * in a config is held to the rules like one in the trees.
+ */
+describe("the configs' Arabic under the ux-araby rules", () => {
+  const texts = configTexts();
+  it('reads every config text of every entity', () => {
+    expect(texts.length).toBeGreaterThan(1000);
+  });
+  it('writes every Arabic text in Arabic unless it is a brand, a code or a value', () => {
+    for (const { where, kind, ar } of texts) {
+      expect(ar.trim(), `empty: ${where} ${kind}`).not.toBe('');
+      if (!LATIN_ONLY.test(ar)) expect(ar, `not Arabic: ${where} ${kind}`).toMatch(ARABIC);
+    }
+  });
+  for (const rule of RULES) {
+    it(rule.name, () => {
+      const offenders = texts
+        .filter(({ ar }) => rule.bad.test(ar))
+        .map(({ where, kind, ar }) => `${where} ${kind}: ${ar}`);
       expect(offenders).toEqual([]);
     });
   }

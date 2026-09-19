@@ -110,7 +110,7 @@ export const Prompts: CollectionConfig = {
         name: 'enabled',
         type: 'checkbox',
         defaultValue: true,
-        label: { ar: 'يعمل', en: 'On' },
+        label: { ar: 'مفعّل', en: 'On' },
         admin: {
           position: 'sidebar',
           components: { Field: '@/modules/cms/admin/fields/enabled-switch#EnabledSwitch' },

@@ -258,7 +258,7 @@ export const Connections: CollectionConfig = {
         name: 'enabled',
         type: 'checkbox',
         defaultValue: true,
-        label: { ar: 'يعمل', en: 'On' },
+        label: { ar: 'مفعّل', en: 'On' },
         admin: {
           position: 'sidebar',
           components: { Field: '@/modules/cms/admin/fields/enabled-switch#EnabledSwitch' },
@@ -282,7 +282,7 @@ export const Connections: CollectionConfig = {
         name: 'callsThisMonth',
         type: 'number',
         virtual: true,
-        label: { ar: 'تشغيلات هذا الشهر', en: 'Runs this month' },
+        label: { ar: 'جولات هذا الشهر', en: 'Runs this month' },
         hooks: {
           afterRead: [
             async ({ data, req }) => {

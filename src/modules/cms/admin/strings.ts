@@ -123,7 +123,7 @@ export const adminStrings = {
   engine: {
     generateNow: 'Generate now',
     queueing: 'Queueing…',
-    queued: 'Queued: the run starts within a minute. Watch the runs list.',
+    queued: 'Queued: the run starts within a minute; see Runs.',
     postTitle: 'Content engine',
     regenerate: 'Regenerate',
     regenerateHint: 'A new run from the topic replaces the text under the same address and cover.',
@@ -136,7 +136,7 @@ export const adminStrings = {
     importResult: '{created} added, {skipped} already there.',
     factsTitle: 'What the engine may say',
     factsHint:
-      'Built live from the site settings, the products and the integrations, in Arabic and in English; every number a draft states is checked against this list.',
+      'Built from the site settings, the products and the connected stores, in both languages; every number a draft states is checked against it.',
     factsNumbers: '{n} numbers on the sheet.',
     card: {
       title: 'Engine and spend',
@@ -203,7 +203,7 @@ export const adminStrings = {
   },
   views: {
     adminsOnlyTitle: 'Admins only',
-    adminsOnly: 'This page is for administrators. Ask an admin if you need its numbers.',
+    adminsOnly: 'This page is for admins.',
   },
   visibility: {
     overall: 'Visibility score',
@@ -228,9 +228,9 @@ export const adminStrings = {
       introOne: 'One thing to do. It links to the field that fixes it.',
       recompute: 'Recompute',
       howOverall:
-        'The overall score is the weighted sum of every item, outside signals included (PageSpeed, the verifications, the assistants), so 100% means the site, the engines and the assistants all agree. A filled site with no service connected scores about 70; until the GEO content ships, the ceiling is 93.',
+        'Every item weighed, outside signals included: 100% means the site, the search engines and the assistants all agree. A filled site with no service connected scores about 70.',
       howSiteOnly:
-        '"What you control" counts only the items that need no outside service or assistant. Items with many documents earn pro-rata: 4 of 5 is 80%.',
+        'Only the items that need no outside service or assistant; an item over many documents earns pro rata (4 of 5 is 80%).',
       up: 'up {n} points since {date}',
       down: 'down {n} points since {date}',
       same: 'unchanged since {date}',
@@ -258,7 +258,7 @@ export const adminStrings = {
     },
     ledger: {
       title: 'Citation ledger',
-      hint: 'Every morning each enabled AI connection is asked the prompts due on their period; the rates cover the last four weeks, on the prompts that do not name the brand.',
+      hint: 'Every morning each enabled AI connection is asked the questions that are due; the rates cover the last four weeks, on the questions that do not name the brand.',
       runNow: 'Run now',
       queuing: 'Queuing',
       queued:
@@ -271,7 +271,7 @@ export const adminStrings = {
       close: 'Close',
       noLimit: 'No monthly limit',
       empty:
-        'No run yet. Add an AI connection under Admin, keep the prompts you want asked, then press Run now or wait for the morning run.',
+        'No run yet. Add an AI connection under Admin, then press Run now or wait for the morning run.',
       prompts: 'The prompts',
       prompt: 'Prompt',
       notRun: 'not run',
@@ -356,9 +356,9 @@ export const adminStrings = {
       readMost: 'Read most',
       empty: 'Nothing in this range yet.',
       honesty: [
-        'Our own count, not an audit: a landing is a page opened from another site or from nowhere; nothing about the visitor is kept.',
-        'Google’s AI Overviews and AI Mode arrive with a Google referrer and read as Google.',
-        'The native apps (ChatGPT’s, the in-app browsers) send no referrer, so some of their visits count as direct.',
+        'Our own count, not an audit: a page opened from another site or from nowhere; nothing about the visitor is kept.',
+        'Google’s AI Overviews and AI Mode arrive as Google.',
+        'The native apps (ChatGPT’s, in-app browsers) send no referrer, so some of their visits count as direct.',
       ],
     },
   },
@@ -581,7 +581,7 @@ export const adminStringsAr: AdminStrings = {
     never: 'لا حفظ مسجّل بعد.',
   },
   warnings: {
-    none: 'لا ملاحظات.',
+    none: 'لا تنبيهات.',
   },
   fields: {
     pickColor: 'اختر لوناً',
@@ -607,7 +607,7 @@ export const adminStringsAr: AdminStrings = {
   engine: {
     generateNow: 'ولّد الآن',
     queueing: 'جارٍ الإرسال…',
-    queued: 'في الطابور: تبدأ الجولة خلال دقيقة. تابع السجل.',
+    queued: 'في الطابور: تبدأ الجولة خلال دقيقة؛ راجع الجولات.',
     postTitle: 'محرّك المحتوى',
     regenerate: 'أعد التوليد',
     regenerateHint: 'جولة جديدة من الموضوع تستبدل النص وتبقي الرابط والغلاف كما هما.',
@@ -620,7 +620,7 @@ export const adminStringsAr: AdminStrings = {
     importResult: '{created} مضافة، {skipped} موجودة مسبقاً.',
     factsTitle: 'ما يجوز للمحرّك قوله',
     factsHint:
-      'تُبنى مباشرة من إعدادات الموقع والمنتجات والتكاملات، بالعربية والإنجليزية؛ وكل رقم تذكره المسودة يُراجع على هذه القائمة.',
+      'تُبنى من إعدادات الموقع والمنتجات والمتاجر المتصلة، باللغتين؛ وكل رقم تذكره المسودة يُراجع عليها.',
     factsNumbers: 'الأرقام في الورقة: {n}.',
     card: {
       title: 'المحرّك والإنفاق',
@@ -629,7 +629,7 @@ export const adminStringsAr: AdminStrings = {
         on: 'يعمل',
         mock: 'اتصال تجريبي',
         noConnection: 'بلا اتصال',
-        connectionOff: 'الاتصال متوقف',
+        connectionOff: 'الاتصال معطّل',
       },
       runStatus: {
         done: 'اكتملت',
@@ -638,7 +638,7 @@ export const adminStringsAr: AdminStrings = {
         skipped: 'تُخطّيت',
       },
       connection: 'الاتصال',
-      connectionOff: 'متوقف',
+      connectionOff: 'معطّل',
       pickConnection: 'لم يُختر اتصال: أضف واحداً في الاتصالات، ثم اختره في إعدادات المحرّك',
       postsThisMonth: 'مقالات هذا الشهر',
       costToday: 'تكلفة اليوم',
@@ -662,7 +662,7 @@ export const adminStringsAr: AdminStrings = {
       allConnections: 'كل الاتصالات',
       settings: 'الإعدادات',
       topics: 'المواضيع',
-      runs: 'السجل',
+      runs: 'الجولات',
     },
   },
   connections: {
@@ -674,7 +674,7 @@ export const adminStringsAr: AdminStrings = {
   },
   cells: {
     yesNo: ['نعم', 'لا'],
-    onOff: ['مفعّل', 'متوقف'],
+    onOff: ['مفعّل', 'معطّل'],
     notYet: 'ليس بعد',
   },
   readOnly: {
@@ -686,7 +686,7 @@ export const adminStringsAr: AdminStrings = {
   },
   views: {
     adminsOnlyTitle: 'للمديرين فقط',
-    adminsOnly: 'هذه الصفحة للمديرين. اطلب أرقامها من مدير إن احتجتها.',
+    adminsOnly: 'هذه الصفحة للمديرين.',
   },
   visibility: {
     overall: 'درجة الظهور',
@@ -711,9 +711,9 @@ export const adminStringsAr: AdminStrings = {
       introOne: 'بند واحد مفتوح. يرتبط بالحقل الذي يصلحه.',
       recompute: 'أعد الحساب',
       howOverall:
-        'الدرجة الكلية هي المجموع الموزون لكل البنود، بما فيها الإشارات الخارجية (PageSpeed والتحققات والمساعدون)، فدرجة 100% تعني أن الموقع والمحركات والمساعدين متفقون جميعاً. موقع مكتمل بلا خدمة متصلة يحصل على نحو 70؛ وحتى يصدر محتوى GEO يبقى الحد الأعلى 93.',
+        'كل البنود بأوزانها، والإشارات الخارجية معها: 100% تعني أن الموقع ومحركات البحث والمساعدين متفقون جميعاً. موقع مكتمل بلا خدمة متصلة يحصل على نحو 70.',
       howSiteOnly:
-        '«ما بيدك» يحسب فقط البنود التي لا تحتاج خدمة خارجية ولا مساعداً. البنود ذات المستندات المتعددة تُحتسب بالنسبة: 4 من 5 تساوي 80%.',
+        'البنود التي لا تحتاج خدمة خارجية ولا مساعداً فقط؛ والبند الممتد على مستندات كثيرة يُحتسب بالنسبة (4 من 5 تساوي 80%).',
       up: 'ارتفعت بمقدار {n} منذ {date}',
       down: 'انخفضت بمقدار {n} منذ {date}',
       same: 'بلا تغيير منذ {date}',
@@ -734,14 +734,14 @@ export const adminStringsAr: AdminStrings = {
       query: 'الاستعلام',
       page: 'الصفحة',
       mobile: 'الجوال',
-      desktop: 'سطح المكتب',
+      desktop: 'الحاسوب',
       window: 'من {from} إلى {to}',
       psiErrors: 'الفحوص الفاشلة: {n}؛ الصف ناقص.',
       tooSoon: 'جرى سحب قبل لحظات؛ انتظر عشر دقائق.',
     },
     ledger: {
       title: 'سجل الاستشهادات',
-      hint: 'كل صباح يُسأل كل اتصال ذكاء اصطناعي مفعّل الأسئلة المستحقة بحسب دوريتها؛ وتغطي النسب الأسابيع الأربعة الأخيرة، على الأسئلة التي لا تذكر العلامة.',
+      hint: 'كل صباح يُسأل كل اتصال ذكاء اصطناعي مفعّل الأسئلة المستحقة؛ وتغطي النسب الأسابيع الأربعة الأخيرة، على الأسئلة التي لا تذكر العلامة.',
       runNow: 'شغّل الآن',
       queuing: 'جارٍ الإرسال',
       queued: 'في الطابور: كل الأسئلة أياً كانت دوريتها؛ تصل الإجابات خلال دقائق، أعد التحميل لرؤيتها',
@@ -753,7 +753,7 @@ export const adminStringsAr: AdminStrings = {
       close: 'إغلاق',
       noLimit: 'بلا حد شهري',
       empty:
-        'لا جولات بعد. أضف اتصال ذكاء اصطناعي في الإدارة، وأبقِ الأسئلة التي تريد طرحها، ثم اضغط «شغّل الآن» أو انتظر جولة الصباح.',
+        'لا جولات بعد. أضف اتصال ذكاء اصطناعي في الإدارة، ثم اضغط «شغّل الآن» أو انتظر جولة الصباح.',
       prompts: 'الأسئلة',
       prompt: 'السؤال',
       notRun: 'لم يُشغّل',
@@ -826,7 +826,7 @@ export const adminStringsAr: AdminStrings = {
       window: 'من {from} إلى {to}',
       sources: 'المصادر',
       source: 'المصدر',
-      pages: 'صفحات الهبوط',
+      pages: 'صفحات الدخول',
       pageCol: 'الصفحة',
       topChannel: 'أكثر قناة جلبت',
       crawlers: 'الزواحف',
@@ -837,8 +837,8 @@ export const adminStringsAr: AdminStrings = {
       readMost: 'الأكثر قراءة',
       empty: 'لا شيء في هذه المدة بعد.',
       honesty: [
-        'عدّ الموقع نفسه، لا تدقيق: الزيارة صفحة فُتحت من موقع آخر أو من غير مصدر؛ ولا يُحفظ شيء عن الزائر.',
-        'تصل AI Overviews وAI Mode من Google بمُحيل Google وتُحسب على Google.',
+        'عدّ الموقع نفسه، لا تدقيق: صفحة فُتحت من موقع آخر أو من غير مصدر؛ ولا يُحفظ شيء عن الزائر.',
+        'AI Overviews وAI Mode من Google تُحسب على Google.',
         'التطبيقات الأصلية (تطبيق ChatGPT والمتصفحات داخل التطبيقات) لا ترسل مُحيلاً، فتُحسب بعض زياراتها مباشرة.',
       ],
     },
@@ -922,7 +922,7 @@ export const adminStringsAr: AdminStrings = {
         off: 'محرّك المحتوى متوقف',
         mock: 'محرّك المحتوى يعمل (اتصال تجريبي)',
         noConnection: 'محرّك المحتوى يعمل بلا اتصال',
-        connectionOff: 'محرّك المحتوى يعمل واتصاله متوقف',
+        connectionOff: 'محرّك المحتوى يعمل واتصاله معطّل',
       },
       check: 'التقرير الكامل',
       version: 'الإصدار',
@@ -936,20 +936,20 @@ export const adminStringsAr: AdminStrings = {
         },
         email: {
           resend: 'البريد يُرسل عبر Resend',
-          console: 'البريد يُطبع في السجل، بلا مزوّد',
+          console: 'البريد يُطبع في السجل، بلا خدمة إرسال',
         },
-        turnstile: { on: 'فحص الروبوتات مفعّل', off: 'فحص الروبوتات متوقف' },
-        indexnow: { on: 'تنبيهات محركات البحث مفعّلة', off: 'تنبيهات محركات البحث متوقفة' },
-        media: { s3: 'الوسائط على التخزين السحابي', local: 'الوسائط على قرص الخادم' },
+        turnstile: { on: 'فحص الروبوتات مفعّل', off: 'فحص الروبوتات معطّل' },
+        indexnow: { on: 'تنبيهات محركات البحث مفعّلة', off: 'تنبيهات محركات البحث معطّلة' },
+        media: { s3: 'الصور على التخزين السحابي', local: 'الصور على قرص الخادم' },
         contact: {
           live: 'نموذج التواصل يُرسل',
           mock: 'نموذج التواصل في وضع الاختبار',
-          off: 'نموذج التواصل متوقف',
+          off: 'نموذج التواصل معطّل',
         },
         newsletter: {
           live: 'النشرة البريدية تسجّل المشتركين',
           mock: 'النشرة البريدية في وضع الاختبار',
-          off: 'النشرة البريدية متوقفة',
+          off: 'النشرة البريدية معطّلة',
         },
       },
     },

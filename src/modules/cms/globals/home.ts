@@ -19,15 +19,11 @@ export const WHY_US_ICONS = ['ShieldCheck', 'Workflow', 'Zap'] as const;
 /** Exactly this many products sit in the strip (BRD 6.4.2). */
 export const STRIP_SIZE = 5;
 
-const PHOTO_PER_LANGUAGE = {
-  ar: 'لكل لغة صورتها (الموقع الإنجليزي لا يعود إلى العربية). الإنجليزية: تركيب معكوس، المساحة الهادئة تحت النص.',
-  en: 'Per language (the English site has no fallback). English: the mirrored composition, calm area under the copy.',
-};
-
 /**
  * A slide's photo, per language (ADR-044): the English document mirrors the layout, so its
  * photo is a mirrored composition; the site reads without locale fallback, so both languages
- * need their own. The English is picked in the twin right under the Arabic (ADR-057, PR B).
+ * need their own. The English is picked in the twin right under the Arabic (ADR-057, PR B);
+ * the map's sentence under each says so.
  */
 const slidePhoto = (name: string, label: { ar: string; en: string }): UploadField => ({
   name,
@@ -36,10 +32,9 @@ const slidePhoto = (name: string, label: { ar: string; en: string }): UploadFiel
   required: true,
   localized: true,
   label,
-  admin: { description: PHOTO_PER_LANGUAGE },
 });
 const imageDesktop = slidePhoto('imageDesktop', {
-  ar: 'الصورة (سطح المكتب 16:9)',
+  ar: 'الصورة (الحاسوب 16:9)',
   en: 'Image (desktop 16:9)',
 });
 const imageMobile = slidePhoto('imageMobile', {
@@ -50,19 +45,13 @@ const imageMobile = slidePhoto('imageMobile', {
 const text = (name: string, label: { ar: string; en: string }, extra: Partial<Field> = {}): Field =>
   ({ name, type: 'text', required: true, localized: true, label, ...extra }) as Field;
 
-/** The section switch (ADR-039): its description names what the switch removes from the site. */
-const enabled = (section: { ar: string; en: string }): Field => ({
+/** The section switch (ADR-039): the map's sentence names what the switch removes from the site. */
+const enabled = (): Field => ({
   name: 'enabled',
   type: 'checkbox',
   defaultValue: true,
   label: { ar: 'يظهر في الصفحة', en: 'Shown on the page' },
-  admin: {
-    description: {
-      ar: `عند الإيقاف يختفي قسم «${section.ar}» من الصفحة الرئيسية.`,
-      en: `Off hides the “${section.en}” section from the home page.`,
-    },
-    components: { Field: '@/modules/cms/admin/fields/enabled-switch#EnabledSwitch' },
-  },
+  admin: { components: { Field: '@/modules/cms/admin/fields/enabled-switch#EnabledSwitch' } },
 });
 
 const header = (withEyebrow = true, withLead = true): Field[] => [
@@ -145,12 +134,6 @@ export const Home: GlobalConfig = {
                 name: 'overlay',
                 type: 'group',
                 label: { ar: 'التدرّج فوق الصورة', en: 'Fade over the photo' },
-                admin: {
-                  description: {
-                    ar: 'طبقة شفافة من لون واحد تبدأ من جهة النص وتتلاشى فوق الصورة؛ تُقرأ العناوين فوق أي صورة.',
-                    en: 'A one-colour fade from the copy side over the photo, so the headline reads on any photo.',
-                  },
-                },
                 fields: [
                   {
                     name: 'enabled',
@@ -158,10 +141,6 @@ export const Home: GlobalConfig = {
                     defaultValue: true,
                     label: { ar: 'يظهر فوق الصورة', en: 'Shown over the photo' },
                     admin: {
-                      description: {
-                        ar: 'عند الإيقاف تظهر الصورة كما هي خلف النص، بلا تدرّج.',
-                        en: 'Off shows the photo as it is behind the copy, with no fade.',
-                      },
                       components: {
                         Field: '@/modules/cms/admin/fields/enabled-switch#EnabledSwitch',
                       },
@@ -174,10 +153,6 @@ export const Home: GlobalConfig = {
                     defaultValue: HERO_OVERLAY_DEFAULT,
                     label: { ar: 'اللون', en: 'Colour' },
                     admin: {
-                      description: {
-                        ar: 'لون التدرّج؛ الأبيض هو الأصل. يُكتب بصيغة #rrggbb.',
-                        en: 'The fade colour; white is the default. Written as #rrggbb.',
-                      },
                       components: { Field: '@/modules/cms/admin/fields/color-field#ColorField' },
                     },
                     validate: (value: unknown, { req }: { req: PayloadRequest }) =>
@@ -208,12 +183,6 @@ export const Home: GlobalConfig = {
                   singular: { ar: 'شارة', en: 'Chip' },
                   plural: { ar: 'الشارات', en: 'Chips' },
                 },
-                admin: {
-                  description: {
-                    ar: `من صفر إلى ${HERO_CHIPS_MAX}؛ بلا شارات يختفي الصف. الصفوف مشتركة بين اللغتين والنص لكل لغة: صف بلا نص إنجليزي لا يظهر في الموقع الإنجليزي.`,
-                    en: `Zero to ${HERO_CHIPS_MAX}; none hides the row. The rows are shared by both languages, the text is per language: a row without an English text does not show on the English site.`,
-                  },
-                },
                 fields: [text('text', { ar: 'النص', en: 'Text' })],
               },
             ],
@@ -241,12 +210,6 @@ export const Home: GlobalConfig = {
                 // Drafts never reach the strip: the picker lists published products only.
                 filterOptions: { _status: { equals: 'published' } },
                 label: { ar: 'المنتجات الخمسة بالترتيب', en: 'The five products, in order' },
-                admin: {
-                  description: {
-                    ar: 'منتجات منشورة فقط؛ منتج يُلغى نشره لاحقاً يسقط من الشريط حتى يُنشر من جديد.',
-                    en: 'Published products only; one unpublished later drops out of the strip until it is published again.',
-                  },
-                },
                 validate: (value: unknown, { req }: { req: PayloadRequest }) => {
                   const ids = Array.isArray(value)
                     ? value.map((v) =>
@@ -271,8 +234,8 @@ export const Home: GlobalConfig = {
             name: 'designer',
             label: { ar: 'المصمّم', en: 'Designer' },
             description: {
-              ar: 'قسم المصمّم والحاسبة: يجرّب الزائر تصميماً على منتج ويرى ربحه قبل أن يسجّل.',
-              en: 'The designer and calculator section: a visitor tries a design on a product and sees the profit before signing up.',
+              ar: 'يجرّب الزائر تصميماً على منتج ويرى ربحه قبل أن يسجّل.',
+              en: 'A visitor tries a design on a product and sees the profit before signing up.',
             },
             fields: [...header(), text('cta', { ar: 'الزر', en: 'Button' })],
           },
@@ -280,7 +243,7 @@ export const Home: GlobalConfig = {
             name: 'steps',
             label: { ar: 'الخطوات الثلاث', en: 'Three steps' },
             fields: [
-              enabled({ ar: 'الخطوات الثلاث', en: 'Three steps' }),
+              enabled(),
               ...header(true, false),
               text('link', { ar: 'رابط «اعرف أكثر»', en: 'Learn-more link' }),
               {
@@ -315,13 +278,13 @@ export const Home: GlobalConfig = {
               ar: 'المقطع نفسه ملف ثابت في الموقع؛ هنا العنوان والوصف فقط.',
               en: 'The loop itself ships with the site; only the copy lives here.',
             },
-            fields: [enabled({ ar: 'الفيديو', en: 'Video' }), ...header(false)],
+            fields: [enabled(), ...header(false)],
           },
           {
             name: 'whyUs',
             label: { ar: 'لماذا بحر', en: 'Why us' },
             fields: [
-              enabled({ ar: 'لماذا بحر', en: 'Why us' }),
+              enabled(),
               ...header(true, false),
               {
                 name: 'items',
@@ -355,25 +318,25 @@ export const Home: GlobalConfig = {
             name: 'testimonials',
             label: { ar: 'آراء التجار', en: 'Testimonials' },
             description: {
-              ar: 'الآراء نفسها في «آراء التجار»؛ هنا عنوان القسم.',
+              ar: 'هنا عنوان القسم فقط؛ الآراء نفسها في «آراء التجار».',
               en: 'The entries live in Testimonials; the section title lives here.',
             },
-            fields: [enabled({ ar: 'آراء التجار', en: 'Testimonials' }), ...header(true, false)],
+            fields: [enabled(), ...header(true, false)],
           },
           {
             name: 'integrations',
             label: { ar: 'المتاجر المتصلة', en: 'Connected stores' },
-            fields: [enabled({ ar: 'المتاجر المتصلة', en: 'Connected stores' }), ...header(false)],
+            fields: [enabled(), ...header(false)],
           },
           {
             name: 'faq',
             label: { ar: 'الأسئلة الشائعة', en: 'FAQ' },
             description: {
-              ar: 'الأسئلة نفسها في «الأسئلة الشائعة» (المعلَّمة «يظهر في الرئيسية»).',
-              en: 'The entries flagged «show on home» in the FAQ collection.',
+              ar: 'ما عُلِّم «يظهر في الرئيسية» في الأسئلة الشائعة.',
+              en: 'The entries flagged "show on the home page" in the FAQ.',
             },
             fields: [
-              enabled({ ar: 'الأسئلة الشائعة', en: 'FAQ' }),
+              enabled(),
               ...header(false, false),
               text('link', { ar: 'رابط «كل الأسئلة»', en: 'All-questions link' }),
             ],
@@ -382,8 +345,8 @@ export const Home: GlobalConfig = {
             name: 'ribbon',
             label: { ar: 'شريط الدعوة', en: 'Bottom banner' },
             description: {
-              ar: 'شريط الدعوة أسفل كل صفحة من الموقع، فوق التذييل؛ يُحرَّر هنا مرة واحدة.',
-              en: 'The CTA ribbon at the bottom of every page of the site, above the footer; edited here once.',
+              ar: 'أسفل كل صفحة، فوق التذييل؛ يُحرَّر هنا مرة واحدة.',
+              en: 'At the bottom of every page, above the footer; edited here once.',
             },
             fields: [...header(false), text('button', { ar: 'الزر', en: 'Button' })],
           },

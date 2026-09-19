@@ -220,7 +220,7 @@ export const SiteSettings: GlobalConfig = {
                         name: 'whatsapp',
                         type: 'text',
                         required: true,
-                        label: { ar: 'واتساب (أرقام فقط)', en: 'WhatsApp digits' },
+                        label: { ar: 'WhatsApp (أرقام فقط)', en: 'WhatsApp digits' },
                       },
                     ],
                   },

@@ -58,7 +58,7 @@ describe('readOnlyText: a value as an editor reads it', () => {
     expect(readOnlyText(field('checkbox', { name: 'enabled' }), true, 'en', en)).toBe('On');
     expect(readOnlyText(field('checkbox', { name: 'enabled' }), false, 'en', en)).toBe('Off');
     expect(readOnlyText(field('checkbox'), true, 'ar', ar)).toBe('نعم');
-    expect(readOnlyText(field('checkbox', { name: 'enabled' }), false, 'ar', ar)).toBe('متوقف');
+    expect(readOnlyText(field('checkbox', { name: 'enabled' }), false, 'ar', ar)).toBe('معطّل');
   });
 
   it("a select as its option's label, or the value when no option matches", () => {

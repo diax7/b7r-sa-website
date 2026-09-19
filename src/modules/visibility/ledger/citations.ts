@@ -37,7 +37,7 @@ export const Citations: CollectionConfig = {
     },
     hidden: hiddenUnlessAdmin,
     description: {
-      ar: 'جواب كل مساعد عن كل سؤال في كل جولة: هل ذكر بحر برنت، هل ربط إليه، ومن ذكر من المنافسين. للقراءة فقط.',
+      ar: 'إجابة كل مساعد عن كل سؤال في كل جولة: هل ذكر بحر برنت، هل ربط إليه، ومن ذكر من المنافسين. للقراءة فقط.',
       en: 'Each assistant’s answer to each prompt in each run: whether it named B7R, linked to it, and which competitors it named. Read-only.',
     },
   },
@@ -66,7 +66,7 @@ export const Citations: CollectionConfig = {
             name: 'provider',
             type: 'text',
             required: true,
-            label: { ar: 'المزوّد', en: 'Provider' },
+            label: { ar: 'الخدمة', en: 'Service' },
             admin: { readOnly: true },
           },
           {
@@ -129,7 +129,7 @@ export const Citations: CollectionConfig = {
       {
         name: 'answer',
         type: 'richText',
-        label: { ar: 'الجواب كاملاً', en: 'The full answer' },
+        label: { ar: 'الإجابة كاملة', en: 'The full answer' },
         admin: { readOnly: true },
       },
       {

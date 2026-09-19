@@ -34,11 +34,11 @@ export function identity(s: Snapshot): Finding[] {
       status: has(loc(s.site.tagline, 'en')) ? 'done' : 'missing',
       title: {
         en: 'The tagline exists in English',
-        ar: 'الشعار النصي مكتوب بالإنجليزية',
+        ar: 'الجملة التعريفية مكتوبة بالإنجليزية',
       },
       guide: {
-        en: 'One sentence that says what B7R is, the same everywhere: the footer, llms.txt, the app manifest and the store schema read it. Site settings, the Brand tab, the English field beside the Arabic tagline.',
-        ar: 'جملة واحدة تعرّف بحر برنت، هي نفسها في كل مكان: يقرؤها التذييل وملف llms.txt وبيان التطبيق ومخطط المتجر. إعدادات الموقع، تبويب العلامة، الحقل الإنجليزي بجانب الشعار النصي العربي.',
+        en: 'One sentence that says what B7R is, the same everywhere: the footer, llms.txt, the app manifest and the search data read it. Site settings, the Brand tab, the English field beside the Arabic tagline.',
+        ar: 'جملة واحدة تعرّف بحر برنت، هي نفسها في كل مكان: يقرؤها التذييل وملف llms.txt وبيان التطبيق وبيانات البحث. إعدادات الموقع، تبويب العلامة، الحقل الإنجليزي بجانب الجملة التعريفية العربية.',
       },
       href: settings,
     }),
@@ -51,8 +51,8 @@ export function identity(s: Snapshot): Finding[] {
         ar: 'حسابات التواصل روابط كاملة',
       },
       guide: {
-        en: 'The store schema lists the profiles so the engines tie them to the brand: each must be a full https:// address. Site settings, the Contact & social tab.',
-        ar: 'مخطط المتجر يذكر الحسابات لتربطها المحرّكات بالعلامة: كل حساب عنوان كامل يبدأ بـ https://. إعدادات الموقع، تبويب التواصل والحسابات.',
+        en: 'The search data lists the profiles so the engines tie them to the brand: each must be a full https:// address. Site settings, the Contact & social tab.',
+        ar: 'بيانات البحث تذكر الحسابات لتربطها المحرّكات بالعلامة: كل حساب عنوان كامل يبدأ بـ https://. إعدادات الموقع، تبويب التواصل والحسابات.',
       },
     }),
     finding({
@@ -90,15 +90,15 @@ export function identityFacts(): Fact[] {
     {
       section: 'identity',
       text: {
-        en: 'The footer, llms.txt, the app manifest and the store schema all read the tagline; the schema lists the profiles.',
-        ar: 'التذييل وملف llms.txt وبيان التطبيق ومخطط المتجر تقرأ كلها الشعار النصي؛ والمخطط يذكر الحسابات.',
+        en: 'The footer, llms.txt, the app manifest and the search data all read the tagline; the search data lists the profiles.',
+        ar: 'التذييل وملف llms.txt وبيان التطبيق وبيانات البحث تقرأ كلها الجملة التعريفية؛ وبيانات البحث تذكر الحسابات.',
       },
     },
     {
       section: 'identity',
       text: {
         en: 'The Arabic tagline and the three profiles are required fields: a save without them is refused.',
-        ar: 'الشعار النصي العربي والحسابات الثلاثة حقول إلزامية: لا يُحفظ الإعداد بدونها.',
+        ar: 'الجملة التعريفية العربية والحسابات الثلاثة حقول مطلوبة: لا يُحفظ الإعداد بدونها.',
       },
     },
   ];

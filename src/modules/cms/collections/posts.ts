@@ -122,12 +122,6 @@ const body: RichTextField = {
   localized: true,
   editor: postEditor,
   label: { ar: 'المتن', en: 'Body' },
-  admin: {
-    description: {
-      ar: 'عناوين H2 بصيغة أسئلة، فقرات قصيرة، رابطان على الأقل إلى صفحات الموقع.',
-      en: 'H2s as questions, short paragraphs, at least two links to pages of this site.',
-    },
-  },
 };
 
 /**
@@ -242,7 +236,7 @@ export const Posts: CollectionConfig = {
                     required: true,
                     unique: true,
                     index: true,
-                    label: { ar: 'المعرّف في الرابط', en: 'Address ending (slug)' },
+                    label: { ar: 'المعرّف في الرابط (slug)', en: 'Address ending (slug)' },
                   },
                 ],
               },
@@ -251,7 +245,7 @@ export const Posts: CollectionConfig = {
             ],
           },
           {
-            label: { ar: 'الملخص والغلاف', en: 'Summary & cover' },
+            label: { ar: 'المقتطف والغلاف', en: 'Excerpt & cover' },
             fields: [
               {
                 name: 'excerpt',
@@ -262,12 +256,6 @@ export const Posts: CollectionConfig = {
                 label: {
                   ar: `المقتطف (حتى ${EXCERPT_MAX} حرفاً)`,
                   en: `Excerpt (up to ${EXCERPT_MAX} characters)`,
-                },
-                admin: {
-                  description: {
-                    ar: 'جملة أو جملتان تظهران في بطاقة المقال وفي نتائج البحث.',
-                    en: 'One or two sentences on the post card and in search results.',
-                  },
                 },
               },
               {
@@ -295,12 +283,6 @@ export const Posts: CollectionConfig = {
                 relationTo: 'media',
                 required: true,
                 label: { ar: 'الغلاف (16:9)', en: 'Cover (16:9)' },
-                admin: {
-                  description: {
-                    ar: 'صورة الغلاف مع نص بديل عربي في المكتبة.',
-                    en: 'The cover with its Arabic alt text in the library.',
-                  },
-                },
               },
               {
                 // The rows are shared and the text is per language (ADR-057, PR A): a row
@@ -334,12 +316,6 @@ export const Posts: CollectionConfig = {
                 name: 'seo',
                 type: 'group',
                 label: { ar: 'محركات البحث', en: 'Search engines' },
-                admin: {
-                  description: {
-                    ar: 'اختياري: يُستخدم العنوان والمقتطف عندما تُترك فارغة.',
-                    en: 'Optional: the title and the excerpt are used when left empty.',
-                  },
-                },
                 fields: [
                   {
                     name: 'title',
@@ -392,25 +368,13 @@ export const Posts: CollectionConfig = {
             name: 'publishedAt',
             type: 'date',
             label: { ar: 'تاريخ النشر', en: 'Published at' },
-            admin: {
-              date: { pickerAppearance: 'dayAndTime' },
-              description: {
-                ar: 'يُملأ عند أول نشر إن تُرك فارغاً.',
-                en: 'Filled on the first publish when left empty.',
-              },
-            },
+            admin: { date: { pickerAppearance: 'dayAndTime' } },
           },
           {
             name: 'contentUpdatedAt',
             type: 'date',
             label: { ar: 'تاريخ التحديث (اختياري)', en: 'Updated at (optional)' },
-            admin: {
-              date: { pickerAppearance: 'dayAndTime' },
-              description: {
-                ar: 'يُعرض على المقال عندما يتغيّر محتواه فعلاً.',
-                en: 'Shown on the post when its content really changed.',
-              },
-            },
+            admin: { date: { pickerAppearance: 'dayAndTime' } },
           },
         ],
       },
@@ -456,12 +420,6 @@ export const Posts: CollectionConfig = {
             ],
             label: { ar: 'المصدر', en: 'Origin' },
             access: { update: adminField },
-            admin: {
-              description: {
-                ar: 'تعديل محرّر على مقال آلي يجعله "آلي ثم عُدّل" ويستثنيه من التحديث الآلي.',
-                en: 'A change by an editor to an engine post marks it "engine, then edited" and exempts it from the freshness job.',
-              },
-            },
           },
           {
             name: 'engineActions',

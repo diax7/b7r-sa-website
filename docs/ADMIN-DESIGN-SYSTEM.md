@@ -28,7 +28,7 @@ is the checklist, `tests/admin-config.test.ts` is the gate.
 4. **One primary action per view.** Blue fill for the one thing to do (save, publish, add);
    everything else is secondary or a link.
 5. **Explain before you toggle.** A switch or a destructive button carries one sentence that
-   names the consequence on the site («عند الإيقاف يختفي قسم … من الصفحة الرئيسية»).
+   names the consequence on the site («يختفي قسم … من الصفحة الرئيسية عند الإيقاف»).
 6. **Nothing reaches the public site.** The admin stylesheet and components live in
    `src/app/(payload)/admin.css` and `src/modules/cms/admin/**`; the site's Tailwind sources
    exclude them and the budget e2e guards the public CSS and JS.
@@ -125,20 +125,55 @@ The admin's strings are interface copy (ADR-031): written by us, under the ux-ar
   descriptions, and our overrides of Payload's pack (`modules/cms/admin/payload-ar.ts`).
 - Labels are nouns: «المنتجات», «الصفحة الرئيسية», «إعدادات الموقع». Never a sentence.
 - Actions are verb-first imperatives: «أضف صفحة», «ارفع ملفاً», «عرض الموقع». No «قم بـ».
-- Descriptions are one sentence that says what the thing is *for the site*: «الأسئلة الشائعة
-  بمجموعاتها. حتى خمسة أسئلة تظهر في الصفحة الرئيسية.» Not how Payload stores it. Since
-  ADR-046 every field an editor sees carries one: where it shows and what it does, then the
-  limit or an example («يظهر في بطاقة المنتج تحت السعر وفي قائمة المصمّم. قصير: S – 2XL»);
-  they live per entity in `modules/cms/admin/descriptions/*.ts` and are applied by
-  `describeFields()`; the config test enforces both languages on every field.
-- Consequences before switches: «عند الإيقاف يختفي قسم «لماذا بحر برنت» من الصفحة الرئيسية.»
+- **The description rule** (ADR-046; the 2026-09-19 words pass, `.claude/rules/admin-ui.md`
+  rule 4): one sentence of what the thing does *on the site* and where, then the limit or an
+  example if one helps a decision («حتى 70 حرفاً», «1200×630 أو أكبر»); nothing the label
+  already says, nothing about how it is stored, no second sentence that repeats the first.
+  The English is written first and trimmed; the Arabic is written **by meaning**, never a
+  calque, and a sentence that says where the value shows opens with its verb, the field the
+  implied subject and the gender agreeing with it («يظهر تحت العنوان بخط أخف؛ فارغ يخفيه»,
+  «تظهر خلف الشريحة على الجوال», «يعلو شبكة البطاقات»), never with a bare place preposition
+  («في البطاقة…»: not helper text, a fragment); a spec sentence may stay nominal («كلمتان إلى
+  أربع.», «بنسبة 4:5.», «من صفر إلى 5؛ بلا شارات يختفي الصف.»); the English may keep its
+  fragment. Every field an editor sees carries one, per entity in
+  `modules/cms/admin/descriptions/*.ts`, applied by `describeFields()`; the config test
+  enforces both languages, a cap of 140 characters in each as rendered (two lines under a
+  field on a 400 px column; a bilingual list may exceed it by its one-clause shared-rows
+  note; a named exception carries its reason), never opening with the label's own noun,
+  never a storage word, never an Arabic place fragment. Three before and after:
+  - Product, «الاسم» (Name). Before: «اسم المنتج كما يظهر في البطاقة، وعنوان صفحته، وقائمة
+    المصمّم، وملف llms.txt.» / "The product's name on its card, its page title, the
+    designer's picker and llms.txt." After: «يظهر في البطاقة، وعنوان صفحته، وقائمة المصمّم،
+    وملف llms.txt.» / "On the card, the page title, the designer's picker and llms.txt." (the
+    label already says "name"; the Arabic opens with its verb).
+  - Connections, «مفتاح API» (API key). Before: «المفتاح من لوحة الخدمة؛ لـ Search Console ملف
+    حساب الخدمة (JSON). يُحفظ مشفّراً ولا يُعرض ثانية؛ اترك القناع للإبقاء عليه.» After: «من
+    لوحة الخدمة؛ ولـ Search Console ملف حساب الخدمة (JSON). لا يُعرض ثانية؛ اترك القناع للإبقاء
+    عليه.» (how it is stored is not the editor's business; what happens on save is).
+  - Site settings, «واتساب (أرقام فقط)» became «WhatsApp (أرقام فقط)», and its sentence «أرقام
+    واتساب بلا + ولا مسافات، لرابط wa.me في الأداة وكل أزرار واتساب: 966501699572.» became «بلا +
+    ولا مسافات، لرابط wa.me في الأداة وكل أزرار WhatsApp: 966501699572.» (a brand stays
+    Latin; the label already says whose digits).
+- **The glossary** (`docs/ADMIN-GLOSSARY.md`, rendered from `modules/cms/admin/glossary.ts`
+  by `pnpm glossary`): one word per concept in each language, in both directions (no two
+  concepts share a word: the test refuses a second row with the same Arabic), and which
+  terms stay Latin inside Arabic copy (API, JSON, URL, slug, UTM, CSV, IndexNow, Search Console, Bing
+  Webmaster Tools, PageSpeed, Umami, GA4, WhatsApp, Turnstile, Resend, the model ids,
+  `alt`, `og:image`, the brands and the product names; Salla, Zid and Misk keep their own
+  Arabic names). A refused alternate («الشعار النصي» for the tagline, «سطح المكتب» for the
+  desktop, «مزوّد» for the service, «سقف» for a limit, «واتساب») fails
+  `tests/admin-glossary.test.ts` anywhere in the panel; the site's copy (BRD-verbatim) is
+  reported on, never gated. A new concept is a new row before its first string.
+- A switch names its consequence, verb first: «يختفي قسم «لماذا بحر» من الصفحة الرئيسية عند
+  الإيقاف.» A switch is «مفعّل» / «معطّل»; a thing that runs is «يعمل» / «متوقف».
 - Success and status: light passives or nominal («حُفظت المسودة», «الوظائف تعمل»), never «تم».
 - Empty states: why it is empty + the next step: «لا صفحات بعد. أضف الأولى.»
 - Errors: what happened + how to recover, no blame: «تعذّر الحفظ. تحقق من الحقول المعلّمة.»
 - Numbers Western (`1, 2, 3`) in both languages, dates relative when recent («قبل 3 دقائق»),
   otherwise `dd/MM/yyyy`: all through `modules/cms/admin/format.ts` (§5a); the traffic
   count's day keys (`YYYY-MM-DD`, Riyadh) show as they are, since they are keys that sort and
-  match the rows. Brand and product names stay Latin: Salla, Zid, Shopify, Turnstile, Resend.
+  match the rows. Brand and product names stay Latin (Shopify, Turnstile, Resend, WhatsApp);
+  Salla, Zid and Misk carry their own Arabic names (the glossary says which).
 - Counts Arabic declines (one, two, three to ten, eleven and up) are functions in the strings
   tree, never one template with a number dropped in («7 أيام», «30 يوماً»).
 - Punctuation: Arabic comma «،», «أو» not «/», no «!». **No em dash anywhere** (ADR-040,
@@ -191,6 +226,13 @@ Payload's `switchLanguage`, kept in its `payload-lng` cookie) and Payload sets `
   in the panel's own labels ("Admin, Connections", «الإدارة، الاتصالات»), never with an
   arrow, an environment variable or a code path; `tests/visibility-rules-strings.test.ts`
   reads the pairs under the same rules as the strings test.
+- **One place changes the language** (`.claude/rules/admin-ui.md` rule 16): the header
+  switch, with the account view's select behind it. No `?lang=`, no per-view override, no
+  string or component that assumes a direction; a new surface ships with `check:rtl` clean
+  and the e2e's axe pass in both languages. A technical token inside Arabic (a model id, a
+  path, a key) stays Latin, in `<bdi>` or the pill, so it reads left-to-right. Every
+  editor-facing string is born in both languages, through the trees or the maps, never
+  inline: toasts, refusals, empty states and error sentences are strings of the feature.
 
 ## 6. Components
 
@@ -221,7 +263,7 @@ Payload's own elements (buttons, fields, pills, toasts) are themed in `admin.css
 | Login | `modules/cms/admin/login/*` | One line under the form; the Turnstile widget above it (ADR-034). |
 
 | Dashboard | `modules/cms/admin/dashboard/*` | Seven sections top to bottom (ADR-059), one server render, the reads in parallel and each guarded (a failed reader shows its section with the "not available" word, never a blank page). (1) The greeting by the Riyadh hour (name in the accent), the 7 / 30 / 90 day range as links at the trailing edge (`?days=`, server-rendered, no client state; `rules.ts`) and the "needs a hand" line (failed runs this week, a connection at its limit, an enabled connection whose last test failed, documents without English, drafts older than a week; each a link, or one sentence). (2) Four tiles, each one link (`tiles.tsx`, `tile-data.ts`): visits with the change against the previous range (`trafficSummary` twice), the cited rate on the category prompts over 28 days with the engines' count, the score with its trend, "went live" in the range with the drafts waiting. (3) Where visits come from (`traffic/admin/traffic-card.tsx`): the bars by group, the top three entry pages, the crawler reads, "All traffic" into the same range. (4) What the assistants say (`visibility/admin/assistants-card.tsx`): per engine the cited and linked rates, the last run, the next run computed from the prompts' periods (`schedule.ts`, `duePrompts`) or the plain sentence; no "Run now" (it costs money). (5) Content (`content-card.tsx`): the home tile with when it was published, one row per content collection with published, drafts (linked to the list filtered on `_status`) and missing English (linked to the first English form), the last five saves by people (`data.ts`: the content groups only, no machine rows, no untitled unsaved draft), "Write a post" and "Add a product" as bordered buttons by permission. (6) Engine and spend (`ai-content/admin/engine-card.tsx`): the state, posts against the monthly cap and today's cost against the daily cap as bars (violet, amber from 80 %, red at the cap), the next slot, one row per AI connection with its spend against its limit (amber with "No monthly limit" when it has none, red at the limit), runs and last test. (7) Server (`server-card.tsx`): a `details` collapsed by default and open when a row is red, the ten health rows (`healthReport()`), the version, the jobs queue as the next run of each scheduled task on the Riyadh clock, "Full report". An editor sees the sections they may open; a reader that needs an admin is skipped. Numbers, dates and moments through `admin/format.ts`; the hooks are `data-admin-dashboard-<section>`. Every in-admin link is Payload's `Link`: no reload. |
-| Forms as tabs | `globals/{home,site-settings}.ts`, `collections/{products,posts,pages}.ts` | One tab per section of the site, in site order (ADR-046): Home ten named tabs (Opening slides · Product strip · Designer · Three steps · Video · Why us · Testimonials · Connected stores · FAQ · Bottom banner, each opening on its switch where one exists; a named tab stores under the group's old path and columns), Product four in the card's order (Photos & colours · Basics · Sizes · Print area; the order in the sidebar), Post three (Content · Summary & cover · Search; the sidebar in three collapsibles: Publishing with author and dates, Checks with the warnings and the reading time, Engine with origin and the engine actions), Page two (Content · Search), Site settings five (Brand · Contact & social · Menus & footer with a collapsed Advanced group for the three accessibility labels · Numbers and delivery · Analytics; the menus are the named tab `menu`). The tab strip scrolls sideways with edge fades and an accent bar on the active tab (`admin.css`). |
+| Forms as tabs | `globals/{home,site-settings}.ts`, `collections/{products,posts,pages}.ts` | One tab per section of the site, in site order (ADR-046): Home ten named tabs (Opening slides · Product strip · Designer · Three steps · Video · Why us · Testimonials · Connected stores · FAQ · Bottom banner, each opening on its switch where one exists; a named tab stores under the group's old path and columns), Product four in the card's order (Photos & colours · Basics · Sizes · Print area; the order in the sidebar), Post three (Content · Excerpt & cover · Search; the sidebar in three collapsibles: Publishing with author and dates, Checks with the warnings and the reading time, Engine with origin and the engine actions), Page two (Content · Search), Site settings five (Brand · Contact & social · Menus & footer with a collapsed Advanced group for the three accessibility labels · Numbers and delivery · Analytics; the menus are the named tab `menu`). The tab strip scrolls sideways with edge fades and an accent bar on the active tab (`admin.css`). |
 | Page header | `modules/cms/admin/document/entity-header.tsx` | The description slot under Payload's title (`admin.components.Description` on collections, shared with the list view; `admin.components.elements.Description` on globals; registered per config with its `serverProps.entity` through `admin/document/config.ts`): a bar and a disc in the group's hue, the description, "Shows on:" from `admin.custom.shows` (both languages), a link to the public listing where one exists, and on the home page "10 sections, N on" from the saved document (`HomeSectionsCount`). Nothing of ours sits before the document controls (the locale note went with the switch, ADR-057). |
 | Blog group | `modules/cms/collections/{posts,categories,authors,tags}.ts` | Posts, hubs, authors, tags (violet, the Blog hue); the post's sidebar carries author, publish and update dates, reading minutes, origin, the editorial warnings (`WarningsField`) and "Last saved"; a publish that breaks a hard rule is refused with the reason (`fields/editorial.ts`, ADR-041). |
 | Content engine section (inside Blog) | `modules/ai-content/{settings,topics,runs}.ts`, `modules/ai-content/admin/*` | Admin only. Engine settings in tabs (the connection it writes with, the caps, the style), topics with "Generate now" (`ApiAction`) and a CSV import panel, runs read-only with their connection; the "Engine and spend" section of the dashboard (ADR-059) and a health row; "Regenerate" in an engine post's sidebar (`PostEngineActions`). ADR-042, ADR-047. |
@@ -292,8 +334,8 @@ per language, no switch, no note.
   and its entry is keyed by the row's id from the form state, never by the index
   (`hero.slides.<id>.headline`, `blocks.<id>.items.<id>.title`; `data-admin-bilingual`
   carries that key), so a moved row keeps its English, a deleted row's entry is dropped,
-  and a duplicated row copies the Arabic only, its English starting empty. The list's
-  description ends with that sentence (`SHARED_ROWS_NOTE` in `describe.ts`, appended by the
+  and a duplicated row copies the Arabic only (its English starts empty). The list's
+  description ends with that one clause (`SHARED_ROWS_NOTE` in `describe.ts`, appended by the
   pass to every list whose rows are bilingual). A row added and typed in both languages
   lands with both on the same save. The number twin renders Payload's own number markup
   (`field-type number`, an `<input type="number">`; `@payloadcms/ui` exports the field, not

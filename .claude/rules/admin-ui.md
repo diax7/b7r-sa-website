@@ -3,7 +3,8 @@
 Read `docs/ADMIN-DESIGN-SYSTEM.md` before touching anything under `src/modules/cms/**`,
 `src/app/(payload)/**` or a Payload collection/global config. These rules are enforced by
 `tests/admin-config.test.ts` (the config shape, the icons, the sidebar registry, the
-bilingual census), `check:rtl` and the admin e2e.
+bilingual census, the description rule), `tests/admin-glossary.test.ts` (the glossary),
+`check:rtl` and the admin e2e.
 
 ## Adding or changing a collection or global
 
@@ -23,15 +24,43 @@ bilingual census), `check:rtl` and the admin e2e.
    field are in the form, rules 13 and 15).
 3. `labels.singular` / `labels.plural` (collections) or `label` (globals) in Arabic + English;
    nouns, never sentences.
-4. `admin.description` on the entity: one sentence about what it is *for the site*, not how
-   it is stored, Arabic + English. And on **every field an editor sees** (ADR-046): what it
-   does on the site and where, then the limit or an example, through the entity's map in
-   `src/modules/cms/admin/descriptions/*.ts` (engine fields in
-   `src/modules/ai-content/descriptions.ts`, connections in
-   `src/modules/connections/descriptions.ts`), applied by `describeFields()` on the config's
-   `fields` (the same pass gives every checkbox its list cell, rule 6); `tests/admin-config.test.ts` refuses a field without both languages and a map
-   key that names no field. A form with more than one screen of fields is tabs, one per
-   section of the site in site order (named tabs where a group existed: same columns).
+4. **Every string an editor sees is born in both languages** (ADR-046, ADR-056, the
+   2026-09-19 words pass): labels, descriptions, hints, placeholders, select options, empty
+   states, buttons, toasts, refusals and error sentences alike; the Arabic written by
+   meaning under ux-araby (design system §5), never a calque, and never inline in a
+   component: a string of the shell lives in both trees of `admin/strings.ts`, a config text
+   in the config's `{ ar, en }` pair, a field's sentence in the entity's map
+   (`src/modules/cms/admin/descriptions/*.ts`; engine fields in
+   `src/modules/ai-content/descriptions.ts`, connections, traffic and visibility in their
+   module's `descriptions.ts`) applied by `describeFields()` (the same pass gives every
+   checkbox its list cell, rule 6). Toasts, refusals, empty states and error sentences are
+   strings of the feature, not afterthoughts: they ship with it, in both trees.
+   **The description rule**, for the entity's `admin.description` and for every field an
+   editor sees: one sentence of what the thing does *on the site* and where, then the limit
+   or an example if one helps ("Up to 70 characters", "1200×630 or larger"); nothing the
+   label already says, nothing about how it is stored, no second sentence that repeats the
+   first. In Arabic, a sentence that says where the value shows opens with its verb, the
+   field the implied subject, the gender agreeing with the thing («يظهر في البطاقة، وعنوان
+   صفحته»، «تظهر خلف الشريحة»، «يعلو شبكة البطاقات؛ فارغ يعرض البطاقات وحدها»), never with a
+   bare place preposition («في البطاقة…»); a spec sentence (a limit, a format, an example)
+   may stay nominal («كلمتان إلى أربع.», «بنسبة 4:5.», «من صفر إلى 5»). English may keep its
+   prepositional fragment. **The glossary** (`docs/ADMIN-GLOSSARY.md`, rendered from
+   `src/modules/cms/admin/glossary.ts`) fixes one word per concept in each language, in both
+   directions (no two concepts share a word), and which terms stay Latin inside Arabic (API,
+   JSON, URL, slug, the services, the brands, the model ids, `alt`, `og:image`); a new
+   concept is a new row before its first string. Enforced: `tests/admin-config.test.ts`
+   refuses a field without both languages, a map key that names no field, an inline
+   sentence where the map names the field, a description over 140 characters in either
+   language as rendered (a bilingual list may exceed it by its shared-rows note; exceptions
+   named per path with a reason, in `CAP_EXCEPTIONS`), one that opens with the label's own
+   noun, one that says "stored", "database", "table" or "column" (or their Arabic), and an
+   Arabic one that opens with «في», «تحت», «فوق», «خلف», «بجانب», «أمام», «على», «عند», «داخل»
+   or «ضمن»; `tests/admin-glossary.test.ts` refuses a Latin-kept term translated and a
+   settled word's alternate anywhere in the panel; `tests/admin-strings.test.ts` keeps the
+   ux-araby rules over the trees, the overrides and every config text, and
+   `tests/visibility-rules-strings.test.ts` over the rules' sentences. A form with more than
+   one screen of fields is tabs, one per section of the site in site order (named tabs
+   where a group existed: same columns).
 5. `admin.useAsTitle` (collections) on the field an editor recognises; `admin.defaultColumns`
    with the 3–5 columns that answer "which one is this?"; `admin.listSearchableFields` on the
    title-like fields (the command palette searches the same fields).
@@ -101,6 +130,18 @@ bilingual census), `check:rtl` and the admin e2e.
    twin and a config with a twin without the hook. A localized light field needs nothing
    (rule 4's pass makes it bilingual); a localized array is never added (the design system
    §6a: `localized` goes on a row's subfields, never on the array).
+16. **The interface language changes in exactly one place** (ADR-056, the header switch,
+   with the account view's select behind it): no `?lang=`, no per-view override, no string
+   or component that assumes a direction. A new surface ships with `check:rtl` clean and the
+   e2e's axe pass in both languages. Digits Western and dates Riyadh through
+   `admin/format.ts`; a technical token inside Arabic (a model id, a path, a key) stays
+   Latin, wrapped in `<bdi>` or the pill so it reads left-to-right (ADR-039 and ADR-056
+   stand). A control that carries meaning by colour carries its word too; a chrome change is
+   measured at 390, 1024, 1280 and 1440 in both languages. **The known gap:** a validator's
+   refusal (`inLanguage(req, { ar, en })` inside a `validate` closure, a `Refused` reason in
+   a hook) is outside every gate above, since no test can call the closure; it is written
+   under the same rules by hand, and a regex over `src/` for `inLanguage(` literals would
+   feed those pairs to the checks when the gap is closed.
 
 ## Adding an admin component
 

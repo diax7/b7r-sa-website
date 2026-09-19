@@ -51,7 +51,7 @@ export function redirectProblem(
     const internal = url.startsWith('/') && !url.startsWith('//');
     if (!external && !internal) {
       return {
-        ar: 'الوجهة: مسار يبدأ بـ / أو رابط https://',
+        ar: 'الوجهة: مسار يبدأ بـ «/» أو رابط https://',
         en: 'To: a path starting with / or an https:// URL',
       };
     }
@@ -145,7 +145,7 @@ export function redirectFields(defaultFields: Field[]): Field[] {
               'url',
               { ar: 'مسار أو رابط', en: 'Path or URL' },
               {
-                ar: 'مسار في الموقع يبدأ بـ / أو رابط https:// خارجه. لا يكون مصدر تحويل آخر (لا سلاسل).',
+                ar: 'مسار في الموقع يبدأ بـ «/» أو رابط https:// خارجه. لا يكون مصدر تحويل آخر (لا سلاسل).',
                 en: 'A path on the site starting with /, or an https:// link elsewhere. Never the From of another redirect (no chains).',
               },
             ),

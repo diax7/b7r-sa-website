@@ -76,6 +76,7 @@ import { AiSettings } from '@/modules/ai-content/settings';
 import { AiTopics } from '@/modules/ai-content/topics';
 import { COLLECTIONS, GLOBALS } from '@/modules/cms/entities';
 import { ADMIN_VIEW_COMPONENTS } from '@/modules/cms/admin/views/registry';
+import { refusedForm } from '@/modules/cms/admin/glossary';
 import { Connections } from '@/modules/connections/collection';
 import { CONNECTION_DESCRIPTIONS } from '@/modules/connections/descriptions';
 import { Traffic } from '@/modules/traffic/collection';
@@ -361,6 +362,210 @@ describe('every field says what it does on the site (ADR-046)', () => {
       expect(missing).toEqual([]);
     });
   }
+});
+
+/**
+ * The description rule (the 2026-09-19 words pass, `.claude/rules/admin-ui.md` rule 4): one
+ * sentence of what the field does on the site and where, then the limit or an example;
+ * nothing the label already says, nothing about how it is stored; an Arabic sentence that
+ * says where the value shows opens with its verb («يظهر تحت العنوان»), never with a bare
+ * place preposition. Four cheap gates over every description an editor sees (fields, tabs,
+ * collapsibles, the entity's own): a cap of 140 characters in each language (two lines
+ * under a field on a 400 px column) measured on the rendered text, with the shared-rows
+ * note the mechanism appends to a bilingual list as the list's allowance; never opening
+ * with the label's own noun; never a storage word; never a place fragment in Arabic.
+ */
+const DESCRIPTION_CAP = 140;
+
+/** A path whose sentence must carry both a limit and an example, and the reason. */
+const CAP_EXCEPTIONS: Record<string, string> = {};
+
+interface Sentence {
+  where: string;
+  label?: Pair;
+  description: Pair;
+}
+type Pair = { ar: string; en: string };
+
+const pairOf = (value: unknown): Pair | undefined => {
+  if (typeof value !== 'object' || value === null) return undefined;
+  const { ar, en } = value as { ar?: unknown; en?: unknown };
+  return typeof ar === 'string' && typeof en === 'string' ? { ar, en } : undefined;
+};
+
+/** Every description of a config with the label it sits under, tabs and collapsibles included. */
+function sentences(slug: string, fields: Field[], path = ''): Sentence[] {
+  const out: Sentence[] = [];
+  const add = (where: string, label: unknown, description: unknown) => {
+    const d = pairOf(description);
+    if (d) out.push({ where: `${slug}.${where}`, description: d, ...labelled(label) });
+  };
+  const labelled = (label: unknown): { label?: Pair } => {
+    const l = pairOf(label);
+    return l ? { label: l } : {};
+  };
+  for (const f of fields) {
+    if (f.type === 'tabs') {
+      for (const t of f.tabs) {
+        const named = 'name' in t && t.name ? `${path}${t.name}` : `${path}[tab]`;
+        add(named, t.label, t.description);
+        out.push(...sentences(slug, t.fields, 'name' in t && t.name ? `${path}${t.name}.` : path));
+      }
+      continue;
+    }
+    if (f.type === 'ui') continue;
+    if (
+      f.type === 'row' ||
+      f.type === 'collapsible' ||
+      (f.type === 'group' && !('name' in f && f.name))
+    ) {
+      if (f.type === 'collapsible')
+        add(`${path}[collapsible]`, f.label, adminBlock(f)['description']);
+      out.push(...sentences(slug, f.fields, path));
+      continue;
+    }
+    if (!('name' in f) || !f.name) continue;
+    const name = `${path}${f.name}`;
+    add(name, (f as { label?: unknown }).label, adminBlock(f)['description']);
+    if ('fields' in f && Array.isArray(f.fields))
+      out.push(...sentences(slug, f.fields, `${name}.`));
+    if ('blocks' in f) {
+      for (const b of f.blocks) out.push(...sentences(slug, b.fields, `${name}.${b.slug}.`));
+    }
+  }
+  return out;
+}
+
+const adminBlock = (f: Field): Record<string, unknown> =>
+  ((f as { admin?: Record<string, unknown> }).admin ?? {}) as Record<string, unknown>;
+
+/**
+ * What a list may exceed the cap by: the shared-rows note the mechanism appends (and the
+ * space before it), when the rendered text ends with one; the field's own sentence stays
+ * under the cap either way.
+ */
+function noteAllowance(text: string, language: keyof Pair): number {
+  for (const note of [SHARED_ROWS_WITH_TWINS_NOTE, SHARED_ROWS_NOTE]) {
+    if (text.endsWith(note[language])) return note[language].length + 1;
+  }
+  return 0;
+}
+
+/**
+ * The place prepositions an Arabic description never opens with: the sentence says where
+ * the value shows, so it opens with its verb («يظهر تحت», «تظهر في», «يعلو»). «من» and
+ * «بين» stay allowed: a range or a spec starts with them («من صفر إلى 5»). Keyed on the
+ * first token by design: a place after a colon or a verb passes unseen («يظهر: في
+ * البطاقة»), and that is fine, since the shapes in use are covered; widening the pattern
+ * into the sentence would refuse every «يظهر في …» as a false positive.
+ */
+const PLACE_FRAGMENT = /^(في|تحت|فوق|خلف|بجانب|أمام|على|عند|داخل|ضمن)\s/;
+
+const DIACRITICS = /[\u064B-\u0652\u0670\u0640]/g;
+const LEADING_QUOTES = /^[\s"'“”«»‘’]+/;
+
+/** The word a label or a description opens with, the article and the possessive off. */
+function firstWord(text: string, language: keyof Pair): string {
+  const clean = text.replace(LEADING_QUOTES, '');
+  if (language === 'en') {
+    const word = clean.replace(/^(the|a|an)\s+/i, '').split(/[\s:;,.()"'“”«»]+/)[0] ?? '';
+    return word
+      .toLowerCase()
+      .replace(/['’]s$/, '')
+      .replace(/s$/, '');
+  }
+  const word = clean.replace(DIACRITICS, '').split(/[\s:;،؛.()"'“”«»]+/)[0] ?? '';
+  return word.replace(/^ال/, '');
+}
+
+/** The storage words a description never says, in both languages, as whole words. */
+const STORAGE_WORDS: Record<keyof Pair, RegExp[]> = {
+  en: [/\b(stored|database|tables?|columns?)\b/i],
+  ar: ['يخزن', 'تخزن', 'مخزن', 'قاعدة البيانات', 'جدول', 'عمود'].map(refusedForm),
+};
+
+describe('the description rule (2026-09-19): one sentence, the cap, nothing the label says, no storage', () => {
+  const all = [...collections, ...globals].flatMap((c) => sentences(c.slug, c.fields ?? []));
+  const entityOwn = [...collections, ...globals].flatMap((c) => {
+    const d = pairOf(c.admin?.description);
+    return d ? [{ where: `${c.slug}.admin.description`, description: d }] : [];
+  });
+
+  it('reads every description of every entity', () => {
+    expect(all.length).toBeGreaterThan(350);
+    expect(entityOwn.length).toBe(collections.length + globals.length);
+  });
+
+  it(`keeps every description under ${DESCRIPTION_CAP} characters in each language as rendered, a list's note allowed, exceptions named`, () => {
+    const over = [...all, ...entityOwn].flatMap(({ where, description }) =>
+      (['en', 'ar'] as const)
+        .map((language) => ({ language, text: description[language] }))
+        .filter(
+          ({ language, text }) => text.length > DESCRIPTION_CAP + noteAllowance(text, language),
+        )
+        .filter(() => !(where in CAP_EXCEPTIONS))
+        .map(({ language, text }) => `${where} (${language}, ${text.length}): ${text}`),
+    );
+    expect(over).toEqual([]);
+    for (const [path, reason] of Object.entries(CAP_EXCEPTIONS)) {
+      expect(reason.length, `${path}: a reason`).toBeGreaterThan(10);
+      expect(
+        all.some((s) => s.where === path),
+        `${path}: names a field`,
+      ).toBe(true);
+    }
+  });
+
+  it("never opens with the label's own noun, in either language", () => {
+    const echoes = all
+      .filter((s): s is Sentence & { label: Pair } => s.label !== undefined)
+      .flatMap(({ where, label, description }) =>
+        (['en', 'ar'] as const)
+          .filter((language) => {
+            const noun = firstWord(label[language], language);
+            return noun.length > 1 && noun === firstWord(description[language], language);
+          })
+          .map(
+            (language) => `${where} (${language}): «${label[language]}» / ${description[language]}`,
+          ),
+      );
+    expect(echoes).toEqual([]);
+  });
+
+  it('an Arabic sentence that says where opens with its verb, never a bare place preposition', () => {
+    const fragments = [...all, ...entityOwn]
+      .filter(({ description }) => PLACE_FRAGMENT.test(description.ar))
+      .map(({ where, description }) => `${where}: ${description.ar}`);
+    expect(fragments).toEqual([]);
+    expect(PLACE_FRAGMENT.test('في البطاقة، وعنوان صفحته.')).toBe(true);
+    expect(PLACE_FRAGMENT.test('عند الإيقاف يختفي القسم.')).toBe(true);
+    expect(PLACE_FRAGMENT.test('يظهر في البطاقة.')).toBe(false);
+    expect(PLACE_FRAGMENT.test('من صفر إلى 5؛ بلا شارات يختفي الصف.')).toBe(false);
+    expect(PLACE_FRAGMENT.test('فيه كلمة واحدة.')).toBe(false);
+  });
+
+  it('never says how a thing is stored', () => {
+    const storage = [...all, ...entityOwn].flatMap(({ where, description }) =>
+      (['en', 'ar'] as const)
+        .filter((language) => {
+          const text = language === 'ar' ? description.ar.replace(DIACRITICS, '') : description.en;
+          return STORAGE_WORDS[language].some((re) => re.test(text));
+        })
+        .map((language) => `${where} (${language}): ${description[language]}`),
+    );
+    expect(storage).toEqual([]);
+  });
+
+  it('the label-noun check reads through articles, quotes and plurals', () => {
+    expect(firstWord('The colours of the product', 'en')).toBe('colour');
+    expect(firstWord('Colours', 'en')).toBe('colour');
+    expect(firstWord('"Policies" list of the footer', 'en')).toBe('policie');
+    expect(firstWord("The merchant's words", 'en')).toBe('merchant');
+    expect(firstWord('الألوان', 'ar')).toBe('ألوان');
+    expect(firstWord('ألوان المنتج: مربعات', 'ar')).toBe('ألوان');
+    expect(firstWord('«لماذا بحر» فوق', 'ar')).toBe('لماذا');
+    expect(firstWord('مفعّل: يظهر', 'ar')).toBe('مفعل');
+  });
 });
 
 /**

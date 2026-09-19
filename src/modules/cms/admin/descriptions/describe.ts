@@ -148,11 +148,12 @@ function named(field: Field & { name: string }, pass: Pass, name: string): Field
 /**
  * What duplicating a row does in a list whose rows are edited in both languages (ADR-057,
  * PR A): the form copies the Arabic with a new row id, so the English of the copy starts
- * empty. Said on the list, after its own sentence.
+ * empty (implied: "only"). One clause, said on the list after its own sentence; the cap in
+ * `tests/admin-config.test.ts` measures the rendered text with this clause as the allowance.
  */
 export const SHARED_ROWS_NOTE = {
-  ar: 'تكرار الصف ينسخ العربية فقط؛ والإنجليزية تبدأ فارغة.',
-  en: 'A duplicated row copies the Arabic only; its English starts empty.',
+  ar: 'تكرار الصف ينسخ العربية فقط.',
+  en: 'A duplicated row copies the Arabic only.',
 };
 
 /**
@@ -160,8 +161,8 @@ export const SHARED_ROWS_NOTE = {
  * photo under a field is a real field of the row, so the copy keeps it.
  */
 export const SHARED_ROWS_WITH_TWINS_NOTE = {
-  ar: 'تكرار الصف ينسخ العربية والنص أو الصورة بالإنجليزية تحت الحقل؛ والإنجليزية بجانب الحقول الأخرى تبدأ فارغة.',
-  en: 'A duplicated row copies the Arabic and the English text or photo under a field; the English beside the other fields starts empty.',
+  ar: 'تكرار الصف ينسخ العربية والنص أو الصورة الإنجليزية.',
+  en: 'A duplicated row copies the Arabic and the English text or photo.',
 };
 
 const rowsUnder = (paths: ReadonlySet<string>, name: string): boolean =>

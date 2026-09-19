@@ -164,7 +164,7 @@ export const Pages: CollectionConfig = {
                     required: true,
                     unique: true,
                     index: true,
-                    label: { ar: 'المعرّف في الرابط', en: 'Address ending (slug)' },
+                    label: { ar: 'المعرّف في الرابط (slug)', en: 'Address ending (slug)' },
                   },
                 ],
               },

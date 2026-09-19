@@ -15,9 +15,9 @@ import { describeFields } from '@/modules/cms/admin/descriptions/describe';
 interface NumberOptions {
   min?: number;
   max?: number;
-  description?: { ar: string; en: string };
 }
 
+/** A required number; its sentence comes from the map like every other field's. */
 function number(
   name: string,
   label: { ar: string; en: string },
@@ -32,7 +32,6 @@ function number(
     label,
     ...(options.min !== undefined ? { min: options.min } : {}),
     ...(options.max !== undefined ? { max: options.max } : {}),
-    ...(options.description ? { admin: { description: options.description } } : {}),
   };
 }
 
@@ -57,8 +56,8 @@ export const AiSettings: GlobalConfig = {
     },
     hidden: hiddenUnlessAdmin,
     description: {
-      ar: 'المحرّك ينشر تلقائياً بلا مراجعة بشرية (قرار D-44). النشر الآلي بكميات كبيرة دون مراجعة يعرّض الموقع لسياسة Google للمحتوى الموسّع؛ أبقِ الوتيرة معتدلة وبوابات الجودة صارمة.',
-      en: 'The engine publishes without a human step (D-44). Unreviewed high-volume AI publishing risks the scaled-content policy of Google: keep the cadence moderate and the quality gates strict.',
+      ar: 'ينشر بلا مراجعة بشرية (القرار D-44). أبقِ الوتيرة معتدلة وحدود الجودة صارمة: Google تعاقب المحتوى الآلي غير المراجَع بكميات.',
+      en: 'Publishes without a human step (D-44). Keep the cadence moderate and the quality gates strict: Google penalises unreviewed bulk AI content.',
     },
   },
   access: { read: isAdmin, update: isAdmin },
@@ -100,12 +99,6 @@ export const AiSettings: GlobalConfig = {
                 type: 'checkbox',
                 defaultValue: false,
                 label: { ar: 'المحرّك يعمل', en: 'Engine on' },
-                admin: {
-                  description: {
-                    ar: 'مفتاح الإيقاف. عند الإيقاف لا تبدأ أي جولة جديدة خلال ساعة.',
-                    en: 'The kill switch. Off, no new run starts within the hour.',
-                  },
-                },
               },
               {
                 type: 'row',
@@ -113,10 +106,6 @@ export const AiSettings: GlobalConfig = {
                   number('postsPerDay', { ar: 'مقالات في اليوم', en: 'Posts per day' }, 1, {
                     min: 0,
                     max: 5,
-                    description: {
-                      ar: 'التوصية المدعومة بالدراسات: 8 إلى 16 مقالة شهرياً؛ الجودة قبل الكمية.',
-                      en: 'The research-backed range: 8 to 16 posts a month; quality before quantity.',
-                    },
                   }),
                   number(
                     'publishHourRiyadh',
@@ -140,23 +129,15 @@ export const AiSettings: GlobalConfig = {
                 fields: [
                   number(
                     'dailyCostCapUsd',
-                    { ar: 'سقف التكلفة اليومي (دولار)', en: 'Daily cost cap (USD)' },
+                    { ar: 'الحد اليومي للتكلفة (دولار)', en: 'Daily cost limit (USD)' },
                     5,
-                    {
-                      min: 0,
-                    },
+                    { min: 0 },
                   ),
                   number(
                     'reviewFirstRuns',
                     { ar: 'مقالات تُراجع قبل النشر', en: 'Posts to review before publishing' },
                     3,
-                    {
-                      min: 0,
-                      description: {
-                        ar: 'ما دام العدد فوق الصفر تُحفظ مقالات المزوّد الحي كمسودات لتقرأها؛ ضعه صفراً عندما تطمئن.',
-                        en: 'While above zero the posts of a live provider land as drafts for your read; set it to 0 once they read well.',
-                      },
-                    },
+                    { min: 0 },
                   ),
                 ],
               },
@@ -166,8 +147,8 @@ export const AiSettings: GlobalConfig = {
             label: { ar: 'اللغة والأسلوب', en: 'Language and style' },
             name: 'style',
             description: {
-              ar: 'لكل لغة دليلها وتعليماتها وعباراتها الممنوعة: النصان جنباً إلى جنب، وحفظ واحد يكتب اللغتين.',
-              en: 'Each language has its own guide, instructions and banned phrases: both texts sit side by side, one Save writes both.',
+              ar: 'لكل لغة دليلها وتعليماتها وعباراتها الممنوعة؛ وحفظ واحد يكتب اللغتين.',
+              en: 'Each language has its own guide, instructions and banned phrases; one Save writes both.',
             },
             fields: [
               {
@@ -256,12 +237,6 @@ export const AiSettings: GlobalConfig = {
                   },
                 ],
                 label: { ar: 'مصدر الغلاف', en: 'Cover source' },
-                admin: {
-                  description: {
-                    ar: 'التوليد يُرفض حتى يُربط مزوّد صور؛ Pexels يحتاج مفتاحاً.',
-                    en: 'Generation is refused until an image provider is wired; Pexels needs a key.',
-                  },
-                },
               },
               {
                 name: 'imageStyle',
@@ -305,13 +280,7 @@ export const AiSettings: GlobalConfig = {
               {
                 name: 'notifyEmail',
                 type: 'email',
-                label: { ar: 'البريد', en: 'E-mail' },
-                admin: {
-                  description: {
-                    ar: 'يستقبل تنبيهات الفشل والملخص الأسبوعي.',
-                    en: 'Gets failure alerts and the weekly digest.',
-                  },
-                },
+                label: { ar: 'البريد الإلكتروني', en: 'E-mail' },
               },
               {
                 type: 'row',

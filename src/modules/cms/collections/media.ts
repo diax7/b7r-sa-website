@@ -38,8 +38,8 @@ export const Media: CollectionConfig = {
       },
     },
     description: {
-      ar: 'صور الموقع وأيقوناته: المنتجات، الرئيسية، أغلفة المدونة. لكل صورة نص بديل باللغتين؛ ارفع الصورة بأعلى دقة لديك (صور المنتجات مربّعة)، فالموقع يصغّرها بنفسه لكل شاشة.',
-      en: 'The photos and icons the site shows: products, the home page, the blog covers. Every image needs its alt text in both languages; upload the largest file you have (product photos are squares), the site resizes it for every screen itself.',
+      ar: 'صور الموقع وأيقوناته: المنتجات، الرئيسية، أغلفة المدونة. ارفع أعلى دقة لديك؛ الموقع يصغّرها لكل شاشة.',
+      en: 'The photos and icons the site shows: products, the home page, the blog covers. Upload the largest file; the site resizes it.',
     },
     defaultColumns: ['filename', 'alt', 'updatedAt'],
     useAsTitle: 'filename',
