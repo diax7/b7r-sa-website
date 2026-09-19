@@ -298,7 +298,7 @@ Decision history: `docs/00-decisions-log.md` (rounds 1–4 with Dhia, 2026-09-12
 3. Zid and Shopify must be enabled in the app before the site says "متاح الآن".
 4. Final hero photographs (four, per §3.9) to replace the AI placeholders.
 5. Three real testimonials.
-6. Cal.com account and `bookingUrl`.
+6. ~~Cal.com account and `bookingUrl`.~~ Closed 2026-09-19 (ADR-062): bookings are built in; the Google Workspace steps in the RUNBOOK replace this line.
 7. Higher-resolution Saudi Business Center and Ministry of Commerce badge files; a logo SVG.
 9. Confirm the ITF Rayat Round web licence permits subsetting the woff2 files (the site serves subsets, ADR-010); if not, serve the original files and re-measure.
 10. Review the agent-written aria/microcopy strings in `src/messages/ar.json` and the `TODO(copy)` strings in `src/content/pages.ts`: the two error-page strings and «تعذّر الاشتراك الآن، حاول لاحقاً.» (newsletter 429/5xx).

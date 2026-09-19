@@ -1580,8 +1580,8 @@ What the site guarantees by construction (required fields, publish rules, the ge
 
 1. A contact submission and a booking both appear in the inbox within a minute, with working reply actions.
 2. `/book` and the contact page book a real test consultation: the row, the event with its Meet link on the host's calendar, the two e-mails, the manage link's move and cancel (ADR-062).
-3. Newsletter subscribers list matches the Resend audience.
-4. Analytics view shows Umami, GA4, and Search Console numbers for the last 30 days from the cache; Search Console queries create at least five suggested topics.
+3. Newsletter subscribers list matches the Resend audience. *Deferred 2026-09-19 (ADR-061): the subscribers sync is a future block (§12.6); Resend's own audience is the list.*
+4. Analytics view shows Umami, GA4, and Search Console numbers for the last 30 days from the cache; Search Console queries create at least five suggested topics. *Amended 2026-09-19 (ADR-048 amended, ADR-049): the dashboard's visits card shows the site's own landings and Umami's visitors and page views for 7, 30 and 90 days from `metrics`; Search Console, Bing and PageSpeed read on the Score page; GA4 stays in GA; the Search Console suggestions as written.*
 
 ---
 
@@ -1622,8 +1622,11 @@ DoD: all of §6.18; Search Console and Bing verification tokens in place; launch
 | 3c | Live provider runs, scheduling endpoint, freshness job, seeded backlog, first ten automatic posts, monitoring and digest | §10.3 all |
 | | *Amended 2026-09-14 (ADR-042): shipped as Payload schedules on the in-process runner (no endpoint), the freshness pass on a facts baseline per run, the digest and the retention sweep, the thirty-topic backlog with windows, ten mock posts on the review server. The live run per provider (§10.3 item 2) waits for Dhia's keys: add a key in Engine settings, pick the provider, press "Generate now"; the first three posts land as drafts.* | |
 | 4a | Inbox collections and dashboard, subscribers sync | §11.5 items 1 (contact part), 3 |
+| | *Amended 2026-09-19 (ADR-061, PR #56): the `messages` collection stored before the e-mail leaves, the Inbox section first under Site with the status pill, the three actions, the badge and the dashboard card; no assignee; the subscribers sync is a future block (§12.6).* | |
 | 4b | Cal.com embed, `/book`, webhook, bookings | §11.5 items 1 (booking part), 2 |
+| | *Amended 2026-09-19 (ADR-062, PR #57): bookings built inside b7r.sa, no Cal.com: the `booking` global, the slot rules, the picker on `/book` and the contact card, a Google Meet link through domain-wide delegation of the Search Console service account, the e-mails with a calendar file, the signed manage link, the sweep's reminders; bookings in the inbox.* | |
 | 4c | Metrics job, analytics view, Search Console topic suggestions | §11.5 item 4 |
+| | *Amended 2026-09-16 and 2026-09-19 (ADR-048, ADR-049, PR #55): the nightly pull into `metrics` and the Score page came with the visibility score; Umami's visitors and page views join the dashboard's visits card beside the site's own counter; GA4 stays in GA; no separate analytics view.* | |
 | 5a | The English site at `/en/` (`specs/009-level-5-english/`, ADR-043): second root layout, per-locale copy banks, locale reads with the presence gate, hreflang and sitemap alternates, the switch, English forms and e-mails, English CMS content and legal drafts in the seed | Every public page except the blog answers in English with the same static behaviour, budgets and accessibility; the Arabic site unchanged |
 | 5b | The blog in English: `/en/blog`, hubs, authors, pagination, search, feed, translation pairs; the three Level 1 posts in English | `/en/blog/*` per locale; `BLOG_ENGLISH_PENDING` removed |
 | 5c | The engine in English: `ai-topics.language`, prompts and checks per locale, a 15-topic English backlog; `llms.txt` | English posts from the backlog under the same guardrails |
@@ -1968,7 +1971,7 @@ Decision history: `docs/00-decisions-log.md` (rounds 1–4 with Dhia, 2026-09-12
 3. Zid and Shopify must be enabled in the app before the site says "متاح الآن".
 4. Final hero photographs (four, per §3.9) to replace the AI placeholders.
 5. Three real testimonials.
-6. Cal.com account and `bookingUrl`.
+6. ~~Cal.com account and `bookingUrl`.~~ Closed 2026-09-19 (ADR-062): bookings are built in; the Google Workspace steps in the RUNBOOK replace this line.
 7. Higher-resolution Saudi Business Center and Ministry of Commerce badge files; a logo SVG.
 9. Confirm the ITF Rayat Round web licence permits subsetting the woff2 files (the site serves subsets, ADR-010); if not, serve the original files and re-measure.
 10. Review the agent-written aria/microcopy strings in `src/messages/ar.json` and the `TODO(copy)` strings in `src/content/pages.ts`: the two error-page strings and «تعذّر الاشتراك الآن، حاول لاحقاً.» (newsletter 429/5xx).
