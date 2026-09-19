@@ -262,13 +262,18 @@ describe('the secret field for a service account (ADR-049)', () => {
 });
 
 describe('the service kinds (ADR-049)', () => {
-  it('names four service kinds the engine picker leaves out', () => {
+  it('names six service kinds the engine picker leaves out', () => {
     expect(kindsThat('service')).toEqual([
       'google-search-console',
       'bing-webmaster',
       'pagespeed',
       'umami',
+      'google-calendar',
+      'mock-calendar',
     ]);
+    // The calendar takes the same key file as Search Console (ADR-062); the mock has none.
+    expect(KINDS['google-calendar'].secret).toBe('serviceAccount');
+    expect(KINDS['mock-calendar']).toMatchObject({ secret: 'apiKey', needsBaseUrl: false });
     expect(kindsThat('ai')).not.toContain('pagespeed');
     expect(isServiceKind('bing-webmaster')).toBe(true);
     expect(isServiceKind('umami')).toBe(true);

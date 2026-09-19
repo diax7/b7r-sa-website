@@ -2494,3 +2494,164 @@ appears in the list with its pill, in the card and in the badge; the WhatsApp an
 targets; mark handled flips the pill, clears the count and disables itself; the editor
 changes status and notes and never the phone; the outsider gets nothing; axe on the list
 and the document in both languages at 1440 and 390; the row deleted at the end).
+
+## ADR-062: Bookings of our own: the picker, the delegated calendar, the grid and the index, the signed link, the sweep (2026-09-19)
+
+**Context.** BRD §11.2 planned the free consultation on a hosted Cal.com account embedded on
+`/book` and the contact card, mirrored into the inbox by a webhook. Dhia's Level 4 interview
+(2026-09-19, `docs/plans/2026-09-19-level-4.md`) settled otherwise: bookings are **built
+inside b7r.sa**. Cal.com hosted is a second product for one event type, its embed a third-party
+iframe on the site's most important page, its data outside the panel; the self-hosted
+edition (Cal.diy) the vendor now calls non-production, and it would be a second app to run,
+back up and upgrade for the least ownership. Every consultation still carries a Google Meet
+link, created on the Google Workspace calendar of `b7r.sa` through the service account
+whose key is already pasted for Search Console. The CTO settled the seven points below before
+the build (plan review 88, GO with the settlements).
+
+**The settings** are a global of their own, `booking` under Site beside Home and Site
+settings (a place on the site with its own switch and its own revalidation, not a sixth tab
+of the panel's largest form): the switch (`EnabledSwitch`), the consultation's bilingual
+name, the length, the gap, the notice, the window, the daily cap, the weekly hours and the
+closed dates in Riyadh time, the calendar owner's address. `site-settings.bookingUrl`
+leaves the config; its column stays for a later migration to drop by hand, as ADR-025 asks
+of every removal. An unsaved global reads its defaults from the seed; the seed writes it
+once, off.
+
+**The calendar by domain-wide delegation, two narrow scopes.** `signJwt` and `accessToken`
+(`lib/google-jwt.ts`) take an optional subject: the assertion carries `sub: hostEmail`, and
+Google issues a token for that user's calendar. The subject is always the settings' value,
+never one from a request. The kind `google-calendar` (a row of its own under Connections,
+the same key file pasted again, ADR-047's one row per service) asks
+`https://www.googleapis.com/auth/calendar.events` and
+`https://www.googleapis.com/auth/calendar.freebusy`, never the whole `calendar` scope:
+delegation lets the key act as any user on the domain for the scopes the Admin console
+granted, so the grant is exactly the two the feature uses. The client
+(`modules/bookings/google.ts`) speaks `freeBusy.query`, `events.insert` with
+`conferenceDataVersion=1` and a `createRequest` (`hangoutsMeet`, a fresh `requestId`),
+`events.patch` and `events.delete`, all with `sendUpdates=none`: the merchant is an attendee
+so the event is theirs on their own calendar if they use Google, but Google e-mails nobody;
+the site's own e-mails carry the link, in the merchant's language, with the calendar file
+attached. A Meet link still `pending` in the insert's answer is read again up to three
+times a second apart; an event without its link after that reads as failed with its id, so
+the sweep asks for the link rather than making a second event. The Meet `createRequest` id
+is minted on the row (`meetRequestId`) before the first insert and reused by every retry,
+so an insert that timed out on our side but reached Google is deduplicated by Google
+rather than doubled (the CTO's revision of the phase-1 review; a row from before the field
+existed gets its id written before its first retry). The `mock-calendar` kind
+serves the tests and the review server, refused in production like the AI mock; its `fail`
+flag (the row's `model` field) makes every call fail and drives the failed path end to end.
+
+**The grid rule and the index.** A slot is `from` plus a multiple of `length + gap`
+(`slots.ts`, pure, tested on the Riyadh day boundary), so two bookings that overlap share a
+`start`. The route refuses a start that is not on the grid (400) and re-checks the day's
+free slots inside the write (409); a partial unique index, `CREATE UNIQUE INDEX
+bookings_start_active ON bookings (start) WHERE status <> 'cancelled'`, makes the race a
+database refusal, which the store maps to the same 409 (Payload's adapter wraps the `23505`
+as a validation error on `start`). A generated migration never carries a partial index, so
+it is created and dropped by hand in its own raw-SQL migration, the snapshot beside it the
+previous one unchanged. A cancelled booking leaves the index and frees its slot.
+
+**The signed link, no token column.** The manage link's token is `<id>.<hmac>`, the
+HMAC-SHA256 of the id under a key derived once from `PAYLOAD_SECRET` for the purpose
+(`internalToken('booking-manage')`), verified in constant time. Nothing else is in it: the
+route reads the row and decides by its status and its end (a cancelled or past booking
+refuses every action; the link lives a day past the end), so an expiry lives on the row,
+never in the token, and one link serves the booking's life. A bearer by design, as the
+preview link is. `GET /api/bookings/ics?token=` serves the calendar file by the same token.
+
+**The routes and the flows** (`modules/bookings/service.ts` over ports: a store, a calendar,
+a mailer, a clock) so the route handlers stay thin and the tests run the flows against a
+map. `POST /api/bookings` in the contact route's order (JSON and same origin, zod, honeypot,
+rate limit, Turnstile), then the switch, the grid, the horizon, the free slots, the row, the
+event, the e-mails; a Google refusal leaves the booking standing with `calendar: failed`,
+Dhia's e-mail says so, the merchant's says the link follows. `GET /api/bookings/slots?date=`
+is public, rate limited, cached a minute, and refuses a date outside today..the window (the
+host's pattern cannot be scraped for months); the host calendar's free/busy is read once a
+minute per day and, when the calendar fails to answer, read as free with a log line, so an
+outage costs the Meet link (retried) and not every booking. A move obeys the notice on
+both ends: the current start must still be beyond it, and the new slot is one of the day's
+free slots; a cancel is allowed until the start. Every log line names the row's id and
+never a personal field; a mail that fails is a log line, never a failed booking; and every
+route catches its own failures (rule 18): an error that reached Next uncaught would be
+printed whole, and a failed query's message carries its parameters, the merchant's fields,
+so the route answers a 500 with a generic word and logs the route and the error's name
+alone. A staff status put back from cancelled is refused in the panel's language: the
+event is gone and the slot free, so the merchant books again.
+
+**The sweep** (`sweep.ts`, every fifteen minutes on a queue of its own with one job at a
+time, so two passes never send twice): `start <= now + 24 h AND start > now + 1 h AND NOT
+reminded24h` sends the day reminder; `start <= now + 1 h AND start > now AND NOT
+reminded1h` the hour reminder (and closes the day flag too, for a runner so late the day
+window passed); `end < now` on an active booking sets `completed`; a failed calendar is
+retried three times an hour apart, a recovery sending the link mails. The windows are
+open-ended on purpose: a runner that was down sends late rather than never. Sent, then
+flagged: a crash between the two sends twice, a crash before never sends, and the first is
+the lesser harm. The dashboard's jobs list reads an every-N-minutes cron beside the daily
+and weekly ones. The bookings queue's runner tick sits at second 30 (`30 * * * * *`, a
+six-field cron) while the engine's queue ticks at second 0: Payload's scheduler
+(`payload/dist/queues/operations/handleSchedules/defaultAfterSchedule.js`, lines 19 to 37)
+writes the whole `payload-jobs-stats` global from the tick's own snapshot, so two queues
+ticking in the same second clobber each other's `lastScheduledRun` and the loser's schedule
+fires on every tick (the sweep ran every minute on 2026-09-19 until the offset). The
+condition `tests/jobs-runner.test.ts` keeps: no scheduled task on a third queue at second
+0 or 30; a new scheduled queue takes a second of its own (`docs/upstream/payload-jobs-stats-race.md`
+holds the report for Payload).
+
+**The site.** `/book` and `/en/book` (the §4.19 copy, written under §0.5's fallback rule
+and listed for Dhia's read; a `WebPage` graph; in the sitemap while the switch is on, a
+404 while it is off, as a page with nothing to offer should be) and `/book/manage`, never
+indexed and standing whatever the switch says, since a booking made earlier keeps its link. One client island
+(`modules/bookings/picker`), loaded near the viewport over a server-rendered stand-in like
+the newsletter island: the strip of days on the Riyadh clock (a closed day greyed with its
+reason), the day's free starts from the API with Western digits in both languages, the
+form with Turnstile at submit, the confirmation. The contact card holds the same island
+inline while the switch is on and keeps the WhatsApp way otherwise; the `/contact` JS
+budget is measured (207 KB of our chunks before and after, the island never in the first
+paint) and asserted. The Turnstile container renders from the island's first render: the
+hook mounts the widget once, on mount, and the form appears only after a slot is chosen.
+
+**The panel.** The `bookings` collection: editors update the status and the notes (the
+field rule refuses the rest), admins correct the merchant's fields and delete, the API
+creates nothing (the routes are the only writers, with access overridden), the facts the
+routes write read as lines. A status set to cancelled by a person (a request with a user;
+the routes and the sweep write with none) does what the merchant's own cancel does, the
+event deleted and both e-mails sent, through a hook that loads the mailer and the calendar
+on demand, since the config is loaded by the CLI under plain Node where `server-only`
+throws; a delete of the row touches nothing. The same personal-data rules as the messages (ADR-061).
+
+**In the panel (phase 2, on PR 4a's inbox section).** `bookings` is the second entry of the
+Inbox section with the status pill (`booked` green, `rescheduled` amber, `cancelled` red,
+`completed` neutral; the words are glossary rows) and one action above the form,
+"Remind on WhatsApp": a `wa.me` link to the merchant's phone with the reminder prefilled in
+the merchant's language (the span on the Riyadh clock, the Meet link when the row has one),
+shown while the booking is still ahead; nothing automatic (the Business API is a later
+block). The inbox badge counts the new messages and the bookings still ahead that start
+today (Riyadh) as one number, its sentence "{n} waiting in the inbox"; the dashboard's
+Inbox card splits it in two lines and lists, after the newest three messages, the next
+three bookings with the moment on the Riyadh clock and the status word. The Google Calendar
+connection's Test reads the host's free/busy for today through the delegated key (the key
+file, the API and the delegation proved in one call) and answers the host and the count of
+busy blocks; a settings global without a calendar owner is refused in the tester's language
+before any call; the mock calendar's Test fails on its fail flag. The words the merchant
+reads (`DATE_LOCALES`, `riyadhSpanLabel` in `lib/riyadh.ts`) are one place for the e-mails,
+the picker and the reminder.
+
+**Tests and gates.** `booking-slots` (the grid, the gap, the notice, the horizon, the closed
+dates, the cap, the busy blocks, the Riyadh day boundary), `booking-google` (the delegated
+assertion, the parsers over recorded bodies, the poll, the mock), `booking-mail` (every body
+in both languages, the calendar file), `booking-routes` (the order, the 409 twice, the
+failed-Google path, the manage link's refusals, no personal field in a log line),
+`booking-sweep` (the windows, idempotence, the retries), `booking-actions` (the reminder's
+text and link, the tones, the day query), the calendar Tests in `booking-google`, the badge
+and the card reader in `admin-nav` and `dashboard`, the outsider's rows in
+`access.test.ts`, the config census; the e2e books in both languages on the review server
+with the mock calendar, moves and cancels on the manage page, refuses an off-grid start,
+runs axe at 1440 and 390, then reads the panel's side: the row and its pill in the inbox
+section, the card and the badge, the reminder's href, the editor's limits, the cancelled
+row that stays cancelled, axe in both languages at 1440 and 390.
+
+**Dhia's side, once:** enable the Calendar API on the service account's Cloud project; in
+the Workspace Admin console add domain-wide delegation for the account's client id with the
+two scopes; paste the key on a Google Calendar connection and Test it; set the calendar
+owner's address and switch the booking on (RUNBOOK "Bookings"). A leak is a key rotation
+in the Cloud console, never a row edit.

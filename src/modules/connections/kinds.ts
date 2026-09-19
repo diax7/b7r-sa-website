@@ -2,12 +2,15 @@
  * The kinds of connection (ADR-047, ADR-049): the four vendors the AI SDK speaks, an
  * OpenAI-compatible endpoint for any other AI with an API, the mock the tests and the review
  * server run on (refused in production, as before), the three services the visibility score
- * reads (Search Console by a service account, Bing Webmaster and PageSpeed by an API key) and
- * Umami, whose people numbers the dashboard shows (ADR-048 amended). `speaks` says which: the
- * engine's picker and the citation ledger take `ai`, the nightly pull takes `service`. An AI
- * kind names the factory in `model.ts`; its default model and rates are the vendor's
- * published ones at the time of writing, filled into a new connection that leaves them empty
- * and editable afterwards.
+ * reads (Search Console by a service account, Bing Webmaster and PageSpeed by an API key),
+ * Umami, whose people numbers the dashboard shows (ADR-048 amended), and Google Calendar,
+ * which the bookings write to by domain-wide delegation (ADR-062), with the mock calendar
+ * the tests and the review server book on (refused in production like the AI mock; its
+ * `model` field set to `fail` makes every call fail). `speaks` says which: the engine's
+ * picker and the citation ledger take `ai`, the nightly pull and the bookings take
+ * `service`. An AI kind names the factory in `model.ts`; its default model and rates are the
+ * vendor's published ones at the time of writing, filled into a new connection that leaves
+ * them empty and editable afterwards.
  */
 export const CONNECTION_KINDS = [
   'openai',
@@ -20,7 +23,15 @@ export const CONNECTION_KINDS = [
   'bing-webmaster',
   'pagespeed',
   'umami',
+  'google-calendar',
+  'mock-calendar',
 ] as const;
+
+/** The mock kinds: shown and saved only where `AI_CONTENT_MOCK=1`, never in production. */
+export const MOCK_KINDS: readonly string[] = ['mock', 'mock-calendar'];
+
+/** The service kinds whose Test runs without a key: PageSpeed (optional key), the mock calendar. */
+export const KEYLESS_SERVICE_KINDS: readonly string[] = ['pagespeed', 'mock-calendar'];
 
 export type ConnectionKind = (typeof CONNECTION_KINDS)[number];
 
@@ -130,6 +141,25 @@ export const KINDS: Record<ConnectionKind, KindInfo> = {
   // Umami Cloud by default; a self-hosted Umami names its address on the row.
   umami: {
     label: { ar: 'Umami', en: 'Umami' },
+    speaks: 'service',
+    defaultModel: '',
+    rates: { input: 0, output: 0 },
+    needsBaseUrl: false,
+    secret: 'apiKey',
+    searchFeeUsd: 0,
+  },
+  // The same key file as Search Console, pasted again on its own row (ADR-047, ADR-062).
+  'google-calendar': {
+    label: { ar: 'Google Calendar', en: 'Google Calendar' },
+    speaks: 'service',
+    defaultModel: '',
+    rates: { input: 0, output: 0 },
+    needsBaseUrl: false,
+    secret: 'serviceAccount',
+    searchFeeUsd: 0,
+  },
+  'mock-calendar': {
+    label: { ar: 'تقويم تجريبي (اختبارات فقط)', en: 'Mock calendar (tests only)' },
     speaks: 'service',
     defaultModel: '',
     rates: { input: 0, output: 0 },

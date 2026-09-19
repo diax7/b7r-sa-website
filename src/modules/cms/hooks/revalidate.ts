@@ -71,6 +71,7 @@ export const SITE_ROUTES = [
   '/contact',
   '/faq',
   '/blog',
+  '/book',
   '/terms',
   '/shipping',
   '/privacy',

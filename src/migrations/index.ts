@@ -31,6 +31,8 @@ import * as migration_20260918_212944_media_blur from './20260918_212944_media_b
 import * as migration_20260918_213027_media_no_renditions from './20260918_213027_media_no_renditions';
 import * as migration_20260919_170624_connections_umami from './20260919_170624_connections_umami';
 import * as migration_20260919_183008_messages from './20260919_183008_messages';
+import * as migration_20260919_195745_bookings from './20260919_195745_bookings';
+import * as migration_20260919_195800_bookings_start_active from './20260919_195800_bookings_start_active';
 
 export const migrations = [
   {
@@ -197,5 +199,15 @@ export const migrations = [
     up: migration_20260919_183008_messages.up,
     down: migration_20260919_183008_messages.down,
     name: '20260919_183008_messages',
+  },
+  {
+    up: migration_20260919_195745_bookings.up,
+    down: migration_20260919_195745_bookings.down,
+    name: '20260919_195745_bookings',
+  },
+  {
+    up: migration_20260919_195800_bookings_start_active.up,
+    down: migration_20260919_195800_bookings_start_active.down,
+    name: '20260919_195800_bookings_start_active',
   },
 ];

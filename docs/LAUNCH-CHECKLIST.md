@@ -85,6 +85,15 @@ b7r.sa to go live.
 |---|---|---|---|---|
 | 42 | An Umami Cloud API key on a Connection of the kind "Umami" (Admin → Connections → Create, Save, Test reads yesterday's numbers); Site settings → Analytics → website id already set (row 36) | Dhia | open | RUNBOOK "Connecting Umami"; the first pull reads 90 days back, then the visits tile shows Umami's visitors beside our landings and the card its people row; until then both read as before |
 
+## Added 2026-09-19 (Level 4 bookings, ADR-062)
+
+| # | Item | Owner | Status | Notes |
+|---|---|---|---|---|
+| 44 | The Google Calendar API enabled on the service account's Cloud project, and domain-wide delegation added in the Workspace Admin console for the account's client id with the two scopes `https://www.googleapis.com/auth/calendar.events` and `https://www.googleapis.com/auth/calendar.freebusy` | Dhia | open | RUNBOOK "Bookings": the steps; never the whole `calendar` scope |
+| 45 | A `google-calendar` connection with the key file pasted again on its own row, its Test green (today's free/busy on the host's calendar); Site → Booking → the calendar owner's e-mail, the hours checked, then Booking open | Dhia | open | Until the switch is on, `/book` says the WhatsApp way and the contact card keeps the BRD 4.11 message; `/api/health` is untouched by the switch |
+| 46 | A real test booking on the live site: the row in Site → Bookings, the event with its Meet link on the calendar, the confirmation and Dhia's notification e-mail (needs row 4's Resend keys), the manage link's move and cancel, then the row deleted | Dhia + agent | open | BRD §11.5 (2); a booking made before the calendar is on stands as `calendar: off` and says the link follows |
+| 47 | The booking copy (BRD §4.19: the page, the picker, the e-mails, the `/book` search row) read and approved, or corrected in `src/content/copy/{ar,en}.ts`; then out of `TODO_COPY` in the verbatim test | Dhia | open | Written under BRD §0.5's fallback rule, as the compare page was |
+
 ## Also needed before any of the above
 
 - GitHub repository `diax7/b7r-sa-website` exists (its visibility is Dhia's); the platform project is still Dhia's.

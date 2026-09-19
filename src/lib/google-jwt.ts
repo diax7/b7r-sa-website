@@ -3,8 +3,12 @@ import type { ServiceAccountKey } from '@/lib/service-account';
 /**
  * A Google access token from a service account (ADR-049): the JWT-bearer flow, signed with the
  * account's private key through Web Crypto (RS256), no `google-auth-library`. The token lives
- * in memory keyed by the key's id until it expires, never on a row. Forty lines, tested with a
- * key generated at test time.
+ * in memory keyed by the key's id, the scope and the subject until it expires, never on a
+ * row. Forty lines, tested with a key generated at test time.
+ *
+ * With domain-wide delegation (ADR-062) the assertion carries `sub`, the Workspace user the
+ * account acts as: Google then issues a token for that user's calendar, for the scopes the
+ * Admin console granted the account's client id.
  */
 export const SEARCH_CONSOLE_SCOPE = 'https://www.googleapis.com/auth/webmasters.readonly';
 
@@ -29,11 +33,12 @@ function pemToDer(pem: string): ArrayBuffer {
   return bytes.buffer;
 }
 
-/** The signed assertion for one scope, valid for an hour from `now`. */
+/** The signed assertion for one scope (and one delegated user), valid for an hour from `now`. */
 export async function signJwt(
   key: ServiceAccountKey,
   scope: string,
   now = new Date(),
+  subject?: string,
 ): Promise<string> {
   const iat = Math.floor(now.getTime() / 1000);
   const header = base64url(
@@ -44,7 +49,14 @@ export async function signJwt(
     }),
   );
   const claims = base64url(
-    JSON.stringify({ iss: key.clientEmail, scope, aud: key.tokenUri, iat, exp: iat + TOKEN_TTL_S }),
+    JSON.stringify({
+      iss: key.clientEmail,
+      scope,
+      aud: key.tokenUri,
+      iat,
+      exp: iat + TOKEN_TTL_S,
+      ...(subject ? { sub: subject } : {}),
+    }),
   );
   const signingKey = await crypto.subtle.importKey(
     'pkcs8',
@@ -67,11 +79,12 @@ export async function accessToken(
   scope: string,
   fetcher: typeof fetch = fetch,
   now = new Date(),
+  subject?: string,
 ): Promise<string> {
-  const cacheKey = `${key.privateKeyId || key.clientEmail}\n${scope}`;
+  const cacheKey = `${key.privateKeyId || key.clientEmail}\n${scope}\n${subject ?? ''}`;
   const cached = cache.get(cacheKey);
   if (cached && cached.expiresAt > now.getTime() + 60_000) return cached.token;
-  const assertion = await signJwt(key, scope, now);
+  const assertion = await signJwt(key, scope, now, subject);
   const res = await fetcher(key.tokenUri, {
     method: 'POST',
     headers: { 'content-type': 'application/x-www-form-urlencoded' },

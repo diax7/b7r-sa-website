@@ -13,6 +13,7 @@ export const CODE_TOP_LEVEL = [
   'products',
   'blog',
   'author',
+  'book',
   'admin',
   'api',
   '_next',

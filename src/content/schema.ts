@@ -26,7 +26,6 @@ export const SiteSettingsSchema = z.object({
   social: z.object({ x: z.url(), instagram: z.url(), tiktok: z.url() }),
   offer: z.object({ welcomeCredit: z.int().positive() }),
   delivery: z.object({ maxDays: z.int().positive(), origin: nonEmpty, region: nonEmpty }),
-  bookingUrl: z.url().optional(),
   legalEntity: nonEmpty,
   /** Every main CTA button with the brand's sheen (ADR-054); the admin's switch, site-wide. */
   ctaShiny: z.boolean().default(false),
@@ -37,6 +36,36 @@ export const SiteSettingsSchema = z.object({
   }),
 });
 export type SiteSettings = z.infer<typeof SiteSettingsSchema>;
+
+/** `HH:MM` on a 24-hour clock, the shape the booking hours are typed in (ADR-062). */
+export const CLOCK_TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
+/** 0 is Sunday, as `Date.getUTCDay()` counts. */
+const weekday = z.int().min(0).max(6);
+
+/**
+ * The booking settings (BRD 11.2 as rewritten by ADR-062): the switch, the consultation's
+ * name, the slot arithmetic (minutes and days), the weekly hours and the closed dates, all
+ * in Riyadh time, and the Workspace user whose calendar takes the events.
+ */
+export const BookingSettingsSchema = z.object({
+  enabled: z.boolean(),
+  title: nonEmpty,
+  durationMinutes: z.int().min(10).max(240),
+  bufferMinutes: z.int().min(0).max(120),
+  noticeHours: z.int().min(0).max(336),
+  horizonDays: z.int().min(1).max(90),
+  maxPerDay: z.int().min(1).max(24),
+  hours: z.array(
+    z.object({
+      day: weekday,
+      from: z.string().regex(CLOCK_TIME),
+      to: z.string().regex(CLOCK_TIME),
+    }),
+  ),
+  closedDates: z.array(z.object({ date: isoDate, reason: z.string() })),
+  hostEmail: z.email().or(z.literal('')),
+});
+export type BookingSettings = z.infer<typeof BookingSettingsSchema>;
 
 export const NavItemSchema = z.object({
   label: nonEmpty,

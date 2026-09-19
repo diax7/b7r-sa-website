@@ -81,6 +81,7 @@ export interface Config {
     'ai-topics': AiTopic;
     'ai-runs': AiRun;
     connections: Connection;
+    bookings: Booking;
     traffic: Traffic;
     metrics: Metric;
     prompts: Prompt;
@@ -109,6 +110,7 @@ export interface Config {
     'ai-topics': AiTopicsSelect<false> | AiTopicsSelect<true>;
     'ai-runs': AiRunsSelect<false> | AiRunsSelect<true>;
     connections: ConnectionsSelect<false> | ConnectionsSelect<true>;
+    bookings: BookingsSelect<false> | BookingsSelect<true>;
     traffic: TrafficSelect<false> | TrafficSelect<true>;
     metrics: MetricsSelect<false> | MetricsSelect<true>;
     prompts: PromptsSelect<false> | PromptsSelect<true>;
@@ -128,6 +130,7 @@ export interface Config {
   globals: {
     home: Home;
     'site-settings': SiteSetting;
+    booking: Booking1;
     'seo-defaults': SeoDefault;
     'ai-settings': AiSetting;
     'visibility-checklist': VisibilityChecklist;
@@ -136,6 +139,7 @@ export interface Config {
   globalsSelect: {
     home: HomeSelect<false> | HomeSelect<true>;
     'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
+    booking: BookingSelect<false> | BookingSelect<true>;
     'seo-defaults': SeoDefaultsSelect<false> | SeoDefaultsSelect<true>;
     'ai-settings': AiSettingsSelect<false> | AiSettingsSelect<true>;
     'visibility-checklist': VisibilityChecklistSelect<false> | VisibilityChecklistSelect<true>;
@@ -154,6 +158,7 @@ export interface Config {
       'content-digest': TaskContentDigest;
       'visibility-pull': TaskVisibilityPull;
       'citation-ledger': TaskCitationLedger;
+      'bookings-sweep': TaskBookingsSweep;
       schedulePublish: TaskSchedulePublish;
       inline: {
         input: unknown;
@@ -1471,7 +1476,7 @@ export interface Connection {
    */
   label: string;
   /**
-   * Which service the key belongs to. Search Console, Bing and PageSpeed feed the score, Umami the dashboard, not the engine: one on each.
+   * Which service the key belongs to: Search Console, Bing and PageSpeed for the score, Umami for the dashboard, Calendar for the bookings.
    */
   kind:
     | 'openai'
@@ -1483,7 +1488,9 @@ export interface Connection {
     | 'google-search-console'
     | 'bing-webmaster'
     | 'pagespeed'
-    | 'umami';
+    | 'umami'
+    | 'google-calendar'
+    | 'mock-calendar';
   /**
    * Exactly as the service docs write it: gpt-4.1-mini, claude-haiku-4-5, gemini-3-flash-preview. Empty on save: the usual cheap model.
    */
@@ -1493,7 +1500,7 @@ export interface Connection {
    */
   baseUrl?: string | null;
   /**
-   * From the service's console; Search Console takes the account's JSON file, Umami an API key. Never shown again; leave the mask to keep it.
+   * The account's JSON file for Search Console and Google Calendar, an API key for the rest. Never shown again; leave the mask to keep it.
    */
   apiKey?: string | null;
   /**
@@ -1532,6 +1539,90 @@ export interface Connection {
   lastSavedBy?: {
     name?: string | null;
     at?: string | null;
+  };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * A consultation booked on the site: who, when, the Meet link. The status and the notes are yours; a move or a cancel is the merchant's.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "bookings".
+ */
+export interface Booking {
+  id: number;
+  /**
+   * As the merchant typed it on the booking page; the list's title and the calendar event's name.
+   */
+  name: string;
+  /**
+   * Receives the confirmation, the two reminders and the change-or-cancel link; invited to the Meet event by it.
+   */
+  email: string;
+  /**
+   * The "Remind on WhatsApp" button opens a chat to this number with a prefilled message in their language.
+   */
+  phone: string;
+  /**
+   * Shown in Riyadh time; the merchant moves it from their link, never here, so the calendar event follows.
+   */
+  start: string;
+  /**
+   * Computed from the start and the length in the booking settings.
+   */
+  end: string;
+  /**
+   * The e-mails and the prefilled WhatsApp message go out in it; the language of the page they booked from.
+   */
+  locale: 'ar' | 'en';
+  /**
+   * Booked on booking, Rescheduled after a change, Cancelled after a cancel, Completed on its own once the time has passed.
+   */
+  status: 'booked' | 'rescheduled' | 'cancelled' | 'completed';
+  /**
+   * For you and your colleagues: what was agreed and what to follow up. The merchant never reads them.
+   */
+  notes?: string | null;
+  /**
+   * Created by Google with the event and sent to the merchant in the confirmation; empty while the calendar fails.
+   */
+  meetLink?: string | null;
+  /**
+   * On the calendar once the event exists; Failed when Google refused (three retries, an hour apart); No calendar without a connection.
+   */
+  calendar: 'synced' | 'failed' | 'off';
+  /**
+   * Ties the booking to its event on the owner's calendar, for a move and a delete.
+   */
+  googleEventId?: string | null;
+  meetRequestId?: string | null;
+  /**
+   * How many times the sweep asked Google again after a refusal; it stops at 3.
+   */
+  calendarAttempts?: number | null;
+  /**
+   * When the sweep last tried again; the next is an hour later.
+   */
+  calendarAttemptAt?: string | null;
+  /**
+   * Set once the day-before reminder left, to the merchant and to you, so it never goes twice.
+   */
+  reminded24h?: boolean | null;
+  /**
+   * Set once the hour-before reminder left, so it never goes twice.
+   */
+  reminded1h?: boolean | null;
+  /**
+   * The path the booking was made from: /book or /contact, under /en in English.
+   */
+  page?: string | null;
+  /**
+   * Shown when the merchant arrived by a campaign link (utm): the source, the medium and the campaign as written in it.
+   */
+  utm?: {
+    source?: string | null;
+    medium?: string | null;
+    campaign?: string | null;
   };
   updatedAt: string;
   createdAt: string;
@@ -1930,6 +2021,7 @@ export interface PayloadJob {
           | 'content-digest'
           | 'visibility-pull'
           | 'citation-ledger'
+          | 'bookings-sweep'
           | 'schedulePublish';
         taskID: string;
         input?:
@@ -1973,6 +2065,7 @@ export interface PayloadJob {
         | 'content-digest'
         | 'visibility-pull'
         | 'citation-ledger'
+        | 'bookings-sweep'
         | 'schedulePublish'
       )
     | null;
@@ -2053,6 +2146,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'connections';
         value: number | Connection;
+      } | null)
+    | ({
+        relationTo: 'bookings';
+        value: number | Booking;
       } | null)
     | ({
         relationTo: 'traffic';
@@ -2680,6 +2777,38 @@ export interface ConnectionsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "bookings_select".
+ */
+export interface BookingsSelect<T extends boolean = true> {
+  name?: T;
+  email?: T;
+  phone?: T;
+  start?: T;
+  end?: T;
+  locale?: T;
+  status?: T;
+  notes?: T;
+  meetLink?: T;
+  calendar?: T;
+  googleEventId?: T;
+  meetRequestId?: T;
+  calendarAttempts?: T;
+  calendarAttemptAt?: T;
+  reminded24h?: T;
+  reminded1h?: T;
+  page?: T;
+  utm?:
+    | T
+    | {
+        source?: T;
+        medium?: T;
+        campaign?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "traffic_select".
  */
 export interface TrafficSelect<T extends boolean = true> {
@@ -3274,10 +3403,6 @@ export interface SiteSetting {
    */
   deliveryRegion: string;
   /**
-   * Opens from the booking card on the contact page. Empty opens WhatsApp with the prefilled message instead.
-   */
-  bookingUrl?: string | null;
-  /**
    * Read by nothing on the site today: the copyright line and the legal pages carry fixed text. Kept for the day they read it.
    */
   legalEntity: string;
@@ -3298,6 +3423,101 @@ export interface SiteSetting {
      */
     umamiId?: string | null;
   };
+  /**
+   * Who saved the current version and when. Drafts do not change it.
+   */
+  lastSavedBy?: {
+    name?: string | null;
+    at?: string | null;
+  };
+  translations?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * The free consultation booking: its length, the hours, the closed days, and the Google calendar the appointments land in.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "booking".
+ */
+export interface Booking1 {
+  id: number;
+  /**
+   * The heading of the booking page and the subject of the confirmation e-mail: "Free consultation, 30 minutes".
+   */
+  title: string;
+  /**
+   * How long each appointment lasts and where the slots fall in the day: 30.
+   */
+  durationMinutes: number;
+  /**
+   * Left free after each appointment before the next one, and counted in the slot grid: 10.
+   */
+  bufferMinutes: number;
+  /**
+   * Hides the slots closer than this from a visitor; a reschedule obeys it too: 24.
+   */
+  noticeHours: number;
+  /**
+   * Shows the days from today up to this many, and refuses a date beyond them: 30.
+   */
+  horizonDays: number;
+  /**
+   * Closes the day once this many are booked, even with free hours to spare: 4.
+   */
+  maxPerDay: number;
+  /**
+   * The days and the hours a slot is offered on, in Riyadh time; a day without a row stays closed.
+   */
+  hours?:
+    | {
+        /**
+         * The weekday the row applies to; two rows for one day both count.
+         */
+        day: '0' | '1' | '2' | '3' | '4' | '5' | '6';
+        /**
+         * The first slot of the day in Riyadh time, as 10:00.
+         */
+        from: string;
+        /**
+         * The time the last slot must end by, in Riyadh time, as 18:00.
+         */
+        to: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Closes single days, an Eid holiday for one; a visitor reads the reason on the greyed day of the booking page. A duplicated row copies the Arabic only.
+   */
+  closedDates?:
+    | {
+        /**
+         * The day that stays closed, in Riyadh.
+         */
+        date: string;
+        /**
+         * Shown on the greyed day of the booking page: "Eid al-Adha holiday". Two to five words.
+         */
+        reason: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * The Google Workspace account on b7r.sa whose calendar is read and takes the appointments with their Meet link.
+   */
+  hostEmail?: string | null;
+  /**
+   * On opens the booking page and the contact card picker; off sends the contact card to WhatsApp with the prefilled message.
+   */
+  enabled?: boolean | null;
   /**
    * Who saved the current version and when. Drafts do not change it.
    */
@@ -3746,7 +3966,6 @@ export interface SiteSettingsSelect<T extends boolean = true> {
   deliveryMaxDays?: T;
   deliveryOrigin?: T;
   deliveryRegion?: T;
-  bookingUrl?: T;
   legalEntity?: T;
   analytics?:
     | T
@@ -3755,6 +3974,45 @@ export interface SiteSettingsSelect<T extends boolean = true> {
         umamiSrc?: T;
         umamiId?: T;
       };
+  lastSavedBy?:
+    | T
+    | {
+        name?: T;
+        at?: T;
+      };
+  translations?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "booking_select".
+ */
+export interface BookingSelect<T extends boolean = true> {
+  title?: T;
+  durationMinutes?: T;
+  bufferMinutes?: T;
+  noticeHours?: T;
+  horizonDays?: T;
+  maxPerDay?: T;
+  hours?:
+    | T
+    | {
+        day?: T;
+        from?: T;
+        to?: T;
+        id?: T;
+      };
+  closedDates?:
+    | T
+    | {
+        date?: T;
+        reason?: T;
+        id?: T;
+      };
+  hostEmail?: T;
+  enabled?: T;
   lastSavedBy?:
     | T
     | {
@@ -3971,6 +4229,19 @@ export interface TaskCitationLedger {
   };
   output: {
     summary?: string | null;
+  };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TaskBookings-sweep".
+ */
+export interface TaskBookingsSweep {
+  input?: unknown;
+  output: {
+    reminded?: number | null;
+    completed?: number | null;
+    recovered?: number | null;
+    retried?: number | null;
   };
 }
 /**

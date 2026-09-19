@@ -221,7 +221,7 @@ Amended 2026-09-13 (Dhia's design review, same copy): the lifestyle photo sits b
 
 **API `POST /api/contact`:** validates with the same zod schema; rejects if the honeypot is filled (returns 200 to fool bots); verifies Turnstile server-side when configured; rate-limits 5 requests per IP per 10 minutes (in-memory map; note the single-instance assumption); sends the email through Resend (§4.17) to the contact address in the site settings (amended 2026-09-17, ADR-052); returns `{ ok: true }` or `{ ok: false, error }` with 400/429/500. Never logs message bodies in production.
 
-**Booking card:** button opens `BOOKING_URL` in a new tab when set; otherwise opens WhatsApp with the §4.11 prefilled message. Level 4 replaces this with an inline Cal.com embed.
+**Booking card:** while the booking switch (the `booking` global, §11.2) is on, the card holds the booking picker itself, the same island as `/book`, and a booking made here records the contact page as its origin; while it is off, the button opens WhatsApp with the §4.11 prefilled message. Amended 2026-09-19 (ADR-062): the Cal.com link and the `bookingUrl` setting are gone.
 
 Amended 2026-09-13 (ADR-031): the section is the `contact` block of the contact page in the CMS (card titles and the booking card are content; the form's strings stay in code) and sits on the surface tone like the first section of every page.
 

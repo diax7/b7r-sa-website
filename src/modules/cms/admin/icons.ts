@@ -5,6 +5,7 @@ import {
   Bell,
   Blend,
   Bot,
+  CalendarCheck,
   CalendarClock,
   ChartLine,
   CircleHelp,
@@ -106,11 +107,13 @@ export const COLLECTION_ICONS: Record<CollectionSlug, LucideIcon> = {
   prompts: MessageCircleQuestion,
   citations: Quote,
   messages: MessageSquare,
+  bookings: CalendarClock,
 };
 
 export const GLOBAL_ICONS: Record<GlobalSlug, LucideIcon> = {
   home: House,
   'site-settings': Settings2,
+  booking: CalendarCheck,
   'seo-defaults': Search,
   'ai-settings': SlidersHorizontal,
   'visibility-checklist': ListTodo,
@@ -324,6 +327,7 @@ export const ADMIN_NAV: {
 } = {
   collections: {
     messages: { group: 'site', order: 0, section: 'inbox' },
+    bookings: { group: 'site', order: 1, section: 'inbox' },
     pages: { group: 'site', order: 1 },
     media: { group: 'site', order: 3 },
     products: { group: 'catalogue', order: 0, listing: '/products' },
@@ -347,6 +351,8 @@ export const ADMIN_NAV: {
   globals: {
     home: { group: 'site', order: 0 },
     'site-settings': { group: 'site', order: 2 },
+    // Beside Home and Site settings, before the images (ADR-062).
+    booking: { group: 'site', order: 2.5 },
     'seo-defaults': { group: 'visibility', order: 6 },
     'visibility-checklist': { group: 'visibility', order: 1, parent: SCORE_VIEW },
     'ai-settings': { group: 'blog', order: 12, section: 'engine' },

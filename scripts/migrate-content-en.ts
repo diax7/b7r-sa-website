@@ -75,6 +75,13 @@ async function mediaIdByPath(payload: Payload, publicPath: string): Promise<numb
   return doc.id;
 }
 
+/** The English title and description of a code route's search row (BRD 4.16). */
+function englishSeoRow(route: string): { title: string; description: string } {
+  const english = seoEn.routes[route];
+  if (!english) throw new Error(`seed en: no English SEO row for ${route}`);
+  return english;
+}
+
 export async function ensureEnglish(payload: Payload): Promise<EnglishSummary> {
   const out: EnglishSummary = { written: [], skipped: [] };
   const done = (name: string) => out.written.push(name);
@@ -121,17 +128,13 @@ export async function ensureEnglish(payload: Payload): Promise<EnglishSummary> {
     }
   }
 
-  // seo-defaults
+  // seo-defaults: every row, or the rows a later seed appended without English (a row
+  // without an English title breaks every English page's metadata, so none may stay).
   {
     const en = await payload.findGlobal({ slug: 'seo-defaults', ...EN });
-    if (en.titleTemplate) skip('en seo-defaults');
-    else {
-      const ar = await payload.findGlobal({ slug: 'seo-defaults', ...AR });
-      const rows = (ar.routes ?? []).map((row) => {
-        const english = seoEn.routes[row.route];
-        if (!english) throw new Error(`seed en: no English SEO row for ${row.route}`);
-        return english;
-      });
+    const ar = await payload.findGlobal({ slug: 'seo-defaults', ...AR });
+    if (!en.titleTemplate) {
+      const rows = (ar.routes ?? []).map((row) => englishSeoRow(row.route));
       await payload.updateGlobal({
         slug: 'seo-defaults',
         locale: 'en',
@@ -139,6 +142,19 @@ export async function ensureEnglish(payload: Payload): Promise<EnglishSummary> {
         context: CONTEXT,
       });
       done('en seo-defaults');
+    } else {
+      const untitled = (en.routes ?? []).filter((row) => !row.title);
+      if (untitled.length === 0) skip('en seo-defaults');
+      else {
+        const rows = (en.routes ?? []).map((row) => (row.title ? {} : englishSeoRow(row.route)));
+        await payload.updateGlobal({
+          slug: 'seo-defaults',
+          locale: 'en',
+          data: { routes: merged(en.routes, rows) },
+          context: CONTEXT,
+        });
+        done(`en seo-defaults: ${untitled.map((r) => r.route).join(', ')}`);
+      }
     }
   }
 

@@ -12,9 +12,10 @@ import { overLimitConnections } from '@/modules/connections/spend';
  * The sidebar's badges (ADR-058): a number only where it asks for action, never a count of
  * documents. Four exist: runs that failed this week on Runs (red), posts whose newest
  * version is a draft on Posts (amber), connections past their monthly limit on
- * Connections (red) and messages nobody has opened on Messages (red, ADR-061). The runs,
- * the drafts and the inbox are the dashboard's own readers (ADR-059), so the badge, the
- * tile or the card and the hand line show one number. Zero is no badge.
+ * Connections (red) and the inbox on Messages (red, ADR-061): the messages nobody has
+ * opened plus the bookings still ahead today (ADR-062). The runs, the drafts and the inbox
+ * are the dashboard's own readers (ADR-059), so the badge, the tile or the card and the
+ * hand line show one number. Zero is no badge.
  */
 export type NavBadgeKind = 'failedRuns' | 'drafts' | 'overLimit' | 'inbox';
 
@@ -57,15 +58,15 @@ const READERS: Record<NavBadgeKind, Reader> = {
     (await draftsWaiting(payload, { collections: ['posts'], now, user: user ?? null }))[0]
       ?.waiting ?? 0,
   overLimit: ({ payload, now }) => overLimitConnections(payload, now),
-  inbox: async ({ payload, user }) =>
-    (await inboxReading(payload, { user: user ?? null })).newCount,
+  inbox: async ({ payload, user, now }) =>
+    (await inboxReading(payload, { user: user ?? null, now })).waiting,
 };
 
 /**
  * The badges for the entries this user sees, read in parallel with the user's access (one
  * `count` for the runs, two `countVersions` for the drafts, two `find`s for the
- * connections, one `find` for the inbox), never cached: a badge that lags a fix is worse
- * than none. A failed read logs and leaves that entry without a badge.
+ * connections, two `find`s and a `count` for the inbox), never cached: a badge that lags a
+ * fix is worse than none. A failed read logs and leaves that entry without a badge.
  */
 export async function navBadges(args: {
   payload: Payload;

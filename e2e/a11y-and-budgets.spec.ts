@@ -175,6 +175,42 @@ test.describe('budgets (BRD 7.8, constitution IV)', () => {
     );
   });
 
+  test('the contact page stays within budget and its booking picker is out of the first paint (ADR-062)', async ({
+    page,
+    baseURL,
+  }) => {
+    const js: Array<{ url: string; bytes: number }> = [];
+    await page.route('**/*', (route) => {
+      const headers = route.request().headers();
+      if (headers['next-router-prefetch'] || headers['rsc']) return route.abort();
+      return route.continue();
+    });
+    page.on('response', async (r) => {
+      // Our own chunks: the Turnstile script is Cloudflare's and the analytics stub the test's.
+      if (r.request().resourceType() !== 'script' || !r.url().includes('/_next/static/')) return;
+      try {
+        js.push({ url: r.url(), bytes: (await r.request().sizes()).responseBodySize });
+      } catch {
+        // Cached or aborted responses have no sizes; ignore.
+      }
+    });
+    await page.goto('/contact');
+    await page.waitForLoadState('load');
+    await page.waitForTimeout(1500);
+    const total = js.reduce((n, r) => n + r.bytes, 0);
+    // Measured at 207 KB on 2026-09-19, before and after the picker: the form's split chunk
+    // hydrates with the page, the picker's loader is a few lines, the island never loads here.
+    expect(total, js.map((r) => `${r.bytes}\t${r.url}`).join('\n')).toBeLessThanOrEqual(215 * 1024);
+    // The island is a dynamic import: no script the server HTML references carries it.
+    const html = await (await page.request.get(`${baseURL}/contact`)).text();
+    const sources = [...html.matchAll(/<script[^>]+src="([^"]+)"/g)].map((m) => m[1]!);
+    expect(sources.length).toBeGreaterThan(0);
+    for (const src of sources) {
+      const body = await (await page.request.get(new URL(src, baseURL).toString())).text();
+      expect(body, src).not.toContain('data-booking-island');
+    }
+  });
+
   test('CMS pages ship no editor or rich-text JS: their blocks render on the server', async ({
     page,
   }) => {
