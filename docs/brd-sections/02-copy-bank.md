@@ -283,11 +283,13 @@ The English titles and descriptions (suffix ` | B7R Print`) are the `seo` rows o
 | Shipping | الشحن والتوصيل | سياسة الشحن والتوصيل في بحر برنت داخل المملكة: التوصيل خلال 5 أيام، ومحاولات التسليم، والتعويض خلال 10 أيام من الاستلام. |
 | Privacy | سياسة الخصوصية | كيف نجمع بياناتك ونستخدمها ونحميها في بحر برنت، ومدة الاحتفاظ بها، وحقوقك عليها. |
 | Compare (Printful) | بحر برنت مقابل Printful لمتجر سعودي | مقارنة بالأرقام: الطباعة في جدة والتوصيل خلال 5 أيام مقابل الشحن من الخارج خلال أسابيع؛ الأسعار بالريال وربط سلة وزد. |
+| Book (`/book`, §4.19, draft for Dhia's read) | احجز استشارة مجانية | اختر يوماً وموعداً يناسبك: 30 دقيقة على Google Meet نجاوب فيها على أسئلتك ونساعدك تبدأ براندك. |
 
 ### 4.17 Transactional emails (Level 1, sent through Resend)
 
 - Contact notification to contact@b7r.sa: subject: رسالة جديدة من الموقع: {inquiryType}; body lists all fields, LTR-safe formatting for phone and email, plus a "رد عبر واتساب" link if the phone is Saudi.
 - Newsletter: no welcome email in Level 1; the address is added to a Resend audience named "b7r.sa newsletter".
+- Booking e-mails (Level 4, ADR-062): the merchant's confirmation, move, cancel, the two reminders and the link that follows a calendar failure, and Dhia's pair of each at the contact address, in the merchant's language; the wording is §4.19's second table, the time reads in Riyadh with Western digits, the confirmation and the move attach the calendar file.
 
 ### 4.18 The compare page `/compare-printful` (ADR-050, approved by Dhia 2026-09-16)
 
@@ -330,3 +332,83 @@ The block’s fixed words (`content/copy/ar.ts`, `compare`):
 
 SEO row (§4.16): route `/compare-printful`, title «بحر برنت مقابل Printful لمتجر سعودي», description «مقارنة بالأرقام: الطباعة في جدة والتوصيل خلال 5 أيام مقابل الشحن من الخارج خلال أسابيع؛ الأسعار بالريال وربط سلة وزد.».
 
+### 4.19 The booking page `/book` and its e-mails (ADR-062; a draft for Dhia's read, `TODO(copy)`)
+
+Bookings are built inside b7r.sa (no Cal.com): the page `/book` and the contact page's booking card hold one picker, a strip of days on the Riyadh clock, the day's free times with Western digits, the merchant's name, phone, e-mail and an optional note, then the confirmation with the Google Meet link and the calendar file; the manage page `/book/manage` (by the signed link in the confirmation e-mail) moves or cancels the booking. The name, phone and e-mail labels, placeholders and validation are §4.11's. Written under §0.5's fallback rule and listed in `TODO_COPY` of the verbatim test until Dhia approves; then the markers go and this section is the check.
+
+The page and the picker (`content/copy/ar.ts`, `booking`):
+
+| Key | Arabic |
+|---|---|
+| `title` | احجز استشارة مجانية |
+| `lead` | 30 دقيقة على Google Meet نجاوب فيها على أسئلتك ونساعدك تبدأ. |
+| `riyadhTime` | بتوقيت الرياض |
+| `pickDay` | اختر اليوم |
+| `pickTime` | اختر الوقت |
+| `duration` | {minutes} دقيقة |
+| `loadingSlots` | جارٍ تحميل المواعيد |
+| `noSlots` | لا مواعيد متاحة في هذا اليوم. اختر يوماً آخر. |
+| `closed` | مغلق: {reason} |
+| `chosen` | موعدك: {day}، {time} |
+| `change` | غيّر الوقت |
+| `note` | ملاحظة (اختياري) |
+| `notePlaceholder` | ما الذي تريد أن نناقشه؟ |
+| `submit` | أكّد الحجز |
+| `submitting` | جارٍ الحجز |
+| `taken` | حُجز هذا الموعد للتو. اختر موعداً آخر. |
+| `failure` | تعذّر الحجز. حاول مرة أخرى أو راسلنا على واتساب. |
+| `disabled` | الحجز متوقف حالياً. راسلنا على واتساب ونرتّب لك موعداً. |
+| `confirmedTitle` | موعدك محجوز |
+| `confirmedText` | أرسلنا التفاصيل إلى بريدك: رابط الاجتماع ورابط تغيير الموعد أو إلغائه. |
+| `meetLink` | رابط الاجتماع |
+| `linkFollows` | رابط الاجتماع يصلك على بريدك قبل الموعد. |
+| `addToCalendar` | أضف إلى تقويمك |
+| `manageLink` | غيّر الموعد أو ألغِه |
+| `manageTitle` | إدارة حجزك |
+| `manageLead` | غيّر موعد استشارتك أو ألغِه من هنا. |
+| `reschedule` | غيّر الموعد |
+| `cancel` | ألغِ الحجز |
+| `confirmCancel` | أكّد الإلغاء |
+| `keep` | أبقِ الموعد |
+| `rescheduled` | تغيّر موعدك. أرسلنا التفاصيل الجديدة إلى بريدك. |
+| `cancelled` | أُلغي حجزك. نرحّب بك في موعد آخر متى شئت. |
+| `past` | انتهى هذا الموعد. احجز موعداً جديداً متى شئت. |
+| `tooLate` | لا يمكن تغيير الموعد قبل أقل من {hours} ساعة منه. راسلنا على واتساب. |
+| `invalid` | هذا الرابط غير صالح. راسلنا على واتساب ونساعدك. |
+| `bookAgain` | احجز موعداً جديداً |
+| `whatsappMessage` | مرحباً، أرغب بحجز استشارة مجانية. |
+
+The e-mails (`content/copy/ar.ts`, `bookingEmail`): `{name}` is the merchant, `{title}` the consultation's name from the booking settings, `{when}` the time in Riyadh.
+
+| Key | Arabic |
+|---|---|
+| `confirmSubject` | موعدك محجوز: {title} |
+| `confirmIntro` | مرحباً {name}، موعدك محجوز. |
+| `when` | الموعد |
+| `meet` | رابط الاجتماع |
+| `linkFollows` | رابط الاجتماع يصلك في بريد آخر قبل الموعد. |
+| `manage` | غيّر الموعد أو ألغِه من هنا |
+| `calendarFile` | ملف التقويم مرفق بهذا البريد. |
+| `reminder24Subject` | تذكير: استشارتك غداً |
+| `reminder1Subject` | تذكير: استشارتك بعد ساعة |
+| `reminderIntro` | مرحباً {name}، نذكّرك بموعد استشارتك. |
+| `rescheduledSubject` | تغيّر موعدك: {title} |
+| `rescheduledIntro` | مرحباً {name}، تغيّر موعد استشارتك. |
+| `cancelledSubject` | أُلغي حجزك: {title} |
+| `cancelledIntro` | مرحباً {name}، أُلغي حجز استشارتك. نرحّب بك في موعد آخر متى شئت. |
+| `linkSubject` | رابط اجتماعك: {title} |
+| `linkIntro` | مرحباً {name}، هذا رابط اجتماعك. |
+| `bookAgain` | احجز موعداً آخر |
+| `newSubject` | حجز جديد: {name}، {when} |
+| `newIntro` | حجز جديد من الموقع. |
+| `calendarFailed` | تعذّر تسجيل الموعد في تقويم Google؛ يُعاد الطلب تلقائياً ثلاث مرات. |
+| `ownerRescheduledSubject` | تغيّر موعد: {name}، {when} |
+| `ownerCancelledSubject` | أُلغي حجز: {name}، {when} |
+| `ownerReminder24Subject` | تذكير: استشارة {name} غداً، {when} |
+| `ownerReminder1Subject` | تذكير: استشارة {name} بعد ساعة |
+| `ownerLinkSubject` | رابط الاجتماع جاهز: {name}، {when} |
+| `noteLabel` | ملاحظة التاجر |
+| `pageLabel` | حُجز من |
+| `openInPanel` | افتح الحجز في اللوحة |
+
+SEO row (§4.16): route `/book`, title «احجز استشارة مجانية», description «اختر يوماً وموعداً يناسبك: 30 دقيقة على Google Meet نجاوب فيها على أسئلتك ونساعدك تبدأ براندك.».

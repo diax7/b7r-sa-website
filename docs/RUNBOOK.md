@@ -349,6 +349,62 @@ current), point `DATABASE_URL` at it.
 `emails.send` to the contact address in the site settings (ADR-052) with `replyTo` = the sender. `CONTACT_TRANSPORT=mock` (tests
 only, refused with a key) keeps messages in memory. Message bodies are never logged.
 
+## Bookings (ADR-062)
+
+The free consultation is booked on the site itself (`/book`, `/en/book`, the contact card),
+one event per booking on a Google Workspace calendar with a Google Meet link, the rows in
+Site → Bookings, the settings in Site → Booking. The switch is off until the calendar is
+wired.
+
+**The Workspace steps, once (Dhia).**
+
+1. Google Cloud console, the project of the service account already pasted for Search
+   Console: APIs & Services → Library → enable the **Google Calendar API**.
+2. Google Cloud console → IAM & Admin → Service Accounts → the account → copy its
+   **Unique ID** (the OAuth client id, a long number).
+3. Google Workspace Admin console → Security → Access and data control → API controls →
+   **Domain-wide delegation** → Add new: the client id from step 2 and exactly these two
+   scopes, comma-separated: `https://www.googleapis.com/auth/calendar.events`,
+   `https://www.googleapis.com/auth/calendar.freebusy`. Never the whole
+   `https://www.googleapis.com/auth/calendar` scope: delegation lets the key act as any user
+   on b7r.sa for the scopes granted, so the grant is the two the feature uses.
+4. The panel: Admin → Connections → New, kind **Google Calendar**, paste the same key file
+   again (one row per service, ADR-047), save, **Test**: it reads today's free/busy on the
+   host's calendar, which proves the delegation; a `notFound` or a 403 here means step 3 is
+   missing or names another scope.
+5. Site → Booking: the **calendar owner e-mail** (the Workspace user whose calendar takes
+   the events, `dhia@b7r.sa`), the hours and the numbers, then **Booking open**. The page
+   and the contact card switch the same minute.
+
+**What the row's calendar state means.** `synced`: the event exists with its Meet link.
+`failed`: Google refused (the key, the delegation, the API off, an outage) or answered
+without a Meet link; the merchant's confirmation says the link follows, Dhia's says the
+calendar failed, and the sweep retries three times an hour apart (the row's retries and
+last retry are in its sidebar); after the third it stays failed and the link is Dhia's to
+send by hand (WhatsApp from the row). `off`: no calendar connection was on when the booking
+was made; the same "link follows" e-mail, no retry.
+
+**The sweep** runs every fifteen minutes on its own queue (the dashboard's jobs list shows
+the next quarter hour): the reminders a day and an hour before (merchant and Dhia), the
+`completed` status once the end has passed, the calendar retries. Its windows are
+open-ended, so a container that was down sends late rather than never; the two reminder
+flags on the row keep it from sending twice.
+
+**The merchant's link** (`/book/manage?token=`) is the HMAC of the booking's id under a key
+derived from `PAYLOAD_SECRET`; the row decides what it may still do (a cancelled or past
+booking refuses every action; the link lives a day past the end). Rotating
+`PAYLOAD_SECRET` voids every link sent so far.
+
+**A leak of the key file** is a key rotation in the Cloud console (a new key on the service
+account, the old one deleted), then the new file pasted on both Google rows; nothing on a
+row itself revokes anything. A leaked link is one booking's, and its cancel is the
+merchant's anyway.
+
+**Deleting.** Nothing is deleted by a job. An admin deletes a booking row from its list; the
+event on the calendar is not touched by a delete (cancel through the merchant's link first,
+or delete the event on the calendar). The public API creates, reads and lists nothing on
+the collection; the booking routes are the only writers.
+
 ## Open Graph images
 
 `pnpm og` re-renders `public/og/default.png` and `public/og/products/*.png` with Playwright

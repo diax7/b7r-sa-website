@@ -120,7 +120,8 @@ published pill) is re-hued to the accent in `@layer payload`; its greys are unto
   ai-topics `ListChecks`, ai-runs `History`, connections `KeyRound`, traffic `Footprints`;
   the Traffic view `Signpost`, the Visibility score view `Gauge`, visibility-checklist `ListTodo`, metrics `Camera`, prompts `MessageCircleQuestion`, citations `Quote`;
   home `House`,
-  site-settings `Settings2`,
+  site-settings `Settings2`, booking `CalendarCheck` (a place: the booking page, ADR-062),
+  bookings `CalendarClock` (a noun: an appointment),
   seo-defaults `Search`, ai-settings `SlidersHorizontal`; groups Site
   `Globe`, Catalogue `ShoppingBag`, Blog `PenLine`, Visibility `Radar`, Admin `Shield`; the
   engine section `Bot`; the dashboard entry `LayoutDashboard` (a place, like a global's).

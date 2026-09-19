@@ -288,7 +288,7 @@ Amended 2026-09-13 (ADR-037): the marketing video in §6.4.5 is the second conti
 
 ### 3.10 Component inventory (build these once, reuse everywhere)
 
-`Button` (variants primary, secondary [white with primary border], ghost, link, shiny and inverseShiny [the sheen, ADR-054, the site-wide admin switch]; sizes md 44 px, lg 52 px; optional trailing arrow icon mirrored in RTL; loading state) · `Chip` (pill, optional check icon) · `Badge` (tint background, 10% colour rule: `bg-{color}/10 text-{color} border-{color}/20`) · `Card` · `SectionHeader` (eyebrow + H2 + lead, start-aligned) · `Accordion` (single-open, chevron rotates, `aria-expanded`) · `Input`, `Textarea`, `Select`, `Stepper` (numeric with +/−), `Slider` · `Dialog` · `Toast` · `SarAmount` (§3.11) · `ProductCard` · `WaveDivider` · `CtaRibbon` · `WhatsAppWidget` · `ConsentBar` · `VideoPlayer` · `Breadcrumbs` · `Icon` (RTL-aware Lucide wrapper) · `Container`, `Section`.
+`Button` (variants primary, secondary [white with primary border], ghost, link, shiny and inverseShiny [the sheen, ADR-054, the site-wide admin switch]; sizes md 44 px, lg 52 px; optional trailing arrow icon mirrored in RTL; loading state) · `Chip` (pill, optional check icon) · `Badge` (tint background, 10% colour rule: `bg-{color}/10 text-{color} border-{color}/20`) · `Card` · `SectionHeader` (eyebrow + H2 + lead, start-aligned) · `Accordion` (single-open, chevron rotates, `aria-expanded`) · `Input`, `Textarea`, `Select`, `Stepper` (numeric with +/−), `Slider` · `Dialog` · `Toast` · `SarAmount` (§3.11) · `ProductCard` · `WaveDivider` · `CtaRibbon` · `WhatsAppWidget` · `ConsentBar` · `VideoPlayer` · `Breadcrumbs` · `Icon` (RTL-aware Lucide wrapper) · `Container`, `Section` · `BookingPicker` (Level 4, ADR-062: the strip of days on the Riyadh clock as 56×64 px chips, the weekday above the day number, the selected one filled primary, a closed day greyed with its reason as a title; the free times as 44 px pills with Western digits; the form reuses `Input`, `Textarea` and `Button`; a client island loaded near the viewport over a server-rendered stand-in, on `/book` and inline in the contact card).
 
 Use shadcn/ui primitives (Radix) for Accordion, Dialog, Select, Slider, Toast, and Tabs; restyle them to these tokens. Do not ship shadcn's default look.
 
@@ -605,11 +605,13 @@ The English titles and descriptions (suffix ` | B7R Print`) are the `seo` rows o
 | Shipping | الشحن والتوصيل | سياسة الشحن والتوصيل في بحر برنت داخل المملكة: التوصيل خلال 5 أيام، ومحاولات التسليم، والتعويض خلال 10 أيام من الاستلام. |
 | Privacy | سياسة الخصوصية | كيف نجمع بياناتك ونستخدمها ونحميها في بحر برنت، ومدة الاحتفاظ بها، وحقوقك عليها. |
 | Compare (Printful) | بحر برنت مقابل Printful لمتجر سعودي | مقارنة بالأرقام: الطباعة في جدة والتوصيل خلال 5 أيام مقابل الشحن من الخارج خلال أسابيع؛ الأسعار بالريال وربط سلة وزد. |
+| Book (`/book`, §4.19, draft for Dhia's read) | احجز استشارة مجانية | اختر يوماً وموعداً يناسبك: 30 دقيقة على Google Meet نجاوب فيها على أسئلتك ونساعدك تبدأ براندك. |
 
 ### 4.17 Transactional emails (Level 1, sent through Resend)
 
 - Contact notification to contact@b7r.sa: subject: رسالة جديدة من الموقع: {inquiryType}; body lists all fields, LTR-safe formatting for phone and email, plus a "رد عبر واتساب" link if the phone is Saudi.
 - Newsletter: no welcome email in Level 1; the address is added to a Resend audience named "b7r.sa newsletter".
+- Booking e-mails (Level 4, ADR-062): the merchant's confirmation, move, cancel, the two reminders and the link that follows a calendar failure, and Dhia's pair of each at the contact address, in the merchant's language; the wording is §4.19's second table, the time reads in Riyadh with Western digits, the confirmation and the move attach the calendar file.
 
 ### 4.18 The compare page `/compare-printful` (ADR-050, approved by Dhia 2026-09-16)
 
@@ -651,6 +653,87 @@ The block’s fixed words (`content/copy/ar.ts`, `compare`):
 | `asOfTail` | ؛ الأرقام تتغير، وتاريخ القراءة يبقى صادقاً. |
 
 SEO row (§4.16): route `/compare-printful`, title «بحر برنت مقابل Printful لمتجر سعودي», description «مقارنة بالأرقام: الطباعة في جدة والتوصيل خلال 5 أيام مقابل الشحن من الخارج خلال أسابيع؛ الأسعار بالريال وربط سلة وزد.».
+
+### 4.19 The booking page `/book` and its e-mails (ADR-062; a draft for Dhia's read, `TODO(copy)`)
+
+Bookings are built inside b7r.sa (no Cal.com): the page `/book` and the contact page's booking card hold one picker, a strip of days on the Riyadh clock, the day's free times with Western digits, the merchant's name, phone, e-mail and an optional note, then the confirmation with the Google Meet link and the calendar file; the manage page `/book/manage` (by the signed link in the confirmation e-mail) moves or cancels the booking. The name, phone and e-mail labels, placeholders and validation are §4.11's. Written under §0.5's fallback rule and listed in `TODO_COPY` of the verbatim test until Dhia approves; then the markers go and this section is the check.
+
+The page and the picker (`content/copy/ar.ts`, `booking`):
+
+| Key | Arabic |
+|---|---|
+| `title` | احجز استشارة مجانية |
+| `lead` | 30 دقيقة على Google Meet نجاوب فيها على أسئلتك ونساعدك تبدأ. |
+| `riyadhTime` | بتوقيت الرياض |
+| `pickDay` | اختر اليوم |
+| `pickTime` | اختر الوقت |
+| `duration` | {minutes} دقيقة |
+| `loadingSlots` | جارٍ تحميل المواعيد |
+| `noSlots` | لا مواعيد متاحة في هذا اليوم. اختر يوماً آخر. |
+| `closed` | مغلق: {reason} |
+| `chosen` | موعدك: {day}، {time} |
+| `change` | غيّر الوقت |
+| `note` | ملاحظة (اختياري) |
+| `notePlaceholder` | ما الذي تريد أن نناقشه؟ |
+| `submit` | أكّد الحجز |
+| `submitting` | جارٍ الحجز |
+| `taken` | حُجز هذا الموعد للتو. اختر موعداً آخر. |
+| `failure` | تعذّر الحجز. حاول مرة أخرى أو راسلنا على واتساب. |
+| `disabled` | الحجز متوقف حالياً. راسلنا على واتساب ونرتّب لك موعداً. |
+| `confirmedTitle` | موعدك محجوز |
+| `confirmedText` | أرسلنا التفاصيل إلى بريدك: رابط الاجتماع ورابط تغيير الموعد أو إلغائه. |
+| `meetLink` | رابط الاجتماع |
+| `linkFollows` | رابط الاجتماع يصلك على بريدك قبل الموعد. |
+| `addToCalendar` | أضف إلى تقويمك |
+| `manageLink` | غيّر الموعد أو ألغِه |
+| `manageTitle` | إدارة حجزك |
+| `manageLead` | غيّر موعد استشارتك أو ألغِه من هنا. |
+| `reschedule` | غيّر الموعد |
+| `cancel` | ألغِ الحجز |
+| `confirmCancel` | أكّد الإلغاء |
+| `keep` | أبقِ الموعد |
+| `rescheduled` | تغيّر موعدك. أرسلنا التفاصيل الجديدة إلى بريدك. |
+| `cancelled` | أُلغي حجزك. نرحّب بك في موعد آخر متى شئت. |
+| `past` | انتهى هذا الموعد. احجز موعداً جديداً متى شئت. |
+| `tooLate` | لا يمكن تغيير الموعد قبل أقل من {hours} ساعة منه. راسلنا على واتساب. |
+| `invalid` | هذا الرابط غير صالح. راسلنا على واتساب ونساعدك. |
+| `bookAgain` | احجز موعداً جديداً |
+| `whatsappMessage` | مرحباً، أرغب بحجز استشارة مجانية. |
+
+The e-mails (`content/copy/ar.ts`, `bookingEmail`): `{name}` is the merchant, `{title}` the consultation's name from the booking settings, `{when}` the time in Riyadh.
+
+| Key | Arabic |
+|---|---|
+| `confirmSubject` | موعدك محجوز: {title} |
+| `confirmIntro` | مرحباً {name}، موعدك محجوز. |
+| `when` | الموعد |
+| `meet` | رابط الاجتماع |
+| `linkFollows` | رابط الاجتماع يصلك في بريد آخر قبل الموعد. |
+| `manage` | غيّر الموعد أو ألغِه من هنا |
+| `calendarFile` | ملف التقويم مرفق بهذا البريد. |
+| `reminder24Subject` | تذكير: استشارتك غداً |
+| `reminder1Subject` | تذكير: استشارتك بعد ساعة |
+| `reminderIntro` | مرحباً {name}، نذكّرك بموعد استشارتك. |
+| `rescheduledSubject` | تغيّر موعدك: {title} |
+| `rescheduledIntro` | مرحباً {name}، تغيّر موعد استشارتك. |
+| `cancelledSubject` | أُلغي حجزك: {title} |
+| `cancelledIntro` | مرحباً {name}، أُلغي حجز استشارتك. نرحّب بك في موعد آخر متى شئت. |
+| `linkSubject` | رابط اجتماعك: {title} |
+| `linkIntro` | مرحباً {name}، هذا رابط اجتماعك. |
+| `bookAgain` | احجز موعداً آخر |
+| `newSubject` | حجز جديد: {name}، {when} |
+| `newIntro` | حجز جديد من الموقع. |
+| `calendarFailed` | تعذّر تسجيل الموعد في تقويم Google؛ يُعاد الطلب تلقائياً ثلاث مرات. |
+| `ownerRescheduledSubject` | تغيّر موعد: {name}، {when} |
+| `ownerCancelledSubject` | أُلغي حجز: {name}، {when} |
+| `ownerReminder24Subject` | تذكير: استشارة {name} غداً، {when} |
+| `ownerReminder1Subject` | تذكير: استشارة {name} بعد ساعة |
+| `ownerLinkSubject` | رابط الاجتماع جاهز: {name}، {when} |
+| `noteLabel` | ملاحظة التاجر |
+| `pageLabel` | حُجز من |
+| `openInPanel` | افتح الحجز في اللوحة |
+
+SEO row (§4.16): route `/book`, title «احجز استشارة مجانية», description «اختر يوماً وموعداً يناسبك: 30 دقيقة على Google Meet نجاوب فيها على أسئلتك ونساعدك تبدأ براندك.».
 
 ---
 
@@ -877,7 +960,7 @@ Amended 2026-09-13 (Dhia's design review, same copy): the lifestyle photo sits b
 
 **API `POST /api/contact`:** validates with the same zod schema; rejects if the honeypot is filled (returns 200 to fool bots); verifies Turnstile server-side when configured; rate-limits 5 requests per IP per 10 minutes (in-memory map; note the single-instance assumption); sends the email through Resend (§4.17) to the contact address in the site settings (amended 2026-09-17, ADR-052); returns `{ ok: true }` or `{ ok: false, error }` with 400/429/500. Never logs message bodies in production.
 
-**Booking card:** button opens `BOOKING_URL` in a new tab when set; otherwise opens WhatsApp with the §4.11 prefilled message. Level 4 replaces this with an inline Cal.com embed.
+**Booking card:** while the booking switch (the `booking` global, §11.2) is on, the card holds the booking picker itself, the same island as `/book`, and a booking made here records the contact page as its origin; while it is off, the button opens WhatsApp with the §4.11 prefilled message. Amended 2026-09-19 (ADR-062): the Cal.com link and the `bookingUrl` setting are gone.
 
 Amended 2026-09-13 (ADR-031): the section is the `contact` block of the contact page in the CMS (card titles and the booking card are content; the form's strings stay in code) and sits on the surface tone like the first section of every page.
 
@@ -1458,15 +1541,20 @@ What the site guarantees by construction (required fields, publish rules, the ge
 ### 11.1 Inbox
 
 - `form-submissions` (from `@payloadcms/plugin-form-builder` or a custom collection fed by `/api/contact`): name, phone, email, inquiryType, message, source page, UTM, created, `status` (جديد · قيد المتابعة · تمت المعالجة), assignee, internal notes. List view with filters and quick actions: "رد عبر واتساب" (opens `wa.me` with the phone and a greeting), "رد بالبريد" (`mailto:`), mark handled.
-- `bookings`: mirrored from Cal.com webhooks (§11.2): name, email, phone, start/end (Asia/Riyadh), meeting type, status (booked · rescheduled · cancelled · completed), Cal.com uid, notes.
+- `bookings`: the site's own (§11.2, ADR-062): name, e-mail, phone, the merchant's language, start and end (UTC, shown in Riyadh), status (booked · rescheduled · cancelled · completed), the Meet link, the Google event id, the calendar's state (synced · failed · off) with its retries, the reminder flags, the page and the campaign it came from, internal notes.
 - Both appear on an "البريد الوارد" dashboard view with counts of new items; optional daily email summary to Dhia.
 
-### 11.2 Bookings (Cal.com)
+### 11.2 Bookings of our own (rewritten 2026-09-19, ADR-062; the Cal.com plan is withdrawn)
 
-- Dhia creates a hosted Cal.com account with one event type: **استشارة مجانية، 30 دقيقة** (Riyadh timezone, Arabic description, WhatsApp/phone question in the booking form). The event URL goes into `site-settings.bookingUrl`.
-- Site: the contact page's booking card becomes an inline Cal.com embed (`@calcom/embed-react`, Arabic locale if available, brand colour `#0058B0`), plus a dedicated `/book` page with the same embed and the §4.11 copy. The CSP `frame-src` allows `app.cal.com`.
-- Webhook `POST /api/webhooks/cal` (secret in `CAL_WEBHOOK_SECRET`, signature verified) upserts `bookings`; sends Dhia a notification email; adds the booker to the inbox.
-- Fallback: if `bookingUrl` is empty, the WhatsApp behaviour from §6.9 remains.
+- **Settings:** the `booking` global under Site: the switch, the consultation's name (bilingual, «استشارة مجانية، 30 دقيقة»), the length (30 minutes), the gap between two (10), the minimum notice (24 hours), the booking window (30 days), the daily cap (4), the weekly hours in Riyadh time (Sunday to Thursday 10:00 to 18:00 in the seed), the closed dates with a bilingual reason, and the Google Workspace user whose calendar takes the events. `site-settings.bookingUrl` is gone.
+- **The calendar:** every consultation is an event on that user's Google Calendar with a Google Meet link, created through the service account by domain-wide delegation for two narrow scopes (`calendar.events`, `calendar.freebusy`), never the whole `calendar` scope; the connection is a `google-calendar` row under Connections (the same key file as Search Console, pasted again on its own row) and its Test reads today's free/busy, which proves the delegation. Google e-mails nobody (`sendUpdates: none`): the site's own e-mails carry the link. A `mock-calendar` kind serves the tests and the review server, refused in production, with a `fail` flag (its `model` field) that makes every call fail.
+- **The slots:** `GET /api/bookings/slots?date=` answers a day's free starts: the weekly hours minus the notice, the day's bookings each widened by the gap, the host calendar's busy blocks (cached a minute), the closed dates, the cap; a date outside today..the window, or the switch off, is a 400, so the host's pattern cannot be scraped for months. The grid rule: a slot is `from` plus a multiple of `length + gap`, so two bookings that overlap share a start, and a partial unique index on `start` where the status is not cancelled makes a double booking a database refusal (a raw-SQL migration; the route re-checks the free slots inside the write and answers the same 409 either way).
+- **Booking:** `POST /api/bookings` in the contact route's order (JSON and same origin, zod, honeypot, rate limit, Turnstile), then the grid rule (400), the free slots (409), the row, the Google event, the merchant's confirmation e-mail in their language (the time in Riyadh with Western digits, the Meet link, the calendar file attached, the manage link) and Dhia's notification at the contact address. A Google refusal leaves the booking standing with `calendar: failed`; Dhia's e-mail says so; the merchant's says the link follows; the sweep retries three times an hour apart and a recovery sends the link.
+- **Manage:** `/book/manage?token=` in both languages, by a signed token (the HMAC of the booking's id under a key derived from the secret; no token column; the row's status and end decide, the link lives a day past the end): a move to another free slot under the same notice rule on both ends (the event patched, both e-mails again), a cancel until the start (the event deleted, both e-mails). `GET /api/bookings/ics?token=` serves the calendar file.
+- **The sweep:** every fifteen minutes on its own queue: the 24-hour and 1-hour reminders (merchant and Dhia) with open-ended windows so a late runner sends late rather than never, idempotent by two flags; `completed` once the end has passed; the calendar retry. No automatic WhatsApp: a «ذكّر على WhatsApp» button on the booking opens `wa.me` with a prefilled reminder in the merchant's language (the Business API is a future block).
+- **Site:** `/book` and `/en/book` (§4.19's copy, a `WebPage` graph, in the sitemap while the switch is on), the contact page's booking card with the same picker inline (§6.9), one client island loaded near the viewport; the manage page never indexed.
+- **Inbox:** `bookings` beside the messages with the status as a pill (booked green, rescheduled amber, cancelled red, completed neutral); the inbox badge counts today's bookings; the dashboard's Inbox card lists the next three.
+- **Personal data:** the same rules as the messages: no personal field in a log line, editors change the status and the notes only, an admin deletes, the public key reads, lists, creates and changes nothing.
 
 ### 11.3 Newsletter
 
@@ -1486,8 +1574,8 @@ What the site guarantees by construction (required fields, publish rules, the ge
 
 ### 11.5 Acceptance (Level 4)
 
-1. A contact submission and a Cal.com booking both appear in the inbox within a minute, with working reply actions.
-2. `/book` and the contact page embed Cal.com and record a real test booking.
+1. A contact submission and a booking both appear in the inbox within a minute, with working reply actions.
+2. `/book` and the contact page book a real test consultation: the row, the event with its Meet link on the host's calendar, the two e-mails, the manage link's move and cancel (ADR-062).
 3. Newsletter subscribers list matches the Resend audience.
 4. Analytics view shows Umami, GA4, and Search Console numbers for the last 30 days from the cache; Search Console queries create at least five suggested topics.
 
@@ -1551,6 +1639,10 @@ Before cutover:
 10. All §5.2 redirects tested against the live old URLs list.
 11. Lighthouse CI green on the production build; axe zero serious issues.
 12. RTL QA on iOS Safari and Chrome Android completed with screenshots attached to the PR.
+
+Level 4 bookings (ADR-062), before the switch goes on:
+12a. The Calendar API enabled on the service account's Cloud project; domain-wide delegation added in the Workspace Admin console for the account's client id with the two scopes `https://www.googleapis.com/auth/calendar.events` and `https://www.googleapis.com/auth/calendar.freebusy`; the key file pasted on a `google-calendar` connection and its Test green; the calendar owner's address in the booking settings.
+12b. A real test booking on the live site: the row in the inbox, the event with its Meet link on the calendar, the two e-mails, the manage link's move and cancel.
 
 Cutover:
 13. DNS `b7r.sa` A/CNAME to CranL; `www` redirect; TLS valid.
