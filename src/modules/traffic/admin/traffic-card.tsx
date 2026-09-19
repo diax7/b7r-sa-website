@@ -16,8 +16,8 @@ export function channelLabel(channel: Channel, s: AdminStrings['traffic']): stri
 
 /**
  * "Where visits come from" on the dashboard (ADR-048, ADR-059, admins): the range's
- * landings, one bar per group with its share (the Visibility pink on the surface track:
- * identity, not meaning), the top channel, the crawler reads, the three entry pages that
+ * landings, one bar per group with its share (the Visibility pink of the card's icon on the
+ * surface track: identity, not meaning, and the card's one hue, ADR-060), the top channel, the crawler reads, the three entry pages that
  * brought most, and the "All traffic" link into the same range. Empty until the first visitor.
  */
 export function TrafficCard({
@@ -37,6 +37,7 @@ export function TrafficCard({
       hook="visits"
       title={s.card.title}
       icon={TrafficIcon}
+      hue="pink"
       end={<SectionLink href={href}>{s.card.link}</SectionLink>}
       data-admin-traffic=""
       data-admin-traffic-landings={summary.landings}
@@ -46,7 +47,7 @@ export function TrafficCard({
           className="flex items-center gap-2 text-small text-text-muted"
           data-admin-traffic-empty=""
         >
-          <Icon icon={TrafficIcon} size={16} className="text-pink" />
+          <Icon icon={TrafficIcon} size={16} />
           {s.card.empty}
         </p>
       ) : (

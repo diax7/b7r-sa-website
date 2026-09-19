@@ -21,6 +21,7 @@ export interface Tile {
 /**
  * The numbers at a glance (ADR-059): four tiles, each one link to its place. A tile whose
  * reader failed shows the "not available" word in place of the number and stays a link.
+ * The disc behind the icon is the tile's one hue (ADR-060); the numbers stay neutral.
  */
 export function Tiles({ tiles }: { tiles: Tile[] }) {
   return (
@@ -40,6 +41,7 @@ export function Tiles({ tiles }: { tiles: Tile[] }) {
             >
               <span
                 className={`grid size-10 shrink-0 place-items-center rounded-pill ${HUE_CLASSES[t.hue]}`}
+                data-admin-hue={t.hue}
               >
                 <Icon icon={t.icon} size={20} />
               </span>

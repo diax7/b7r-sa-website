@@ -4,17 +4,20 @@ import type { ReactNode } from 'react';
 import { Card } from '@/components/shared/card';
 import { Icon } from '@/components/shared/icon';
 import { cn } from '@/lib/cn';
-import type { Hue } from '@/modules/cms/admin/icons';
+import { type Hue, HUE_TEXT_CLASSES } from '@/modules/cms/admin/icons';
 import { adminStringsFor } from '@/modules/cms/admin/strings';
 
 /**
  * One section of the dashboard (ADR-059): a card with an icon and a title at the start, an
  * optional link or badge at the end, and its `data-admin-dashboard-<hook>` for the e2e.
+ * The icon takes the group's hue and is the card's one hue carrier (ADR-060): the body
+ * stays neutral, and never two hues in one card.
  */
 export function DashboardSection({
   hook,
   title,
   icon,
+  hue,
   end,
   children,
   className,
@@ -23,6 +26,7 @@ export function DashboardSection({
   hook: string;
   title: string;
   icon: LucideIcon;
+  hue: Hue;
   end?: ReactNode;
   children: ReactNode;
   className?: string;
@@ -38,7 +42,7 @@ export function DashboardSection({
     >
       <div className="flex items-center justify-between gap-3">
         <h2 id={id} className="flex items-center gap-2 text-h4 text-text">
-          <Icon icon={icon} size={20} className="text-accent" />
+          <Icon icon={icon} size={20} className={HUE_TEXT_CLASSES[hue]} data-admin-hue={hue} />
           {title}
         </h2>
         {end}
@@ -52,14 +56,22 @@ export function DashboardSection({
 export function EmptySection({
   hook,
   title,
+  hue,
   language,
 }: {
   hook: string;
   title: string;
+  hue: Hue;
   language: string;
 }) {
   return (
-    <DashboardSection hook={hook} title={title} icon={CircleOff} data-admin-dashboard-empty={hook}>
+    <DashboardSection
+      hook={hook}
+      title={title}
+      icon={CircleOff}
+      hue={hue}
+      data-admin-dashboard-empty={hook}
+    >
       <p className="text-small text-text-muted">
         {adminStringsFor(language).dashboard.tiles.unavailable}
       </p>
