@@ -14,7 +14,7 @@ import { describeFields } from '@/modules/cms/admin/descriptions/describe';
 export const PLATFORM_LABELS: Record<(typeof INTEGRATION_PLATFORMS)[number], Bilingual> = {
   salla: { ar: 'سلة', en: 'Salla' },
   zid: { ar: 'زد', en: 'Zid' },
-  shopify: { ar: 'شوبيفاي', en: 'Shopify' },
+  shopify: { ar: 'Shopify', en: 'Shopify' },
 };
 
 /**
@@ -42,8 +42,8 @@ export const Integrations: CollectionConfig = {
       },
     },
     description: {
-      ar: 'المنصات المتصلة (سلة، زد، شوبيفاي) وترتيبها في قسم المتاجر المتصلة.',
-      en: 'The connected platforms (Salla, Zid, Shopify) and their order in the connected-stores section.',
+      ar: 'سلة وزد وShopify وترتيبها في قسم المتاجر المتصلة بالرئيسية.',
+      en: 'Salla, Zid and Shopify, and their order in the connected-stores section of the home page.',
     },
   },
   defaultSort: 'order',
