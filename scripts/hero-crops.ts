@@ -1,7 +1,10 @@
 /**
- * Hero placeholder variants (BRD §3.9, §6.4.1). Desktop 16:9 at 1920 wide; mobile 4:5 at
- * 1080 wide, cropped from the same shot centred on the product cluster. The placeholders are
- * smaller than the final-photo spec, so desktop is upscaled slightly; final photos replace them.
+ * Hero placeholder variants (BRD §3.9, §6.4.1). Desktop 16:9 keeping the bottom of the shot
+ * (the product cluster sits low); mobile 4:5 cropped from the same shot centred on the
+ * cluster. Both are written at the source's own resolution and never upscaled (ADR-029,
+ * amended 2026-09-19): the 1586 px placeholder is served at 1586, a 3000 px photograph at
+ * 3000, and the optimizer's encode is the only lossy step after this one (`PHOTO_JPEG`).
+ * Final photos replace the placeholders through the admin.
  *
  * The English document mirrors the layout (the copy sits at the left, ADR-044), so its
  * placeholders are the same shots flipped (`public/images/hero-en/`): the cluster moves to
@@ -11,6 +14,7 @@
 import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import sharp from 'sharp';
+import { heroMobileWindow, largestBox, PHOTO_JPEG } from '../src/lib/photo';
 
 const root = process.cwd();
 
@@ -29,27 +33,28 @@ const sources: Source[] = [
 async function crops(input: string, name: string, clusterX: number, out: string, flip: boolean) {
   const shot = () => (flip ? sharp(input).flop() : sharp(input));
   const meta = await sharp(input).metadata();
-  const w = meta.width ?? 0;
-  const h = meta.height ?? 0;
+  const source = { width: meta.width ?? 0, height: meta.height ?? 0 };
 
-  // Desktop: crop to 16:9 keeping the bottom (the product cluster sits low), resize to 1920.
-  const targetH = Math.round((w * 9) / 16);
-  const cropH = Math.min(h, targetH);
+  // Desktop: the largest 16:9 box of the shot, anchored at the bottom.
+  const desktop = largestBox(source, 16 / 9);
   await shot()
-    .extract({ left: 0, top: h - cropH, width: w, height: cropH })
-    .resize(1920, 1080, { fit: 'cover', position: 'south' })
-    .jpeg({ quality: 80, mozjpeg: true })
+    .resize(desktop.width, desktop.height, {
+      fit: 'cover',
+      position: 'south',
+      withoutEnlargement: true,
+    })
+    .jpeg(PHOTO_JPEG)
     .toFile(join(out, `${name}-desktop.jpg`));
 
-  // Mobile: 4:5 window centred on the cluster, full height.
-  const cropW = Math.min(w, Math.round((h * 4) / 5));
-  const centre = flip ? 1 - clusterX : clusterX;
-  const left = Math.max(0, Math.min(w - cropW, Math.round(centre * w - cropW / 2)));
+  // Mobile: the 4:5 window over the cluster, full height.
+  const window = heroMobileWindow(source, flip ? 1 - clusterX : clusterX);
+  const mobile = largestBox(window, 4 / 5);
   await shot()
-    .extract({ left, top: 0, width: cropW, height: h })
-    .resize(1080, 1350, { fit: 'cover' })
-    .jpeg({ quality: 80, mozjpeg: true })
+    .extract(window)
+    .resize(mobile.width, mobile.height, { fit: 'cover', withoutEnlargement: true })
+    .jpeg(PHOTO_JPEG)
     .toFile(join(out, `${name}-mobile.jpg`));
+  return { desktop, mobile };
 }
 
 for (const [folder, flip] of [
@@ -60,7 +65,9 @@ for (const [folder, flip] of [
   mkdirSync(out, { recursive: true });
   for (const s of sources) {
     const input = join(root, 'resources', 'hero', 'examples', s.file);
-    await crops(input, s.name, s.clusterX, out, flip);
-    console.log(`hero-crops: ${folder}/${s.name} desktop 1920x1080, mobile 1080x1350`);
+    const { desktop, mobile } = await crops(input, s.name, s.clusterX, out, flip);
+    console.log(
+      `hero-crops: ${folder}/${s.name} desktop ${desktop.width}x${desktop.height}, mobile ${mobile.width}x${mobile.height}`,
+    );
   }
 }

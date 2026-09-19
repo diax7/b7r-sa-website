@@ -69,10 +69,18 @@ interface Target {
  * `createLocalReq` writes `locale`, `fallbackLocale`, `context` and `query.depth` onto the
  * `req` it is handed, and the hooks after this one (and the response) still need the
  * request's own.
+ *
+ * The request's `file` (an upload, or a replacement) is taken off for the nested call and
+ * put back after: the other locale's write carries text, and an operation that saw the file
+ * would run `generateFileData` a second time (a second copy under a `-1` name, the blur
+ * computed twice). Payload's Local API clears `req.file` itself when no file is passed
+ * (`local/update.js`), so this guarantee is the hook's own rather than borrowed; and the
+ * outer operation's `unlinkTempFiles`, which runs after the hooks, needs the file back.
  */
 export async function inOtherLocale<T>(req: PayloadRequest, run: () => Promise<T>): Promise<T> {
-  const { locale, fallbackLocale, context } = req;
+  const { locale, fallbackLocale, context, file } = req;
   const depth = req.query?.['depth'];
+  delete req.file;
   try {
     return await run();
   } finally {
@@ -81,6 +89,8 @@ export async function inOtherLocale<T>(req: PayloadRequest, run: () => Promise<T
     if (fallbackLocale === undefined) delete req.fallbackLocale;
     else req.fallbackLocale = fallbackLocale;
     req.context = context;
+    if (file === undefined) delete req.file;
+    else req.file = file;
     if (req.query) {
       if (depth === undefined) delete req.query['depth'];
       else req.query['depth'] = depth;
@@ -116,8 +126,13 @@ function writeOther(
   data: Doc,
   draft: boolean,
 ): Promise<unknown> {
+  // No fallback on the write either: a global's update reads its original document with the
+  // request's fallback locale and fills every field the data omits from that copy, so a
+  // fallback here would write the Arabic into each empty English field of the global
+  // (`globals/operations/update.js`; a collection's update by id reads without fallback).
   const shared = {
     locale: other as TypedLocale,
+    fallbackLocale: false as const,
     data,
     draft,
     depth: 0,

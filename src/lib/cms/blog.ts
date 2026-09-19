@@ -1,7 +1,7 @@
 import 'server-only';
 import { cache } from 'react';
 import type { LexicalState } from '@/lib/lexical';
-import { mediaUrl } from '@/lib/cms/mappers';
+import { mediaBlur, mediaUrl } from '@/lib/cms/mappers';
 import { cms, inLocale, publicRead } from '@/lib/cms/payload';
 import { PUBLISHED } from '@/lib/cms/read';
 import { versionedRead } from '@/lib/cms/read-mode';
@@ -49,6 +49,8 @@ export interface Author {
 export interface Cover {
   src: string;
   alt: string;
+  /** The blur-up placeholder the media library computed (ADR-029), when it has one. */
+  blur?: string;
   width?: number;
   height?: number;
   /** From the media document, for the feed's enclosure; absent for a hub's fallback cover. */
@@ -136,9 +138,11 @@ function cover(post: PostDoc, hub: Hub): Cover {
   const media = populated<Media>(post.cover);
   const src = mediaUrl(media);
   if (!media || !src) return { src: hub.cover?.url ?? '', alt: '', ...hub.cover };
+  const blur = mediaBlur(media);
   return {
     src,
     alt: media.alt ?? '',
+    ...(blur ? { blur } : {}),
     ...sizeOf(media),
     ...(typeof media.filesize === 'number' ? { bytes: media.filesize } : {}),
     ...(media.mimeType ? { mime: media.mimeType } : {}),

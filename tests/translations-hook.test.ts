@@ -172,6 +172,7 @@ describe('the apply (ADR-057): one Save writes the other language too', () => {
         collection: 'pages',
         id: 7,
         locale: 'en',
+        fallbackLocale: false,
         draft: false,
         overrideAccess: false,
         req,
@@ -384,10 +385,13 @@ describe('the apply (ADR-057): one Save writes the other language too', () => {
     expect(findGlobal).toHaveBeenCalledWith(
       expect.objectContaining({ slug: 'site-settings', locale: 'en', draft: true }),
     );
+    // No fallback on a global's write: its update reads the original with the request's
+    // fallback locale and fills every omitted field from that copy.
     expect(updateGlobal).toHaveBeenCalledWith(
       expect.objectContaining({
         slug: 'site-settings',
         locale: 'en',
+        fallbackLocale: false,
         draft: false,
         data: { title: 'New', translations: null },
       }),
@@ -642,6 +646,51 @@ describe('the request is put back after the other locale is written', () => {
     ).rejects.toThrow('refused');
     expect(req).toMatchObject({ locale: 'ar', fallbackLocale: 'ar', context: { own: true } });
     expect(req.context[SKIP_TRANSLATIONS]).toBeUndefined();
+  });
+
+  it('the upload rides the first write only: the nested call runs without req.file and the request has it back after', async () => {
+    const file = { name: 'photo.jpg', data: Buffer.from('jpeg'), mimetype: 'image/jpeg', size: 4 };
+    const req = { locale: 'ar', context: {}, query: {}, file } as unknown as PayloadRequest;
+    const seen: unknown[] = [];
+    await inOtherLocale(req, async () => {
+      seen.push(req.file);
+    });
+    expect(seen).toEqual([undefined]);
+    expect(req.file).toBe(file);
+    await expect(
+      inOtherLocale(req, async () => {
+        seen.push(req.file);
+        throw new Error('refused');
+      }),
+    ).rejects.toThrow('refused');
+    expect(seen).toEqual([undefined, undefined]);
+    expect(req.file).toBe(file);
+    // Through the hook itself, as a media save runs it: the bilingual text rides the upload,
+    // and the second update (the other language) runs on the same request without the file.
+    const { req: upload, update } = fake();
+    upload.file = file;
+    let fileSeenByUpdate: unknown = file;
+    update.mockImplementationOnce(async () => {
+      fileSeenByUpdate = upload.file;
+      return {};
+    });
+    await save(
+      {
+        id: 5,
+        _status: 'published',
+        translations: pending({ title: { value: 'New', base: 'Old' } }),
+      },
+      upload,
+    );
+    expect(update).toHaveBeenCalledTimes(1);
+    expect(fileSeenByUpdate).toBeUndefined();
+    expect(upload.file).toBe(file);
+  });
+
+  it('a request without a file stays without one', async () => {
+    const req = { locale: 'ar', context: {}, query: {} } as unknown as PayloadRequest;
+    await inOtherLocale(req, async () => {});
+    expect('file' in req).toBe(false);
   });
 });
 

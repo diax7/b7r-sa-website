@@ -373,4 +373,8 @@ export const MEDIA_DESCRIPTIONS: Described = {
     ar: 'مصدر الصورة أو المصوّر، للتوثيق الداخلي. لا يظهر في الموقع.',
     en: "The photo's source or photographer, for the record. Not shown on the site.",
   },
+  blur: {
+    ar: 'نسخة ضبابية صغيرة تُحسب عند الرفع وتظهر في مكان الصورة حتى تصل. لا تُحرَّر يدوياً.',
+    en: "A tiny blurred copy computed on upload, shown in the photo's place until it arrives. Not edited by hand.",
+  },
 };

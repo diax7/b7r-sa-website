@@ -91,6 +91,8 @@ The key is served at `/indexnow/{INDEXNOW_KEY}.txt` by `app/indexnow/[key]/route
 | Third-party scripts | Umami ≤ 5 kB; GA only after consent; Turnstile only on `/contact` |
 | Lighthouse CI thresholds | Performance 90, Accessibility 95, Best Practices 95, SEO 100 (mobile, throttled) |
 
+*Amended 2026-09-19 (photo quality, ADR-029 amended): a photo is encoded once before the optimizer (JPEG q92, full chroma, at the source's resolution, never upscaled) and served by `next/image` at quality 90; every CMS photo carries a blur-up placeholder computed on upload; the LCP image budget stands (the hero AVIF at 1920 measures 38 to 52 KB) and `srcset` reaches 3840 so a 2x screen at 1920 gets a 3000 px photograph whole.*
+
 *Amended 2026-09-18 (site audit item 12, the CTO's settlement): performance 90 is the gate on the seven LHCI URLs (`/`, `/products`, `/products/tee-essential`, `/contact` at warn, `/blog/{sample}`, `/en`, `/en/products/tee-essential`); every other route carries a floor of 85, asserted as a warn on four of them in CI (`/how-it-works`, `/faq`, `/privacy`, `/en/compare-printful`) and on all of them by the launch-checklist `lh-all` pass. Why: 140 of a CMS page's 164 KB of first-paint JavaScript is React DOM and the app router, which the site cannot shed; the floor is theirs, not ours (ADR-014, and the analyzer's numbers in `docs/audits/2026-09-18-site.md`, "After the fixes"). Do not spend a day looking for the missing five points there. Accessibility, best practices, SEO and CLS keep their thresholds on every route.*
 
 ### 7.9 Content requirements that affect ranking (Level 1)

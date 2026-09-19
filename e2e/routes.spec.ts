@@ -47,8 +47,9 @@ test.describe('routes (BRD 5.1, 7.1, 7.4)', () => {
   }
 
   test('og:image declares the size the image really has', async ({ request }) => {
-    // A render is 1200×630; a post's cover is the 1600×900 JPEG the CMS recorded (site audit
-    // 2026-09-18, item 15). The English home takes its own render, not the Arabic one.
+    // A render is 1200×630; a post's cover is the CMS JPEG served through the optimizer at
+    // 1200 wide with its size scaled to match (site audit 2026-09-18, item 15; ADR-029,
+    // amended 2026-09-19). The English home takes its own render, not the Arabic one.
     const og = async (path: string) => {
       const html = await (await request.get(path)).text();
       const read = (name: string) =>
@@ -61,9 +62,21 @@ test.describe('routes (BRD 5.1, 7.1, 7.4)', () => {
       height: '630',
     });
     const post = await og('/blog/how-to-price-printed-tshirt-saudi');
-    expect(post.url).toMatch(/cover-pricing/);
-    expect(post.width).toBe('1600');
-    expect(post.height).toBe('900');
+    expect(post.url).toMatch(
+      /^https:\/\/b7r\.sa\/_next\/image\?url=.*cover-pricing.*&amp;w=1200&amp;q=82$/,
+    );
+    expect(post.width).toBe('1200');
+    expect(post.height).toBe('675');
+    // The share image itself answers as a JPEG under 300 KB to a scraper without an Accept header.
+    const share = await request.get(
+      post.url!.replace('https://b7r.sa', '').replaceAll('&amp;', '&'),
+      {
+        headers: { accept: '*/*' },
+      },
+    );
+    expect(share.status()).toBe(200);
+    expect(share.headers()['content-type']).toBe('image/jpeg');
+    expect((await share.body()).byteLength).toBeLessThan(300 * 1024);
     expect((await og('/en')).url).toBe('https://b7r.sa/og/en/default.png');
   });
 

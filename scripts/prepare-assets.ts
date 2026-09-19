@@ -3,17 +3,22 @@
  *
  * - fonts:    see scripts/subset-fonts.sh (subset woff2 -> public/fonts/)
  * - logos:    resources/brand/logo/*.png             -> public/images/logo/ (+ app icons)
- * - products: resources/products/{slug}/*.jpg        -> public/images/products/{slug}/ (q82)
+ * - products: resources/products/{slug}/*.jpg        -> public/images/products/{slug}/ (1:1)
  * - badges:   payment + trust + misk                 -> public/images/badges/
  * - icons-3d: resources/icons-3d/*.jpg (not sheet)   -> public/images/icons-3d/
  * - video:    resources/video/*.mp4 + poster         -> public/video/ (poster = BRD 6.4.5 fallback still
  *             until a frame can be extracted; see RUNBOOK)
  * - integrations: resources/brand/integrations/*.svg -> public/images/integrations/
  * - lifestyle: decorative mockups for the about banner (21:9) and blog covers (16:9)
+ *
+ * Photos (products, covers, the banner, the 3D icons) are written once, at the source's own
+ * resolution and never upscaled, as JPEG q92 with full chroma (`PHOTO_JPEG`, ADR-029 amended
+ * 2026-09-19): the image optimizer's encode is the only lossy step the browser sees.
  */
 import { copyFileSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import sharp from 'sharp';
+import { type Box, largestBox, PHOTO_JPEG, squareBox } from '../src/lib/photo';
 
 const root = process.cwd();
 const res = (...p: string[]) => join(root, 'resources', ...p);
@@ -88,16 +93,34 @@ function icoFromPng(png: Buffer, size: number): Buffer {
   return Buffer.concat([header, entry, png]);
 }
 
+/** A source's pixel size, for the crop arithmetic. */
+async function sizeOf(input: string): Promise<Box> {
+  const meta = await sharp(input).metadata();
+  return { width: meta.width ?? 0, height: meta.height ?? 0 };
+}
+
+/** A photo cropped to `box` at the anchor, never scaled up, encoded once. */
+async function photo(input: string, box: Box, position: string, out: string) {
+  await sharp(input)
+    .resize(box.width, box.height, { fit: 'cover', position, withoutEnlargement: true })
+    .jpeg(PHOTO_JPEG)
+    .toFile(out);
+}
+
+/** The catalogue photos (BRD 6.6): the largest centred square of each source. */
 async function products() {
   const base = res('products');
   for (const slug of readdirSync(base)) {
     ensure(pub('images', 'products', slug));
     for (const f of readdirSync(join(base, slug))) {
       if (!f.endsWith('.jpg')) continue;
-      await sharp(join(base, slug, f))
-        .resize(1000, 1000, { fit: 'cover' })
-        .jpeg({ quality: 82, mozjpeg: true })
-        .toFile(pub('images', 'products', slug, f));
+      const input = join(base, slug, f);
+      await photo(
+        input,
+        squareBox(await sizeOf(input)),
+        'centre',
+        pub('images', 'products', slug, f),
+      );
     }
   }
 }
@@ -152,7 +175,7 @@ async function icons3d() {
   for (const f of readdirSync(res('icons-3d'))) {
     if (!f.endsWith('.jpg')) continue;
     await sharp(res('icons-3d', f))
-      .jpeg({ quality: 82, mozjpeg: true })
+      .jpeg(PHOTO_JPEG)
       .toFile(pub('images', 'icons-3d', f));
   }
 }
@@ -164,10 +187,13 @@ async function lifestyle() {
   // BRD 6.8 names hanging-tshirt-mockup.jpg, but that file carries the vendor's
   // "Free t-shirt mockup" sample print; -2 is the same subject with a real design
   // (flagged for Dhia in Appendix G).
-  await sharp(src('hanging-tshirt-mockup-2.jpg'))
-    .resize(1920, 823, { fit: 'cover', position: 'centre' })
-    .jpeg({ quality: 82, mozjpeg: true })
-    .toFile(pub('images', 'lifestyle', 'hanging-tshirt-mockup.jpg'));
+  const banner = src('hanging-tshirt-mockup-2.jpg');
+  await photo(
+    banner,
+    largestBox(await sizeOf(banner), 21 / 9),
+    'centre',
+    pub('images', 'lifestyle', 'hanging-tshirt-mockup.jpg'),
+  );
   // 16:9 covers; the focal point of each source is known, so the crop anchor is explicit.
   const covers: Array<[string, string, 'centre' | 'top']> = [
     ['designer-at-desk-stock.jpg', 'cover-start-brand.jpg', 'centre'],
@@ -175,10 +201,13 @@ async function lifestyle() {
     ['totebag1.jpg', 'cover-pricing.jpg', 'centre'],
   ];
   for (const [from, to, position] of covers) {
-    await sharp(src(from))
-      .resize(1600, 900, { fit: 'cover', position })
-      .jpeg({ quality: 80, mozjpeg: true })
-      .toFile(pub('images', 'lifestyle', to));
+    const input = src(from);
+    await photo(
+      input,
+      largestBox(await sizeOf(input), 16 / 9),
+      position,
+      pub('images', 'lifestyle', to),
+    );
   }
 }
 

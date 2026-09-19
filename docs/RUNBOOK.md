@@ -89,6 +89,45 @@ again (move `public/media` aside first so filenames do not collide).
 `Cache-Control: immutable` for a year (ADR-039), so a changed woff2 must get a **new file
 name** (a version suffix); never overwrite the same path, browsers will keep the old bytes.
 
+## Assets (photos)
+
+`pnpm assets` derives `public/images` from `resources/` (ADR-002): logos, badges, the 3D
+icons, the product photos, the blog covers, the hero crops. Since 2026-09-19 (ADR-029
+amended) a photo is written **once**, at the source's own resolution, JPEG q92 with full
+chroma and never upscaled (`src/lib/photo.ts` holds the numbers); the image optimizer's
+encode at quality 90 is the only lossy step after it. Put a 3000 px hero photograph under
+`resources/hero/examples` or a 2000 by 2000 product export under `resources/products/{slug}/`
+and the same command serves it whole; nothing else changes.
+
+The media library holds the same files under the seed's names (`{slug}-{colour}-{side}.jpg`,
+`hero-set-a-desktop.jpg`, `lifestyle-cover-pricing.jpg`, `icons-3d-printer-print.jpg`). Two
+scripts keep it current, both taking `--env <file>` for another database and bucket
+(`.env.cranl.local` for production, after the merge):
+
+- `pnpm exec tsx scripts/media-blur.ts [--force]` fills the blur-up placeholder of every
+  media document without one (the hook computes it on upload; older uploads need this once).
+- `pnpm exec tsx scripts/media-requality.ts [--dry-run]` re-uploads, for every document the
+  seed named, the file `pnpm assets` regenerated, through the Local API as the admin (the
+  blur is computed in the same pass), and deletes the old renditions beside it. Run
+  `pnpm assets` first and `--dry-run` before the real pass; a document already at this
+  encode is skipped.
+
+**A replaced photo gets a new name** (`{name}-{8 hex}.jpg`), on purpose. The bucket's CDN
+(`storage-b7r-media.cranl.net`, a BunnyCDN pull zone in front of R2) answers with
+`cache-control: public, max-age=31536000, immutable` and `cdn-cache: HIT` (checked with
+`curl -I` on 2026-09-19; `media-to-bucket.mjs` set that header on the objects it uploaded),
+and `next/image` caches its transforms by URL for a year (`images.minimumCacheTTL`): an
+object replaced under its old name keeps serving the old bytes to the optimizer and to the
+browser for up to a year. The document's `url` changes with the name and the old object goes
+when Payload deletes it. **The production run ends with a redeploy** (the script says so
+when it changed anything): a media document revalidates no page of its own, so the
+prerendered pages keep the old names until their 60 s timer runs (ADR-030), and in that
+minute a photo not cached at the CDN edge or by the optimizer answers 404, the old file
+being gone; the rebuild prerenders every page with the new names at once and clears the
+optimizer's cache. An upload from the admin is safe for the same reason as the rename:
+Payload names a new file uniquely; the page that uses it is saved after, and its own hook
+revalidates it.
+
 ## Docker
 
 The build prerenders every page from the CMS, so it needs the database and the Payload secret
@@ -325,6 +364,12 @@ Since 2026-09-18 (site audit, item 16) `next/image` caches its transforms for a 
 `pnpm og` and `pnpm assets`, which rewrite files under the same names, are served stale by
 the optimiser until the name changes or a deploy clears `.next/cache`. A CMS upload is safe:
 Payload gives a new file a new name.
+
+A CMS photo used as a share image (a post or hub cover, an author photo) is announced as the
+optimizer's URL at 1200 wide (`/_next/image?url=…&w=1200&q=82`), the JPEG a scraper gets,
+about 60 KB, with `og:image:width` and `:height` scaled to match (ADR-029, amended
+2026-09-19): the stored cover is a q92 JPEG of 400 to 530 KB and WhatsApp drops a preview
+image over roughly 300 KB. The `/og/*.png` renders are announced as they are.
 
 ## Lighthouse
 
@@ -635,7 +680,16 @@ its English editor or picker under the Arabic one. Type the English next to the 
 one Save writes both. There is no locale switch in the panel and no admin URL takes
 `?locale=` (an old link is redirected without it); the REST API keeps `?locale=`, and a
 `locale` preference left from before the switch went is purged by migration
-`20260918_142817_purge_locale_preference`. The Publish rule: touching one English field on a
+`20260918_142817_purge_locale_preference`. A REST write on `?locale=en` must carry
+`fallback-locale=none`, or every omitted empty English field is filled with the Arabic:
+Payload fills what the request omits from the document read with the request's fallback
+locale, the default one unless the request says otherwise. A global (the home page, the
+site settings) is the one exposed: its update reads the original that way, while a
+collection's update by id reads it without fallback (`payload`'s `updateDocument`, verified
+2026-09-19). The read that captures a global for a restore takes the same parameter, or its
+copy already holds the Arabic. The panel writes in the default locale, where the fallback is
+the locale itself; the bilingual mechanism's second write passes `fallbackLocale: false`
+(`hooks/translations.ts`). The Publish rule: touching one English field on a
 Publish validates the whole English document, the collection's own rules included (on a
 post: the English excerpt, the three English takeaways and the two internal links of the
 English body), exactly as a Publish from the English locale does; a half-filled English side

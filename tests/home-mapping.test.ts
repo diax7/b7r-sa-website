@@ -23,7 +23,7 @@ beforeEach(() => vi.stubEnv('NEXT_PUBLIC_SITE_URL', SERVER));
 afterEach(() => vi.unstubAllEnvs());
 
 /** A populated media doc whose URL is the seed path served by Payload. */
-function media(publicPath: string, alt = 'صورة'): Media {
+function media(publicPath: string, alt = 'صورة', blur?: string): Media {
   const id = ids.get(publicPath) ?? ids.size + 1;
   ids.set(publicPath, id);
   return {
@@ -32,8 +32,11 @@ function media(publicPath: string, alt = 'صورة'): Media {
     url: `${SERVER}/api/payload/media/file/${publicPath.slice(1)}`,
     updatedAt: '',
     createdAt: '',
+    ...(blur ? { blur } : {}),
   };
 }
+
+const BLUR = 'data:image/webp;base64,UklGRiIAAABXRUJQVlA4IBYAAAAwAQCdASoBAAEADsD+JaQAA3AAAAAA';
 
 const product = (slug: string, id: number) => ({ id, slug }) as ProductDoc;
 
@@ -95,6 +98,16 @@ describe('toHome', () => {
     expect(mapped.whyUs).toEqual(home.whyUs);
     expect(mapped.ribbon).toEqual(home.ribbon);
     expect(mapped.video.enabled).toBe(true);
+  });
+
+  it("carries each hero photo's blur-up placeholder, and nothing for a media without one", () => {
+    const doc = homeDoc();
+    const first = doc.hero.slides[0]!;
+    first.imageDesktop = media('/images/hero/set-a-desktop.jpg', 'صورة', BLUR);
+    const mapped = toHome(doc);
+    expect(mapped.hero.slides[0]).toMatchObject({ blurDesktop: BLUR });
+    expect(mapped.hero.slides[0]).not.toHaveProperty('blurMobile');
+    expect(mapped.hero.slides[1]).not.toHaveProperty('blurDesktop');
   });
 
   it('renders zero to six chips and hides a row with no text in this language (ADR-044)', () => {

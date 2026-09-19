@@ -5,6 +5,8 @@ import { useId, useState, type KeyboardEvent } from 'react';
 import { ColorPicker } from '@/components/shared/color-picker';
 import type { ProductColor } from '@/content/schema';
 import { cn } from '@/lib/cn';
+import { blurPlaceholder } from '@/lib/image-url';
+import { PHOTO_QUALITY } from '@/lib/photo';
 
 export interface GalleryCopy {
   label: string;
@@ -71,6 +73,8 @@ export function Gallery({ productName, colors, copy }: GalleryProps) {
           alt={`${productName}${copy.separator}${color.name}${copy.separator}${copy.front}`}
           fill
           sizes="(min-width: 1024px) 560px, 100vw"
+          quality={PHOTO_QUALITY}
+          {...blurPlaceholder(color.images.frontBlur)}
           priority
           fetchPriority="high"
           className={cn(
@@ -84,6 +88,8 @@ export function Gallery({ productName, colors, copy }: GalleryProps) {
             alt={`${productName}${copy.separator}${color.name}${copy.separator}${copy.back}`}
             fill
             sizes="(min-width: 1024px) 560px, 100vw"
+            quality={PHOTO_QUALITY}
+            {...blurPlaceholder(color.images.backBlur)}
             className={cn(
               'object-cover transition-opacity duration-(--duration-slow) ease-(--ease-standard)',
               showBack ? 'opacity-100' : 'opacity-0',

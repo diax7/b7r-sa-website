@@ -299,6 +299,58 @@ media URLs are stored relative (`mediaUrl` strips `PAYLOAD_PUBLIC_SERVER_URL`); 
 is the one `images.remotePatterns` entry. Product OG images (`pnpm og`) read the CMS when
 `DATABASE_URL` is set.
 
+Amended 2026-09-19 (photo quality, Dhia: "the photos look low quality";
+`docs/audits/2026-09-19-photo-quality.md`). **One lossy encode.** The assets scripts wrote
+every photo as JPEG q80 to q82 with 4:2:0 chroma and the optimizer encoded that again as
+AVIF at 75 (sharp's 47): the stacked pass is what softened the fabric and the print. Now
+`prepare-assets.ts` and `hero-crops.ts` write a photo once, at the source's own resolution,
+JPEG q92 mozjpeg with 4:4:4 chroma, never enlarged and capped at 3840 wide (`src/lib/photo.ts`
+holds the numbers and the crop arithmetic as data), and every photo component asks
+`next/image` for quality 90 (`images.qualities: [75, 82, 90]`; logos, icons and badges keep
+75; `deviceSizes` gains 3840 so a 2x screen at 1920 gets a 3000 px photograph whole). The
+hero placeholders are served at 1586 and 794 px rather than upscaled to 1920 and 1080; the
+hero AVIF at 1920 measures 38 to 52 KB against the 220 KB budget, so BRD 7.8 stands. **No
+renditions.** Payload's `imageSizes` (thumbnail, card, hero, og) were never served: the
+mappers hand the original's URL to the optimizer and `pnpm og` renders the share images, so
+they are gone from the collection; the panel's thumbnail is the optimizer's 384 px transform
+of the original (`adminThumbnail`), and the `sizes_*` columns stay unread until a later
+migration drops them (ADR-025, `20260918_213027_media_no_renditions`). **Blur-up.** A hidden
+`blur` field on `media` holds a 24 px WebP data URL (about 300 bytes) that `stampBlur`
+computes from the request's file on upload or replacement (a save of the alt text keeps it; a
+file sharp cannot read logs and leaves it empty, never refusing the save); the mappers expose
+it (`image.blur`, a slide's `blurDesktop`/`blurMobile`, a colour's `frontBlur`/`backBlur`, a
+cover's `blur`) and the photo components pass it as `placeholder="blur"`; the hero, which
+renders its own `<picture>`, applies the `background-image` Next computes per breakpoint
+until the photo decodes, its preloads and fetch priority unchanged. `scripts/media-blur.ts`
+backfills the field; `scripts/media-requality.ts` re-uploads the seeded photos at the new
+encode under a **new name** (the seed's name plus 8 hex of the file's sha256), because the
+bucket's CDN caches an object for a year as `immutable` and the optimizer caches its
+transforms by URL for as long (RUNBOOK, "Assets"), and deletes the old renditions beside the
+file. **A media rename ends with a redeploy** (the CTO's review): the media collection has
+no revalidation hook, so a renamed file reaches the prerendered pages through ADR-030's 60 s
+timer only, while the old file is already gone from the bucket; for that minute a photo not
+cached at the CDN edge or by the optimizer is a 404 (the optimizer caches no failure, so
+nothing outlives the minute). The rebuild prerenders every page with the new names at once
+and clears the optimizer's cache; the script prints the reminder when it changed anything.
+`deviceSizes` also gains 1536, the 2x candidate of the 760 px reading column, so a blog
+cover's 2x fetch is the 1536 rendition (60,515 B for the pricing cover) rather than the
+1920 one (120,197 B). **Share images.** A q92
+cover is 400 to 530 KB and WhatsApp drops a preview image over roughly 300 KB, so the
+`og:image` of a CMS photo is the optimizer's URL at 1200 wide (the JPEG a scraper without
+an `Accept` header gets, about 60 KB), its declared size scaled to match; the `/og/*.png`
+renders are unchanged. **Two findings of the same review, outside the photos.** The
+bilingual hook's `inOtherLocale` (ADR-057) takes `req.file` off the request for the other
+language's write and puts it back after: Payload's Local API clears it itself on this
+version (`local/update.js`), so no second copy was ever uploaded (verified with a bilingual
+upload and a replacement through REST: the names stay), but the guarantee is now the hook's
+own, and the outer operation's `unlinkTempFiles` sees the file again. And the hook's second
+write passes `fallbackLocale: false`, as its read did: a **global's** update reads its
+original with the request's fallback locale and fills every omitted localized field from
+that copy, so a write on `?locale=en` without `fallback-locale=none` copies the Arabic
+into each empty English field (a collection's update by id reads without fallback, verified
+2026-09-19); the e2e's restores of the home and site-settings globals carry the parameter
+(RUNBOOK, "The English site").
+
 ## ADR-030: Publish → live: a 60 s timer plus `revalidatePath` on static routes (2026-09-13)
 
 The plan was tag-based on-demand revalidation. Two Next 16.3.5 behaviours ruled it out,
@@ -380,6 +432,13 @@ surface, so `/contact` moved from ground to surface (BRD §6.9 amended). The `(s
 route with its consequences for unknown URLs is ADR-032. Live preview stays deferred (BRD §9.3
 amended): it needs draft rendering on the public routes, which ISR + `revalidatePath` do
 not offer.
+
+Amended 2026-09-19 (photo quality, ADR-029 amended): the hero photos and the step icons the
+seed uploads are the files `pnpm assets` derives, now at the source's resolution and one q92
+encode; a slide's contract carries `blurDesktop` and `blurMobile` beside its two photos, and
+the `Home` hero renders them as the placeholder under each breakpoint's photo. The seed's
+media names (`hero-set-a-desktop.jpg`, `icons-3d-printer-print.jpg`) stay the key
+`scripts/media-requality.ts` matches on; a re-uploaded file carries that name plus a hash.
 
 ## ADR-032: Unknown top-level URLs: the proxy answers the global 404 (2026-09-13)
 

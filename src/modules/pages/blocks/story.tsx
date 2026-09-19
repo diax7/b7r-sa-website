@@ -5,6 +5,8 @@ import { Icon } from '@/components/shared/icon';
 import { SarAmount } from '@/components/shared/sar-amount';
 import { Section } from '@/components/shared/section';
 import { getHome, getSiteSettings } from '@/lib/cms';
+import { blurPlaceholder } from '@/lib/image-url';
+import { PHOTO_QUALITY } from '@/lib/photo';
 import type { BlockProps } from '@/modules/pages/blocks/types';
 
 /**
@@ -44,6 +46,8 @@ export async function StoryBlock({ block, locale, tone, anchor, heading }: Block
               src={block.photo.src}
               alt=""
               fill
+              quality={PHOTO_QUALITY}
+              {...blurPlaceholder(block.photo.blur)}
               priority
               fetchPriority="high"
               sizes="(min-width: 1024px) 640px, 100vw"

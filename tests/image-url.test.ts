@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { optimizedSrc, s3PublicOrigin, s3RemotePatterns } from '@/lib/image-url';
+import { blurPlaceholder, optimizedSrc, s3PublicOrigin, s3RemotePatterns } from '@/lib/image-url';
 
 describe('S3 media host (ADR-029)', () => {
   it('is absent until a storage endpoint is configured', () => {
@@ -25,6 +25,17 @@ describe('S3 media host (ADR-029)', () => {
         S3_PUBLIC_URL: 'https://media.b7r.sa',
       }),
     ).toEqual([{ protocol: 'https', hostname: 'media.b7r.sa', pathname: '/**' }]);
+  });
+});
+
+describe('blurPlaceholder (ADR-029, amended 2026-09-19)', () => {
+  it('is the blur-up pair for a placeholder and nothing without one', () => {
+    expect(blurPlaceholder('data:image/webp;base64,AA==')).toEqual({
+      placeholder: 'blur',
+      blurDataURL: 'data:image/webp;base64,AA==',
+    });
+    expect(blurPlaceholder(undefined)).toEqual({});
+    expect(blurPlaceholder('')).toEqual({});
   });
 });
 
