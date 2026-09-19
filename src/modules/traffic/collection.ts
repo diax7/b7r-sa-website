@@ -37,7 +37,7 @@ export const Traffic: CollectionConfig = {
     },
     hidden: hiddenUnlessAdmin,
     description: {
-      ar: 'من أين يأتي الزوار وماذا تقرأ زواحف الذكاء الاصطناعي: عدّاد يومي خاص بالموقع، بلا ملفات تعريف ولا عناوين IP. للقراءة فقط.',
+      ar: 'من أين يأتي الزوار وماذا تقرأ زواحف الذكاء الاصطناعي: عدّاد يومي خاص بالموقع، بلا ملفات ارتباط ولا عناوين IP. للقراءة فقط.',
       en: "Where visitors come from and what the AI crawlers read: the site's own daily count, no cookies, no IP addresses. Read-only.",
     },
   },

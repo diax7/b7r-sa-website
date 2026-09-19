@@ -167,7 +167,7 @@ export function extractability(s: Snapshot): Finding[] {
       },
       guide: {
         en: 'The Arabic alt text is required; the English one is what the English page and an engine reading it get. Open each photo listed here and write the English field beside the Arabic alt text.',
-        ar: 'النص البديل العربي إلزامي؛ والإنجليزي هو ما تحصل عليه الصفحة الإنجليزية والمحرّك الذي يقرؤها. افتح كل صورة في هذه القائمة واكتب الحقل الإنجليزي بجانب النص البديل العربي.',
+        ar: 'النص البديل العربي مطلوب؛ والإنجليزي هو ما تحصل عليه الصفحة الإنجليزية والمحرّك الذي يقرؤها. افتح كل صورة في هذه القائمة واكتب الحقل الإنجليزي بجانب النص البديل العربي.',
       },
     }),
     prorata({
@@ -256,14 +256,14 @@ export function extractabilityFacts(): Fact[] {
       section: 'extractability',
       text: {
         en: 'A post cannot be published without three takeaways, a cover and two internal links; a product cannot be published without a front photo, a short description, sizes and a price.',
-        ar: 'لا يُنشر المقال بلا ثلاث نقاط رئيسية وغلاف ورابطين داخليين؛ ولا يُنشر المنتج بلا صورة أمامية ووصف قصير ومقاسات وسعر.',
+        ar: 'لا يُنشر المقال بلا أهم النقاط الثلاث وغلاف ورابطين داخليين؛ ولا يُنشر المنتج بلا صورة أمامية ووصف قصير ومقاسات وسعر.',
       },
     },
     {
       section: 'extractability',
       text: {
         en: 'Every product page states the delivery days and the price with its prefix from the site settings; every photo has Arabic alt text (required).',
-        ar: 'كل صفحة منتج تذكر أيام التوصيل والسعر مع بادئته من إعدادات الموقع؛ ولكل صورة نص بديل عربي (إلزامي).',
+        ar: 'كل صفحة منتج تذكر أيام التوصيل والسعر مع بادئته من إعدادات الموقع؛ ولكل صورة نص بديل عربي (مطلوب).',
       },
     },
   ];
