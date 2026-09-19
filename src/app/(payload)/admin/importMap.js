@@ -1,4 +1,5 @@
 import { EntityHeader as EntityHeader_f6dfb7db6d86b31e8afa488c8e2f837d } from '@/modules/cms/admin/document/entity-header'
+import { FormModifiedSentinel as FormModifiedSentinel_a8947d47cb10b1a9b865ee253e10dbae } from '@/modules/cms/admin/document/form-modified'
 import { BilingualField as BilingualField_177fb8b1434bc5d21b7dade77badc58e } from '@/modules/cms/admin/fields/bilingual/field'
 import { SavedByField as SavedByField_46120640bb11e96d61a3a62a5294d80c } from '@/modules/cms/admin/fields/saved-by-field'
 import { NoDiff as NoDiff_662eeae41683300b50909d58e1fcdcd1 } from '@/modules/cms/admin/fields/bilingual/no-diff'
@@ -55,6 +56,7 @@ import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } f
 /** @type import('payload').ImportMap */
 export const importMap = {
   "@/modules/cms/admin/document/entity-header#EntityHeader": EntityHeader_f6dfb7db6d86b31e8afa488c8e2f837d,
+  "@/modules/cms/admin/document/form-modified#FormModifiedSentinel": FormModifiedSentinel_a8947d47cb10b1a9b865ee253e10dbae,
   "@/modules/cms/admin/fields/bilingual/field#BilingualField": BilingualField_177fb8b1434bc5d21b7dade77badc58e,
   "@/modules/cms/admin/fields/saved-by-field#SavedByField": SavedByField_46120640bb11e96d61a3a62a5294d80c,
   "@/modules/cms/admin/fields/bilingual/no-diff#NoDiff": NoDiff_662eeae41683300b50909d58e1fcdcd1,

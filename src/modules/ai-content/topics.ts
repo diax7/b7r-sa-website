@@ -55,8 +55,9 @@ export const AiTopics: CollectionConfig = {
       en: 'What the engine writes about, by priority. Seasonal topics carry a publish window.',
     },
     components: {
-      ...collectionComponents('ai-topics'),
-      edit: { beforeDocumentControls: ['@/modules/ai-content/admin/generate-now#GenerateNow'] },
+      ...collectionComponents('ai-topics', {
+        beforeDocumentControls: ['@/modules/ai-content/admin/generate-now#GenerateNow'],
+      }),
       // Under the list controls, above the rows it feeds (audit 2026-09-18, 2.13); Payload
       // offers no slot beside "Create New" short of a custom list view.
       beforeListTable: ['@/modules/ai-content/admin/import-topics#ImportTopics'],
