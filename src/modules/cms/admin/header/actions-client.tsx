@@ -2,52 +2,32 @@
 
 import { useNav, useWindowInfo } from '@payloadcms/ui';
 import { Menu, Search } from 'lucide-react';
-import type { ReactElement } from 'react';
 import { Icon } from '@/components/shared/icon';
 import { Kbd } from '@/components/ui/kbd';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { TooltipProvider } from '@/components/ui/tooltip';
 import { cn } from '@/lib/cn';
 import { ACTION_ICONS } from '@/modules/cms/admin/icons';
+import { control, IconTooltip } from '@/modules/cms/admin/header/control';
 import { Palette, type PaletteProps } from '@/modules/cms/admin/header/palette';
 import { PALETTE_EVENT } from '@/modules/cms/admin/header/palette-event';
+import { LanguageSwitch } from '@/modules/cms/admin/nav/language-switch';
 import { useAdminStrings } from '@/modules/cms/admin/use-admin-strings';
-
-const control =
-  'flex h-9 items-center gap-2 rounded-inner border border-border bg-surface px-3 text-small text-text-muted transition-[width,color,border-color] duration-(--duration-fast) hover:border-text-muted/60 hover:text-text focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-accent/40';
-
-/** A tooltip on a control while it shows its icon alone (the icon-only rule); nothing when its text is visible. */
-function IconTooltip({
-  label,
-  when,
-  children,
-}: {
-  label: string;
-  when: boolean;
-  children: ReactElement;
-}) {
-  if (!when) return children;
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>{children}</TooltipTrigger>
-      <TooltipContent side="bottom">{label}</TooltipContent>
-    </Tooltip>
-  );
-}
 
 /**
  * Payload's header, our controls (Dhia, 2026-09-13; ADR-058): the hamburger that opens the
  * drawer at 1024 px and under (the stylesheet places it at the leading edge of the header
  * and hides it above; the drawer, which covers the header, carries the X at the same spot),
- * a bordered search box that opens the palette (240 px, growing on focus), and a bordered
- * "View website" link. At the drawer widths the two controls fold to icons (Payload caps
+ * a bordered search box that opens the palette (240 px, growing on focus), a bordered
+ * "View website" link, and the panel's language switch at the trailing end (ADR-056,
+ * amended 2026-09-19). At the drawer widths the three controls fold to icons (Payload caps
  * the actions at 300 px there) and, icon-only, carry a tooltip beside their label; the
  * palette still answers Ctrl/⌘ K everywhere.
  */
 export function HeaderActionsClient(props: PaletteProps) {
   const s = useAdminStrings();
   const { navOpen, setNavOpen } = useNav();
-  // Payload's `m` (1024 px): at or under it the two controls are icons (undefined, before
-  // the first measurement, counts as icons; the tooltip is harmless beside visible text).
+  // Payload's `m` (1024 px): at or under it the controls are icons (undefined, before the
+  // first measurement, counts as icons; the tooltip is harmless beside visible text).
   const iconsOnly = useWindowInfo().breakpoints['m'] !== false;
   const menuLabel = navOpen ? s.nav.closeMenu : s.nav.openMenu;
   return (
@@ -102,6 +82,7 @@ export function HeaderActionsClient(props: PaletteProps) {
             <span className="hidden min-[1025px]:inline">{s.header.viewSite}</span>
           </a>
         </IconTooltip>
+        <LanguageSwitch placement="header" />
       </div>
       <Palette {...props} />
     </TooltipProvider>

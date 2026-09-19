@@ -28,8 +28,10 @@ export const adminStrings = {
     openMenu: 'Open the menu',
     closeMenu: 'Close the menu',
     viewSite: 'View website',
+    /** The language switch's group (the header, the drawer's foot); the names are Payload's own. */
     language: 'Panel language',
-    languages: { en: 'English', ar: 'العربية' },
+    /** The header's one-icon switch at 1024 px and under: it toggles to the other language. */
+    switchLanguage: 'Switch to Arabic',
     /**
      * The badges (ADR-058), read to a screen reader after the entry's name. The runs and the
      * drafts badges say what the dashboard says (`dashboard.hand.failedRuns`,
@@ -516,7 +518,7 @@ export const adminStringsAr: AdminStrings = {
     closeMenu: 'أغلق القائمة',
     viewSite: 'عرض الموقع',
     language: 'لغة اللوحة',
-    languages: { en: 'English', ar: 'العربية' },
+    switchLanguage: 'بدّل إلى الإنجليزية',
     badges: {
       overLimit: (n) =>
         arabicCount(n, {

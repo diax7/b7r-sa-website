@@ -238,7 +238,7 @@ export function NavClient({ groups, prefs, account, adminRoute }: NavClientProps
                 direction={direction}
               />
             )}
-            <LanguageSwitch />
+            <LanguageSwitch placement="drawer" />
           </div>
         </div>
       </aside>
