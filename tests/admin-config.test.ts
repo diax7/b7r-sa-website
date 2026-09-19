@@ -454,7 +454,10 @@ function noteAllowance(text: string, language: keyof Pair): number {
 /**
  * The place prepositions an Arabic description never opens with: the sentence says where
  * the value shows, so it opens with its verb («يظهر تحت», «تظهر في», «يعلو»). «من» and
- * «بين» stay allowed: a range or a spec starts with them («من صفر إلى 5»).
+ * «بين» stay allowed: a range or a spec starts with them («من صفر إلى 5»). Keyed on the
+ * first token by design: a place after a colon or a verb passes unseen («يظهر: في
+ * البطاقة»), and that is fine, since the shapes in use are covered; widening the pattern
+ * into the sentence would refuse every «يظهر في …» as a false positive.
  */
 const PLACE_FRAGMENT = /^(في|تحت|فوق|خلف|بجانب|أمام|على|عند|داخل|ضمن)\s/;
 

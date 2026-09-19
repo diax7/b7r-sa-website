@@ -14,8 +14,8 @@ unhelpful or redundant copy goes; this applies to all future features."
 | Field descriptions in the maps | 320 before, 353 after (33 sentences moved in from inline config text and the six home-page section switches; no field lost its sentence) |
 | English descriptions rewritten | 276 of 320 (254 shorter); 28,339 characters to 23,564, 17% less |
 | Arabic descriptions rewritten | 299 of 320 (268 shorter); 23,092 characters to 19,152, 17% less |
-| Descriptions over 140 characters | 29 before, 0 after, measured on the rendered text (a bilingual list may exceed the cap by its one-clause shared-rows note: three lists do, by 7 to 43 characters); `CAP_EXCEPTIONS` is empty |
-| Arabic descriptions that opened with a bare place preposition («في البطاقة…», «تحت العنوان…») | 83 after the first pass (the CTO review), 0 after: each got its verb («يظهر في البطاقة…», «تظهر خلف الشريحة…», «يعلو شبكة البطاقات…»); 116 of the 411 now open with a verb, the rest are spec sentences or switches |
+| Descriptions over 140 characters | 29 before, 0 after, measured on the rendered text (a bilingual list may exceed the cap by its one-clause shared-rows note: the longest rendered Arabic is 148 characters, `home.hero.slides`, 140 plus its note, the allowance); `CAP_EXCEPTIONS` is empty |
+| Arabic descriptions that opened with a bare place preposition («في البطاقة…», «تحت العنوان…») | 83 after the first pass (the CTO review counted 120: each bilingual pair twice), 0 on the merged head: each got its verb («يظهر في البطاقة…», «تظهر خلف الشريحة…», «يعلو شبكة البطاقات…»); 96 of the 411 open with their verb, the rest are spec sentences or switches |
 | Config labels, options, tab and entity sentences changed | 61 English, 67 Arabic (the moves included) |
 | Visibility rules' sentences changed | 3 English, 8 Arabic (the tagline, the search data, «مطلوب», «أهم النقاط») |
 | Strings tree leaves changed | 16 pairs (the on/off pair, the desktop, the image rows, the ledger and score help, the traffic notes; `nav.*` untouched, it is PR 1's) |
