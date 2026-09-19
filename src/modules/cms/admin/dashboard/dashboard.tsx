@@ -2,6 +2,7 @@ import { getTranslation } from '@payloadcms/translations';
 import type { I18nClient } from '@payloadcms/translations';
 import { Gutter } from '@payloadcms/ui';
 import type { AdminViewServerProps, Payload } from 'payload';
+import { cn } from '@/lib/cn';
 import { riyadh } from '@/lib/riyadh';
 import { EngineCard } from '@/modules/ai-content/admin/engine-card';
 import { ContentCard, type ContentRow } from '@/modules/cms/admin/dashboard/content-card';
@@ -17,6 +18,7 @@ import { dashboardTiles } from '@/modules/cms/admin/dashboard/tile-data';
 import { Tiles } from '@/modules/cms/admin/dashboard/tiles';
 import { ADMIN_VIEWS } from '@/modules/cms/admin/icons';
 import { type AdminStrings, adminStringsFor } from '@/modules/cms/admin/strings';
+import { InboxCard } from '@/modules/inbox/admin/inbox-card';
 import { TrafficCard } from '@/modules/traffic/admin/traffic-card';
 import { AssistantsCard } from '@/modules/visibility/admin/assistants-card';
 
@@ -54,12 +56,13 @@ function shapeContent(
 }
 
 /**
- * The admin home (`admin.components.views.dashboard`, ADR-039, ADR-059): seven sections, top
+ * The admin home (`admin.components.views.dashboard`, ADR-039, ADR-059): eight sections, top
  * to bottom, answering "how is the site doing and what needs me": the greeting with the range
  * and the "needs a hand" line; four numbers at a glance; where visits come from; what the
- * assistants say; the content; the engine and the spend; the server (collapsed). One server
- * render, the reads in parallel (`read.ts`), each guarded: a failed reader shows its section
- * with the "not available" word, a reader the user may not run leaves no section behind.
+ * assistants say; the inbox beside the content (ADR-061); the engine and the spend; the
+ * server (collapsed). One server render, the reads in parallel (`read.ts`), each guarded: a
+ * failed reader shows its section with the "not available" word, a reader the user may not
+ * run leaves no section behind.
  */
 export async function Dashboard(props: AdminViewServerProps) {
   const { payload, i18n, initPageResult, user, searchParams } = props;
@@ -86,7 +89,7 @@ export async function Dashboard(props: AdminViewServerProps) {
         })
       : null;
   const name = String(user?.['name'] ?? user?.email ?? '');
-  const { traffic, people, ledger, engine, health } = data;
+  const { traffic, people, ledger, engine, health, inbox } = data;
   return (
     <Gutter>
       <div
@@ -142,15 +145,37 @@ export async function Dashboard(props: AdminViewServerProps) {
             )}
           </div>
         )}
-        <ContentCard
-          rows={rows}
-          home={home}
-          saves={saves}
-          actions={actions.buttons}
-          adminRoute={adminRoute}
-          language={language}
-          now={now}
-        />
+        {/* The inbox before the content (ADR-061): a third of the row beside it on a desktop,
+            above it when stacked; the row is the content alone for a user without the inbox.
+            The tracks are `minmax(0, …)`: an `auto` track would grow to a truncated title's
+            full width and push a phone sideways. */}
+        <div
+          className={cn(
+            'grid grid-cols-1 gap-6',
+            inbox !== undefined && 'lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]',
+          )}
+        >
+          {inbox === null && (
+            <EmptySection
+              hook="inbox"
+              title={s.dashboard.inbox.title}
+              hue="blue"
+              language={language}
+            />
+          )}
+          {inbox && (
+            <InboxCard reading={inbox} adminRoute={adminRoute} language={language} now={now} />
+          )}
+          <ContentCard
+            rows={rows}
+            home={home}
+            saves={saves}
+            actions={actions.buttons}
+            adminRoute={adminRoute}
+            language={language}
+            now={now}
+          />
+        </div>
         {engine === null && (
           <EmptySection
             hook="engine"

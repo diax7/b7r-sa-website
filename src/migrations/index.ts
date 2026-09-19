@@ -30,6 +30,7 @@ import * as migration_20260918_142817_purge_locale_preference from './20260918_1
 import * as migration_20260918_212944_media_blur from './20260918_212944_media_blur';
 import * as migration_20260918_213027_media_no_renditions from './20260918_213027_media_no_renditions';
 import * as migration_20260919_170624_connections_umami from './20260919_170624_connections_umami';
+import * as migration_20260919_183008_messages from './20260919_183008_messages';
 
 export const migrations = [
   {
@@ -190,6 +191,11 @@ export const migrations = [
   {
     up: migration_20260919_170624_connections_umami.up,
     down: migration_20260919_170624_connections_umami.down,
-    name: '20260919_170624_connections_umami'
+    name: '20260919_170624_connections_umami',
+  },
+  {
+    up: migration_20260919_183008_messages.up,
+    down: migration_20260919_183008_messages.down,
+    name: '20260919_183008_messages',
   },
 ];

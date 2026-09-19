@@ -94,6 +94,14 @@ test refuses (translations of a Latin term, or synonyms of the settled word).
 | The site | redirect | تحويل |  | إعادة التوجيه، إعادة توجيه |  |
 | The site | fixed pages | الصفحات الثابتة |  | الصفحات الأساسية |  |
 | The site | address / path | عنوان / مسار |  |  |  |
+| Inbox | inbox | الوارد |  | البريد الوارد، صندوق الوارد | The section under Site and the dashboard card: the messages, and the bookings after them. |
+| Inbox | message (a contact form submission) | رسالة |  | مراسلة، طلب تواصل | Plural «الرسائل»; the row is what the form sent, never rewritten. |
+| Inbox | inquiry (the choice on the form) | الاستفسار |  | نوع الطلب | The column reads «نوع الاستفسار», the form's own label. |
+| Inbox | sender | المرسل |  | صاحب الرسالة |  |
+| Inbox | reply | رد |  |  |  |
+| Inbox | new (a message nobody opened) | جديد |  | غير مقروء، غير مقروءة | The status pill in blue, the sidebar badge and the dashboard card count these. |
+| Inbox | following (a reply pending) | قيد المتابعة |  | تحت المتابعة، جارٍ المتابعة | Amber, like a draft: someone is on it. |
+| Inbox | handled | معالَج |  | تمت المعالجة، تم التعامل، منتهية | Green, done; the passive participle, never «تم» + مصدر (§5). The action is «علّم كمعالَج». |
 | Catalogue | catalogue | الكتالوج |  |  |  |
 | Catalogue | product | منتج |  | سلعة |  |
 | Catalogue | colour | لون |  |  |  |

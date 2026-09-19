@@ -23,8 +23,9 @@ import {
 } from '@/modules/cms/admin/nav/active';
 import { type BadgeStrings, badgeStrings } from '@/modules/cms/admin/nav/badge-strings';
 import type { NavBadge } from '@/modules/cms/admin/nav/badges';
-import type { NavEntity, NavGroup } from '@/modules/cms/admin/nav/groups';
+import type { NavEntity, NavGroup, NavGroupSection } from '@/modules/cms/admin/nav/groups';
 import { nextRowIndex, rowKey, tabbableRow, treeRows } from '@/modules/cms/admin/nav/keyboard';
+import { groupBlocks } from '@/modules/cms/admin/nav/order';
 import { useAdminStrings } from '@/modules/cms/admin/use-admin-strings';
 
 const row =
@@ -199,40 +200,67 @@ function Group({
           overridden fails axe's list rule, so the group owns the list rather than being it. */}
       <CollapsibleContent role="group" aria-labelledby={buttonId} className="animate-none py-1">
         <ul className="flex flex-col gap-0.5">
-          {group.entities.map((entity) => (
-            <Entry
-              key={`${entity.type}-${entity.slug}`}
-              entity={entity}
-              hue={group.hue}
-              pathname={pathname}
-              tabbable={tabbable}
-              badges={badges}
-            />
-          ))}
-          {group.sections.map((section) => (
-            <li key={section.key} data-admin-section={section.key}>
-              <div className="flex h-[32px] items-center gap-2 ps-2.5 text-caption font-medium text-text-muted">
-                <Icon icon={NAV_SECTIONS[section.key].icon} size={14} />
-                <span className="truncate">{section.label}</span>
-              </div>
-              <ul className={subList} aria-label={section.label}>
-                {section.entities.map((entity) => (
-                  <Entry
-                    key={`${entity.type}-${entity.slug}`}
-                    entity={entity}
-                    hue={group.hue}
-                    pathname={pathname}
-                    tabbable={tabbable}
-                    badges={badges}
-                    secondary
-                  />
-                ))}
-              </ul>
-            </li>
-          ))}
+          {groupBlocks(group).map((block) =>
+            block.kind === 'entity' ? (
+              <Entry
+                key={`${block.entity.type}-${block.entity.slug}`}
+                entity={block.entity}
+                hue={group.hue}
+                pathname={pathname}
+                tabbable={tabbable}
+                badges={badges}
+              />
+            ) : (
+              <Section
+                key={block.section.key}
+                section={block.section}
+                hue={group.hue}
+                pathname={pathname}
+                tabbable={tabbable}
+                badges={badges}
+              />
+            ),
+          )}
         </ul>
       </CollapsibleContent>
     </Collapsible>
+  );
+}
+
+/** A section inside a group (ADR-061): its heading (not a row), then its entries as secondary ones. */
+function Section({
+  section,
+  hue,
+  pathname,
+  tabbable,
+  badges,
+}: {
+  section: NavGroupSection;
+  hue: Hue;
+  pathname: string;
+  tabbable: string | null;
+  badges: BadgeStrings;
+}) {
+  return (
+    <li data-admin-section={section.key}>
+      <div className="flex h-[32px] items-center gap-2 ps-2.5 text-caption font-medium text-text-muted">
+        <Icon icon={NAV_SECTIONS[section.key].icon} size={14} />
+        <span className="truncate">{section.label}</span>
+      </div>
+      <ul className={subList} aria-label={section.label}>
+        {section.entities.map((entity) => (
+          <Entry
+            key={`${entity.type}-${entity.slug}`}
+            entity={entity}
+            hue={hue}
+            pathname={pathname}
+            tabbable={tabbable}
+            badges={badges}
+            secondary
+          />
+        ))}
+      </ul>
+    </li>
   );
 }
 

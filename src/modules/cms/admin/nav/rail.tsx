@@ -25,6 +25,7 @@ import {
 import { groupEntities, isActive, isDashboard } from '@/modules/cms/admin/nav/active';
 import type { NavEntity, NavGroup } from '@/modules/cms/admin/nav/groups';
 import { type BadgeStrings, badgeStrings } from '@/modules/cms/admin/nav/badge-strings';
+import { groupBlocks } from '@/modules/cms/admin/nav/order';
 import { BadgeMark } from '@/modules/cms/admin/nav/tree';
 import { useAdminStrings } from '@/modules/cms/admin/use-admin-strings';
 
@@ -175,33 +176,34 @@ function RailGroup({
           />
           <span className="font-semibold">{group.label}</span>
         </DropdownMenuLabel>
-        {group.entities.map((entity) => (
-          <FlyoutEntry
-            key={`${entity.type}-${entity.slug}`}
-            entity={entity}
-            hue={group.hue}
-            pathname={pathname}
-            badges={badges}
-          />
-        ))}
-        {group.sections.map((section) => (
-          <div key={section.key} data-admin-section={section.key}>
-            <DropdownMenuLabel className="flex items-center gap-2">
-              <Icon icon={NAV_SECTIONS[section.key].icon} size={14} />
-              {section.label}
-            </DropdownMenuLabel>
-            {section.entities.map((entity) => (
-              <FlyoutEntry
-                key={`${entity.type}-${entity.slug}`}
-                entity={entity}
-                hue={group.hue}
-                pathname={pathname}
-                badges={badges}
-                secondary
-              />
-            ))}
-          </div>
-        ))}
+        {groupBlocks(group).map((block) =>
+          block.kind === 'entity' ? (
+            <FlyoutEntry
+              key={`${block.entity.type}-${block.entity.slug}`}
+              entity={block.entity}
+              hue={group.hue}
+              pathname={pathname}
+              badges={badges}
+            />
+          ) : (
+            <div key={block.section.key} data-admin-section={block.section.key}>
+              <DropdownMenuLabel className="flex items-center gap-2">
+                <Icon icon={NAV_SECTIONS[block.section.key].icon} size={14} />
+                {block.section.label}
+              </DropdownMenuLabel>
+              {block.section.entities.map((entity) => (
+                <FlyoutEntry
+                  key={`${entity.type}-${entity.slug}`}
+                  entity={entity}
+                  hue={group.hue}
+                  pathname={pathname}
+                  badges={badges}
+                  secondary
+                />
+              ))}
+            </div>
+          ),
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );

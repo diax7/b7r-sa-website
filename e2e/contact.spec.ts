@@ -1,5 +1,6 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, type Page, request as apiRequest, test } from '@playwright/test';
 import { CONTACT_RATE_LIMIT } from '../src/modules/contact/schema';
+import { ADMIN, API, hasAdmin, login } from './helpers/cms';
 
 // One project, serial, one client IP per test: the in-memory limiter (5 per 10 min) must see
 // deterministic traffic (the newsletter lesson). The 429 test runs last.
@@ -16,6 +17,30 @@ const VALID = {
   inquiry: 'تاجر',
   message: 'أرغب بربط متجري.',
 };
+
+/** The two addresses the suite submits under; every row they left in the inbox goes at the end. */
+const SENDERS = [VALID.email, 'investor@example.ae'];
+
+// Every accepted submission is a row of the inbox (ADR-061): the suite removes its own,
+// with the admin's token, once it has run (a context of its own: `afterAll` gets no test
+// fixture); without the credentials the rows stay (a local run against a scratch database).
+test.afterAll(async () => {
+  if (!hasAdmin) return;
+  const baseURL = test.info().project.use.baseURL ?? '';
+  const request = await apiRequest.newContext({ baseURL });
+  try {
+    const auth = await login(request, ADMIN);
+    for (const email of SENDERS) {
+      const res = await request.delete(
+        `${API}/messages?where[email][equals]=${encodeURIComponent(email)}`,
+        { headers: auth },
+      );
+      expect(res.status(), `deleting the rows of ${email}`).toBe(200);
+    }
+  } finally {
+    await request.dispose();
+  }
+});
 
 /**
  * Serves a stand-in for Cloudflare's widget script: the same API surface, no network.

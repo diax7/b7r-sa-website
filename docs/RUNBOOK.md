@@ -345,9 +345,36 @@ current), point `DATABASE_URL` at it.
 ## Contact form
 
 `POST /api/contact` order: JSON + same origin → validation → honeypot (200) → rate limit
-5/10 min/IP → Turnstile `siteverify` when `TURNSTILE_SECRET_KEY` is set → Resend
-`emails.send` to the contact address in the site settings (ADR-052) with `replyTo` = the sender. `CONTACT_TRANSPORT=mock` (tests
-only, refused with a key) keeps messages in memory. Message bodies are never logged.
+5/10 min/IP → Turnstile `siteverify` when `TURNSTILE_SECRET_KEY` is set → **the inbox row**
+(ADR-061) → Resend `emails.send` to the contact address in the site settings (ADR-052) with
+`replyTo` = the sender. The answer is 200 once the row exists, whatever the e-mail did.
+`CONTACT_TRANSPORT=mock` (tests only, refused with a key) keeps messages in memory. Message
+bodies and the sender's fields are never logged; a failure names the row's id.
+
+## The inbox (ADR-061)
+
+- **Reading it.** Site → Inbox → Messages: one row per submission, newest first, the
+  status as a pill (New blue, Following amber, Handled green), searchable by name, e-mail
+  and phone. The red badge on Messages and the dashboard's Inbox card count the new ones;
+  both clear as messages are handled. A message's form shows the sender's fields as lines
+  (nobody rewrites them), the internal notes, the status, the page and the UTM parameters
+  the link carried, and three actions above it: "Reply on WhatsApp" (a `wa.me` link with a
+  greeting in the sender's language, only when the row has a phone), "Reply by e-mail" (a
+  `mailto:` with a subject in it) and "Mark handled". Admins and editors read and work the
+  inbox alike.
+- **`emailed: false`** ("Notification sent: No") means the row is here and the
+  notification e-mail did not go out: no `RESEND_API_KEY`, no contact address in Site
+  settings → Contact, or Resend refused. Nothing retries it; answer from the inbox. The
+  log line names the row's id and the transport's status, never the sender; a store that
+  failed names the error's name alone (a database error's message would carry the
+  sender's fields). On a fresh host before Resend is configured, every message reads this
+  way and none is lost.
+- **Deleting** is an admin's act, one row at a time or a filtered bulk delete through the
+  API; nothing deletes itself. A stranger's name, phone and e-mail live in these rows:
+  export nothing, and remove a row when its sender asks.
+- **The e2e** on the review server creates rows under `example.com` addresses and removes
+  them at the end (the public contact spec with the admin's token, the admin spec its own
+  row); a row of theirs that survives is a run that was interrupted.
 
 ## Open Graph images
 

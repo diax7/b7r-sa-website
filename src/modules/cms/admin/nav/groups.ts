@@ -20,6 +20,7 @@ import {
   type NavSection,
 } from '@/modules/cms/admin/icons';
 import { type NavBadge, navBadges } from '@/modules/cms/admin/nav/badges';
+import { blockEntities, groupBlocks } from '@/modules/cms/admin/nav/order';
 
 /** One sidebar / palette entry: plain data, safe to hand to a client component. */
 export interface NavEntity {
@@ -36,6 +37,8 @@ export interface NavEntity {
 export interface NavGroupSection {
   key: NavSection;
   label: string;
+  /** Before or after the group's primary entries (`NAV_SECTIONS`, ADR-061). */
+  place: 'first' | 'last';
   entities: NavEntity[];
 }
 
@@ -151,6 +154,7 @@ export async function navGroups(args: {
       .map((section) => ({
         key: section,
         label: getTranslation({ ar: NAV_SECTIONS[section].ar, en: NAV_SECTIONS[section].en }, i18n),
+        place: NAV_SECTIONS[section].place,
         entities: ofGroup.filter((e) => e.placement.section === section).map(toEntity),
       }))
       .filter((s) => s.entities.length > 0);
@@ -168,12 +172,9 @@ function flat(entities: NavEntity[], group: string): Array<NavEntity & { group: 
   return entities.flatMap((e) => [{ ...e, group }, ...flat(e.children, group)]);
 }
 
-/** Every entry of every group, flat, for the palette and the dashboard. */
+/** Every entry of every group, flat and in document order, for the palette and the dashboard. */
 export function flattenNav(groups: NavGroup[]): Array<NavEntity & { group: string }> {
-  return groups.flatMap((g) => [
-    ...flat(g.entities, g.label),
-    ...g.sections.flatMap((s) => flat(s.entities, g.label)),
-  ]);
+  return groups.flatMap((g) => groupBlocks(g).flatMap((b) => flat(blockEntities(b), g.label)));
 }
 
 /** The user's remembered open/closed groups (Payload's `nav` preference). */

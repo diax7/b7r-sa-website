@@ -87,7 +87,7 @@ try {
       greeting.slice(0, 30),
     );
     // A page's edit view: the bilingual twin beside the title.
-    await page.goto(`${origin}/admin/collections/pages?limit=1`, { waitUntil: 'networkidle' });
+    await page.goto(`${origin}/admin/collections/pages`, { waitUntil: 'networkidle' });
     // An existing document (the list's "Create New" link would open a fresh draft).
     const first = page
       .locator('.collection-list a[href*="/admin/collections/pages/"]:not([href$="/create"])')

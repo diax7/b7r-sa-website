@@ -16,6 +16,7 @@
 @source '../../modules/cms/admin';
 @source '../../modules/ai-content/admin';
 @source '../../modules/connections/admin';
+@source '../../modules/inbox/admin';
 @source '../../modules/traffic/admin';
 @source '../../modules/visibility/admin';
 @source '../../components';
@@ -36,6 +37,10 @@
   /* Blue text, icons, links and focus on the greys (5.7:1 on the page background). */
   --color-accent: #0098e0;
   --color-accent-tint: rgb(0 152 224 / 0.14);
+  /* The accent as text on its own tint (the New message pill, ADR-061): lifted one step,
+     since #0098e0 on a blue tint over the surface reads 4.1:1; this is 5.3:1 on the
+     `bg-accent/10` pill over rgb 34 34 34 (the e2e measures it). Links stay the accent. */
+  --color-accent-on-tint: #33a8e6;
   /* Payload's greys. */
   --color-ground: var(--theme-elevation-0);
   --color-surface: var(--theme-elevation-50);

@@ -17,12 +17,14 @@ type State =
  * the button (design system: one primary action, the outcome in words, never a bare
  * spinner). The cookie signs the request; the route answers 403 to anyone else. `done`
  * turns the route's JSON into the sentence shown on success; the default is `doneLabel`.
+ * `onDone` is what the page does with a success besides saying it (a form field updated).
  */
 export function ApiAction({
   label,
   busyLabel,
   doneLabel,
   done,
+  onDone,
   icon,
   endpoint,
   body,
@@ -34,6 +36,7 @@ export function ApiAction({
   busyLabel: string;
   doneLabel: string;
   done?: (json: Record<string, unknown>) => string;
+  onDone?: (json: Record<string, unknown>) => void;
   icon: LucideIcon;
   endpoint: string;
   body: Record<string, unknown>;
@@ -63,6 +66,7 @@ export function ApiAction({
         return;
       }
       setState({ kind: 'done', text: done ? done(json) : doneLabel });
+      onDone?.(json);
     } catch (error) {
       setState({ kind: 'error', text: error instanceof Error ? error.message : String(error) });
     }

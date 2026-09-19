@@ -13,6 +13,8 @@ import {
   draftsWaiting,
   FAILED_RUNS_DAYS,
   failedRuns,
+  type InboxReading,
+  inboxReading,
   type MissingEnglish,
   missingEnglish,
   type PeopleSummary,
@@ -47,6 +49,8 @@ export interface DashboardData {
   published: Read<PublishedCount[]>;
   drafts: Read<DraftCount[]>;
   missingEnglish: Read<MissingEnglish[]>;
+  /** The new messages and the newest three (ADR-061); admins and editors. */
+  inbox: Read<InboxReading>;
   /** The content collections the user may read, in the audit's order. */
   contentCollections: ContentSlug[];
 }
@@ -74,9 +78,10 @@ async function guarded<T>(
  * Every number the dashboard shows (ADR-059), read once per render, in parallel, with the
  * user's permissions deciding which readers run: the traffic, the people, the score, the
  * ledger, the engine, the connections and the runs need an admin (the collections and globals
- * they read are admin-only); the content readers run on the collections the user may read; the health
- * report and the latest saves run for everyone. Nothing here is cached beyond what the
- * readers cache themselves (the score reading keeps its minute).
+ * they read are admin-only); the content readers run on the collections the user may read,
+ * the inbox on the messages; the health report and the latest saves run for everyone.
+ * Nothing here is cached beyond what the readers cache themselves (the score reading keeps
+ * its minute).
  */
 export async function readDashboard(args: {
   payload: Payload;
@@ -105,6 +110,7 @@ export async function readDashboard(args: {
     published,
     drafts,
     missing,
+    inbox,
   ] = await Promise.all([
     guarded(payload, 'health', true, () => healthReport()),
     guarded(payload, 'latest saves', true, () =>
@@ -142,6 +148,9 @@ export async function readDashboard(args: {
     ),
     guarded(payload, 'drafts', someContent, () => draftsWaiting(payload, content)),
     guarded(payload, 'missing English', someContent, () => missingEnglish(payload, content)),
+    guarded(payload, 'inbox', reads('messages'), () =>
+      inboxReading(payload, { user: user ?? null }),
+    ),
   ]);
   return {
     health,
@@ -156,6 +165,7 @@ export async function readDashboard(args: {
     published,
     drafts,
     missingEnglish: missing,
+    inbox,
     contentCollections,
   };
 }

@@ -5,10 +5,13 @@ import {
   connectionRows,
   draftsWaiting,
   failedRuns,
+  INBOX_PREVIEW,
+  inboxReading,
   missingEnglish,
   publishedInRange,
   rangeStart,
 } from '@/modules/cms/admin/dashboard/readers';
+import { excerptOf } from '@/modules/inbox/excerpt';
 import {
   daypartOf,
   needsAHand,
@@ -413,6 +416,45 @@ describe('the content readers (ADR-059)', () => {
         ],
       },
     });
+  });
+
+  it("reads the inbox with the user's access: the count of new messages and the newest three of them (ADR-061)", async () => {
+    const { payload, calls } = fakePayload({
+      find: () => [
+        { id: 3, name: 'ضياء', inquiry: 'تاجر', message: 'أرغب بربط متجري.', createdAt: 'c' },
+        { id: 2, name: 'Sara', inquiry: 'Partnership', message: 'Hi', createdAt: 'b' },
+      ],
+    });
+    const reading = await inboxReading(payload, { user });
+    expect(reading).toEqual({
+      newCount: 2,
+      newest: [
+        { id: 3, name: 'ضياء', inquiry: 'تاجر', message: 'أرغب بربط متجري.', createdAt: 'c' },
+        { id: 2, name: 'Sara', inquiry: 'Partnership', message: 'Hi', createdAt: 'b' },
+      ],
+    });
+    expect(calls).toHaveLength(1);
+    expect(calls[0]!.args).toMatchObject({
+      collection: 'messages',
+      where: { status: { equals: 'new' } },
+      sort: '-createdAt',
+      limit: INBOX_PREVIEW,
+      select: { name: true, inquiry: true, message: true, createdAt: true },
+      user,
+      overrideAccess: false,
+    });
+    expect(INBOX_PREVIEW).toBe(3);
+  });
+
+  it('cuts a message to its first words for the card: one line, at a word, an ellipsis', () => {
+    expect(excerptOf('أرغب بربط متجري.')).toBe('أرغب بربط متجري.');
+    expect(excerptOf('line one\n\n  line two')).toBe('line one line two');
+    const long = `${'word '.repeat(30)}end`;
+    const cut = excerptOf(long);
+    expect(cut.length).toBeLessThanOrEqual(81);
+    expect(cut.endsWith('…')).toBe(true);
+    expect(cut).not.toMatch(/ …$/);
+    expect(excerptOf('x'.repeat(100))).toBe(`${'x'.repeat(80)}…`);
   });
 
   it("reads one row per AI connection with the month's spend and runs, the service kinds left out", async () => {

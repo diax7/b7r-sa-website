@@ -194,6 +194,33 @@ export const adminStrings = {
         `${date}: ${visitors} visitors, ${pageviews} page views`,
     },
   },
+  inbox: {
+    /** The three actions above a message (ADR-061); the outcome beside the third. */
+    replyWhatsApp: 'Reply on WhatsApp',
+    replyEmail: 'Reply by e-mail',
+    markHandled: 'Mark handled',
+    marking: 'Marking…',
+    handled: 'Handled. The list shows it green.',
+    alreadyHandled: 'Handled already.',
+    /** The route's refusals, by status: the row is gone, or the rule says no. */
+    gone: 'This message no longer exists. Reload the list.',
+    refused: 'You may not change this message.',
+    /**
+     * What the reply opens with, in the sender's language (the message's `locale`), whatever
+     * the panel's: the same pair in both trees, keyed by the content locale like
+     * `bilingual.languages`, never a string of the panel.
+     */
+    reply: {
+      greeting: {
+        ar: 'مرحباً {name}، معك بحر برنت بخصوص رسالتك على b7r.sa.',
+        en: 'Hello {name}, this is B7R Print about your message on b7r.sa.',
+      } as Record<string, string>,
+      subject: {
+        ar: 'بخصوص رسالتك إلى بحر برنت',
+        en: 'About your message to B7R Print',
+      } as Record<string, string>,
+    },
+  },
   cells: {
     yesNo: ['Yes', 'No'] as const,
     onOff: ['On', 'Off'] as const,
@@ -420,6 +447,13 @@ export const adminStrings = {
       drafts: (n: number) =>
         n === 0 ? 'no drafts waiting' : `${n} draft${n === 1 ? '' : 's'} waiting`,
       unavailable: 'Not available',
+    },
+    /** The inbox card (ADR-061): the new messages and the newest three; its count is the sidebar's badge. */
+    inbox: {
+      title: 'Inbox',
+      newMessages: (n: number) =>
+        n === 0 ? 'No new messages' : `${n} new message${n === 1 ? '' : 's'}`,
+      link: 'All messages',
     },
     assistants: {
       title: 'What the assistants say',
@@ -699,6 +733,26 @@ export const adminStringsAr: AdminStrings = {
         `${date}: ${arabicCount(visitors, { one: 'زائر واحد', two: 'زائران', few: 'زوّار', many: 'زائراً' })}، ${arabicCount(pageviews, { one: 'مشاهدة صفحة واحدة', two: 'مشاهدتا صفحة', few: 'مشاهدات صفحات', many: 'مشاهدة صفحة' })}`,
     },
   },
+  inbox: {
+    replyWhatsApp: 'رد على WhatsApp',
+    replyEmail: 'رد بالبريد',
+    markHandled: 'علّم كمعالَج',
+    marking: 'جارٍ التعليم…',
+    handled: 'عولجت. تظهر خضراء في القائمة.',
+    alreadyHandled: 'معالَجة من قبل.',
+    gone: 'لم تعد هذه الرسالة موجودة. أعد تحميل القائمة.',
+    refused: 'لا يمكنك تغيير هذه الرسالة.',
+    reply: {
+      greeting: {
+        ar: 'مرحباً {name}، معك بحر برنت بخصوص رسالتك على b7r.sa.',
+        en: 'Hello {name}, this is B7R Print about your message on b7r.sa.',
+      },
+      subject: {
+        ar: 'بخصوص رسالتك إلى بحر برنت',
+        en: 'About your message to B7R Print',
+      },
+    },
+  },
   cells: {
     yesNo: ['نعم', 'لا'],
     onOff: ['مفعّل', 'معطّل'],
@@ -916,6 +970,19 @@ export const adminStringsAr: AdminStrings = {
           ? 'لا مسودات بانتظارك'
           : `${arabicCount(n, { one: 'مسودة واحدة', two: 'مسودتان', few: 'مسودات', many: 'مسودة' })} بانتظارك`,
       unavailable: 'غير متاح',
+    },
+    inbox: {
+      title: 'الوارد',
+      newMessages: (n) =>
+        n === 0
+          ? 'لا رسائل جديدة'
+          : arabicCount(n, {
+              one: 'رسالة جديدة واحدة',
+              two: 'رسالتان جديدتان',
+              few: 'رسائل جديدة',
+              many: 'رسالة جديدة',
+            }),
+      link: 'كل الرسائل',
     },
     assistants: {
       title: 'ماذا يقول المساعدون',

@@ -3,18 +3,24 @@ import type { DefaultServerCellComponentProps, StaticLabel } from 'payload';
 import { Badge } from '@/components/shared/badge';
 import { adminStringsFor } from '@/modules/cms/admin/strings';
 
-type Tone = 'success' | 'warning' | 'error' | 'muted';
+type Tone = 'accent' | 'success' | 'warning' | 'error' | 'muted';
 
 /**
- * The colour of a status word (design system §2, ADR-060): green is live, amber is a draft
- * or a change waiting, red is failed; every other state is neutral. A colour never appears
- * without its word, and never elsewhere than this pill and the `BoolCell` badge.
+ * The colour of a status word (design system §2, ADR-060): green is live or done, amber is
+ * a draft, a change waiting or a reply pending, red is failed, blue is a message nobody has
+ * opened (ADR-061: the one that asks for a person; the accent on its tint, lifted for the
+ * word, the panel's blue for text on dark, never `text-primary`); every other state is
+ * neutral. A colour never
+ * appears without its word, and never elsewhere than this pill and the `BoolCell` badge.
  */
 export const STATUS_TONES: Record<string, Tone> = {
   published: 'success',
   draft: 'warning',
   changed: 'warning',
   failed: 'error',
+  new: 'accent',
+  following: 'warning',
+  handled: 'success',
 };
 
 export const statusTone = (value: string): Tone => STATUS_TONES[value] ?? 'muted';

@@ -285,3 +285,49 @@ export async function failedRuns(
   });
   return totalDocs;
 }
+
+/** How many messages the dashboard card lists (the newest ones that still read New). */
+export const INBOX_PREVIEW = 3;
+
+export interface InboxReading {
+  /** Messages nobody has opened: the badge, the card's number. */
+  newCount: number;
+  /** The newest `INBOX_PREVIEW` new messages, for the card's rows. */
+  newest: Array<{
+    id: number;
+    name: string;
+    inquiry: string;
+    message: string;
+    createdAt: string;
+  }>;
+}
+
+/**
+ * The inbox for the dashboard and the sidebar (ADR-061): the count of `status: new` (the
+ * sidebar's badge on Messages reads the same number) and the newest three of them, read
+ * with the user's access; admins and editors alike.
+ */
+export async function inboxReading(
+  payload: Payload,
+  args: { user?: TypedUser | null },
+): Promise<InboxReading> {
+  const { docs, totalDocs } = await payload.find({
+    collection: 'messages',
+    where: { status: { equals: 'new' } },
+    sort: '-createdAt',
+    limit: INBOX_PREVIEW,
+    depth: 0,
+    select: { name: true, inquiry: true, message: true, createdAt: true },
+    ...accessOf(args.user),
+  });
+  return {
+    newCount: totalDocs,
+    newest: docs.map((doc) => ({
+      id: doc.id,
+      name: doc.name,
+      inquiry: doc.inquiry,
+      message: doc.message,
+      createdAt: doc.createdAt,
+    })),
+  };
+}

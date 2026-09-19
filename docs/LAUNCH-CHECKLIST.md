@@ -95,3 +95,9 @@ b7r.sa to go live.
   deploy reads.
 - Container smoke test on the 2a image (owner: agent), **done 2026-09-13**: `docker build` with the BuildKit secrets against the compose Postgres (338 MB), then `docker run` with the runtime env: `/api/health` → `db: ok`, `media: local`; `/` and `/products/hoodie` 200, `/showcase` 301, `/wp-admin` 410, `/nope` 404, `/admin/login` carries `X-Robots-Tag` and `no-store`. Repeat against the GHCR image once `deploy.yml` has the secrets.
 - Container smoke test (owner: agent), **done 2026-09-13** on the 1c image (`docker build -t b7r-site:1c .`): `/api/health` reports the four integration states, `/showcase` → 301, `/wp-admin` → 410, CSP + `Content-Language` headers present, `/og/products/hoodie.png` 200, and a run with `B7R_RUNTIME=production` and missing variables exits 1 listing them (the health check would fail). Repeat on the image CranL builds before cutover.
+
+## Added 2026-09-19 (the inbox, ADR-061)
+
+| # | Item | Owner | Status | Notes |
+|---|---|---|---|---|
+| 43 | A real submission on the production `/contact` lands in Site → Inbox → Messages with its pill, the badge and the dashboard card count it, and "Notification sent" reads Yes once row 4 (Resend) is done; then delete the test row | Dhia | open | Before row 4 the row still lands, with "Notification sent: No" (RUNBOOK "The inbox"); the WhatsApp and e-mail actions open the sender's channel |
