@@ -531,7 +531,8 @@ test.describe('CMS admin', () => {
       'aria-current',
       'page',
     );
-    await expect(flyout.locator('[role="menuitem"]')).toHaveCount(4);
+    // Home, pages, site settings, booking (ADR-062), images, bookings.
+    await expect(flyout.locator('[role="menuitem"]')).toHaveCount(6);
     expect(
       await page.evaluate(() => document.activeElement?.closest('[data-admin-flyout]') !== null),
     ).toBe(true);

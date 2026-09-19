@@ -6,8 +6,8 @@ nextEnv.loadEnvConfig(process.cwd());
 
 const PORT = 3004;
 export const BASE_URL = `http://localhost:${PORT}`;
-/** Suites that mutate the CMS (one serial file). */
-const CMS_SPECS = '**/admin.spec.ts';
+/** Suites that mutate the CMS (serial files): the admin seats, the bookings (they switch the global on). */
+const CMS_SPECS = '**/{admin,bookings}.spec.ts';
 
 export default defineConfig({
   testDir: './e2e',
