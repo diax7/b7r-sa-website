@@ -1,5 +1,5 @@
 import type { Payload } from 'payload';
-import { getBookingMailer } from '@/lib/booking-mail';
+import { getBookingMailer } from '@/lib/booking-mailer';
 import { siteBase } from '@/lib/env';
 import { ADMIN_PREFIX } from '@/lib/site-routes';
 import { calendarFor } from '@/modules/bookings/calendar';

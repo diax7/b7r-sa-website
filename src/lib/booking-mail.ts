@@ -1,7 +1,4 @@
-import 'server-only';
-import { Resend } from 'resend';
 import { copyFor } from '@/content/copy';
-import { contactEnv } from '@/lib/env-server';
 import { buildIcs } from '@/lib/ics';
 import { htmlDir, type Locale } from '@/lib/i18n';
 import { formatSaudiPhone } from '@/lib/phone';
@@ -13,8 +10,9 @@ import { riyadhDayLabel, riyadhTimeLabel } from '@/lib/riyadh';
  * follows", the manage link, the calendar file attached to the confirmation) and to Dhia at
  * the contact address, in the same language. Six kinds, each a merchant mail and an owner
  * mail: the confirmation, a move, a cancel, the two reminders, and the link that follows a
- * calendar failure. Resend when the key is set, a console line otherwise (never a body),
- * the in-memory outbox for the tests. No personal field is ever logged.
+ * calendar failure. Pure builders, so the sweep's task (in the Payload config's graph,
+ * which the CLI loads under plain Node) can import them; the transport that sends them is
+ * `booking-mailer.ts`, server-only.
  */
 export type BookingMailKind =
   | 'confirmation'
@@ -257,76 +255,4 @@ export function buildOwnerMail(
     links: [{ href: input.adminUrl, label: e.openInPanel }],
   });
   return { to, ...mail, replyTo: input.email };
-}
-
-const mockOutbox: OutgoingMail[] = [];
-
-/** Test-only: the mails the mock mailer received, in order. */
-export function mockBookingOutbox(): readonly OutgoingMail[] {
-  return mockOutbox;
-}
-
-export function clearBookingOutbox(): void {
-  mockOutbox.length = 0;
-}
-
-/** `m***@example.com`: enough to follow a log, never the address. */
-export function maskAddress(email: string): string {
-  const [user = '', domain = ''] = email.split('@');
-  return `${user.slice(0, 1)}***@${domain}`;
-}
-
-let cachedClient: { key: string; client: Resend } | null = null;
-
-function resendClient(apiKey: string): Resend {
-  if (cachedClient?.key !== apiKey) cachedClient = { key: apiKey, client: new Resend(apiKey) };
-  return cachedClient.client;
-}
-
-function liveMailer(apiKey: string, from: string): BookingMailer {
-  const resend = resendClient(apiKey);
-  return {
-    kind: 'live',
-    async send(mail) {
-      const { error } = await resend.emails.send({
-        from,
-        to: mail.to,
-        subject: mail.subject,
-        html: mail.html,
-        text: mail.text,
-        ...(mail.replyTo ? { replyTo: mail.replyTo } : {}),
-        ...(mail.attachments ? { attachments: mail.attachments } : {}),
-      });
-      return error ? { ok: false, status: 500 } : { ok: true };
-    },
-  };
-}
-
-/**
- * Picks the booking mailer: live with a Resend key; the in-memory outbox when
- * `CONTACT_TRANSPORT=mock` and no key exists (the tests and CI); otherwise the console, one
- * line per mail with the subject and the masked address, never the body, so a booking on a
- * server without the keys goes through and the log says what would have left.
- */
-export function getBookingMailer(logger: Pick<Console, 'info'> = console): BookingMailer {
-  const env = contactEnv();
-  if (env.resendApiKey) return liveMailer(env.resendApiKey, env.resendFrom);
-  if (env.transportOverride === 'mock') {
-    return {
-      kind: 'mock',
-      async send(mail) {
-        mockOutbox.push(mail);
-        return { ok: true };
-      },
-    };
-  }
-  return {
-    kind: 'console',
-    async send(mail) {
-      logger.info(
-        `booking mail (not sent, no RESEND_API_KEY): "${mail.subject}" to ${maskAddress(mail.to)}`,
-      );
-      return { ok: true };
-    },
-  };
 }

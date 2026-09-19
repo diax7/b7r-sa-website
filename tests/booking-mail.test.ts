@@ -5,13 +5,15 @@ import {
   type BookingMailInput,
   buildMerchantMail,
   buildOwnerMail,
-  clearBookingOutbox,
-  getBookingMailer,
   ICS_FILENAME,
-  maskAddress,
-  mockBookingOutbox,
   whenLabel,
 } from '@/lib/booking-mail';
+import {
+  clearBookingOutbox,
+  getBookingMailer,
+  maskAddress,
+  mockBookingOutbox,
+} from '@/lib/booking-mailer';
 import { buildIcs, icsStamp, icsText } from '@/lib/ics';
 import type { Locale } from '@/lib/i18n';
 

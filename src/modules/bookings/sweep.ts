@@ -1,6 +1,5 @@
 import type { Payload, TaskConfig, Where } from 'payload';
 import { CALENDAR_RETRIES } from '@/modules/bookings/collection';
-import { bookingPorts } from '@/modules/bookings/ports';
 import { SWEEP_CRON } from '@/modules/bookings/schedule';
 import { type BookingPorts, sendPair, syncCalendar } from '@/modules/bookings/service';
 import type { BookingRow } from '@/modules/bookings/store';
@@ -11,6 +10,10 @@ import type { BookingRow } from '@/modules/bookings/store';
  * reminder, the `completed` transition once the end has passed, and the calendar retry for
  * a failed event (three tries an hour apart, then it stays failed). The predicates are
  * pure and tested; the `where` clauses are the same windows for the database's pre-filter.
+ *
+ * The ports (the mailer, the calendar) are loaded when the task runs, never at import: this
+ * file is in the Payload config's graph, which the CLI (`migrate`, `generate:types`) loads
+ * under plain Node, where `server-only` throws.
  */
 export const BOOKINGS_SWEEP = 'bookings-sweep' as const;
 /** The sweep's own queue, one job at a time, so two runs never overlap and send twice. */
@@ -196,7 +199,7 @@ export const bookingsSweepTask: TaskConfig<{
     { name: 'retried', type: 'number' },
   ],
   handler: async ({ req }) => {
-    const result = await sweep(await bookingPorts(req.payload));
+    const result = await runSweep(req.payload);
     req.payload.logger.info({ msg: summary(result) });
     return {
       output: {
@@ -209,7 +212,8 @@ export const bookingsSweepTask: TaskConfig<{
   },
 };
 
-/** For a script or a test on a live database: one pass now. */
+/** One pass over the live ports, for the task and for a script on a live database. */
 export async function runSweep(payload: Payload): Promise<SweepResult> {
+  const { bookingPorts } = await import('@/modules/bookings/ports');
   return sweep(await bookingPorts(payload));
 }

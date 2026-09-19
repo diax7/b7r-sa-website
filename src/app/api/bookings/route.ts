@@ -10,6 +10,7 @@ import {
   BOOKING_WINDOW_MS,
   bookingBodySchema,
   bookingPorts,
+  routeFailure,
 } from '@/modules/bookings';
 
 export const dynamic = 'force-dynamic';
@@ -54,23 +55,29 @@ export async function POST(req: Request) {
   }
 
   const { name, email, phone, note, start, locale, page, utm } = parsed.data;
-  const ports = await bookingPorts(await cms());
-  const result = await book(ports, {
-    name,
-    email,
-    phone,
-    note,
-    start,
-    locale,
-    page: page ?? '/book',
-    utm: {
-      ...(utm?.source ? { source: utm.source } : {}),
-      ...(utm?.medium ? { medium: utm.medium } : {}),
-      ...(utm?.campaign ? { campaign: utm.campaign } : {}),
-    },
-  });
-  if (result.status === 201) {
-    return NextResponse.json({ ok: true, booking: result.booking }, { status: 201 });
+  const payload = await cms();
+  try {
+    const ports = await bookingPorts(payload);
+    const result = await book(ports, {
+      name,
+      email,
+      phone,
+      note,
+      start,
+      locale,
+      page: page ?? '/book',
+      utm: {
+        ...(utm?.source ? { source: utm.source } : {}),
+        ...(utm?.medium ? { medium: utm.medium } : {}),
+        ...(utm?.campaign ? { campaign: utm.campaign } : {}),
+      },
+    });
+    if (result.status === 201) {
+      return NextResponse.json({ ok: true, booking: result.booking }, { status: 201 });
+    }
+    return NextResponse.json({ ok: false, error: result.error }, { status: result.status });
+  } catch (error) {
+    // Rule 18: the error's name alone; its message would carry the merchant's fields.
+    return routeFailure(payload.logger, 'POST /api/bookings', error);
   }
-  return NextResponse.json({ ok: false, error: result.error }, { status: result.status });
 }

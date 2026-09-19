@@ -11,6 +11,7 @@ import {
   type ManageResult,
   readManage,
   reschedule,
+  routeFailure,
 } from '@/modules/bookings';
 
 export const dynamic = 'force-dynamic';
@@ -46,7 +47,12 @@ export async function GET(req: Request) {
   const refused = limited(req);
   if (refused) return refused;
   const token = new URL(req.url).searchParams.get('token');
-  return answer(await readManage(await bookingPorts(await cms()), token));
+  const payload = await cms();
+  try {
+    return answer(await readManage(await bookingPorts(payload), token));
+  } catch (error) {
+    return routeFailure(payload.logger, 'GET /api/bookings/manage', error);
+  }
 }
 
 export async function POST(req: Request) {
@@ -63,11 +69,17 @@ export async function POST(req: Request) {
   }
   const parsed = manageBodySchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ ok: false, error: 'invalid' }, { status: 400 });
-  const ports = await bookingPorts(await cms());
+  const payload = await cms();
   const { data } = parsed;
-  return answer(
-    data.action === 'reschedule'
-      ? await reschedule(ports, data.token, data.start)
-      : await cancel(ports, data.token),
-  );
+  try {
+    const ports = await bookingPorts(payload);
+    return answer(
+      data.action === 'reschedule'
+        ? await reschedule(ports, data.token, data.start)
+        : await cancel(ports, data.token),
+    );
+  } catch (error) {
+    // Rule 18: the error's name alone; a failed query's message carries the row's fields.
+    return routeFailure(payload.logger, 'POST /api/bookings/manage', error);
+  }
 }

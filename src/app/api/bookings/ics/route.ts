@@ -1,7 +1,13 @@
 import { ICS_FILENAME } from '@/lib/booking-mail';
 import { cms } from '@/lib/cms/payload';
 import { clientIp, createRateLimiter } from '@/lib/rate-limit';
-import { bookingPorts, icsFor, MANAGE_RATE_LIMIT, MANAGE_WINDOW_MS } from '@/modules/bookings';
+import {
+  bookingPorts,
+  icsFor,
+  MANAGE_RATE_LIMIT,
+  MANAGE_WINDOW_MS,
+  routeFailure,
+} from '@/modules/bookings';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,7 +23,13 @@ export async function GET(req: Request) {
     });
   }
   const token = new URL(req.url).searchParams.get('token');
-  const ics = await icsFor(await bookingPorts(await cms()), token);
+  const payload = await cms();
+  let ics: string | null;
+  try {
+    ics = await icsFor(await bookingPorts(payload), token);
+  } catch (error) {
+    return routeFailure(payload.logger, 'GET /api/bookings/ics', error);
+  }
   if (!ics) return new Response(null, { status: 404, headers: { 'Cache-Control': 'no-store' } });
   return new Response(ics, {
     headers: {

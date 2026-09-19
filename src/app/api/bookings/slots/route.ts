@@ -4,6 +4,7 @@ import { isLocale } from '@/lib/i18n';
 import { clientIp, createRateLimiter } from '@/lib/rate-limit';
 import {
   bookingPorts,
+  routeFailure,
   SLOTS_RATE_LIMIT,
   SLOTS_WINDOW_MS,
   slotsFor,
@@ -33,11 +34,15 @@ export async function GET(req: Request) {
   if (!parsed.success) return NextResponse.json({ ok: false, error: 'invalid' }, { status: 400 });
   const localeParam = url.searchParams.get('locale');
   const locale = isLocale(localeParam) ? localeParam : 'ar';
-  const ports = await bookingPorts(await cms());
-  const result = await slotsFor(ports, parsed.data.date, locale);
-  if (!result.ok) return NextResponse.json({ ok: false, error: result.reason }, { status: 400 });
-  return NextResponse.json(
-    { ok: true, date: parsed.data.date, slots: result.slots.map((s) => s.toISOString()) },
-    { headers: { 'Cache-Control': 'public, max-age=60' } },
-  );
+  const payload = await cms();
+  try {
+    const result = await slotsFor(await bookingPorts(payload), parsed.data.date, locale);
+    if (!result.ok) return NextResponse.json({ ok: false, error: result.reason }, { status: 400 });
+    return NextResponse.json(
+      { ok: true, date: parsed.data.date, slots: result.slots.map((s) => s.toISOString()) },
+      { headers: { 'Cache-Control': 'public, max-age=60' } },
+    );
+  } catch (error) {
+    return routeFailure(payload.logger, 'GET /api/bookings/slots', error);
+  }
 }

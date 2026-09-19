@@ -33,5 +33,6 @@ export {
   renderBook,
   renderManage,
 } from '@/modules/bookings/routes';
+export { routeFailure } from '@/modules/bookings/route-failure';
 export { toBookingSettings } from '@/modules/bookings/settings';
 export { BookingPicker } from '@/modules/bookings/site';
