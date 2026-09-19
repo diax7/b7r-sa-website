@@ -1,4 +1,4 @@
-import type { CollectionConfig, Field } from 'payload';
+import type { CollectionAfterChangeHook, CollectionConfig, Field } from 'payload';
 import { adminField, isAdmin, isEditorOrAdmin } from '@/modules/cms/access';
 import { describeFields } from '@/modules/cms/admin/descriptions/describe';
 import { collectionComponents } from '@/modules/cms/admin/document/config';
@@ -20,6 +20,25 @@ export type CalendarState = (typeof CALENDAR_STATES)[number];
 export const CALENDAR_RETRIES = 3;
 
 const never = () => false;
+
+/**
+ * A status set to cancelled by a person in the panel (a request with a user; the routes and
+ * the sweep write with none) tells the merchant and deletes the event, as the merchant's own
+ * cancel does. The mailer and the calendar are loaded on demand: the config must not pull
+ * them (the CLI loads it under plain Node, where `server-only` throws).
+ */
+const cancelledByStaff: CollectionAfterChangeHook = async ({
+  doc,
+  previousDoc,
+  operation,
+  req,
+}) => {
+  const cancelled = doc?.['status'] === 'cancelled' && previousDoc?.['status'] !== 'cancelled';
+  if (operation !== 'update' || !cancelled || !req.user) return doc;
+  const { cancelledInPanel } = await import('@/modules/bookings/panel-cancel');
+  await cancelledInPanel(req.payload, doc['id'] as number);
+  return doc;
+};
 
 /** A fact the routes and the sweep write, shown as a line, never edited in the panel. */
 function fact(field: Field & { name: string }, sidebar = false): Field {
@@ -65,6 +84,7 @@ export const Bookings: CollectionConfig = {
   },
   defaultSort: '-start',
   access: { read: isEditorOrAdmin, create: never, update: isEditorOrAdmin, delete: isAdmin },
+  hooks: { afterChange: [cancelledByStaff] },
   fields: describeFields(
     [
       {

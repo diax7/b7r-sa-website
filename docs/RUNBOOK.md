@@ -400,10 +400,12 @@ account, the old one deleted), then the new file pasted on both Google rows; not
 row itself revokes anything. A leaked link is one booking's, and its cancel is the
 merchant's anyway.
 
-**Deleting.** Nothing is deleted by a job. An admin deletes a booking row from its list; the
-event on the calendar is not touched by a delete (cancel through the merchant's link first,
-or delete the event on the calendar). The public API creates, reads and lists nothing on
-the collection; the booking routes are the only writers.
+**Cancelling and deleting.** A status set to **cancelled** in the panel (an admin or an
+editor) does what the merchant's own cancel does: the event leaves the calendar and both
+cancel e-mails go out. Nothing is deleted by a job. An admin deletes a booking row from its
+list; a delete touches neither the calendar nor the merchant (set the status to cancelled
+first). The public API creates, reads and lists nothing on the collection; the booking
+routes are the only writers.
 
 ## Open Graph images
 

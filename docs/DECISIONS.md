@@ -2459,7 +2459,11 @@ hook mounts the widget once, on mount, and the form appears only after a slot is
 **The panel.** The `bookings` collection: editors update the status and the notes (the
 field rule refuses the rest), admins correct the merchant's fields and delete, the API
 creates nothing (the routes are the only writers, with access overridden), the facts the
-routes write read as lines. The same personal-data rules as the messages (ADR-061). In the
+routes write read as lines. A status set to cancelled by a person (a request with a user;
+the routes and the sweep write with none) does what the merchant's own cancel does, the
+event deleted and both e-mails sent, through a hook that loads the mailer and the calendar
+on demand, since the config is loaded by the CLI under plain Node where `server-only`
+throws; a delete of the row touches nothing. The same personal-data rules as the messages (ADR-061). In the
 Inbox section beside the messages with the status pill, the WhatsApp reminder action, the
 inbox badge counting today's bookings and the dashboard's Inbox card listing the next
 three, once PR 4a's section is on main.

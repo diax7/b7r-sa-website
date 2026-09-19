@@ -10,6 +10,7 @@ import { bookingBodySchema, manageBodySchema, slotsQuerySchema } from '@/modules
 import {
   book,
   cancel,
+  cancelledByStaff,
   icsFor,
   linkExpired,
   readManage,
@@ -428,6 +429,24 @@ describe('the manage link', () => {
     ports.calendar!.fail = true;
     expect((await cancel(ports, token)).status).toBe(200);
     expect(ports.logger.lines.some((l) => l.includes('the calendar kept the event'))).toBe(true);
+  });
+
+  it('a cancel made in the panel tells the merchant and deletes the event; any other status change does nothing', async () => {
+    const { ports, id } = await booked();
+    await ports.store.update(id, { status: 'cancelled' });
+    await cancelledByStaff(ports, id);
+    expect(ports.calendar!.calls.at(-1)).toMatchObject({ method: 'deleteEvent', args: ['evt-1'] });
+    expect(ports.mailer.outbox.map((m) => m.to)).toEqual([
+      'merchant@example.com',
+      'contact@b7r.sa',
+    ]);
+    expect(ports.logger.lines).toContain(`info: booking ${id}: cancelled in the panel`);
+    // Not cancelled, or no such row: nothing.
+    const other = await booked();
+    await other.ports.store.update(other.id, { status: 'completed' });
+    await cancelledByStaff(other.ports, other.id);
+    await cancelledByStaff(other.ports, 999);
+    expect(other.ports.mailer.outbox).toHaveLength(0);
   });
 
   it('serves the calendar file of an active booking', async () => {

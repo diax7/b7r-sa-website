@@ -465,3 +465,23 @@ export async function icsFor(ports: BookingPorts, token: string | null): Promise
     revision: row.status === 'rescheduled' ? 1 : 0,
   });
 }
+
+/**
+ * A cancel made in the panel (the row's status set to cancelled by a person): the merchant
+ * hears it and the event leaves the calendar, as a cancel by the merchant's own link does.
+ * Best effort throughout: a refusal is a log line with the row's id, never a failed save.
+ */
+export async function cancelledByStaff(ports: BookingPorts, id: number): Promise<void> {
+  const row = await ports.store.byId(id);
+  if (!row || row.status !== 'cancelled') return;
+  if (ports.calendar && row.googleEventId) {
+    try {
+      await ports.calendar.deleteEvent(row.googleEventId);
+    } catch (error) {
+      ports.logger.warn(`booking ${row.id}: the calendar kept the event: ${reason(error)}`);
+    }
+  }
+  const settings = await ports.store.settings(row.locale);
+  await sendPair(ports, 'cancelled', row, settings, row.notes);
+  ports.logger.info(`booking ${row.id}: cancelled in the panel`);
+}
