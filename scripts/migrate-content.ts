@@ -14,6 +14,7 @@ import nextEnv from '@next/env';
 import { convertMarkdownToLexical, editorConfigFactory } from '@payloadcms/richtext-lexical';
 import { getPayload, type Payload } from 'payload';
 import { blogAuthor, blogHubs, blogPostBody, blogPosts } from '../src/content/seed/blog';
+import { booking } from '../src/content/seed/booking';
 import { faq } from '../src/content/seed/faq';
 import { home } from '../src/content/seed/home';
 import { postBodyField } from '../src/lib/cms/post-body';
@@ -353,6 +354,15 @@ function menuData() {
   };
 }
 
+/** A BRD 4.16 row as the `seo-defaults` global stores it. */
+const seoRow = (row: (typeof seo)[number]) => ({
+  route: row.route,
+  title: row.title,
+  description: row.description,
+  ...(row.ogImage ? { ogImage: row.ogImage } : {}),
+  updatedAt: `${row.updatedAt}T00:00:00.000Z`,
+});
+
 async function ensureGlobals(payload: Payload): Promise<void> {
   if (await globalIsFilled(payload, 'site-settings')) {
     summary.skipped.push('global site-settings');
@@ -379,7 +389,6 @@ async function ensureGlobals(payload: Payload): Promise<void> {
         deliveryMaxDays: site.delivery.maxDays,
         deliveryOrigin: site.delivery.origin,
         deliveryRegion: site.delivery.region,
-        ...(site.bookingUrl ? { bookingUrl: site.bookingUrl } : {}),
         legalEntity: site.legalEntity,
         menu: menuData(),
       },
@@ -387,21 +396,27 @@ async function ensureGlobals(payload: Payload): Promise<void> {
     });
     summary.created.push('global site-settings');
   }
-  if (await globalIsFilled(payload, 'seo-defaults')) summary.skipped.push('global seo-defaults');
-  else {
+  if (await globalIsFilled(payload, 'seo-defaults')) {
+    summary.skipped.push('global seo-defaults');
+    // A database seeded before a code route gained its row (the booking page, ADR-062)
+    // gets the missing row appended; the rows it has are never touched.
+    const doc = await payload.findGlobal({ slug: 'seo-defaults', depth: 0 });
+    const known = new Set((doc.routes ?? []).map((r) => r.route));
+    const missing = seo.filter((row) => CODE_ROUTES.has(row.route) && !known.has(row.route));
+    if (missing.length > 0) {
+      await payload.updateGlobal({
+        slug: 'seo-defaults',
+        data: { routes: [...(doc.routes ?? []), ...missing.map(seoRow)] },
+        context: CONTEXT,
+      });
+      summary.created.push(`global seo-defaults: ${missing.map((r) => r.route).join(', ')}`);
+    }
+  } else {
     await payload.updateGlobal({
       slug: 'seo-defaults',
       data: {
         titleTemplate: ar.seo.titleTemplate,
-        routes: seo
-          .filter((row) => CODE_ROUTES.has(row.route))
-          .map((row) => ({
-            route: row.route,
-            title: row.title,
-            description: row.description,
-            ...(row.ogImage ? { ogImage: row.ogImage } : {}),
-            updatedAt: `${row.updatedAt}T00:00:00.000Z`,
-          })),
+        routes: seo.filter((row) => CODE_ROUTES.has(row.route)).map(seoRow),
       },
       context: CONTEXT,
     });
@@ -409,8 +424,31 @@ async function ensureGlobals(payload: Payload): Promise<void> {
   }
 }
 
+/**
+ * The `booking` global (ADR-062): the seed's numbers and hours, the switch off, once; a
+ * database that has the settings keeps them.
+ */
+async function ensureBooking(payload: Payload): Promise<void> {
+  // An unsaved global reads its defaults with no id; a saved one has been someone's.
+  const doc = await payload.findGlobal({ slug: 'booking', depth: 0 });
+  if (doc.id !== undefined) {
+    summary.skipped.push('global booking');
+    return;
+  }
+  await payload.updateGlobal({
+    slug: 'booking',
+    data: {
+      ...booking,
+      hours: booking.hours.map((row) => ({ ...row, day: String(row.day) as '0' })),
+      closedDates: [],
+    },
+    context: CONTEXT,
+  });
+  summary.created.push('global booking');
+}
+
 /** Routes the code owns; every other BRD 4.16 row lives in the page's own `seo` group (ADR-031). */
-const CODE_ROUTES = new Set(['/', '/products', '/blog']);
+const CODE_ROUTES = new Set(['/', '/products', '/blog', '/book']);
 
 /**
  * The one exception to "never overwrites" (ADR-026 amendment): a database seeded before 2b
@@ -739,6 +777,7 @@ async function main(): Promise<number> {
     await ensureProduct(payload, product);
   }
   await ensureGlobals(payload);
+  await ensureBooking(payload);
   await ensureHome(payload);
   for (const page of pages) {
     // A seeded slug is a designed page (its route folder is in code) or a plain `/[slug]`

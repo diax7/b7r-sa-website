@@ -1,5 +1,7 @@
 import type { Payload, PayloadRequest, TypedUser } from 'payload';
 import { localeEnabledWith } from '@/lib/cms/locale-enabled';
+import { riyadhDayWindow } from '@/lib/riyadh';
+import { BOOKINGS, type BookingStatus, UPCOMING_STATUSES } from '@/modules/bookings/status';
 import { kindsThat } from '@/modules/connections/kinds';
 import { connectionSpend } from '@/modules/connections/spend';
 import { sinceDay } from '@/modules/traffic/summary';
@@ -286,11 +288,11 @@ export async function failedRuns(
   return totalDocs;
 }
 
-/** How many messages the dashboard card lists (the newest ones that still read New). */
+/** How many messages, and how many bookings, the dashboard card lists. */
 export const INBOX_PREVIEW = 3;
 
 export interface InboxReading {
-  /** Messages nobody has opened: the badge, the card's number. */
+  /** Messages nobody has opened: the card's first number. */
   newCount: number;
   /** The newest `INBOX_PREVIEW` new messages, for the card's rows. */
   newest: Array<{
@@ -300,34 +302,81 @@ export interface InboxReading {
     message: string;
     createdAt: string;
   }>;
+  /** Bookings still ahead that start today in Riyadh: the card's second number. */
+  todayCount: number;
+  /** The next `INBOX_PREVIEW` bookings ahead, soonest first, for the card's rows. */
+  next: Array<{
+    id: number;
+    name: string;
+    start: string;
+    status: BookingStatus;
+  }>;
+  /** `newCount + todayCount`: the sidebar's badge on the inbox section (`inbox.waiting`). */
+  waiting: number;
 }
 
 /**
- * The inbox for the dashboard and the sidebar (ADR-061): the count of `status: new` (the
- * sidebar's badge on Messages reads the same number) and the newest three of them, read
- * with the user's access; admins and editors alike.
+ * The inbox for the dashboard and the sidebar (ADR-061, ADR-062): the count of `status:
+ * new` messages with the newest three, the count of bookings still ahead that start today
+ * (Riyadh) with the next three whichever day they fall on, and the two counts added for
+ * the badge; read with the user's access, admins and editors alike (the two collections
+ * share one read rule, so a user who sees one sees both).
  */
 export async function inboxReading(
   payload: Payload,
-  args: { user?: TypedUser | null },
+  args: { user?: TypedUser | null; now?: Date },
 ): Promise<InboxReading> {
-  const { docs, totalDocs } = await payload.find({
-    collection: 'messages',
-    where: { status: { equals: 'new' } },
-    sort: '-createdAt',
-    limit: INBOX_PREVIEW,
-    depth: 0,
-    select: { name: true, inquiry: true, message: true, createdAt: true },
-    ...accessOf(args.user),
-  });
+  const now = args.now ?? new Date();
+  const access = accessOf(args.user);
+  const [dayStart, dayEnd] = riyadhDayWindow(now);
+  const ahead = { status: { in: [...UPCOMING_STATUSES] } };
+  const [messages, today, bookings] = await Promise.all([
+    payload.find({
+      collection: 'messages',
+      where: { status: { equals: 'new' } },
+      sort: '-createdAt',
+      limit: INBOX_PREVIEW,
+      depth: 0,
+      select: { name: true, inquiry: true, message: true, createdAt: true },
+      ...access,
+    }),
+    payload.count({
+      collection: BOOKINGS,
+      where: {
+        and: [
+          ahead,
+          { start: { greater_than_equal: dayStart.toISOString() } },
+          { start: { less_than: dayEnd.toISOString() } },
+        ],
+      },
+      ...access,
+    }),
+    payload.find({
+      collection: BOOKINGS,
+      where: { and: [ahead, { end: { greater_than: now.toISOString() } }] },
+      sort: 'start',
+      limit: INBOX_PREVIEW,
+      depth: 0,
+      select: { name: true, start: true, status: true },
+      ...access,
+    }),
+  ]);
   return {
-    newCount: totalDocs,
-    newest: docs.map((doc) => ({
+    newCount: messages.totalDocs,
+    newest: messages.docs.map((doc) => ({
       id: doc.id,
       name: doc.name,
       inquiry: doc.inquiry,
       message: doc.message,
       createdAt: doc.createdAt,
     })),
+    todayCount: today.totalDocs,
+    next: bookings.docs.map((doc) => ({
+      id: doc.id,
+      name: doc.name,
+      start: doc.start,
+      status: doc.status,
+    })),
+    waiting: messages.totalDocs + today.totalDocs,
   };
 }

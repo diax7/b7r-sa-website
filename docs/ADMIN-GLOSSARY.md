@@ -102,6 +102,15 @@ test refuses (translations of a Latin term, or synonyms of the settled word).
 | Inbox | new (a message nobody opened) | جديد |  | غير مقروء، غير مقروءة | The status pill in blue, the sidebar badge and the dashboard card count these. |
 | Inbox | following (a reply pending) | قيد المتابعة |  | تحت المتابعة، جارٍ المتابعة | Amber, like a draft: someone is on it. |
 | Inbox | handled | معالَج |  | تمت المعالجة، تم التعامل، منتهية | Green, done; the passive participle, never «تم» + مصدر (§5). The action is «علّم كمعالَج». |
+| Inbox | booking (a consultation a merchant booked) | حجز |  | طلب حجز، حجوزات مسبقة | Plural «الحجوزات»; the entry after Messages in the inbox section, and the settings global. |
+| Inbox | consultation | استشارة |  | جلسة استشارية، مكالمة تعريفية | What the merchant books; the settings name it («استشارة مجانية، 30 دقيقة»). |
+| Inbox | appointment (a slot on the grid) | موعد |  | فترة زمنية، خانة زمنية | Plural «المواعيد»: the settings count appointments per day; a booking holds its appointment. |
+| Inbox | calendar owner (the host) | صاحب التقويم |  | المضيف، مالك التقويم | The Workspace account whose calendar the bookings write to (the settings field, the Test). |
+| Inbox | Meet link | رابط Meet | yes | رابط الاجتماع، رابط ميت | Google creates it with the event; the row shows it, the reminder sends it. |
+| Inbox | booked | محجوز |  | مؤكد، مؤكّد | Green: the appointment stands. |
+| Inbox | rescheduled | مُعاد جدولته |  | أعيد جدولته، مؤجل، مؤجّل | Amber: the merchant moved it from the link in the e-mail. |
+| Inbox | cancelled | ملغى |  | ملغي، تم الإلغاء | Red; stays cancelled (the merchant books again on the site). |
+| Inbox | completed (a booking past its end) | مكتمل |  | منتهٍ، منتهي | Neutral; the sweep sets it once the end has passed, nobody by hand. |
 | Catalogue | catalogue | الكتالوج |  |  |  |
 | Catalogue | product | منتج |  | سلعة |  |
 | Catalogue | colour | لون |  |  |  |

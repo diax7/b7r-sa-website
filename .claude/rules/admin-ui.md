@@ -170,8 +170,12 @@ registry, the bilingual census, the description rule, the status column),
    query and its parameters (drizzle's `Failed query: … params: …`), and pino's serializer
    writes the message and the stack out. The sender's fields refuse every update
    (field-level `access.update`, read-only lines); a route that writes them does so with
-   access overridden and nothing else; an admin deletes, nothing deletes itself; the test
-   that proves the log clean reads every key of the entry, not the `msg` alone.
+   access overridden and nothing else, and every route that writes such a row catches its
+   own failures (an error that reaches Next uncaught is logged whole, query and parameters
+   included; `routeFailure()` in `modules/bookings/route-failure.ts` logs the route and the
+   error's name, and the route answers `{ ok: false, error: 'failed' }` with 500); an admin
+   deletes, nothing deletes itself; the test that proves the log clean reads every key of
+   the entry, not the `msg` alone.
 
 ## Adding an admin component
 

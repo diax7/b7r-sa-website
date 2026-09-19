@@ -172,14 +172,9 @@ describe('globals', () => {
       deliveryMaxDays: site.delivery.maxDays,
       deliveryOrigin: site.delivery.origin,
       deliveryRegion: site.delivery.region,
-      bookingUrl: null,
       legalEntity: site.legalEntity,
     };
-    const { bookingUrl: _unused, ...expected } = site;
-    expect(toSiteSettings(doc)).toEqual(expected);
-    expect(toSiteSettings({ ...doc, bookingUrl: 'https://cal.com/b7r' }).bookingUrl).toBe(
-      'https://cal.com/b7r',
-    );
+    expect(toSiteSettings(doc)).toEqual(site);
     expect(() => toSiteSettings({ ...doc, contact: { ...doc.contact, email: 'nope' } })).toThrow();
   });
 

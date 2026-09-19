@@ -43,6 +43,14 @@ export const seo: PageSeo[] = [
     updatedAt: '2026-09-13',
   },
   {
+    // TODO(copy): the booking page's search row (ADR-062, BRD 4.19), for Dhia's read.
+    route: '/book',
+    title: 'احجز استشارة مجانية',
+    description:
+      'اختر يوماً وموعداً يناسبك: 30 دقيقة على Google Meet نجاوب فيها على أسئلتك ونساعدك تبدأ براندك.',
+    updatedAt: '2026-09-19',
+  },
+  {
     route: '/faq',
     title: 'الأسئلة الشائعة عن الطباعة عند الطلب',
     description: 'إجابات مباشرة عن التكلفة والربح والتوصيل وربط المتاجر مع بحر برنت.',

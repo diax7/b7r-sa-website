@@ -4,6 +4,7 @@ import { createRateLimiter } from '@/lib/rate-limit';
 import {
   type ConnectionKind,
   type ConnectionSpec,
+  KEYLESS_SERVICE_KINDS,
   KINDS,
   mockAllowed,
 } from '@/modules/connections/kinds';
@@ -15,13 +16,15 @@ export const TEST_TIMEOUT_MS = 20_000;
 
 /**
  * What a service kind's test may read besides the secret: the site's settings (Umami's
- * website id lives there) and the panel language of the person testing, for a refusal of
- * ours (a missing id); the service's own answer stays in its terms.
+ * website id, the booking's calendar owner live there), the panel language of the person
+ * testing, for a refusal of ours (a missing id), the row's address and its `model` field
+ * (the mock calendar's fail flag, ADR-062); the service's own answer stays in its terms.
  */
 export interface ServiceTestContext {
   payload: Payload;
   language: string;
   baseUrl: string | null;
+  model: string;
 }
 
 /** A service kind's test (ADR-049): the secret in, a sentence out, or a throw. */
@@ -54,9 +57,9 @@ async function ping(
   if (KINDS[spec.kind].speaks === 'service') {
     const test = services[spec.kind];
     if (!test) throw new Error(`no test for the kind ${spec.kind}`);
-    if (!spec.apiKey && spec.kind !== 'pagespeed')
+    if (!spec.apiKey && !KEYLESS_SERVICE_KINDS.includes(spec.kind))
       throw new Error('no key saved on this connection');
-    return test(spec.apiKey, { payload, language, baseUrl: spec.baseUrl });
+    return test(spec.apiKey, { payload, language, baseUrl: spec.baseUrl, model: spec.model });
   }
   if (spec.kind === 'mock') {
     if (!mockAllowed()) throw new Error('mock kind: not enabled on this server');

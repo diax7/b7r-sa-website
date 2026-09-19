@@ -15,6 +15,7 @@
 @import 'tailwindcss/utilities.css' source(none);
 @source '../../modules/cms/admin';
 @source '../../modules/ai-content/admin';
+@source '../../modules/bookings/admin';
 @source '../../modules/connections/admin';
 @source '../../modules/inbox/admin';
 @source '../../modules/traffic/admin';

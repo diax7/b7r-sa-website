@@ -57,6 +57,10 @@ Before cutover:
 11. Lighthouse CI green on the production build; axe zero serious issues.
 12. RTL QA on iOS Safari and Chrome Android completed with screenshots attached to the PR.
 
+Level 4 bookings (ADR-062), before the switch goes on:
+12a. The Calendar API enabled on the service account's Cloud project; domain-wide delegation added in the Workspace Admin console for the account's client id with the two scopes `https://www.googleapis.com/auth/calendar.events` and `https://www.googleapis.com/auth/calendar.freebusy`; the key file pasted on a `google-calendar` connection and its Test green; the calendar owner's address in the booking settings.
+12b. A real test booking on the live site: the row in the inbox, the event with its Meet link on the calendar, the two e-mails, the manage link's move and cancel.
+
 Cutover:
 13. DNS `b7r.sa` A/CNAME to CranL; `www` redirect; TLS valid.
 14. Old Hostinger site kept for 14 days, then cancelled.

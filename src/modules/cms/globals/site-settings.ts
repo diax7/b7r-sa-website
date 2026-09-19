@@ -296,14 +296,6 @@ export const SiteSettings: GlobalConfig = {
                 ],
               },
               {
-                name: 'bookingUrl',
-                type: 'text',
-                label: {
-                  ar: 'رابط حجز الاستشارة (Cal.com)',
-                  en: 'Consultation booking link (Cal.com)',
-                },
-              },
-              {
                 name: 'legalEntity',
                 type: 'text',
                 required: true,

@@ -314,10 +314,6 @@ export const SITE_SETTINGS_DESCRIPTIONS: Described = {
     ar: 'تظهر في بيانات البحث (addressRegion) لا للزائر: منطقة مكة المكرمة.',
     en: 'The origin region in the search data (addressRegion): Makkah Region. Not shown to a visitor.',
   },
-  bookingUrl: {
-    ar: 'يُفتح من بطاقة الحجز في صفحة التواصل. فارغ يفتح WhatsApp بالرسالة الجاهزة بدلاً منه.',
-    en: 'Opens from the booking card on the contact page. Empty opens WhatsApp with the prefilled message instead.',
-  },
   legalEntity: {
     ar: 'لا يقرؤه الموقع اليوم: سطر الحقوق والصفحات القانونية نصّها ثابت. محفوظ لليوم الذي يُقرأ فيه.',
     en: 'Read by nothing on the site today: the copyright line and the legal pages carry fixed text. Kept for the day they read it.',
