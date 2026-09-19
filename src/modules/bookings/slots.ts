@@ -1,3 +1,4 @@
+import type { BookingSettings } from '@/content/schema';
 import { riyadh } from '@/lib/riyadh';
 
 /**
@@ -25,6 +26,11 @@ export interface SlotRules {
 export interface Interval {
   start: Date;
   end: Date;
+}
+
+/** The settings as the arithmetic reads them: the closed dates by their day alone. */
+export function rulesOf(settings: BookingSettings): SlotRules {
+  return { ...settings, closedDates: settings.closedDates.map((row) => row.date) };
 }
 
 export const DAY_KEY = /^\d{4}-\d{2}-\d{2}$/;
