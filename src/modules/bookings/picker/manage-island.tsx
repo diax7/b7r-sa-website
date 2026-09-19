@@ -126,7 +126,7 @@ export function ManageIsland({ locale, copy, settings, whatsappHref }: ManageIsl
   }
 
   const { booking, notice } = view;
-  const when = `${riyadhDayLabel(new Date(booking.start), copy.dateLocale)}, ${riyadhTimeLabel(new Date(booking.start), copy.dateLocale)}`;
+  const when = `${riyadhDayLabel(new Date(booking.start), copy.dateLocale)}${locale === 'ar' ? '، ' : ', '}${riyadhTimeLabel(new Date(booking.start), copy.dateLocale)}`;
   const chosenLine = copy.booking.chosen
     .replace('{day}', riyadhDayLabel(new Date(booking.start), copy.dateLocale))
     .replace('{time}', riyadhTimeLabel(new Date(booking.start), copy.dateLocale));

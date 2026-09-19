@@ -67,9 +67,30 @@ export async function BookingPicker({
   );
 }
 
+/**
+ * The page's search row (BRD 4.16), or the bank's own title and lead on a database seeded
+ * before the row existed (`pnpm content:migrate --force` appends it; until then the page
+ * still answers, and stays out of the sitemap, which lists the rows).
+ */
+async function bookSeo(
+  locale: Locale,
+): Promise<{ title: string; description: string; ogImage?: string }> {
+  try {
+    const row = await getSeo(locale, '/book');
+    return {
+      title: row.title,
+      description: row.description,
+      ...(row.ogImage ? { ogImage: row.ogImage } : {}),
+    };
+  } catch {
+    const { booking } = copyFor(locale);
+    return { title: booking.title, description: booking.lead };
+  }
+}
+
 /** `/book` (BRD 4.19): the H1 and the lead from the bank, the picker, the ribbon. */
 export async function BookPage({ locale }: { locale: Locale }) {
-  const [settings, seo] = await Promise.all([getBooking(locale), getSeo(locale, '/book')]);
+  const [settings, seo] = await Promise.all([getBooking(locale), bookSeo(locale)]);
   const { booking, productsPage } = copyFor(locale);
   const base = siteBase();
   return (
@@ -133,7 +154,7 @@ export async function ManagePage({ locale }: { locale: Locale }) {
 /** `/book`: the search row of the fixed page; `noindex` while the switch is off. */
 export async function bookMetadata(locale: Locale): Promise<Metadata> {
   const [seo, site, locales, settings] = await Promise.all([
-    getSeo(locale, '/book'),
+    bookSeo(locale),
     getSiteSettings(locale),
     siteLocales(),
     getBooking(locale),

@@ -375,6 +375,10 @@ wired.
 5. Site → Booking: the **calendar owner e-mail** (the Workspace user whose calendar takes
    the events, `dhia@b7r.sa`), the hours and the numbers, then **Booking open**. The page
    and the contact card switch the same minute.
+6. A database seeded before this feature has no `/book` row in SEO settings: `pnpm
+   content:migrate --force` appends it in both languages (the seed adds only what is
+   missing), or add the row by hand from BRD §4.16. Without it the page still answers with
+   the bank's title and stays out of the sitemap.
 
 **What the row's calendar state means.** `synced`: the event exists with its Meet link.
 `failed`: Google refused (the key, the delegation, the API off, an outage) or answered
