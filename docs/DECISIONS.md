@@ -1349,10 +1349,16 @@ so the dashboard never sums two different days): one `stats` call per day, each 
 its own `metrics` row (`source: 'umami'`, `{ visitors, pageviews, visits, bounces,
 totaltime }`), 90 days back on the first run, then yesterday and the day before every night
 (late hits land in yesterday; today is never read, it is not over), a night missed filled
-from the day after the newest row, the calls paced under the Cloud's 50 per 15 s. On the
-dashboard: when the range holds a `umami` row the visits tile is Umami's visitors with our
-landings on the line under and the visitors' own change against the previous range (no
-change claimed while the previous range has no row); the "Where visits come from" card
+from the day after the newest row; then the three dashboard ranges ending yesterday
+(`compare=prev`), written into yesterday's row as `data.ranges[7|30|90] = { …, previous }`,
+because a range's visitors are its unique people, not its days' uniques added up (the CTO's
+review: a merchant who came on three days is one visitor, the number Umami's own dashboard
+shows and Dhia will compare with); the calls paced under the Cloud's 50 per 15 s. On the
+dashboard: when the range holds a `umami` row the visits tile is Umami's visitors for the
+range (the range object of the newest row that carries it) with our landings on the line
+under and the change against Umami's previous range; while no row carries the range object
+(rows from before it was pulled) the days are summed and the tile and the card say so
+("daily visitors, summed" / «زوّار الأيام، مجموعةً»); the "Where visits come from" card
 gains a people row (visitors, page views, the average visit as `m:ss` from `totaltime /
 visits`) for the same range, through yesterday; without a row the tile and the card read
 exactly as before. The Traffic page is untouched. `docs/RUNBOOK.md` "Connecting Umami"; the

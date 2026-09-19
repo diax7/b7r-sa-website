@@ -321,6 +321,8 @@ export const adminStrings = {
       pageViews: 'Page views',
       averageTime: 'Average visit',
       people: 'People, by Umami through yesterday',
+      /** While no snapshot carries the range: the days' uniques added up, a person on three days counted thrice. */
+      peopleSummed: 'Daily visitors, summed, by Umami through yesterday',
     },
     families: {
       openai: 'OpenAI',
@@ -403,6 +405,7 @@ export const adminStrings = {
        */
       visitors: 'Visitors',
       landings: (n: number, text: string) => `${text} ${n === 1 ? 'landing' : 'landings'}`,
+      summed: 'daily visitors, summed',
       visitsUp: (n: number, days: number) => `${n}% more than the previous ${days} days`,
       visitsDown: (n: number, days: number) => `${n}% fewer than the previous ${days} days`,
       visitsSame: (days: number) => `the same as the previous ${days} days`,
@@ -818,6 +821,7 @@ export const adminStringsAr: AdminStrings = {
       pageViews: 'مشاهدات الصفحات',
       averageTime: 'متوسط الزيارة',
       people: 'الأشخاص، بحسب Umami حتى أمس',
+      peopleSummed: 'زوّار الأيام مجموعةً، بحسب Umami حتى أمس',
     },
     families: {
       openai: 'OpenAI',
@@ -895,6 +899,7 @@ export const adminStringsAr: AdminStrings = {
       visits: 'الزيارات',
       visitors: 'الزوّار',
       landings: (_n, text) => `الزيارات: ${text}`,
+      summed: 'زوّار الأيام، مجموعةً',
       visitsUp: (n, days) => `أكثر بنسبة ${n}% من المدة السابقة (${arabicDays(days)})`,
       visitsDown: (n, days) => `أقل بنسبة ${n}% من المدة السابقة (${arabicDays(days)})`,
       visitsSame: (days) => `مثل المدة السابقة (${arabicDays(days)})`,

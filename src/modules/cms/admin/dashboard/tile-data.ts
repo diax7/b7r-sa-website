@@ -24,8 +24,8 @@ export interface TileInputs {
   language: string;
   /** The range and the double range, so the previous range is the difference. */
   traffic: { current: TrafficSummary; double: TrafficSummary } | null | undefined;
-  /** Umami's people the same way (ADR-048 amended); no row in the range reads as no Umami. */
-  people?: { current: PeopleSummary; double: PeopleSummary } | null | undefined;
+  /** Umami's people for the range (ADR-048 amended); null is no row, so no Umami. */
+  people?: PeopleSummary | null | undefined;
   ledger: LedgerReading | null | undefined;
   score: { score: Score<string>; trend: ScoreTrend | null } | null | undefined;
   published: PublishedCount[] | null | undefined;
@@ -58,12 +58,12 @@ function changeLine(
  * The visits tile (ADR-059; ADR-048 amended): our landings with their change; when Umami has
  * a row in the range, its visitors are the number (the truest people count: it loads for
  * everyone, GA4 only after consent), the landings move to the line under, and the change is
- * the visitors' own where the previous range has rows.
+ * the visitors' own against Umami's previous range; a summed fallback says so instead.
  */
 function visitsTile(input: TileInputs, t: Words): Tile {
   const { days, adminRoute, language } = input;
   const href = `${adminRoute}${ADMIN_VIEWS.traffic.path}?days=${days}`;
-  const people = input.people?.current.days ? input.people : null;
+  const people = input.people ?? null;
   const landings = input.traffic?.current.landings ?? null;
   const tile: Tile = {
     key: 'visits',
@@ -75,10 +75,10 @@ function visitsTile(input: TileInputs, t: Words): Tile {
     hue: 'pink',
   };
   if (people) {
-    const visitors = people.current.visitors;
-    const previous =
-      people.double.days > people.current.days ? people.double.visitors - visitors : null;
-    const line = changeLine(visitors, previous, days, t);
+    const { visitors } = people;
+    const line = people.summed
+      ? t.summed
+      : changeLine(visitors, people.previous?.visitors ?? null, days, t);
     return {
       ...tile,
       label: t.visitors,

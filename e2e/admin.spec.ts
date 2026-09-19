@@ -34,6 +34,15 @@ const sidewaysOverflow = (page: Page) =>
 
 /** The colour of an element's `::after` (the active tab's bar); runs in the browser. */
 const barColour = (el: Element) => getComputedStyle(el, '::after').backgroundColor;
+
+/** An Umami window's numbers for the seeded snapshot (PR 4c): 602,700 s over 4,100 visits is 2:27. */
+const umamiNumbers = (visitors: number) => ({
+  visitors,
+  pageviews: 9100,
+  visits: 4100,
+  bounces: 900,
+  totaltime: 602_700,
+});
 /**
  * The text's contrast against the pill's tint composited over the row behind it (WCAG).
  * Runs in the browser through `evaluate`, so its helpers must travel inside it.
@@ -4109,15 +4118,18 @@ test.describe('CMS admin', () => {
         { headers: auth },
       );
       const connected = ((await existing.json()) as { totalDocs: number }).totalDocs > 0;
+      // Yesterday's row as the pull writes it: the day's numbers and the three ranges ending
+      // that day, each with Umami's previous range; the week's range is the tile's number.
       const day = {
-        visitors: 3900,
-        pageviews: 9100,
-        visits: 4100,
-        bounces: 900,
-        totaltime: 602_700,
+        ...umamiNumbers(410),
+        ranges: {
+          7: { ...umamiNumbers(3900), previous: umamiNumbers(3000) },
+          30: { ...umamiNumbers(12_000), previous: umamiNumbers(12_000) },
+          90: { ...umamiNumbers(30_000), previous: umamiNumbers(0) },
+        },
       };
       const { execFileSync } = await import('node:child_process');
-      const row = (action: 'upsert' | 'delete') =>
+      const row = (action: 'upsert' | 'delete', data: unknown = day) =>
         execFileSync(
           process.execPath,
           [
@@ -4127,7 +4139,7 @@ test.describe('CMS admin', () => {
             action,
             'umami',
             yesterday,
-            ...(action === 'upsert' ? [JSON.stringify(day)] : []),
+            ...(action === 'upsert' ? [JSON.stringify(data)] : []),
           ],
           { cwd: process.cwd(), env: process.env, stdio: 'pipe', timeout: 90_000 },
         );
@@ -4163,13 +4175,24 @@ test.describe('CMS admin', () => {
           /\d+:\d{2}/,
         );
         if (!connected) {
+          // The week's range object, not the day's numbers or a sum; the change is Umami's own.
+          await expect(people).toHaveAttribute('data-admin-traffic-people', 'range');
           await expect(tile).toHaveAttribute('data-admin-tile-visitors', '3900');
           await expect(tile).toHaveAttribute('data-admin-tile-value', '3,900');
+          await expect(tile).toContainText('30% more than the previous 7 days');
           await expect(card).toHaveAttribute('data-admin-traffic-visitors', '3900');
           await expect(people.locator('[data-admin-stat="visitors"]')).toContainText('3,900');
           await expect(people.locator('[data-admin-stat="page-views"]')).toContainText('9,100');
           // 602,700 seconds over 4,100 visits: 147 s.
           await expect(people.locator('[data-admin-stat="average-visit"]')).toContainText('2:27');
+          // The 30-day range: the same as before; the 90-day range: nobody before.
+          await page.goto('/admin?days=30');
+          await expect(tile).toHaveAttribute('data-admin-tile-value', '12,000');
+          await expect(tile).toContainText('the same as the previous 30 days');
+          await page.goto('/admin?days=90');
+          await expect(tile).toHaveAttribute('data-admin-tile-value', '30,000');
+          await expect(tile).toContainText('none in the previous 90 days');
+          await page.goto('/admin');
         }
         // Both hue carriers stay as they were: one disc on the tile, one icon on the card.
         await expect(tile.locator('[data-admin-hue]')).toHaveCount(1);
@@ -4184,6 +4207,17 @@ test.describe('CMS admin', () => {
         await expect(people).toContainText('مشاهدات الصفحات');
         await expect(people).toContainText('متوسط الزيارة');
         await expect(people).toContainText('Umami');
+        if (!connected) {
+          // A row from before the ranges were pulled: the days summed, said as such.
+          await page.context().addCookies([{ name: 'payload-lng', value: 'en', url: baseURL! }]);
+          row('upsert', umamiNumbers(410));
+          await page.goto('/admin');
+          await expect(people).toHaveAttribute('data-admin-traffic-people', 'summed');
+          await expect(people).toContainText('Daily visitors, summed');
+          await expect(tile).toHaveAttribute('data-admin-tile-value', '410');
+          await expect(tile).toContainText('daily visitors, summed');
+          await expect(tile).not.toContainText(/previous 7 days/);
+        }
       } finally {
         await page.context().addCookies([{ name: 'payload-lng', value: 'en', url: baseURL! }]);
         if (!connected) row('delete');

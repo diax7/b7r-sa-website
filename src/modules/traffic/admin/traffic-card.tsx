@@ -21,8 +21,9 @@ export function channelLabel(channel: Channel, s: AdminStrings['traffic']): stri
  * surface track: identity, not meaning, and the card's one hue, ADR-060), the top channel, the crawler reads, the three entry pages that
  * brought most, and the "All traffic" link into the same range. Empty until the first visitor.
  * With Umami connected (ADR-048 amended) a people row under the figures: its visitors, page
- * views and the average visit for the same range, through yesterday; without a row the card
- * reads as before.
+ * views and the average visit for the same range, through yesterday (the range's uniques from
+ * the newest snapshot, or the days summed while no snapshot carries the range, captioned so);
+ * without a row the card reads as before.
  */
 export function TrafficCard({
   summary,
@@ -37,7 +38,7 @@ export function TrafficCard({
 }) {
   const s = adminStringsFor(language).traffic;
   const top = summary.byChannel[0];
-  const counted = people && people.days > 0 ? people : null;
+  const counted = people ?? null;
   const empty = summary.landings === 0 && summary.crawls === 0 && counted === null;
   return (
     <DashboardSection
@@ -66,8 +67,13 @@ export function TrafficCard({
             <Stat label={s.card.crawls} value={formatNumber(summary.crawls, language)} />
           </div>
           {counted && (
-            <div className="flex flex-col gap-2" data-admin-traffic-people="">
-              <span className="text-caption text-text-muted">{s.card.people}</span>
+            <div
+              className="flex flex-col gap-2"
+              data-admin-traffic-people={counted.summed ? 'summed' : 'range'}
+            >
+              <span className="text-caption text-text-muted">
+                {counted.summed ? s.card.peopleSummed : s.card.people}
+              </span>
               <div className="grid grid-cols-3 gap-4">
                 <Stat
                   label={s.card.visitors}

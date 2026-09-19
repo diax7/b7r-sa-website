@@ -18,7 +18,8 @@ import {
 import {
   riyadhDayBefore,
   UMAMI_CALL_GAP_MS,
-  type UmamiDay,
+  UMAMI_RANGES,
+  type UmamiRow,
   umamiClient,
   umamiWebsiteId,
 } from '@/modules/visibility/services/umami';
@@ -62,8 +63,9 @@ const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve,
 
 /**
  * The Umami source (ADR-048 amended): one `stats` call per day to pull, each written as its
- * own row the moment it lands, paced under the Cloud's limit; a day that fails stops the run
- * and is named, the days before it stand.
+ * own row the moment it lands, and on yesterday's row the three dashboard ranges ending
+ * yesterday (`compare=prev`, so the previous range rides along); every call paced under the
+ * Cloud's limit. A call that fails stops the run and is named, the rows before it stand.
  */
 async function pullUmami(
   payload: Payload,
@@ -75,14 +77,26 @@ async function pullUmami(
   if (!websiteId) throw new Error('no Umami website id in Site settings, Analytics');
   const latest = await latestMetrics(payload, 'umami', 1);
   const days = umamiDaysToPull(latest[0]?.date ?? null, now);
+  const yesterday = days[days.length - 1];
   const client = umamiClient(connection.apiKey, websiteId, { baseUrl: connection.baseUrl });
+  // Serial on purpose: the Cloud allows 50 calls per 15 s and each row lands on its own.
+  let calls = 0;
+  const paced = async <T>(call: () => Promise<T>): Promise<T> => {
+    if (calls++ > 0 && gapMs > 0) await sleep(gapMs);
+    return call();
+  };
+  const rangesEnding = async (end: string): Promise<NonNullable<UmamiRow['ranges']>> => {
+    const ranges: NonNullable<UmamiRow['ranges']> = {};
+    // oxlint-disable-next-line no-await-in-loop
+    for (const n of UMAMI_RANGES) ranges[n] = await paced(() => client.range(end, n));
+    return ranges;
+  };
   const written: string[] = [];
-  for (const [i, date] of days.entries()) {
-    // Serial on purpose: the Cloud allows 50 calls per 15 s and each row lands on its own.
+  for (const date of days) {
     // oxlint-disable-next-line no-await-in-loop
-    if (i > 0 && gapMs > 0) await sleep(gapMs);
+    const day = await paced(() => client.day(date));
     // oxlint-disable-next-line no-await-in-loop
-    const data: UmamiDay = await client.day(date);
+    const data: UmamiRow = date === yesterday ? { ...day, ranges: await rangesEnding(date) } : day;
     // oxlint-disable-next-line no-await-in-loop
     await upsertMetric(payload, { date, source: 'umami', data });
     written.push(date);

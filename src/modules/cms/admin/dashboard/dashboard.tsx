@@ -117,7 +117,7 @@ export async function Dashboard(props: AdminViewServerProps) {
             {traffic && (
               <TrafficCard
                 summary={traffic.current}
-                people={people?.current ?? null}
+                people={people ?? null}
                 href={`${adminRoute}${ADMIN_VIEWS.traffic.path}?days=${days}`}
                 language={language}
               />

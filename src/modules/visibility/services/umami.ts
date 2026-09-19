@@ -4,7 +4,10 @@
  * answers at `https://api.umami.is/v1` with the key as a Bearer token; a self-hosted Umami
  * (`umami.b7r.app`) answers the same shape under `<address>/api` with its login token. One
  * `stats` call per day on Riyadh day boundaries, the boundary every other `metrics` source
- * keeps, so the dashboard never sums two different days. Pure parsers over the API's shape.
+ * keeps, so the dashboard never sums two different days; and one per dashboard range ending
+ * yesterday, since a range's visitors are its unique people, not its days' uniques added up
+ * (a merchant who came on three days is one visitor, as Umami's own dashboard counts). Pure
+ * parsers over the API's shape.
  */
 import type { Payload } from 'payload';
 import { riyadh } from '@/lib/riyadh';
@@ -14,7 +17,7 @@ export const UMAMI_CLOUD_API = 'https://api.umami.is/v1';
 export const UMAMI_CALL_GAP_MS = 400;
 const DAY_MS = 86_400_000;
 
-/** One day's numbers as `stats` answers them and as the `metrics` row keeps them. */
+/** One window's numbers as `stats` answers them and as the `metrics` row keeps them. */
 export interface UmamiDay {
   visitors: number;
   pageviews: number;
@@ -22,6 +25,20 @@ export interface UmamiDay {
   bounces: number;
   /** Seconds on the site, summed over the visits. */
   totaltime: number;
+}
+
+/** The dashboard's ranges (`DASHBOARD_RANGES`, kept equal by a test): the pull reads each ending yesterday. */
+export const UMAMI_RANGES = [7, 30, 90] as const;
+export type UmamiRangeDays = (typeof UMAMI_RANGES)[number];
+
+/** A range's numbers with the previous range's, from `stats` with `compare=prev`. */
+export interface UmamiRange extends UmamiDay {
+  previous: UmamiDay;
+}
+
+/** A `metrics` row of the source: the day's numbers, and on yesterday's row the ranges ending that day. */
+export interface UmamiRow extends UmamiDay {
+  ranges?: Partial<Record<UmamiRangeDays, UmamiRange>>;
 }
 
 /** The API's address for a row: the Cloud when the row names none, else the row's under `/api`. */
@@ -42,6 +59,15 @@ export function dayWindow(dayRiyadh: string): { startAt: number; endAt: number }
   return { startAt, endAt: startAt + DAY_MS - 1 };
 }
 
+/** The window of `days` Riyadh days ending on `endDayRiyadh`, inclusive, in milliseconds. */
+export function rangeWindow(
+  endDayRiyadh: string,
+  days: number,
+): { startAt: number; endAt: number } {
+  const end = dayWindow(endDayRiyadh);
+  return { startAt: end.startAt - (days - 1) * DAY_MS, endAt: end.endAt };
+}
+
 /** The Riyadh day `n` days before `now` (`1` is yesterday). */
 export function riyadhDayBefore(now: Date, n: number): string {
   return riyadh(new Date(now.getTime() - n * DAY_MS)).dateKey;
@@ -55,7 +81,7 @@ function figure(value: unknown): number {
   return Number.isFinite(n) ? n : 0;
 }
 
-/** The five numbers of a `stats` answer; `comparison` is ignored (our rows compare themselves). */
+/** The five numbers of a `stats` answer; the `comparison` is read by `parseRange`. */
 export function parseStats(body: unknown): UmamiDay {
   const b = (body ?? {}) as Record<string, unknown>;
   return {
@@ -67,9 +93,17 @@ export function parseStats(body: unknown): UmamiDay {
   };
 }
 
+/** A range's `stats` answer with its `comparison`: the previous range of the same length. */
+export function parseRange(body: unknown): UmamiRange {
+  const b = (body ?? {}) as Record<string, unknown>;
+  return { ...parseStats(b), previous: parseStats(b['comparison']) };
+}
+
 export interface UmamiClient {
   /** One day's numbers: the Test (yesterday) and the pull (each missing day). */
   day(dayRiyadh: string): Promise<UmamiDay>;
+  /** A range's numbers ending on a day, with the previous range's: the pull, on yesterday. */
+  range(endDayRiyadh: string, days: number): Promise<UmamiRange>;
 }
 
 export function umamiClient(
@@ -79,19 +113,22 @@ export function umamiClient(
 ): UmamiClient {
   const fetcher = options.fetcher ?? fetch;
   const api = umamiApi(options.baseUrl);
+  const stats = async (window: { startAt: number; endAt: number }, compare?: 'prev') => {
+    const url = new URL(`${api}/websites/${encodeURIComponent(websiteId)}/stats`);
+    url.searchParams.set('startAt', String(window.startAt));
+    url.searchParams.set('endAt', String(window.endAt));
+    if (compare) url.searchParams.set('compare', compare);
+    const res = await fetcher(url, {
+      headers: { accept: 'application/json', authorization: `Bearer ${apiKey}` },
+      signal: AbortSignal.timeout(20_000),
+    });
+    if (!res.ok) throw new Error(`Umami answered ${res.status}`);
+    return res.json() as Promise<unknown>;
+  };
   return {
-    async day(dayRiyadh) {
-      const { startAt, endAt } = dayWindow(dayRiyadh);
-      const url = new URL(`${api}/websites/${encodeURIComponent(websiteId)}/stats`);
-      url.searchParams.set('startAt', String(startAt));
-      url.searchParams.set('endAt', String(endAt));
-      const res = await fetcher(url, {
-        headers: { accept: 'application/json', authorization: `Bearer ${apiKey}` },
-        signal: AbortSignal.timeout(20_000),
-      });
-      if (!res.ok) throw new Error(`Umami answered ${res.status}`);
-      return parseStats(await res.json());
-    },
+    day: async (dayRiyadh) => parseStats(await stats(dayWindow(dayRiyadh))),
+    range: async (endDayRiyadh, days) =>
+      parseRange(await stats(rangeWindow(endDayRiyadh, days), 'prev')),
   };
 }
 

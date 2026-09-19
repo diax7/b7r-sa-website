@@ -3,7 +3,9 @@ import { type MigrateDownArgs, type MigrateUpArgs, sql } from '@payloadcms/db-po
 /**
  * Umami on the dashboard (Level 4 PR 4c, ADR-048 amended): the `umami` connection kind and
  * the `umami` snapshot source. Additive: two enum values, `IF NOT EXISTS` so a database that
- * took them from an earlier build of the branch is not refused.
+ * took them from an earlier build of the branch is not refused. The `IF NOT EXISTS` is
+ * hand-written: a regenerated drizzle diff would not carry it, so a future regeneration on
+ * top of a newer main keeps this file (its snapshot JSON beside it) rather than replacing it.
  */
 export async function up({ db }: MigrateUpArgs): Promise<void> {
   await db.execute(sql`

@@ -37,8 +37,8 @@ export interface DashboardData {
   health: Read<HealthReport>;
   recent: Read<RecentItem[]>;
   traffic: Read<{ current: TrafficSummary; double: TrafficSummary }>;
-  /** Umami's people for the range and the double range (ADR-048 amended); `days: 0` without the connection. */
-  people: Read<{ current: PeopleSummary; double: PeopleSummary }>;
+  /** Umami's people for the range (ADR-048 amended); the inner null is no row, so no Umami. */
+  people: Read<PeopleSummary | null>;
   score: Read<{ score: Score<string>; trend: ScoreTrend | null }>;
   ledger: Read<LedgerReading>;
   engine: Read<EngineSummary>;
@@ -117,13 +117,7 @@ export async function readDashboard(args: {
       ]);
       return { current, double };
     }),
-    guarded(payload, 'people', reads('metrics'), async () => {
-      const [current, double] = await Promise.all([
-        peopleSummary(payload, { days, now }),
-        peopleSummary(payload, { days: days * 2, now }),
-      ]);
-      return { current, double };
-    }),
+    guarded(payload, 'people', reads('metrics'), () => peopleSummary(payload, { days, now })),
     guarded(
       payload,
       'score',

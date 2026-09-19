@@ -462,9 +462,14 @@ CI writes its dummy ids into the settings (`scripts/ci/analytics-ids.ts`), the U
   written as its own snapshot row (`source: umami`): 90 days back the first night (about 40
   seconds, paced under the Cloud's limit), then yesterday and the day before every night
   (late hits land in yesterday); a night missed is filled from the day after the newest row.
-  Today is never read, so the dashboard's people numbers run through yesterday while the
-  landings count today too. The tile and the card read as before until the first row lands
-  ("Pull now" on the Score page brings it within the minute).
+  Then three more calls, the 7-, 30- and 90-day ranges ending yesterday with Umami's own
+  comparison, written into yesterday's row as `ranges`: a range's visitors are its unique
+  people (a merchant who came on three days is one), the same number Umami's dashboard
+  shows, and the change under the tile is against the previous range. Today is never read,
+  so the dashboard's people numbers run through yesterday while the landings count today
+  too. The tile and the card read as before until the first row lands ("Pull now" on the
+  Score page brings it within the minute); a row from before the ranges were pulled reads
+  as the days summed and says so ("Daily visitors, summed") until the next night.
 - **The pull.** Every night at 04:00 Riyadh the `ai` queue pulls each connected service and
   writes one snapshot row per source for the day (Umami one row per day it read), then the
   day's score; a second pull the same day replaces the day's rows. "Pull now" on the Score page queues it once (one per ten
