@@ -34,39 +34,51 @@ const sidewaysOverflow = (page: Page) =>
 
 /** The colour of an element's `::after` (the active tab's bar); runs in the browser. */
 const barColour = (el: Element) => getComputedStyle(el, '::after').backgroundColor;
+
+/** An Umami window's numbers for the seeded snapshot (PR 4c): 602,700 s over 4,100 visits is 2:27. */
+const umamiNumbers = (visitors: number) => ({
+  visitors,
+  pageviews: 9100,
+  visits: 4100,
+  bounces: 900,
+  totaltime: 602_700,
+});
 /**
  * The text's contrast against the pill's tint composited over the row behind it (WCAG).
- * Runs in the browser through `evaluate`, so its helpers must travel inside it.
+ * Runs in the browser through `evaluate`, so its helpers must travel inside it. The
+ * compositing is the browser's own: every ancestor's background is painted, outermost
+ * first, over black into a one-pixel canvas, then the pill's, and the pixel is read; a
+ * Tailwind `/10` tint computes to `lab(… / 0.1)` in Chromium, which no digits regex reads.
  */
 /* oxlint-disable unicorn/consistent-function-scoping -- serialised into the page as one function */
 const contrast = (el: Element) => {
-  type Rgba = { r: number; g: number; b: number; a: number };
-  const rgba = (s: string): Rgba => {
-    const m = s.match(/[\d.]+/g)?.map(Number) ?? [0, 0, 0, 1];
-    return { r: m[0]!, g: m[1]!, b: m[2]!, a: m[3] ?? 1 };
+  const canvas = document.createElement('canvas');
+  canvas.width = 1;
+  canvas.height = 1;
+  const ctx = canvas.getContext('2d')!;
+  const paint = (colour: string) => {
+    ctx.fillStyle = colour;
+    ctx.fillRect(0, 0, 1, 1);
   };
-  const over = (top: Rgba, under: Rgba): Rgba => ({
-    r: top.r * top.a + under.r * (1 - top.a),
-    g: top.g * top.a + under.g * (1 - top.a),
-    b: top.b * top.a + under.b * (1 - top.a),
-    a: 1,
-  });
-  let ground = rgba('rgb(0, 0, 0)');
-  const layers: Rgba[] = [];
+  const pixel = () => [...ctx.getImageData(0, 0, 1, 1).data].slice(0, 3);
+  const layers: string[] = [];
   for (let node = el.parentElement; node; node = node.parentElement) {
-    const bg = rgba(getComputedStyle(node).backgroundColor);
-    if (bg.a > 0) layers.push(bg);
-    if (bg.a === 1) break;
+    layers.push(getComputedStyle(node).backgroundColor);
   }
-  for (const layer of layers.toReversed()) ground = over(layer, ground);
-  const behind = over(rgba(getComputedStyle(el).backgroundColor), ground);
+  paint('rgb(0, 0, 0)');
+  for (const layer of layers.toReversed()) paint(layer);
+  paint(getComputedStyle(el).backgroundColor);
+  const behind = pixel();
+  paint('rgb(0, 0, 0)');
+  paint(getComputedStyle(el).color);
+  const ink = pixel();
   const weights = [0.2126, 0.7152, 0.0722];
-  const luminance = (c: Rgba) =>
-    [c.r, c.g, c.b]
+  const luminance = (c: number[]) =>
+    c
       .map((v) => v / 255)
       .map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4))
       .reduce((sum, v, i) => sum + v * weights[i]!, 0);
-  const text = luminance(rgba(getComputedStyle(el).color));
+  const text = luminance(ink);
   const back = luminance(behind);
   return (Math.max(text, back) + 0.05) / (Math.min(text, back) + 0.05);
 };
@@ -82,6 +94,34 @@ async function switchPanelLanguage(page: Page, code: 'ar' | 'en') {
   if (await name.isVisible()) await name.click();
   else await actions.locator('[data-admin-language-toggle]').click();
   await expect(page.locator('html')).toHaveAttribute('lang', code);
+}
+
+/**
+ * One message through `POST /api/contact` (ADR-061), from a fresh address for the limiter,
+ * and the id of the row it left, read with the admin's token. The caller deletes the row.
+ */
+async function submitMessage(
+  request: APIRequestContext,
+  auth: Record<string, string>,
+  body: Record<string, unknown> & { email: string },
+): Promise<number> {
+  const seed = Math.floor(Math.random() * 65_536);
+  const res = await request.post('/api/contact', {
+    headers: {
+      'Content-Type': 'application/json',
+      'x-forwarded-for': `10.61.${seed >> 8}.${seed & 255}`,
+    },
+    data: body,
+  });
+  expect(res.status(), await res.text()).toBe(200);
+  const found = await request.get(
+    `${API}/messages?where[email][equals]=${encodeURIComponent(body.email)}&depth=0&limit=1`,
+    { headers: auth },
+  );
+  expect(found.status()).toBe(200);
+  const { docs } = (await found.json()) as { docs: Array<{ id: number }> };
+  expect(docs[0], `the row of ${body.email}`).toBeDefined();
+  return docs[0]!.id;
 }
 
 /** The id of the first document of a collection, read with the admin's token. */
@@ -404,17 +444,25 @@ test.describe('CMS admin', () => {
       .locator('[data-admin-group]')
       .evaluateAll((els) => els.map((el) => el.getAttribute('data-hue')));
     expect(groupHues).toEqual(['blue', 'teal', 'violet', 'pink', 'slate']);
+    // The inbox section opens Site (ADR-061), then the primary entries from the home page.
     await expect(nav.locator('[data-admin-group="Site"] a[id^="nav-"]').first()).toHaveAttribute(
       'id',
-      'nav-global-home',
+      'nav-messages',
     );
-    // Secondary entries sit under their parent; the engine is a section inside Blog; no
-    // entry shows a document count, a badge only asks for action (red or amber); the
-    // active entry wears its group's hue; the dashboard is a real entry, active on /admin.
+    await expect(
+      nav.locator('[data-admin-group="Site"] [data-admin-entry="primary"]').first(),
+    ).toHaveAttribute('id', 'nav-global-home');
+    // Secondary entries sit under their parent; the engine is a section inside Blog, the
+    // inbox one inside Site; no entry shows a document count, a badge only asks for action
+    // (red or amber); the active entry wears its group's hue; the dashboard is a real entry,
+    // active on /admin.
     await expect(nav.locator('#nav-categories')).toHaveAttribute('data-admin-entry', 'secondary');
     await expect(
       nav.locator('[data-admin-group="Blog"] [data-admin-section="engine"] #nav-ai-topics'),
     ).toBeVisible();
+    await expect(
+      nav.locator('[data-admin-group="Site"] [data-admin-section="inbox"] #nav-messages'),
+    ).toHaveAttribute('data-admin-entry', 'secondary');
     await expect(nav.locator('[data-admin-count]')).toHaveCount(0);
     for (const badge of await nav.locator('[data-admin-badge]').all()) {
       await expect(badge).toHaveAttribute('data-admin-badge', /^(error|warning)$/);
@@ -531,11 +579,15 @@ test.describe('CMS admin', () => {
       'aria-current',
       'page',
     );
-    // Home, pages, site settings, booking (ADR-062), images, bookings.
-    await expect(flyout.locator('[role="menuitem"]')).toHaveCount(6);
+    // The Inbox section's messages and bookings, then home, pages, site settings, booking
+    // (ADR-062) and images.
+    await expect(flyout.locator('[role="menuitem"]')).toHaveCount(7);
     expect(
       await page.evaluate(() => document.activeElement?.closest('[data-admin-flyout]') !== null),
     ).toBe(true);
+    // The flyout follows the tree's order: the inbox section first, then the home page.
+    await page.keyboard.press('ArrowDown');
+    await expect(flyout.locator('[data-admin-flyout-entry="messages"]')).toBeFocused();
     await page.keyboard.press('ArrowDown');
     await expect(flyout.locator('[data-admin-flyout-entry="home"]')).toBeFocused();
     expect(
@@ -762,8 +814,8 @@ test.describe('CMS admin', () => {
     await expect(dashboard.locator('[data-admin-tile="cited"]')).toContainText(
       /category prompts|No ledger run/,
     );
-    // 3 to 7, top to bottom, each with its hook.
-    for (const hook of ['visits', 'assistants', 'content', 'engine', 'server']) {
+    // 3 to 8, top to bottom, each with its hook (the inbox beside the content, ADR-061).
+    for (const hook of ['visits', 'assistants', 'inbox', 'content', 'engine', 'server']) {
       await expect(dashboard.locator(`[data-admin-dashboard-${hook}]`)).toBeVisible();
     }
     // 5. The content: the home tile, the figures as links (the drafts to the list filtered on
@@ -787,7 +839,7 @@ test.describe('CMS admin', () => {
     await expect(content.locator('[data-admin-hue]')).toHaveCount(1);
     await expect(content.locator('[data-admin-hue]')).toHaveAttribute('data-admin-hue', 'blue');
     await expect(content.locator('[data-hue]')).toHaveCount(0);
-    for (const hook of ['visits', 'assistants', 'engine', 'server']) {
+    for (const hook of ['visits', 'assistants', 'inbox', 'engine', 'server']) {
       await expect(
         dashboard.locator(`[data-admin-dashboard-${hook}] [data-admin-hue]`),
       ).toHaveCount(1);
@@ -860,6 +912,7 @@ test.describe('CMS admin', () => {
       await expect(theirs.locator('[data-admin-tile]')).toHaveCount(1);
       await expect(theirs.locator('[data-admin-tile="published"]')).toBeVisible();
       await expect(theirs.locator('[data-admin-dashboard-content]')).toBeVisible();
+      await expect(theirs.locator('[data-admin-dashboard-inbox]')).toBeVisible();
       await expect(theirs.locator('[data-admin-dashboard-server]')).toBeVisible();
       await expect(theirs.locator('[data-admin-dashboard-hand]')).toBeVisible();
       for (const hook of ['visits', 'assistants', 'engine']) {
@@ -926,6 +979,10 @@ test.describe('CMS admin', () => {
         .map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`);
     /** The switch sits after "View website" on the trailing side: the right in LTR, the left in RTL. */
     const trailing = async (control: Locator, rtl: boolean) => {
+      // Both boxes are read after the header's actions are on screen (a one-shot read under
+      // load found "View website" not yet laid out).
+      await expect(control).toBeVisible();
+      await expect(viewSite).toBeVisible();
       const box = (await control.boundingBox())!;
       const site = (await viewSite.boundingBox())!;
       const width = page.viewportSize()!.width;
@@ -1596,9 +1653,8 @@ test.describe('CMS admin', () => {
     await expect.poll(() => strip.evaluate((el) => el.scrollLeft)).toBeGreaterThan(0);
     const active = page.locator('.tabs-field__tab-button--active').first();
     await expect(active).toHaveCSS('color', 'rgb(255, 255, 255)');
-    expect(await active.evaluate((el) => getComputedStyle(el, '::after').backgroundColor)).toBe(
-      'rgb(0, 152, 224)',
-    );
+    // The hue lands with the icon portal after Payload's render: poll, never a one-shot read.
+    await expect.poll(() => active.evaluate(barColour), POLL).toBe('rgb(0, 152, 224)');
     await active.scrollIntoViewIfNeeded();
     await expect(active).toBeInViewport();
     expect(await sidewaysOverflow(page), 'no horizontal overflow on the home form').toBe(0);
@@ -1652,6 +1708,15 @@ test.describe('CMS admin', () => {
     });
     expect(created.status(), await created.text()).toBe(201);
     const draftId = ((await created.json()) as { doc: { id: number } }).doc.id;
+    // A message of the test's own, so the inbox list shows a New pill (blue, ADR-061).
+    const messageId = await submitMessage(request, auth, {
+      name: `E2E Colour ${Date.now()}`,
+      email: `colour-e2e-${Date.now()}@example.com`,
+      phone: '0501699572',
+      inquiry: 'تاجر',
+      message: 'رسالة للألوان.',
+      locale: 'ar',
+    });
     const { AxeBuilder } = await import('@axe-core/playwright');
     const serious = async (...include: string[]) => {
       let builder = new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']);
@@ -1670,6 +1735,7 @@ test.describe('CMS admin', () => {
       en: { published: 'Published', draft: 'Draft', changed: 'Changed' },
       ar: { published: 'منشور', draft: 'مسودة', changed: 'معدّل' },
     };
+    const NEW = { en: 'New', ar: 'جديد' };
     const TEXT = 'rgb(255, 255, 255)';
     try {
       for (const width of [1440, 390] as const) {
@@ -1738,11 +1804,26 @@ test.describe('CMS admin', () => {
             await serious('[data-admin-header]', 'td.cell-_status'),
             `axe: a list ${at}`,
           ).toEqual([]);
+          // The inbox list: the New pill is the accent on its tint (never `text-primary` on
+          // dark), its word in the panel's language, readable against its row.
+          await page.goto('/admin/collections/messages');
+          const newPill = page
+            .locator(`.collection-list tr:has(a[href$="/messages/${messageId}"])`)
+            .locator('td.cell-status [data-admin-status="new"]');
+          await expect(newPill).toHaveText(NEW[lang]);
+          expect(
+            await newPill.evaluate(contrast),
+            `the New pill's contrast ${at}`,
+          ).toBeGreaterThanOrEqual(4.5);
+          expect(
+            await serious('[data-admin-header]', 'td.cell-status'),
+            `axe: the inbox list ${at}`,
+          ).toEqual([]);
           // The dashboard: one hue per card, on its icon.
           await page.goto('/admin');
           const dashboard = page.locator('[data-admin-dashboard]');
           await expect(dashboard).toBeVisible();
-          for (const hook of ['visits', 'assistants', 'content', 'engine', 'server']) {
+          for (const hook of ['visits', 'assistants', 'inbox', 'content', 'engine', 'server']) {
             await expect(
               dashboard.locator(`[data-admin-dashboard-${hook}] [data-admin-hue]`),
               `${hook} ${at}`,
@@ -1756,6 +1837,265 @@ test.describe('CMS admin', () => {
       await page.goto('/admin');
       await switchPanelLanguage(page, 'en');
       await request.delete(`${API}/pages/${draftId}`, { headers: auth });
+      await request.delete(`${API}/messages/${messageId}`, { headers: auth });
+    }
+  });
+
+  // The inbox (ADR-061): a submission on `/api/contact` lands in the messages, the sidebar's
+  // badge and the dashboard card count it, the document carries the three actions, an editor
+  // works it but never rewrites the sender, and an outsider gets nothing.
+  test('the inbox (ADR-061): a submission lands with its pill, the badge and the dashboard card count it, the actions, mark handled, the editor and the outsider seats, axe in both languages at 1440 and 390', async ({
+    page,
+    request,
+  }) => {
+    test.setTimeout(300_000);
+    expect((await page.request.post(`${API}/users/login`, { data: admin })).status()).toBe(200);
+    const auth = await login(request, admin);
+    const stamp = Date.now();
+    const sender = { name: `E2E Inbox ${stamp}`, email: `inbox-e2e-${stamp}@example.com` };
+    const message = `أرغب بربط متجري بمنصة بحر برنت والاطلاع على الأسعار وطريقة الطباعة عند الطلب، وهل يوجد حد أدنى للطلب؟ ${stamp}`;
+    const health = (await (await request.get('/api/health')).json()) as { contact: string };
+    // Two more rows that stay New, submitted first so the main one stays the newest: the
+    // list's axe pass then reads several blue pills, not one row that happens to be amber by
+    // then (the CI defect of 2026-09-19).
+    const extras: number[] = [];
+    for (const n of [2, 3]) {
+      extras.push(
+        await submitMessage(request, auth, {
+          name: `E2E Extra ${stamp} ${n}`,
+          email: `inbox-e2e-${stamp}-${n}@example.com`,
+          phone: '0501699572',
+          inquiry: 'شراكة',
+          message: `رسالة إضافية ${n}`,
+          locale: 'ar',
+        }),
+      );
+    }
+    const submitted = await request.post('/api/contact', {
+      headers: {
+        'Content-Type': 'application/json',
+        'x-forwarded-for': `10.61.${(stamp >> 8) & 255}.${stamp & 255}`,
+      },
+      data: {
+        ...sender,
+        phone: '0501699572',
+        inquiry: 'تاجر',
+        message,
+        locale: 'ar',
+        page: '/contact',
+        utm: { source: 'e2e', medium: 'test', campaign: 'inbox' },
+      },
+    });
+    expect(submitted.status(), await submitted.text()).toBe(200);
+    type Doc = {
+      id: number;
+      name: string;
+      phone: string;
+      email: string;
+      inquiry: string;
+      status: string;
+      notes?: string | null;
+      emailed: boolean;
+      page: string;
+      utm: { source: string; medium: string; campaign: string };
+    };
+    const read = async (as: Record<string, string>) => {
+      const res = await request.get(
+        `${API}/messages?where[email][equals]=${encodeURIComponent(sender.email)}&depth=0`,
+        { headers: as },
+      );
+      expect(res.status()).toBe(200);
+      return ((await res.json()) as { docs: Doc[] }).docs;
+    };
+    const [doc] = await read(auth);
+    expect(doc, 'the row').toBeDefined();
+    const id = doc!.id;
+    expect(doc).toMatchObject({
+      name: sender.name,
+      phone: '966501699572',
+      inquiry: 'تاجر',
+      status: 'new',
+      page: '/contact',
+      utm: { source: 'e2e', medium: 'test', campaign: 'inbox' },
+      // The mock transport on the review server and in CI accepts; without any, the row
+      // stands with the flag off.
+      emailed: health.contact !== 'off',
+    });
+    const badgeCount = async () => {
+      const badge = page.locator('#nav-messages [data-admin-badge]');
+      return (await badge.count()) === 0
+        ? 0
+        : Number(await badge.locator('[aria-hidden="true"]').textContent());
+    };
+    const { AxeBuilder } = await import('@axe-core/playwright');
+    const serious = async (...include: string[]) => {
+      let builder = new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']);
+      for (const sel of include) builder = builder.include(sel);
+      return (await builder.analyze()).violations
+        .filter((v) => ['serious', 'critical'].includes(v.impact ?? ''))
+        .map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`);
+    };
+    const editor = await createEditor(request, auth);
+    try {
+      // The dashboard: the card counts it and lists it with the name, the inquiry and the
+      // first words; the sidebar's badge on Messages is red and reads the same number.
+      await page.goto('/admin');
+      const card = page.locator('[data-admin-dashboard-inbox]');
+      await expect(card).toBeVisible();
+      await expect(card.locator('[data-admin-hue]')).toHaveAttribute('data-admin-hue', 'blue');
+      await expect(card.locator('[data-admin-hue]')).toHaveCount(1);
+      const newBefore = Number(await card.getAttribute('data-admin-inbox-new'));
+      expect(newBefore).toBeGreaterThanOrEqual(1);
+      await expect(card.locator('[data-admin-figure="new-messages"]')).toHaveText(
+        newBefore === 1 ? '1 new message' : `${newBefore} new messages`,
+      );
+      const row = card.locator(`[data-admin-inbox-message="${id}"]`);
+      await expect(row).toBeVisible();
+      await expect(row).toContainText(sender.name);
+      await expect(row).toContainText('تاجر');
+      // The first words only: the long message is cut at a word with an ellipsis.
+      await expect(row).toContainText('أرغب بربط متجري بمنصة بحر برنت');
+      await expect(row).toContainText('…');
+      await expect(row).not.toContainText(`؟ ${stamp}`);
+      expect(await badgeCount(), 'the badge').toBe(newBefore);
+      await expect(page.locator('#nav-messages [data-admin-badge]')).toHaveAttribute(
+        'data-admin-badge',
+        'error',
+      );
+      // The section: first in Site, its own icon, the entry inside it.
+      const nav = page.locator('[data-admin-nav]');
+      await expect(
+        nav.locator('[data-admin-group="Site"] [data-admin-section="inbox"] #nav-messages'),
+      ).toBeVisible();
+      await expect(nav.locator('[data-admin-group="Site"] a[id^="nav-"]').first()).toHaveAttribute(
+        'id',
+        'nav-messages',
+      );
+      // The list: the pill with its word, the columns.
+      await page.goto('/admin/collections/messages');
+      const listRow = page.locator('.collection-list tr', { hasText: sender.name });
+      await expect(listRow).toBeVisible();
+      await expect(listRow.locator('td.cell-status [data-admin-status="new"]')).toHaveText('New');
+      await expect(listRow.locator('td.cell-inquiry')).toContainText('تاجر');
+      await expect(page.locator('.collection-list th', { hasText: /^Created/ })).toBeVisible();
+      // The document: the sender's fields as lines, the three actions with their targets.
+      await page.goto(`/admin/collections/messages/${id}`);
+      const actions = page.locator('[data-admin-message-actions]');
+      await expect(actions).toBeVisible();
+      const wa = actions.locator('[data-admin-action="reply-whatsapp"]');
+      await expect(wa).toHaveAttribute('href', /^https:\/\/wa\.me\/966501699572\?text=/);
+      expect(decodeURIComponent((await wa.getAttribute('href'))!)).toContain(
+        `مرحباً ${sender.name}، معك بحر برنت`,
+      );
+      await expect(wa).toHaveAttribute('target', '_blank');
+      await expect(actions.locator('[data-admin-action="reply-email"]')).toHaveAttribute(
+        'href',
+        `mailto:${sender.email}?subject=${encodeURIComponent('بخصوص رسالتك إلى بحر برنت')}`,
+      );
+      await expect(page.locator('[data-admin-read-only="phone"]')).toContainText('966501699572');
+      await expect(page.locator('input#field-name')).toHaveCount(0);
+      // Mark handled: the sentence beside the button, the select turns, the form stays clean.
+      await actions.locator('[data-admin-action="mark-handled"]').click();
+      await expect(actions.locator('[data-admin-action-result="done"]')).toHaveText(
+        'Handled. The list shows it green.',
+      );
+      await expect(page.locator('#field-status')).toContainText('Handled');
+      await expect(page.locator('body')).not.toHaveAttribute('data-admin-form-modified', '');
+      await expect(actions.locator('[data-admin-action-result="disabled"]')).toHaveText(
+        'Handled already.',
+      );
+      expect((await read(auth))[0]!.status).toBe('handled');
+      // The list flips the pill; the badge and the card count one fewer.
+      await page.goto('/admin/collections/messages');
+      await expect(listRow.locator('td.cell-status [data-admin-status="handled"]')).toHaveText(
+        'Handled',
+      );
+      expect(await badgeCount(), 'the badge after').toBe(newBefore - 1);
+      await page.goto('/admin');
+      await expect(card).toHaveAttribute('data-admin-inbox-new', String(newBefore - 1));
+      if (newBefore === 1) {
+        await expect(card.locator('[data-admin-inbox-empty]')).toHaveText('No new messages');
+      }
+      // The editor: sees the inbox, changes the status and the notes, never the sender's
+      // phone (the field's rule drops it), never deletes.
+      const editorAuth = await login(request, editor);
+      expect((await read(editorAuth))[0]?.id, 'the editor reads it').toBe(id);
+      const worked = await request.patch(`${API}/messages/${id}`, {
+        headers: editorAuth,
+        data: { status: 'following', notes: 'اتصلت به', phone: '0509999999' },
+      });
+      expect(worked.status(), await worked.text()).toBe(200);
+      expect((await read(auth))[0]).toMatchObject({
+        status: 'following',
+        notes: 'اتصلت به',
+        phone: '966501699572',
+      });
+      expect(
+        (await request.delete(`${API}/messages/${id}`, { headers: editorAuth })).status(),
+      ).toBe(403);
+      expect(
+        (await request.post(`${API}/messages`, { headers: editorAuth, data: doc })).status(),
+        'nobody creates through the API',
+      ).toBe(403);
+      // The outsider: nothing.
+      for (const [what, res] of [
+        ['list', await request.get(`${API}/messages`)],
+        ['read', await request.get(`${API}/messages/${id}`)],
+        ['create', await request.post(`${API}/messages`, { data: doc })],
+        ['update', await request.patch(`${API}/messages/${id}`, { data: { status: 'handled' } })],
+        ['delete', await request.delete(`${API}/messages/${id}`)],
+      ] as const) {
+        expect(res.status(), `an outsider's ${what}`).toBeGreaterThanOrEqual(401);
+      }
+      expect((await read(auth))[0]!.status, 'the outsider changed nothing').toBe('following');
+      // Axe on the list and the document, both languages, desktop and phone; the words.
+      const WORDS = {
+        en: { following: 'Following', new: 'New', reply: 'Reply on WhatsApp' },
+        ar: { following: 'قيد المتابعة', new: 'جديد', reply: 'رد على WhatsApp' },
+      };
+      for (const width of [1440, 390] as const) {
+        await page.setViewportSize({ width, height: 900 });
+        for (const lang of ['en', 'ar'] as const) {
+          const at = `at ${width} in ${lang}`;
+          await page.goto('/admin');
+          await switchPanelLanguage(page, lang);
+          await page.goto('/admin/collections/messages');
+          await expect(
+            listRow.locator('td.cell-status [data-admin-status="following"]'),
+          ).toHaveText(WORDS[lang].following);
+          const newPills = page.locator('td.cell-status [data-admin-status="new"]');
+          expect(await newPills.count(), `New pills ${at}`).toBeGreaterThanOrEqual(2);
+          for (const pill of await newPills.all()) {
+            await expect(pill).toHaveText(WORDS[lang].new);
+            expect(await pill.evaluate(contrast), `a New pill ${at}`).toBeGreaterThanOrEqual(4.5);
+          }
+          expect(
+            await serious('[data-admin-header]', 'td.cell-status'),
+            `axe: the list ${at}`,
+          ).toEqual([]);
+          await page.goto(`/admin/collections/messages/${id}`);
+          await expect(wa).toHaveText(WORDS[lang].reply);
+          // Our surfaces: the header, the actions and the main column of lines (the status
+          // select in the sidebar is Payload's react-select, outside every axe pass here).
+          expect(
+            await serious(
+              '[data-admin-header]',
+              '[data-admin-message-actions]',
+              '.document-fields__main',
+            ),
+            `axe: the document ${at}`,
+          ).toEqual([]);
+        }
+      }
+    } finally {
+      await page.setViewportSize({ width: 1280, height: 800 });
+      await page.goto('/admin');
+      await switchPanelLanguage(page, 'en');
+      await request.delete(`${API}/users/${editor.id}`, { headers: auth });
+      for (const extra of extras)
+        await request.delete(`${API}/messages/${extra}`, { headers: auth });
+      const removed = await request.delete(`${API}/messages/${id}`, { headers: auth });
+      expect(removed.status(), 'an admin deletes the row').toBe(200);
     }
   });
 
@@ -4091,6 +4431,136 @@ test.describe('CMS admin', () => {
         'data-admin-traffic-page',
         '30',
       );
+    });
+
+    test('Umami on the dashboard (ADR-048 amended, PR 4c): a people day in `metrics` puts the visitors on the visits tile and a people row on the card, in both languages; without one the card reads as before', async ({
+      page,
+      request,
+      baseURL,
+    }) => {
+      test.setTimeout(180_000);
+      const auth = await login(request, ADMIN);
+      const yesterday = riyadh(new Date(Date.now() - 86_400_000)).dateKey;
+      const since = riyadh(new Date(Date.now() - 6 * 86_400_000)).dateKey;
+      // The snapshots refuse every API write (ADR-049): the row goes in through the local
+      // API the pull uses (`scripts/dev/metric-row.ts`, in this process's env) and out the
+      // same way. A review server whose Umami is really connected already has rows in the
+      // week: those are left alone and read as they are.
+      const existing = await request.get(
+        `${API}/metrics?depth=0&limit=1&where[source][equals]=umami&where[date][greater_than_equal]=${since}`,
+        { headers: auth },
+      );
+      const connected = ((await existing.json()) as { totalDocs: number }).totalDocs > 0;
+      // Yesterday's row as the pull writes it: the day's numbers and the three ranges ending
+      // that day, each with Umami's previous range; the week's range is the tile's number.
+      const day = {
+        ...umamiNumbers(410),
+        ranges: {
+          7: { ...umamiNumbers(3900), previous: umamiNumbers(3000) },
+          30: { ...umamiNumbers(12_000), previous: umamiNumbers(12_000) },
+          90: { ...umamiNumbers(30_000), previous: umamiNumbers(0) },
+        },
+      };
+      const { execFileSync } = await import('node:child_process');
+      const row = (action: 'upsert' | 'delete', data: unknown = day) =>
+        execFileSync(
+          process.execPath,
+          [
+            '--import',
+            'tsx',
+            'scripts/dev/metric-row.ts',
+            action,
+            'umami',
+            yesterday,
+            ...(action === 'upsert' ? [JSON.stringify(data)] : []),
+          ],
+          { cwd: process.cwd(), env: process.env, stdio: 'pipe', timeout: 90_000 },
+        );
+      expect((await page.request.post(`${API}/users/login`, { data: ADMIN })).status()).toBe(200);
+      const dashboard = page.locator('[data-admin-dashboard]');
+      const tile = dashboard.locator('[data-admin-tile="visits"]');
+      const card = dashboard.locator('[data-admin-traffic]');
+      if (!connected) {
+        // Without a row: the landings tile and the card as they were (the assertions above).
+        await page.goto('/admin');
+        await expect(tile).toContainText('Visits');
+        await expect(tile).not.toHaveAttribute('data-admin-tile-visitors', /.*/);
+        await expect(card.locator('[data-admin-traffic-people]')).toHaveCount(0);
+        await expect(card).not.toHaveAttribute('data-admin-traffic-visitors', /.*/);
+        row('upsert');
+      }
+      try {
+        await page.goto('/admin');
+        // The tile: Umami's visitors as the number, our landings on the line under.
+        await expect(tile).toContainText('Visitors');
+        await expect(tile).toHaveAttribute('data-admin-tile-visitors', /^\d+$/);
+        await expect(tile).toHaveAttribute('data-admin-tile-value', /^[\d,]+$/);
+        await expect(tile).toContainText(/landings?/);
+        // The card: the people row with the three figures, the average visit as m:ss.
+        const people = card.locator('[data-admin-traffic-people]');
+        await expect(people).toBeVisible();
+        await expect(people).toContainText('People, by Umami');
+        await expect(people.locator('[data-admin-stat="visitors"]')).toContainText(
+          /^Visitors[\d,]+$/,
+        );
+        await expect(people.locator('[data-admin-stat="page-views"]')).toContainText(/Page views/);
+        await expect(people.locator('[data-admin-stat="average-visit"]')).toContainText(
+          /\d+:\d{2}/,
+        );
+        if (!connected) {
+          // The week's range object, not the day's numbers or a sum; the change is Umami's own.
+          await expect(people).toHaveAttribute('data-admin-traffic-people', 'range');
+          await expect(tile).toHaveAttribute('data-admin-tile-visitors', '3900');
+          await expect(tile).toHaveAttribute('data-admin-tile-value', '3,900');
+          await expect(tile).toContainText('30% more than the previous 7 days');
+          await expect(card).toHaveAttribute('data-admin-traffic-visitors', '3900');
+          await expect(people.locator('[data-admin-stat="visitors"]')).toContainText('3,900');
+          await expect(people.locator('[data-admin-stat="page-views"]')).toContainText('9,100');
+          // 602,700 seconds over 4,100 visits: 147 s.
+          await expect(people.locator('[data-admin-stat="average-visit"]')).toContainText('2:27');
+          // The 30-day range: the same as before; the 90-day range: nobody before.
+          await page.goto('/admin?days=30');
+          await expect(tile).toHaveAttribute('data-admin-tile-value', '12,000');
+          await expect(tile).toContainText('the same as the previous 30 days');
+          await page.goto('/admin?days=90');
+          await expect(tile).toHaveAttribute('data-admin-tile-value', '30,000');
+          await expect(tile).toContainText('none in the previous 90 days');
+          await page.goto('/admin');
+        }
+        // Both hue carriers stay as they were: one disc on the tile, one icon on the card.
+        await expect(tile.locator('[data-admin-hue]')).toHaveCount(1);
+        await expect(card.locator('[data-admin-hue]')).toHaveCount(1);
+        // In Arabic: the glossary's words.
+        await page.context().addCookies([{ name: 'payload-lng', value: 'ar', url: baseURL! }]);
+        await page.goto('/admin');
+        await expect(page.locator('html')).toHaveAttribute('dir', /rtl/i);
+        await expect(tile).toContainText('الزوّار');
+        await expect(tile).toContainText('الزيارات:');
+        await expect(people).toContainText('الزوّار');
+        await expect(people).toContainText('مشاهدات الصفحات');
+        await expect(people).toContainText('متوسط الزيارة');
+        await expect(people).toContainText('Umami');
+        if (!connected) {
+          // A row from before the ranges were pulled: the days summed, said as such.
+          await page.context().addCookies([{ name: 'payload-lng', value: 'en', url: baseURL! }]);
+          row('upsert', umamiNumbers(410));
+          await page.goto('/admin');
+          await expect(people).toHaveAttribute('data-admin-traffic-people', 'summed');
+          await expect(people).toContainText('Daily visitors, summed');
+          await expect(tile).toHaveAttribute('data-admin-tile-value', '410');
+          await expect(tile).toContainText('daily visitors, summed');
+          await expect(tile).not.toContainText(/previous 7 days/);
+        }
+      } finally {
+        await page.context().addCookies([{ name: 'payload-lng', value: 'en', url: baseURL! }]);
+        if (!connected) row('delete');
+      }
+      if (!connected) {
+        await page.goto('/admin');
+        await expect(tile).toContainText('Visits');
+        await expect(tile).not.toHaveAttribute('data-admin-tile-visitors', /.*/);
+        await expect(card.locator('[data-admin-traffic-people]')).toHaveCount(0);
+      }
     });
 
     test('connections (ADR-047): a key is stored masked, a test records its outcome, the limit and the guard hold; editors are refused', async ({

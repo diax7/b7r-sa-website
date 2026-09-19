@@ -3,7 +3,9 @@ import { localeEnabledWith } from '@/lib/cms/locale-enabled';
 import { kindsThat } from '@/modules/connections/kinds';
 import { connectionSpend } from '@/modules/connections/spend';
 import { sinceDay } from '@/modules/traffic/summary';
+import { METRICS } from '@/modules/visibility/metrics';
 import { editHref } from '@/modules/visibility/rules/shared';
+import type { UmamiDay, UmamiRangeDays, UmamiRow } from '@/modules/visibility/services/umami';
 
 /** The collections with drafts (`versions.drafts`), the ones the content section counts. */
 export const CONTENT_COLLECTIONS = ['posts', 'pages', 'products'] as const;
@@ -28,6 +30,64 @@ function accessOf(user: TypedUser | null | undefined): Access {
 /** The Riyadh midnight that opens a range of `days` (today and the days before it). */
 export function rangeStart(days: number, now: Date): Date {
   return new Date(`${sinceDay(days, now)}T00:00:00+03:00`);
+}
+
+/** Umami's people over a range (ADR-048 amended), as the visits tile and the card read them. */
+export interface PeopleSummary extends UmamiDay {
+  /** The previous range's numbers (Umami's own comparison); null when the rows were summed. */
+  previous: UmamiDay | null;
+  /**
+   * True while no row of the range carries the range object (rows from before the ranges
+   * were pulled): the days' uniques added up, so a person who came on three days counts
+   * three times, and the tile and the card say so.
+   */
+  summed: boolean;
+}
+
+const five = (n: Partial<UmamiDay>): UmamiDay => ({
+  visitors: Number(n.visitors ?? 0),
+  pageviews: Number(n.pageviews ?? 0),
+  visits: Number(n.visits ?? 0),
+  bounces: Number(n.bounces ?? 0),
+  totaltime: Number(n.totaltime ?? 0),
+});
+
+/**
+ * The people of the last `days` days by Umami: the range object of the newest `umami` row
+ * that carries one (the range's unique visitors ending on that day, with the previous
+ * range's numbers; the pull writes it on yesterday's row), else the rows of the range summed
+ * (the fallback, said as such). No `umami` row in the range reads null, and the visits tile
+ * and the card then read as they do without the connection. Admins: the caller has checked
+ * the collection's read.
+ */
+export async function peopleSummary(
+  payload: Payload,
+  args: { days: number; now?: Date },
+): Promise<PeopleSummary | null> {
+  const since = sinceDay(args.days, args.now ?? new Date());
+  const { docs } = await payload.find({
+    collection: METRICS,
+    where: { and: [{ source: { equals: 'umami' } }, { date: { greater_than_equal: since } }] },
+    depth: 0,
+    pagination: false,
+    sort: '-date',
+    select: { date: true, data: true },
+    overrideAccess: true,
+  });
+  if (docs.length === 0) return null;
+  const rows = docs.map((d) => (d.data ?? {}) as Partial<UmamiRow>);
+  const range = rows.map((r) => r.ranges?.[args.days as UmamiRangeDays]).find((r) => r);
+  if (range) return { ...five(range), previous: five(range.previous ?? {}), summed: false };
+  const summary: PeopleSummary = { ...five({}), previous: null, summed: true };
+  for (const row of rows) {
+    const day = five(row);
+    summary.visitors += day.visitors;
+    summary.pageviews += day.pageviews;
+    summary.visits += day.visits;
+    summary.bounces += day.bounces;
+    summary.totaltime += day.totaltime;
+  }
+  return summary;
 }
 
 export interface PublishedCount {
@@ -224,4 +284,50 @@ export async function failedRuns(
     ...accessOf(args.user),
   });
   return totalDocs;
+}
+
+/** How many messages the dashboard card lists (the newest ones that still read New). */
+export const INBOX_PREVIEW = 3;
+
+export interface InboxReading {
+  /** Messages nobody has opened: the badge, the card's number. */
+  newCount: number;
+  /** The newest `INBOX_PREVIEW` new messages, for the card's rows. */
+  newest: Array<{
+    id: number;
+    name: string;
+    inquiry: string;
+    message: string;
+    createdAt: string;
+  }>;
+}
+
+/**
+ * The inbox for the dashboard and the sidebar (ADR-061): the count of `status: new` (the
+ * sidebar's badge on Messages reads the same number) and the newest three of them, read
+ * with the user's access; admins and editors alike.
+ */
+export async function inboxReading(
+  payload: Payload,
+  args: { user?: TypedUser | null },
+): Promise<InboxReading> {
+  const { docs, totalDocs } = await payload.find({
+    collection: 'messages',
+    where: { status: { equals: 'new' } },
+    sort: '-createdAt',
+    limit: INBOX_PREVIEW,
+    depth: 0,
+    select: { name: true, inquiry: true, message: true, createdAt: true },
+    ...accessOf(args.user),
+  });
+  return {
+    newCount: totalDocs,
+    newest: docs.map((doc) => ({
+      id: doc.id,
+      name: doc.name,
+      inquiry: doc.inquiry,
+      message: doc.message,
+      createdAt: doc.createdAt,
+    })),
+  };
 }

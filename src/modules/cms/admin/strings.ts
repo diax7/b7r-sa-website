@@ -187,6 +187,39 @@ export const adminStrings = {
     works: 'Works.',
     worksWith: 'Works: {model} answered. Recorded on the connection.',
     saveFirst: 'Save, then test.',
+    /** The Umami Test (PR 4c): a refusal of ours before the call, and yesterday's numbers after it. */
+    umami: {
+      noId: 'No Umami website id in Site settings, Analytics: fill it first, then test.',
+      yesterday: (date: string, visitors: number, pageviews: number) =>
+        `${date}: ${visitors} visitors, ${pageviews} page views`,
+    },
+  },
+  inbox: {
+    /** The three actions above a message (ADR-061); the outcome beside the third. */
+    replyWhatsApp: 'Reply on WhatsApp',
+    replyEmail: 'Reply by e-mail',
+    markHandled: 'Mark handled',
+    marking: 'Marking…',
+    handled: 'Handled. The list shows it green.',
+    alreadyHandled: 'Handled already.',
+    /** The route's refusals, by status: the row is gone, or the rule says no. */
+    gone: 'This message no longer exists. Reload the list.',
+    refused: 'You may not change this message.',
+    /**
+     * What the reply opens with, in the sender's language (the message's `locale`), whatever
+     * the panel's: the same pair in both trees, keyed by the content locale like
+     * `bilingual.languages`, never a string of the panel.
+     */
+    reply: {
+      greeting: {
+        ar: 'مرحباً {name}، معك بحر برنت بخصوص رسالتك على b7r.sa.',
+        en: 'Hello {name}, this is B7R Print about your message on b7r.sa.',
+      } as Record<string, string>,
+      subject: {
+        ar: 'بخصوص رسالتك إلى بحر برنت',
+        en: 'About your message to B7R Print',
+      } as Record<string, string>,
+    },
   },
   cells: {
     yesNo: ['Yes', 'No'] as const,
@@ -310,6 +343,13 @@ export const adminStrings = {
       pages: 'Top entry pages',
       empty: 'No landings yet: the count starts with the first visitor.',
       link: 'All traffic',
+      /** The people row (ADR-048 amended): Umami's numbers for the range, through yesterday. */
+      visitors: 'Visitors',
+      pageViews: 'Page views',
+      averageTime: 'Average visit',
+      people: 'People, by Umami through yesterday',
+      /** While no snapshot carries the range: the days' uniques added up, a person on three days counted thrice. */
+      peopleSummed: 'Daily visitors, summed, by Umami through yesterday',
     },
     families: {
       openai: 'OpenAI',
@@ -386,6 +426,13 @@ export const adminStrings = {
     /** The four numbers at a glance, each tile a link to its place. */
     tiles: {
       visits: 'Visits',
+      /**
+       * When Umami counts (ADR-048 amended) the tile is its visitors and our landings move to
+       * the line under: the number is the people, the landings the site's own count.
+       */
+      visitors: 'Visitors',
+      landings: (n: number, text: string) => `${text} ${n === 1 ? 'landing' : 'landings'}`,
+      summed: 'daily visitors, summed',
       visitsUp: (n: number, days: number) => `${n}% more than the previous ${days} days`,
       visitsDown: (n: number, days: number) => `${n}% fewer than the previous ${days} days`,
       visitsSame: (days: number) => `the same as the previous ${days} days`,
@@ -400,6 +447,13 @@ export const adminStrings = {
       drafts: (n: number) =>
         n === 0 ? 'no drafts waiting' : `${n} draft${n === 1 ? '' : 's'} waiting`,
       unavailable: 'Not available',
+    },
+    /** The inbox card (ADR-061): the new messages and the newest three; its count is the sidebar's badge. */
+    inbox: {
+      title: 'Inbox',
+      newMessages: (n: number) =>
+        n === 0 ? 'No new messages' : `${n} new message${n === 1 ? '' : 's'}`,
+      link: 'All messages',
     },
     assistants: {
       title: 'What the assistants say',
@@ -674,6 +728,31 @@ export const adminStringsAr: AdminStrings = {
     works: 'يعمل.',
     worksWith: 'يعمل: أجاب {model}. سُجّلت النتيجة في الاتصال.',
     saveFirst: 'احفظ أولاً، ثم اختبر.',
+    umami: {
+      noId: 'لا معرّف موقع في Umami ضمن إعدادات الموقع، قسم التحليلات: املأه أولاً، ثم اختبر.',
+      yesterday: (date, visitors, pageviews) =>
+        `${date}: ${arabicCount(visitors, { one: 'زائر واحد', two: 'زائران', few: 'زوّار', many: 'زائراً' })}، ${arabicCount(pageviews, { one: 'مشاهدة صفحة واحدة', two: 'مشاهدتا صفحة', few: 'مشاهدات صفحات', many: 'مشاهدة صفحة' })}`,
+    },
+  },
+  inbox: {
+    replyWhatsApp: 'رد على WhatsApp',
+    replyEmail: 'رد بالبريد',
+    markHandled: 'علّم كمعالَج',
+    marking: 'جارٍ التعليم…',
+    handled: 'عولجت. تظهر خضراء في القائمة.',
+    alreadyHandled: 'معالَجة من قبل.',
+    gone: 'لم تعد هذه الرسالة موجودة. أعد تحميل القائمة.',
+    refused: 'لا يمكنك تغيير هذه الرسالة.',
+    reply: {
+      greeting: {
+        ar: 'مرحباً {name}، معك بحر برنت بخصوص رسالتك على b7r.sa.',
+        en: 'Hello {name}, this is B7R Print about your message on b7r.sa.',
+      },
+      subject: {
+        ar: 'بخصوص رسالتك إلى بحر برنت',
+        en: 'About your message to B7R Print',
+      },
+    },
   },
   cells: {
     yesNo: ['نعم', 'لا'],
@@ -793,6 +872,11 @@ export const adminStringsAr: AdminStrings = {
       pages: 'أكثر صفحات الدخول',
       empty: 'لا زيارات بعد: يبدأ العدّ مع أول زائر.',
       link: 'كل الزيارات',
+      visitors: 'الزوّار',
+      pageViews: 'مشاهدات الصفحات',
+      averageTime: 'متوسط الزيارة',
+      people: 'الأشخاص، بحسب Umami حتى أمس',
+      peopleSummed: 'زوّار الأيام مجموعةً، بحسب Umami حتى أمس',
     },
     families: {
       openai: 'OpenAI',
@@ -868,6 +952,9 @@ export const adminStringsAr: AdminStrings = {
     },
     tiles: {
       visits: 'الزيارات',
+      visitors: 'الزوّار',
+      landings: (_n, text) => `الزيارات: ${text}`,
+      summed: 'زوّار الأيام، مجموعةً',
       visitsUp: (n, days) => `أكثر بنسبة ${n}% من المدة السابقة (${arabicDays(days)})`,
       visitsDown: (n, days) => `أقل بنسبة ${n}% من المدة السابقة (${arabicDays(days)})`,
       visitsSame: (days) => `مثل المدة السابقة (${arabicDays(days)})`,
@@ -884,6 +971,19 @@ export const adminStringsAr: AdminStrings = {
           ? 'لا مسودات بانتظارك'
           : `${arabicCount(n, { one: 'مسودة واحدة', two: 'مسودتان', few: 'مسودات', many: 'مسودة' })} بانتظارك`,
       unavailable: 'غير متاح',
+    },
+    inbox: {
+      title: 'الوارد',
+      newMessages: (n) =>
+        n === 0
+          ? 'لا رسائل جديدة'
+          : arabicCount(n, {
+              one: 'رسالة جديدة واحدة',
+              two: 'رسالتان جديدتان',
+              few: 'رسائل جديدة',
+              many: 'رسالة جديدة',
+            }),
+      link: 'كل الرسائل',
     },
     assistants: {
       title: 'ماذا يقول المساعدون',

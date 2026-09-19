@@ -16,6 +16,7 @@
 export type GlossaryArea =
   | 'panel'
   | 'site'
+  | 'inbox'
   | 'catalogue'
   | 'blog'
   | 'engine'
@@ -41,6 +42,7 @@ export interface GlossaryRow {
 const AREA_LABELS: Record<GlossaryArea, string> = {
   panel: 'The panel',
   site: 'The site',
+  inbox: 'Inbox',
   catalogue: 'Catalogue',
   blog: 'Blog',
   engine: 'Content engine',
@@ -52,6 +54,7 @@ const AREA_LABELS: Record<GlossaryArea, string> = {
 const AREA_ORDER: GlossaryArea[] = [
   'panel',
   'site',
+  'inbox',
   'catalogue',
   'blog',
   'engine',
@@ -375,6 +378,58 @@ export const GLOSSARY: readonly GlossaryRow[] = [
   },
   { area: 'site', en: 'address / path', ar: 'عنوان / مسار', latin: false, refused: [] },
 
+  // Inbox (ADR-061)
+  {
+    area: 'inbox',
+    en: 'inbox',
+    ar: 'الوارد',
+    latin: false,
+    refused: ['البريد الوارد', 'صندوق الوارد'],
+    note: 'The section under Site and the dashboard card: the messages, and the bookings after them.',
+  },
+  {
+    area: 'inbox',
+    en: 'message (a contact form submission)',
+    ar: 'رسالة',
+    latin: false,
+    refused: ['مراسلة', 'طلب تواصل'],
+    note: 'Plural «الرسائل»; the row is what the form sent, never rewritten.',
+  },
+  {
+    area: 'inbox',
+    en: 'inquiry (the choice on the form)',
+    ar: 'الاستفسار',
+    latin: false,
+    refused: ['نوع الطلب'],
+    note: "The column reads «نوع الاستفسار», the form's own label.",
+  },
+  { area: 'inbox', en: 'sender', ar: 'المرسل', latin: false, refused: ['صاحب الرسالة'] },
+  { area: 'inbox', en: 'reply', ar: 'رد', latin: false, refused: [] },
+  {
+    area: 'inbox',
+    en: 'new (a message nobody opened)',
+    ar: 'جديد',
+    latin: false,
+    refused: ['غير مقروء', 'غير مقروءة'],
+    note: 'The status pill in blue, the sidebar badge and the dashboard card count these.',
+  },
+  {
+    area: 'inbox',
+    en: 'following (a reply pending)',
+    ar: 'قيد المتابعة',
+    latin: false,
+    refused: ['تحت المتابعة', 'جارٍ المتابعة'],
+    note: 'Amber, like a draft: someone is on it.',
+  },
+  {
+    area: 'inbox',
+    en: 'handled',
+    ar: 'معالَج',
+    latin: false,
+    refused: ['تمت المعالجة', 'تم التعامل', 'منتهية'],
+    note: 'Green, done; the passive participle, never «تم» + مصدر (§5). The action is «علّم كمعالَج».',
+  },
+
   // Catalogue
   { area: 'catalogue', en: 'catalogue', ar: 'الكتالوج', latin: false, refused: [] },
   { area: 'catalogue', en: 'product', ar: 'منتج', latin: false, refused: ['سلعة'] },
@@ -649,6 +704,21 @@ export const GLOSSARY: readonly GlossaryRow[] = [
     refused: ['حركة المرور', 'ترافيك', 'حركة الزيارات'],
   },
   { area: 'traffic', en: 'visit / landing', ar: 'زيارة', latin: false, refused: ['هبوط'] },
+  {
+    area: 'traffic',
+    en: 'visitors (the people, by Umami)',
+    ar: 'الزوّار',
+    latin: false,
+    refused: ['الزائرون', 'الزائرين'],
+    note: 'The dashboard’s visits tile and the people row when Umami counts (ADR-048 amended); a landing stays «زيارة», a user «مستخدم». Counted, the four forms of `arabicCount`: «زائر واحد», «زائران», «5 زوّار», «25 زائراً».',
+  },
+  {
+    area: 'traffic',
+    en: 'page views',
+    ar: 'مشاهدات الصفحات',
+    latin: false,
+    refused: ['الصفحات المعروضة'],
+  },
   {
     area: 'traffic',
     en: 'entry page',

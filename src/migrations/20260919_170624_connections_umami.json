@@ -12997,208 +12997,6 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.bookings": {
-      "name": "bookings",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "serial",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "name": {
-          "name": "name",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "email": {
-          "name": "email",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "phone": {
-          "name": "phone",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "start": {
-          "name": "start",
-          "type": "timestamp(3) with time zone",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "end": {
-          "name": "end",
-          "type": "timestamp(3) with time zone",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "locale": {
-          "name": "locale",
-          "type": "enum_bookings_locale",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'ar'"
-        },
-        "status": {
-          "name": "status",
-          "type": "enum_bookings_status",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'booked'"
-        },
-        "notes": {
-          "name": "notes",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "meet_link": {
-          "name": "meet_link",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "calendar": {
-          "name": "calendar",
-          "type": "enum_bookings_calendar",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'off'"
-        },
-        "google_event_id": {
-          "name": "google_event_id",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "calendar_attempts": {
-          "name": "calendar_attempts",
-          "type": "numeric",
-          "primaryKey": false,
-          "notNull": false,
-          "default": 0
-        },
-        "calendar_attempt_at": {
-          "name": "calendar_attempt_at",
-          "type": "timestamp(3) with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "reminded24h": {
-          "name": "reminded24h",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": false,
-          "default": false
-        },
-        "reminded1h": {
-          "name": "reminded1h",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": false,
-          "default": false
-        },
-        "page": {
-          "name": "page",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "utm_source": {
-          "name": "utm_source",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "utm_medium": {
-          "name": "utm_medium",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "utm_campaign": {
-          "name": "utm_campaign",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp(3) with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp(3) with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "bookings_start_idx": {
-          "name": "bookings_start_idx",
-          "columns": [
-            {
-              "expression": "start",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "bookings_updated_at_idx": {
-          "name": "bookings_updated_at_idx",
-          "columns": [
-            {
-              "expression": "updated_at",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "bookings_created_at_idx": {
-          "name": "bookings_created_at_idx",
-          "columns": [
-            {
-              "expression": "created_at",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
     "public.traffic": {
       "name": "traffic",
       "schema": "",
@@ -14670,12 +14468,6 @@
           "primaryKey": false,
           "notNull": false
         },
-        "bookings_id": {
-          "name": "bookings_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
         "traffic_id": {
           "name": "traffic_id",
           "type": "integer",
@@ -14963,21 +14755,6 @@
           "method": "btree",
           "with": {}
         },
-        "payload_locked_documents_rels_bookings_id_idx": {
-          "name": "payload_locked_documents_rels_bookings_id_idx",
-          "columns": [
-            {
-              "expression": "bookings_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
         "payload_locked_documents_rels_traffic_id_idx": {
           "name": "payload_locked_documents_rels_traffic_id_idx",
           "columns": [
@@ -15243,19 +15020,6 @@
           "tableTo": "connections",
           "columnsFrom": [
             "connections_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "payload_locked_documents_rels_bookings_fk": {
-          "name": "payload_locked_documents_rels_bookings_fk",
-          "tableFrom": "payload_locked_documents_rels",
-          "tableTo": "bookings",
-          "columnsFrom": [
-            "bookings_id"
           ],
           "columnsTo": [
             "id"
@@ -18793,6 +18557,12 @@
           "primaryKey": false,
           "notNull": true
         },
+        "booking_url": {
+          "name": "booking_url",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
         "legal_entity": {
           "name": "legal_entity",
           "type": "varchar",
@@ -18956,428 +18726,6 @@
           "name": "site_settings_locales_parent_id_fk",
           "tableFrom": "site_settings_locales",
           "tableTo": "site_settings",
-          "columnsFrom": [
-            "_parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.booking_hours": {
-      "name": "booking_hours",
-      "schema": "",
-      "columns": {
-        "_order": {
-          "name": "_order",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "_parent_id": {
-          "name": "_parent_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "id": {
-          "name": "id",
-          "type": "varchar",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "day": {
-          "name": "day",
-          "type": "enum_booking_hours_day",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "from": {
-          "name": "from",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "to": {
-          "name": "to",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {
-        "booking_hours_order_idx": {
-          "name": "booking_hours_order_idx",
-          "columns": [
-            {
-              "expression": "_order",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "booking_hours_parent_id_idx": {
-          "name": "booking_hours_parent_id_idx",
-          "columns": [
-            {
-              "expression": "_parent_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "booking_hours_parent_id_fk": {
-          "name": "booking_hours_parent_id_fk",
-          "tableFrom": "booking_hours",
-          "tableTo": "booking",
-          "columnsFrom": [
-            "_parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.booking_closed_dates": {
-      "name": "booking_closed_dates",
-      "schema": "",
-      "columns": {
-        "_order": {
-          "name": "_order",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "_parent_id": {
-          "name": "_parent_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "id": {
-          "name": "id",
-          "type": "varchar",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "date": {
-          "name": "date",
-          "type": "timestamp(3) with time zone",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {
-        "booking_closed_dates_order_idx": {
-          "name": "booking_closed_dates_order_idx",
-          "columns": [
-            {
-              "expression": "_order",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "booking_closed_dates_parent_id_idx": {
-          "name": "booking_closed_dates_parent_id_idx",
-          "columns": [
-            {
-              "expression": "_parent_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "booking_closed_dates_parent_id_fk": {
-          "name": "booking_closed_dates_parent_id_fk",
-          "tableFrom": "booking_closed_dates",
-          "tableTo": "booking",
-          "columnsFrom": [
-            "_parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.booking_closed_dates_locales": {
-      "name": "booking_closed_dates_locales",
-      "schema": "",
-      "columns": {
-        "reason": {
-          "name": "reason",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "id": {
-          "name": "id",
-          "type": "serial",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "_locale": {
-          "name": "_locale",
-          "type": "_locales",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "_parent_id": {
-          "name": "_parent_id",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {
-        "booking_closed_dates_locales_locale_parent_id_unique": {
-          "name": "booking_closed_dates_locales_locale_parent_id_unique",
-          "columns": [
-            {
-              "expression": "_locale",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "_parent_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "booking_closed_dates_locales_parent_id_fk": {
-          "name": "booking_closed_dates_locales_parent_id_fk",
-          "tableFrom": "booking_closed_dates_locales",
-          "tableTo": "booking_closed_dates",
-          "columnsFrom": [
-            "_parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.booking": {
-      "name": "booking",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "serial",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "duration_minutes": {
-          "name": "duration_minutes",
-          "type": "numeric",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 30
-        },
-        "buffer_minutes": {
-          "name": "buffer_minutes",
-          "type": "numeric",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 10
-        },
-        "notice_hours": {
-          "name": "notice_hours",
-          "type": "numeric",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 24
-        },
-        "horizon_days": {
-          "name": "horizon_days",
-          "type": "numeric",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 30
-        },
-        "max_per_day": {
-          "name": "max_per_day",
-          "type": "numeric",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 4
-        },
-        "host_email": {
-          "name": "host_email",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "enabled": {
-          "name": "enabled",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": false,
-          "default": false
-        },
-        "last_saved_by_name": {
-          "name": "last_saved_by_name",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "last_saved_by_at": {
-          "name": "last_saved_by_at",
-          "type": "timestamp(3) with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "translations": {
-          "name": "translations",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp(3) with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp(3) with time zone",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.booking_locales": {
-      "name": "booking_locales",
-      "schema": "",
-      "columns": {
-        "title": {
-          "name": "title",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "id": {
-          "name": "id",
-          "type": "serial",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "_locale": {
-          "name": "_locale",
-          "type": "_locales",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "_parent_id": {
-          "name": "_parent_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {
-        "booking_locales_locale_parent_id_unique": {
-          "name": "booking_locales_locale_parent_id_unique",
-          "columns": [
-            {
-              "expression": "_locale",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "_parent_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "booking_locales_parent_id_fk": {
-          "name": "booking_locales_parent_id_fk",
-          "tableFrom": "booking_locales",
-          "tableTo": "booking",
           "columnsFrom": [
             "_parent_id"
           ],
@@ -20374,34 +19722,8 @@
         "mock",
         "google-search-console",
         "bing-webmaster",
-        "pagespeed"
-      ]
-    },
-    "public.enum_bookings_locale": {
-      "name": "enum_bookings_locale",
-      "schema": "public",
-      "values": [
-        "ar",
-        "en"
-      ]
-    },
-    "public.enum_bookings_status": {
-      "name": "enum_bookings_status",
-      "schema": "public",
-      "values": [
-        "booked",
-        "rescheduled",
-        "cancelled",
-        "completed"
-      ]
-    },
-    "public.enum_bookings_calendar": {
-      "name": "enum_bookings_calendar",
-      "schema": "public",
-      "values": [
-        "synced",
-        "failed",
-        "off"
+        "pagespeed",
+        "umami"
       ]
     },
     "public.enum_traffic_kind": {
@@ -20419,7 +19741,8 @@
         "search-console",
         "bing",
         "pagespeed",
-        "score"
+        "score",
+        "umami"
       ]
     },
     "public.enum_prompts_language": {
@@ -20548,19 +19871,6 @@
         "en"
       ]
     },
-    "public.enum_booking_hours_day": {
-      "name": "enum_booking_hours_day",
-      "schema": "public",
-      "values": [
-        "0",
-        "1",
-        "2",
-        "3",
-        "4",
-        "5",
-        "6"
-      ]
-    },
     "public.enum_ai_settings_images_image_mode": {
       "name": "enum_ai_settings_images_image_mode",
       "schema": "public",
@@ -20581,6 +19891,6 @@
     "tables": {},
     "columns": {}
   },
-  "id": "b83b4a25-d7ad-4fb3-a274-b553cf6f4b9e",
+  "id": "e674e7d7-436e-4ce3-8271-7a4a362b3f41",
   "prevId": "00000000-0000-0000-0000-000000000000"
 }

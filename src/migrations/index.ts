@@ -29,9 +29,8 @@ import * as migration_20260918_131849_heavy_twins from './20260918_131849_heavy_
 import * as migration_20260918_142817_purge_locale_preference from './20260918_142817_purge_locale_preference';
 import * as migration_20260918_212944_media_blur from './20260918_212944_media_blur';
 import * as migration_20260918_213027_media_no_renditions from './20260918_213027_media_no_renditions';
-import * as migration_20260919_170643_booking_global from './20260919_170643_booking_global';
-import * as migration_20260919_173150_bookings from './20260919_173150_bookings';
-import * as migration_20260919_173200_bookings_start_active from './20260919_173200_bookings_start_active';
+import * as migration_20260919_170624_connections_umami from './20260919_170624_connections_umami';
+import * as migration_20260919_183008_messages from './20260919_183008_messages';
 
 export const migrations = [
   {
@@ -190,18 +189,13 @@ export const migrations = [
     name: '20260918_213027_media_no_renditions',
   },
   {
-    up: migration_20260919_170643_booking_global.up,
-    down: migration_20260919_170643_booking_global.down,
-    name: '20260919_170643_booking_global',
+    up: migration_20260919_170624_connections_umami.up,
+    down: migration_20260919_170624_connections_umami.down,
+    name: '20260919_170624_connections_umami',
   },
   {
-    up: migration_20260919_173150_bookings.up,
-    down: migration_20260919_173150_bookings.down,
-    name: '20260919_173150_bookings',
-  },
-  {
-    up: migration_20260919_173200_bookings_start_active.up,
-    down: migration_20260919_173200_bookings_start_active.down,
-    name: '20260919_173200_bookings_start_active',
+    up: migration_20260919_183008_messages.up,
+    down: migration_20260919_183008_messages.down,
+    name: '20260919_183008_messages',
   },
 ];

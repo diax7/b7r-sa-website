@@ -62,6 +62,12 @@ const pairs: Array<{ use: string; fg: Rgb; bg: Rgb; min: number }> = [
   },
   { use: 'Button inverse', fg: rgb(token('primary')), bg: rgb(token('white')), min: AA_TEXT },
   {
+    use: 'Badge accent (the accent as text on its tint)',
+    fg: rgb(token('accent-on-tint')),
+    bg: rgb(token('accent-tint')),
+    min: AA_TEXT,
+  },
+  {
     use: 'Button inverse hover',
     fg: rgb(token('primary')),
     bg: rgb(token('accent-tint')),

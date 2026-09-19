@@ -348,9 +348,36 @@ current), point `DATABASE_URL` at it.
 ## Contact form
 
 `POST /api/contact` order: JSON + same origin → validation → honeypot (200) → rate limit
-5/10 min/IP → Turnstile `siteverify` when `TURNSTILE_SECRET_KEY` is set → Resend
-`emails.send` to the contact address in the site settings (ADR-052) with `replyTo` = the sender. `CONTACT_TRANSPORT=mock` (tests
-only, refused with a key) keeps messages in memory. Message bodies are never logged.
+5/10 min/IP → Turnstile `siteverify` when `TURNSTILE_SECRET_KEY` is set → **the inbox row**
+(ADR-061) → Resend `emails.send` to the contact address in the site settings (ADR-052) with
+`replyTo` = the sender. The answer is 200 once the row exists, whatever the e-mail did.
+`CONTACT_TRANSPORT=mock` (tests only, refused with a key) keeps messages in memory. Message
+bodies and the sender's fields are never logged; a failure names the row's id.
+
+## The inbox (ADR-061)
+
+- **Reading it.** Site → Inbox → Messages: one row per submission, newest first, the
+  status as a pill (New blue, Following amber, Handled green), searchable by name, e-mail
+  and phone. The red badge on Messages and the dashboard's Inbox card count the new ones;
+  both clear as messages are handled. A message's form shows the sender's fields as lines
+  (nobody rewrites them), the internal notes, the status, the page and the UTM parameters
+  the link carried, and three actions above it: "Reply on WhatsApp" (a `wa.me` link with a
+  greeting in the sender's language, only when the row has a phone), "Reply by e-mail" (a
+  `mailto:` with a subject in it) and "Mark handled". Admins and editors read and work the
+  inbox alike.
+- **`emailed: false`** ("Notification sent: No") means the row is here and the
+  notification e-mail did not go out: no `RESEND_API_KEY`, no contact address in Site
+  settings → Contact, or Resend refused. Nothing retries it; answer from the inbox. The
+  log line names the row's id and the transport's status, never the sender; a store that
+  failed names the error's name alone (a database error's message would carry the
+  sender's fields). On a fresh host before Resend is configured, every message reads this
+  way and none is lost.
+- **Deleting** is an admin's act, one row at a time or a filtered bulk delete through the
+  API; nothing deletes itself. A stranger's name, phone and e-mail live in these rows:
+  export nothing, and remove a row when its sender asks.
+- **The e2e** on the review server creates rows under `example.com` addresses and removes
+  them at the end (the public contact spec with the admin's token, the admin spec its own
+  row); a row of theirs that survives is a run that was interrupted.
 
 ## Bookings (ADR-062)
 
@@ -517,9 +544,29 @@ CI writes its dummy ids into the settings (`scripts/ci/analytics-ids.ts`), the U
   (the public quota is a few hundred runs a day; the pull uses ten). A key from Google Cloud
   (APIs → PageSpeed Insights API → Credentials) lifts the quota. Test runs one mobile audit of
   the home page and takes up to a minute and a half.
+- **Connecting Umami** (ADR-048 amended: its visitors and page views on the dashboard's
+  visits tile and card; GA4 stays in GA). Umami Cloud → the profile button → Settings → API
+  keys → Create key, reveal it. Admin → Connections → Create: "Umami", the key, Save, Test.
+  The Test reads yesterday's numbers of the website id in Site settings → Analytics (the
+  same id the site's script carries) and refuses while that field is empty, so fill it
+  first. Base URL stays empty for the Cloud; a self-hosted Umami (`umami.b7r.app`) names its
+  address there and its login token as the key. One enabled Umami connection at a time,
+  like the other services.
+- **What the pull does with it.** One `stats` call per day on Riyadh day boundaries, each
+  written as its own snapshot row (`source: umami`): 90 days back the first night (about 40
+  seconds, paced under the Cloud's limit), then yesterday and the day before every night
+  (late hits land in yesterday); a night missed is filled from the day after the newest row.
+  Then three more calls, the 7-, 30- and 90-day ranges ending yesterday with Umami's own
+  comparison, written into yesterday's row as `ranges`: a range's visitors are its unique
+  people (a merchant who came on three days is one), the same number Umami's dashboard
+  shows, and the change under the tile is against the previous range. Today is never read,
+  so the dashboard's people numbers run through yesterday while the landings count today
+  too. The tile and the card read as before until the first row lands ("Pull now" on the
+  Score page brings it within the minute); a row from before the ranges were pulled reads
+  as the days summed and says so ("Daily visitors, summed") until the next night.
 - **The pull.** Every night at 04:00 Riyadh the `ai` queue pulls each connected service and
-  writes one snapshot row per source for the day, then the day's score; a second pull the
-  same day replaces the day's rows. "Pull now" on the Score page queues it once (one per ten
+  writes one snapshot row per source for the day (Umami one row per day it read), then the
+  day's score; a second pull the same day replaces the day's rows. "Pull now" on the Score page queues it once (one per ten
   minutes); `pnpm visibility:pull` runs it from a shell and exits 1 when a service failed
   (`--check` runs it twice and proves the replacement, the CI integration check). The rows sit
   under the Score page as "Snapshots" (read-only). A service that fails writes no row and is

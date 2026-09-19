@@ -1332,6 +1332,38 @@ sidebar and the palette list a view like a global, by the registry's own rule (a
 the data paths that walk entities (the dashboard's Latest changes, the counts, the palette's
 search) leave views out explicitly. Project 3's Score page reuses all of it.
 
+*Amended 2026-09-19 (Level 4 PR 4c, Dhia's decision in the Level 4 interview): **Umami's
+numbers join the counter on the dashboard; GA4 stays in GA.** Umami's are the truest people
+numbers this site has: its script loads for every visitor without consent (ADR-052), GA4
+only after the bar is accepted, and our own counter counts landings (a page opened from
+elsewhere), not people. A connection kind `umami` (`speaks: 'service'`, secret `apiKey`,
+one enabled row like the other services): the API key from Umami Cloud's settings, the base
+`https://api.umami.is/v1` unless the row names an address (`https://umami.b7r.app`, whose
+API is `<address>/api` with its login token as the Bearer); the website id is the one Site
+settings → Analytics already holds, so the Test refuses a row while that field is empty, in
+the tester's language (the one sentence of ours a service Test writes; the service's own
+answer stays in its terms). The nightly pull gains the `umami` source
+(`visibility/services/umami.ts`: pure parsers over the `stats` shape, `dayWindow()` on
+**Riyadh** day boundaries in milliseconds, the boundary every other `metrics` source keeps,
+so the dashboard never sums two different days): one `stats` call per day, each written as
+its own `metrics` row (`source: 'umami'`, `{ visitors, pageviews, visits, bounces,
+totaltime }`), 90 days back on the first run, then yesterday and the day before every night
+(late hits land in yesterday; today is never read, it is not over), a night missed filled
+from the day after the newest row; then the three dashboard ranges ending yesterday
+(`compare=prev`), written into yesterday's row as `data.ranges[7|30|90] = { …, previous }`,
+because a range's visitors are its unique people, not its days' uniques added up (the CTO's
+review: a merchant who came on three days is one visitor, the number Umami's own dashboard
+shows and Dhia will compare with); the calls paced under the Cloud's 50 per 15 s. On the
+dashboard: when the range holds a `umami` row the visits tile is Umami's visitors for the
+range (the range object of the newest row that carries it) with our landings on the line
+under and the change against Umami's previous range; while no row carries the range object
+(rows from before it was pulled) the days are summed and the tile and the card say so
+("daily visitors, summed" / «زوّار الأيام، مجموعةً»); the "Where visits come from" card
+gains a people row (visitors, page views, the average visit as `m:ss` from `totaltime /
+visits`) for the same range, through yesterday; without a row the tile and the card read
+exactly as before. The Traffic page is untouched. `docs/RUNBOOK.md` "Connecting Umami"; the
+checklist row; BRD §11.4 amended.*
+
 ## ADR-049: The visibility score: how compliant the site is with SEO and GEO, and what to do next (2026-09-16)
 
 **Context.** Dhia asked for a percentage per section of how compliant the site is with SEO and
@@ -2358,6 +2390,110 @@ the text colour), reads the status pills' words in a list with a draft of its ow
 the amber pill's contrast against its row (≥ 4.5:1, computed from the rendered colours),
 and runs axe on a document, a global, a list and the dashboard.
 
+## ADR-061: The inbox: the contact form's messages as rows under Site, stored before they are mailed (2026-09-19)
+
+**Context.** BRD §11.1 asked for an inbox of the contact form's submissions with a status,
+an assignee, internal notes and quick reply actions, and a dashboard view of new items
+(Level 4, `docs/plans/2026-09-19-level-4.md`, PR 4a). Until now `/api/contact` validated,
+rate-limited, checked Turnstile and sent one e-mail through Resend; a submission that
+arrived while the key was missing or the provider was down was a 503 to the sender and
+nothing anywhere else, and a sent one lived only in the mailbox. Dhia's interview settled
+the scope: messages and, next, bookings; a status and notes; no assignee (one person
+answers), no subscribers list (Resend keeps the audience; a future block), no daily
+summary (the badge and the card are the summary).
+
+**Decision: the row is the record, the e-mail a copy.** A `messages` collection
+(`src/modules/inbox/messages.ts`): `name`, `phone`, `email`, `inquiry`, `message`,
+`locale`, `page` (the path the form was on), `utm` (source, medium, campaign), `status`
+(`new` · `following` · `handled`), `notes`, `emailed`. `/api/contact` runs in its old
+order to the Turnstile check, then **stores the row first** through the Local API with
+access overridden (`storeMessage`, the one writer; the collection refuses every create
+through the API), then sends; a send that succeeds sets `emailed: true`, one that fails
+leaves it `false` and the route answers 200 all the same, since the message is safe and
+the panel shows the flag (a second attempt by the sender would only make a second row).
+A store that fails is logged and the e-mail still tried; only a submission that could be
+neither stored nor sent is an error to the sender (503 without a transport, 500 otherwise).
+The form posts its `page` and the `utm` parameters of its own address; the route folds
+what it gets by the traffic beacon's rules (`pagePath`, `UTM_MAX`) and falls back to the
+`Referer` header, never refusing a message over its origin. A UTM value over the bound or a
+page over the bound is invalid input like any other field. The newsletter is untouched.
+
+**Where it sits.** A section **Inbox** («الوارد») first in the **Site** group, with its own
+icon and the messages inside it; PR 4b adds the bookings there. Not a sixth group (every
+free hue sits beside a meaning colour or the accent, and the "daily task" signal is the red
+badge and the dashboard card, ADR-058 rule 14). `NAV_SECTIONS` gained a `place` (`first` or
+`last`) and one pure order (`nav/order.ts`, `groupBlocks`) that the tree, the rail's flyout,
+the keyboard model and the active-row rule all read, so a section can open a group (the
+inbox) or close it (the engine under Blog) without the four disagreeing.
+
+**The status words** are three glossary rows and three pills through `StatusCell`: **New**
+blue («جديد», the one that asks for a person; blue because it is the thing to act on, not a
+draft and not a failure; the `Badge`'s `accent` tone, `accent-on-tint` #33a8e6 on the
+accent's 10 % tint, since `text-primary` is never used on dark and the accent itself on a
+blue tint over the surface reads 4.1:1; this reads 5.3:1, and the e2e composites the pill
+over its row through a canvas and asserts 4.5:1, CI's finding of 2026-09-19), **Following**
+amber («قيد المتابعة», a reply pending, like a draft), **Handled** green («معالَج», done). «تمت المعالجة», BRD §11.1's word, is «تم» +
+مصدر and the ux-araby gate refuses it; the passive participle is the panel's word and the
+action reads «علّم كمعالَج» ("Mark handled"). The list is name · inquiry · status ·
+created, newest first, searchable by name, e-mail and phone.
+
+**The actions** above a message's form (`beforeDocumentControls` after the sentinel, one
+component): "Reply on WhatsApp" opens `wa.me/<digits>?text=<greeting>` with a greeting in
+the **message's** language (the `inbox.reply` records in both string trees, keyed by the
+content locale; the panel's language never decides what the merchant reads), only when the
+row has a phone; "Reply by e-mail" opens `mailto:` with a subject in that language; "Mark
+handled" is an `ApiAction` on `POST /api/inbox/messages/:id/handle`, which goes through
+`adminOnly()` with `roles: ['admin', 'editor']` (the guard gained a roles option and now
+hands the route the person, so the write runs with their access, never the route's; a
+write Payload refuses answers its status with the panel's own sentence in the caller's
+language, `refusalOf`, never Payload's English under an Arabic button), turns
+the form's status select to Handled through a field `UPDATE` with its `initialValue` (the
+form stays clean, no unsaved-changes prompt) and disables itself with "Handled already."
+once the row is handled.
+
+**The badge and the card.** A fourth badge kind `inbox` on Messages: the count of `status:
+new`, red when any, read by the dashboard's own `inboxReading` (one `find` with the user's
+access, `status` indexed for it) so the sidebar, the card and their sentences agree
+(`dashboard.inbox.newMessages`, declined in Arabic). The dashboard gained an **Inbox card**
+before the Content card, a third of that row on a desktop and above it when stacked: the
+sentence with the count linked to the list filtered on New, the newest three new messages
+with the sender, the inquiry and the first 80 characters cut at a word (`excerpt.ts`), each
+a link to its form, "All messages" at the end; «لا رسائل جديدة» when there is nothing. The
+Site blue on the title icon is its one hue. Editors see it (they read the messages); the
+hand line is untouched (ADR-059).
+
+**Personal-data rules** (the first rows holding a stranger's name, phone and e-mail; rule
+18 of `.claude/rules/admin-ui.md`): no personal field in any log line (a failed send names
+the row's id; a failed store names the error's name alone, never `err:`, since a database
+error's message is the failed query with its parameters, drizzle's `Failed query: …
+params: …`, and pino's serializer would write the sender's fields out; the test reads
+every key of the entry); the sender's fields carry field-level `access.update: () =>
+false` and `readOnly`, so the record is what the form sent, for everyone: Payload answers
+a refused field by dropping it from the write, so an editor's PATCH that names the phone
+keeps the phone and the status change lands; `emailed` carries the same refusal on its
+own, and `markEmailed` passes it only because the Local API's `overrideAccess` skips
+field access; `status` and `notes` are the two fields anyone writes;
+admins and editors read and update, an admin alone deletes, nothing is deleted
+automatically (RUNBOOK); the outsider seat is proved in `tests/access.test.ts` and in the
+e2e (list, read, create, update and delete all refused for the public key). The public
+contact e2e removes the rows it creates with the admin's token when it has one.
+
+**Consequences.** The contact form works from the day the site is up, before Resend is
+configured: the messages wait in the inbox with `emailed: false` and the RUNBOOK says what
+that means. A stored-but-unsent message is never retried automatically (there is no
+outbox job; the inbox is the place to answer from). The e-mail body is unchanged (BRD
+4.17). `adminOnly()`'s success now carries `user`. BRD §11.1 is amended (no assignee, the
+subscribers list deferred, the status words); `docs/LAUNCH-CHECKLIST.md` gains the row "a
+real submission lands in the inbox on production". Tests: `tests/messages.test.ts` (the
+route stores then sends, a failed send keeps the row, a failed store still sends, the
+honeypot stores nothing, the page and the UTM from the body and the referer, the bounds),
+the access rows, the config census (the section, the icons, the columns, the pill, the
+read-only lines, the refused updates), `tests/status-cell.test.tsx`, the badge reader and
+the card's reader and excerpt, and the admin e2e (a submission through `POST /api/contact`
+appears in the list with its pill, in the card and in the badge; the WhatsApp and mailto
+targets; mark handled flips the pill, clears the count and disables itself; the editor
+changes status and notes and never the phone; the outsider gets nothing; axe on the list
+and the document in both languages at 1440 and 390; the row deleted at the end).
 
 ## ADR-062: Bookings of our own: the picker, the delegated calendar, the grid and the index, the signed link, the sweep (2026-09-19)
 

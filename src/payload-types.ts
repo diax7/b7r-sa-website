@@ -86,6 +86,7 @@ export interface Config {
     metrics: Metric;
     prompts: Prompt;
     citations: Citation;
+    messages: Message;
     redirects: Redirect;
     'payload-kv': PayloadKv;
     'payload-jobs': PayloadJob;
@@ -114,6 +115,7 @@ export interface Config {
     metrics: MetricsSelect<false> | MetricsSelect<true>;
     prompts: PromptsSelect<false> | PromptsSelect<true>;
     citations: CitationsSelect<false> | CitationsSelect<true>;
+    messages: MessagesSelect<false> | MessagesSelect<true>;
     redirects: RedirectsSelect<false> | RedirectsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-jobs': PayloadJobsSelect<false> | PayloadJobsSelect<true>;
@@ -1474,7 +1476,7 @@ export interface Connection {
    */
   label: string;
   /**
-   * Which service the key belongs to. Search Console, Bing and PageSpeed are read by the visibility score, not the engine: one enabled each.
+   * Which service the key belongs to. Search Console, Bing and PageSpeed feed the score, Umami the dashboard, not the engine: one on each.
    */
   kind:
     | 'openai'
@@ -1485,17 +1487,18 @@ export interface Connection {
     | 'mock'
     | 'google-search-console'
     | 'bing-webmaster'
-    | 'pagespeed';
+    | 'pagespeed'
+    | 'umami';
   /**
    * Exactly as the service docs write it: gpt-4.1-mini, claude-haiku-4-5, gemini-3-flash-preview. Empty on save: the usual cheap model.
    */
   model?: string | null;
   /**
-   * The compatible service's address, https:// and without the chat path: https://api.example.com/v1.
+   * A compatible service's address without the chat path: https://api.example.com/v1. For Umami your own copy (https://umami.b7r.app) or empty.
    */
   baseUrl?: string | null;
   /**
-   * From the service's console; for Search Console, the service account's JSON file. Never shown again; leave the mask to keep it.
+   * From the service's console; Search Console takes the account's JSON file, Umami an API key. Never shown again; leave the mask to keep it.
    */
   apiKey?: string | null;
   /**
@@ -1654,7 +1657,7 @@ export interface Traffic {
   createdAt: string;
 }
 /**
- * A nightly snapshot from Search Console, Bing and PageSpeed, and that day’s visibility score. Read-only.
+ * A nightly snapshot from Search Console, Bing, PageSpeed and Umami, and that day’s visibility score. Read-only.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "metrics".
@@ -1666,11 +1669,11 @@ export interface Metric {
    */
   date: string;
   /**
-   * Search Console, Bing or PageSpeed, or "Score" for that day’s visibility score.
+   * Search Console, Bing, PageSpeed or Umami, or "Score" for that day’s visibility score.
    */
-  source: 'search-console' | 'bing' | 'pagespeed' | 'score';
+  source: 'search-console' | 'bing' | 'pagespeed' | 'score' | 'umami';
   /**
-   * The service's answer as it came: the totals and the top queries and pages, the performance scores per page, or the sections' percentages.
+   * The service's answer as it came: totals and top queries and pages, scores per page, a day's visitors, or the sections' percentages.
    */
   data:
     | {
@@ -1832,6 +1835,74 @@ export interface Citation {
    * The one that wrote this row (under Runs, kind Citation ledger).
    */
   run?: (number | null) | AiRun;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * What the contact form sent, as it arrived: a status per message and internal notes. Nobody creates one by hand.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "messages".
+ */
+export interface Message {
+  id: number;
+  /**
+   * As the sender typed it in the form; the row's title in the list.
+   */
+  name: string;
+  /**
+   * A Saudi mobile reads as 9665…; the "Reply on WhatsApp" button opens it.
+   */
+  phone?: string | null;
+  /**
+   * Where "Reply by e-mail" writes to; the notification e-mail carries it as its reply address.
+   */
+  email: string;
+  /**
+   * What the sender picked on the form: merchant, partnership, investment or other.
+   */
+  inquiry: string;
+  /**
+   * Arabic or English, by the page the sender wrote on; the WhatsApp greeting follows it.
+   */
+  locale: 'ar' | 'en';
+  /**
+   * The text as it was sent, up to 4000 characters; nobody rewrites it.
+   */
+  message: string;
+  /**
+   * For the team only; the sender never sees them.
+   */
+  notes?: string | null;
+  /**
+   * New until someone opens it, Following while a reply is pending, Handled when done; the sidebar counts the new ones.
+   */
+  status: 'new' | 'following' | 'handled';
+  /**
+   * Yes when the notification e-mail went out; No means the message is only here: reply from the inbox.
+   */
+  emailed?: boolean | null;
+  /**
+   * The path the form was on: /contact or /en/contact.
+   */
+  page?: string | null;
+  /**
+   * From the link the sender arrived by, when its address carried the UTM parameters.
+   */
+  utm?: {
+    /**
+     * What utm_source said on the link: instagram, google, a newsletter.
+     */
+    source?: string | null;
+    /**
+     * What utm_medium said on the link: social, cpc, email.
+     */
+    medium?: string | null;
+    /**
+     * What utm_campaign said on the link: the campaign's name.
+     */
+    campaign?: string | null;
+  };
   updatedAt: string;
   createdAt: string;
 }
@@ -2093,6 +2164,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'citations';
         value: number | Citation;
+      } | null)
+    | ({
+        relationTo: 'messages';
+        value: number | Message;
       } | null)
     | ({
         relationTo: 'redirects';
@@ -2796,6 +2871,31 @@ export interface CitationsSelect<T extends boolean = true> {
   prompt?: T;
   connection?: T;
   run?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "messages_select".
+ */
+export interface MessagesSelect<T extends boolean = true> {
+  name?: T;
+  phone?: T;
+  email?: T;
+  inquiry?: T;
+  locale?: T;
+  message?: T;
+  notes?: T;
+  status?: T;
+  emailed?: T;
+  page?: T;
+  utm?:
+    | T
+    | {
+        source?: T;
+        medium?: T;
+        campaign?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
 }

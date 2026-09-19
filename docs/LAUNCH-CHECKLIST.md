@@ -79,14 +79,20 @@ b7r.sa to go live.
 | 40 | The real photographs: the hero at 3000 px wide (both compositions, ADR-044) and the product photos at 2000 by 2000 exported from the PSDs in `resources/source-files`; the pipeline serves them whole the day they land | Dhia | open | Under `resources/hero/examples` and `resources/products/{slug}/`, then `pnpm assets` and row 33; or uploaded through the admin (RUNBOOK "Assets"). Row 3 stays for the crops. Then re-run the audit's measurement at 2x (`docs/audits/2026-09-19-photo-quality.md`, the served bytes of the 1920w and 3840w candidates) and re-read the 220 KB budget of BRD 7.8: a 3000 px AVIF at q90 above about 250 KB puts the hero alone at 85 (the CTO's fallback), the rest of the photos stay at 90 |
 | 41 | Production after the merge: `pnpm exec tsx scripts/media-requality.ts --env .env.cranl.local --dry-run`, then without the flag (every seeded photo re-uploaded at the new encode under a new name, the old renditions deleted from the bucket), then `scripts/media-blur.ts --env .env.cranl.local` for any upload the pass did not cover, **then a redeploy** (Deploy → Redeploy on the platform, or an empty commit on `main`): the rebuild prerenders every page with the new names at once | *code* / Dhia | open | Done on the review database 2026-09-19; the CDN caches an object as immutable for a year, which is why the names change (RUNBOOK "Assets"). Without the redeploy the pages keep the old names until their 60 s timer runs (ADR-030; a media document revalidates nothing of its own), and the old files are already gone from the bucket: a photo not cached at the CDN edge or by the optimizer is a 404 for that minute |
 
+## Added 2026-09-19 (Level 4 PR 4c, ADR-048 amended)
+
+| # | Item | Owner | Status | Notes |
+|---|---|---|---|---|
+| 42 | An Umami Cloud API key on a Connection of the kind "Umami" (Admin → Connections → Create, Save, Test reads yesterday's numbers); Site settings → Analytics → website id already set (row 36) | Dhia | open | RUNBOOK "Connecting Umami"; the first pull reads 90 days back, then the visits tile shows Umami's visitors beside our landings and the card its people row; until then both read as before |
+
 ## Added 2026-09-19 (Level 4 bookings, ADR-062)
 
 | # | Item | Owner | Status | Notes |
 |---|---|---|---|---|
-| 42 | The Google Calendar API enabled on the service account's Cloud project, and domain-wide delegation added in the Workspace Admin console for the account's client id with the two scopes `https://www.googleapis.com/auth/calendar.events` and `https://www.googleapis.com/auth/calendar.freebusy` | Dhia | open | RUNBOOK "Bookings": the steps; never the whole `calendar` scope |
-| 43 | A `google-calendar` connection with the key file pasted again on its own row, its Test green (today's free/busy on the host's calendar); Site → Booking → the calendar owner's e-mail, the hours checked, then Booking open | Dhia | open | Until the switch is on, `/book` says the WhatsApp way and the contact card keeps the BRD 4.11 message; `/api/health` is untouched by the switch |
-| 44 | A real test booking on the live site: the row in Site → Bookings, the event with its Meet link on the calendar, the confirmation and Dhia's notification e-mail (needs row 4's Resend keys), the manage link's move and cancel, then the row deleted | Dhia + agent | open | BRD §11.5 (2); a booking made before the calendar is on stands as `calendar: off` and says the link follows |
-| 45 | The booking copy (BRD §4.19: the page, the picker, the e-mails, the `/book` search row) read and approved, or corrected in `src/content/copy/{ar,en}.ts`; then out of `TODO_COPY` in the verbatim test | Dhia | open | Written under BRD §0.5's fallback rule, as the compare page was |
+| 44 | The Google Calendar API enabled on the service account's Cloud project, and domain-wide delegation added in the Workspace Admin console for the account's client id with the two scopes `https://www.googleapis.com/auth/calendar.events` and `https://www.googleapis.com/auth/calendar.freebusy` | Dhia | open | RUNBOOK "Bookings": the steps; never the whole `calendar` scope |
+| 45 | A `google-calendar` connection with the key file pasted again on its own row, its Test green (today's free/busy on the host's calendar); Site → Booking → the calendar owner's e-mail, the hours checked, then Booking open | Dhia | open | Until the switch is on, `/book` says the WhatsApp way and the contact card keeps the BRD 4.11 message; `/api/health` is untouched by the switch |
+| 46 | A real test booking on the live site: the row in Site → Bookings, the event with its Meet link on the calendar, the confirmation and Dhia's notification e-mail (needs row 4's Resend keys), the manage link's move and cancel, then the row deleted | Dhia + agent | open | BRD §11.5 (2); a booking made before the calendar is on stands as `calendar: off` and says the link follows |
+| 47 | The booking copy (BRD §4.19: the page, the picker, the e-mails, the `/book` search row) read and approved, or corrected in `src/content/copy/{ar,en}.ts`; then out of `TODO_COPY` in the verbatim test | Dhia | open | Written under BRD §0.5's fallback rule, as the compare page was |
 
 ## Also needed before any of the above
 
@@ -98,3 +104,9 @@ b7r.sa to go live.
   deploy reads.
 - Container smoke test on the 2a image (owner: agent), **done 2026-09-13**: `docker build` with the BuildKit secrets against the compose Postgres (338 MB), then `docker run` with the runtime env: `/api/health` → `db: ok`, `media: local`; `/` and `/products/hoodie` 200, `/showcase` 301, `/wp-admin` 410, `/nope` 404, `/admin/login` carries `X-Robots-Tag` and `no-store`. Repeat against the GHCR image once `deploy.yml` has the secrets.
 - Container smoke test (owner: agent), **done 2026-09-13** on the 1c image (`docker build -t b7r-site:1c .`): `/api/health` reports the four integration states, `/showcase` → 301, `/wp-admin` → 410, CSP + `Content-Language` headers present, `/og/products/hoodie.png` 200, and a run with `B7R_RUNTIME=production` and missing variables exits 1 listing them (the health check would fail). Repeat on the image CranL builds before cutover.
+
+## Added 2026-09-19 (the inbox, ADR-061)
+
+| # | Item | Owner | Status | Notes |
+|---|---|---|---|---|
+| 43 | A real submission on the production `/contact` lands in Site → Inbox → Messages with its pill, the badge and the dashboard card count it, and "Notification sent" reads Yes once row 4 (Resend) is done; then delete the test row | Dhia | open | Before row 4 the row still lands, with "Notification sent: No" (RUNBOOK "The inbox"); the WhatsApp and e-mail actions open the sender's channel |

@@ -13,8 +13,19 @@ import { safeMessage } from '@/modules/connections/safe-message';
 
 export const TEST_TIMEOUT_MS = 20_000;
 
+/**
+ * What a service kind's test may read besides the secret: the site's settings (Umami's
+ * website id lives there) and the panel language of the person testing, for a refusal of
+ * ours (a missing id); the service's own answer stays in its terms.
+ */
+export interface ServiceTestContext {
+  payload: Payload;
+  language: string;
+  baseUrl: string | null;
+}
+
 /** A service kind's test (ADR-049): the secret in, a sentence out, or a throw. */
-export type ServiceTest = (secret: string | null) => Promise<string>;
+export type ServiceTest = (secret: string | null, context: ServiceTestContext) => Promise<string>;
 export type ServiceTests = Partial<Record<ConnectionKind, ServiceTest>>;
 /**
  * The reply's size: OpenAI's Responses API (the `openai` kind) refuses fewer than 16 output
@@ -34,13 +45,18 @@ export type TestResult =
  * since the visibility module owns the clients and depends on this one), with that kind's own
  * timeout.
  */
-async function ping(spec: ConnectionSpec, services: ServiceTests): Promise<string> {
+async function ping(
+  payload: Payload,
+  spec: ConnectionSpec,
+  services: ServiceTests,
+  language: string,
+): Promise<string> {
   if (KINDS[spec.kind].speaks === 'service') {
     const test = services[spec.kind];
     if (!test) throw new Error(`no test for the kind ${spec.kind}`);
     if (!spec.apiKey && spec.kind !== 'pagespeed')
       throw new Error('no key saved on this connection');
-    return test(spec.apiKey);
+    return test(spec.apiKey, { payload, language, baseUrl: spec.baseUrl });
   }
   if (spec.kind === 'mock') {
     if (!mockAllowed()) throw new Error('mock kind: not enabled on this server');
@@ -68,11 +84,14 @@ async function ping(spec: ConnectionSpec, services: ServiceTests): Promise<strin
  * Tests a saved connection and records the outcome on it (ADR-047): `lastTestAt`,
  * `lastTestOk`, `lastTestMessage` (the model id on success, the vendor's message on failure).
  * A Test is not a run: nothing lands in `ai-runs` and nothing counts against the limit.
+ * `language` is the tester's panel language, for the one sentence a service test writes
+ * itself (a refusal of ours).
  */
 export async function testConnection(
   payload: Payload,
   id: number,
   services: ServiceTests = {},
+  language = 'en',
 ): Promise<TestResult> {
   if (!limiter.hit(`connection:${id}`).allowed) {
     return { ok: false, status: 429, message: 'Tested a moment ago; wait ten seconds' };
@@ -81,7 +100,7 @@ export async function testConnection(
   if (!spec) return { ok: false, status: 404, message: 'No such connection' };
   let result: TestResult;
   try {
-    result = { ok: true, message: await ping(spec, services) };
+    result = { ok: true, message: await ping(payload, spec, services, language) };
   } catch (error) {
     result = { ok: false, status: 502, message: safeMessage(error, spec.apiKey) };
   }

@@ -57,6 +57,7 @@ import {
   GLOBAL_ICONS,
   groupIcon,
   groupKey,
+  NAV_SECTIONS,
   navPlacement,
   type ViewSlug,
 } from '@/modules/cms/admin/icons';
@@ -85,6 +86,8 @@ import { ADMIN_VIEW_COMPONENTS } from '@/modules/cms/admin/views/registry';
 import { refusedForm } from '@/modules/cms/admin/glossary';
 import { Connections } from '@/modules/connections/collection';
 import { CONNECTION_DESCRIPTIONS } from '@/modules/connections/descriptions';
+import { MESSAGE_DESCRIPTIONS } from '@/modules/inbox/descriptions';
+import { Messages } from '@/modules/inbox/messages';
 import { Traffic } from '@/modules/traffic/collection';
 import { TRAFFIC_DESCRIPTIONS } from '@/modules/traffic/descriptions';
 import {
@@ -352,6 +355,7 @@ describe('the description maps name real fields (ADR-046)', () => {
     [AiRuns, AI_RUNS_DESCRIPTIONS],
     [Connections, CONNECTION_DESCRIPTIONS],
     [Traffic, TRAFFIC_DESCRIPTIONS],
+    [Messages, MESSAGE_DESCRIPTIONS],
   ];
   for (const [c, map] of maps) {
     it(`${c.slug}: every key of its map is a field`, () => {
@@ -1497,8 +1501,76 @@ describe('the status column (ADR-060)', () => {
     });
     expect(column.label({ t: (k) => `<${k}>` })).toBe('<version:status>');
   });
-  it("the runs' outcome reads through the same cell", () => {
-    const status = walkFields(AiRuns.fields).find((f) => f.path === 'status')!.field;
-    expect(componentsOf(status)?.Cell).toBe(STATUS_CELL);
+  it("the runs' outcome and a message's state read through the same cell", () => {
+    for (const config of [AiRuns, Messages]) {
+      const status = walkFields(config.fields).find((f) => f.path === 'status')!.field;
+      expect(componentsOf(status)?.Cell, config.slug).toBe(STATUS_CELL);
+    }
+  });
+});
+
+/**
+ * The inbox (ADR-061): a section first in Site with its own icon, the messages placed in
+ * it, the columns that answer "which one is this?", the status as a pill with three words,
+ * the sender's fields read-only and refused to every update, the two working fields open.
+ */
+describe('the inbox (ADR-061)', () => {
+  const fields = walkFields(Messages.fields);
+  const fieldOf = (path: string) =>
+    fields.find((f) => f.path === path)?.field as Field & {
+      access?: { update?: unknown };
+      admin?: { readOnly?: boolean; position?: string };
+    };
+  it('is a section of Site, first, with its own icon, the messages inside it', () => {
+    expect(NAV_SECTIONS.inbox).toMatchObject({ ar: 'الوارد', en: 'Inbox', place: 'first' });
+    expect(NAV_SECTIONS.engine.place).toBe('last');
+    expect(isIcon(NAV_SECTIONS.inbox.icon)).toBe(true);
+    expect(NAV_SECTIONS.inbox.icon).not.toBe(ADMIN_GROUPS.site.icon);
+    expect(NAV_SECTIONS.inbox.icon).not.toBe(COLLECTION_ICONS.messages);
+    expect(navPlacement('collections', 'messages')).toEqual({
+      group: 'site',
+      order: 0,
+      section: 'inbox',
+    });
+  });
+  it('lists name, inquiry, status and created, newest first, searchable by name, e-mail and phone', () => {
+    expect(Messages.admin?.defaultColumns).toEqual(['name', 'inquiry', 'status', 'createdAt']);
+    expect(Messages.admin?.listSearchableFields).toEqual(['name', 'email', 'phone']);
+    expect(Messages.admin?.useAsTitle).toBe('name');
+    expect(Messages.defaultSort).toBe('-createdAt');
+    expect(Messages.admin?.hidden).toBeUndefined();
+  });
+  it("the status is the three glossary words as a pill; the sender's fields are lines nobody rewrites", () => {
+    const status = fieldOf('status') as ReturnType<typeof fieldOf> & {
+      options: Array<{ value: string; label: unknown }>;
+    };
+    expect(status.options.map((o) => o.value)).toEqual(['new', 'following', 'handled']);
+    expect(status.options.map((o) => o.label)).toEqual([
+      { ar: 'جديد', en: 'New' },
+      { ar: 'قيد المتابعة', en: 'Following' },
+      { ar: 'معالَج', en: 'Handled' },
+    ]);
+    expect(status.access?.update).toBeUndefined();
+    expect(fieldOf('notes').access?.update).toBeUndefined();
+    for (const path of [
+      'name',
+      'phone',
+      'email',
+      'inquiry',
+      'locale',
+      'message',
+      'emailed',
+      'page',
+      'utm.source',
+      'utm.medium',
+      'utm.campaign',
+    ]) {
+      const field = fieldOf(path);
+      expect(field.admin?.readOnly, `${path} read-only`).toBe(true);
+      expect(componentsOf(field)?.Field, `${path} as a line`).toBe(READ_ONLY_LINE);
+      const refuse = field.access?.update as (() => boolean) | undefined;
+      expect(refuse?.(), `${path} refuses every update`).toBe(false);
+    }
+    expect(componentsOf(fieldOf('emailed'))?.Cell).toBe(BOOL_CELL);
   });
 });

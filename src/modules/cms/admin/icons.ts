@@ -33,12 +33,14 @@ import {
   History,
   House,
   Image,
+  Inbox,
   KeyRound,
   ListChecks,
   ListTodo,
   type LucideIcon,
   Megaphone,
   Menu,
+  MessageSquare,
   MessageSquareQuote,
   Newspaper,
   PenLine,
@@ -65,6 +67,7 @@ import {
   Truck,
   UserPen,
   Users,
+  Waypoints,
   Workflow,
   Wrench,
   Zap,
@@ -103,6 +106,7 @@ export const COLLECTION_ICONS: Record<CollectionSlug, LucideIcon> = {
   metrics: Camera,
   prompts: MessageCircleQuestion,
   citations: Quote,
+  messages: MessageSquare,
   bookings: CalendarClock,
 };
 
@@ -227,6 +231,8 @@ export const SECTION_ICONS = {
   notifications: Bell,
   // A connection.
   rates: Coins,
+  // A message of the inbox.
+  utm: Waypoints,
 } as const satisfies Record<string, LucideIcon>;
 
 export type SectionIconKey = keyof typeof SECTION_ICONS;
@@ -275,10 +281,18 @@ export function adminGroup(key: AdminGroupKey): { ar: string; en: string } {
   return { ar: ADMIN_GROUPS[key].ar, en: ADMIN_GROUPS[key].en };
 }
 
-/** A sub-heading inside a group: the content engine's three entries under Blog. */
+/**
+ * A sub-heading inside a group with its own entries: the inbox first in Site (ADR-061:
+ * the messages, and the bookings after them), the content engine last in Blog. `place`
+ * says whether the section's rows come before or after the group's primary entries.
+ */
 export const NAV_SECTIONS = {
-  engine: { ar: 'محرّك المحتوى', en: 'Content engine', icon: Bot },
-} as const satisfies Record<string, { ar: string; en: string; icon: LucideIcon }>;
+  inbox: { ar: 'الوارد', en: 'Inbox', icon: Inbox, place: 'first' },
+  engine: { ar: 'محرّك المحتوى', en: 'Content engine', icon: Bot, place: 'last' },
+} as const satisfies Record<
+  string,
+  { ar: string; en: string; icon: LucideIcon; place: 'first' | 'last' }
+>;
 
 export type NavSection = keyof typeof NAV_SECTIONS;
 
@@ -312,6 +326,8 @@ export const ADMIN_NAV: {
   views: Record<ViewSlug, NavPlacement>;
 } = {
   collections: {
+    messages: { group: 'site', order: 0, section: 'inbox' },
+    bookings: { group: 'site', order: 1, section: 'inbox' },
     pages: { group: 'site', order: 1 },
     media: { group: 'site', order: 3 },
     products: { group: 'catalogue', order: 0, listing: '/products' },
@@ -329,8 +345,6 @@ export const ADMIN_NAV: {
     metrics: { group: 'visibility', order: 2, parent: SCORE_VIEW },
     prompts: { group: 'visibility', order: 3, parent: SCORE_VIEW },
     citations: { group: 'visibility', order: 4, parent: SCORE_VIEW },
-    // Under Site until PR 4a's Inbox section lands; then a section entry beside the messages.
-    bookings: { group: 'site', order: 4 },
     users: { group: 'admin', order: 0 },
     connections: { group: 'admin', order: 1 },
   },

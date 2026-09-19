@@ -5,6 +5,7 @@ import { fold } from '@/lib/arabic-fold';
 import {
   activeGroupKey,
   activeRowKey,
+  groupEntities,
   groupIsOpen,
   isActive,
   isDashboard,
@@ -21,6 +22,7 @@ import {
   treeRows,
 } from '@/modules/cms/admin/nav/keyboard';
 import { badgeStrings } from '@/modules/cms/admin/nav/badge-strings';
+import { groupBlocks } from '@/modules/cms/admin/nav/order';
 import { adminStrings, adminStringsAr } from '@/modules/cms/admin/strings';
 import { overLimitConnections } from '@/modules/connections/spend';
 
@@ -47,7 +49,14 @@ const groups: NavGroup[] = [
     label: 'Site',
     hue: 'blue',
     entities: [entity('globals', 'home', 'Home page'), entity('collections', 'pages', 'Pages')],
-    sections: [],
+    sections: [
+      {
+        key: 'inbox',
+        label: 'Inbox',
+        place: 'first',
+        entities: [entity('collections', 'messages', 'Messages')],
+      },
+    ],
   },
   {
     key: 'blog',
@@ -60,6 +69,7 @@ const groups: NavGroup[] = [
       {
         key: 'engine',
         label: 'Content engine',
+        place: 'last',
         entities: [entity('collections', 'ai-runs', 'Runs')],
       },
     ],
@@ -69,6 +79,7 @@ const groups: NavGroup[] = [
 const rows: NavRow[] = [
   { key: 'dashboard', label: 'Dashboard' },
   { key: 'group:site', label: 'Site' },
+  { key: 'collections:messages', label: 'Messages' },
   { key: 'globals:home', label: 'Home page' },
   { key: 'collections:pages', label: 'Pages' },
   { key: 'group:blog', label: 'Blog' },
@@ -78,11 +89,11 @@ const rows: NavRow[] = [
 describe('the keyboard model: arrows, Home, End, a typed letter', () => {
   it('walks down and up without wrapping, jumps to the ends', () => {
     expect(nextRowIndex(rows, 0, 'ArrowDown')).toBe(1);
-    expect(nextRowIndex(rows, 5, 'ArrowDown')).toBe(5);
+    expect(nextRowIndex(rows, 6, 'ArrowDown')).toBe(6);
     expect(nextRowIndex(rows, 3, 'ArrowUp')).toBe(2);
     expect(nextRowIndex(rows, 0, 'ArrowUp')).toBe(0);
     expect(nextRowIndex(rows, 4, 'Home')).toBe(0);
-    expect(nextRowIndex(rows, 1, 'End')).toBe(5);
+    expect(nextRowIndex(rows, 1, 'End')).toBe(6);
   });
 
   it('leaves the other keys to the rows and answers nothing for an empty tree', () => {
@@ -97,10 +108,11 @@ describe('the keyboard model: arrows, Home, End, a typed letter', () => {
   });
 
   it('a letter jumps to the next row starting with it, wrapping, the current row last', () => {
-    expect(nextRowIndex(rows, 0, 'p')).toBe(3);
-    expect(nextRowIndex(rows, 3, 'p')).toBe(5);
-    expect(nextRowIndex(rows, 5, 'P')).toBe(3);
-    expect(nextRowIndex(rows, 3, 'x')).toBeNull();
+    expect(nextRowIndex(rows, 0, 'p')).toBe(4);
+    expect(nextRowIndex(rows, 4, 'p')).toBe(6);
+    expect(nextRowIndex(rows, 6, 'P')).toBe(4);
+    expect(nextRowIndex(rows, 4, 'x')).toBeNull();
+    expect(nextRowIndex(rows, 0, 'm')).toBe(2);
     expect(rowStartingWith(rows, 1, 's')).toBe(1);
     const arabic: NavRow[] = [
       { key: 'a', label: 'الموقع' },
@@ -134,10 +146,11 @@ describe('the keyboard model: arrows, Home, End, a typed letter', () => {
     expect(tabbableRow([], null, null)).toBeNull();
   });
 
-  it('lists the rows in document order, a closed group without its entries', () => {
+  it('lists the rows in document order (a section placed first before the entries, one placed last after them), a closed group without its entries', () => {
     expect(treeRows(groups, () => true, 'Dashboard').map((r) => r.key)).toEqual([
       'dashboard',
       'group:site',
+      'collections:messages',
       'globals:home',
       'collections:pages',
       'group:blog',
@@ -145,6 +158,9 @@ describe('the keyboard model: arrows, Home, End, a typed letter', () => {
       'collections:authors',
       'collections:ai-runs',
     ]);
+    expect(groupBlocks(groups[0]!).map((b) => b.kind)).toEqual(['section', 'entity', 'entity']);
+    expect(groupBlocks(groups[1]!).map((b) => b.kind)).toEqual(['entity', 'section']);
+    expect(groupEntities(groups[0]!).map((e) => e.slug)).toEqual(['messages', 'home', 'pages']);
     expect(treeRows(groups, (key) => key === 'blog', 'Dashboard').map((r) => r.label)).toEqual([
       'Dashboard',
       'Site',
@@ -169,6 +185,10 @@ describe('the current page and the open groups', () => {
 
   it('names the active row and its group; the dashboard on the admin route alone', () => {
     expect(activeRowKey(groups, '/admin', '/admin')).toBe('dashboard');
+    expect(activeRowKey(groups, '/admin/collections/messages/4', '/admin')).toBe(
+      'collections:messages',
+    );
+    expect(activeGroupKey(groups, '/admin/collections/messages')).toBe('site');
     expect(activeRowKey(groups, '/admin/collections/authors/2', '/admin')).toBe(
       'collections:authors',
     );
@@ -195,13 +215,20 @@ describe('the badge rule: a number only where it asks for action', () => {
     expect(badgeFor('failedRuns', 3)).toEqual({ kind: 'failedRuns', count: 3, tone: 'error' });
     expect(badgeFor('drafts', 1)).toEqual({ kind: 'drafts', count: 1, tone: 'warning' });
     expect(badgeFor('overLimit', 2)).toEqual({ kind: 'overLimit', count: 2, tone: 'error' });
+    expect(badgeFor('inbox', 4)).toEqual({ kind: 'inbox', count: 4, tone: 'error' });
     for (const n of [0, -1, 1.5, Number.NaN])
       expect(badgeFor('drafts', n), String(n)).toBeUndefined();
-    expect(BADGE_TONE).toEqual({ failedRuns: 'error', drafts: 'warning', overLimit: 'error' });
+    expect(BADGE_TONE).toEqual({
+      failedRuns: 'error',
+      drafts: 'warning',
+      overLimit: 'error',
+      inbox: 'error',
+    });
     expect(BADGE_ENTRY).toEqual({
       failedRuns: 'ai-runs',
       drafts: 'posts',
       overLimit: 'connections',
+      inbox: 'messages',
     });
   });
 
@@ -217,6 +244,7 @@ describe('the badge rule: a number only where it asks for action', () => {
       }
       expect(sentences.failedRuns).toBe(strings.dashboard.hand.failedRuns);
       expect(sentences.drafts).toBe(strings.dashboard.tiles.drafts);
+      expect(sentences.inbox).toBe(strings.dashboard.inbox.newMessages);
     }
     const en = badgeStrings(adminStrings);
     const ar = badgeStrings(adminStringsAr);
@@ -225,6 +253,14 @@ describe('the badge rule: a number only where it asks for action', () => {
     expect(ar.drafts(2)).toBe('مسودتان بانتظارك');
     expect(ar.failedRuns(1)).toBe('جولة فاشلة واحدة هذا الأسبوع');
     expect(ar.overLimit(11)).toBe('11 اتصالاً تجاوز حدّه الشهري');
+    expect(en.inbox(1)).toBe('1 new message');
+    expect(en.inbox(3)).toBe('3 new messages');
+    expect(ar.inbox(1)).toBe('رسالة جديدة واحدة');
+    expect(ar.inbox(2)).toBe('رسالتان جديدتان');
+    expect(ar.inbox(3)).toBe('3 رسائل جديدة');
+    expect(ar.inbox(11)).toBe('11 رسالة جديدة');
+    expect(en.inbox(0)).toBe('No new messages');
+    expect(ar.inbox(0)).toBe('لا رسائل جديدة');
   });
 
   it('reads the dashboard readers for the entries the user sees, and survives a failed read', async () => {
@@ -252,17 +288,32 @@ describe('the badge rule: a number only where it asks for action', () => {
         ]);
         return { totalDocs: args.where.and.length === 2 ? 2 : 1 };
       },
-      find: async () => ({ docs: [] }),
+      find: async (args: { collection: string; where: unknown }) => {
+        asked.push(`find:${args.collection}`);
+        if (args.collection === 'messages') {
+          expect(args.where).toEqual({ status: { equals: 'new' } });
+          return { docs: [{ id: 9 }], totalDocs: 5 };
+        }
+        return { docs: [] };
+      },
       logger: { error: () => {} },
     } as unknown as Payload;
     const badges = await navBadges({
       payload,
       user: undefined,
-      visible: new Set(['posts', 'ai-runs', 'pages']),
+      visible: new Set(['posts', 'ai-runs', 'pages', 'messages']),
       now,
     });
-    expect(badges).toEqual({ posts: { kind: 'drafts', count: 2, tone: 'warning' } });
-    expect(asked.toSorted()).toEqual(['count:ai-runs', 'versions:posts', 'versions:posts']);
+    expect(badges).toEqual({
+      posts: { kind: 'drafts', count: 2, tone: 'warning' },
+      messages: { kind: 'inbox', count: 5, tone: 'error' },
+    });
+    expect(asked.toSorted()).toEqual([
+      'count:ai-runs',
+      'find:messages',
+      'versions:posts',
+      'versions:posts',
+    ]);
   });
 
   it('counts the enabled connections whose month has reached the limit, in two queries', async () => {

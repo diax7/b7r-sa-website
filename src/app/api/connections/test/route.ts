@@ -12,7 +12,7 @@ export async function POST(req: Request): Promise<Response> {
   const body = (await jsonBody(req)) ?? {};
   const id = body['id'];
   if (typeof id !== 'number') return Response.json({ error: 'id: a number' }, { status: 400 });
-  const result = await testConnection(guard.payload, id, SERVICE_TESTS);
+  const result = await testConnection(guard.payload, id, SERVICE_TESTS, guard.language);
   if (!result.ok) return Response.json({ error: result.message }, { status: result.status });
   return Response.json({ ok: true, message: result.message });
 }

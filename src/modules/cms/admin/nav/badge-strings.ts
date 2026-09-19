@@ -5,14 +5,16 @@ import type { AdminStrings } from '@/modules/cms/admin/strings';
 export type BadgeStrings = Record<NavBadgeKind, (n: number) => string>;
 
 /**
- * The runs' and the drafts' sentences are the dashboard's own (`hand.failedRuns`,
- * `tiles.drafts`), as their numbers are its readers (ADR-058, ADR-059): one number, one
- * sentence, in the sidebar and on the dashboard alike.
+ * The runs', the drafts' and the inbox's sentences are the dashboard's own
+ * (`hand.failedRuns`, `tiles.drafts`, `inbox.newMessages`), as their numbers are its
+ * readers (ADR-058, ADR-059, ADR-061): one number, one sentence, in the sidebar and on the
+ * dashboard alike.
  */
 export function badgeStrings(s: AdminStrings): BadgeStrings {
   return {
     failedRuns: s.dashboard.hand.failedRuns,
     drafts: s.dashboard.tiles.drafts,
     overLimit: s.nav.badges.overLimit,
+    inbox: s.dashboard.inbox.newMessages,
   };
 }
