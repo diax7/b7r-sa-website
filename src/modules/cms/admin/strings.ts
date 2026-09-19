@@ -187,6 +187,12 @@ export const adminStrings = {
     works: 'Works.',
     worksWith: 'Works: {model} answered. Recorded on the connection.',
     saveFirst: 'Save, then test.',
+    /** The Umami Test (PR 4c): a refusal of ours before the call, and yesterday's numbers after it. */
+    umami: {
+      noId: 'No Umami website id in Site settings, Analytics: fill it first, then test.',
+      yesterday: (date: string, visitors: number, pageviews: number) =>
+        `${date}: ${visitors} visitors, ${pageviews} page views`,
+    },
   },
   cells: {
     yesNo: ['Yes', 'No'] as const,
@@ -673,6 +679,11 @@ export const adminStringsAr: AdminStrings = {
     works: 'يعمل.',
     worksWith: 'يعمل: أجاب {model}. سُجّلت النتيجة في الاتصال.',
     saveFirst: 'احفظ أولاً، ثم اختبر.',
+    umami: {
+      noId: 'لا معرّف موقع في Umami ضمن إعدادات الموقع، قسم التحليلات: املأه أولاً، ثم اختبر.',
+      yesterday: (date, visitors, pageviews) =>
+        `${date}: ${arabicCount(visitors, { one: 'زائر واحد', two: 'زائران', few: 'زوّار', many: 'زائراً' })}، ${arabicCount(pageviews, { one: 'مشاهدة صفحة واحدة', two: 'مشاهدتا صفحة', few: 'مشاهدات صفحات', many: 'مشاهدة صفحة' })}`,
+    },
   },
   cells: {
     yesNo: ['نعم', 'لا'],
