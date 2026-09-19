@@ -2034,6 +2034,70 @@ Every interface string of the English site, key for key with the Arabic bank of 
 | `contactForm.validation.message` | Write your message |
 | `contactEmail.subject` | New message from the website: {inquiryType} |
 | `contactEmail.replyOnWhatsapp` | Reply on WhatsApp |
+| `booking.title` | Book a free consultation |
+| `booking.lead` | 30 minutes on Google Meet to answer your questions and help you start. |
+| `booking.riyadhTime` | Riyadh time |
+| `booking.pickDay` | Pick a day |
+| `booking.pickTime` | Pick a time |
+| `booking.duration` | {minutes} minutes |
+| `booking.loadingSlots` | Loading the times |
+| `booking.noSlots` | No times free on this day. Pick another day. |
+| `booking.closed` | Closed: {reason} |
+| `booking.chosen` | Your slot: {day}, {time} |
+| `booking.change` | Change the time |
+| `booking.note` | Note (optional) |
+| `booking.notePlaceholder` | What would you like to talk about? |
+| `booking.submit` | Confirm the booking |
+| `booking.submitting` | Booking |
+| `booking.taken` | That time was just taken. Pick another one. |
+| `booking.failure` | The booking did not go through. Try again or message us on WhatsApp. |
+| `booking.disabled` | Booking is paused for now. Message us on WhatsApp and we will set a time. |
+| `booking.confirmedTitle` | Your consultation is booked |
+| `booking.confirmedText` | The details are in your inbox: the meeting link and the link to change or cancel. |
+| `booking.meetLink` | Meeting link |
+| `booking.linkFollows` | The meeting link reaches your inbox before the time. |
+| `booking.addToCalendar` | Add to your calendar |
+| `booking.manageLink` | Change or cancel |
+| `booking.manageTitle` | Your booking |
+| `booking.manageLead` | Change the time of your consultation or cancel it here. |
+| `booking.reschedule` | Change the time |
+| `booking.cancel` | Cancel the booking |
+| `booking.confirmCancel` | Confirm the cancellation |
+| `booking.keep` | Keep the booking |
+| `booking.rescheduled` | Your time has changed. The new details are in your inbox. |
+| `booking.cancelled` | Your booking is cancelled. Book another time whenever you like. |
+| `booking.past` | This consultation has passed. Book a new one whenever you like. |
+| `booking.tooLate` | A change needs at least {hours} hours before the time. Message us on WhatsApp. |
+| `booking.invalid` | This link is not valid. Message us on WhatsApp and we will help. |
+| `booking.bookAgain` | Book a new time |
+| `bookingEmail.confirmSubject` | Your consultation is booked: {title} |
+| `bookingEmail.confirmIntro` | Hello {name}, your consultation is booked. |
+| `bookingEmail.when` | When |
+| `bookingEmail.meet` | Meeting link |
+| `bookingEmail.linkFollows` | The meeting link comes in a second e-mail before the time. |
+| `bookingEmail.manage` | Change the time or cancel here |
+| `bookingEmail.calendarFile` | The calendar file is attached to this e-mail. |
+| `bookingEmail.reminder24Subject` | Reminder: your consultation is tomorrow |
+| `bookingEmail.reminder1Subject` | Reminder: your consultation is in an hour |
+| `bookingEmail.reminderIntro` | Hello {name}, a reminder of your consultation. |
+| `bookingEmail.rescheduledSubject` | Your time has changed: {title} |
+| `bookingEmail.rescheduledIntro` | Hello {name}, the time of your consultation has changed. |
+| `bookingEmail.cancelledSubject` | Your booking is cancelled: {title} |
+| `bookingEmail.cancelledIntro` | Hello {name}, your consultation is cancelled. Book another time whenever you like. |
+| `bookingEmail.linkSubject` | Your meeting link: {title} |
+| `bookingEmail.linkIntro` | Hello {name}, here is your meeting link. |
+| `bookingEmail.bookAgain` | Book another time |
+| `bookingEmail.newSubject` | New booking: {name}, {when} |
+| `bookingEmail.newIntro` | A new booking from the website. |
+| `bookingEmail.calendarFailed` | The event did not reach the Google calendar; it is retried three times on its own. |
+| `bookingEmail.ownerRescheduledSubject` | Time changed: {name}, {when} |
+| `bookingEmail.ownerCancelledSubject` | Booking cancelled: {name}, {when} |
+| `bookingEmail.ownerReminder24Subject` | Reminder: consultation with {name} tomorrow, {when} |
+| `bookingEmail.ownerReminder1Subject` | Reminder: consultation with {name} in an hour |
+| `bookingEmail.ownerLinkSubject` | Meeting link ready: {name}, {when} |
+| `bookingEmail.noteLabel` | Merchant's note |
+| `bookingEmail.pageLabel` | Booked from |
+| `bookingEmail.openInPanel` | Open the booking in the panel |
 | `notFoundPage.title` | Page not found |
 | `notFoundPage.text` | The link seems to have changed or been removed. |
 | `notFoundPage.button` | Back to the home page |

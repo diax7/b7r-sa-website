@@ -71,8 +71,11 @@ const TODO_COPY = new Set<string>([
   blogAuthor.bio,
   // The llms.txt sentences (Level 5c, ADR-043), listed for Dhia in Appendix G.
   ...Object.values(messages.llms),
-  // The booking page's search row (ADR-062, BRD 4.19), for Dhia's read.
+  // The booking page, its picker, its e-mails and its search row (ADR-062, BRD 4.19), for
+  // Dhia's read; once approved, out of here and the BRD section is the check.
   ...seo.filter((row) => row.route === '/book').flatMap((row) => [row.title, row.description]),
+  ...collectStrings(ar.booking),
+  ...collectStrings(ar.bookingEmail),
 ]);
 
 const brd = readFileSync(join(process.cwd(), 'B7R-WEBSITE-MASTER-BRD.md'), 'utf8').replace(
@@ -133,6 +136,7 @@ const sources: Record<string, unknown> = {
   })),
   'seo.ts': [seo, ar.seo.product, ar.seo.merchantCostNote],
   'copy/ar.ts (compare)': [ar.compare],
+  'copy/ar.ts (booking)': [ar.booking, ar.bookingEmail],
   // Post titles and hub names are BRD 4.13; excerpts, takeaways and bodies are agent-written
   // samples listed for Dhia (ADR-018), so only the BRD fields are checked here.
   'copy/ar.ts (blog)': [blogCopy],
