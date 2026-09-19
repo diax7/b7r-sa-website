@@ -1,6 +1,6 @@
 import { fold } from '@/lib/arabic-fold';
 import type { NavEntity, NavGroup } from '@/modules/cms/admin/nav/groups';
-import { groupBlocks } from '@/modules/cms/admin/nav/order';
+import { blockEntities, groupBlocks } from '@/modules/cms/admin/nav/order';
 
 /**
  * The sidebar's keyboard model (ADR-058), pure. The tree is one tab stop: Tab lands on the
@@ -86,13 +86,7 @@ export function treeRows(
     { key: rowKey.dashboard, label: dashboardLabel },
     ...groups.flatMap((g) => [
       { key: rowKey.group(g.key), label: g.label },
-      ...(isOpen(g.key)
-        ? groupBlocks(g).flatMap((block) =>
-            block.kind === 'entity'
-              ? entityRows([block.entity])
-              : entityRows(block.section.entities),
-          )
-        : []),
+      ...(isOpen(g.key) ? groupBlocks(g).flatMap((block) => entityRows(blockEntities(block))) : []),
     ]),
   ];
 }

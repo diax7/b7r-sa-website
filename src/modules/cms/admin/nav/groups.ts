@@ -20,7 +20,7 @@ import {
   type NavSection,
 } from '@/modules/cms/admin/icons';
 import { type NavBadge, navBadges } from '@/modules/cms/admin/nav/badges';
-import { groupBlocks } from '@/modules/cms/admin/nav/order';
+import { blockEntities, groupBlocks } from '@/modules/cms/admin/nav/order';
 
 /** One sidebar / palette entry: plain data, safe to hand to a client component. */
 export interface NavEntity {
@@ -174,13 +174,7 @@ function flat(entities: NavEntity[], group: string): Array<NavEntity & { group: 
 
 /** Every entry of every group, flat and in document order, for the palette and the dashboard. */
 export function flattenNav(groups: NavGroup[]): Array<NavEntity & { group: string }> {
-  return groups.flatMap((g) =>
-    groupBlocks(g).flatMap((block) =>
-      block.kind === 'entity'
-        ? flat([block.entity], g.label)
-        : flat(block.section.entities, g.label),
-    ),
-  );
+  return groups.flatMap((g) => groupBlocks(g).flatMap((b) => flat(blockEntities(b), g.label)));
 }
 
 /** The user's remembered open/closed groups (Payload's `nav` preference). */

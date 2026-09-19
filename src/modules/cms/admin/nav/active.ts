@@ -1,6 +1,6 @@
 import type { NavEntity, NavGroup } from '@/modules/cms/admin/nav/groups';
 import { rowKey } from '@/modules/cms/admin/nav/keyboard';
-import { groupBlocks } from '@/modules/cms/admin/nav/order';
+import { blockEntities, groupBlocks } from '@/modules/cms/admin/nav/order';
 
 /**
  * Which entry is the current page, and whether a group is open (ADR-058), pure.
@@ -23,9 +23,7 @@ const withChildren = (entities: NavEntity[]): NavEntity[] =>
 
 /** The entries of a group in document order, secondary ones after their parent, the sections where they are placed. */
 export function groupEntities(group: NavGroup): NavEntity[] {
-  return groupBlocks(group).flatMap((block) =>
-    block.kind === 'entity' ? withChildren([block.entity]) : withChildren(block.section.entities),
-  );
+  return groupBlocks(group).flatMap((block) => withChildren(blockEntities(block)));
 }
 
 /** The row of the current page: the dashboard on the admin route, else the first entry whose route matches. */

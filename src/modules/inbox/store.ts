@@ -1,4 +1,4 @@
-import type { Payload } from 'payload';
+import type { Payload, TypedUser } from 'payload';
 import type { Locale } from '@/lib/i18n';
 import { MESSAGES, type MessageStatus } from '@/modules/inbox/messages';
 import type { Utm } from '@/modules/inbox/origin';
@@ -63,11 +63,7 @@ export async function markEmailed(payload: Payload, id: number): Promise<void> {
  */
 export async function setMessageStatus(
   payload: Payload,
-  args: {
-    id: number;
-    status: MessageStatus;
-    user: NonNullable<Parameters<Payload['update']>[0]['user']>;
-  },
+  args: { id: number; status: MessageStatus; user: TypedUser },
 ): Promise<void> {
   await payload.update({
     collection: MESSAGES,

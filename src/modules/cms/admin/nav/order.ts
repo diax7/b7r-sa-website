@@ -10,6 +10,11 @@ export type NavBlock =
   | { kind: 'entity'; entity: NavEntity }
   | { kind: 'section'; section: NavGroupSection };
 
+/** The entries a block holds: the one entity, or the section's. */
+export function blockEntities(block: NavBlock): NavEntity[] {
+  return block.kind === 'entity' ? [block.entity] : block.section.entities;
+}
+
 export function groupBlocks(group: NavGroup): NavBlock[] {
   const sections = (place: NavGroupSection['place']): NavBlock[] =>
     group.sections
