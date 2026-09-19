@@ -1198,7 +1198,7 @@ describe('side-by-side bilingual editing (ADR-057)', () => {
    * `beforeChange` for the language of each write). Anything else is listed by name so the
    * failure says what remains.
    */
-  it('the census gate (PR C): 131 localized fields show both languages, 125 light ones paired (55 inside rows), the four heavy ones by their twins, the two facts of the post by their widgets; nothing remains; no list is localized as a whole but the warnings', () => {
+  it('the census gate (PR C): 133 localized fields show both languages, 127 light ones paired (56 inside rows), the four heavy ones by their twins, the two facts of the post by their widgets; nothing remains; no list is localized as a whole but the warnings', () => {
     const placed = configs.flatMap((c) =>
       everyField(c.fields).map((p) => ({ ...p, slug: c.slug })),
     );
@@ -1211,8 +1211,9 @@ describe('side-by-side bilingual editing (ADR-057)', () => {
     const pairedHeavy = localized.filter(
       (p) => HEAVY.has(p.field.type) && isTwinOf(p.next, p.field),
     );
-    expect(pairedLight.length).toBe(125);
-    expect(pairedLight.filter((p) => p.inList).length).toBe(55);
+    // The booking settings (ADR-062) added the consultation's name and a closed date's reason.
+    expect(pairedLight.length).toBe(127);
+    expect(pairedLight.filter((p) => p.inList).length).toBe(56);
     expect(pairedHeavy.map(placedName)).toEqual([
       'pages.blocks.richText.content',
       'posts.body',

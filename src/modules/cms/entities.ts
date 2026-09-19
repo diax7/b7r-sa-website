@@ -2,6 +2,7 @@ import type { CollectionConfig, GlobalConfig } from 'payload';
 import { AiRuns } from '@/modules/ai-content/runs';
 import { AiSettings } from '@/modules/ai-content/settings';
 import { AiTopics } from '@/modules/ai-content/topics';
+import { Booking } from '@/modules/bookings/global';
 import { Authors } from '@/modules/cms/collections/authors';
 import { Categories } from '@/modules/cms/collections/categories';
 import { Faqs } from '@/modules/cms/collections/faqs';
@@ -52,6 +53,7 @@ export const COLLECTIONS: CollectionConfig[] = [
 export const GLOBALS: GlobalConfig[] = [
   Home,
   SiteSettings,
+  Booking,
   SeoDefaults,
   AiSettings,
   VisibilityChecklist,

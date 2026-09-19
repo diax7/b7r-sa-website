@@ -11,9 +11,10 @@ import { copyFor } from '@/content/copy';
 import type { BlockOf } from '@/content/schema';
 import { getSiteSettings } from '@/lib/cms';
 import { env } from '@/lib/env';
-import type { Locale } from '@/lib/i18n';
+import { type Locale, localePath } from '@/lib/i18n';
 import { displayPhone } from '@/lib/phone';
 import { whatsappUrl } from '@/lib/utm';
+import { getBooking } from '@/modules/bookings';
 import { ContactFormLoader } from '@/modules/contact/contact-form-loader';
 
 function ContactCard({
@@ -67,11 +68,14 @@ export async function ContactSection({
   anchor,
   heading,
 }: ContactSectionProps) {
-  const site = await getSiteSettings(locale);
+  const [site, booking] = await Promise.all([getSiteSettings(locale), getBooking(locale)]);
   const { contactForm, footer: footerCopy } = copyFor(locale);
   const whatsapp = whatsappUrl(site.contact.whatsapp);
-  const booking = site.bookingUrl;
-  const bookingHref = booking ?? whatsappUrl(site.contact.whatsapp, block.booking.whatsappMessage);
+  // The booking switch (ADR-062): on, the card opens the booking page; off, WhatsApp with
+  // the BRD 4.11 message, as before.
+  const bookingHref = booking.enabled
+    ? localePath(locale, '/book')
+    : whatsappUrl(site.contact.whatsapp, block.booking.whatsappMessage);
   const social = [
     { href: site.social.x, label: footerCopy.socialAria.x, Icon: XIcon },
     { href: site.social.instagram, label: footerCopy.socialAria.instagram, Icon: InstagramIcon },
@@ -169,12 +173,15 @@ export async function ContactSection({
               <Button asChild className="self-start" trailingArrow={false}>
                 <a
                   href={bookingHref}
-                  target="_blank"
-                  rel="noopener"
-                  data-booking-mode={booking ? 'calendar' : 'whatsapp'}
-                  {...(booking
+                  data-booking-mode={booking.enabled ? 'page' : 'whatsapp'}
+                  {...(booking.enabled
                     ? {}
-                    : { 'data-track': 'whatsapp_click', 'data-location': 'contact' })}
+                    : {
+                        target: '_blank',
+                        rel: 'noopener',
+                        'data-track': 'whatsapp_click',
+                        'data-location': 'contact',
+                      })}
                 >
                   {block.booking.button}
                 </a>

@@ -126,6 +126,7 @@ export interface Config {
   globals: {
     home: Home;
     'site-settings': SiteSetting;
+    booking: Booking;
     'seo-defaults': SeoDefault;
     'ai-settings': AiSetting;
     'visibility-checklist': VisibilityChecklist;
@@ -134,6 +135,7 @@ export interface Config {
   globalsSelect: {
     home: HomeSelect<false> | HomeSelect<true>;
     'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
+    booking: BookingSelect<false> | BookingSelect<true>;
     'seo-defaults': SeoDefaultsSelect<false> | SeoDefaultsSelect<true>;
     'ai-settings': AiSettingsSelect<false> | AiSettingsSelect<true>;
     'visibility-checklist': VisibilityChecklistSelect<false> | VisibilityChecklistSelect<true>;
@@ -3174,10 +3176,6 @@ export interface SiteSetting {
    */
   deliveryRegion: string;
   /**
-   * Opens from the booking card on the contact page. Empty opens WhatsApp with the prefilled message instead.
-   */
-  bookingUrl?: string | null;
-  /**
    * Read by nothing on the site today: the copyright line and the legal pages carry fixed text. Kept for the day they read it.
    */
   legalEntity: string;
@@ -3198,6 +3196,101 @@ export interface SiteSetting {
      */
     umamiId?: string | null;
   };
+  /**
+   * Who saved the current version and when. Drafts do not change it.
+   */
+  lastSavedBy?: {
+    name?: string | null;
+    at?: string | null;
+  };
+  translations?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * The free consultation booking: its length, the hours, the closed days, and the Google calendar the appointments land in.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "booking".
+ */
+export interface Booking {
+  id: number;
+  /**
+   * The heading of the booking page and the subject of the confirmation e-mail: "Free consultation, 30 minutes".
+   */
+  title: string;
+  /**
+   * How long each appointment lasts and where the slots fall in the day: 30.
+   */
+  durationMinutes: number;
+  /**
+   * Left free after each appointment before the next one, and counted in the slot grid: 10.
+   */
+  bufferMinutes: number;
+  /**
+   * Hides the slots closer than this from a visitor; a reschedule obeys it too: 24.
+   */
+  noticeHours: number;
+  /**
+   * Shows the days from today up to this many, and refuses a date beyond them: 30.
+   */
+  horizonDays: number;
+  /**
+   * Closes the day once this many are booked, even with free hours to spare: 4.
+   */
+  maxPerDay: number;
+  /**
+   * The days and the hours a slot is offered on, in Riyadh time; a day without a row stays closed.
+   */
+  hours?:
+    | {
+        /**
+         * The weekday the row applies to; two rows for one day both count.
+         */
+        day: '0' | '1' | '2' | '3' | '4' | '5' | '6';
+        /**
+         * The first slot of the day in Riyadh time, as 10:00.
+         */
+        from: string;
+        /**
+         * The time the last slot must end by, in Riyadh time, as 18:00.
+         */
+        to: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Closes single days, an Eid holiday for one; a visitor reads the reason on the greyed day of the booking page. A duplicated row copies the Arabic only.
+   */
+  closedDates?:
+    | {
+        /**
+         * The day that stays closed, in Riyadh.
+         */
+        date: string;
+        /**
+         * Shown on the greyed day of the booking page: "Eid al-Adha holiday". Two to five words.
+         */
+        reason: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * The Google Workspace account on b7r.sa whose calendar is read and takes the appointments with their Meet link.
+   */
+  hostEmail?: string | null;
+  /**
+   * On opens the booking page and the contact card picker; off sends the contact card to WhatsApp with the prefilled message.
+   */
+  enabled?: boolean | null;
   /**
    * Who saved the current version and when. Drafts do not change it.
    */
@@ -3646,7 +3739,6 @@ export interface SiteSettingsSelect<T extends boolean = true> {
   deliveryMaxDays?: T;
   deliveryOrigin?: T;
   deliveryRegion?: T;
-  bookingUrl?: T;
   legalEntity?: T;
   analytics?:
     | T
@@ -3655,6 +3747,45 @@ export interface SiteSettingsSelect<T extends boolean = true> {
         umamiSrc?: T;
         umamiId?: T;
       };
+  lastSavedBy?:
+    | T
+    | {
+        name?: T;
+        at?: T;
+      };
+  translations?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "booking_select".
+ */
+export interface BookingSelect<T extends boolean = true> {
+  title?: T;
+  durationMinutes?: T;
+  bufferMinutes?: T;
+  noticeHours?: T;
+  horizonDays?: T;
+  maxPerDay?: T;
+  hours?:
+    | T
+    | {
+        day?: T;
+        from?: T;
+        to?: T;
+        id?: T;
+      };
+  closedDates?:
+    | T
+    | {
+        date?: T;
+        reason?: T;
+        id?: T;
+      };
+  hostEmail?: T;
+  enabled?: T;
   lastSavedBy?:
     | T
     | {

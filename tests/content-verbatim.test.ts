@@ -71,6 +71,8 @@ const TODO_COPY = new Set<string>([
   blogAuthor.bio,
   // The llms.txt sentences (Level 5c, ADR-043), listed for Dhia in Appendix G.
   ...Object.values(messages.llms),
+  // The booking page's search row (ADR-062, BRD 4.19), for Dhia's read.
+  ...seo.filter((row) => row.route === '/book').flatMap((row) => [row.title, row.description]),
 ]);
 
 const brd = readFileSync(join(process.cwd(), 'B7R-WEBSITE-MASTER-BRD.md'), 'utf8').replace(

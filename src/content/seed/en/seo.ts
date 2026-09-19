@@ -26,6 +26,11 @@ export const seoEn = {
       title: 'Contact us',
       description: 'Message us on WhatsApp or by email, or book a free 30-minute consultation.',
     },
+    '/book': {
+      title: 'Book a free consultation',
+      description:
+        'Pick a day and a time that suits you: 30 minutes on Google Meet to answer your questions and help you start your brand.',
+    },
     '/compare-printful': {
       title: 'B7R Print vs Printful for a Saudi store',
       description:

@@ -29,6 +29,7 @@ import * as migration_20260918_131849_heavy_twins from './20260918_131849_heavy_
 import * as migration_20260918_142817_purge_locale_preference from './20260918_142817_purge_locale_preference';
 import * as migration_20260918_212944_media_blur from './20260918_212944_media_blur';
 import * as migration_20260918_213027_media_no_renditions from './20260918_213027_media_no_renditions';
+import * as migration_20260919_170643_booking_global from './20260919_170643_booking_global';
 
 export const migrations = [
   {
@@ -185,5 +186,10 @@ export const migrations = [
     up: migration_20260918_213027_media_no_renditions.up,
     down: migration_20260918_213027_media_no_renditions.down,
     name: '20260918_213027_media_no_renditions',
+  },
+  {
+    up: migration_20260919_170643_booking_global.up,
+    down: migration_20260919_170643_booking_global.down,
+    name: '20260919_170643_booking_global',
   },
 ];

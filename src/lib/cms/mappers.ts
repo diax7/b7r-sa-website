@@ -144,7 +144,6 @@ export function toSiteSettings(doc: SiteSetting): SiteSettings {
       origin: doc.deliveryOrigin,
       region: doc.deliveryRegion,
     },
-    ...(doc.bookingUrl ? { bookingUrl: doc.bookingUrl } : {}),
     legalEntity: doc.legalEntity,
     ctaShiny: Boolean(doc.ctaShiny),
     analytics: {
