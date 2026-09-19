@@ -9,7 +9,7 @@ import { PRINT_AREA_LABEL, PRINT_METHOD } from '@/content/seed/products';
 import { localePath, requestLocale } from '@/lib/i18n';
 import { previewUrl } from '@/lib/preview-token';
 import { collectionComponents } from '@/modules/cms/admin/document/config';
-import { adminGroup } from '@/modules/cms/admin/icons';
+import { adminGroup, sectionIcon } from '@/modules/cms/admin/icons';
 import { PRODUCT_DESCRIPTIONS } from '@/modules/cms/admin/descriptions/catalogue';
 import { describeFields } from '@/modules/cms/admin/descriptions/describe';
 
@@ -68,6 +68,7 @@ export const Products: CollectionConfig = {
         tabs: [
           {
             label: { ar: 'الصور والألوان', en: 'Photos & colours' },
+            admin: sectionIcon('photos'),
             fields: [
               {
                 name: 'colors',
@@ -135,6 +136,7 @@ export const Products: CollectionConfig = {
           },
           {
             label: { ar: 'الأساسيات', en: 'Basics' },
+            admin: sectionIcon('basics'),
             fields: [
               {
                 type: 'row',
@@ -212,6 +214,7 @@ export const Products: CollectionConfig = {
           },
           {
             label: { ar: 'المقاسات', en: 'Sizes' },
+            admin: sectionIcon('sizes'),
             fields: [
               {
                 name: 'sizes',
@@ -283,6 +286,7 @@ export const Products: CollectionConfig = {
           },
           {
             label: { ar: 'منطقة الطباعة', en: 'Print area' },
+            admin: sectionIcon('printArea'),
             fields: [
               {
                 name: 'printArea',

@@ -8,7 +8,7 @@ import { secretField } from '@/modules/cms/fields/secret-field';
 import { CONNECTIONS } from '@/modules/connections/collection';
 import { kindsThat, mockAllowed } from '@/modules/connections/kinds';
 import { globalComponents } from '@/modules/cms/admin/document/config';
-import { adminGroup } from '@/modules/cms/admin/icons';
+import { adminGroup, sectionIcon } from '@/modules/cms/admin/icons';
 import { AI_SETTINGS_DESCRIPTIONS } from '@/modules/ai-content/descriptions';
 import { describeFields } from '@/modules/cms/admin/descriptions/describe';
 
@@ -84,6 +84,7 @@ export const AiSettings: GlobalConfig = {
         tabs: [
           {
             label: { ar: 'الجدولة والحدود', en: 'Schedule and limits' },
+            admin: sectionIcon('schedule'),
             fields: [
               {
                 name: 'connection',
@@ -146,6 +147,7 @@ export const AiSettings: GlobalConfig = {
           {
             label: { ar: 'اللغة والأسلوب', en: 'Language and style' },
             name: 'style',
+            admin: sectionIcon('style'),
             description: {
               ar: 'لكل لغة دليلها وتعليماتها وعباراتها الممنوعة؛ وحفظ واحد يكتب اللغتين.',
               en: 'Each language has its own guide, instructions and banned phrases; one Save writes both.',
@@ -204,6 +206,7 @@ export const AiSettings: GlobalConfig = {
           },
           {
             label: { ar: 'ورقة الحقائق', en: 'Facts sheet' },
+            admin: sectionIcon('facts'),
             fields: [
               {
                 name: 'factsSheet',
@@ -219,6 +222,7 @@ export const AiSettings: GlobalConfig = {
           {
             label: { ar: 'الصور', en: 'Images' },
             name: 'images',
+            admin: sectionIcon('photos'),
             fields: [
               {
                 name: 'imageMode',
@@ -250,6 +254,7 @@ export const AiSettings: GlobalConfig = {
           {
             label: { ar: 'الجودة', en: 'Quality' },
             name: 'quality',
+            admin: sectionIcon('quality'),
             fields: [
               {
                 type: 'row',
@@ -276,6 +281,7 @@ export const AiSettings: GlobalConfig = {
           {
             label: { ar: 'التنبيهات', en: 'Notifications' },
             name: 'notifications',
+            admin: sectionIcon('notifications'),
             fields: [
               {
                 name: 'notifyEmail',

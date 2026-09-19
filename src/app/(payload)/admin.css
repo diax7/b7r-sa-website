@@ -107,6 +107,12 @@
     --admin-red-ink: #2a0f0f;
     --admin-red-tint: rgb(242 107 107 / 0.14);
     --admin-amber: #f5b53f;
+    /* The identity hues (ADR-046) for the one Payload element that carries one: the active
+       tab's bar (ADR-060). The same values as the token block above. */
+    --admin-teal: #2dd4bf;
+    --admin-violet: #a78bfa;
+    --admin-pink: #f472b6;
+    --admin-slate: #cbd5e1;
     --admin-ring: rgb(0 152 224 / 0.4);
     --admin-rail-width: 64px;
     --admin-drawer-width: 320px;
@@ -575,12 +581,16 @@
   }
 
   /* ----------------------------------------------------------------------------------------
-     The tab strip of a tabbed form (audit 2026-09-18, 3.1 and 3.2). Payload already scrolls
-     it sideways but gives no cue: the last tab was cut at the screen's edge and the active
-     tab was a 2 px grey line under a 50 % label. Two sticky fades on the scroller's inline
-     edges say "more this way" only while there is more that way (at either end the fade sits
-     over the gutter spacer Payload draws), the active tab reads in the accent with a 3 px bar,
-     and the strip scrolls smoothly to a tab brought into view.
+     The tab strip of a tabbed form (audit 2026-09-18, 3.1 and 3.2; ADR-060). Payload
+     already scrolls it sideways but gives no cue: the last tab was cut at the screen's edge
+     and the active tab was a 2 px grey line under a 50 % label. Two sticky fades on the
+     scroller's inline edges say "more this way" only while there is more that way (at
+     either end the fade sits over the gutter spacer Payload draws), every tab carries its
+     icon before its label (`IconTabs` portals the span into Payload's flex button; `order`
+     puts it first in both directions), the active tab reads in the text colour with a 3 px
+     bar in the document's group hue (the span carries the hue; the second of the screen's
+     two hue carriers, the header's tile being the first), a tab with errors stays red with
+     its count, and the strip scrolls smoothly to a tab brought into view.
      ---------------------------------------------------------------------------------------- */
   .tabs-field__tabs-wrap {
     display: flex;
@@ -630,12 +640,35 @@
   .tabs-field__tab-button:hover {
     opacity: 0.9;
   }
+  .tabs-field__tab-button > [data-admin-section-icon] {
+    order: -1;
+  }
   .tabs-field__tab-button--active {
-    color: var(--admin-accent);
+    color: var(--theme-elevation-1000);
   }
   .tabs-field__tab-button--active::after {
     height: 3px;
     background: var(--admin-accent);
+  }
+  .tabs-field__tab-button--active:has([data-admin-section-hue='teal'])::after {
+    background: var(--admin-teal);
+  }
+  .tabs-field__tab-button--active:has([data-admin-section-hue='violet'])::after {
+    background: var(--admin-violet);
+  }
+  .tabs-field__tab-button--active:has([data-admin-section-hue='pink'])::after {
+    background: var(--admin-pink);
+  }
+  .tabs-field__tab-button--active:has([data-admin-section-hue='slate'])::after {
+    background: var(--admin-slate);
+  }
+  .tabs-field__tab-button--has-error,
+  .tabs-field__tab-button--has-error.tabs-field__tab-button--active {
+    color: var(--admin-red);
+  }
+  .tabs-field__tab-button--has-error::after,
+  .tabs-field__tab-button--has-error.tabs-field__tab-button--active::after {
+    background: var(--admin-red);
   }
   .tabs-field__tab-button:focus-visible {
     outline: none;

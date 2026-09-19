@@ -8,7 +8,6 @@ import {
   ADMIN_GROUPS,
   type EntityRef,
   entityIcon,
-  HUE_BAR_CLASSES,
   HUE_CLASSES,
   navPlacement,
 } from '@/modules/cms/admin/icons';
@@ -16,11 +15,11 @@ import { adminStringsFor } from '@/modules/cms/admin/strings';
 
 /**
  * The block under a document's or a list's title (the `Description` slot, ADR-046): the
- * entity's icon in a disc of its group's hue behind a bar of the same hue, the description
- * sentence, then where on the site the thing shows (`admin.custom.shows` on the config) and,
- * for a collection with a public listing, a link to it. The slot renders on the list view
- * too, so nothing here depends on a document. The language note (ADR-044) stays before the
- * document controls.
+ * entity's icon in a tile of its group's hue (one of the screen's two hue carriers,
+ * ADR-060; the hairline beside the block is neutral), the description sentence, then where
+ * on the site the thing shows (`admin.custom.shows` on the config) and, for a collection
+ * with a public listing, a link to it. The slot renders on the list view too, so nothing
+ * here depends on a document.
  */
 export function EntityHeader(props: ViewDescriptionServerProps & { entity: EntityRef }) {
   const { entity, description, i18n, payload } = props;
@@ -36,13 +35,13 @@ export function EntityHeader(props: ViewDescriptionServerProps & { entity: Entit
   const label = config && 'labels' in config ? getTranslation(config.labels.plural, i18n) : '';
   return (
     <div
-      className={cn('flex items-start gap-3 border-s-2 ps-3', HUE_BAR_CLASSES[hue])}
+      className="flex items-start gap-3 border-s-2 border-border ps-3"
       data-admin-ui=""
       data-admin-header={entity.slug}
-      data-hue={hue}
     >
       <span
         className={cn('grid size-10 shrink-0 place-items-center rounded-base', HUE_CLASSES[hue])}
+        data-admin-hue={hue}
       >
         {EntityIcon && <Icon icon={EntityIcon} size={20} />}
       </span>

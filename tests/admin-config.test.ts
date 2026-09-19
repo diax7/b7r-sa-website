@@ -21,6 +21,9 @@ import {
 } from '@/modules/cms/admin/descriptions/catalogue';
 import {
   BOOL_CELL,
+  ICON_STRIP,
+  ICON_TABS,
+  SECTION_LABEL,
   type Described,
   describeFields,
   JSON_VIEW_CELL,
@@ -48,6 +51,9 @@ import {
   ADMIN_VIEWS,
   COLLECTION_ICONS,
   entityIcon,
+  SECTION_ICONS,
+  sectionIcon,
+  sectionIconKeyOf,
   GLOBAL_ICONS,
   groupIcon,
   groupKey,
@@ -1265,5 +1271,174 @@ describe('dashboard recent list: a title for every row', () => {
     expect(people).not.toContain('ai-runs');
     // Users carry no stamp (Payload's auth collection); their saves are not "content" either.
     expect(people).not.toContain('users');
+  });
+});
+
+/**
+ * The section icons (ADR-060): every tab of every tabs field and every collapsible names
+ * one icon of `SECTION_ICONS` through `sectionIcon()`, a labelled group may; no icon
+ * repeats inside one strip and none repeats the entity's own icon (the header's tile).
+ * `describeFields()` places the `ui` field that draws the tabs' icons right after every
+ * tabs field, with the keys in order, and the label widget on every collapsible or group
+ * that names an icon; a widget the config set stays.
+ */
+interface Section {
+  kind: 'tabs' | 'collapsible' | 'group';
+  where: string;
+  field: Field;
+  /** The field right after it at the same level (the strip a tabs field must be followed by). */
+  next: Field | undefined;
+}
+
+function sectionsOf(fields: Field[], path = ''): Section[] {
+  const out: Section[] = [];
+  fields.forEach((f, i) => {
+    const next = fields[i + 1];
+    if (f.type === 'tabs') {
+      out.push({ kind: 'tabs', where: `${path}[tabs]`, field: f, next });
+      for (const t of f.tabs) {
+        out.push(...sectionsOf(t.fields, 'name' in t && t.name ? `${path}${t.name}.` : path));
+      }
+      return;
+    }
+    if (f.type === 'collapsible') {
+      out.push({ kind: 'collapsible', where: `${path}[collapsible]`, field: f, next });
+      out.push(...sectionsOf(f.fields, path));
+      return;
+    }
+    if (f.type === 'row') {
+      out.push(...sectionsOf(f.fields, path));
+      return;
+    }
+    if (f.type === 'group') {
+      const named = 'name' in f && f.name ? `${path}${f.name}` : `${path}[group]`;
+      if (f.label) out.push({ kind: 'group', where: named, field: f, next });
+      out.push(...sectionsOf(f.fields, 'name' in f && f.name ? `${named}.` : path));
+      return;
+    }
+    if ('fields' in f && Array.isArray(f.fields) && 'name' in f) {
+      out.push(...sectionsOf(f.fields, `${path}${f.name}.`));
+    }
+    if ('blocks' in f) {
+      for (const b of f.blocks) out.push(...sectionsOf(b.fields, `${path}${f.name}.${b.slug}.`));
+    }
+  });
+  return out;
+}
+
+const labelOf = (field: Field) =>
+  (field as { admin?: { components?: { Label?: unknown } } }).admin?.components?.Label;
+
+describe('section icons (ADR-060)', () => {
+  const entities: Array<{ type: 'collections' | 'globals'; slug: string; fields: Field[] }> = [
+    ...collections
+      .filter((c) => c.slug !== 'redirects')
+      .map((c) => ({ type: 'collections' as const, slug: c.slug, fields: c.fields })),
+    ...globals.map((g) => ({ type: 'globals' as const, slug: g.slug, fields: g.fields })),
+  ];
+  for (const e of entities) {
+    const sections = sectionsOf(e.fields);
+    if (sections.length === 0) continue;
+    it(`${e.slug}: every tab and collapsible names an icon, no icon twice in a strip, never the entity's own`, () => {
+      const own = entityIcon(e.type, e.slug);
+      for (const s of sections) {
+        if (s.kind === 'tabs' && s.field.type === 'tabs') {
+          const keys = s.field.tabs.map((t) => sectionIconKeyOf(t.admin));
+          expect(keys, `${e.slug}.${s.where}: a tab without an icon`).not.toContain(null);
+          expect(new Set(keys).size, `${e.slug}.${s.where}: an icon repeated in the strip`).toBe(
+            keys.length,
+          );
+          for (const key of keys) {
+            expect(
+              SECTION_ICONS[key!],
+              `${e.slug}.${s.where}: ${key} repeats the entity's icon`,
+            ).not.toBe(own);
+          }
+          // The strip that draws them follows, keys in order, the widget on it.
+          const strip = s.next as
+            | {
+                name?: string;
+                type?: string;
+                admin?: { custom?: { icons?: unknown }; components?: { Field?: unknown } };
+              }
+            | undefined;
+          expect(strip?.type, `${e.slug}.${s.where}: no strip after the tabs`).toBe('ui');
+          expect(strip?.name).toBe(ICON_STRIP);
+          expect(strip?.admin?.custom?.icons).toEqual(keys);
+          expect(strip?.admin?.components?.Field).toBe(ICON_TABS);
+        }
+        if (s.kind === 'collapsible') {
+          expect(
+            sectionIconKeyOf(s.field.admin),
+            `${e.slug}.${s.where}: a collapsible without an icon`,
+          ).not.toBeNull();
+          expect(labelOf(s.field), `${e.slug}.${s.where}: the label widget`).toBe(SECTION_LABEL);
+        }
+        if (s.kind === 'group') {
+          const key = sectionIconKeyOf(s.field.admin);
+          expect(labelOf(s.field), `${e.slug}.${s.where}: the label widget follows the icon`).toBe(
+            key ? SECTION_LABEL : undefined,
+          );
+        }
+      }
+    });
+  }
+
+  it('the registry: every key names a lucide icon; sectionIcon() writes admin.custom.icon', () => {
+    for (const [key, icon] of Object.entries(SECTION_ICONS)) expect(isIcon(icon), key).toBe(true);
+    expect(sectionIcon('photos')).toEqual({ custom: { icon: 'photos' } });
+    expect(sectionIconKeyOf(sectionIcon('sizes'))).toBe('sizes');
+    expect(sectionIconKeyOf({ custom: { icon: 'nope' } })).toBeNull();
+    expect(sectionIconKeyOf(undefined)).toBeNull();
+  });
+
+  it('describeFields: the strip follows the tabs with the keys in order (null where none), labels go where an icon is named, a set widget stays', () => {
+    const out = describeFields(
+      [
+        {
+          type: 'tabs',
+          tabs: [
+            { label: { ar: 'أ', en: 'A' }, admin: sectionIcon('photos'), fields: [] },
+            { label: { ar: 'ب', en: 'B' }, fields: [] },
+          ],
+        },
+        {
+          type: 'collapsible',
+          label: { ar: 'ج', en: 'C' },
+          admin: sectionIcon('checks'),
+          fields: [],
+        },
+        { type: 'collapsible', label: { ar: 'د', en: 'D' }, fields: [] },
+        {
+          type: 'collapsible',
+          label: { ar: 'ه', en: 'E' },
+          admin: { ...sectionIcon('engine'), components: { Label: 'x#Y' } },
+          fields: [],
+        },
+        {
+          name: 'g',
+          type: 'group',
+          label: { ar: 'و', en: 'F' },
+          admin: sectionIcon('phone'),
+          fields: [],
+        },
+      ],
+      {},
+    );
+    expect(out.map((f) => f.type)).toEqual([
+      'tabs',
+      'ui',
+      'collapsible',
+      'collapsible',
+      'collapsible',
+      'group',
+    ]);
+    const strip = out[1] as { admin?: { custom?: unknown; components?: unknown } };
+    expect(strip.admin?.custom).toEqual({ icons: ['photos', null] });
+    expect(strip.admin?.components).toEqual({ Field: ICON_TABS });
+    expect(labelOf(out[2]!)).toBe(SECTION_LABEL);
+    expect(labelOf(out[3]!)).toBeUndefined();
+    expect(labelOf(out[4]!)).toBe('x#Y');
+    expect(labelOf(out[5]!)).toBe(SECTION_LABEL);
   });
 });

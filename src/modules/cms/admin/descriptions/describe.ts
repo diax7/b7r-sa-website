@@ -1,4 +1,5 @@
 import type { Field, Tab } from 'payload';
+import { sectionIconKeyOf, sectionIconOf } from '@/modules/cms/admin/icons';
 import {
   BILINGUAL_FIELD,
   bilingualPaths,
@@ -15,6 +16,15 @@ export type Described = Record<string, { ar: string; en: string }>;
  * it beside the descriptions: the one pass every collection's fields go through.
  */
 export const BOOL_CELL = '@/modules/cms/admin/fields/bool-cell#BoolCell';
+
+/**
+ * The widgets that draw a section's icon (ADR-060): the `ui` field placed after every tabs
+ * field, which draws one icon into each tab button and gives the active bar the group's hue
+ * (`IconTabs`), and the label of a collapsible or a labelled group with the icon before the
+ * words (`SectionLabel`, attached where the config names one through `sectionIcon()`).
+ */
+export const ICON_TABS = '@/modules/cms/admin/fields/icon-tabs#IconTabs';
+export const SECTION_LABEL = '@/modules/cms/admin/fields/section-label#SectionLabel';
 
 /**
  * The field and the list cell for every read-only JSON field (admin audit 2026-09-18, 2.1):
@@ -83,6 +93,9 @@ const readOnlyShown = (field: Field): boolean => {
  * component (the census in `tests/admin-config.test.ts` counts it). When a config has any
  * bilingual field the hidden `translations` JSON the hook reads is appended once; the
  * config's `afterChange` must then list `applyTranslations` (the config test checks).
+ * The section icons (ADR-060) ride the same pass: every `tabs` field is followed by the
+ * `ui` field that draws its tabs' icons, and a collapsible or a group that names an icon
+ * gets `SectionLabel`.
  */
 export function describeFields(fields: Field[], map: Described, applied?: Set<string>): Field[] {
   const bilingual = new Set(bilingualPaths(fields));
@@ -92,32 +105,58 @@ export function describeFields(fields: Field[], map: Described, applied?: Set<st
   return bilingual.size > 0 && !carried ? [...described, translationsField()] : described;
 }
 
+/** A tabs field comes out followed by the `ui` field that draws its tabs' icons (ADR-060). */
 function walk(fields: Field[], pass: Pass, path: string): Field[] {
-  return fields.map((field) => {
+  return fields.flatMap((field): Field[] => {
     if (field.type === 'tabs') {
-      return {
-        ...field,
-        tabs: field.tabs.map((tab): Tab => ({
-          ...tab,
-          fields: walk(tab.fields, pass, 'name' in tab && tab.name ? `${path}${tab.name}.` : path),
-        })) as typeof field.tabs,
-      };
+      const tabs = field.tabs.map((tab): Tab => ({
+        ...tab,
+        fields: walk(tab.fields, pass, 'name' in tab && tab.name ? `${path}${tab.name}.` : path),
+      })) as typeof field.tabs;
+      return [{ ...field, tabs }, iconStrip(field.tabs)];
     }
-    if (field.type === 'ui') return field;
-    if (
-      field.type === 'row' ||
-      field.type === 'collapsible' ||
-      (field.type === 'group' && !('name' in field && field.name))
-    ) {
-      return { ...field, fields: walk(field.fields, pass, path) } as Field;
-    }
-    if (!('name' in field) || !field.name) return field;
-    return named(field, pass, `${path}${field.name}`);
+    return [walkOne(field, pass, path)];
   });
 }
 
+function walkOne(field: Field, pass: Pass, path: string): Field {
+  if (field.type === 'ui') return field;
+  if (
+    field.type === 'row' ||
+    field.type === 'collapsible' ||
+    (field.type === 'group' && !('name' in field && field.name))
+  ) {
+    return withSectionLabel({ ...field, fields: walk(field.fields, pass, path) } as Field);
+  }
+  if (!('name' in field) || !field.name) return field;
+  return named(field, pass, `${path}${field.name}`);
+}
+
+/** The name of the `ui` field that follows a tabs field; `tests/admin-config.test.ts` reads it. */
+export const ICON_STRIP = 'tabIcons';
+
+/**
+ * The `ui` field placed right after a tabs field: it carries the tabs' icon keys in order
+ * (`null` where a tab names none) and renders `IconTabs`, which draws them into Payload's
+ * tab buttons. A `ui` field, because Payload 3.89 never renders a custom `Field` on a
+ * `tabs` field itself; it stores nothing, lists nothing and is not bulk-edited.
+ */
+function iconStrip(tabs: Tab[]): Field {
+  const icons = tabs.map((tab) => sectionIconKeyOf(tab.admin));
+  return {
+    name: ICON_STRIP,
+    type: 'ui',
+    admin: {
+      disableListColumn: true,
+      disableBulkEdit: true,
+      custom: { icons },
+      components: { Field: ICON_TABS },
+    },
+  };
+}
+
 function named(field: Field & { name: string }, pass: Pass, name: string): Field {
-  let next: Field = withDescription(field, pass, name);
+  let next: Field = withSectionLabel(withDescription(field, pass, name));
   // A checkbox in a list reads as a coloured badge, never Payload's `true` / `false` pill.
   if (next.type === 'checkbox' && !adminOf(next).components?.Cell) {
     next = withComponent(next, 'Cell', BOOL_CELL);
@@ -215,9 +254,19 @@ function withReadOnlyLine(field: Field): Field {
   return withComponent(field, 'Field', READ_ONLY_LINE);
 }
 
-function withComponent(field: Field, slot: 'Cell' | 'Field', path: string): Field {
+/** A collapsible or a group that names a section icon gets the label that draws it. */
+function withSectionLabel(field: Field): Field {
+  if (field.type !== 'collapsible' && field.type !== 'group') return field;
+  if (!sectionIconOf(field.admin)) return field;
+  return withComponent(field, 'Label', SECTION_LABEL);
+}
+
+/** Sets the slot unless the config already set it (a widget of its own wins). */
+function withComponent(field: Field, slot: 'Cell' | 'Field' | 'Label', path: string): Field {
+  const components = (field.admin?.components ?? {}) as Record<string, unknown>;
+  if (components[slot] !== undefined) return field;
   return {
     ...field,
-    admin: { ...field.admin, components: { ...field.admin?.components, [slot]: path } },
+    admin: { ...field.admin, components: { ...components, [slot]: path } },
   } as Field;
 }

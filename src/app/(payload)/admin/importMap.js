@@ -4,6 +4,7 @@ import { BilingualField as BilingualField_177fb8b1434bc5d21b7dade77badc58e } fro
 import { SavedByField as SavedByField_46120640bb11e96d61a3a62a5294d80c } from '@/modules/cms/admin/fields/saved-by-field'
 import { NoDiff as NoDiff_662eeae41683300b50909d58e1fcdcd1 } from '@/modules/cms/admin/fields/bilingual/no-diff'
 import { ReadOnlyLine as ReadOnlyLine_165e879dbcaac6b97e5e0fd657bff438 } from '@/modules/cms/admin/fields/read-only-line'
+import { IconTabs as IconTabs_e2533967c91c899f8470dbfa73627ba9 } from '@/modules/cms/admin/fields/icon-tabs'
 import { RscEntryLexicalCell as RscEntryLexicalCell_44fe37237e0ebf4470c9990d8cb7b07e } from '@payloadcms/richtext-lexical/rsc'
 import { RscEntryLexicalField as RscEntryLexicalField_44fe37237e0ebf4470c9990d8cb7b07e } from '@payloadcms/richtext-lexical/rsc'
 import { LexicalDiffComponent as LexicalDiffComponent_44fe37237e0ebf4470c9990d8cb7b07e } from '@payloadcms/richtext-lexical/rsc'
@@ -21,6 +22,7 @@ import { BoolCell as BoolCell_ddc0406e32e5001e13c7589ed2437e2f } from '@/modules
 import { IconSelect as IconSelect_864a7deb37ea334ede14512c58d1df70 } from '@/modules/cms/admin/fields/icon-select'
 import { PlatformSelect as PlatformSelect_13d4e9c129758ea64a712b0ddc9960bb } from '@/modules/cms/admin/fields/platform-select'
 import { BlockquoteFeatureClient as BlockquoteFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
+import { SectionLabel as SectionLabel_96132535f86eb601cbd6f0221baedc0b } from '@/modules/cms/admin/fields/section-label'
 import { WarningsField as WarningsField_9c9dd1e32f9fabcc59ef66c800ec3897 } from '@/modules/cms/admin/fields/warnings-field'
 import { PostEngineActions as PostEngineActions_79c14430483a99b8c00d049a212fa9af } from '@/modules/ai-content/admin/post-engine-actions'
 import { ImportTopics as ImportTopics_9635d5ea376c57a65f2d6e00b831fcd3 } from '@/modules/ai-content/admin/import-topics'
@@ -61,6 +63,7 @@ export const importMap = {
   "@/modules/cms/admin/fields/saved-by-field#SavedByField": SavedByField_46120640bb11e96d61a3a62a5294d80c,
   "@/modules/cms/admin/fields/bilingual/no-diff#NoDiff": NoDiff_662eeae41683300b50909d58e1fcdcd1,
   "@/modules/cms/admin/fields/read-only-line#ReadOnlyLine": ReadOnlyLine_165e879dbcaac6b97e5e0fd657bff438,
+  "@/modules/cms/admin/fields/icon-tabs#IconTabs": IconTabs_e2533967c91c899f8470dbfa73627ba9,
   "@payloadcms/richtext-lexical/rsc#RscEntryLexicalCell": RscEntryLexicalCell_44fe37237e0ebf4470c9990d8cb7b07e,
   "@payloadcms/richtext-lexical/rsc#RscEntryLexicalField": RscEntryLexicalField_44fe37237e0ebf4470c9990d8cb7b07e,
   "@payloadcms/richtext-lexical/rsc#LexicalDiffComponent": LexicalDiffComponent_44fe37237e0ebf4470c9990d8cb7b07e,
@@ -78,6 +81,7 @@ export const importMap = {
   "@/modules/cms/admin/fields/icon-select#IconSelect": IconSelect_864a7deb37ea334ede14512c58d1df70,
   "@/modules/cms/admin/fields/platform-select#PlatformSelect": PlatformSelect_13d4e9c129758ea64a712b0ddc9960bb,
   "@payloadcms/richtext-lexical/client#BlockquoteFeatureClient": BlockquoteFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
+  "@/modules/cms/admin/fields/section-label#SectionLabel": SectionLabel_96132535f86eb601cbd6f0221baedc0b,
   "@/modules/cms/admin/fields/warnings-field#WarningsField": WarningsField_9c9dd1e32f9fabcc59ef66c800ec3897,
   "@/modules/ai-content/admin/post-engine-actions#PostEngineActions": PostEngineActions_79c14430483a99b8c00d049a212fa9af,
   "@/modules/ai-content/admin/import-topics#ImportTopics": ImportTopics_9635d5ea376c57a65f2d6e00b831fcd3,

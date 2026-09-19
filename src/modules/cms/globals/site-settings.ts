@@ -6,7 +6,7 @@ import { umamiSrcAllowed } from '@/lib/security-headers';
 import { inLanguage } from '@/modules/cms/fields/message';
 import { savedByField, stampSavedByGlobal } from '@/modules/cms/fields/saved-by';
 import { globalComponents } from '@/modules/cms/admin/document/config';
-import { adminGroup } from '@/modules/cms/admin/icons';
+import { adminGroup, sectionIcon } from '@/modules/cms/admin/icons';
 import { SITE_SETTINGS_DESCRIPTIONS } from '@/modules/cms/admin/descriptions/site';
 import { describeFields } from '@/modules/cms/admin/descriptions/describe';
 
@@ -51,6 +51,7 @@ const navItem: Field[] = [
 const menu: NamedTab = {
   name: 'menu',
   label: { ar: 'القوائم والتذييل', en: 'Menus & footer' },
+  admin: sectionIcon('menus'),
   description: {
     ar: 'روابط الترويسة والتذييل وتسميات القائمة، في كل صفحة من الموقع.',
     en: 'The header and footer links and the menu labels, on every page of the site.',
@@ -88,6 +89,7 @@ const menu: NamedTab = {
       type: 'collapsible',
       label: { ar: 'متقدّم', en: 'Advanced' },
       admin: {
+        ...sectionIcon('advanced'),
         initCollapsed: true,
         description: {
           ar: 'ثلاث عبارات يقرؤها قارئ الشاشة ولوحة المفاتيح؛ نادراً ما تتغيّر.',
@@ -159,6 +161,7 @@ export const SiteSettings: GlobalConfig = {
         tabs: [
           {
             label: { ar: 'العلامة', en: 'Brand' },
+            admin: sectionIcon('brand'),
             fields: [
               {
                 type: 'row',
@@ -195,11 +198,13 @@ export const SiteSettings: GlobalConfig = {
           },
           {
             label: { ar: 'التواصل والحسابات', en: 'Contact & social' },
+            admin: sectionIcon('contact'),
             fields: [
               {
                 name: 'contact',
                 type: 'group',
                 label: { ar: 'التواصل', en: 'Contact' },
+                admin: sectionIcon('phone'),
                 fields: [
                   {
                     type: 'row',
@@ -236,6 +241,7 @@ export const SiteSettings: GlobalConfig = {
                 name: 'social',
                 type: 'group',
                 label: { ar: 'الحسابات', en: 'Social' },
+                admin: sectionIcon('social'),
                 fields: [
                   { name: 'x', type: 'text', required: true, label: 'X' },
                   { name: 'instagram', type: 'text', required: true, label: 'Instagram' },
@@ -247,6 +253,7 @@ export const SiteSettings: GlobalConfig = {
           menu,
           {
             label: { ar: 'الأرقام والتوصيل', en: 'Numbers and delivery' },
+            admin: sectionIcon('delivery'),
             fields: [
               {
                 type: 'row',
@@ -306,6 +313,7 @@ export const SiteSettings: GlobalConfig = {
           },
           {
             label: { ar: 'التحليلات', en: 'Analytics' },
+            admin: sectionIcon('analytics'),
             fields: [
               {
                 name: 'analytics',

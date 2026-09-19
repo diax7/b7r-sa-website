@@ -12,7 +12,7 @@ import { populateTwins } from '@/modules/cms/fields/twins';
 import { localePath, requestLocale } from '@/lib/i18n';
 import { previewUrl } from '@/lib/preview-token';
 import { collectionComponents } from '@/modules/cms/admin/document/config';
-import { adminGroup } from '@/modules/cms/admin/icons';
+import { adminGroup, sectionIcon } from '@/modules/cms/admin/icons';
 import { PAGE_DESCRIPTIONS } from '@/modules/cms/admin/descriptions/pages';
 import { describeFields } from '@/modules/cms/admin/descriptions/describe';
 
@@ -147,6 +147,7 @@ export const Pages: CollectionConfig = {
         tabs: [
           {
             label: { ar: 'المحتوى', en: 'Content' },
+            admin: sectionIcon('content'),
             fields: [
               {
                 type: 'row',
@@ -190,6 +191,7 @@ export const Pages: CollectionConfig = {
           },
           {
             label: { ar: 'البحث', en: 'Search' },
+            admin: sectionIcon('search'),
             fields: [
               {
                 name: 'seo',
