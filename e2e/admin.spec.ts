@@ -1595,9 +1595,8 @@ test.describe('CMS admin', () => {
     await expect.poll(() => strip.evaluate((el) => el.scrollLeft)).toBeGreaterThan(0);
     const active = page.locator('.tabs-field__tab-button--active').first();
     await expect(active).toHaveCSS('color', 'rgb(255, 255, 255)');
-    expect(await active.evaluate((el) => getComputedStyle(el, '::after').backgroundColor)).toBe(
-      'rgb(0, 152, 224)',
-    );
+    // The hue lands with the icon portal after Payload's render: poll, never a one-shot read.
+    await expect.poll(() => active.evaluate(barColour), POLL).toBe('rgb(0, 152, 224)');
     await active.scrollIntoViewIfNeeded();
     await expect(active).toBeInViewport();
     expect(await sidewaysOverflow(page), 'no horizontal overflow on the home form').toBe(0);
