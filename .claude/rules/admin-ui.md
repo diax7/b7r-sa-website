@@ -14,7 +14,10 @@ registry, the bilingual census, the description rule, the status column),
 2. A place in `ADMIN_NAV` (group, order, and a `parent` for a secondary entry or a `section`),
    and one icon in `COLLECTION_ICONS` / `GLOBAL_ICONS`: a noun for a collection, a place for a
    global; a group's icon must not repeat its first entry's. Missing = type error + failing
-   test; the test also checks that `admin.group` and the registry agree.
+   test; the test also checks that `admin.group` and the registry agree. A section is a row
+   of `NAV_SECTIONS` (both labels, an icon of its own, a `place`: `first` opens the group,
+   `last` closes it; the inbox opens Site, the engine closes Blog, ADR-061); the tree, the
+   rail, the keyboard model and the active row read one order (`nav/order.ts`).
 2b. `admin.custom.shows` in Arabic + English (where on the site the thing shows) and the
    header registered through `collectionComponents(slug)` / `globalComponents(slug)` from
    `admin/document/config.ts` (the description slot and, first before the document
@@ -74,8 +77,10 @@ registry, the bilingual census, the description rule, the status column),
    encrypted at rest, masked on read, the mask kept on save. An API key belongs to a row of
    the Connections collection, not to a settings global (ADR-047).
 10. An admin-only JSON route goes through `adminOnly()` (`src/modules/cms/admin-api.ts`,
-   re-exported by the module's index) and a button through `ApiAction`
-   (`src/modules/cms/admin/api-action.tsx`), which says what happened beside the button.
+   re-exported by the module's index; a route editors may call names them in `roles` and
+   writes with the person the guard hands back, never with access overridden) and a button
+   through `ApiAction` (`src/modules/cms/admin/api-action.tsx`), which says what happened
+   beside the button (`onDone` for what the page does besides saying it).
 11. A page of our own in the panel (a report, ADR-048) is a custom view: an entry in
    `ADMIN_VIEWS` (label, path, icon: a place, never the group's) and `ADMIN_NAV.views` in
    `icons.ts`, its component in `admin/views/registry.ts`, and the component's first lines
