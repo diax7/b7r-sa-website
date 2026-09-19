@@ -75,7 +75,7 @@ export const Authors: CollectionConfig = {
             required: true,
             unique: true,
             index: true,
-            label: { ar: 'المعرّف في الرابط', en: 'Address ending (slug)' },
+            label: { ar: 'المعرّف في الرابط (slug)', en: 'Address ending (slug)' },
           },
         ],
       },
@@ -103,12 +103,6 @@ export const Authors: CollectionConfig = {
         type: 'array',
         label: { ar: 'روابط الحسابات (اختياري)', en: 'Profile links (optional)' },
         labels: { singular: { ar: 'رابط', en: 'Link' }, plural: { ar: 'روابط', en: 'Links' } },
-        admin: {
-          description: {
-            ar: 'حسابات الكاتب العامة (X، لينكدإن…) لبيانات الصفحة المنظّمة.',
-            en: 'Public profiles (X, LinkedIn…) for the structured data of the page.',
-          },
-        },
         fields: [
           {
             name: 'url',

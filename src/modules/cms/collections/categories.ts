@@ -76,7 +76,7 @@ export const Categories: CollectionConfig = {
             required: true,
             unique: true,
             index: true,
-            label: { ar: 'المعرّف في الرابط', en: 'Address ending (slug)' },
+            label: { ar: 'المعرّف في الرابط (slug)', en: 'Address ending (slug)' },
           },
         ],
       },
@@ -86,12 +86,6 @@ export const Categories: CollectionConfig = {
         required: true,
         localized: true,
         label: { ar: 'الوصف', en: 'Description' },
-        admin: {
-          description: {
-            ar: 'جملة واحدة تظهر تحت عنوان القسم وفي بطاقات المدونة.',
-            en: 'One sentence under the hub title and on the blog cards.',
-          },
-        },
       },
       {
         name: 'lead',
@@ -107,12 +101,6 @@ export const Categories: CollectionConfig = {
             type: 'upload',
             relationTo: 'media',
             label: { ar: 'الغلاف الافتراضي', en: 'Default cover' },
-            admin: {
-              description: {
-                ar: 'يُستخدم عندما لا يملك المقال غلافاً خاصاً.',
-                en: 'Used when a post has no cover of its own.',
-              },
-            },
           },
           {
             name: 'order',

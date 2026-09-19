@@ -1272,7 +1272,7 @@ test.describe('CMS admin', () => {
     };
     expect(await tabsOf(`/admin/collections/posts/${posts.docs[0]?.id}`)).toEqual([
       'Content',
-      'Summary & cover',
+      'Excerpt & cover',
       'Search',
     ]);
     // The post's sidebar keeps the author and the dates, in three groups (3.5).
