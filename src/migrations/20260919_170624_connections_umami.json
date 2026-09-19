@@ -13604,168 +13604,6 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.messages": {
-      "name": "messages",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "serial",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "name": {
-          "name": "name",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "phone": {
-          "name": "phone",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "email": {
-          "name": "email",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "inquiry": {
-          "name": "inquiry",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "locale": {
-          "name": "locale",
-          "type": "enum_messages_locale",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'ar'"
-        },
-        "message": {
-          "name": "message",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "notes": {
-          "name": "notes",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "status": {
-          "name": "status",
-          "type": "enum_messages_status",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'new'"
-        },
-        "emailed": {
-          "name": "emailed",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": false,
-          "default": false
-        },
-        "page": {
-          "name": "page",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "utm_source": {
-          "name": "utm_source",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "utm_medium": {
-          "name": "utm_medium",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "utm_campaign": {
-          "name": "utm_campaign",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp(3) with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp(3) with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "messages_status_idx": {
-          "name": "messages_status_idx",
-          "columns": [
-            {
-              "expression": "status",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "messages_updated_at_idx": {
-          "name": "messages_updated_at_idx",
-          "columns": [
-            {
-              "expression": "updated_at",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "messages_created_at_idx": {
-          "name": "messages_created_at_idx",
-          "columns": [
-            {
-              "expression": "created_at",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
     "public.redirects": {
       "name": "redirects",
       "schema": "",
@@ -14654,12 +14492,6 @@
           "primaryKey": false,
           "notNull": false
         },
-        "messages_id": {
-          "name": "messages_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
         "redirects_id": {
           "name": "redirects_id",
           "type": "integer",
@@ -14983,21 +14815,6 @@
           "method": "btree",
           "with": {}
         },
-        "payload_locked_documents_rels_messages_id_idx": {
-          "name": "payload_locked_documents_rels_messages_id_idx",
-          "columns": [
-            {
-              "expression": "messages_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
         "payload_locked_documents_rels_redirects_id_idx": {
           "name": "payload_locked_documents_rels_redirects_id_idx",
           "columns": [
@@ -15255,19 +15072,6 @@
           "tableTo": "citations",
           "columnsFrom": [
             "citations_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "payload_locked_documents_rels_messages_fk": {
-          "name": "payload_locked_documents_rels_messages_fk",
-          "tableFrom": "payload_locked_documents_rels",
-          "tableTo": "messages",
-          "columnsFrom": [
-            "messages_id"
           ],
           "columnsTo": [
             "id"
@@ -19918,7 +19722,8 @@
         "mock",
         "google-search-console",
         "bing-webmaster",
-        "pagespeed"
+        "pagespeed",
+        "umami"
       ]
     },
     "public.enum_traffic_kind": {
@@ -19936,7 +19741,8 @@
         "search-console",
         "bing",
         "pagespeed",
-        "score"
+        "score",
+        "umami"
       ]
     },
     "public.enum_prompts_language": {
@@ -19962,23 +19768,6 @@
       "values": [
         "search",
         "plain"
-      ]
-    },
-    "public.enum_messages_locale": {
-      "name": "enum_messages_locale",
-      "schema": "public",
-      "values": [
-        "ar",
-        "en"
-      ]
-    },
-    "public.enum_messages_status": {
-      "name": "enum_messages_status",
-      "schema": "public",
-      "values": [
-        "new",
-        "following",
-        "handled"
       ]
     },
     "public.enum_redirects_to_type": {
@@ -20102,6 +19891,6 @@
     "tables": {},
     "columns": {}
   },
-  "id": "7617b9d7-93f2-4aab-88f5-02d53aca1c54",
+  "id": "e674e7d7-436e-4ce3-8271-7a4a362b3f41",
   "prevId": "00000000-0000-0000-0000-000000000000"
 }

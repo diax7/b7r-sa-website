@@ -18,6 +18,7 @@ CI keeps Playwright's default. Do not raise the cap to save a minute.
 - `cta-shiny-toggle.ts on|off`, the header's shiny switch on the local database (ADR-054).
 - `analytics-probe.mjs [origin]`, a real browser visits the live site, accepts the consent bar, walks two pages and lists every request to Umami and GA4 with its status (a `connect-src` refusal in the console is the sign Umami moved its gateway again).
 - `cranl-smoke.mjs [origin]`, the temporary domain (or `https://b7r.sa` after the cutover) after a deploy: the admin in both languages, the sidebar, the dashboard, a bilingual twin, one publish and one upload through the API, both undone (launch checklist row 39).
+- `metric-row.ts upsert|delete <source> <YYYY-MM-DD> [json]`, one snapshot row by hand through the local API (the collection refuses API writes); the admin e2e seeds and removes an Umami day with it (PR 4c).
 - `prelaunch-clean.ts`, before dumping the review database for production: the Mock connection and its citations, the failed jobs, the CI analytics ids. `media-to-bucket.mjs <env file>`, copies `public/media` into the production bucket under `media/`.
 - In `scripts/` (not here): `media-blur.ts [--env <file>] [--force]` fills the blur-up placeholder of every media document without one; `media-requality.ts [--env <file>] [--dry-run]` re-uploads the seeded photos at the current encode under new names and deletes the old renditions (RUNBOOK "Assets").
 - `shot-studies.mjs <html> <out dir>`, one look at a design-studies page.

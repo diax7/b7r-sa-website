@@ -76,6 +76,21 @@ describe('adminStrings: both languages, the same tree', () => {
   });
 });
 
+/**
+ * The pattern for a count sentence: `arabicCount` with its four forms, so the next one is
+ * never «5 زائر» or «25 زوّار». The Umami Test's sentence is the example; the two shapes a
+ * regular expression can catch are rules in `tests/helpers/arabic-rules.ts`.
+ */
+describe('a counted noun in Arabic takes its four forms', () => {
+  it('«زائر واحد», «زائران», «5 زوّار», «25 زائراً»', () => {
+    const sentence = adminStringsAr.connections.umami.yesterday;
+    expect(sentence('2026-09-18', 1, 1)).toBe('2026-09-18: زائر واحد، مشاهدة صفحة واحدة');
+    expect(sentence('2026-09-18', 2, 2)).toBe('2026-09-18: زائران، مشاهدتا صفحة');
+    expect(sentence('2026-09-18', 5, 10)).toBe('2026-09-18: 5 زوّار، 10 مشاهدات صفحات');
+    expect(sentence('2026-09-18', 25, 3900)).toBe('2026-09-18: 25 زائراً، 3900 مشاهدة صفحة');
+  });
+});
+
 /** The ux-araby rules a regular expression can read (design system §5): `tests/helpers/arabic-rules.ts`. */
 describe('the Arabic strings under the ux-araby rules', () => {
   for (const rule of RULES) {

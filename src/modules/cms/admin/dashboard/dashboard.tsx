@@ -89,7 +89,7 @@ export async function Dashboard(props: AdminViewServerProps) {
         })
       : null;
   const name = String(user?.['name'] ?? user?.email ?? '');
-  const { traffic, ledger, engine, health, inbox } = data;
+  const { traffic, people, ledger, engine, health, inbox } = data;
   return (
     <Gutter>
       <div
@@ -120,6 +120,7 @@ export async function Dashboard(props: AdminViewServerProps) {
             {traffic && (
               <TrafficCard
                 summary={traffic.current}
+                people={people ?? null}
                 href={`${adminRoute}${ADMIN_VIEWS.traffic.path}?days=${days}`}
                 language={language}
               />

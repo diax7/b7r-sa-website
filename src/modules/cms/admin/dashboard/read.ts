@@ -17,6 +17,8 @@ import {
   inboxReading,
   type MissingEnglish,
   missingEnglish,
+  type PeopleSummary,
+  peopleSummary,
   type PublishedCount,
   publishedInRange,
 } from '@/modules/cms/admin/dashboard/readers';
@@ -37,6 +39,8 @@ export interface DashboardData {
   health: Read<HealthReport>;
   recent: Read<RecentItem[]>;
   traffic: Read<{ current: TrafficSummary; double: TrafficSummary }>;
+  /** Umami's people for the range (ADR-048 amended); the inner null is no row, so no Umami. */
+  people: Read<PeopleSummary | null>;
   score: Read<{ score: Score<string>; trend: ScoreTrend | null }>;
   ledger: Read<LedgerReading>;
   engine: Read<EngineSummary>;
@@ -72,11 +76,12 @@ async function guarded<T>(
 
 /**
  * Every number the dashboard shows (ADR-059), read once per render, in parallel, with the
- * user's permissions deciding which readers run: the traffic, the score, the ledger, the
- * engine, the connections and the runs need an admin (the collections and globals they read
- * are admin-only); the content readers run on the collections the user may read, the inbox
- * on the messages; the health report and the latest saves run for everyone. Nothing here
- * is cached beyond what the readers cache themselves (the score reading keeps its minute).
+ * user's permissions deciding which readers run: the traffic, the people, the score, the
+ * ledger, the engine, the connections and the runs need an admin (the collections and globals
+ * they read are admin-only); the content readers run on the collections the user may read,
+ * the inbox on the messages; the health report and the latest saves run for everyone.
+ * Nothing here is cached beyond what the readers cache themselves (the score reading keeps
+ * its minute).
  */
 export async function readDashboard(args: {
   payload: Payload;
@@ -96,6 +101,7 @@ export async function readDashboard(args: {
     health,
     recent,
     traffic,
+    people,
     score,
     ledger,
     engine,
@@ -117,6 +123,7 @@ export async function readDashboard(args: {
       ]);
       return { current, double };
     }),
+    guarded(payload, 'people', reads('metrics'), () => peopleSummary(payload, { days, now })),
     guarded(
       payload,
       'score',
@@ -149,6 +156,7 @@ export async function readDashboard(args: {
     health,
     recent,
     traffic,
+    people,
     score,
     ledger,
     engine,

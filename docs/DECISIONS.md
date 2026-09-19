@@ -1332,6 +1332,38 @@ sidebar and the palette list a view like a global, by the registry's own rule (a
 the data paths that walk entities (the dashboard's Latest changes, the counts, the palette's
 search) leave views out explicitly. Project 3's Score page reuses all of it.
 
+*Amended 2026-09-19 (Level 4 PR 4c, Dhia's decision in the Level 4 interview): **Umami's
+numbers join the counter on the dashboard; GA4 stays in GA.** Umami's are the truest people
+numbers this site has: its script loads for every visitor without consent (ADR-052), GA4
+only after the bar is accepted, and our own counter counts landings (a page opened from
+elsewhere), not people. A connection kind `umami` (`speaks: 'service'`, secret `apiKey`,
+one enabled row like the other services): the API key from Umami Cloud's settings, the base
+`https://api.umami.is/v1` unless the row names an address (`https://umami.b7r.app`, whose
+API is `<address>/api` with its login token as the Bearer); the website id is the one Site
+settings → Analytics already holds, so the Test refuses a row while that field is empty, in
+the tester's language (the one sentence of ours a service Test writes; the service's own
+answer stays in its terms). The nightly pull gains the `umami` source
+(`visibility/services/umami.ts`: pure parsers over the `stats` shape, `dayWindow()` on
+**Riyadh** day boundaries in milliseconds, the boundary every other `metrics` source keeps,
+so the dashboard never sums two different days): one `stats` call per day, each written as
+its own `metrics` row (`source: 'umami'`, `{ visitors, pageviews, visits, bounces,
+totaltime }`), 90 days back on the first run, then yesterday and the day before every night
+(late hits land in yesterday; today is never read, it is not over), a night missed filled
+from the day after the newest row; then the three dashboard ranges ending yesterday
+(`compare=prev`), written into yesterday's row as `data.ranges[7|30|90] = { …, previous }`,
+because a range's visitors are its unique people, not its days' uniques added up (the CTO's
+review: a merchant who came on three days is one visitor, the number Umami's own dashboard
+shows and Dhia will compare with); the calls paced under the Cloud's 50 per 15 s. On the
+dashboard: when the range holds a `umami` row the visits tile is Umami's visitors for the
+range (the range object of the newest row that carries it) with our landings on the line
+under and the change against Umami's previous range; while no row carries the range object
+(rows from before it was pulled) the days are summed and the tile and the card say so
+("daily visitors, summed" / «زوّار الأيام، مجموعةً»); the "Where visits come from" card
+gains a people row (visitors, page views, the average visit as `m:ss` from `totaltime /
+visits`) for the same range, through yesterday; without a row the tile and the card read
+exactly as before. The Traffic page is untouched. `docs/RUNBOOK.md` "Connecting Umami"; the
+checklist row; BRD §11.4 amended.*
+
 ## ADR-049: The visibility score: how compliant the site is with SEO and GEO, and what to do next (2026-09-16)
 
 **Context.** Dhia asked for a percentage per section of how compliant the site is with SEO and

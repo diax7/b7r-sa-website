@@ -8,7 +8,7 @@ import {
   secretField,
   serviceAccountProblem,
 } from '@/modules/cms/fields/secret-field';
-import { isServiceKind, KINDS, kindsThat } from '@/modules/connections/kinds';
+import { isServiceKind, KINDS, kindsThat, takesBaseUrl } from '@/modules/connections/kinds';
 import { Connections } from '@/modules/connections/collection';
 import { testConnection } from '@/modules/connections/test';
 import {
@@ -262,14 +262,26 @@ describe('the secret field for a service account (ADR-049)', () => {
 });
 
 describe('the service kinds (ADR-049)', () => {
-  it('names three service kinds the engine picker leaves out', () => {
-    expect(kindsThat('service')).toEqual(['google-search-console', 'bing-webmaster', 'pagespeed']);
+  it('names four service kinds the engine picker leaves out', () => {
+    expect(kindsThat('service')).toEqual([
+      'google-search-console',
+      'bing-webmaster',
+      'pagespeed',
+      'umami',
+    ]);
     expect(kindsThat('ai')).not.toContain('pagespeed');
     expect(isServiceKind('bing-webmaster')).toBe(true);
+    expect(isServiceKind('umami')).toBe(true);
     expect(isServiceKind('openai')).toBe(false);
     expect(isServiceKind(undefined)).toBe(false);
     expect(KINDS['google-search-console'].secret).toBe('serviceAccount');
     expect(KINDS.pagespeed.secret).toBe('apiKey');
+    expect(KINDS.umami).toMatchObject({ secret: 'apiKey', needsBaseUrl: false });
+    // Umami's address is optional (the Cloud when empty); a compatible endpoint's required.
+    expect(takesBaseUrl('umami')).toBe(true);
+    expect(takesBaseUrl('openai-compatible')).toBe(true);
+    expect(takesBaseUrl('pagespeed')).toBe(false);
+    expect(takesBaseUrl(undefined)).toBe(false);
   });
 
   it('allows one enabled connection per service kind', async () => {

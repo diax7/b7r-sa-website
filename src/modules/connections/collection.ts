@@ -16,11 +16,13 @@ import { Refused } from '@/modules/cms/refused';
 import { CONNECTION_DESCRIPTIONS } from '@/modules/connections/descriptions';
 import {
   CONNECTION_KINDS,
+  type ConnectionKind,
   isConnectionKind,
   isServiceKind,
   KINDS,
   mockAllowed,
   ratesForModel,
+  takesBaseUrl,
 } from '@/modules/connections/kinds';
 import { spendFor } from '@/modules/connections/spend';
 
@@ -197,14 +199,23 @@ export const Connections: CollectionConfig = {
         name: 'baseUrl',
         type: 'text',
         label: { ar: 'عنوان الخدمة', en: 'Base URL' },
-        admin: { condition: (data) => data?.['kind'] === 'openai-compatible' },
+        admin: { condition: (data) => takesBaseUrl(data?.['kind']) },
+        // Required for a compatible endpoint; optional for Umami (empty is the Cloud), but an
+        // address given is https.
         validate: (
           value: unknown,
           { req, siblingData }: { req: PayloadRequest; siblingData: Record<string, unknown> },
-        ) =>
-          siblingData['kind'] !== 'openai-compatible' ||
-          (typeof value === 'string' && HTTPS.test(value)) ||
-          inLanguage(req, { ar: 'عنوان يبدأ بـ https://', en: 'An https:// address' }),
+        ) => {
+          const kind = siblingData['kind'];
+          const empty = value === undefined || value === null || value === '';
+          if (!takesBaseUrl(kind) || (empty && !KINDS[kind as ConnectionKind].needsBaseUrl)) {
+            return true;
+          }
+          return (
+            (typeof value === 'string' && HTTPS.test(value)) ||
+            inLanguage(req, { ar: 'عنوان يبدأ بـ https://', en: 'An https:// address' })
+          );
+        },
       },
       secretField(
         'apiKey',

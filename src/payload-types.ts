@@ -1471,7 +1471,7 @@ export interface Connection {
    */
   label: string;
   /**
-   * Which service the key belongs to. Search Console, Bing and PageSpeed are read by the visibility score, not the engine: one enabled each.
+   * Which service the key belongs to. Search Console, Bing and PageSpeed feed the score, Umami the dashboard, not the engine: one on each.
    */
   kind:
     | 'openai'
@@ -1482,17 +1482,18 @@ export interface Connection {
     | 'mock'
     | 'google-search-console'
     | 'bing-webmaster'
-    | 'pagespeed';
+    | 'pagespeed'
+    | 'umami';
   /**
    * Exactly as the service docs write it: gpt-4.1-mini, claude-haiku-4-5, gemini-3-flash-preview. Empty on save: the usual cheap model.
    */
   model?: string | null;
   /**
-   * The compatible service's address, https:// and without the chat path: https://api.example.com/v1.
+   * A compatible service's address without the chat path: https://api.example.com/v1. For Umami your own copy (https://umami.b7r.app) or empty.
    */
   baseUrl?: string | null;
   /**
-   * From the service's console; for Search Console, the service account's JSON file. Never shown again; leave the mask to keep it.
+   * From the service's console; Search Console takes the account's JSON file, Umami an API key. Never shown again; leave the mask to keep it.
    */
   apiKey?: string | null;
   /**
@@ -1567,7 +1568,7 @@ export interface Traffic {
   createdAt: string;
 }
 /**
- * A nightly snapshot from Search Console, Bing and PageSpeed, and that day’s visibility score. Read-only.
+ * A nightly snapshot from Search Console, Bing, PageSpeed and Umami, and that day’s visibility score. Read-only.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "metrics".
@@ -1579,11 +1580,11 @@ export interface Metric {
    */
   date: string;
   /**
-   * Search Console, Bing or PageSpeed, or "Score" for that day’s visibility score.
+   * Search Console, Bing, PageSpeed or Umami, or "Score" for that day’s visibility score.
    */
-  source: 'search-console' | 'bing' | 'pagespeed' | 'score';
+  source: 'search-console' | 'bing' | 'pagespeed' | 'score' | 'umami';
   /**
-   * The service's answer as it came: the totals and the top queries and pages, the performance scores per page, or the sections' percentages.
+   * The service's answer as it came: totals and top queries and pages, scores per page, a day's visitors, or the sections' percentages.
    */
   data:
     | {

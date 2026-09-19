@@ -187,6 +187,12 @@ export const adminStrings = {
     works: 'Works.',
     worksWith: 'Works: {model} answered. Recorded on the connection.',
     saveFirst: 'Save, then test.',
+    /** The Umami Test (PR 4c): a refusal of ours before the call, and yesterday's numbers after it. */
+    umami: {
+      noId: 'No Umami website id in Site settings, Analytics: fill it first, then test.',
+      yesterday: (date: string, visitors: number, pageviews: number) =>
+        `${date}: ${visitors} visitors, ${pageviews} page views`,
+    },
   },
   inbox: {
     /** The three actions above a message (ADR-061); the outcome beside the third. */
@@ -337,6 +343,13 @@ export const adminStrings = {
       pages: 'Top entry pages',
       empty: 'No landings yet: the count starts with the first visitor.',
       link: 'All traffic',
+      /** The people row (ADR-048 amended): Umami's numbers for the range, through yesterday. */
+      visitors: 'Visitors',
+      pageViews: 'Page views',
+      averageTime: 'Average visit',
+      people: 'People, by Umami through yesterday',
+      /** While no snapshot carries the range: the days' uniques added up, a person on three days counted thrice. */
+      peopleSummed: 'Daily visitors, summed, by Umami through yesterday',
     },
     families: {
       openai: 'OpenAI',
@@ -413,6 +426,13 @@ export const adminStrings = {
     /** The four numbers at a glance, each tile a link to its place. */
     tiles: {
       visits: 'Visits',
+      /**
+       * When Umami counts (ADR-048 amended) the tile is its visitors and our landings move to
+       * the line under: the number is the people, the landings the site's own count.
+       */
+      visitors: 'Visitors',
+      landings: (n: number, text: string) => `${text} ${n === 1 ? 'landing' : 'landings'}`,
+      summed: 'daily visitors, summed',
       visitsUp: (n: number, days: number) => `${n}% more than the previous ${days} days`,
       visitsDown: (n: number, days: number) => `${n}% fewer than the previous ${days} days`,
       visitsSame: (days: number) => `the same as the previous ${days} days`,
@@ -707,6 +727,11 @@ export const adminStringsAr: AdminStrings = {
     works: 'يعمل.',
     worksWith: 'يعمل: أجاب {model}. سُجّلت النتيجة في الاتصال.',
     saveFirst: 'احفظ أولاً، ثم اختبر.',
+    umami: {
+      noId: 'لا معرّف موقع في Umami ضمن إعدادات الموقع، قسم التحليلات: املأه أولاً، ثم اختبر.',
+      yesterday: (date, visitors, pageviews) =>
+        `${date}: ${arabicCount(visitors, { one: 'زائر واحد', two: 'زائران', few: 'زوّار', many: 'زائراً' })}، ${arabicCount(pageviews, { one: 'مشاهدة صفحة واحدة', two: 'مشاهدتا صفحة', few: 'مشاهدات صفحات', many: 'مشاهدة صفحة' })}`,
+    },
   },
   inbox: {
     replyWhatsApp: 'رد على WhatsApp',
@@ -846,6 +871,11 @@ export const adminStringsAr: AdminStrings = {
       pages: 'أكثر صفحات الدخول',
       empty: 'لا زيارات بعد: يبدأ العدّ مع أول زائر.',
       link: 'كل الزيارات',
+      visitors: 'الزوّار',
+      pageViews: 'مشاهدات الصفحات',
+      averageTime: 'متوسط الزيارة',
+      people: 'الأشخاص، بحسب Umami حتى أمس',
+      peopleSummed: 'زوّار الأيام مجموعةً، بحسب Umami حتى أمس',
     },
     families: {
       openai: 'OpenAI',
@@ -921,6 +951,9 @@ export const adminStringsAr: AdminStrings = {
     },
     tiles: {
       visits: 'الزيارات',
+      visitors: 'الزوّار',
+      landings: (_n, text) => `الزيارات: ${text}`,
+      summed: 'زوّار الأيام، مجموعةً',
       visitsUp: (n, days) => `أكثر بنسبة ${n}% من المدة السابقة (${arabicDays(days)})`,
       visitsDown: (n, days) => `أقل بنسبة ${n}% من المدة السابقة (${arabicDays(days)})`,
       visitsSame: (days) => `مثل المدة السابقة (${arabicDays(days)})`,
