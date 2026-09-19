@@ -946,6 +946,10 @@ test.describe('CMS admin', () => {
         .map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`);
     /** The switch sits after "View website" on the trailing side: the right in LTR, the left in RTL. */
     const trailing = async (control: Locator, rtl: boolean) => {
+      // Both boxes are read after the header's actions are on screen (a one-shot read under
+      // load found "View website" not yet laid out).
+      await expect(control).toBeVisible();
+      await expect(viewSite).toBeVisible();
       const box = (await control.boundingBox())!;
       const site = (await viewSite.boundingBox())!;
       const width = page.viewportSize()!.width;
