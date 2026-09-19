@@ -201,6 +201,8 @@ export const ar = {
     tooLate: 'لا يمكن تغيير الموعد قبل أقل من {hours} ساعة منه. راسلنا على واتساب.',
     invalid: 'هذا الرابط غير صالح. راسلنا على واتساب ونساعدك.',
     bookAgain: 'احجز موعداً جديداً',
+    /** The BRD 4.11 message the WhatsApp way carries while the switch is off. */
+    whatsappMessage: 'مرحباً، أرغب بحجز استشارة مجانية.',
   },
   // TODO(copy): the booking e-mails (ADR-062, BRD 4.19), for Dhia's read.
   bookingEmail: {

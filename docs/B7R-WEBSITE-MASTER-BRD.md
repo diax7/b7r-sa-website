@@ -2070,6 +2070,7 @@ Every interface string of the English site, key for key with the Arabic bank of 
 | `booking.tooLate` | A change needs at least {hours} hours before the time. Message us on WhatsApp. |
 | `booking.invalid` | This link is not valid. Message us on WhatsApp and we will help. |
 | `booking.bookAgain` | Book a new time |
+| `booking.whatsappMessage` | Hello, I would like to book a free consultation. |
 | `bookingEmail.confirmSubject` | Your consultation is booked: {title} |
 | `bookingEmail.confirmIntro` | Hello {name}, your consultation is booked. |
 | `bookingEmail.when` | When |

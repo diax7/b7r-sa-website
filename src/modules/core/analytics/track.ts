@@ -15,7 +15,8 @@ export type TrackEvent =
   | { name: 'product_view'; props: { slug: string } }
   | { name: 'faq_open'; props: { question: string } }
   | { name: 'newsletter_submit'; props: Record<string, never> }
-  | { name: 'contact_submit'; props: { inquiry: string } };
+  | { name: 'contact_submit'; props: { inquiry: string } }
+  | { name: 'booking_submit'; props: { page: string } };
 
 type Sink = (event: TrackEvent) => void;
 

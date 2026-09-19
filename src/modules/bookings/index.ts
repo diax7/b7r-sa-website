@@ -27,4 +27,11 @@ export {
   reschedule,
   slotsFor,
 } from '@/modules/bookings/service';
+export {
+  bookRouteMetadata,
+  manageRouteMetadata,
+  renderBook,
+  renderManage,
+} from '@/modules/bookings/routes';
 export { toBookingSettings } from '@/modules/bookings/settings';
+export { BookingPicker } from '@/modules/bookings/site';

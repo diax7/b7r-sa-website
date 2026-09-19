@@ -1,6 +1,6 @@
 import type { Payload } from 'payload';
 import type { BookingSettings } from '@/content/schema';
-import { mockAllowed } from '@/modules/connections/kinds';
+import { isConnectionKind, mockAllowed } from '@/modules/connections/kinds';
 import { readConnection } from '@/modules/connections/read';
 import {
   type CalendarClient,
@@ -14,8 +14,13 @@ export const MOCK_CALENDAR_KIND = 'mock-calendar';
 /** The mock row's `model` field set to this makes every call fail (ADR-062). */
 export const MOCK_FAIL_FLAG = 'fail';
 
-/** The one enabled connection of a kind, its secret revealed, or null. */
+/**
+ * The one enabled connection of a kind, its secret revealed, or null. A kind the table does
+ * not list yet is never asked for: `kind` is a Postgres enum, and a value outside it is a
+ * query error, not an empty answer.
+ */
 async function enabledConnection(payload: Payload, kind: string) {
+  if (!isConnectionKind(kind)) return null;
   const found = await payload.find({
     collection: 'connections',
     where: { and: [{ kind: { equals: kind } }, { enabled: { equals: true } }] },

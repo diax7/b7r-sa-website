@@ -14,7 +14,7 @@ import { env } from '@/lib/env';
 import { type Locale, localePath } from '@/lib/i18n';
 import { displayPhone } from '@/lib/phone';
 import { whatsappUrl } from '@/lib/utm';
-import { getBooking } from '@/modules/bookings';
+import { BookingPicker, getBooking } from '@/modules/bookings';
 import { ContactFormLoader } from '@/modules/contact/contact-form-loader';
 
 function ContactCard({
@@ -71,11 +71,9 @@ export async function ContactSection({
   const [site, booking] = await Promise.all([getSiteSettings(locale), getBooking(locale)]);
   const { contactForm, footer: footerCopy } = copyFor(locale);
   const whatsapp = whatsappUrl(site.contact.whatsapp);
-  // The booking switch (ADR-062): on, the card opens the booking page; off, WhatsApp with
+  // The booking switch (ADR-062): on, the card holds the picker itself; off, WhatsApp with
   // the BRD 4.11 message, as before.
-  const bookingHref = booking.enabled
-    ? localePath(locale, '/book')
-    : whatsappUrl(site.contact.whatsapp, block.booking.whatsappMessage);
+  const bookingHref = whatsappUrl(site.contact.whatsapp, block.booking.whatsappMessage);
   const social = [
     { href: site.social.x, label: footerCopy.socialAria.x, Icon: XIcon },
     { href: site.social.instagram, label: footerCopy.socialAria.instagram, Icon: InstagramIcon },
@@ -162,7 +160,11 @@ export async function ContactSection({
                 ))}
               </ul>
             </Card>
-            <Card className="flex flex-col gap-4 bg-accent-tint/60 p-6" data-booking="">
+            <Card
+              className="flex flex-col gap-4 bg-accent-tint/60 p-6"
+              data-booking=""
+              data-booking-mode={booking.enabled ? 'inline' : 'whatsapp'}
+            >
               <span className="grid size-11 place-items-center rounded-pill bg-surface text-primary">
                 <Icon icon={CalendarCheck} size={22} />
               </span>
@@ -170,22 +172,26 @@ export async function ContactSection({
                 <h2 className="text-h4 text-text">{block.booking.title}</h2>
                 <p className="text-body text-text-muted">{block.booking.text}</p>
               </div>
-              <Button asChild className="self-start" trailingArrow={false}>
-                <a
-                  href={bookingHref}
-                  data-booking-mode={booking.enabled ? 'page' : 'whatsapp'}
-                  {...(booking.enabled
-                    ? {}
-                    : {
-                        target: '_blank',
-                        rel: 'noopener',
-                        'data-track': 'whatsapp_click',
-                        'data-location': 'contact',
-                      })}
-                >
-                  {block.booking.button}
-                </a>
-              </Button>
+              {booking.enabled ? (
+                <BookingPicker
+                  locale={locale}
+                  settings={booking}
+                  page={localePath(locale, '/contact')}
+                />
+              ) : (
+                <Button asChild className="self-start" trailingArrow={false}>
+                  <a
+                    href={bookingHref}
+                    target="_blank"
+                    rel="noopener"
+                    data-booking-mode="whatsapp"
+                    data-track="whatsapp_click"
+                    data-location="contact"
+                  >
+                    {block.booking.button}
+                  </a>
+                </Button>
+              )}
             </Card>
           </div>
         </div>

@@ -199,6 +199,7 @@ export const en: SiteCopy = {
     tooLate: 'A change needs at least {hours} hours before the time. Message us on WhatsApp.',
     invalid: 'This link is not valid. Message us on WhatsApp and we will help.',
     bookAgain: 'Book a new time',
+    whatsappMessage: 'Hello, I would like to book a free consultation.',
   },
   bookingEmail: {
     confirmSubject: 'Your consultation is booked: {title}',
