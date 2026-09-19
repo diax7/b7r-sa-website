@@ -52,7 +52,7 @@ render in both worlds without a fork. Raw hex lives only in the token block.
 | `border` | `--theme-elevation-150` | Hairlines (rgb 60 60 60). |
 | `success` / `warning` / `error` | `#3fbf6b` / `#f5b53f` / `#f26b6b` | Status text and badges; each ≥ 4.5:1 on `ground` and `surface`. `success-tint` sits behind green icons. |
 | `on-warning` | `black` | The text on an amber surface: a filled "careful" button (the language switch's "Switch anyway"). Never a literal `text-black` beside `bg-warning`. |
-| `teal` / `violet` / `pink` / `slate` (+ `-tint`) | `#2dd4bf` / `#a78bfa` / `#f472b6` / `#cbd5e1` | Identity hues (ADR-046): one per sidebar group (`ADMIN_GROUPS` in `icons.ts`; the Site group uses the accent blue), carried by every entity of the group onto the sidebar's discs and active entry, the page header's disc and bar, and the dashboard's discs. Identity, never meaning. Each ≥ 5.8:1 on `surface`; the slate disc is lighter than the 50 % disabled state so the two never read alike. |
+| `teal` / `violet` / `pink` / `slate` (+ `-tint`) | `#2dd4bf` / `#a78bfa` / `#f472b6` / `#cbd5e1` | Identity hues (ADR-046): one per sidebar group (`ADMIN_GROUPS` in `icons.ts`; the Site group uses the accent blue), carried by every entity of the group onto the sidebar's discs and active entry, the page header's tile, the active tab's bar and the dashboard card's icon (ADR-060: at most two carriers on a document screen, one per dashboard card). Identity, never meaning. Each ≥ 5.8:1 on `surface`; the slate disc is lighter than the 50 % disabled state so the two never read alike. |
 | `surface-2` | `--theme-elevation-100` | One step above the surface: the hover of a sidebar entry, neutral in every group. |
 | `radius-base` / `radius-lg` / `radius-inner` / `radius-pill` | 13 / 20 / 6 / 999 px | From `src/styles/tokens.css` (shared with the site). |
 | `shadow-card` / `shadow-popover` | black at 40 % / 60 % | Depth on the dark surface. |
@@ -63,15 +63,25 @@ never used in an admin component; `bg-accent` is never used behind white text. T
 `primary` tone (blue text on a blue tint) is not used in the admin; use `success`, `warning`,
 `error` or `muted`.
 
+**The colour rule** (the CTO, 2026-09-19, ADR-060): a screen shows its group's hue in at most
+two places, the entity header's icon tile and the active tab's bar; a status colour appears
+only on the status pill and the `BoolCell`; every other icon is the text colour, every other
+surface neutral. Green is live, amber is draft or careful, red is failed or delete; a colour
+never appears without its word. On the dashboard the card's icon takes the group hue, the
+body stays neutral, never two hues in one card (a bar keeps its card's one hue). The sidebar
+keeps ADR-046's group hues as they are; a report page (ADR-048, ADR-049) keeps its one
+identity hue on its ring and bars; a finding's or a health row's icon beside its word keeps
+its meaning colour (ADR-049, ADR-059).
+
 **Colour that means something** (Dhia, 2026-09-13): the same four meanings everywhere, on
 Payload's elements and ours.
 
 | Colour | Means | Where |
 |---|---|---|
 | Blue (`primary` fill, `accent` text) | the main action, a link, the Site group | Create New, Save, links, focus rings, the Site group's discs. Amended by ADR-046: the active sidebar entry sits on its own group's tint with weight and `aria-current`, so "active" is carried by weight and the tint, and the hue stays identity. |
-| Green (`--admin-green`) | publish, live | the publish button of a document with drafts, the Published pill, "answering/running" rows |
-| Red (`--admin-red`) | delete, failure | Delete items, row removal, the delete confirmation, failed rows, Log out |
-| Amber (`--admin-amber`) | careful | Unpublish, Revert, "off / test mode" rows |
+| Green (`--admin-green`) | publish, live | the publish button of a document with drafts, the Published pill (`StatusCell` in a list, Payload's in the document controls), "answering/running" rows |
+| Red (`--admin-red`) | delete, failure | Delete items, row removal, the delete confirmation, failed rows, the Failed pill of a run, a form tab with errors, Log out |
+| Amber (`--admin-amber`) | careful, a draft | Unpublish, Revert, "off / test mode" rows, the Draft and Changed pills |
 
 Payload's own selection colour (its "success" ramp: checkboxes, radios, focus rings, the
 published pill) is re-hued to the accent in `@layer payload`; its greys are untouched.
@@ -81,9 +91,10 @@ published pill) is re-hued to the accent in `@layer payload`; its greys are unto
 - Text sizes are the site scale from `tokens.css`: `text-body` 17 px for form copy is Payload's
   business; our surfaces use `text-h4` (20/500) for card titles, `text-small` (15) for rows,
   `text-caption` (13) for meta and descriptions; a dashboard tile's number is `text-h3`.
-- A bar (`dashboard/section.tsx`, `Bar`): the fill is the group's identity hue, or amber and
-  red when the bar itself carries a warning (no limit, at the cap); it grows from the start
-  edge (`inline-size`), so it reads the same in both directions.
+- A bar (`dashboard/section.tsx`, `Bar`): the fill is its card's one identity hue (the same
+  as the card's icon, ADR-060), or amber and red when the bar itself carries a warning (no
+  limit, at the cap) beside the badge that says so; it grows from the start edge
+  (`inline-size`), so it reads the same in both directions.
 - Spacing on the 4 px grid: 8 between icon and label, 12 inside a row, 16 inside a card,
   24 between cards, 32 between dashboard sections.
 - Radius: cards and dialogs 13 px, menus 13 px, chips and inputs inside Payload 8 px
@@ -113,8 +124,40 @@ published pill) is re-hued to the accent in `@layer payload`; its greys are unto
   seo-defaults `Search`, ai-settings `SlidersHorizontal`; groups Site
   `Globe`, Catalogue `ShoppingBag`, Blog `PenLine`, Visibility `Radar`, Admin `Shield`; the
   engine section `Bot`; the dashboard entry `LayoutDashboard` (a place, like a global's).
-- Colour: icons inherit text colour. An entity's disc takes its group's hue (§2) in the
-  sidebar, the page header, its dashboard tile and the latest changes.
+- **Section icons** (ADR-060, `SECTION_ICONS` in `icons.ts`): every form tab, every
+  collapsible and a labelled group with a noun of its own carries one icon before its words,
+  named in the config through `sectionIcon('key')` on its `admin` (`admin.custom.icon`);
+  a place for a section of the site, a noun for a thing, the registry's own icon where the
+  section is an entity (the product strip is the products' shirt, a Search tab the search
+  defaults' glass, the Engine group the engine's bot); never twice in one strip, never the
+  entity's own icon (the header's tile), always the text colour, 16 px. Home: slides
+  `GalleryHorizontal`, strip `Shirt`, designer `PenTool`, steps `ListOrdered`, video
+  `Clapperboard`, why `Sparkles`, testimonials `MessageSquareQuote`, stores `Plug`, faq
+  `CircleHelp`, banner `Megaphone`, the fade group `Blend`; product: photos `Images`, basics
+  `Info`, sizes `Ruler`, print area `SquareDashed`; post and page: content `Text`, excerpt
+  `LayoutTemplate`, search `Search`, the sidebar's Publishing `Send`, Checks
+  `ClipboardCheck`, Engine `Bot`; site settings: brand `Fingerprint`, contact `AtSign` (its
+  Contact group `Phone`, Social `Share2`), menus `Menu` (Advanced `Wrench`), delivery
+  `Truck`, analytics `ChartLine`; engine settings: schedule `CalendarClock`, style
+  `Languages`, facts `ClipboardList`, images `Images`, quality `BadgeCheck`, notifications
+  `Bell`; a connection's Rates `Coins`. **How they are drawn:** Payload 3.89 has no label
+  slot on a tab and never renders a custom `Field` on a `tabs` field, so `describeFields()`
+  places a `ui` field (`tabIcons`) right after every tabs field whose `IconTabs` portals one
+  icon into each `button.tabs-field__tab-button` by index (the one file that reaches into
+  Payload's DOM; `admin/fields/icon-tabs.tsx` names the three package facts it relies on;
+  plain tabs are its degraded state); a collapsible or a group gets `SectionLabel` in
+  Payload's own `admin.components.Label` slot. `tests/admin-config.test.ts` refuses a tab
+  or a collapsible without an icon, an icon repeated in a strip, and a strip out of place.
+- **The status pill** (ADR-060, `admin/fields/status-cell.tsx`): a document's `_status` in
+  a list reads as a pill with its word, Published green, Draft amber, and Changed amber (a
+  live document with newer text waiting: Payload's list marks the row `_displayStatus:
+  'changed'`), the words the glossary's in both languages (`cells.status` in the trees); a
+  drafted collection lists `statusColumn()` (`fields/status.ts`) to put the cell on
+  Payload's own column. The same cell on a run's outcome: Failed red, the rest neutral. A
+  status word is a glossary row first.
+- Colour: icons inherit text colour. An entity's tile takes its group's hue (§2) in the
+  sidebar and the page header; on the dashboard a card's title icon takes the hue and the
+  entities' discs inside it stay neutral (ADR-060).
 
 ## 5. Writing (Arabic)
 
@@ -240,7 +283,7 @@ Payload's `switchLanguage`, kept in its `payload-lng` cookie) and Payload sets `
 |---|---|---|
 | `Button` | `shared/button.tsx` | `primary` only for the one main action; `secondary`/`ghost`/`link` variants are blue text → **not** on dark; use `variant="inverse"` for a white-on-blue exception. |
 | `Card` | `shared/card.tsx` | Dashboard tiles and sections. `hoverable` for tiles that are links. |
-| `Badge` | `shared/badge.tsx` | Status: `success` (live, running), `warning` (off, console), `error` (failed), `muted` (n/a). Every checkbox in a list renders as one (`BoolCell`, set by `describeFields`): green Yes / On, red No / Off, never Payload's `true` / `false` pill. The sidebar's count badge (`BadgeMark` in `nav/tree.tsx`) is a different thing: a 16 px solid pill, red or amber, for a number that asks for action (ADR-058), never grey and never a document count. |
+| `Badge` | `shared/badge.tsx` | Status: `success` (live, running), `warning` (off, console), `error` (failed), `muted` (n/a). Every checkbox in a list renders as one (`BoolCell`, set by `describeFields`): green Yes / On, red No / Off, never Payload's `true` / `false` pill; a status column renders as one (`StatusCell`, §4): the word in its colour. The sidebar's count badge (`BadgeMark` in `nav/tree.tsx`) is a different thing: a 16 px solid pill, red or amber, for a number that asks for action (ADR-058), never grey and never a document count. |
 | `Icon` | `shared/icon.tsx` | Every icon. |
 | `Tooltip` | `ui/tooltip.tsx` | Icon-only buttons and truncated titles. Not for essential information. |
 | `DropdownMenu` | `ui/dropdown-menu.tsx` | Account menu, row actions, the rail's flyouts (a menu of links: focus in, arrows and a typed letter, Esc back to the trigger). Icon before each item. |
@@ -262,9 +305,9 @@ Payload's own elements (buttons, fields, pills, toasts) are themed in `admin.css
 | Account menu | `modules/cms/admin/account/*` | Initials avatar, name, e-mail (LTR), role badge, "My account", "Log out" (red). In the rail only the avatar shows. The one account entry point: Payload's header avatar is hidden. |
 | Login | `modules/cms/admin/login/*` | One line under the form; the Turnstile widget above it (ADR-034). |
 
-| Dashboard | `modules/cms/admin/dashboard/*` | Seven sections top to bottom (ADR-059), one server render, the reads in parallel and each guarded (a failed reader shows its section with the "not available" word, never a blank page). (1) The greeting by the Riyadh hour (name in the accent), the 7 / 30 / 90 day range as links at the trailing edge (`?days=`, server-rendered, no client state; `rules.ts`) and the "needs a hand" line (failed runs this week, a connection at its limit, an enabled connection whose last test failed, documents without English, drafts older than a week; each a link, or one sentence). (2) Four tiles, each one link (`tiles.tsx`, `tile-data.ts`): visits with the change against the previous range (`trafficSummary` twice), the cited rate on the category prompts over 28 days with the engines' count, the score with its trend, "went live" in the range with the drafts waiting. (3) Where visits come from (`traffic/admin/traffic-card.tsx`): the bars by group, the top three entry pages, the crawler reads, "All traffic" into the same range. (4) What the assistants say (`visibility/admin/assistants-card.tsx`): per engine the cited and linked rates, the last run, the next run computed from the prompts' periods (`schedule.ts`, `duePrompts`) or the plain sentence; no "Run now" (it costs money). (5) Content (`content-card.tsx`): the home tile with when it was published, one row per content collection with published, drafts (linked to the list filtered on `_status`) and missing English (linked to the first English form), the last five saves by people (`data.ts`: the content groups only, no machine rows, no untitled unsaved draft), "Write a post" and "Add a product" as bordered buttons by permission. (6) Engine and spend (`ai-content/admin/engine-card.tsx`): the state, posts against the monthly cap and today's cost against the daily cap as bars (violet, amber from 80 %, red at the cap), the next slot, one row per AI connection with its spend against its limit (amber with "No monthly limit" when it has none, red at the limit), runs and last test. (7) Server (`server-card.tsx`): a `details` collapsed by default and open when a row is red, the ten health rows (`healthReport()`), the version, the jobs queue as the next run of each scheduled task on the Riyadh clock, "Full report". An editor sees the sections they may open; a reader that needs an admin is skipped. Numbers, dates and moments through `admin/format.ts`; the hooks are `data-admin-dashboard-<section>`. Every in-admin link is Payload's `Link`: no reload. |
-| Forms as tabs | `globals/{home,site-settings}.ts`, `collections/{products,posts,pages}.ts` | One tab per section of the site, in site order (ADR-046): Home ten named tabs (Opening slides · Product strip · Designer · Three steps · Video · Why us · Testimonials · Connected stores · FAQ · Bottom banner, each opening on its switch where one exists; a named tab stores under the group's old path and columns), Product four in the card's order (Photos & colours · Basics · Sizes · Print area; the order in the sidebar), Post three (Content · Excerpt & cover · Search; the sidebar in three collapsibles: Publishing with author and dates, Checks with the warnings and the reading time, Engine with origin and the engine actions), Page two (Content · Search), Site settings five (Brand · Contact & social · Menus & footer with a collapsed Advanced group for the three accessibility labels · Numbers and delivery · Analytics; the menus are the named tab `menu`). The tab strip scrolls sideways with edge fades and an accent bar on the active tab (`admin.css`). |
-| Page header | `modules/cms/admin/document/entity-header.tsx` | The description slot under Payload's title (`admin.components.Description` on collections, shared with the list view; `admin.components.elements.Description` on globals; registered per config with its `serverProps.entity` through `admin/document/config.ts`): a bar and a disc in the group's hue, the description, "Shows on:" from `admin.custom.shows` (both languages), a link to the public listing where one exists, and on the home page "10 sections, N on" from the saved document (`HomeSectionsCount`). Nothing of ours sits before the document controls (the locale note went with the switch, ADR-057). |
+| Dashboard | `modules/cms/admin/dashboard/*` | Seven sections top to bottom (ADR-059), one server render, the reads in parallel and each guarded (a failed reader shows its section with the "not available" word, never a blank page). (1) The greeting by the Riyadh hour (name in the accent), the 7 / 30 / 90 day range as links at the trailing edge (`?days=`, server-rendered, no client state; `rules.ts`) and the "needs a hand" line (failed runs this week, a connection at its limit, an enabled connection whose last test failed, documents without English, drafts older than a week; each a link, or one sentence). (2) Four tiles, each one link (`tiles.tsx`, `tile-data.ts`): visits with the change against the previous range (`trafficSummary` twice), the cited rate on the category prompts over 28 days with the engines' count, the score with its trend, "went live" in the range with the drafts waiting. (3) Where visits come from (`traffic/admin/traffic-card.tsx`): the bars by group, the top three entry pages, the crawler reads, "All traffic" into the same range. (4) What the assistants say (`visibility/admin/assistants-card.tsx`): per engine the cited and linked rates, the last run, the next run computed from the prompts' periods (`schedule.ts`, `duePrompts`) or the plain sentence; no "Run now" (it costs money). (5) Content (`content-card.tsx`): the home tile with when it was published, one row per content collection with published, drafts (linked to the list filtered on `_status`) and missing English (linked to the first English form), the last five saves by people (`data.ts`: the content groups only, no machine rows, no untitled unsaved draft), "Write a post" and "Add a product" as bordered buttons by permission. (6) Engine and spend (`ai-content/admin/engine-card.tsx`): the state, posts against the monthly cap and today's cost against the daily cap as bars (violet, amber from 80 %, red at the cap), the next slot, one row per AI connection with its spend against its limit (amber with "No monthly limit" when it has none, red at the limit), runs and last test. (7) Server (`server-card.tsx`): a `details` collapsed by default and open when a row is red, the ten health rows (`healthReport()`), the version, the jobs queue as the next run of each scheduled task on the Riyadh clock, "Full report". An editor sees the sections they may open; a reader that needs an admin is skipped. One hue per card (ADR-060): the section's title icon takes its group's hue (`DashboardSection` `hue`: visits and assistants pink, content blue, engine violet, server slate; a tile its one disc) and the body stays neutral, the content card's entity discs and buttons included; a draft in the saves reads amber. Numbers, dates and moments through `admin/format.ts`; the hooks are `data-admin-dashboard-<section>`. Every in-admin link is Payload's `Link`: no reload. |
+| Forms as tabs | `globals/{home,site-settings}.ts`, `collections/{products,posts,pages}.ts` | One tab per section of the site, in site order (ADR-046): Home ten named tabs (Opening slides · Product strip · Designer · Three steps · Video · Why us · Testimonials · Connected stores · FAQ · Bottom banner, each opening on its switch where one exists; a named tab stores under the group's old path and columns), Product four in the card's order (Photos & colours · Basics · Sizes · Print area; the order in the sidebar), Post three (Content · Excerpt & cover · Search; the sidebar in three collapsibles: Publishing with author and dates, Checks with the warnings and the reading time, Engine with origin and the engine actions), Page two (Content · Search), Site settings five (Brand · Contact & social · Menus & footer with a collapsed Advanced group for the three accessibility labels · Numbers and delivery · Analytics; the menus are the named tab `menu`). Every tab carries its section icon (§4); the tab strip scrolls sideways with edge fades, the active tab reads in the text colour with a 3 px bar in the document's group hue (`admin.css`, through the icon span's `data-admin-section-hue`), a tab with errors red. |
+| Page header | `modules/cms/admin/document/entity-header.tsx` | The description slot under Payload's title (`admin.components.Description` on collections, shared with the list view; `admin.components.elements.Description` on globals; registered per config with its `serverProps.entity` through `admin/document/config.ts`): the entity's icon in a tile of the group's hue (`data-admin-hue`, the screen's carrier beside the active tab's bar, ADR-060; the hairline beside the block is neutral), the description, "Shows on:" from `admin.custom.shows` (both languages), a link to the public listing where one exists, and on the home page "10 sections, N on" from the saved document (`HomeSectionsCount`). Nothing of ours sits before the document controls (the locale note went with the switch, ADR-057). |
 | Blog group | `modules/cms/collections/{posts,categories,authors,tags}.ts` | Posts, hubs, authors, tags (violet, the Blog hue); the post's sidebar carries author, publish and update dates, reading minutes, origin, the editorial warnings (`WarningsField`) and "Last saved"; a publish that breaks a hard rule is refused with the reason (`fields/editorial.ts`, ADR-041). |
 | Content engine section (inside Blog) | `modules/ai-content/{settings,topics,runs}.ts`, `modules/ai-content/admin/*` | Admin only. Engine settings in tabs (the connection it writes with, the caps, the style), topics with "Generate now" (`ApiAction`) and a CSV import panel, runs read-only with their connection; the "Engine and spend" section of the dashboard (ADR-059) and a health row; "Regenerate" in an engine post's sidebar (`PostEngineActions`). ADR-042, ADR-047. |
 | Traffic (Visibility group) | `modules/traffic/*`, `lib/traffic/*`, `modules/core/analytics/landing-beacon.tsx` | Admin only. The site's own daily count of landings by source and page and of crawler reads by bot (`traffic`, read-only rows written by the batcher's upsert, listed as "Counts" under the page); the "Where visits come from" section of the dashboard with one bar per group (the Visibility pink on the surface track: identity, not meaning), the top channel, the crawler reads, the top entry pages and an empty state (ADR-059); the Traffic page (`/admin/traffic`, `TrafficView`) with 7 / 30 / 90-day ranges, the groups, four tables (channels, sources, landing pages, crawlers) each with an empty state, and the honesty lines. The channel is derived at read (`channelOf`). ADR-048. |

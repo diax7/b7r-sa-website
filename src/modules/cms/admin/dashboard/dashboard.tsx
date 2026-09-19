@@ -107,7 +107,12 @@ export async function Dashboard(props: AdminViewServerProps) {
         {(traffic !== undefined || ledger !== undefined) && (
           <div className="grid gap-6 lg:grid-cols-2">
             {traffic === null && (
-              <EmptySection hook="visits" title={s.traffic.card.title} language={language} />
+              <EmptySection
+                hook="visits"
+                title={s.traffic.card.title}
+                hue="pink"
+                language={language}
+              />
             )}
             {traffic && (
               <TrafficCard
@@ -120,6 +125,7 @@ export async function Dashboard(props: AdminViewServerProps) {
               <EmptySection
                 hook="assistants"
                 title={s.dashboard.assistants.title}
+                hue="pink"
                 language={language}
               />
             )}
@@ -145,7 +151,12 @@ export async function Dashboard(props: AdminViewServerProps) {
           now={now}
         />
         {engine === null && (
-          <EmptySection hook="engine" title={s.engine.card.title} language={language} />
+          <EmptySection
+            hook="engine"
+            title={s.engine.card.title}
+            hue="violet"
+            language={language}
+          />
         )}
         {engine && (
           <EngineCard
@@ -157,7 +168,12 @@ export async function Dashboard(props: AdminViewServerProps) {
           />
         )}
         {health === null && (
-          <EmptySection hook="server" title={s.dashboard.health.title} language={language} />
+          <EmptySection
+            hook="server"
+            title={s.dashboard.health.title}
+            hue="slate"
+            language={language}
+          />
         )}
         {health && <ServerCard report={health} language={language} now={now} />}
       </div>

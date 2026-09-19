@@ -3,6 +3,7 @@ import { canDeleteVersioned, isEditorOrAdmin, publishedOrStaff } from '@/modules
 import { revalidateRoutes } from '@/modules/cms/hooks/revalidate';
 import { applyTranslations } from '@/modules/cms/hooks/translations';
 import { savedByField, stampSavedBy } from '@/modules/cms/fields/saved-by';
+import { statusColumn } from '@/modules/cms/fields/status';
 import { collectionComponents } from '@/modules/cms/admin/document/config';
 import { adminGroup } from '@/modules/cms/admin/icons';
 import { TESTIMONIAL_DESCRIPTIONS } from '@/modules/cms/admin/descriptions/catalogue';
@@ -104,6 +105,7 @@ export const Testimonials: CollectionConfig = {
         label: { ar: 'نموذج (ليس رأي تاجر حقيقي)', en: 'Sample (not a real merchant)' },
       },
       savedByField,
+      statusColumn(),
     ],
     TESTIMONIAL_DESCRIPTIONS,
   ),

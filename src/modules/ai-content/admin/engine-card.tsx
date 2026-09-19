@@ -203,6 +203,7 @@ export function EngineCard({
       hook="engine"
       title={s.title}
       icon={Bot}
+      hue="violet"
       end={<Badge tone={ENGINE_STATE_TONE[summary.state]}>{s.state[summary.state]}</Badge>}
       data-admin-engine=""
       data-admin-engine-state={summary.state}

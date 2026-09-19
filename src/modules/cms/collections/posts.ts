@@ -34,11 +34,12 @@ import {
 import { twinField } from '@/modules/cms/fields/bilingual';
 import { type Bilingual, inLanguage } from '@/modules/cms/fields/message';
 import { savedByField, stampSavedBy } from '@/modules/cms/fields/saved-by';
+import { statusColumn } from '@/modules/cms/fields/status';
 import { populateTwins } from '@/modules/cms/fields/twins';
 import { isDraftSave, revalidatePosts } from '@/modules/cms/hooks/revalidate';
 import { applyTranslations } from '@/modules/cms/hooks/translations';
 import { collectionComponents } from '@/modules/cms/admin/document/config';
-import { adminGroup } from '@/modules/cms/admin/icons';
+import { adminGroup, sectionIcon } from '@/modules/cms/admin/icons';
 import { POST_DESCRIPTIONS } from '@/modules/cms/admin/descriptions/blog';
 import { describeFields } from '@/modules/cms/admin/descriptions/describe';
 
@@ -215,6 +216,7 @@ export const Posts: CollectionConfig = {
         tabs: [
           {
             label: { ar: 'المحتوى', en: 'Content' },
+            admin: sectionIcon('content'),
             fields: [
               {
                 type: 'row',
@@ -246,6 +248,7 @@ export const Posts: CollectionConfig = {
           },
           {
             label: { ar: 'المقتطف والغلاف', en: 'Excerpt & cover' },
+            admin: sectionIcon('excerpt'),
             fields: [
               {
                 name: 'excerpt',
@@ -311,6 +314,7 @@ export const Posts: CollectionConfig = {
           },
           {
             label: { ar: 'البحث', en: 'Search' },
+            admin: sectionIcon('search'),
             fields: [
               {
                 name: 'seo',
@@ -354,7 +358,7 @@ export const Posts: CollectionConfig = {
       {
         type: 'collapsible',
         label: { ar: 'النشر', en: 'Publishing' },
-        admin: { position: 'sidebar' },
+        admin: { position: 'sidebar', ...sectionIcon('publishing') },
         fields: [
           {
             name: 'author',
@@ -381,7 +385,7 @@ export const Posts: CollectionConfig = {
       {
         type: 'collapsible',
         label: { ar: 'الفحوص', en: 'Checks' },
-        admin: { position: 'sidebar' },
+        admin: { position: 'sidebar', ...sectionIcon('checks') },
         fields: [
           {
             name: 'warnings',
@@ -406,7 +410,7 @@ export const Posts: CollectionConfig = {
       {
         type: 'collapsible',
         label: { ar: 'المحرّك', en: 'Engine' },
-        admin: { position: 'sidebar' },
+        admin: { position: 'sidebar', ...sectionIcon('engine') },
         fields: [
           {
             name: 'origin',
@@ -442,6 +446,7 @@ export const Posts: CollectionConfig = {
         admin: { hidden: true },
       },
       savedByField,
+      statusColumn(),
     ],
     POST_DESCRIPTIONS,
   ),

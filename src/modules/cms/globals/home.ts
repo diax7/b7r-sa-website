@@ -9,7 +9,7 @@ import { populateGlobalTwins } from '@/modules/cms/fields/twins';
 import { previewUrl } from '@/lib/preview-token';
 import { HERO_CHIPS_MAX, HERO_OVERLAY_DEFAULT, HEX_COLOR } from '@/content/schema';
 import { globalComponents } from '@/modules/cms/admin/document/config';
-import { adminGroup, iconOptions } from '@/modules/cms/admin/icons';
+import { adminGroup, iconOptions, sectionIcon } from '@/modules/cms/admin/icons';
 import { HOME_DESCRIPTIONS } from '@/modules/cms/admin/descriptions/site';
 import { describeFields } from '@/modules/cms/admin/descriptions/describe';
 
@@ -107,6 +107,7 @@ export const Home: GlobalConfig = {
           {
             name: 'hero',
             label: { ar: 'الشرائح الافتتاحية', en: 'Opening slides' },
+            admin: sectionIcon('slides'),
             fields: [
               {
                 name: 'slides',
@@ -134,6 +135,7 @@ export const Home: GlobalConfig = {
                 name: 'overlay',
                 type: 'group',
                 label: { ar: 'التدرّج فوق الصورة', en: 'Fade over the photo' },
+                admin: sectionIcon('fade'),
                 fields: [
                   {
                     name: 'enabled',
@@ -190,6 +192,7 @@ export const Home: GlobalConfig = {
           {
             name: 'productStrip',
             label: { ar: 'شريط المنتجات', en: 'Product strip' },
+            admin: sectionIcon('strip'),
             fields: [
               ...header(),
               {
@@ -233,6 +236,7 @@ export const Home: GlobalConfig = {
           {
             name: 'designer',
             label: { ar: 'المصمّم', en: 'Designer' },
+            admin: sectionIcon('designer'),
             description: {
               ar: 'يجرّب الزائر تصميماً على منتج ويرى ربحه قبل أن يسجّل.',
               en: 'A visitor tries a design on a product and sees the profit before signing up.',
@@ -242,6 +246,7 @@ export const Home: GlobalConfig = {
           {
             name: 'steps',
             label: { ar: 'الخطوات الثلاث', en: 'Three steps' },
+            admin: sectionIcon('steps'),
             fields: [
               enabled(),
               ...header(true, false),
@@ -274,6 +279,7 @@ export const Home: GlobalConfig = {
           {
             name: 'video',
             label: { ar: 'الفيديو', en: 'Video' },
+            admin: sectionIcon('video'),
             description: {
               ar: 'المقطع نفسه ملف ثابت في الموقع؛ هنا العنوان والوصف فقط.',
               en: 'The loop itself ships with the site; only the copy lives here.',
@@ -283,6 +289,7 @@ export const Home: GlobalConfig = {
           {
             name: 'whyUs',
             label: { ar: 'لماذا بحر', en: 'Why us' },
+            admin: sectionIcon('why'),
             fields: [
               enabled(),
               ...header(true, false),
@@ -317,6 +324,7 @@ export const Home: GlobalConfig = {
           {
             name: 'testimonials',
             label: { ar: 'آراء التجار', en: 'Testimonials' },
+            admin: sectionIcon('testimonials'),
             description: {
               ar: 'هنا عنوان القسم فقط؛ الآراء نفسها في «آراء التجار».',
               en: 'The entries live in Testimonials; the section title lives here.',
@@ -326,11 +334,13 @@ export const Home: GlobalConfig = {
           {
             name: 'integrations',
             label: { ar: 'المتاجر المتصلة', en: 'Connected stores' },
+            admin: sectionIcon('stores'),
             fields: [enabled(), ...header(false)],
           },
           {
             name: 'faq',
             label: { ar: 'الأسئلة الشائعة', en: 'FAQ' },
+            admin: sectionIcon('faq'),
             description: {
               ar: 'ما عُلِّم «يظهر في الرئيسية» في الأسئلة الشائعة.',
               en: 'The entries flagged "show on the home page" in the FAQ.',
@@ -344,6 +354,7 @@ export const Home: GlobalConfig = {
           {
             name: 'ribbon',
             label: { ar: 'شريط الدعوة', en: 'Bottom banner' },
+            admin: sectionIcon('banner'),
             description: {
               ar: 'أسفل كل صفحة، فوق التذييل؛ يُحرَّر هنا مرة واحدة.',
               en: 'At the bottom of every page, above the footer; edited here once.',

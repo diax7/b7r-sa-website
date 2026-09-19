@@ -32,6 +32,46 @@ const withoutRowIds = (rows: unknown) =>
 const sidewaysOverflow = (page: Page) =>
   page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
 
+/** The colour of an element's `::after` (the active tab's bar); runs in the browser. */
+const barColour = (el: Element) => getComputedStyle(el, '::after').backgroundColor;
+/**
+ * The text's contrast against the pill's tint composited over the row behind it (WCAG).
+ * Runs in the browser through `evaluate`, so its helpers must travel inside it.
+ */
+/* oxlint-disable unicorn/consistent-function-scoping -- serialised into the page as one function */
+const contrast = (el: Element) => {
+  type Rgba = { r: number; g: number; b: number; a: number };
+  const rgba = (s: string): Rgba => {
+    const m = s.match(/[\d.]+/g)?.map(Number) ?? [0, 0, 0, 1];
+    return { r: m[0]!, g: m[1]!, b: m[2]!, a: m[3] ?? 1 };
+  };
+  const over = (top: Rgba, under: Rgba): Rgba => ({
+    r: top.r * top.a + under.r * (1 - top.a),
+    g: top.g * top.a + under.g * (1 - top.a),
+    b: top.b * top.a + under.b * (1 - top.a),
+    a: 1,
+  });
+  let ground = rgba('rgb(0, 0, 0)');
+  const layers: Rgba[] = [];
+  for (let node = el.parentElement; node; node = node.parentElement) {
+    const bg = rgba(getComputedStyle(node).backgroundColor);
+    if (bg.a > 0) layers.push(bg);
+    if (bg.a === 1) break;
+  }
+  for (const layer of layers.toReversed()) ground = over(layer, ground);
+  const behind = over(rgba(getComputedStyle(el).backgroundColor), ground);
+  const weights = [0.2126, 0.7152, 0.0722];
+  const luminance = (c: Rgba) =>
+    [c.r, c.g, c.b]
+      .map((v) => v / 255)
+      .map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4))
+      .reduce((sum, v, i) => sum + v * weights[i]!, 0);
+  const text = luminance(rgba(getComputedStyle(el).color));
+  const back = luminance(behind);
+  return (Math.max(text, back) + 0.05) / (Math.min(text, back) + 0.05);
+};
+/* oxlint-enable unicorn/consistent-function-scoping */
+
 /**
  * The header's language switch (ADR-056, amended 2026-09-19): a click on the other name
  * above 1024 px, on the one icon at and under it; then the refresh that flips `html[lang]`.
@@ -453,14 +493,15 @@ test.describe('CMS admin', () => {
     await nav.locator('#nav-pages').focus();
     await page.keyboard.press('Tab');
     await expect(page.locator('[data-admin-collapse]')).toBeFocused();
-    // The page header (the description slot): the entity's disc and bar in its hue, where the
-    // thing shows on the site, and the public listing on a list view.
+    // The page header (the description slot): the entity's tile in its hue (the screen's one
+    // hue carrier outside the tabs, ADR-060), where the thing shows on the site, and the
+    // public listing on a list view.
     const header = page.locator('[data-admin-header="pages"]');
-    await expect(header).toHaveAttribute('data-hue', 'blue');
+    await expect(header.locator('[data-admin-hue]')).toHaveAttribute('data-admin-hue', 'blue');
     await expect(header.locator('[data-admin-shows]')).toContainText(/Shows on:/);
     await page.goto('/admin/collections/products');
-    await expect(page.locator('[data-admin-header="products"]')).toHaveAttribute(
-      'data-hue',
+    await expect(page.locator('[data-admin-header="products"] [data-admin-hue]')).toHaveAttribute(
+      'data-admin-hue',
       'teal',
     );
     await expect(
@@ -725,7 +766,7 @@ test.describe('CMS admin', () => {
       await expect(dashboard.locator(`[data-admin-dashboard-${hook}]`)).toBeVisible();
     }
     // 5. The content: the home tile, the figures as links (the drafts to the list filtered on
-    // `_status`), the saves by people, the two actions in their entity's hue.
+    // `_status`), the saves by people, the two actions; one hue in the card, on its icon.
     for (const key of ['home', 'add-product', 'add-post']) {
       await expect(dashboard.locator(`[data-admin-action="${key}"]`)).toBeVisible();
     }
@@ -739,12 +780,20 @@ test.describe('CMS admin', () => {
     const first = dashboard.locator('[data-admin-recent] li').first();
     await expect(first).toContainText(entry!.question);
     await expect(first).toContainText(/by /);
-    // Hues are the group's (ADR-046): a FAQ entry is Catalogue teal, a post is Blog violet.
-    await expect(first.locator('[data-hue]')).toHaveAttribute('data-hue', 'teal');
-    await expect(dashboard.locator('[data-admin-action="add-post"]')).toHaveAttribute(
-      'data-hue',
-      'violet',
-    );
+    // One hue per card (ADR-060): the content card's icon is blue, its discs and buttons
+    // are neutral; every section carries exactly one hue, and each tile one disc.
+    const content = dashboard.locator('[data-admin-dashboard-content]');
+    await expect(content.locator('[data-admin-hue]')).toHaveCount(1);
+    await expect(content.locator('[data-admin-hue]')).toHaveAttribute('data-admin-hue', 'blue');
+    await expect(content.locator('[data-hue]')).toHaveCount(0);
+    for (const hook of ['visits', 'assistants', 'engine', 'server']) {
+      await expect(
+        dashboard.locator(`[data-admin-dashboard-${hook}] [data-admin-hue]`),
+      ).toHaveCount(1);
+    }
+    for (const tile of await dashboard.locator('[data-admin-tile]').all()) {
+      await expect(tile.locator('[data-admin-hue]')).toHaveCount(1);
+    }
     // 7. The server: collapsed unless a row is red; the rows keep their tones inside.
     const server = dashboard.locator('[data-admin-dashboard-server]');
     const worst = await server.getAttribute('data-admin-dashboard-server');
@@ -910,16 +959,18 @@ test.describe('CMS admin', () => {
       // just written, so the text is back; `<html lang dir>` flip; the cookie is set by name.
       await page.locator('.tabs-field__tab-button', { hasText: 'Content' }).click();
       const title = page.locator('#field-title');
-      const before = await title.inputValue();
-      const typed = `${before} (e2e)`;
-      const draftTitle = async () =>
+      const pageTitle = async (draft: boolean) =>
         (
           (await (
-            await request.get(`${API}/pages/${pageId}?depth=0&draft=true`, { headers: auth })
+            await request.get(`${API}/pages/${pageId}?depth=0&draft=${draft}`, { headers: auth })
           ).json()) as { title: string }
         ).title;
+      // The published title, not the field's value: a stale draft of an earlier run would
+      // otherwise carry its suffix forward; the test republishes the original at the end.
+      const before = await pageTitle(false);
+      const typed = `${before} (e2e)`;
       await title.fill(typed);
-      await expect.poll(draftTitle, POLL).toBe(typed);
+      await expect.poll(() => pageTitle(true), POLL).toBe(typed);
       let loads = 0;
       page.on('load', () => (loads += 1));
       await group.locator('button[lang="ar"]').click();
@@ -942,6 +993,12 @@ test.describe('CMS admin', () => {
       await expect.poll(languageCookie).toBe('en');
       await expect(title).toHaveValue(typed);
       await expect(group.locator('[aria-pressed="true"]')).toHaveText('English');
+      // Undo the typed draft: republish the original title so the page reads as before.
+      const republish = await request.patch(`${API}/pages/${pageId}`, {
+        headers: auth,
+        data: { title: before, _status: 'published' },
+      });
+      expect(republish.status(), 'republishing the original title').toBe(200);
       // A form without autosave (site settings): while it holds unsaved changes the switch
       // asks first. Cancel keeps the text and the language; Esc too; "Switch anyway" flips
       // the panel and the form takes the server's state again (Payload's form on a refresh).
@@ -1393,10 +1450,21 @@ test.describe('CMS admin', () => {
     await page.locator('#field-password').fill(admin.password);
     await page.locator('form button[type="submit"]').first().click();
     await page.waitForURL((u) => !u.pathname.endsWith('/login'));
+    // Every tab button carries one icon before its words (ADR-060, `IconTabs`): as many
+    // icons as buttons, and as many buttons as the strip's count of tabs.
     const tabsOf = async (url: string) => {
       await page.goto(url);
-      await expect(page.locator('.tabs-field__tab-button').first()).toBeVisible();
-      return page.locator('.tabs-field__tab-button').allTextContents();
+      const buttons = page.locator('.tabs-field__tab-button');
+      await expect(buttons.first()).toBeVisible();
+      const count = await buttons.count();
+      await expect(page.locator('[data-admin-icon-tabs]')).toHaveAttribute(
+        'data-admin-icon-tabs',
+        String(count),
+      );
+      await expect(
+        page.locator('.tabs-field__tab-button [data-admin-section-icon] svg'),
+      ).toHaveCount(count);
+      return buttons.allTextContents();
     };
     expect(await tabsOf('/admin/globals/home')).toEqual([
       'Opening slides',
@@ -1448,10 +1516,14 @@ test.describe('CMS admin', () => {
       'Excerpt & cover',
       'Search',
     ]);
-    // The post's sidebar keeps the author and the dates, in three groups (3.5).
+    // The post's sidebar keeps the author and the dates, in three groups (3.5), each with
+    // its icon before its name (ADR-060, `SectionLabel`).
     await expect(page.locator('.document-fields__sidebar #field-author')).toBeVisible();
     await expect(page.locator('.document-fields__sidebar #field-publishedAt')).toBeVisible();
     await expect(page.locator('.document-fields__sidebar .collapsible-field')).toHaveCount(3);
+    await expect(
+      page.locator('.document-fields__sidebar .collapsible-field [data-admin-section-icon] svg'),
+    ).toHaveCount(3);
     // The body has a toolbar (2.3), and a read-only number reads as a line (2.11).
     await page.locator('.tabs-field__tab-button', { hasText: 'Content' }).click();
     await expect(page.locator('.fixed-toolbar').first()).toBeVisible();
@@ -1511,8 +1583,8 @@ test.describe('CMS admin', () => {
     await expect(page.locator('[data-admin-locale-note]')).toHaveCount(0);
     const publishBox = (await publish.boundingBox())!;
     expect(publishBox.x + publishBox.width, 'Publish inside the screen').toBeLessThanOrEqual(390);
-    // Ten tabs at 390 px: the strip is a horizontal scroller, the active tab is marked in the
-    // accent, and the page itself never scrolls sideways.
+    // Ten tabs at 390 px: the strip is a horizontal scroller, the active tab reads in the text
+    // colour with its bar in the Site blue (ADR-060), and the page never scrolls sideways.
     const strip = page.locator('.tabs-field__tabs-wrap').first();
     const scrollable = await strip.evaluate((el) => el.scrollWidth > el.clientWidth + 8);
     expect(scrollable, 'the tab strip overflows into a scroller').toBe(true);
@@ -1522,7 +1594,10 @@ test.describe('CMS admin', () => {
     });
     await expect.poll(() => strip.evaluate((el) => el.scrollLeft)).toBeGreaterThan(0);
     const active = page.locator('.tabs-field__tab-button--active').first();
-    await expect(active).toHaveCSS('color', 'rgb(0, 152, 224)');
+    await expect(active).toHaveCSS('color', 'rgb(255, 255, 255)');
+    expect(await active.evaluate((el) => getComputedStyle(el, '::after').backgroundColor)).toBe(
+      'rgb(0, 152, 224)',
+    );
     await active.scrollIntoViewIfNeeded();
     await expect(active).toBeInViewport();
     expect(await sidewaysOverflow(page), 'no horizontal overflow on the home form').toBe(0);
@@ -1539,6 +1614,147 @@ test.describe('CMS admin', () => {
       expect(viewSite.x + viewSite.width, '"View website" inside the screen').toBeLessThanOrEqual(
         390,
       );
+    }
+  });
+
+  test('icons and colour (ADR-060): two hue carriers per document, the status pills with their words, the amber pill readable, axe clean at 1440 and 390 in both languages', async ({
+    page,
+    request,
+  }) => {
+    test.setTimeout(300_000);
+    expect((await page.request.post(`${API}/users/login`, { data: admin })).status()).toBe(200);
+    const auth = await login(request, admin);
+    const productId = await firstDocId(request, auth, 'products');
+    // A draft page of the test's own, so the list shows an amber pill whatever the data.
+    const created = await request.post(`${API}/pages?draft=true`, {
+      headers: auth,
+      data: {
+        title: `مسودة الألوان ${Date.now()}`,
+        slug: `colour-e2e-${Date.now()}`,
+        _status: 'draft',
+        blocks: [
+          {
+            blockType: 'richText',
+            content: {
+              root: {
+                type: 'root',
+                children: [],
+                direction: 'rtl',
+                format: '',
+                indent: 0,
+                version: 1,
+              },
+            },
+          },
+        ],
+      },
+    });
+    expect(created.status(), await created.text()).toBe(201);
+    const draftId = ((await created.json()) as { doc: { id: number } }).doc.id;
+    const { AxeBuilder } = await import('@axe-core/playwright');
+    const serious = async (...include: string[]) => {
+      let builder = new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']);
+      for (const sel of include) builder = builder.include(sel);
+      return (await builder.analyze()).violations
+        .filter((v) => ['serious', 'critical'].includes(v.impact ?? ''))
+        .map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`);
+    };
+    // The screen's hue carriers on the page (Payload's wrap: the header's slot, the controls
+    // and the form; the sidebar sits outside it): the header's tile and the active tab's bar.
+    const carriers = async () => ({
+      tiles: await page.locator('.template-default__wrap [data-admin-hue]').count(),
+      bars: await page.locator('.template-default__wrap .tabs-field__tab-button--active').count(),
+    });
+    const WORDS = {
+      en: { published: 'Published', draft: 'Draft', changed: 'Changed' },
+      ar: { published: 'منشور', draft: 'مسودة', changed: 'معدّل' },
+    };
+    const TEXT = 'rgb(255, 255, 255)';
+    try {
+      for (const width of [1440, 390] as const) {
+        await page.setViewportSize({ width, height: 900 });
+        for (const lang of ['en', 'ar'] as const) {
+          const at = `at ${width} in ${lang}`;
+          await page.goto('/admin');
+          await switchPanelLanguage(page, lang);
+          // A document of the Catalogue: one teal tile, one teal bar, the labels and every
+          // icon in the text colour, nothing else in a hue.
+          await page.goto(`/admin/collections/products/${productId}`);
+          const active = page.locator('.tabs-field__tab-button--active');
+          await expect(active).toBeVisible();
+          expect(await carriers(), `carriers on a product ${at}`).toEqual({ tiles: 1, bars: 1 });
+          await expect(
+            page.locator('[data-admin-header="products"] [data-admin-hue]'),
+          ).toHaveAttribute('data-admin-hue', 'teal');
+          // The icons mount after hydration and the bar reads its hue from the icon's span.
+          await expect(active.locator('[data-admin-section-icon] svg')).toHaveCSS('color', TEXT);
+          await expect
+            .poll(() => active.evaluate(barColour), { message: `the bar ${at}` })
+            .toBe('rgb(45, 212, 191)');
+          await expect(active).toHaveCSS('color', TEXT);
+          await expect(
+            page.locator('.tabs-field__tab-button:not(.tabs-field__tab-button--active)').first(),
+          ).toHaveCSS('color', TEXT);
+          expect(
+            await serious('[data-admin-header]', '.tabs-field__tabs-wrap'),
+            `axe: a product ${at}`,
+          ).toEqual([]);
+          // A global of the Site: the same two carriers, in blue.
+          await page.goto('/admin/globals/site-settings');
+          await expect(
+            page.locator('.tabs-field__tab-button--active [data-admin-section-icon] svg'),
+          ).toBeVisible();
+          expect(await carriers(), `carriers on a global ${at}`).toEqual({ tiles: 1, bars: 1 });
+          await expect
+            .poll(() => page.locator('.tabs-field__tab-button--active').evaluate(barColour), {
+              message: `the bar on a global ${at}`,
+            })
+            .toBe('rgb(0, 152, 224)');
+          expect(
+            await serious('[data-admin-header]', '.tabs-field__tabs-wrap'),
+            `axe: a global ${at}`,
+          ).toEqual([]);
+          // A list: every status a pill with its word in the panel's language, the draft
+          // amber and readable against its row, the list's one tile.
+          await page.goto('/admin/collections/pages');
+          const pills = page.locator('td.cell-_status [data-admin-status]');
+          await expect(pills.first()).toBeVisible();
+          for (const pill of await pills.all()) {
+            const status = (await pill.getAttribute('data-admin-status')) as keyof typeof WORDS.en;
+            await expect(pill, `${status} ${at}`).toHaveText(WORDS[lang][status]);
+          }
+          const draft = page.locator('td.cell-_status [data-admin-status="draft"]').first();
+          await expect(draft).toBeVisible();
+          expect(
+            await draft.evaluate(contrast),
+            `the amber pill's contrast ${at}`,
+          ).toBeGreaterThanOrEqual(4.5);
+          await expect(
+            page.locator('td.cell-_status [data-admin-status="published"]').first(),
+          ).toBeVisible();
+          await expect(page.locator('.collection-list [data-admin-hue]')).toHaveCount(1);
+          expect(
+            await serious('[data-admin-header]', 'td.cell-_status'),
+            `axe: a list ${at}`,
+          ).toEqual([]);
+          // The dashboard: one hue per card, on its icon.
+          await page.goto('/admin');
+          const dashboard = page.locator('[data-admin-dashboard]');
+          await expect(dashboard).toBeVisible();
+          for (const hook of ['visits', 'assistants', 'content', 'engine', 'server']) {
+            await expect(
+              dashboard.locator(`[data-admin-dashboard-${hook}] [data-admin-hue]`),
+              `${hook} ${at}`,
+            ).toHaveCount(1);
+          }
+          expect(await serious('[data-admin-dashboard]'), `axe: the dashboard ${at}`).toEqual([]);
+        }
+      }
+    } finally {
+      await page.setViewportSize({ width: 1280, height: 800 });
+      await page.goto('/admin');
+      await switchPanelLanguage(page, 'en');
+      await request.delete(`${API}/pages/${draftId}`, { headers: auth });
     }
   });
 

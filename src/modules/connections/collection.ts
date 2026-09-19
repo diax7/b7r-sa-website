@@ -8,7 +8,7 @@ import type {
 import { hiddenUnlessAdmin, isAdmin } from '@/modules/cms/access';
 import { describeFields } from '@/modules/cms/admin/descriptions/describe';
 import { collectionComponents } from '@/modules/cms/admin/document/config';
-import { adminGroup } from '@/modules/cms/admin/icons';
+import { adminGroup, sectionIcon } from '@/modules/cms/admin/icons';
 import { inLanguage } from '@/modules/cms/fields/message';
 import { savedByField, stampSavedBy } from '@/modules/cms/fields/saved-by';
 import { secretField } from '@/modules/cms/fields/secret-field';
@@ -220,7 +220,11 @@ export const Connections: CollectionConfig = {
       {
         type: 'collapsible',
         label: { ar: 'الأسعار', en: 'Rates' },
-        admin: { initCollapsed: true, condition: (data) => !isServiceKind(data?.['kind']) },
+        admin: {
+          ...sectionIcon('rates'),
+          initCollapsed: true,
+          condition: (data) => !isServiceKind(data?.['kind']),
+        },
         fields: [
           {
             type: 'row',

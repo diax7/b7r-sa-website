@@ -104,3 +104,13 @@ and 1440 in both languages.
   takes the server's state again on the refresh (a reload for the form), so a sentinel in
   every document form marks unsaved changes and the switch asks first ("Switch anyway" or
   "Cancel"; the autosaving documents get their draft back).
+- 2026-09-19: PR 3 built on `admin/icons-colour` (ADR-060). Settled with the CTO on the
+  phase-1 plan: the tab icons by a portal into Payload's buttons, mapped by index (Payload
+  3.89 has no label slot on a tab, and, found in the build, never renders a custom `Field`
+  on a `tabs` field either, so the widget is a `ui` field the pass places after the tabs);
+  collapsibles and groups through Payload's own Label slot; the header's tile and the active
+  tab's bar the two carriers, the label in the text colour; the dashboard one hue per card
+  on its title icon, the content card's discs neutral; `_status` through `statusColumn()`
+  merged over Payload's base with the cell and the two keys sanitize insists on; three
+  words in the list, Published, Draft and Changed («معدّل», its glossary row), the third
+  from Payload's `_displayStatus` (3.89's list marks a draft over a published version).

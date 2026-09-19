@@ -45,6 +45,7 @@ export function AssistantsCard({
       hook="assistants"
       title={a.title}
       icon={AssistantsIcon}
+      hue="pink"
       end={<SectionLink href={href}>{a.link}</SectionLink>}
     >
       {engines.length === 0 ? (

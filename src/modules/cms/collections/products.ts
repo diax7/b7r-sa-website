@@ -4,12 +4,13 @@ import { revalidateProducts } from '@/modules/cms/hooks/revalidate';
 import { inLanguage } from '@/modules/cms/fields/message';
 import { applyTranslations } from '@/modules/cms/hooks/translations';
 import { savedByField, stampSavedBy } from '@/modules/cms/fields/saved-by';
+import { statusColumn } from '@/modules/cms/fields/status';
 import { PRINT_AREA_LABEL_EN, PRINT_METHOD_EN } from '@/content/seed/en/products';
 import { PRINT_AREA_LABEL, PRINT_METHOD } from '@/content/seed/products';
 import { localePath, requestLocale } from '@/lib/i18n';
 import { previewUrl } from '@/lib/preview-token';
 import { collectionComponents } from '@/modules/cms/admin/document/config';
-import { adminGroup } from '@/modules/cms/admin/icons';
+import { adminGroup, sectionIcon } from '@/modules/cms/admin/icons';
 import { PRODUCT_DESCRIPTIONS } from '@/modules/cms/admin/descriptions/catalogue';
 import { describeFields } from '@/modules/cms/admin/descriptions/describe';
 
@@ -68,6 +69,7 @@ export const Products: CollectionConfig = {
         tabs: [
           {
             label: { ar: 'الصور والألوان', en: 'Photos & colours' },
+            admin: sectionIcon('photos'),
             fields: [
               {
                 name: 'colors',
@@ -135,6 +137,7 @@ export const Products: CollectionConfig = {
           },
           {
             label: { ar: 'الأساسيات', en: 'Basics' },
+            admin: sectionIcon('basics'),
             fields: [
               {
                 type: 'row',
@@ -212,6 +215,7 @@ export const Products: CollectionConfig = {
           },
           {
             label: { ar: 'المقاسات', en: 'Sizes' },
+            admin: sectionIcon('sizes'),
             fields: [
               {
                 name: 'sizes',
@@ -283,6 +287,7 @@ export const Products: CollectionConfig = {
           },
           {
             label: { ar: 'منطقة الطباعة', en: 'Print area' },
+            admin: sectionIcon('printArea'),
             fields: [
               {
                 name: 'printArea',
@@ -403,6 +408,7 @@ export const Products: CollectionConfig = {
         admin: { position: 'sidebar', step: 1 },
       },
       savedByField,
+      statusColumn(),
     ],
     PRODUCT_DESCRIPTIONS,
   ),

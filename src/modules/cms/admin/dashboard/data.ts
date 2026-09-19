@@ -6,10 +6,8 @@ import { formatAdminURL } from 'payload/shared';
 import {
   type AdminGroupKey,
   COLLECTION_ICONS,
-  entityHue,
   entityIcon,
   GLOBAL_ICONS,
-  type Hue,
   navPlacement,
 } from '@/modules/cms/admin/icons';
 import { flattenNav, navGroups } from '@/modules/cms/admin/nav/groups';
@@ -22,7 +20,6 @@ export interface QuickAction {
   title: string;
   text: string;
   icon: LucideIcon;
-  hue: Hue;
 }
 
 /**
@@ -72,7 +69,6 @@ export function contentActions(args: {
         key: 'home',
         href: url('/globals/home'),
         icon: GLOBAL_ICONS.home,
-        hue: entityHue('globals', 'home'),
         ...s.actions.home,
       }
     : null;
@@ -82,7 +78,6 @@ export function contentActions(args: {
       key: 'add-post',
       href: url('/collections/posts/create'),
       icon: COLLECTION_ICONS.posts,
-      hue: entityHue('collections', 'posts'),
       ...s.actions.addPost,
     });
   }
@@ -91,7 +86,6 @@ export function contentActions(args: {
       key: 'add-product',
       href: url('/collections/products/create'),
       icon: COLLECTION_ICONS.products,
-      hue: entityHue('collections', 'products'),
       ...s.actions.addProduct,
     });
   }
@@ -105,7 +99,6 @@ export interface RecentItem {
   /** The entity's name under a document's title; empty for a global, whose title is its name. */
   entity: string;
   icon: LucideIcon | undefined;
-  hue: Hue;
   savedBy: string | null;
   updatedAt: string;
   status: 'draft' | 'published' | null;
@@ -190,7 +183,6 @@ export async function recentActivity(args: {
             title: entity.label,
             entity: '',
             icon: entityIcon('globals', entity.slug),
-            hue: entityHue('globals', entity.slug),
             savedBy: savedByName(doc),
             updatedAt: doc.updatedAt,
             status: statusOf(doc),
@@ -219,7 +211,6 @@ export async function recentActivity(args: {
             title: titleOf(raw[titleField], untitled),
             entity: getTranslation(collection.labels.singular, i18n),
             icon: entityIcon('collections', entity.slug),
-            hue: entityHue('collections', entity.slug),
             savedBy: savedByName(raw),
             updatedAt: raw.updatedAt,
             status: statusOf(raw),

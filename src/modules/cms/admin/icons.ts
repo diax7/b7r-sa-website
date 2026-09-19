@@ -1,14 +1,31 @@
 import {
   ArrowRightLeft,
+  AtSign,
+  BadgeCheck,
+  Bell,
+  Blend,
   Bot,
+  CalendarClock,
+  ChartLine,
   CircleHelp,
+  Clapperboard,
+  ClipboardCheck,
+  ClipboardList,
+  Coins,
   Eye,
   FileText,
+  Fingerprint,
   FolderTree,
   Footprints,
+  GalleryHorizontal,
   Gauge,
   Globe,
   Camera,
+  Images,
+  Info,
+  Languages,
+  LayoutTemplate,
+  ListOrdered,
   MessageCircleQuestion,
   Quote,
   Heart,
@@ -19,24 +36,36 @@ import {
   ListChecks,
   ListTodo,
   type LucideIcon,
+  Megaphone,
+  Menu,
   MessageSquareQuote,
   Newspaper,
   PenLine,
+  PenTool,
+  Phone,
   Plug,
   Radar,
+  Ruler,
   Search,
+  Send,
   Settings2,
+  Share2,
   Shield,
   ShieldCheck,
   Shirt,
   ShoppingBag,
   Signpost,
   SlidersHorizontal,
+  Sparkles,
+  SquareDashed,
   Tag,
   Target,
+  Text,
+  Truck,
   UserPen,
   Users,
   Workflow,
+  Wrench,
   Zap,
 } from 'lucide-react';
 import type { Config } from '@/payload-types';
@@ -144,15 +173,81 @@ export const HUE_DOT_CLASSES: Record<Hue, string> = {
   green: 'bg-success',
 };
 
-/** The bar beside a page header, in the entity's hue (literal classes). */
-export const HUE_BAR_CLASSES: Record<Hue, string> = {
-  blue: 'border-accent',
-  teal: 'border-teal',
-  violet: 'border-violet',
-  pink: 'border-pink',
-  slate: 'border-slate',
-  green: 'border-success',
-};
+/**
+ * The icons of a form's sections (ADR-060): one per tab, collapsible or labelled group, a
+ * place for a section of the site, a noun for a thing, always the text colour, and the
+ * registry's own icon where the section is an entity (the product strip is the products'
+ * shirt, the Search tab the search defaults' glass, the Engine group the engine's bot). A
+ * tab, a collapsible or a group names its key through `sectionIcon()`; `describeFields()`
+ * attaches the widget that draws it; `tests/admin-config.test.ts` refuses a tab or a
+ * collapsible without one, a key that names nothing, and an icon repeated in one strip.
+ */
+export const SECTION_ICONS = {
+  // The home page, one per section in site order.
+  slides: GalleryHorizontal,
+  strip: Shirt,
+  designer: PenTool,
+  steps: ListOrdered,
+  video: Clapperboard,
+  why: Sparkles,
+  testimonials: MessageSquareQuote,
+  stores: Plug,
+  faq: CircleHelp,
+  banner: Megaphone,
+  // A product.
+  photos: Images,
+  basics: Info,
+  sizes: Ruler,
+  printArea: SquareDashed,
+  // A post, a page.
+  content: Text,
+  excerpt: LayoutTemplate,
+  search: Search,
+  publishing: Send,
+  checks: ClipboardCheck,
+  engine: Bot,
+  // The site settings.
+  brand: Fingerprint,
+  contact: AtSign,
+  phone: Phone,
+  social: Share2,
+  menus: Menu,
+  advanced: Wrench,
+  delivery: Truck,
+  analytics: ChartLine,
+  fade: Blend,
+  // The engine settings.
+  schedule: CalendarClock,
+  style: Languages,
+  facts: ClipboardList,
+  quality: BadgeCheck,
+  notifications: Bell,
+  // A connection.
+  rates: Coins,
+} as const satisfies Record<string, LucideIcon>;
+
+export type SectionIconKey = keyof typeof SECTION_ICONS;
+
+/**
+ * The `admin` block of a tab, a collapsible or a group that carries a section icon: the key
+ * rides `admin.custom` (Payload keeps a tab's `admin.custom` on the client, unlike the
+ * top-level `custom`), so the widgets read it on either side.
+ */
+export function sectionIcon(key: SectionIconKey): { custom: { icon: SectionIconKey } } {
+  return { custom: { icon: key } };
+}
+
+/** The section icon key a tab, collapsible or group config names, if any. */
+export function sectionIconKeyOf(admin: unknown): SectionIconKey | null {
+  const key = (admin as { custom?: { icon?: unknown } } | undefined)?.custom?.icon;
+  return typeof key === 'string' && key in SECTION_ICONS ? (key as SectionIconKey) : null;
+}
+
+/** The section icon itself, if the config names one. */
+export function sectionIconOf(admin: unknown): LucideIcon | undefined {
+  const key = sectionIconKeyOf(admin);
+  return key ? SECTION_ICONS[key] : undefined;
+}
 
 /** The five task groups of the sidebar, in display order (ADR-046). */
 export const ADMIN_GROUPS = {

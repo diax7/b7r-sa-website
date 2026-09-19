@@ -102,7 +102,7 @@ export function ServerCard({
       <details open={worst === 'error'} className="group">
         <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-base p-5 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-accent/40 [&::-webkit-details-marker]:hidden">
           <h2 className="flex items-center gap-2 text-h4 text-text">
-            <Icon icon={Server} size={20} className="text-accent" />
+            <Icon icon={Server} size={20} className="text-slate" data-admin-hue="slate" />
             {h.title}
           </h2>
           <span className="flex items-center gap-3">

@@ -8,20 +8,13 @@ import type { ContentSlug } from '@/modules/cms/admin/dashboard/readers';
 import { statusListHref } from '@/modules/cms/admin/dashboard/rules';
 import { DashboardSection } from '@/modules/cms/admin/dashboard/section';
 import { formatNumber, relativeTime } from '@/modules/cms/admin/format';
-import { COLLECTION_ICONS, entityHue, HUE_CLASSES } from '@/modules/cms/admin/icons';
+import { COLLECTION_ICONS } from '@/modules/cms/admin/icons';
 import { adminStringsFor } from '@/modules/cms/admin/strings';
 
 const SAVES = 5;
 
-/** The icon of an action button in its entity's hue (literal classes, so the scanner keeps them). */
-const HUE_TEXT: Record<QuickAction['hue'], string> = {
-  blue: 'text-accent',
-  teal: 'text-teal',
-  violet: 'text-violet',
-  pink: 'text-pink',
-  slate: 'text-slate',
-  green: 'text-success',
-};
+/** A neutral disc behind an entity's icon: the card's one hue is its title's (ADR-060). */
+const disc = 'grid shrink-0 place-items-center bg-surface-2 text-text';
 
 /** One collection's figures for the table: each number a link to its place. */
 export interface ContentRow {
@@ -65,7 +58,9 @@ function Figure({
  * row per content collection with what went live in the range, the drafts waiting (each
  * linked to the list filtered on `_status`, the CTO's edit) and the documents without their
  * English (linked to the first one's English form), the last five saves by people, and the
- * two actions an editor presses most.
+ * two actions an editor presses most. Three groups meet in this card, so the entities'
+ * icons sit on neutral discs and the title's blue is the card's one hue (ADR-060); a
+ * status word keeps its colour (green live, amber draft).
  */
 export function ContentCard({
   rows,
@@ -87,17 +82,14 @@ export function ContentCard({
 }) {
   const s = adminStringsFor(language).dashboard.content;
   return (
-    <DashboardSection hook="content" title={s.title} icon={LayoutList}>
+    <DashboardSection hook="content" title={s.title} icon={LayoutList} hue="blue">
       {home && (
         <Link
           href={home.action.href}
           className="flex items-center gap-3 rounded-base border border-border p-3 hover:bg-surface-2 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-accent/40"
           data-admin-action={home.action.key}
-          data-hue={home.action.hue}
         >
-          <span
-            className={`grid size-10 shrink-0 place-items-center rounded-pill ${HUE_CLASSES[home.action.hue]}`}
-          >
+          <span className={cn(disc, 'size-10 rounded-pill')}>
             <Icon icon={home.action.icon} size={20} />
           </span>
           <span className="min-w-0">
@@ -132,9 +124,7 @@ export function ContentCard({
                   <tr key={r.collection} data-admin-figures={r.collection}>
                     <td className={td}>
                       <span className="flex items-center gap-2">
-                        <span
-                          className={`grid size-7 shrink-0 place-items-center rounded-inner ${HUE_CLASSES[entityHue('collections', r.collection)]}`}
-                        >
+                        <span className={cn(disc, 'size-7 rounded-inner')}>
                           <Icon icon={CollectionIcon} size={14} />
                         </span>
                         {r.label}
@@ -183,10 +173,7 @@ export function ContentCard({
                   href={item.href}
                   className="flex items-center gap-3 py-2 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-accent/40"
                 >
-                  <span
-                    className={`grid size-8 shrink-0 place-items-center rounded-inner ${HUE_CLASSES[item.hue]}`}
-                    data-hue={item.hue}
-                  >
+                  <span className={cn(disc, 'size-8 rounded-inner')}>
                     {item.icon && <Icon icon={item.icon} size={16} />}
                   </span>
                   <span className="min-w-0 flex-1">
@@ -195,7 +182,10 @@ export function ContentCard({
                         {item.title}
                       </span>
                       {item.status && (
-                        <Badge tone={item.status === 'published' ? 'success' : 'muted'}>
+                        <Badge
+                          tone={item.status === 'published' ? 'success' : 'warning'}
+                          data-admin-status={item.status}
+                        >
                           {item.status === 'published' ? s.publishedBadge : s.draft}
                         </Badge>
                       )}
@@ -223,9 +213,8 @@ export function ContentCard({
               href={a.href}
               className="flex h-9 items-center gap-2 rounded-inner border border-border bg-surface px-3 text-small text-text transition-colors duration-(--duration-fast) hover:border-text-muted/60 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-accent/40"
               data-admin-action={a.key}
-              data-hue={a.hue}
             >
-              <Icon icon={a.icon} size={16} className={HUE_TEXT[a.hue]} />
+              <Icon icon={a.icon} size={16} />
               {a.title}
             </Link>
           ))}
