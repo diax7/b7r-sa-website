@@ -87,7 +87,7 @@ describe('WarningsField: both languages of the editorial warnings', () => {
     uiLanguage = 'ar';
     otherLanguage = { other: { code: 'en' }, stored: { status: 'error', doc: null } };
     const { container } = render(<WarningsField {...props} />);
-    expect(container.textContent).toContain('لا ملاحظات.');
+    expect(container.textContent).toContain('لا تنبيهات.');
     expect(container.querySelector('[data-admin-other="warnings"]')?.textContent).toBe(
       'ENتعذّر تحميل قيمة اللغة الإنجليزية. أعد تحميل الصفحة.',
     );
