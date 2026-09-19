@@ -2,6 +2,7 @@ import { render } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { StatusCell, statusTone } from '@/modules/cms/admin/fields/status-cell';
 import { RUN_STATUS_LABELS, RUN_STATUSES } from '@/modules/ai-content/runs';
+import { MESSAGE_STATUS_LABELS, MESSAGE_STATUSES } from '@/modules/inbox/messages';
 
 const i18n = (language: 'ar' | 'en') =>
   ({ language, fallbackLanguage: 'en', t: (k: string) => k }) as never;
@@ -10,6 +11,11 @@ const runField = {
   name: 'status',
   type: 'select',
   options: RUN_STATUSES.map((value) => ({ value, label: RUN_STATUS_LABELS[value] })),
+} as never;
+const messageField = {
+  name: 'status',
+  type: 'select',
+  options: MESSAGE_STATUSES.map((value) => ({ value, label: MESSAGE_STATUS_LABELS[value] })),
 } as never;
 
 function cell(field: never, cellData: unknown, language: 'ar' | 'en' = 'en') {
@@ -32,14 +38,36 @@ function cell(field: never, cellData: unknown, language: 'ar' | 'en' = 'en') {
  * option labels.
  */
 describe('StatusCell', () => {
-  it('colours: green live, amber draft or changed, red failed, neutral otherwise', () => {
+  it('colours: green live or handled, amber draft, changed or following, red failed, blue new, neutral otherwise', () => {
     expect(statusTone('published')).toBe('success');
     expect(statusTone('draft')).toBe('warning');
     expect(statusTone('changed')).toBe('warning');
     expect(statusTone('failed')).toBe('error');
+    expect(statusTone('new')).toBe('primary');
+    expect(statusTone('following')).toBe('warning');
+    expect(statusTone('handled')).toBe('success');
     for (const other of ['running', 'done', 'skipped', 'anything']) {
       expect(statusTone(other), other).toBe('muted');
     }
+  });
+
+  it("a message's state by its option label (ADR-061): New blue, Following amber, Handled green, in both languages", () => {
+    expect(cell(messageField, 'new')).toMatchObject({
+      text: 'New',
+      status: 'new',
+      cls: expect.stringContaining('text-primary'),
+    });
+    expect(cell(messageField, 'following')).toMatchObject({
+      text: 'Following',
+      cls: expect.stringContaining('text-warning'),
+    });
+    expect(cell(messageField, 'handled')).toMatchObject({
+      text: 'Handled',
+      cls: expect.stringContaining('text-success'),
+    });
+    expect(cell(messageField, 'new', 'ar').text).toBe('جديد');
+    expect(cell(messageField, 'following', 'ar').text).toBe('قيد المتابعة');
+    expect(cell(messageField, 'handled', 'ar').text).toBe('معالَج');
   });
 
   it("the document's status in both languages, the third word from Payload's _displayStatus", () => {

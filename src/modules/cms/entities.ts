@@ -17,6 +17,7 @@ import { Home } from '@/modules/cms/globals/home';
 import { SeoDefaults } from '@/modules/cms/globals/seo-defaults';
 import { SiteSettings } from '@/modules/cms/globals/site-settings';
 import { Connections } from '@/modules/connections/collection';
+import { Messages } from '@/modules/inbox/messages';
 import { Traffic } from '@/modules/traffic/collection';
 import { VisibilityChecklist } from '@/modules/visibility/checklist';
 import { Citations } from '@/modules/visibility/ledger/citations';
@@ -47,6 +48,7 @@ export const COLLECTIONS: CollectionConfig[] = [
   Metrics,
   Prompts,
   Citations,
+  Messages,
 ];
 
 export const GLOBALS: GlobalConfig[] = [

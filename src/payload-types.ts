@@ -85,6 +85,7 @@ export interface Config {
     metrics: Metric;
     prompts: Prompt;
     citations: Citation;
+    messages: Message;
     redirects: Redirect;
     'payload-kv': PayloadKv;
     'payload-jobs': PayloadJob;
@@ -112,6 +113,7 @@ export interface Config {
     metrics: MetricsSelect<false> | MetricsSelect<true>;
     prompts: PromptsSelect<false> | PromptsSelect<true>;
     citations: CitationsSelect<false> | CitationsSelect<true>;
+    messages: MessagesSelect<false> | MessagesSelect<true>;
     redirects: RedirectsSelect<false> | RedirectsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-jobs': PayloadJobsSelect<false> | PayloadJobsSelect<true>;
@@ -1747,6 +1749,74 @@ export interface Citation {
   createdAt: string;
 }
 /**
+ * What the contact form sent, as it arrived: a status per message and internal notes. Nobody creates one by hand.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "messages".
+ */
+export interface Message {
+  id: number;
+  /**
+   * As the sender typed it in the form; the row's title in the list.
+   */
+  name: string;
+  /**
+   * A Saudi mobile reads as 9665…; the "Reply on WhatsApp" button opens it.
+   */
+  phone?: string | null;
+  /**
+   * Where "Reply by e-mail" writes to; the notification e-mail carries it as its reply address.
+   */
+  email: string;
+  /**
+   * What the sender picked on the form: merchant, partnership, investment or other.
+   */
+  inquiry: string;
+  /**
+   * Arabic or English, by the page the sender wrote on; the WhatsApp greeting follows it.
+   */
+  locale: 'ar' | 'en';
+  /**
+   * The text as it was sent, up to 4000 characters; nobody rewrites it.
+   */
+  message: string;
+  /**
+   * For the team only; the sender never sees them.
+   */
+  notes?: string | null;
+  /**
+   * New until someone opens it, Following while a reply is pending, Handled when done; the sidebar counts the new ones.
+   */
+  status: 'new' | 'following' | 'handled';
+  /**
+   * Yes when the notification e-mail went out; No means the message is only here: reply from the inbox.
+   */
+  emailed?: boolean | null;
+  /**
+   * The path the form was on: /contact or /en/contact.
+   */
+  page?: string | null;
+  /**
+   * From the link the sender arrived by, when its address carried the UTM parameters.
+   */
+  utm?: {
+    /**
+     * What utm_source said on the link: instagram, google, a newsletter.
+     */
+    source?: string | null;
+    /**
+     * What utm_medium said on the link: social, cpc, email.
+     */
+    medium?: string | null;
+    /**
+     * What utm_campaign said on the link: the campaign's name.
+     */
+    campaign?: string | null;
+  };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * Send an old URL to a page or a new URL. Live as soon as it is saved.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1998,6 +2068,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'citations';
         value: number | Citation;
+      } | null)
+    | ({
+        relationTo: 'messages';
+        value: number | Message;
       } | null)
     | ({
         relationTo: 'redirects';
@@ -2669,6 +2743,31 @@ export interface CitationsSelect<T extends boolean = true> {
   prompt?: T;
   connection?: T;
   run?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "messages_select".
+ */
+export interface MessagesSelect<T extends boolean = true> {
+  name?: T;
+  phone?: T;
+  email?: T;
+  inquiry?: T;
+  locale?: T;
+  message?: T;
+  notes?: T;
+  status?: T;
+  emailed?: T;
+  page?: T;
+  utm?:
+    | T
+    | {
+        source?: T;
+        medium?: T;
+        campaign?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
 }
