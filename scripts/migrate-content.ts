@@ -15,6 +15,7 @@ import { convertMarkdownToLexical, editorConfigFactory } from '@payloadcms/richt
 import { getPayload, type Payload } from 'payload';
 import { blogAuthor, blogHubs, blogPostBody, blogPosts } from '../src/content/seed/blog';
 import { booking } from '../src/content/seed/booking';
+import { bookingEn } from '../src/content/seed/en/booking';
 import { faq } from '../src/content/seed/faq';
 import { home } from '../src/content/seed/home';
 import { postBodyField } from '../src/lib/cms/post-body';
@@ -442,6 +443,14 @@ async function ensureBooking(payload: Payload): Promise<void> {
       hours: booking.hours.map((row) => ({ ...row, day: String(row.day) as '0' })),
       closedDates: [],
     },
+    context: CONTEXT,
+  });
+  // The English name lands here too: the field's per-locale default would make the English
+  // pass read it as already set and count a skip on a fresh database (the CI seed check).
+  await payload.updateGlobal({
+    slug: 'booking',
+    locale: 'en',
+    data: { title: bookingEn.title },
     context: CONTEXT,
   });
   summary.created.push('global booking');

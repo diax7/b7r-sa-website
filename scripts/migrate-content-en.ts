@@ -10,7 +10,6 @@ import { convertMarkdownToLexical, editorConfigFactory } from '@payloadcms/richt
 import { basename, dirname, extname } from 'node:path';
 import type { Payload } from 'payload';
 import { blogAuthorEn, blogHubsEn, blogPostBodyEn, blogPostsEn } from '../src/content/seed/en/blog';
-import { bookingEn } from '../src/content/seed/en/booking';
 import { faqEn } from '../src/content/seed/en/faq';
 import { homeEn } from '../src/content/seed/en/home';
 import { postBodyField } from '../src/lib/cms/post-body';
@@ -126,21 +125,6 @@ export async function ensureEnglish(payload: Payload): Promise<EnglishSummary> {
         context: CONTEXT,
       });
       done('en site-settings');
-    }
-  }
-
-  // booking: the consultation's name (ADR-062).
-  {
-    const en = await payload.findGlobal({ slug: 'booking', ...EN });
-    if (en.title) skip('en booking');
-    else {
-      await payload.updateGlobal({
-        slug: 'booking',
-        locale: 'en',
-        data: { title: bookingEn.title },
-        context: CONTEXT,
-      });
-      done('en booking');
     }
   }
 
