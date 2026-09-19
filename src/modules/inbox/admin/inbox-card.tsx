@@ -151,7 +151,11 @@ export function InboxCard({
                     )}
                   </time>
                 </span>
-                <Badge tone={statusTone(b.status)} data-admin-status={b.status}>
+                <Badge
+                  tone={statusTone(b.status)}
+                  className="shrink-0 whitespace-nowrap"
+                  data-admin-status={b.status}
+                >
                   {BOOKING_STATUS_LABELS[b.status][word]}
                 </Badge>
               </Link>

@@ -24,7 +24,12 @@ import { isSlotTaken } from '@/modules/bookings/store';
 import { signManageToken, verifyManageToken } from '@/modules/bookings/token';
 import { Bookings, staysCancelled } from '@/modules/bookings/collection';
 import { ValidationError } from 'payload';
-import { recordedCalendar, SECRET, testPorts } from './helpers/booking-store';
+import {
+  type RecordedCalendar,
+  recordedCalendar,
+  SECRET,
+  testPorts,
+} from './helpers/booking-store';
 
 /** Tuesday 2026-09-22 in Riyadh; `now` is Sunday the 20th at 09:00 Riyadh. */
 const DAY = '2026-09-22';
@@ -347,7 +352,7 @@ describe("POST /api/bookings: the service after the route's gates", () => {
 });
 
 describe('the manage link', () => {
-  async function booked(options: Parameters<typeof testPorts>[0] = {}) {
+  async function booked(options: { calendar?: RecordedCalendar } = {}) {
     const ports = testPorts(options);
     const result = await book(ports, input(at('10:00')));
     if (result.status !== 201) throw new Error('not booked');

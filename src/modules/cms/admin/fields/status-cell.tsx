@@ -35,7 +35,8 @@ type Option = string | { value: string; label?: StaticLabel | string };
  * A status in a list as a pill with its word: the document's `_status` (Published, Draft,
  * or Changed when Payload's list marks a draft over a published version) with the words of
  * the strings tree (the glossary's), and any other status select (a run's outcome) with
- * its option's label; the tone by `STATUS_TONES`. An unset value reads "Not yet".
+ * its option's label; the tone by `STATUS_TONES`. An unset value reads "Not yet". The pill
+ * never wraps: a two-word status («مُعاد جدولته») stays one line in a narrow column.
  */
 export function StatusCell({ cellData, field, i18n }: DefaultServerCellComponentProps) {
   const s = adminStringsFor(i18n.language).cells;
@@ -45,7 +46,7 @@ export function StatusCell({ cellData, field, i18n }: DefaultServerCellComponent
   const word =
     name === '_status' ? s.status[value as keyof typeof s.status] : optionWord(field, value, i18n);
   return (
-    <Badge tone={statusTone(value)} data-admin-status={value}>
+    <Badge tone={statusTone(value)} className="whitespace-nowrap" data-admin-status={value}>
       {word ?? value}
     </Badge>
   );

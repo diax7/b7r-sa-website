@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { copyFor } from '@/content/copy';
-import { CALENDAR_RETRIES } from '@/modules/bookings/status';
+import {
+  type CalendarClient,
+  mockCalendarClient,
+  mockCalendarEvents,
+  resetMockCalendar,
+} from '@/modules/bookings/google';
 import { SWEEP_CRON } from '@/modules/bookings/schedule';
+import { CALENDAR_RETRIES } from '@/modules/bookings/status';
 import { book } from '@/modules/bookings/service';
 import { minuteOf, riyadhInstant } from '@/modules/bookings/slots';
 import type { BookingRow } from '@/modules/bookings/store';
@@ -295,6 +301,54 @@ describe('the sweep pass', () => {
         }
       ).requestId,
     ).toBe(minted);
+  });
+
+  it('a retry after an insert that timed out on our side but reached the calendar finds the same event, never a second one (the reason the column exists)', async () => {
+    resetMockCalendar();
+    // The mock deduplicates on the request id as Google does; the wrapper lets the first
+    // insert reach it and then times out on the way back, the stored id being all we keep.
+    const mock = mockCalendarClient({ fail: false });
+    let timedOut = false;
+    const calendar: CalendarClient = {
+      ...mock,
+      async createEvent(input) {
+        const created = await mock.createEvent(input);
+        if (!timedOut) {
+          timedOut = true;
+          throw new Error('Google Calendar: timed out after 20000 ms');
+        }
+        return created;
+      },
+    };
+    const ports = testPorts({ calendar });
+    const booked = await book(ports, {
+      name: 'ضياء',
+      email: 'merchant@example.com',
+      phone: '966501699572',
+      note: '',
+      start: START,
+      locale: 'ar',
+      page: '/book',
+      utm: {},
+    });
+    expect(booked.status).toBe(201);
+    const stored = ports.store.rows.get(1)!;
+    expect(stored.calendar).toBe('failed');
+    expect(stored.googleEventId).toBeNull();
+    expect(mockCalendarEvents().size).toBe(1);
+    const [only] = mockCalendarEvents().values();
+    expect(only!.requestId).toBe(stored.meetRequestId);
+    ports.clock.now = new Date(ports.clock.now.getTime() + HOUR);
+    expect((await sweep(ports)).recovered).toEqual([1]);
+    // Still the one event, and the row now names it with its link.
+    expect(mockCalendarEvents().size).toBe(1);
+    expect(ports.store.rows.get(1)).toMatchObject({
+      calendar: 'synced',
+      googleEventId: only!.eventId,
+      meetLink: only!.meetLink,
+      meetRequestId: stored.meetRequestId,
+    });
+    resetMockCalendar();
   });
 
   it('an event created without its Meet link reads as failed with its id, and the retry reads the link, never a second event', async () => {

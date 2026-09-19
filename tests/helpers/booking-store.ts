@@ -165,26 +165,29 @@ export function recordedLogger(): BookingLogger & { lines: string[] } {
   };
 }
 
-export interface TestPorts extends BookingPorts {
+/** The recorded calendar unless a test hands in another client (the mock, a wrapper) or none. */
+export interface TestPorts<
+  C extends CalendarClient | null = RecordedCalendar,
+> extends BookingPorts {
   store: ReturnType<typeof memoryStore>;
-  calendar: RecordedCalendar | null;
+  calendar: C;
   mailer: ReturnType<typeof recordedMailer>;
   logger: ReturnType<typeof recordedLogger>;
   clock: { now: Date };
 }
 
 /** Ports over the memory pieces; `now` is Sunday 2026-09-20 09:00 Riyadh unless set. */
-export function testPorts(
+export function testPorts<C extends CalendarClient | null = RecordedCalendar>(
   options: {
     settings?: Partial<BookingSettings>;
-    calendar?: RecordedCalendar | null;
+    calendar?: C;
     now?: Date;
   } = {},
-): TestPorts {
+): TestPorts<C> {
   const clock = { now: options.now ?? new Date('2026-09-20T06:00:00Z') };
   return {
     store: memoryStore(options.settings),
-    calendar: options.calendar === undefined ? recordedCalendar() : options.calendar,
+    calendar: (options.calendar === undefined ? recordedCalendar() : options.calendar) as C,
     mailer: recordedMailer(),
     now: () => clock.now,
     siteUrl: 'https://b7r.sa',

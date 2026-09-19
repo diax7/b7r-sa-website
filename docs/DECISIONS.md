@@ -2587,7 +2587,15 @@ retried three times an hour apart, a recovery sending the link mails. The window
 open-ended on purpose: a runner that was down sends late rather than never. Sent, then
 flagged: a crash between the two sends twice, a crash before never sends, and the first is
 the lesser harm. The dashboard's jobs list reads an every-N-minutes cron beside the daily
-and weekly ones.
+and weekly ones. The bookings queue's runner tick sits at second 30 (`30 * * * * *`, a
+six-field cron) while the engine's queue ticks at second 0: Payload's scheduler
+(`payload/dist/queues/operations/handleSchedules/defaultAfterSchedule.js`, lines 19 to 37)
+writes the whole `payload-jobs-stats` global from the tick's own snapshot, so two queues
+ticking in the same second clobber each other's `lastScheduledRun` and the loser's schedule
+fires on every tick (the sweep ran every minute on 2026-09-19 until the offset). The
+condition `tests/jobs-runner.test.ts` keeps: no scheduled task on a third queue at second
+0 or 30; a new scheduled queue takes a second of its own (`docs/upstream/payload-jobs-stats-race.md`
+holds the report for Payload).
 
 **The site.** `/book` and `/en/book` (the §4.19 copy, written under §0.5's fallback rule
 and listed for Dhia's read; a `WebPage` graph; in the sitemap while the switch is on, a

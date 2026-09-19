@@ -8,15 +8,9 @@ import { s3Storage } from '@payloadcms/storage-s3';
 import { ar } from '@payloadcms/translations/languages/ar';
 import { en } from '@payloadcms/translations/languages/en';
 import { buildConfig } from 'payload';
-import { digestTask } from '@/modules/ai-content/digest';
-import { freshnessTask } from '@/modules/ai-content/freshness';
-import { contentTickTask } from '@/modules/ai-content/tick';
-import { citationLedgerTask } from '@/modules/visibility/ledger/run';
-import { visibilityPullTask } from '@/modules/visibility/pull';
-import { AI_QUEUE, generatePostWorkflow } from '@/modules/ai-content/workflow';
-import { BOOKINGS_QUEUE, bookingsSweepTask } from '@/modules/bookings/sweep';
+import { generatePostWorkflow } from '@/modules/ai-content/workflow';
 import { REDIRECT_OVERRIDES } from '@/modules/cms/collections/redirects';
-import { indexNowTask } from '@/modules/cms/jobs/indexnow';
+import { AUTO_RUN, TASKS } from '@/modules/cms/jobs/runner';
 import { cmsEnv, isBuildPhase } from '@/lib/cms/env';
 import { ADMIN_PREFIX } from '@/lib/site-routes';
 import { COLLECTIONS, GLOBALS } from '@/modules/cms/entities';
@@ -128,28 +122,10 @@ export default buildConfig({
    * is the only runner. Completed jobs are deleted.
    */
   jobs: {
-    tasks: [
-      indexNowTask,
-      contentTickTask,
-      freshnessTask,
-      digestTask,
-      visibilityPullTask,
-      citationLedgerTask,
-      bookingsSweepTask,
-    ],
+    tasks: TASKS,
     workflows: [generatePostWorkflow],
-    // The default queue serves IndexNow and scheduled publishes; the `ai` queue runs one
-    // content-engine job at a time and carries the engine's schedules: the hourly tick, the
-    // weekly freshness pass and the weekly digest (ADR-042); the `bookings` queue runs the
-    // sweep alone, one at a time, so two passes never send a reminder twice (ADR-062). Its
-    // tick sits at second 30: Payload's scheduler reads the jobs-stats global once per tick
-    // and writes it back whole, so two queues ticking in the same second overwrite each
-    // other's "last scheduled" time, and the loser's schedule fires every minute.
-    autoRun: [
-      { cron: '* * * * *', limit: 10 },
-      { cron: '* * * * *', queue: AI_QUEUE, limit: 1 },
-      { cron: '30 * * * * *', queue: BOOKINGS_QUEUE, limit: 1 },
-    ],
+    // The ticks and the queues are in `jobs/runner.ts` with the one rule they keep.
+    autoRun: [...AUTO_RUN],
     shouldAutoRun: () => !isBuildPhase(),
     deleteJobOnComplete: true,
     access: { run: () => false },

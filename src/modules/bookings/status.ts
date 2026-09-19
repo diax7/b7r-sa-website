@@ -15,7 +15,13 @@ export const BOOKING_STATUS_LABELS: Record<BookingStatus, { ar: string; en: stri
   completed: { ar: 'مكتمل', en: 'Completed' },
 };
 
-/** The statuses still ahead of their time: what the badge counts and the card lists. */
+/**
+ * The statuses still ahead of their time: the sweep's windows (reminders, completion, the
+ * calendar retry), the inbox badge and the dashboard card read these two. The slot itself
+ * is held by "not cancelled" (booked, rescheduled and completed alike): the partial unique
+ * index on `start` and the store's `activeBetween` for the picker's busy slots say `status <>
+ * 'cancelled'`, so a completed booking keeps its past slot and a cancelled one frees it.
+ */
 export const UPCOMING_STATUSES: readonly BookingStatus[] = ['booked', 'rescheduled'];
 
 export const CALENDAR_STATES = ['synced', 'failed', 'off'] as const;
