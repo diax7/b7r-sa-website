@@ -1,354 +1,386 @@
+import { HERO_CHIPS_MAX } from '@/content/schema';
 import type { Described } from '@/modules/cms/admin/descriptions/describe';
+
+/** What a section's switch removes from the home page (ADR-039); one sentence per switch. */
+const sectionSwitch = (section: { ar: string; en: string }) => ({
+  ar: `عند الإيقاف يختفي قسم «${section.ar}» من الصفحة الرئيسية.`,
+  en: `Off hides the “${section.en}” section from the home page.`,
+});
+
+/** A section's three header lines, the same way on every section. */
+const eyebrow = (section: { ar: string; en: string }) => ({
+  ar: `كلمة أو كلمتان فوق عنوان ${section.ar}.`,
+  en: `One or two words above the ${section.en} title.`,
+});
 
 /** The home page, section by section (ADR-046). */
 export const HOME_DESCRIPTIONS: Described = {
   'hero.slides': {
-    ar: 'الشرائح الأربع أعلى الرئيسية، تتبدّل تلقائياً؛ الأولى هي ما يراه الزائر أولاً. لكل شريحة عنوان، سطر، وصورتان لكل لغة.',
-    en: 'The four slides at the top of the home page, rotating; the first is what a visitor sees first. Each has a headline, a subline and two photos per language.',
+    ar: 'تتبدّل أعلى الصفحة الرئيسية، والأولى ما يراه الزائر أولاً. لكل شريحة عنوان وسطر وصورتان لكل لغة.',
+    en: 'Rotate at the top of the home page; the first is what a visitor sees first. Each has a headline, a subline and two photos per language.',
   },
   'hero.slides.headline': {
-    ar: 'العنوان الكبير على الشريحة، وH1 الصفحة للشريحة الأولى. سطران على الحاسوب: حتى 6 كلمات.',
-    en: "The big headline on the slide, and the page's H1 for the first one. Two rows on a desktop: up to 6 words.",
+    ar: 'النص الكبير على الشريحة، وH1 الصفحة في الأولى. حتى 6 كلمات: سطران على الحاسوب.',
+    en: "The big text on the slide, and the page's H1 on the first one. Up to 6 words: two rows on a desktop.",
   },
   'hero.slides.subline': {
-    ar: 'السطر تحت العنوان على الشريحة. سطر واحد على الحاسوب: حتى 10 كلمات.',
-    en: 'The line under the headline on the slide. One row on a desktop: up to 10 words.',
+    ar: 'تحت العنوان على الشريحة، سطر واحد على الحاسوب: حتى 10 كلمات.',
+    en: 'Under the headline on the slide, one row on a desktop: up to 10 words.',
+  },
+  'hero.slides.imageDesktop': {
+    ar: 'خلف الشريحة على الحاسوب. الموقع الإنجليزي يعكس التخطيط: اختر له صورة معكوسة مساحتها الهادئة تحت النص.',
+    en: 'Behind the slide on a desktop. The English site mirrors the layout: give it a mirrored photo with its calm area under the text.',
+  },
+  'hero.slides.imageMobile': {
+    ar: 'خلف الشريحة على الجوال، بنسبة 4:5؛ والموقع الإنجليزي يحتاج صورته المعكوسة.',
+    en: 'Behind the slide on a phone, portrait 4:5; the English site needs its own, mirrored.',
+  },
+  'hero.overlay': {
+    ar: 'طبقة من لون واحد تبدأ من جهة النص وتتلاشى فوق الصورة، لتُقرأ العناوين على أي صورة.',
+    en: 'A one-colour fade from the text side over the photo, so the headline reads on any photo.',
+  },
+  'hero.overlay.enabled': {
+    ar: 'عند الإيقاف تظهر الصورة كما هي خلف النص، بلا تدرّج.',
+    en: 'Off shows the photo as it is behind the text, with no fade.',
+  },
+  'hero.overlay.color': {
+    ar: 'يأخذه التدرّج؛ الأبيض هو الأصل. يُكتب بصيغة #rrggbb.',
+    en: 'The fade takes this colour; white is the default. Written as #rrggbb.',
   },
   'hero.primaryCta': {
-    ar: 'نص الزر الأزرق تحت الشرائح؛ يفتح تسجيل حساب في التطبيق. لامع أو كلاسيكي: إعدادات الموقع ← العلامة ← أزرار لامعة.',
+    ar: 'تحت الشرائح، أزرق؛ يفتح تسجيل حساب في التطبيق. لامع أو كلاسيكي: إعدادات الموقع، العلامة، أزرار لامعة.',
     en: "The blue button under the slides; opens the app's sign-up. Shiny or classic: Site settings, Brand, Shiny buttons.",
   },
   'hero.secondaryCta': {
-    ar: 'نص الرابط بجانب الزر؛ يفتح صفحة المنتجات.',
-    en: 'The link beside the button; opens the products page.',
+    ar: 'يفتح صفحة المنتجات من الشرائح.',
+    en: 'Opens the products page from the slides.',
   },
   'hero.microcopy': {
-    ar: 'سطر الرصيد الترحيبي في شريط الحقائق بصفحة «من نحن» (يُبنى من الرئيسية).',
-    en: 'The welcome-credit line in the facts band of the About page (built from the home page).',
+    ar: 'يظهر في شريط الحقائق بصفحة «من نحن»، الذي يُبنى من الرئيسية.',
+    en: 'Shows in the facts band of the About page, which is built from the home page.',
+  },
+  'hero.chips': {
+    ar: `من صفر إلى ${HERO_CHIPS_MAX}؛ بلا شارات يختفي الصف. شارة بلا نص إنجليزي لا تظهر في الموقع الإنجليزي.`,
+    en: `Zero to ${HERO_CHIPS_MAX}; none hides the row. A chip without English text is left off the English site.`,
   },
   'hero.chips.text': {
-    ar: 'نص الشارة الصغيرة تحت الزرين: «توصيل لكل المملكة خلال 5 أيام». كلمتان إلى خمس.',
-    en: 'The small chip under the buttons: "Kingdom-wide delivery in 5 days". Two to five words.',
+    ar: 'شارة صغيرة تحت الزرين: «توصيل لكل المملكة خلال 5 أيام». كلمتان إلى خمس.',
+    en: 'One small chip under the buttons: "Kingdom-wide delivery in 5 days". Two to five words.',
   },
-  'productStrip.eyebrow': {
-    ar: 'الكلمة الصغيرة فوق عنوان شريط المنتجات.',
-    en: "The small word above the product strip's title.",
-  },
+  'productStrip.eyebrow': eyebrow({ ar: 'شريط المنتجات', en: 'product strip' }),
   'productStrip.title': {
-    ar: 'عنوان شريط المنتجات (H2).',
-    en: "The product strip's heading (H2).",
+    ar: 'يعلو شريط المنتجات في الرئيسية (H2).',
+    en: "The product strip's heading (H2) on the home page.",
   },
   'productStrip.lead': {
-    ar: 'سطر تحت عنوان الشريط.',
-    en: "The line under the strip's heading.",
+    ar: 'تحت عنوان الشريط؛ جملة واحدة.',
+    en: "Under the strip's heading; one sentence.",
   },
   'productStrip.pricePrefix': {
-    ar: 'الكلمة قبل السعر: بطاقات الشريط، وبطاقات صفحة المنتجات، وصفحة المنتج وشريطها الثابت: «من». السعر نفسه من المنتج.',
-    en: 'The word before the price: the strip cards, the products page cards, and the product page with its sticky bar: "from". The price itself comes from the product.',
+    ar: 'الكلمة قبل كل سعر: الشريط، وصفحة المنتجات، وصفحة المنتج وشريطها الثابت. عادةً «من».',
+    en: 'The word before every price: the strip, the products page, the product page and its sticky bar. Usually "from".',
   },
   'productStrip.button': {
-    ar: 'نص زر «كل المنتجات» تحت الشريط؛ يفتح صفحة المنتجات.',
-    en: 'The "all products" button under the strip; opens the products page.',
+    ar: 'تحت الشريط؛ يفتح صفحة المنتجات. عادةً «كل المنتجات».',
+    en: 'Under the strip; opens the products page. Usually "all products".',
   },
-  'designer.eyebrow': {
-    ar: 'الكلمة الصغيرة فوق عنوان قسم المصمّم والحاسبة.',
-    en: "The small word above the designer section's title.",
+  'productStrip.products': {
+    ar: 'المنشورة فقط؛ ما يُلغى نشره لاحقاً يسقط من الشريط حتى يُنشر من جديد.',
+    en: 'Published products only; one unpublished later drops out of the strip until it is published again.',
   },
+  'designer.eyebrow': eyebrow({ ar: 'قسم المصمّم', en: 'designer section' }),
   'designer.title': {
-    ar: 'عنوان قسم المصمّم والحاسبة (H2).',
+    ar: 'يعلو قسم المصمّم والحاسبة (H2).',
     en: "The designer section's heading (H2).",
   },
   'designer.lead': {
-    ar: 'سطر تحت عنوان قسم المصمّم: ما يفعله الزائر هنا.',
-    en: "The line under the designer's heading: what a visitor does here.",
+    ar: 'تحت عنوان المصمّم: ما يفعله الزائر هنا.',
+    en: "Under the designer's heading: what a visitor does here.",
   },
   'designer.cta': {
-    ar: 'نص الزر في نهاية المصمّم؛ يفتح تسجيل حساب في التطبيق. لامع أو كلاسيكي: إعدادات الموقع ← العلامة ← أزرار لامعة.',
-    en: "The button at the end of the designer; opens the app's sign-up. Shiny or classic: Site settings, Brand, Shiny buttons.",
+    ar: 'في نهاية المصمّم؛ يفتح تسجيل حساب في التطبيق. لامع أو كلاسيكي: إعدادات الموقع، العلامة، أزرار لامعة.',
+    en: "At the end of the designer; opens the app's sign-up. Shiny or classic: Site settings, Brand, Shiny buttons.",
   },
-  'steps.eyebrow': {
-    ar: 'الكلمة الصغيرة فوق عنوان الخطوات الثلاث.',
-    en: "The small word above the three steps' title.",
-  },
+  'steps.enabled': sectionSwitch({ ar: 'الخطوات الثلاث', en: 'Three steps' }),
+  'steps.eyebrow': eyebrow({ ar: 'الخطوات الثلاث', en: "three steps'" }),
   'steps.title': {
-    ar: 'عنوان قسم الخطوات الثلاث (H2).',
+    ar: 'يعلو الخطوات الثلاث (H2).',
     en: "The three steps' heading (H2).",
   },
   'steps.link': {
-    ar: 'نص رابط «اعرف أكثر» تحت الخطوات؛ يفتح صفحة «كيف تعمل».',
-    en: 'The "learn more" link under the steps; opens the how-it-works page.',
+    ar: 'تحت الخطوات؛ يفتح صفحة «كيف تعمل».',
+    en: 'Under the steps; opens the how-it-works page.',
   },
   'steps.items': {
-    ar: 'الخطوات الثلاث بترتيبها: أيقونة مجسّمة، عنوان، نص.',
-    en: 'The three steps in order: a 3D icon, a title, a text.',
+    ar: 'بترتيبها، لكل خطوة أيقونة مجسّمة وعنوان ونص.',
+    en: 'In order, each with a 3D icon, a title and a text.',
   },
   'steps.items.title': {
-    ar: 'عنوان الخطوة بجانب رقمها؛ كلمتان إلى أربع.',
-    en: "The step's title beside its number; two to four words.",
+    ar: 'بجانب رقم الخطوة؛ كلمتان إلى أربع.',
+    en: "Beside the step's number; two to four words.",
   },
   'steps.items.text': {
-    ar: 'شرح الخطوة تحت العنوان: جملة واحدة.',
-    en: "The step's explanation under the title: one sentence.",
+    ar: 'تحت العنوان: جملة واحدة.',
+    en: 'Under the title: one sentence.',
   },
   'steps.items.icon': {
-    ar: 'الأيقونة المجسّمة للخطوة، من المكتبة (icons-3d-*).',
-    en: "The step's 3D icon, from the library (icons-3d-*).",
+    ar: 'من مكتبة الصور (icons-3d-*).',
+    en: 'From the image library (icons-3d-*).',
   },
+  'video.enabled': sectionSwitch({ ar: 'الفيديو', en: 'Video' }),
   'video.title': {
-    ar: 'العنوان فوق الفيديو؛ المقطع نفسه ملف ثابت في الموقع.',
-    en: 'The heading above the video; the loop itself ships with the site.',
+    ar: 'فوق الفيديو؛ المقطع نفسه ملف ثابت في الموقع.',
+    en: 'Above the video; the loop itself ships with the site.',
   },
   'video.lead': {
-    ar: 'السطر تحت عنوان الفيديو.',
-    en: "The line under the video's heading.",
+    ar: 'تحت عنوان الفيديو مباشرة.',
+    en: "Under the video's heading.",
   },
-  'whyUs.eyebrow': {
-    ar: 'الكلمة الصغيرة فوق عنوان «لماذا بحر».',
-    en: 'The small word above the "why us" title.',
-  },
+  'whyUs.enabled': sectionSwitch({ ar: 'لماذا بحر', en: 'Why us' }),
+  'whyUs.eyebrow': eyebrow({ ar: '«لماذا بحر»', en: '"why us"' }),
   'whyUs.title': {
-    ar: 'عنوان قسم «لماذا بحر» (H2).',
+    ar: 'يعلو قسم «لماذا بحر» (H2).',
     en: 'The "why us" heading (H2).',
   },
   'whyUs.items': {
-    ar: 'البطاقات الثلاث بترتيبها: أيقونة، عنوان، نص. تظهر أيضاً في شريط الحقائق بصفحة «من نحن».',
-    en: 'The three cards in order: an icon, a title, a text. Also the facts band of the About page.',
+    ar: 'بترتيبها، لكل بطاقة أيقونة وعنوان ونص؛ تظهر أيضاً في شريط حقائق «من نحن».',
+    en: 'In order, each with an icon, a title and a text; also the facts band of the About page.',
   },
   'whyUs.items.icon': {
-    ar: 'أيقونة البطاقة، من المجموعة الثابتة.',
-    en: "The card's icon, from the fixed set.",
+    ar: 'واحدة من ثلاث أيقونات ثابتة.',
+    en: 'One of three fixed icons.',
   },
   'whyUs.items.title': {
-    ar: 'عنوان البطاقة؛ كلمتان إلى أربع.',
-    en: "The card's title; two to four words.",
+    ar: 'على البطاقة؛ كلمتان إلى أربع.',
+    en: 'On the card; two to four words.',
   },
   'whyUs.items.text': {
-    ar: 'نص البطاقة: جملة واحدة برقم أو وعد يمكن الوفاء به.',
-    en: "The card's text: one sentence with a number or a promise that can be kept.",
+    ar: 'جملة واحدة برقم أو وعد يمكن الوفاء به.',
+    en: 'One sentence with a number or a promise that can be kept.',
   },
-  'testimonials.eyebrow': {
-    ar: 'الكلمة الصغيرة فوق عنوان آراء التجار.',
-    en: "The small word above the testimonials' title.",
-  },
+  'testimonials.enabled': sectionSwitch({ ar: 'آراء التجار', en: 'Testimonials' }),
+  'testimonials.eyebrow': eyebrow({ ar: 'آراء التجار', en: "testimonials'" }),
   'testimonials.title': {
-    ar: 'عنوان قسم آراء التجار (H2)؛ الآراء نفسها من مجموعة «آراء التجار».',
-    en: 'The testimonials heading (H2); the quotes come from the Testimonials collection.',
+    ar: 'يعلو قسم آراء التجار (H2)؛ الآراء نفسها من «آراء التجار».',
+    en: 'The testimonials heading (H2); the quotes come from Testimonials.',
   },
+  'integrations.enabled': sectionSwitch({ ar: 'المتاجر المتصلة', en: 'Connected stores' }),
   'integrations.title': {
-    ar: 'عنوان قسم المتاجر المتصلة (H2)؛ الشعارات من مجموعة «المتاجر المتصلة».',
+    ar: 'يعلو قسم المتاجر المتصلة (H2)؛ الشعارات من «المتاجر المتصلة».',
     en: 'The connected-stores heading (H2); the logos come from Connected stores.',
   },
   'integrations.lead': {
-    ar: 'السطر تحت عنوان المتاجر المتصلة.',
-    en: 'The line under the connected-stores heading.',
+    ar: 'تحت عنوان المتاجر المتصلة.',
+    en: 'Under the connected-stores heading.',
   },
+  'faq.enabled': sectionSwitch({ ar: 'الأسئلة الشائعة', en: 'FAQ' }),
   'faq.title': {
-    ar: 'عنوان قسم الأسئلة في الرئيسية (H2)؛ الأسئلة من مجموعة الأسئلة المعلَّمة «يظهر في الرئيسية».',
-    en: 'The home FAQ heading (H2); the entries come from the FAQ flagged «show on home».',
+    ar: 'يعلو قسم الأسئلة في الرئيسية (H2)؛ الأسئلة من المعلَّمة «يظهر في الرئيسية».',
+    en: 'The home FAQ heading (H2); the entries come from the FAQ flagged "show on the home page".',
   },
   'faq.link': {
-    ar: 'نص رابط «كل الأسئلة» تحت القسم؛ يفتح صفحة الأسئلة الشائعة.',
-    en: 'The "all questions" link under the section; opens the FAQ page.',
+    ar: 'تحت القسم؛ يفتح صفحة الأسئلة الشائعة.',
+    en: 'Under the section; opens the FAQ page.',
   },
   'ribbon.title': {
-    ar: 'عنوان شريط الدعوة أسفل كل صفحة، فوق التذييل.',
-    en: 'The CTA ribbon heading at the bottom of every page, above the footer.',
+    ar: 'أسفل كل صفحة، فوق التذييل (H2).',
+    en: 'At the bottom of every page, above the footer (H2).',
   },
   'ribbon.lead': {
-    ar: 'السطر تحت عنوان شريط الدعوة.',
-    en: "The line under the ribbon's heading.",
+    ar: 'تحت عنوان شريط الدعوة.',
+    en: "Under the banner's heading.",
   },
   'ribbon.button': {
-    ar: 'نص زر شريط الدعوة؛ يفتح تسجيل حساب في التطبيق. لامع أو كلاسيكي: إعدادات الموقع ← العلامة ← أزرار لامعة.',
-    en: "The ribbon's button; opens the app's sign-up. Shiny or classic: Site settings, Brand, Shiny buttons.",
+    ar: 'يفتح تسجيل حساب في التطبيق. لامع أو كلاسيكي: إعدادات الموقع، العلامة، أزرار لامعة.',
+    en: "Opens the app's sign-up. Shiny or classic: Site settings, Brand, Shiny buttons.",
   },
 };
 
 /** Site settings. */
 export const SITE_SETTINGS_DESCRIPTIONS: Described = {
-  welcomeCredit: {
-    ar: 'الرصيد الترحيبي بالريال: سطر الرصيد في شريط حقائق «من نحن» وملف llms.txt. يساوي التطبيق؛ لا مزامنة بينهما.',
-    en: "The welcome credit in SAR: the credit line in the About facts band and llms.txt. Must equal the app's: there is no sync.",
-  },
-  deliveryMaxDays: {
-    ar: 'أقصى أيام التوصيل داخل المملكة: وعد «خلال N أيام» في llms.txt، وبيانات الشحن لمحركات البحث، وورقة حقائق المحرّك. يساوي التطبيق؛ لا مزامنة.',
-    en: 'The most days a delivery takes inside the Kingdom: the "within N days" promise in llms.txt, the shipping data search engines read, and the engine facts sheet. Must equal the app: there is no sync.',
-  },
-  bookingUrl: {
-    ar: 'رابط حجز الاستشارة (Cal.com) لبطاقة الحجز في صفحة التواصل. فارغ يفتح واتساب بالرسالة الجاهزة بدلاً منه.',
-    en: 'The consultation booking link (Cal.com) for the contact page booking card. Empty opens WhatsApp with the prefilled message instead.',
-  },
   brandName: {
-    ar: 'اسم العلامة: اسم الموقع في بطاقات المشاركة، والسطر الأول في llms.txt، والاسم الذي تقرؤه محركات البحث.',
-    en: "The brand's name: the site name on share cards, the first line of llms.txt and the name search engines read.",
+    ar: 'يظهر في بطاقات المشاركة، والسطر الأول من llms.txt، وفي بيانات البحث.',
+    en: 'The site name on share cards, the first line of llms.txt and the name search engines read.',
   },
   brandNameLatin: {
-    ar: 'الاسم اللاتيني للعلامة: الاسم البديل في بيانات المنظمة لمحركات البحث، وورقة حقائق المحرّك. B7R Print.',
-    en: "The brand's Latin name: the alternate name in the organisation data search engines read, and the engine's facts sheet. B7R Print.",
+    ar: 'يظهر اسماً بديلاً في بيانات البحث وورقة الحقائق: B7R Print.',
+    en: 'The alternate name in the search data and the facts sheet: B7R Print.',
   },
   tagline: {
-    ar: 'الجملة التعريفية الواحدة: تحت الشعار في التذييل، السطر الأول في llms.txt، بيان التطبيق، وورقة حقائق المحرّك. الجملة نفسها في كل مكان.',
-    en: "The one-line definition: under the logo in the footer, the first line of llms.txt, the web app manifest, and the engine's facts sheet. The same sentence everywhere.",
+    ar: 'تُقرأ كما هي في كل مكان: تحت الشعار في التذييل، وأول llms.txt، وبيان التطبيق، وورقة الحقائق. جملة واحدة.',
+    en: 'One sentence, the same everywhere: under the logo in the footer, the first line of llms.txt, the app manifest, the facts sheet.',
+  },
+  ctaShiny: {
+    ar: 'مفعّل: تكتسب الأزرار الرئيسية في كل الصفحات لمعة متحركة بلوني العلامة. معطّل: الأزرار الزرقاء الكلاسيكية.',
+    en: "On: the main buttons on every page get a moving sheen in the brand's two blues. Off: the classic blue buttons.",
   },
   contact: {
-    ar: 'طرق التواصل: التذييل، صفحة التواصل، أداة واتساب، وبيانات المنظمة.',
-    en: 'How to reach us: the footer, the contact page, the WhatsApp widget and the organisation data.',
+    ar: 'التذييل، وصفحة التواصل، وأداة WhatsApp، وبيانات البحث.',
+    en: 'The footer, the contact page, the WhatsApp widget and the search data.',
   },
   'contact.phone': {
-    ar: 'الرقم كما يُعرض لزائر الموقع العربي في التذييل وصفحة التواصل: 0501699572؛ الموقع الإنجليزي يعرض الرقم الدولي.',
-    en: 'The number as a visitor of the Arabic site sees it in the footer and on the contact page: 0501699572; the English site shows the international number.',
+    ar: 'كما يراه زائر الموقع العربي في التذييل وصفحة التواصل: 0501699572؛ الموقع الإنجليزي يعرض الرقم الدولي.',
+    en: 'As the Arabic site shows it in the footer and on the contact page: 0501699572. The English site shows the international one.',
   },
   'contact.phoneIntl': {
-    ar: 'الرقم الدولي الذي يطلبه الهاتف عند النقر، وبيانات المنظمة: +966501699572.',
-    en: 'The international number the phone dials on a tap, and the organisation data: +966501699572.',
+    ar: 'ما يطلبه الهاتف عند النقر، وبيانات البحث: +966501699572.',
+    en: 'What the phone dials on a tap, and the search data: +966501699572.',
   },
   'contact.whatsapp': {
-    ar: 'أرقام واتساب بلا + ولا مسافات، لرابط wa.me في الأداة وكل أزرار واتساب: 966501699572.',
-    en: 'The WhatsApp digits, no + and no spaces, for the wa.me link in the widget and every WhatsApp button: 966501699572.',
+    ar: 'بلا + ولا مسافات، لرابط wa.me في الأداة وكل أزرار WhatsApp: 966501699572.',
+    en: 'No + and no spaces, for the wa.me link in the widget and every WhatsApp button: 966501699572.',
   },
   'contact.email': {
-    ar: 'البريد في التذييل وصفحة التواصل، ورابط mailto عند النقر: contact@b7r.sa.',
-    en: 'The e-mail in the footer and on the contact page, and the mailto link on a tap: contact@b7r.sa.',
+    ar: 'في التذييل وصفحة التواصل؛ ورابط mailto عند النقر: contact@b7r.sa.',
+    en: 'In the footer and on the contact page; the mailto link on a tap: contact@b7r.sa.',
   },
   social: {
-    ar: 'الحسابات الرسمية: أيقونات التذييل وقائمة الجوال، وروابط sameAs في بيانات المنظمة. الروابط الحقيقية فقط.',
-    en: 'The official accounts: the footer and phone-menu icons, and the sameAs links in the organisation data. Real links only.',
+    ar: 'أيقونات التذييل وقائمة الجوال، وروابط sameAs في بيانات البحث. الروابط الحقيقية فقط.',
+    en: 'The footer and phone-menu icons, and the sameAs links in the search data. Real links only.',
   },
   'social.x': {
-    ar: 'رابط حساب X الكامل: https://x.com/b7rprint',
-    en: 'The full X profile link: https://x.com/b7rprint',
+    ar: 'رابط الحساب الكامل: https://x.com/b7rprint',
+    en: 'The full profile link: https://x.com/b7rprint',
   },
   'social.instagram': {
-    ar: 'رابط حساب إنستغرام الكامل: https://instagram.com/b7rprint',
-    en: 'The full Instagram profile link: https://instagram.com/b7rprint',
+    ar: 'رابط الحساب الكامل: https://instagram.com/b7rprint',
+    en: 'The full profile link: https://instagram.com/b7rprint',
   },
   'social.tiktok': {
-    ar: 'رابط حساب تيك توك الكامل: https://tiktok.com/@b7rprint',
-    en: 'The full TikTok profile link: https://tiktok.com/@b7rprint',
+    ar: 'رابط الحساب الكامل: https://tiktok.com/@b7rprint',
+    en: 'The full profile link: https://tiktok.com/@b7rprint',
   },
   'menu.primary': {
-    ar: 'روابط الترويسة بترتيبها، وقائمة الجوال، وعمود «روابط» في التذييل.',
-    en: 'The header links in order, the phone menu, and the "Links" column of the footer.',
+    ar: 'بترتيبها: الترويسة، وقائمة الجوال، وقائمة «روابط» في التذييل.',
+    en: 'In order: the header, the phone menu and the "Links" list of the footer.',
+  },
+  'menu.primary.label': {
+    ar: 'كما يقرؤه الزائر في الترويسة وقائمة الجوال وقائمة «روابط» في التذييل.',
+    en: 'The link text in the header, the phone menu and the "Links" list of the footer.',
+  },
+  'menu.primary.href': {
+    ar: 'المسار الذي يفتحه الرابط، يبدأ بـ /: /products. الموقع الإنجليزي يضيف /en وحده.',
+    en: 'The path the link opens, starting with /: /products. The English site adds /en by itself.',
   },
   'menu.primary.matchPrefix': {
-    ar: 'يبقى الرابط مُعلَّماً في الترويسة لكل صفحة يبدأ مسارها بهذا. مثال: /products',
-    en: 'The link stays marked as the current one on every page whose path starts with this. Example: /products',
+    ar: 'الرابط يبقى مُعلَّماً في كل صفحة يبدأ مسارها بهذا: /products.',
+    en: 'Keeps the link marked as current on every page whose path starts with this: /products.',
   },
   'menu.policies': {
-    ar: 'عمود «السياسات» في التذييل: الشروط، الشحن، الخصوصية، الأسئلة الشائعة.',
-    en: 'The "Policies" column of the footer: terms, shipping, privacy, FAQ.',
+    ar: 'قائمة «السياسات» في التذييل: الشروط، الشحن، الخصوصية، الأسئلة الشائعة.',
+    en: 'The "Policies" list of the footer: terms, shipping, privacy, FAQ.',
+  },
+  'menu.policies.label': {
+    ar: 'كما يقرؤه الزائر في قائمة «السياسات» بالتذييل.',
+    en: 'The link text in the "Policies" list of the footer.',
+  },
+  'menu.policies.href': {
+    ar: 'المسار الذي يفتحه الرابط، يبدأ بـ /: /privacy.',
+    en: 'The path the link opens, starting with /: /privacy.',
   },
   'menu.policies.matchPrefix': {
     ar: 'لا يُقرأ لروابط التذييل؛ اتركه فارغاً.',
     en: 'Not read for footer links; leave it empty.',
   },
   'menu.ctaLabel': {
-    ar: 'نص الزر الأزرق في الترويسة وفي قائمة الجوال.',
+    ar: 'أزرق، في الترويسة وفي قائمة الجوال.',
     en: 'The blue button in the header and in the phone menu.',
   },
   'menu.skipLinkLabel': {
-    ar: 'رابط يظهر عند الضغط على Tab أول مرة، يقفز إلى المحتوى.',
-    en: 'The link a keyboard user sees on the first Tab, jumping past the header to the content.',
+    ar: 'ما يراه مستخدم لوحة المفاتيح عند أول Tab: قفزة من الترويسة إلى المحتوى.',
+    en: 'What a keyboard user sees on the first Tab: a jump past the header to the content.',
   },
   'menu.menuOpenLabel': {
-    ar: 'الاسم الذي يقرؤه قارئ الشاشة لزر القائمة في الجوال وهي مغلقة.',
-    en: "What a screen reader calls the phone menu's burger while the menu is closed.",
+    ar: 'ما يقرؤه قارئ الشاشة لزر القائمة في الجوال وهي مغلقة.',
+    en: "What a screen reader calls the phone menu's button while the menu is closed.",
   },
   'menu.menuCloseLabel': {
-    ar: 'الاسم الذي يقرؤه قارئ الشاشة لزر القائمة في الجوال وهي مفتوحة.',
+    ar: 'ما يقرؤه قارئ الشاشة لزر القائمة في الجوال وهي مفتوحة.',
     en: "What a screen reader calls the phone menu's button while the menu is open.",
   },
-  'menu.primary.label': {
-    ar: 'نص الرابط في الترويسة، وقائمة الجوال، وعمود «روابط» في التذييل.',
-    en: 'The link text in the header, the phone menu and the "Links" column of the footer.',
+  welcomeCredit: {
+    ar: 'بالريال: سطر الرصيد في شريط حقائق «من نحن» وملف llms.txt. يساوي رصيد التطبيق؛ لا مزامنة بينهما.',
+    en: 'In SAR: the credit line in the About facts band and in llms.txt. Must equal the app; nothing syncs them.',
   },
-  'menu.primary.href': {
-    ar: 'المسار الذي يفتحه الرابط، يبدأ بـ /: /products. الموقع الإنجليزي يضيف /en وحده.',
-    en: 'The path the link opens, starting with /: /products. The English site adds /en by itself.',
-  },
-  'menu.policies.label': {
-    ar: 'نص الرابط في عمود «السياسات» بالتذييل.',
-    en: 'The link text in the "Policies" column of the footer.',
-  },
-  'menu.policies.href': {
-    ar: 'المسار الذي يفتحه الرابط، يبدأ بـ /: /privacy.',
-    en: 'The path the link opens, starting with /: /privacy.',
+  deliveryMaxDays: {
+    ar: 'داخل المملكة: وعد «خلال N أيام» في llms.txt، وبيانات الشحن لمحركات البحث، وورقة الحقائق. يساوي التطبيق.',
+    en: 'Inside the Kingdom: the "within N days" promise in llms.txt, the shipping data for search engines, the facts sheet. Must equal the app.',
   },
   deliveryOrigin: {
-    ar: 'مدينة الشحن: شارة الموقع في شريط حقائق «من نحن»، وسطر الشحن في llms.txt، وعنوان المنظمة لمحركات البحث، وورقة حقائق المحرّك: جدة.',
-    en: "The shipping city: the map-pin chip in the About facts band, the shipping line of llms.txt, the organisation's address for search engines, and the engine's facts sheet: Jeddah.",
+    ar: 'شارة الموقع في شريط حقائق «من نحن»، وسطر الشحن في llms.txt، والعنوان في بيانات البحث، وورقة الحقائق: جدة.',
+    en: 'The map-pin chip in the About facts band, the shipping line of llms.txt, the address in the search data, the facts sheet: Jeddah.',
   },
   deliveryRegion: {
-    ar: 'منطقة المنشأ في بيانات المنظمة لمحركات البحث (حقل addressRegion): منطقة مكة المكرمة. لا يظهر للزائر.',
-    en: 'The origin region in the organisation data search engines read (addressRegion): Makkah Region. Not shown to a visitor.',
+    ar: 'في بيانات البحث (addressRegion): منطقة مكة المكرمة. لا تظهر للزائر.',
+    en: 'The origin region in the search data (addressRegion): Makkah Region. Not shown to a visitor.',
   },
-  analytics: {
-    ar: 'أدوات القياس: Google Analytics 4 (بعد موافقة الزائر) وUmami (بلا موافقة). اتركها فارغة لموقع بلا تتبّع.',
-    en: 'The measurement tools: Google Analytics 4 (after the visitor consents) and Umami (no consent needed). Leave empty for a site with no tracking.',
-  },
-  'analytics.gaId': {
-    ar: 'معرّف القياس في Google Analytics 4 (يبدأ بـ G-). عند تعبئته يظهر شريط الموافقة على ملفات الارتباط ويُحمَّل GA بعد الموافقة؛ فارغ يعني لا تتبّع ولا شريط.',
-    en: 'The Google Analytics 4 measurement id (starts with G-). Set, the cookie consent bar shows and GA loads after consent; empty means no tracking and no bar.',
-  },
-  'analytics.umamiSrc': {
-    ar: 'رابط سكربت Umami: على cloud.umami.is أو umami.b7r.app (سياسة الأمان تسمح بهذين فقط). يُحمَّل في كل صفحة عند تعبئته مع معرّف الموقع؛ لا يحتاج موافقة.',
-    en: 'The Umami script URL, on cloud.umami.is or umami.b7r.app (the security policy admits only these). Loads on every page when set together with the website id; needs no consent.',
-  },
-  'analytics.umamiId': {
-    ar: 'معرّف الموقع في Umami (UUID). يعمل فقط مع رابط السكربت.',
-    en: 'The Umami website id (a UUID). Works only together with the script URL.',
-  },
-  ctaShiny: {
-    ar: 'مفعّل: تكتسب الأزرار الرئيسية في كل الصفحات لمعة متحركة بلوني العلامة. معطّل: الأزرار الزرقاء الكلاسيكية.',
-    en: "On: the main buttons on every page get a moving sheen in the brand's two blues. Off: the classic blue buttons.",
+  bookingUrl: {
+    ar: 'يُفتح من بطاقة الحجز في صفحة التواصل. فارغ يفتح WhatsApp بالرسالة الجاهزة بدلاً منه.',
+    en: 'Opens from the booking card on the contact page. Empty opens WhatsApp with the prefilled message instead.',
   },
   legalEntity: {
-    ar: 'لا يقرؤه الموقع اليوم: سطر الحقوق في التذييل والصفحات القانونية نصّها ثابت في الكود. محفوظ لليوم الذي يُقرأ فيه.',
-    en: "Read by nothing on the site today: the footer's copyright line and the legal pages carry their own fixed text. Kept for the day they read it.",
+    ar: 'لا يقرؤه الموقع اليوم: سطر الحقوق والصفحات القانونية نصّها ثابت. محفوظ لليوم الذي يُقرأ فيه.',
+    en: 'Read by nothing on the site today: the copyright line and the legal pages carry fixed text. Kept for the day they read it.',
+  },
+  analytics: {
+    ar: 'GA4 (بعد موافقة الزائر) وUmami (بلا موافقة). فارغ يعني لا تتبّع.',
+    en: 'GA4 (after the visitor consents) and Umami (no consent needed). Empty means no tracking.',
+  },
+  'analytics.gaId': {
+    ar: 'يبدأ بـ G-. عند تعبئته يظهر شريط الموافقة ويُحمَّل GA4 بعد الموافقة؛ فارغ يعني لا تتبّع ولا شريط.',
+    en: 'Starts with G-. Set, the consent bar shows and GA4 loads after consent; empty, no tracking and no bar.',
+  },
+  'analytics.umamiSrc': {
+    ar: 'على cloud.umami.is أو umami.b7r.app، ولا يقبل الموقع غيرهما. يُحمَّل في كل صفحة مع معرّف الموقع؛ بلا موافقة.',
+    en: 'On cloud.umami.is or umami.b7r.app, the only two the site allows. Loads on every page when set with the website id; no consent needed.',
+  },
+  'analytics.umamiId': {
+    ar: 'بصيغة UUID؛ يعمل فقط مع رابط السكربت.',
+    en: 'A UUID; works only together with the script URL.',
   },
 };
 
 /** Search defaults. */
 export const SEO_DEFAULTS_DESCRIPTIONS: Described = {
   titleTemplate: {
-    ar: 'عنوان التبويب ونتيجة Google لكل صفحة: يحلّ %s محلّ عنوان الصفحة نفسها. ما بعد الشرطة العمودية أقل من 15 حرفاً.',
-    en: 'The browser tab and the Google result title of every page: %s becomes the page title itself. Keep the part after the bar under 15 characters.',
+    ar: 'تبويب المتصفح ونتيجة Google لكل صفحة: يحلّ %s محلّ عنوان الصفحة. ما بعد الشرطة العمودية أقل من 15 حرفاً.',
+    en: 'The browser tab and the Google result of every page: %s becomes the page title. Keep the part after the bar under 15 characters.',
   },
   routes: {
-    ar: 'صف لكل صفحة ثابتة: عنوان البحث ووصفه وتاريخ آخر تغيير في محتواها.',
+    ar: 'صف لكل صفحة ثابتة: عنوان البحث ووصفه وتاريخ آخر تغيير في المحتوى.',
     en: 'One row per fixed page: its search title, its description and the date its content last changed.',
   },
-  'routes.updatedAt': {
-    ar: 'تاريخ آخر تغيير حقيقي في محتوى الصفحة: تاريخ التعديل في خريطة الموقع لهذا المسار (محركات البحث تعيد الزحف عنده).',
-    en: 'The date the page content last really changed: the sitemap lastmod for this route (search engines recrawl on it).',
-  },
-  'routes.description': {
-    ar: 'الوصف تحت العنوان في نتيجة Google لهذا المسار. جملة أو جملتان، حتى 155 حرفاً.',
-    en: 'The description under the title in the Google result for this route. One or two sentences, up to 155 characters.',
-  },
-  verification: {
-    ar: 'الرمزان اللذان أعطتهما Google Search Console وBing Webmaster Tools لإثبات الملكية (وسما meta في الرئيسية). فارغ يستخدم متغيّرات البيئة.',
-    en: 'The tokens Google Search Console and Bing Webmaster Tools gave you to prove ownership (meta tags on the home page). Empty uses the environment variables.',
-  },
   'routes.route': {
-    ar: 'مسار الصفحة الثابتة التي ينطبق عليها هذا الصف: / أو /products أو /blog.',
+    ar: 'الصفحة الثابتة التي ينطبق عليها الصف: / أو /products أو /blog.',
     en: 'The fixed page this row is for: /, /products or /blog.',
   },
+  'routes.updatedAt': {
+    ar: 'تاريخ آخر تغيير حقيقي في المحتوى: تاريخ التعديل في خريطة الموقع لهذا المسار، وعنده تعيد محركات البحث الزحف.',
+    en: 'The date the content last really changed: the sitemap lastmod for this path, which search engines recrawl on.',
+  },
   'routes.title': {
-    ar: 'عنوان نتيجة البحث وتبويب المتصفح لهذا المسار؛ يُضاف إليه اسم الموقع من القالب. حتى 70 حرفاً.',
-    en: "The search result's title and the browser tab for this route; the site name from the template is appended. Up to 70 characters.",
+    ar: 'في نتيجة البحث وتبويب المتصفح لهذا المسار؛ يُضاف إليه اسم الموقع من القالب. حتى 70 حرفاً.',
+    en: "The search result's title and the browser tab for this path; the site name from the template is appended. Up to 70 characters.",
+  },
+  'routes.description': {
+    ar: 'تحت العنوان في نتيجة Google لهذا المسار. جملة أو جملتان، حتى 155 حرفاً.',
+    en: 'Under the title in the Google result for this path. One or two sentences, up to 155 characters.',
   },
   'routes.ogImage': {
-    ar: 'مسار صورة المشاركة لهذا المسار: /og/products.png. فارغ يستخدم /og/default.png.',
-    en: "The share image's path for this route: /og/products.png. Empty uses /og/default.png.",
+    ar: 'تظهر عند مشاركة الرابط: /og/products.png. فارغة تستخدم /og/default.png.',
+    en: 'Shown when the link is shared: /og/products.png. Empty uses /og/default.png.',
+  },
+  verification: {
+    ar: 'تثبت الملكية لـ Google Search Console وBing Webmaster Tools (وسما meta في الرئيسية). فارغة تُبقي ما ضُبط مع الاستضافة.',
+    en: 'Prove ownership to Google Search Console and Bing Webmaster Tools (meta tags on the home page). Empty keeps the ones set with the hosting.',
   },
   'verification.google': {
-    ar: 'رمز التحقق من Google Search Console (وسم meta في الرئيسية). فارغ يستخدم متغيّر البيئة.',
-    en: "Google Search Console's verification token (a meta tag on the home page). Empty uses the environment variable.",
+    ar: 'رمز التحقق (وسم meta في الرئيسية). فارغ يُبقي ما ضُبط مع الاستضافة.',
+    en: 'The verification token (a meta tag on the home page). Empty keeps the one set with the hosting.',
   },
   'verification.bing': {
-    ar: 'رمز التحقق من Bing Webmaster Tools (وسم meta في الرئيسية). فارغ يستخدم متغيّر البيئة.',
-    en: "Bing Webmaster Tools' verification token (a meta tag on the home page). Empty uses the environment variable.",
+    ar: 'رمز التحقق (وسم meta في الرئيسية). فارغ يُبقي ما ضُبط مع الاستضافة.',
+    en: 'The verification token (a meta tag on the home page). Empty keeps the one set with the hosting.',
   },
 };
 
@@ -359,8 +391,8 @@ export const USER_DESCRIPTIONS: Described = {
     en: 'Admin: opens settings, users and the engine. Editor: changes content only. Not shown on the site.',
   },
   name: {
-    ar: 'الاسم كما يظهر في «آخر حفظ» على المستندات وفي قائمة الحساب. لا يظهر في الموقع.',
-    en: 'The name as it shows in "Last saved" on documents and in the account menu. Not shown on the site.',
+    ar: 'كما يظهر في «آخر حفظ» على المستندات وفي قائمة الحساب. لا يظهر في الموقع.',
+    en: 'As it shows in "Last saved" on documents and in the account menu. Not shown on the site.',
   },
 };
 
@@ -370,11 +402,11 @@ export const MEDIA_DESCRIPTIONS: Described = {
     en: 'What a screen reader says for this image, in the language of the pill beside the label. Required.',
   },
   credit: {
-    ar: 'مصدر الصورة أو المصوّر، للتوثيق الداخلي. لا يظهر في الموقع.',
-    en: "The photo's source or photographer, for the record. Not shown on the site.",
+    ar: 'المصوّر أو مصدر الصورة، للتوثيق فقط. لا يظهر في الموقع.',
+    en: 'The photographer or the source, for the record. Not shown on the site.',
   },
   blur: {
-    ar: 'نسخة ضبابية صغيرة تُحسب عند الرفع وتظهر في مكان الصورة حتى تصل. لا تُحرَّر يدوياً.',
+    ar: 'نسخة ضبابية صغيرة تُحسب عند الرفع وتظهر مكان الصورة حتى تصل. لا تُحرَّر يدوياً.',
     en: "A tiny blurred copy computed on upload, shown in the photo's place until it arrives. Not edited by hand.",
   },
 };
