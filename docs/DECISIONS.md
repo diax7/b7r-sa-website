@@ -1777,6 +1777,43 @@ test time in the service's own terms (a model id, `sc-domain:b7r.sa (siteOwner)`
 performance: 92`, an HTTP status and reason), never a sentence for a reader; our own words in
 it (`services/tests.ts`, `connections/test.ts`) are terse and technical for that reason.
 
+**The switch in the header (amended 2026-09-19, PR 1 of the Arabic panel's second pass).**
+Dhia: "top right, an option to switch the interface language". The panel's language is now
+one control in two places, `nav/language-switch.tsx`: at the trailing end of the header's
+actions beside the search box and "View website" (top right in English, top left in Arabic,
+as the direction flips with the other controls, ADR-058), and at the foot of the phone
+drawer. Above 1024 px it is a `role="group"` labelled "Panel language" / «لغة اللوحة» with
+the two names, each in its own language and never translated («العربية», "English": Payload's
+`languageOptions`, each pack's `general.thisLanguage`), the current one `aria-pressed` and
+visibly marked; at 1024 px and under it folds to one icon with its label as a tooltip
+("Switch to Arabic" / «بدّل إلى الإنجليزية») that toggles to the other language. No cookie
+of ours: a click calls Payload's own `switchLanguage` from `useTranslation()`, which runs
+the server action the root layout hands its provider (the `payload-lng` cookie, a year,
+path `/`; no `cookiePrefix` is set, so the name is exactly that) and then `router.refresh()`,
+and the root layout, a server component, reads the cookie again for `<html lang dir>`, the
+client config's translations and everything `useAdminStrings()` reads: one refresh, no
+reload (the e2e counts no `load` event), the control disabled while the switch is pending.
+The account view's own select stays and agrees with the header. **The refresh is a reload
+for a document form:** Payload's `Form` replaces its state from the server's `initialState`
+on every `router.refresh()` (`forms/Form/index.js`, `REPLACE_STATE` with `optimize: false`),
+so unsaved changes are gone after a switch; the account view's own select has always had
+the same effect, unnoticed on a page with no content form. On an autosaving document
+(pages, posts, products, testimonials, home; 1.5 s) the draft comes back, so the text is
+there; on any other form it would be lost, so a sentinel inside every document form
+(`document/form-modified.tsx`, first in the `beforeDocumentControls` slot every config gets
+through `admin/document/config.ts`; an entity's own action such as Generate now comes after
+it) mirrors Payload's `useFormModified` onto `<body data-admin-form-modified>`, counted per
+form so a document drawer over an edit view does not clear it, taken off on unmount so
+leaving the view leaves no stale flag; while it is set the switch asks first in our
+`Dialog`: "Unsaved changes are lost when the language changes. Save first, or switch
+anyway." with "Switch anyway" (amber: careful, not red) and "Cancel". Two forms render no
+`beforeDocumentControls` and are not guarded: the account view's own small form and
+Payload's bulk "Edit many" drawer on a list; both stay as they are. The e2e
+drives the switch at 1440 and 390 in both directions (the cookie by name, `lang` and `dir`,
+the marked name, the placement, the tooltip, the drawer's copy, axe on the header in both
+languages), the autosaved page's text back after a switch, and the site settings' guard
+(cancel and Esc keep the text and the language, "Switch anyway" flips the panel).
+
 ## ADR-057: Side-by-side bilingual editing (2026-09-18)
 
 Dhia's brief, from the pre-launch programme (Phase 2): "I do not want to edit English and

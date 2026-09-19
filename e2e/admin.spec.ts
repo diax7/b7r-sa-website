@@ -1,4 +1,4 @@
-import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
+import { expect, test, type APIRequestContext, type Locator, type Page } from '@playwright/test';
 import { signPreview } from '../src/lib/preview-token';
 import { riyadh } from '../src/lib/riyadh';
 import {
@@ -31,6 +31,18 @@ const withoutRowIds = (rows: unknown) =>
 /** How far the document could scroll sideways: zero on a page that fits its screen. */
 const sidewaysOverflow = (page: Page) =>
   page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+
+/**
+ * The header's language switch (ADR-056, amended 2026-09-19): a click on the other name
+ * above 1024 px, on the one icon at and under it; then the refresh that flips `html[lang]`.
+ */
+async function switchPanelLanguage(page: Page, code: 'ar' | 'en') {
+  const actions = page.locator('[data-admin-actions]');
+  const name = actions.locator(`[data-admin-language] button[lang="${code}"]`);
+  if (await name.isVisible()) await name.click();
+  else await actions.locator('[data-admin-language-toggle]').click();
+  await expect(page.locator('html')).toHaveAttribute('lang', code);
+}
 
 /** The id of the first document of a collection, read with the admin's token. */
 async function firstDocId(request: APIRequestContext, auth: Record<string, string>, slug: string) {
@@ -838,7 +850,172 @@ test.describe('CMS admin', () => {
     await expect(page.locator('[data-admin-saved-by]')).toContainText(/by .+ · /);
   });
 
-  test("the admin in Arabic (ADR-056): the account view switches the panel, it reads right-to-left in our strings and Payload's, the content locale stays put, axe is clean, English comes back", async ({
+  test('the language switch (ADR-056, amended 2026-09-19): at the trailing end of the header, one click each way, the cookie, lang and dir, the marked name, typed text kept, one icon on a phone, axe on the header in both languages', async ({
+    page,
+    request,
+    baseURL,
+  }) => {
+    test.setTimeout(120_000);
+    expect((await page.request.post(`${API}/users/login`, { data: admin })).status()).toBe(200);
+    const html = page.locator('html');
+    const actions = page.locator('[data-admin-actions]');
+    const group = actions.locator('[data-admin-language]');
+    const toggle = actions.locator('[data-admin-language-toggle]');
+    const viewSite = page.locator('[data-admin-view-site]');
+    const languageCookie = async () =>
+      (await page.context().cookies()).find((c) => c.name === 'payload-lng')?.value;
+    const { AxeBuilder } = await import('@axe-core/playwright');
+    const serious = async () =>
+      (
+        await new AxeBuilder({ page })
+          .withTags(['wcag2a', 'wcag2aa'])
+          .include('.app-header')
+          .analyze()
+      ).violations
+        .filter((v) => ['serious', 'critical'].includes(v.impact ?? ''))
+        .map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`);
+    /** The switch sits after "View website" on the trailing side: the right in LTR, the left in RTL. */
+    const trailing = async (control: Locator, rtl: boolean) => {
+      const box = (await control.boundingBox())!;
+      const site = (await viewSite.boundingBox())!;
+      const width = page.viewportSize()!.width;
+      expect(box.y + box.height, 'inside the header').toBeLessThan(60);
+      if (rtl) {
+        expect(box.x + box.width).toBeLessThanOrEqual(site.x + 1);
+        expect(box.x).toBeLessThan(width * 0.2);
+      } else {
+        expect(box.x).toBeGreaterThanOrEqual(site.x + site.width - 1);
+        expect(box.x + box.width).toBeGreaterThan(width * 0.8);
+      }
+    };
+    try {
+      // 1440: the two names, each in its own language, English pressed; the icon is hidden.
+      await page.setViewportSize({ width: 1440, height: 900 });
+      const auth = await login(request, admin);
+      const pageId = await firstDocId(request, auth, 'pages');
+      await page.goto(`/admin/collections/pages/${pageId}`);
+      await expect(group).toBeVisible();
+      await expect(group).toHaveAttribute('role', 'group');
+      await expect(group).toHaveAttribute('aria-label', 'Panel language');
+      await expect(group.locator('button')).toHaveText(['English', 'العربية']);
+      await expect(group.locator('button[lang="ar"]')).toHaveAttribute('lang', 'ar');
+      await expect(group.locator('[aria-pressed="true"]')).toHaveText('English');
+      await expect(toggle).toBeHidden();
+      await trailing(group, false);
+      expect(await sidewaysOverflow(page), 'no overflow at 1440, English').toBe(0);
+      expect(await serious(), 'axe: the English header').toEqual([]);
+      // Type into the title and let the autosave land (pages autosave every 1.5 s), then
+      // switch: a refresh, not a reload (no `load` event fires); Payload's form takes the
+      // server's state again on a refresh, which on an autosaving document is the draft
+      // just written, so the text is back; `<html lang dir>` flip; the cookie is set by name.
+      await page.locator('.tabs-field__tab-button', { hasText: 'Content' }).click();
+      const title = page.locator('#field-title');
+      const before = await title.inputValue();
+      const typed = `${before} (e2e)`;
+      const draftTitle = async () =>
+        (
+          (await (
+            await request.get(`${API}/pages/${pageId}?depth=0&draft=true`, { headers: auth })
+          ).json()) as { title: string }
+        ).title;
+      await title.fill(typed);
+      await expect.poll(draftTitle, POLL).toBe(typed);
+      let loads = 0;
+      page.on('load', () => (loads += 1));
+      await group.locator('button[lang="ar"]').click();
+      await expect(html).toHaveAttribute('lang', 'ar');
+      await expect(html).toHaveAttribute('dir', /rtl/i);
+      await expect.poll(languageCookie).toBe('ar');
+      expect(loads, 'a refresh, not a reload').toBe(0);
+      await expect(title).toHaveValue(typed);
+      await expect(group.locator('[aria-pressed="true"]')).toHaveText('العربية');
+      await expect(group.locator('button[lang="en"]')).toBeEnabled();
+      await expect(group).toHaveAttribute('aria-label', 'لغة اللوحة');
+      await expect(viewSite).toContainText('عرض الموقع');
+      await trailing(group, true);
+      expect(await sidewaysOverflow(page), 'no overflow at 1440, Arabic').toBe(0);
+      expect(await serious(), 'axe: the Arabic header').toEqual([]);
+      // And back.
+      await group.locator('button[lang="en"]').click();
+      await expect(html).toHaveAttribute('lang', 'en');
+      await expect(html).toHaveAttribute('dir', /ltr/i);
+      await expect.poll(languageCookie).toBe('en');
+      await expect(title).toHaveValue(typed);
+      await expect(group.locator('[aria-pressed="true"]')).toHaveText('English');
+      // A form without autosave (site settings): while it holds unsaved changes the switch
+      // asks first. Cancel keeps the text and the language; Esc too; "Switch anyway" flips
+      // the panel and the form takes the server's state again (Payload's form on a refresh).
+      await page.goto('/admin/globals/site-settings');
+      await page.locator('.tabs-field__tab-button', { hasText: 'Brand' }).click();
+      const tagline = page.locator('#field-tagline');
+      const savedTagline = await tagline.inputValue();
+      await expect(page.locator('body')).not.toHaveAttribute('data-admin-form-modified');
+      await tagline.fill(`${savedTagline} (e2e)`);
+      await expect(page.locator('body')).toHaveAttribute('data-admin-form-modified', '');
+      const unsaved = page.locator('[data-admin-language-unsaved]');
+      await group.locator('button[lang="ar"]').click();
+      await expect(unsaved).toBeVisible();
+      await expect(unsaved).toContainText('Unsaved changes are lost when the language changes.');
+      await unsaved.getByRole('button', { name: 'Cancel' }).click();
+      await expect(unsaved).toBeHidden();
+      await expect(html).toHaveAttribute('lang', 'en');
+      await expect(tagline).toHaveValue(`${savedTagline} (e2e)`);
+      await group.locator('button[lang="ar"]').click();
+      await expect(unsaved).toBeVisible();
+      await page.keyboard.press('Escape');
+      await expect(unsaved).toBeHidden();
+      await expect(html).toHaveAttribute('lang', 'en');
+      await group.locator('button[lang="ar"]').click();
+      await unsaved.locator('[data-admin-language-switch-anyway]').click();
+      await expect(unsaved).toBeHidden();
+      await expect(html).toHaveAttribute('lang', 'ar');
+      await expect.poll(languageCookie).toBe('ar');
+      await expect(tagline).toHaveValue(savedTagline);
+      // Leaving the edit view leaves no stale flag: the dashboard's switch asks nothing.
+      await page.goto('/admin');
+      await expect(page.locator('body')).not.toHaveAttribute('data-admin-form-modified');
+      await group.locator('button[lang="en"]').click();
+      await expect(unsaved).toBeHidden();
+      await expect(html).toHaveAttribute('lang', 'en');
+      await expect.poll(languageCookie).toBe('en');
+      // 390: the names give way to one labelled icon with a tooltip; a tap toggles, each way.
+      await page.setViewportSize({ width: 390, height: 844 });
+      await page.goto('/admin');
+      await expect(group).toBeHidden();
+      await expect(toggle).toBeVisible();
+      await expect(toggle).toHaveAttribute('aria-label', 'Switch to Arabic');
+      await toggle.hover();
+      await expect(page.getByRole('tooltip')).toHaveText('Switch to Arabic');
+      await trailing(toggle, false);
+      expect(await sidewaysOverflow(page), 'no overflow at 390, English').toBe(0);
+      await toggle.click();
+      await expect(html).toHaveAttribute('lang', 'ar');
+      await expect(html).toHaveAttribute('dir', /rtl/i);
+      await expect.poll(languageCookie).toBe('ar');
+      await expect(toggle).toHaveAttribute('aria-label', 'بدّل إلى الإنجليزية');
+      await expect(toggle).toBeEnabled();
+      await trailing(toggle, true);
+      expect(await sidewaysOverflow(page), 'no overflow at 390, Arabic').toBe(0);
+      expect(await serious(), 'axe: the Arabic header on a phone').toEqual([]);
+      // The drawer's foot is the same control and marks the same language.
+      await page.locator('[data-admin-menu]').click();
+      const drawerGroup = page.locator('[data-admin-nav] [data-admin-language]');
+      await expect(drawerGroup.locator('[aria-pressed="true"]')).toHaveText('العربية');
+      await drawerGroup.locator('button[lang="en"]').click();
+      await expect(html).toHaveAttribute('lang', 'en');
+      await expect(html).toHaveAttribute('dir', /ltr/i);
+      await expect.poll(languageCookie).toBe('en');
+      await expect(drawerGroup.locator('[aria-pressed="true"]')).toHaveText('English');
+      await page.keyboard.press('Escape');
+      await expect(page.locator('[data-admin-nav]')).not.toHaveClass(/nav--nav-open/);
+      await expect(toggle).toHaveAttribute('aria-label', 'Switch to Arabic');
+      expect(await serious(), 'axe: the English header on a phone').toEqual([]);
+    } finally {
+      await page.context().addCookies([{ name: 'payload-lng', value: 'en', url: baseURL! }]);
+    }
+  });
+
+  test("the admin in Arabic (ADR-056): the header's switch turns the panel Arabic, it reads right-to-left in our strings and Payload's, the content locale stays put, axe is clean, English comes back", async ({
     page,
     request,
     baseURL,
@@ -847,15 +1024,8 @@ test.describe('CMS admin', () => {
     await page.setViewportSize({ width: 1600, height: 1000 });
     expect((await page.request.post(`${API}/users/login`, { data: admin })).status()).toBe(200);
     const html = page.locator('html');
-    // Payload keeps the choice in its `payload-lng` cookie (a year, path `/`), written by the
-    // account view's language select through a server action, then `router.refresh()`.
-    const pickLanguage = async (name: string) => {
-      await page.goto('/admin/account');
-      const select = page.locator('#language-select');
-      await select.click();
-      await page.keyboard.type(name);
-      await page.keyboard.press('Enter');
-    };
+    // Payload keeps the choice in its `payload-lng` cookie (a year, path `/`), written by its
+    // own server action behind the header's switch, then `router.refresh()`.
     const languageCookie = async () =>
       (await page.context().cookies()).find((c) => c.name === 'payload-lng')?.value;
     try {
@@ -866,10 +1036,12 @@ test.describe('CMS admin', () => {
       await expect(loginPage.locator('html')).toHaveAttribute('lang', 'ar');
       await expect(loginPage.locator('html')).toHaveAttribute('dir', /rtl/i);
       await arabicBrowser.close();
-      await pickLanguage('العربية');
+      await page.goto('/admin/account');
+      await switchPanelLanguage(page, 'ar');
       await expect(html).toHaveAttribute('dir', /rtl/i);
-      await expect(html).toHaveAttribute('lang', 'ar');
       await expect.poll(languageCookie).toBe('ar');
+      // The account view's own select (Payload's) stays and agrees with the header.
+      await expect(page.locator('.react-select:has(#language-select)')).toContainText('العربية');
       // The dashboard and the sidebar in our Arabic: the five groups in order, the greeting.
       await page.goto('/admin');
       const nav = page.locator('[data-admin-nav]');
@@ -1009,10 +1181,11 @@ test.describe('CMS admin', () => {
       expect(await sidewaysOverflow(page), 'no horizontal overflow on an Arabic phone').toBe(0);
       await page.setViewportSize({ width: 1600, height: 1000 });
       // Back to English through the same control.
-      await pickLanguage('English');
+      await page.goto('/admin/account');
+      await switchPanelLanguage(page, 'en');
       await expect(html).toHaveAttribute('dir', /ltr/i);
-      await expect(html).toHaveAttribute('lang', 'en');
       await expect.poll(languageCookie).toBe('en');
+      await expect(page.locator('.react-select:has(#language-select)')).toContainText('English');
       await page.goto('/admin');
       await expect(page.locator('[data-admin-dashboard] h1')).toContainText(/Good /);
     } finally {

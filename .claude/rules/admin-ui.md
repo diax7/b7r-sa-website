@@ -17,9 +17,11 @@ bilingual census, the description rule), `tests/admin-glossary.test.ts` (the glo
    test; the test also checks that `admin.group` and the registry agree.
 2b. `admin.custom.shows` in Arabic + English (where on the site the thing shows) and the
    header registered through `collectionComponents(slug)` / `globalComponents(slug)` from
-   `admin/document/config.ts` (the description slot, nothing else: there is no locale note
-   and no locale switch, ADR-057; both languages of every field are in the form, rules 13
-   and 15).
+   `admin/document/config.ts` (the description slot and, first before the document
+   controls, the form-modified sentinel the language switch reads, ADR-056; an entity's own
+   action there goes in as `{ beforeDocumentControls }`, never as an `edit` key beside the
+   spread. There is no locale note and no locale switch, ADR-057; both languages of every
+   field are in the form, rules 13 and 15).
 3. `labels.singular` / `labels.plural` (collections) or `label` (globals) in Arabic + English;
    nouns, never sentences.
 4. **Every string an editor sees is born in both languages** (ADR-046, ADR-056, the

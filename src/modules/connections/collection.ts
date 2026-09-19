@@ -135,10 +135,9 @@ export const Connections: CollectionConfig = {
     listSearchableFields: ['label', 'model'],
     group: adminGroup('admin'),
     components: {
-      ...collectionComponents(CONNECTIONS),
-      edit: {
+      ...collectionComponents(CONNECTIONS, {
         beforeDocumentControls: ['@/modules/connections/admin/test-action#TestConnection'],
-      },
+      }),
     },
     custom: {
       shows: {
