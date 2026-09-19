@@ -34,6 +34,15 @@ const sidewaysOverflow = (page: Page) =>
 
 /** The colour of an element's `::after` (the active tab's bar); runs in the browser. */
 const barColour = (el: Element) => getComputedStyle(el, '::after').backgroundColor;
+
+/** An Umami window's numbers for the seeded snapshot (PR 4c): 602,700 s over 4,100 visits is 2:27. */
+const umamiNumbers = (visitors: number) => ({
+  visitors,
+  pageviews: 9100,
+  visits: 4100,
+  bounces: 900,
+  totaltime: 602_700,
+});
 /**
  * The text's contrast against the pill's tint composited over the row behind it (WCAG).
  * Runs in the browser through `evaluate`, so its helpers must travel inside it.
@@ -1595,9 +1604,8 @@ test.describe('CMS admin', () => {
     await expect.poll(() => strip.evaluate((el) => el.scrollLeft)).toBeGreaterThan(0);
     const active = page.locator('.tabs-field__tab-button--active').first();
     await expect(active).toHaveCSS('color', 'rgb(255, 255, 255)');
-    expect(await active.evaluate((el) => getComputedStyle(el, '::after').backgroundColor)).toBe(
-      'rgb(0, 152, 224)',
-    );
+    // The hue lands with the icon portal after Payload's render: poll, never a one-shot read.
+    await expect.poll(() => active.evaluate(barColour), POLL).toBe('rgb(0, 152, 224)');
     await active.scrollIntoViewIfNeeded();
     await expect(active).toBeInViewport();
     expect(await sidewaysOverflow(page), 'no horizontal overflow on the home form').toBe(0);
@@ -4090,6 +4098,136 @@ test.describe('CMS admin', () => {
         'data-admin-traffic-page',
         '30',
       );
+    });
+
+    test('Umami on the dashboard (ADR-048 amended, PR 4c): a people day in `metrics` puts the visitors on the visits tile and a people row on the card, in both languages; without one the card reads as before', async ({
+      page,
+      request,
+      baseURL,
+    }) => {
+      test.setTimeout(180_000);
+      const auth = await login(request, ADMIN);
+      const yesterday = riyadh(new Date(Date.now() - 86_400_000)).dateKey;
+      const since = riyadh(new Date(Date.now() - 6 * 86_400_000)).dateKey;
+      // The snapshots refuse every API write (ADR-049): the row goes in through the local
+      // API the pull uses (`scripts/dev/metric-row.ts`, in this process's env) and out the
+      // same way. A review server whose Umami is really connected already has rows in the
+      // week: those are left alone and read as they are.
+      const existing = await request.get(
+        `${API}/metrics?depth=0&limit=1&where[source][equals]=umami&where[date][greater_than_equal]=${since}`,
+        { headers: auth },
+      );
+      const connected = ((await existing.json()) as { totalDocs: number }).totalDocs > 0;
+      // Yesterday's row as the pull writes it: the day's numbers and the three ranges ending
+      // that day, each with Umami's previous range; the week's range is the tile's number.
+      const day = {
+        ...umamiNumbers(410),
+        ranges: {
+          7: { ...umamiNumbers(3900), previous: umamiNumbers(3000) },
+          30: { ...umamiNumbers(12_000), previous: umamiNumbers(12_000) },
+          90: { ...umamiNumbers(30_000), previous: umamiNumbers(0) },
+        },
+      };
+      const { execFileSync } = await import('node:child_process');
+      const row = (action: 'upsert' | 'delete', data: unknown = day) =>
+        execFileSync(
+          process.execPath,
+          [
+            '--import',
+            'tsx',
+            'scripts/dev/metric-row.ts',
+            action,
+            'umami',
+            yesterday,
+            ...(action === 'upsert' ? [JSON.stringify(data)] : []),
+          ],
+          { cwd: process.cwd(), env: process.env, stdio: 'pipe', timeout: 90_000 },
+        );
+      expect((await page.request.post(`${API}/users/login`, { data: ADMIN })).status()).toBe(200);
+      const dashboard = page.locator('[data-admin-dashboard]');
+      const tile = dashboard.locator('[data-admin-tile="visits"]');
+      const card = dashboard.locator('[data-admin-traffic]');
+      if (!connected) {
+        // Without a row: the landings tile and the card as they were (the assertions above).
+        await page.goto('/admin');
+        await expect(tile).toContainText('Visits');
+        await expect(tile).not.toHaveAttribute('data-admin-tile-visitors', /.*/);
+        await expect(card.locator('[data-admin-traffic-people]')).toHaveCount(0);
+        await expect(card).not.toHaveAttribute('data-admin-traffic-visitors', /.*/);
+        row('upsert');
+      }
+      try {
+        await page.goto('/admin');
+        // The tile: Umami's visitors as the number, our landings on the line under.
+        await expect(tile).toContainText('Visitors');
+        await expect(tile).toHaveAttribute('data-admin-tile-visitors', /^\d+$/);
+        await expect(tile).toHaveAttribute('data-admin-tile-value', /^[\d,]+$/);
+        await expect(tile).toContainText(/landings?/);
+        // The card: the people row with the three figures, the average visit as m:ss.
+        const people = card.locator('[data-admin-traffic-people]');
+        await expect(people).toBeVisible();
+        await expect(people).toContainText('People, by Umami');
+        await expect(people.locator('[data-admin-stat="visitors"]')).toContainText(
+          /^Visitors[\d,]+$/,
+        );
+        await expect(people.locator('[data-admin-stat="page-views"]')).toContainText(/Page views/);
+        await expect(people.locator('[data-admin-stat="average-visit"]')).toContainText(
+          /\d+:\d{2}/,
+        );
+        if (!connected) {
+          // The week's range object, not the day's numbers or a sum; the change is Umami's own.
+          await expect(people).toHaveAttribute('data-admin-traffic-people', 'range');
+          await expect(tile).toHaveAttribute('data-admin-tile-visitors', '3900');
+          await expect(tile).toHaveAttribute('data-admin-tile-value', '3,900');
+          await expect(tile).toContainText('30% more than the previous 7 days');
+          await expect(card).toHaveAttribute('data-admin-traffic-visitors', '3900');
+          await expect(people.locator('[data-admin-stat="visitors"]')).toContainText('3,900');
+          await expect(people.locator('[data-admin-stat="page-views"]')).toContainText('9,100');
+          // 602,700 seconds over 4,100 visits: 147 s.
+          await expect(people.locator('[data-admin-stat="average-visit"]')).toContainText('2:27');
+          // The 30-day range: the same as before; the 90-day range: nobody before.
+          await page.goto('/admin?days=30');
+          await expect(tile).toHaveAttribute('data-admin-tile-value', '12,000');
+          await expect(tile).toContainText('the same as the previous 30 days');
+          await page.goto('/admin?days=90');
+          await expect(tile).toHaveAttribute('data-admin-tile-value', '30,000');
+          await expect(tile).toContainText('none in the previous 90 days');
+          await page.goto('/admin');
+        }
+        // Both hue carriers stay as they were: one disc on the tile, one icon on the card.
+        await expect(tile.locator('[data-admin-hue]')).toHaveCount(1);
+        await expect(card.locator('[data-admin-hue]')).toHaveCount(1);
+        // In Arabic: the glossary's words.
+        await page.context().addCookies([{ name: 'payload-lng', value: 'ar', url: baseURL! }]);
+        await page.goto('/admin');
+        await expect(page.locator('html')).toHaveAttribute('dir', /rtl/i);
+        await expect(tile).toContainText('الزوّار');
+        await expect(tile).toContainText('الزيارات:');
+        await expect(people).toContainText('الزوّار');
+        await expect(people).toContainText('مشاهدات الصفحات');
+        await expect(people).toContainText('متوسط الزيارة');
+        await expect(people).toContainText('Umami');
+        if (!connected) {
+          // A row from before the ranges were pulled: the days summed, said as such.
+          await page.context().addCookies([{ name: 'payload-lng', value: 'en', url: baseURL! }]);
+          row('upsert', umamiNumbers(410));
+          await page.goto('/admin');
+          await expect(people).toHaveAttribute('data-admin-traffic-people', 'summed');
+          await expect(people).toContainText('Daily visitors, summed');
+          await expect(tile).toHaveAttribute('data-admin-tile-value', '410');
+          await expect(tile).toContainText('daily visitors, summed');
+          await expect(tile).not.toContainText(/previous 7 days/);
+        }
+      } finally {
+        await page.context().addCookies([{ name: 'payload-lng', value: 'en', url: baseURL! }]);
+        if (!connected) row('delete');
+      }
+      if (!connected) {
+        await page.goto('/admin');
+        await expect(tile).toContainText('Visits');
+        await expect(tile).not.toHaveAttribute('data-admin-tile-visitors', /.*/);
+        await expect(card.locator('[data-admin-traffic-people]')).toHaveCount(0);
+      }
     });
 
     test('connections (ADR-047): a key is stored masked, a test records its outcome, the limit and the guard hold; editors are refused', async ({

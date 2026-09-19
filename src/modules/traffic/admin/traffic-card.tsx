@@ -1,6 +1,7 @@
 import { Icon } from '@/components/shared/icon';
+import type { PeopleSummary } from '@/modules/cms/admin/dashboard/readers';
 import { Bar, DashboardSection, SectionLink, Stat } from '@/modules/cms/admin/dashboard/section';
-import { formatNumber } from '@/modules/cms/admin/format';
+import { formatMinutesSeconds, formatNumber } from '@/modules/cms/admin/format';
 import { COLLECTION_ICONS } from '@/modules/cms/admin/icons';
 import { type AdminStrings, adminStringsFor } from '@/modules/cms/admin/strings';
 import { type Channel, CHANNEL_GROUPS } from '@/modules/traffic/channels';
@@ -19,19 +20,26 @@ export function channelLabel(channel: Channel, s: AdminStrings['traffic']): stri
  * landings, one bar per group with its share (the Visibility pink of the card's icon on the
  * surface track: identity, not meaning, and the card's one hue, ADR-060), the top channel, the crawler reads, the three entry pages that
  * brought most, and the "All traffic" link into the same range. Empty until the first visitor.
+ * With Umami connected (ADR-048 amended) a people row under the figures: its visitors, page
+ * views and the average visit for the same range, through yesterday (the range's uniques from
+ * the newest snapshot, or the days summed while no snapshot carries the range, captioned so);
+ * without a row the card reads as before.
  */
 export function TrafficCard({
   summary,
+  people,
   href,
   language,
 }: {
   summary: TrafficSummary;
+  people?: PeopleSummary | null;
   href: string;
   language: string;
 }) {
   const s = adminStringsFor(language).traffic;
   const top = summary.byChannel[0];
-  const empty = summary.landings === 0 && summary.crawls === 0;
+  const counted = people ?? null;
+  const empty = summary.landings === 0 && summary.crawls === 0 && counted === null;
   return (
     <DashboardSection
       hook="visits"
@@ -41,6 +49,7 @@ export function TrafficCard({
       end={<SectionLink href={href}>{s.card.link}</SectionLink>}
       data-admin-traffic=""
       data-admin-traffic-landings={summary.landings}
+      data-admin-traffic-visitors={counted?.visitors}
     >
       {empty ? (
         <p
@@ -57,6 +66,35 @@ export function TrafficCard({
             <Stat label={s.card.topChannel} value={top ? channelLabel(top.channel, s) : ''} />
             <Stat label={s.card.crawls} value={formatNumber(summary.crawls, language)} />
           </div>
+          {counted && (
+            <div
+              className="flex flex-col gap-2"
+              data-admin-traffic-people={counted.summed ? 'summed' : 'range'}
+            >
+              <span className="text-caption text-text-muted">
+                {counted.summed ? s.card.peopleSummed : s.card.people}
+              </span>
+              <div className="grid grid-cols-3 gap-4">
+                <Stat
+                  label={s.card.visitors}
+                  value={formatNumber(counted.visitors, language)}
+                  hook="visitors"
+                />
+                <Stat
+                  label={s.card.pageViews}
+                  value={formatNumber(counted.pageviews, language)}
+                  hook="page-views"
+                />
+                <Stat
+                  label={s.card.averageTime}
+                  value={formatMinutesSeconds(
+                    counted.visits > 0 ? counted.totaltime / counted.visits : 0,
+                  )}
+                  hook="average-visit"
+                />
+              </div>
+            </div>
+          )}
           <ul className="flex flex-col gap-2" data-admin-traffic-groups="">
             {CHANNEL_GROUPS.map((group) => {
               const hits = summary.byGroup[group];

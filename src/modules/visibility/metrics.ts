@@ -7,16 +7,17 @@ import { adminGroup } from '@/modules/cms/admin/icons';
 import { METRICS_DESCRIPTIONS } from '@/modules/visibility/descriptions';
 
 export const METRICS = 'metrics' as const;
-export const METRIC_SOURCES = ['search-console', 'bing', 'pagespeed', 'score'] as const;
+export const METRIC_SOURCES = ['search-console', 'bing', 'pagespeed', 'score', 'umami'] as const;
 export type MetricSource = (typeof METRIC_SOURCES)[number];
 
 const never = () => false;
 
 /**
  * The nightly snapshots (ADR-049): one row per day (Riyadh) and source, the pull's answer as
- * JSON; the `score` source keeps the day's percentages, which is the score's only history.
- * Written by the pull's upsert alone, read by admins; the API creates, changes and deletes
- * nothing.
+ * JSON; the `score` source keeps the day's percentages, which is the score's only history;
+ * the `umami` source keeps that day's people numbers (ADR-048 amended), one row per day
+ * pulled, which the dashboard sums over its range. Written by the pull's upsert alone, read
+ * by admins; the API creates, changes and deletes nothing.
  */
 export const Metrics: CollectionConfig = {
   slug: METRICS,
@@ -39,8 +40,8 @@ export const Metrics: CollectionConfig = {
     },
     hidden: hiddenUnlessAdmin,
     description: {
-      ar: 'لقطة كل ليلة من Search Console وBing وPageSpeed، ودرجة الظهور ذلك اليوم. للقراءة فقط.',
-      en: 'A nightly snapshot from Search Console, Bing and PageSpeed, and that day’s visibility score. Read-only.',
+      ar: 'لقطة كل ليلة من Search Console وBing وPageSpeed وUmami، ودرجة الظهور ذلك اليوم. للقراءة فقط.',
+      en: 'A nightly snapshot from Search Console, Bing, PageSpeed and Umami, and that day’s visibility score. Read-only.',
     },
   },
   access: { read: isAdmin, create: never, update: never, delete: never },
@@ -66,6 +67,7 @@ export const Metrics: CollectionConfig = {
               { value: 'bing', label: { ar: 'Bing', en: 'Bing' } },
               { value: 'pagespeed', label: { ar: 'PageSpeed', en: 'PageSpeed' } },
               { value: 'score', label: { ar: 'الدرجة', en: 'Score' } },
+              { value: 'umami', label: { ar: 'Umami', en: 'Umami' } },
             ],
             label: { ar: 'المصدر', en: 'Source' },
             admin: { readOnly: true },

@@ -68,7 +68,7 @@ describe('the mock kind in the picker', () => {
 });
 
 describe('connections (ADR-047)', () => {
-  it('knows nine kinds, six that speak AI and three services, each with what a new row gets', () => {
+  it('knows ten kinds, six that speak AI and four services, each with what a new row gets', () => {
     expect(CONNECTION_KINDS).toEqual([
       'openai',
       'anthropic',
@@ -79,6 +79,7 @@ describe('connections (ADR-047)', () => {
       'google-search-console',
       'bing-webmaster',
       'pagespeed',
+      'umami',
     ]);
     expect(isConnectionKind('openai-compatible')).toBe(true);
     expect(isConnectionKind('perplexity')).toBe(false);

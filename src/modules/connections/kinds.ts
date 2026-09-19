@@ -1,12 +1,13 @@
 /**
  * The kinds of connection (ADR-047, ADR-049): the four vendors the AI SDK speaks, an
  * OpenAI-compatible endpoint for any other AI with an API, the mock the tests and the review
- * server run on (refused in production, as before), and the three services the visibility
- * score reads (Search Console by a service account, Bing Webmaster and PageSpeed by an API
- * key). `speaks` says which: the engine's picker and the citation ledger take `ai`, the
- * nightly pull takes `service`. An AI kind names the factory in `model.ts`; its default model
- * and rates are the vendor's published ones at the time of writing, filled into a new
- * connection that leaves them empty and editable afterwards.
+ * server run on (refused in production, as before), the three services the visibility score
+ * reads (Search Console by a service account, Bing Webmaster and PageSpeed by an API key) and
+ * Umami, whose people numbers the dashboard shows (ADR-048 amended). `speaks` says which: the
+ * engine's picker and the citation ledger take `ai`, the nightly pull takes `service`. An AI
+ * kind names the factory in `model.ts`; its default model and rates are the vendor's
+ * published ones at the time of writing, filled into a new connection that leaves them empty
+ * and editable afterwards.
  */
 export const CONNECTION_KINDS = [
   'openai',
@@ -18,6 +19,7 @@ export const CONNECTION_KINDS = [
   'google-search-console',
   'bing-webmaster',
   'pagespeed',
+  'umami',
 ] as const;
 
 export type ConnectionKind = (typeof CONNECTION_KINDS)[number];
@@ -30,7 +32,7 @@ export interface KindInfo {
   defaultModel: string;
   /** USD per million tokens, input and output. */
   rates: { input: number; output: number };
-  /** The kind calls a URL the connection names (`https://` only). */
+  /** The kind calls a URL the connection names (`https://` only); `takesBaseUrl` adds the kinds where one is optional. */
   needsBaseUrl: boolean;
   /** What the secret is, for the field's label and its guide. */
   secret: 'apiKey' | 'serviceAccount';
@@ -125,6 +127,16 @@ export const KINDS: Record<ConnectionKind, KindInfo> = {
     secret: 'apiKey',
     searchFeeUsd: 0,
   },
+  // Umami Cloud by default; a self-hosted Umami names its address on the row.
+  umami: {
+    label: { ar: 'Umami', en: 'Umami' },
+    speaks: 'service',
+    defaultModel: '',
+    rates: { input: 0, output: 0 },
+    needsBaseUrl: false,
+    secret: 'apiKey',
+    searchFeeUsd: 0,
+  },
 };
 
 /**
@@ -185,6 +197,14 @@ export function kindsThat(speaks: Speaks): ConnectionKind[] {
 
 export function isServiceKind(kind: unknown): boolean {
   return isConnectionKind(kind) && KINDS[kind].speaks === 'service';
+}
+
+/**
+ * The kinds whose row may name an address: required for a compatible endpoint, optional for
+ * Umami (empty is Umami Cloud; `https://umami.b7r.app` is the self-hosted one).
+ */
+export function takesBaseUrl(kind: unknown): boolean {
+  return isConnectionKind(kind) && (KINDS[kind].needsBaseUrl || kind === 'umami');
 }
 
 export function isConnectionKind(value: unknown): value is ConnectionKind {

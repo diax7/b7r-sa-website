@@ -79,6 +79,12 @@ b7r.sa to go live.
 | 40 | The real photographs: the hero at 3000 px wide (both compositions, ADR-044) and the product photos at 2000 by 2000 exported from the PSDs in `resources/source-files`; the pipeline serves them whole the day they land | Dhia | open | Under `resources/hero/examples` and `resources/products/{slug}/`, then `pnpm assets` and row 33; or uploaded through the admin (RUNBOOK "Assets"). Row 3 stays for the crops. Then re-run the audit's measurement at 2x (`docs/audits/2026-09-19-photo-quality.md`, the served bytes of the 1920w and 3840w candidates) and re-read the 220 KB budget of BRD 7.8: a 3000 px AVIF at q90 above about 250 KB puts the hero alone at 85 (the CTO's fallback), the rest of the photos stay at 90 |
 | 41 | Production after the merge: `pnpm exec tsx scripts/media-requality.ts --env .env.cranl.local --dry-run`, then without the flag (every seeded photo re-uploaded at the new encode under a new name, the old renditions deleted from the bucket), then `scripts/media-blur.ts --env .env.cranl.local` for any upload the pass did not cover, **then a redeploy** (Deploy → Redeploy on the platform, or an empty commit on `main`): the rebuild prerenders every page with the new names at once | *code* / Dhia | open | Done on the review database 2026-09-19; the CDN caches an object as immutable for a year, which is why the names change (RUNBOOK "Assets"). Without the redeploy the pages keep the old names until their 60 s timer runs (ADR-030; a media document revalidates nothing of its own), and the old files are already gone from the bucket: a photo not cached at the CDN edge or by the optimizer is a 404 for that minute |
 
+## Added 2026-09-19 (Level 4 PR 4c, ADR-048 amended)
+
+| # | Item | Owner | Status | Notes |
+|---|---|---|---|---|
+| 42 | An Umami Cloud API key on a Connection of the kind "Umami" (Admin → Connections → Create, Save, Test reads yesterday's numbers); Site settings → Analytics → website id already set (row 36) | Dhia | open | RUNBOOK "Connecting Umami"; the first pull reads 90 days back, then the visits tile shows Umami's visitors beside our landings and the card its people row; until then both read as before |
+
 ## Also needed before any of the above
 
 - GitHub repository `diax7/b7r-sa-website` exists (its visibility is Dhia's); the platform project is still Dhia's.
