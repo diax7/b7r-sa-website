@@ -120,12 +120,6 @@ export const StoryBlock: Block = {
       type: 'checkbox',
       defaultValue: true,
       label: { ar: 'شريط الحقائق بعد الحكاية', en: 'Facts band after the story' },
-      admin: {
-        description: {
-          ar: 'الرصيد الترحيبي وبطاقات «لماذا بحر» من الصفحة الرئيسية',
-          en: 'The welcome credit and the why-us pairs from the home page',
-        },
-      },
     },
   ],
 };
@@ -278,8 +272,8 @@ export const ContactBlock: Block = {
     {
       type: 'row',
       fields: [
-        text('whatsappTitle', { ar: 'بطاقة واتساب: العنوان', en: 'WhatsApp card title' }),
-        text('whatsappText', { ar: 'بطاقة واتساب: النص', en: 'WhatsApp card text' }),
+        text('whatsappTitle', { ar: 'بطاقة WhatsApp: العنوان', en: 'WhatsApp card title' }),
+        text('whatsappText', { ar: 'بطاقة WhatsApp: النص', en: 'WhatsApp card text' }),
       ],
     },
     {
@@ -302,7 +296,7 @@ export const ContactBlock: Block = {
           fields: [
             text('button', { ar: 'الزر', en: 'Button' }),
             text('whatsappMessage', {
-              ar: 'رسالة واتساب الجاهزة',
+              ar: 'رسالة WhatsApp الجاهزة',
               en: 'Prefilled WhatsApp message',
             }),
           ],
@@ -332,13 +326,7 @@ export const LegalBodyBlock: Block = {
       required: true,
       localized: true,
       label: { ar: 'النص (Markdown)', en: 'Body (Markdown)' },
-      admin: {
-        description: {
-          ar: 'عناوين ## تصبح فهرس الصفحة؛ لا HTML.',
-          en: '## headings become the on-this-page list; no HTML.',
-        },
-        rows: 30,
-      },
+      admin: { rows: 30 },
     },
   ],
 };
