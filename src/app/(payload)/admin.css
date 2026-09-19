@@ -48,6 +48,8 @@
   --color-success: #3fbf6b;
   --color-success-tint: rgb(63 191 107 / 0.16);
   --color-warning: #f5b53f;
+  /* The text on an amber surface (a filled "careful" button). */
+  --color-on-warning: var(--color-black);
   --color-error: #f26b6b;
   /* Identity hues (ADR-046): one per sidebar group, carried by the group's entities onto the
      sidebar, the page header and the dashboard; never a meaning. Each is at least 5.8:1 on the

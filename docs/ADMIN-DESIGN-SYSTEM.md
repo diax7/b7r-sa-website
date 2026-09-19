@@ -51,6 +51,7 @@ render in both worlds without a fork. Raw hex lives only in the token block.
 | `text-muted` | `--theme-elevation-600` | Secondary text (rgb 181 181 181, 9.5:1). |
 | `border` | `--theme-elevation-150` | Hairlines (rgb 60 60 60). |
 | `success` / `warning` / `error` | `#3fbf6b` / `#f5b53f` / `#f26b6b` | Status text and badges; each ≥ 4.5:1 on `ground` and `surface`. `success-tint` sits behind green icons. |
+| `on-warning` | `black` | The text on an amber surface: a filled "careful" button (the language switch's "Switch anyway"). Never a literal `text-black` beside `bg-warning`. |
 | `teal` / `violet` / `pink` / `slate` (+ `-tint`) | `#2dd4bf` / `#a78bfa` / `#f472b6` / `#cbd5e1` | Identity hues (ADR-046): one per sidebar group (`ADMIN_GROUPS` in `icons.ts`; the Site group uses the accent blue), carried by every entity of the group onto the sidebar's discs and active entry, the page header's disc and bar, and the dashboard's discs. Identity, never meaning. Each ≥ 5.8:1 on `surface`; the slate disc is lighter than the 50 % disabled state so the two never read alike. |
 | `surface-2` | `--theme-elevation-100` | One step above the surface: the hover of a sidebar entry, neutral in every group. |
 | `radius-base` / `radius-lg` / `radius-inner` / `radius-pill` | 13 / 20 / 6 / 999 px | From `src/styles/tokens.css` (shared with the site). |

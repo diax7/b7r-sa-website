@@ -51,8 +51,9 @@ export function LanguageSwitch({ placement }: { placement: 'header' | 'drawer' }
   const options = languageOptions ?? [];
   const other = options.find((o) => o.value !== language);
   const go = (code: AcceptedLanguages) => {
+    if (!switchLanguage) return;
     startTransition(async () => {
-      await switchLanguage?.(code);
+      await switchLanguage(code);
     });
   };
   const choose = (code: AcceptedLanguages) => {
@@ -126,7 +127,7 @@ export function LanguageSwitch({ placement }: { placement: 'header' | 'drawer' }
                 if (asking) go(asking);
                 setAsking(null);
               }}
-              className="inline-flex h-10 items-center rounded-base bg-warning px-4 text-small font-medium text-black transition-colors duration-(--duration-fast) hover:bg-warning/90 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-accent/40"
+              className="inline-flex h-10 items-center rounded-base bg-warning px-4 text-small font-medium text-on-warning transition-colors duration-(--duration-fast) hover:bg-warning/90 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-accent/40"
               data-admin-language-switch-anyway=""
             >
               {s.unsaved.switchAnyway}

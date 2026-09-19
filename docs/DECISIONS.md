@@ -1806,8 +1806,9 @@ it) mirrors Payload's `useFormModified` onto `<body data-admin-form-modified>`, 
 form so a document drawer over an edit view does not clear it, taken off on unmount so
 leaving the view leaves no stale flag; while it is set the switch asks first in our
 `Dialog`: "Unsaved changes are lost when the language changes. Save first, or switch
-anyway." with "Switch anyway" (amber: careful, not red) and "Cancel". The account view
-renders no `beforeDocumentControls`, so its own small form is not guarded there. The e2e
+anyway." with "Switch anyway" (amber: careful, not red) and "Cancel". Two forms render no
+`beforeDocumentControls` and are not guarded: the account view's own small form and
+Payload's bulk "Edit many" drawer on a list; both stay as they are. The e2e
 drives the switch at 1440 and 390 in both directions (the cookie by name, `lang` and `dir`,
 the marked name, the placement, the tooltip, the drawer's copy, axe on the header in both
 languages), the autosaved page's text back after a switch, and the site settings' guard
