@@ -2,6 +2,7 @@ import { getTranslation } from '@payloadcms/translations';
 import type { I18nClient } from '@payloadcms/translations';
 import { Gutter } from '@payloadcms/ui';
 import type { AdminViewServerProps, Payload } from 'payload';
+import { cn } from '@/lib/cn';
 import { riyadh } from '@/lib/riyadh';
 import { EngineCard } from '@/modules/ai-content/admin/engine-card';
 import { ContentCard, type ContentRow } from '@/modules/cms/admin/dashboard/content-card';
@@ -144,8 +145,15 @@ export async function Dashboard(props: AdminViewServerProps) {
           </div>
         )}
         {/* The inbox before the content (ADR-061): a third of the row beside it on a desktop,
-            above it when stacked; the row is the content alone for a user without the inbox. */}
-        <div className={inbox === undefined ? 'grid gap-6' : 'grid gap-6 lg:grid-cols-[1fr_2fr]'}>
+            above it when stacked; the row is the content alone for a user without the inbox.
+            The tracks are `minmax(0, …)`: an `auto` track would grow to a truncated title's
+            full width and push a phone sideways. */}
+        <div
+          className={cn(
+            'grid grid-cols-1 gap-6',
+            inbox !== undefined && 'lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]',
+          )}
+        >
           {inbox === null && (
             <EmptySection
               hook="inbox"
