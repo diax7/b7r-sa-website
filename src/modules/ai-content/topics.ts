@@ -85,12 +85,6 @@ export const AiTopics: CollectionConfig = {
               { value: 'en', label: { ar: 'الإنجليزية', en: 'English' } },
             ],
             label: { ar: 'اللغة', en: 'Language' },
-            admin: {
-              description: {
-                ar: 'لغة المقال الذي سيُكتب: يُنشر على المدونة العربية أو الإنجليزية.',
-                en: 'The language the post is written in: it lands on the Arabic or the English blog.',
-              },
-            },
           },
           {
             name: 'hub',
@@ -153,13 +147,7 @@ export const AiTopics: CollectionConfig = {
             name: 'windowEnd',
             type: 'date',
             label: { ar: 'نهاية نافذة النشر', en: 'Window end' },
-            admin: {
-              date: { pickerAppearance: 'dayOnly' },
-              description: {
-                ar: 'للمواضيع الموسمية: يُنشر داخل النافذة فقط. اتركهما فارغين لموضوع دائم.',
-                en: 'Seasonal topics publish inside the window only. Leave both empty for an evergreen topic.',
-              },
-            },
+            admin: { date: { pickerAppearance: 'dayOnly' } },
           },
         ],
       },

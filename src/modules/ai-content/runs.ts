@@ -23,7 +23,7 @@ export type RunKind = (typeof RUN_KINDS)[number];
 export const RUN_KIND_LABELS: Record<RunKind, { ar: string; en: string }> = {
   generate: { ar: 'كتابة مقال', en: 'Post' },
   freshness: { ar: 'تحديث', en: 'Refresh' },
-  citation: { ar: 'سجل الاستشهاد', en: 'Citation ledger' },
+  citation: { ar: 'سجل الاستشهادات', en: 'Citation ledger' },
 };
 
 /**
@@ -44,7 +44,7 @@ export const AiRuns: CollectionConfig = {
     components: collectionComponents('ai-runs'),
     custom: {
       shows: {
-        ar: 'لا يظهر في الموقع: سجل تشغيلات المحرّك',
+        ar: 'لا يظهر في الموقع: سجل جولات المحرّك',
         en: 'nowhere on the site: what the engine did, run by run',
       },
     },
@@ -88,7 +88,7 @@ export const AiRuns: CollectionConfig = {
           {
             name: 'provider',
             type: 'text',
-            label: { ar: 'المزوّد', en: 'Provider' },
+            label: { ar: 'الخدمة', en: 'Service' },
             admin: { readOnly: true },
           },
           {
@@ -111,13 +111,13 @@ export const AiRuns: CollectionConfig = {
           {
             name: 'tokensIn',
             type: 'number',
-            label: { ar: 'رموز الدخل', en: 'Tokens in' },
+            label: { ar: 'رموز الإدخال', en: 'Tokens in' },
             admin: { readOnly: true },
           },
           {
             name: 'tokensOut',
             type: 'number',
-            label: { ar: 'رموز الخرج', en: 'Tokens out' },
+            label: { ar: 'رموز الإخراج', en: 'Tokens out' },
             admin: { readOnly: true },
           },
           {
