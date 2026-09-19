@@ -99,3 +99,8 @@ and 1440 in both languages.
 - 2026-09-19: settled with the CTO (Payload's own `switchLanguage`; one cap of 140; the
   glossary gates the panel and reports on the site; one colour carrier per screen; rule 16);
   PR 1 and PR 2 building in parallel, PR 3 after PR 2.
+- 2026-09-19: PR 1 built on `admin/language-switch` (ADR-056 amended): the switch in the
+  header and the drawer through Payload's `switchLanguage`; the e2e found that Payload's form
+  takes the server's state again on the refresh (a reload for the form), so a sentinel in
+  every document form marks unsaved changes and the switch asks first ("Switch anyway" or
+  "Cancel"; the autosaving documents get their draft back).
