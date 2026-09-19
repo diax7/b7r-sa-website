@@ -34,8 +34,7 @@ test refuses (translations of a Latin term, or synonyms of the settled word).
 | The panel | on / off (a switch) | مفعّل / معطّل |  | مطفأ، مشغل | A thing that runs is «يعمل» / «متوقف» (the engine, a job); a switch is on or off. |
 | The panel | running / stopped | يعمل / متوقف |  | قيد التشغيل، موقوف |  |
 | The panel | order (sort) | الترتيب |  | التسلسل |  |
-| The panel | notification | تنبيه |  | إشعار، إشعارات |  |
-| The panel | warnings (editorial) | تنبيهات |  | تحذيرات |  |
+| The panel | notification / warning | تنبيه |  | إشعار، إشعارات، تحذير، تحذيرات | A failure alert and an editorial warning are both a heads-up; plural «تنبيهات». |
 | The panel | notes | ملاحظات |  |  |  |
 | The panel | e-mail | البريد الإلكتروني |  | الإيميل، البريد الالكتروني |  |
 | The panel | library (of images) | المكتبة |  |  |  |
@@ -52,7 +51,7 @@ test refuses (translations of a Latin term, or synonyms of the settled word).
 | The site | site | الموقع |  |  |  |
 | The site | home page | الصفحة الرئيسية |  | الصفحة الأولى، صفحة البداية | «الرئيسية» alone in running text. |
 | The site | page | صفحة |  |  |  |
-| The site | section (of a page) | قسم |  | سكشن |  |
+| The site | section (of a page) / hub (of the blog) | قسم |  | سكشن، تصنيف | A section of a thing: a page block, or the blog section a post belongs to («أقسام المدونة»); a page form and a post form never show both. |
 | The site | header | الترويسة |  | رأس الصفحة، هيدر |  |
 | The site | footer | التذييل |  | فوتر، ذيل الصفحة |  |
 | The site | menu | القائمة |  | منيو |  |
@@ -102,12 +101,11 @@ test refuses (translations of a Latin term, or synonyms of the settled word).
 | Catalogue | base cost | التكلفة الأساسية |  | سعر التكلفة |  |
 | Catalogue | suggested price | سعر البيع المقترح |  | السعر المقترح |  |
 | Catalogue | FAQ | الأسئلة الشائعة |  | الأسئلة المتكررة |  |
-| Catalogue | question (a FAQ entry) | سؤال |  | مدخل |  |
+| Catalogue | question (a FAQ entry, a buyer prompt) | سؤال |  | مدخل، موجه، موجهات، أمر نصي | One word on the FAQ and in the ledger: what a visitor or a buyer asks. |
 | Catalogue | answer | الإجابة |  | الجواب، جواب |  |
 | Catalogue | group (of FAQ) | مجموعة |  |  | Never «قسم»: that is a blog hub or a page section. |
 | Blog | blog | المدونة |  | بلوق |  |
 | Blog | post | مقال |  | تدوينة، مقالة |  |
-| Blog | hub | قسم |  | تصنيف | The blog section a post belongs to; plural «أقسام المدونة». |
 | Blog | author | كاتب |  | المؤلف |  |
 | Blog | byline | سطر التوقيع |  |  |  |
 | Blog | tag | وسم |  | تاق، الكلمة الدلالية |  |
@@ -121,7 +119,7 @@ test refuses (translations of a Latin term, or synonyms of the settled word).
 | Content engine | run | جولة |  | تشغيل، تشغيلة، تشغيلات | The noun; the button is still «شغّل الآن». |
 | Content engine | runs (the log) | الجولات |  |  |  |
 | Content engine | topic | موضوع |  | موضوعات | Plural «المواضيع». |
-| Content engine | backlog | القائمة |  | متراكمات |  |
+| Content engine | backlog | قائمة المواضيع |  | متراكمات | «القائمة» alone inside the topics form; the site menu is the other «القائمة». |
 | Content engine | connection | اتصال |  |  |  |
 | Content engine | service (the AI vendor) | الخدمة |  | مزود، مزودة | OpenAI, Anthropic, Google: the same word on a connection, a run and a citation. |
 | Content engine | model | النموذج |  | موديل |  |
@@ -145,7 +143,6 @@ test refuses (translations of a Latin term, or synonyms of the settled word).
 | Visibility | visibility | الظهور |  | المرئية، الوضوح |  |
 | Visibility | score | الدرجة |  | نقاط الظهور، مؤشر الظهور | The Score page is «درجة الظهور». |
 | Visibility | AI assistant | مساعد ذكاء اصطناعي |  | مساعد AI، الشات بوت، روبوت المحادثة |  |
-| Visibility | question (a buyer prompt) | سؤال |  | موجه، موجهات، أمر نصي |  |
 | Visibility | citation | استشهاد |  |  |  |
 | Visibility | citation ledger | سجل الاستشهادات |  | سجل الاستشهاد، سجل الاقتباسات |  |
 | Visibility | cited rate | نسبة الاستشهاد |  | معدل الاستشهاد |  |

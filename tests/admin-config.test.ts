@@ -356,11 +356,13 @@ describe('every field says what it does on the site (ADR-046)', () => {
 /**
  * The description rule (the 2026-09-19 words pass, `.claude/rules/admin-ui.md` rule 4): one
  * sentence of what the field does on the site and where, then the limit or an example;
- * nothing the label already says, nothing about how it is stored. Three cheap gates over
- * every description an editor sees (fields, tabs, collapsibles, the entity's own): a cap of
- * 140 characters in each language (two lines under a field on a 400 px column), never
- * opening with the label's own noun, never a storage word. The shared-rows note the
- * mechanism appends to a bilingual list is not the field's sentence and is stripped first.
+ * nothing the label already says, nothing about how it is stored; an Arabic sentence that
+ * says where the value shows opens with its verb («يظهر تحت العنوان»), never with a bare
+ * place preposition. Four cheap gates over every description an editor sees (fields, tabs,
+ * collapsibles, the entity's own): a cap of 140 characters in each language (two lines
+ * under a field on a 400 px column) measured on the rendered text, with the shared-rows
+ * note the mechanism appends to a bilingual list as the list's allowance; never opening
+ * with the label's own noun; never a storage word; never a place fragment in Arabic.
  */
 const DESCRIPTION_CAP = 140;
 
@@ -426,13 +428,24 @@ function sentences(slug: string, fields: Field[], path = ''): Sentence[] {
 const adminBlock = (f: Field): Record<string, unknown> =>
   ((f as { admin?: Record<string, unknown> }).admin ?? {}) as Record<string, unknown>;
 
-/** The field's own sentence: the mechanism's shared-rows note taken off the end. */
-function ownSentence(text: string, language: keyof Pair): string {
-  return text
-    .replace(SHARED_ROWS_WITH_TWINS_NOTE[language], '')
-    .replace(SHARED_ROWS_NOTE[language], '')
-    .trim();
+/**
+ * What a list may exceed the cap by: the shared-rows note the mechanism appends (and the
+ * space before it), when the rendered text ends with one; the field's own sentence stays
+ * under the cap either way.
+ */
+function noteAllowance(text: string, language: keyof Pair): number {
+  for (const note of [SHARED_ROWS_WITH_TWINS_NOTE, SHARED_ROWS_NOTE]) {
+    if (text.endsWith(note[language])) return note[language].length + 1;
+  }
+  return 0;
 }
+
+/**
+ * The place prepositions an Arabic description never opens with: the sentence says where
+ * the value shows, so it opens with its verb («يظهر تحت», «تظهر في», «يعلو»). «من» and
+ * «بين» stay allowed: a range or a spec starts with them («من صفر إلى 5»).
+ */
+const PLACE_FRAGMENT = /^(في|تحت|فوق|خلف|بجانب|أمام|على|عند|داخل|ضمن)\s/;
 
 const DIACRITICS = /[\u064B-\u0652\u0670\u0640]/g;
 const LEADING_QUOTES = /^[\s"'“”«»‘’]+/;
@@ -469,11 +482,13 @@ describe('the description rule (2026-09-19): one sentence, the cap, nothing the 
     expect(entityOwn.length).toBe(collections.length + globals.length);
   });
 
-  it(`keeps every description under ${DESCRIPTION_CAP} characters in each language, exceptions named`, () => {
+  it(`keeps every description under ${DESCRIPTION_CAP} characters in each language as rendered, a list's note allowed, exceptions named`, () => {
     const over = [...all, ...entityOwn].flatMap(({ where, description }) =>
       (['en', 'ar'] as const)
-        .map((language) => ({ language, text: ownSentence(description[language], language) }))
-        .filter(({ text }) => text.length > DESCRIPTION_CAP)
+        .map((language) => ({ language, text: description[language] }))
+        .filter(
+          ({ language, text }) => text.length > DESCRIPTION_CAP + noteAllowance(text, language),
+        )
         .filter(() => !(where in CAP_EXCEPTIONS))
         .map(({ language, text }) => `${where} (${language}, ${text.length}): ${text}`),
     );
@@ -501,6 +516,18 @@ describe('the description rule (2026-09-19): one sentence, the cap, nothing the 
           ),
       );
     expect(echoes).toEqual([]);
+  });
+
+  it('an Arabic sentence that says where opens with its verb, never a bare place preposition', () => {
+    const fragments = [...all, ...entityOwn]
+      .filter(({ description }) => PLACE_FRAGMENT.test(description.ar))
+      .map(({ where, description }) => `${where}: ${description.ar}`);
+    expect(fragments).toEqual([]);
+    expect(PLACE_FRAGMENT.test('في البطاقة، وعنوان صفحته.')).toBe(true);
+    expect(PLACE_FRAGMENT.test('عند الإيقاف يختفي القسم.')).toBe(true);
+    expect(PLACE_FRAGMENT.test('يظهر في البطاقة.')).toBe(false);
+    expect(PLACE_FRAGMENT.test('من صفر إلى 5؛ بلا شارات يختفي الصف.')).toBe(false);
+    expect(PLACE_FRAGMENT.test('فيه كلمة واحدة.')).toBe(false);
   });
 
   it('never says how a thing is stored', () => {

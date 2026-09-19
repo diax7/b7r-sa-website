@@ -89,6 +89,12 @@ describe('the glossary (docs/ADMIN-GLOSSARY.md)', () => {
     expect(forms.length).toBe(new Set(forms).size);
   });
 
+  it('gives no two concepts one Arabic word (one word per thing, in both directions)', () => {
+    const words = GLOSSARY.map((r) => stripDiacritics(r.ar));
+    const twice = words.filter((w, i) => words.indexOf(w) !== i);
+    expect(twice).toEqual([]);
+  });
+
   it('reads a whole panel: the string trees, the Payload overrides, every config text, the rules', () => {
     expect(panel.filter((c) => c.where.startsWith('strings.')).length).toBeGreaterThan(250);
     expect(panel.filter((c) => c.where.startsWith('payload-ar.')).length).toBeGreaterThan(150);
