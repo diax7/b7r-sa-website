@@ -196,6 +196,9 @@ export const adminStrings = {
     marking: 'Marking…',
     handled: 'Handled. The list shows it green.',
     alreadyHandled: 'Handled already.',
+    /** The route's refusals, by status: the row is gone, or the rule says no. */
+    gone: 'This message no longer exists. Reload the list.',
+    refused: 'You may not change this message.',
     /**
      * What the reply opens with, in the sender's language (the message's `locale`), whatever
      * the panel's: the same pair in both trees, keyed by the content locale like
@@ -712,6 +715,8 @@ export const adminStringsAr: AdminStrings = {
     marking: 'جارٍ التعليم…',
     handled: 'عولجت. تظهر خضراء في القائمة.',
     alreadyHandled: 'معالَجة من قبل.',
+    gone: 'لم تعد هذه الرسالة موجودة. أعد تحميل القائمة.',
+    refused: 'لا يمكنك تغيير هذه الرسالة.',
     reply: {
       greeting: {
         ar: 'مرحباً {name}، معك بحر برنت بخصوص رسالتك على b7r.sa.',

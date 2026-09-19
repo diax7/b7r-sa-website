@@ -1,5 +1,6 @@
-import type { Payload, TypedUser } from 'payload';
+import { APIError, type Payload, type TypedUser } from 'payload';
 import type { Locale } from '@/lib/i18n';
+import { adminStringsFor } from '@/modules/cms/admin/strings';
 import { MESSAGES, type MessageStatus } from '@/modules/inbox/messages';
 import type { Utm } from '@/modules/inbox/origin';
 
@@ -73,4 +74,17 @@ export async function setMessageStatus(
     user: args.user,
     overrideAccess: false,
   });
+}
+
+/**
+ * What "Mark handled" says when Payload refuses the write (ADR-061): the panel's own
+ * sentence in the caller's language, by the status alone, never Payload's English
+ * message under an Arabic button. A refusal that is not Payload's is rethrown.
+ */
+export function refusalOf(error: unknown, language: string): { status: number; error?: string } {
+  if (!(error instanceof APIError)) throw error;
+  const s = adminStringsFor(language).inbox;
+  if (error.status === 404) return { status: 404, error: s.gone };
+  if (error.status === 403) return { status: 403, error: s.refused };
+  return { status: error.status };
 }

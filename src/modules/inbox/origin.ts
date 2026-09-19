@@ -47,8 +47,10 @@ export function originOfReferer(referer: string | null): { page?: string; utm?: 
 
 /**
  * Where a submission came from (ADR-061): what the form posted (`page`, `utm`), each
- * folded by the rules above, else what the `Referer` header says. Never a refusal: a
- * message without its page is still a message.
+ * folded by the rules above, else what the `Referer` header says. The body wins because it
+ * is the form's own record of where it stood; the referer is a browser's courtesy that a
+ * privacy setting or a `Referrer-Policy` may strip or trim to the origin. Never a
+ * refusal: a message without its page is still a message.
  */
 export function originOf(
   body: {

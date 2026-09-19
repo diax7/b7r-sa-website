@@ -129,13 +129,18 @@ export const Messages: CollectionConfig = {
         label: { ar: 'الحالة', en: 'Status' },
         admin: { position: 'sidebar', components: { Cell: STATUS_CELL } },
       },
-      sent({
+      {
         name: 'emailed',
         type: 'checkbox',
         defaultValue: false,
         label: { ar: 'أُرسل التنبيه', en: 'Notification sent' },
-        admin: { position: 'sidebar' },
-      }),
+        // Not a sender's field, but a fact only the route writes: `markEmailed` passes this
+        // refusal because the Local API's `overrideAccess: true` skips field access
+        // (`beforeValidate/promise.js`), the same way `storeMessage` creates the row. Nobody
+        // else, admin or editor, sets it by hand.
+        access: { update: never },
+        admin: { position: 'sidebar', readOnly: true },
+      },
       sent({
         name: 'page',
         type: 'text',

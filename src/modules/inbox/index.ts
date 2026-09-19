@@ -16,6 +16,7 @@ export { originOf, originOfReferer, type Utm, utmFrom, utmOf } from '@/modules/i
 export {
   type IncomingMessage,
   markEmailed,
+  refusalOf,
   setMessageStatus,
   storeMessage,
 } from '@/modules/inbox/store';

@@ -142,8 +142,9 @@ published pill) is re-hued to the accent in `@layer payload`; its greys are unto
   Contact group `Phone`, Social `Share2`), menus `Menu` (Advanced `Wrench`), delivery
   `Truck`, analytics `ChartLine`; engine settings: schedule `CalendarClock`, style
   `Languages`, facts `ClipboardList`, images `Images`, quality `BadgeCheck`, notifications
-  `Bell`; a connection's Rates `Coins`; a message's UTM group `Waypoints`. **How they are
-  drawn:** Payload 3.89 has no label
+  `Bell`; a connection's Rates `Coins`; a message's UTM group `Waypoints` (a labelled
+  group in the form's sidebar carries its icon like one in the main column). **How they
+  are drawn:** Payload 3.89 has no label
   slot on a tab and never renders a custom `Field` on a `tabs` field, so `describeFields()`
   places a `ui` field (`tabIcons`) right after every tabs field whose `IconTabs` portals one
   icon into each `button.tabs-field__tab-button` by index (the one file that reaches into
