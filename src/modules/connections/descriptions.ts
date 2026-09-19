@@ -13,12 +13,12 @@ export const CONNECTION_DESCRIPTIONS: Described = {
     en: 'As you recognise it in the list and the engine settings: "OpenAI, production". Never shown to a visitor.',
   },
   kind: {
-    ar: 'ما يخصّه المفتاح. Search Console وBing وPageSpeed تقرؤها درجة الظهور، وUmami لوحة التحكم، لا المحرّك: اتصال واحد مفعّل لكل منها.',
-    en: 'Which service the key belongs to. Search Console, Bing and PageSpeed feed the score, Umami the dashboard, not the engine: one on each.',
+    ar: 'ما يخصّه المفتاح. Search Console وBing وPageSpeed لدرجة الظهور، وUmami للوحة التحكم، وGoogle Calendar للحجوزات: اتصال واحد مفعّل لكل منها.',
+    en: 'Which service the key belongs to: Search Console, Bing and PageSpeed for the score, Umami for the dashboard, Calendar for the bookings.',
   },
   apiKey: {
-    ar: 'من لوحة الخدمة؛ ولـ Search Console ملف حساب الخدمة (JSON)، ولـ Umami مفتاح API من إعداداته. لا يُعرض ثانية؛ اترك القناع للإبقاء عليه.',
-    en: "From the service's console; Search Console takes the account's JSON file, Umami an API key. Never shown again; leave the mask to keep it.",
+    ar: 'من لوحة الخدمة؛ ملف حساب الخدمة (JSON) لـ Search Console وGoogle Calendar، ومفتاح API لـ Umami. لا يُعرض ثانية؛ اترك القناع للإبقاء عليه.',
+    en: "The account's JSON file for Search Console and Google Calendar, an API key for the rest. Never shown again; leave the mask to keep it.",
   },
   model: {
     ar: 'كما تكتبه وثائق الخدمة حرفياً: gpt-4.1-mini، claude-haiku-4-5، gemini-3-flash-preview. فارغ عند الحفظ: النموذج المعتاد الرخيص.',

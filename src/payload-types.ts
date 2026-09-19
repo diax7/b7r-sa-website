@@ -1476,7 +1476,7 @@ export interface Connection {
    */
   label: string;
   /**
-   * Which service the key belongs to. Search Console, Bing and PageSpeed feed the score, Umami the dashboard, not the engine: one on each.
+   * Which service the key belongs to: Search Console, Bing and PageSpeed for the score, Umami for the dashboard, Calendar for the bookings.
    */
   kind:
     | 'openai'
@@ -1488,7 +1488,9 @@ export interface Connection {
     | 'google-search-console'
     | 'bing-webmaster'
     | 'pagespeed'
-    | 'umami';
+    | 'umami'
+    | 'google-calendar'
+    | 'mock-calendar';
   /**
    * Exactly as the service docs write it: gpt-4.1-mini, claude-haiku-4-5, gemini-3-flash-preview. Empty on save: the usual cheap model.
    */
@@ -1498,7 +1500,7 @@ export interface Connection {
    */
   baseUrl?: string | null;
   /**
-   * From the service's console; Search Console takes the account's JSON file, Umami an API key. Never shown again; leave the mask to keep it.
+   * The account's JSON file for Search Console and Google Calendar, an API key for the rest. Never shown again; leave the mask to keep it.
    */
   apiKey?: string | null;
   /**

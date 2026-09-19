@@ -4,6 +4,7 @@ import { createRateLimiter } from '@/lib/rate-limit';
 import {
   type ConnectionKind,
   type ConnectionSpec,
+  KEYLESS_SERVICE_KINDS,
   KINDS,
   mockAllowed,
 } from '@/modules/connections/kinds';
@@ -54,7 +55,7 @@ async function ping(
   if (KINDS[spec.kind].speaks === 'service') {
     const test = services[spec.kind];
     if (!test) throw new Error(`no test for the kind ${spec.kind}`);
-    if (!spec.apiKey && spec.kind !== 'pagespeed')
+    if (!spec.apiKey && !KEYLESS_SERVICE_KINDS.includes(spec.kind))
       throw new Error('no key saved on this connection');
     return test(spec.apiKey, { payload, language, baseUrl: spec.baseUrl });
   }

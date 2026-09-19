@@ -51,15 +51,18 @@ describe('the mock kind in the picker', () => {
     expect(kind.options.map((o) => o.value)).toEqual([...CONNECTION_KINDS]);
   });
 
-  it('shows and accepts the mock only where AI_CONTENT_MOCK=1', () => {
+  it('shows and accepts the two mocks only where AI_CONTENT_MOCK=1', () => {
     const before = process.env['AI_CONTENT_MOCK'];
     try {
       process.env['AI_CONTENT_MOCK'] = '1';
-      expect(kind.filterOptions({ options: kind.options }).map((o) => o.value)).toContain('mock');
+      const all = kind.filterOptions({ options: kind.options }).map((o) => o.value);
+      expect(all).toContain('mock');
+      expect(all).toContain('mock-calendar');
       delete process.env['AI_CONTENT_MOCK'];
       const shown = kind.filterOptions({ options: kind.options }).map((o) => o.value);
       expect(shown).not.toContain('mock');
-      expect(shown).toHaveLength(CONNECTION_KINDS.length - 1);
+      expect(shown).not.toContain('mock-calendar');
+      expect(shown).toHaveLength(CONNECTION_KINDS.length - 2);
     } finally {
       if (before === undefined) delete process.env['AI_CONTENT_MOCK'];
       else process.env['AI_CONTENT_MOCK'] = before;
@@ -68,7 +71,7 @@ describe('the mock kind in the picker', () => {
 });
 
 describe('connections (ADR-047)', () => {
-  it('knows ten kinds, six that speak AI and four services, each with what a new row gets', () => {
+  it('knows twelve kinds, six that speak AI and six services, each with what a new row gets', () => {
     expect(CONNECTION_KINDS).toEqual([
       'openai',
       'anthropic',
@@ -80,6 +83,8 @@ describe('connections (ADR-047)', () => {
       'bing-webmaster',
       'pagespeed',
       'umami',
+      'google-calendar',
+      'mock-calendar',
     ]);
     expect(isConnectionKind('openai-compatible')).toBe(true);
     expect(isConnectionKind('perplexity')).toBe(false);
