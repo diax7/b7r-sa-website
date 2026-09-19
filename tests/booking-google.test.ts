@@ -453,6 +453,8 @@ describe('the calendar Tests on the connection row (ADR-062)', () => {
 
   it("answers the mock calendar where the server allows it, and fails on the row's fail flag", async () => {
     const test = CALENDAR_TESTS['mock-calendar']!;
+    // CI's workflow sets AI_CONTENT_MOCK=1 for every job: the refusal is asserted with it off.
+    vi.stubEnv('AI_CONTENT_MOCK', '');
     await expect(test(null, context(HOST))).rejects.toThrow(/not enabled on this server/);
     vi.stubEnv('AI_CONTENT_MOCK', '1');
     expect(await test(null, context(HOST))).toBe('mock calendar: nobody busy today');
