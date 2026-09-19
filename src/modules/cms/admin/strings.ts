@@ -33,6 +33,16 @@ export const adminStrings = {
     /** The header's one-icon switch at 1024 px and under: it toggles to the other language. */
     switchLanguage: 'Switch to Arabic',
     /**
+     * Asked before a switch while a document form holds unsaved changes: the refresh behind
+     * the switch reloads the form from the server, so the consequence and the way out.
+     */
+    unsaved: {
+      title: 'Unsaved changes',
+      text: 'Unsaved changes are lost when the language changes. Save first, or switch anyway.',
+      switchAnyway: 'Switch anyway',
+      cancel: 'Cancel',
+    },
+    /**
      * The badges (ADR-058), read to a screen reader after the entry's name. The runs and the
      * drafts badges say what the dashboard says (`dashboard.hand.failedRuns`,
      * `dashboard.tiles.drafts`): one number, one sentence.
@@ -519,6 +529,12 @@ export const adminStringsAr: AdminStrings = {
     viewSite: 'عرض الموقع',
     language: 'لغة اللوحة',
     switchLanguage: 'بدّل إلى الإنجليزية',
+    unsaved: {
+      title: 'تغييرات غير محفوظة',
+      text: 'تُفقد التغييرات غير المحفوظة عند تغيير اللغة. احفظ أولاً، أو غيّر اللغة على أي حال.',
+      switchAnyway: 'غيّر اللغة',
+      cancel: 'إلغاء',
+    },
     badges: {
       overLimit: (n) =>
         arabicCount(n, {

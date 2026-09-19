@@ -4,6 +4,7 @@ import { isAbandonedDraft, savesByPeople, titleOf } from '@/modules/cms/admin/da
 import {
   collectionComponents,
   ENTITY_HEADER_PATH,
+  FORM_MODIFIED_PATH,
   globalComponents,
 } from '@/modules/cms/admin/document/config';
 import {
@@ -163,9 +164,12 @@ describe('the sidebar registry (ADR-046)', () => {
       }
       const header = c.admin?.components?.Description as { path?: string } | undefined;
       expect(header?.path, 'Description slot').toBe(ENTITY_HEADER_PATH);
-      // No locale note before the document controls: it went with the switch (PR C); an
-      // entity's own action there (Generate now, Test connection) is not one.
-      expect(noteAmong(c.admin?.components?.edit?.beforeDocumentControls)).toBe(false);
+      // Before the document controls: the form-modified sentinel first (the language switch
+      // asks before dropping unsaved changes, ADR-056), then an entity's own action (Generate
+      // now, Test connection); never the locale note that went with the switch (PR C).
+      const before = c.admin?.components?.edit?.beforeDocumentControls;
+      expect(before?.[0], 'the sentinel first').toBe(FORM_MODIFIED_PATH);
+      expect(noteAmong(before)).toBe(false);
       const shows = c.admin?.custom?.['shows'] as { ar?: string; en?: string } | undefined;
       expect(shows?.en, 'shows.en').toBeTruthy();
       expect(ARABIC.test(shows?.ar ?? ''), 'shows.ar').toBe(true);
@@ -178,25 +182,32 @@ describe('the sidebar registry (ADR-046)', () => {
       expect(groupKey(groupOf(g.admin)), 'admin.group in the registry').toBe(placement?.group);
       const header = g.admin?.components?.elements?.Description as { path?: string } | undefined;
       expect(header?.path, 'Description slot').toBe(ENTITY_HEADER_PATH);
-      expect(noteAmong(g.admin?.components?.elements?.beforeDocumentControls)).toBe(false);
+      const before = g.admin?.components?.elements?.beforeDocumentControls;
+      expect(before?.[0], 'the sentinel first').toBe(FORM_MODIFIED_PATH);
+      expect(noteAmong(before)).toBe(false);
       const shows = g.admin?.custom?.['shows'] as { ar?: string; en?: string } | undefined;
       expect(shows?.en, 'shows.en').toBeTruthy();
       expect(ARABIC.test(shows?.ar ?? ''), 'shows.ar').toBe(true);
     });
   }
-  it('the header helpers register the description slot and nothing else', () => {
+  it("the document helpers register the description slot, the sentinel and the entity's own actions after it", () => {
     expect(collectionComponents('pages')).toEqual({
       Description: {
         path: ENTITY_HEADER_PATH,
         serverProps: { entity: { type: 'collections', slug: 'pages' } },
       },
+      edit: { beforeDocumentControls: [FORM_MODIFIED_PATH] },
     });
+    expect(
+      collectionComponents('ai-topics', { beforeDocumentControls: ['x#GenerateNow'] }).edit,
+    ).toEqual({ beforeDocumentControls: [FORM_MODIFIED_PATH, 'x#GenerateNow'] });
     expect(globalComponents('home')).toEqual({
       elements: {
         Description: {
           path: ENTITY_HEADER_PATH,
           serverProps: { entity: { type: 'globals', slug: 'home' } },
         },
+        beforeDocumentControls: [FORM_MODIFIED_PATH],
       },
     });
   });
