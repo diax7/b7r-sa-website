@@ -959,16 +959,18 @@ test.describe('CMS admin', () => {
       // just written, so the text is back; `<html lang dir>` flip; the cookie is set by name.
       await page.locator('.tabs-field__tab-button', { hasText: 'Content' }).click();
       const title = page.locator('#field-title');
-      const before = await title.inputValue();
-      const typed = `${before} (e2e)`;
-      const draftTitle = async () =>
+      const pageTitle = async (draft: boolean) =>
         (
           (await (
-            await request.get(`${API}/pages/${pageId}?depth=0&draft=true`, { headers: auth })
+            await request.get(`${API}/pages/${pageId}?depth=0&draft=${draft}`, { headers: auth })
           ).json()) as { title: string }
         ).title;
+      // The published title, not the field's value: a stale draft of an earlier run would
+      // otherwise carry its suffix forward; the test republishes the original at the end.
+      const before = await pageTitle(false);
+      const typed = `${before} (e2e)`;
       await title.fill(typed);
-      await expect.poll(draftTitle, POLL).toBe(typed);
+      await expect.poll(() => pageTitle(true), POLL).toBe(typed);
       let loads = 0;
       page.on('load', () => (loads += 1));
       await group.locator('button[lang="ar"]').click();
@@ -991,6 +993,12 @@ test.describe('CMS admin', () => {
       await expect.poll(languageCookie).toBe('en');
       await expect(title).toHaveValue(typed);
       await expect(group.locator('[aria-pressed="true"]')).toHaveText('English');
+      // Undo the typed draft: republish the original title so the page reads as before.
+      const republish = await request.patch(`${API}/pages/${pageId}`, {
+        headers: auth,
+        data: { title: before, _status: 'published' },
+      });
+      expect(republish.status(), 'republishing the original title').toBe(200);
       // A form without autosave (site settings): while it holds unsaved changes the switch
       // asks first. Cancel keeps the text and the language; Esc too; "Switch anyway" flips
       // the panel and the form takes the server's state again (Payload's form on a refresh).
