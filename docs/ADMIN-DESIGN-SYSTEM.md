@@ -27,7 +27,7 @@ is the checklist, `tests/admin-config.test.ts` is the gate.
 4. **One primary action per view.** Blue fill for the one thing to do (save, publish, add);
    everything else is secondary or a link.
 5. **Explain before you toggle.** A switch or a destructive button carries one sentence that
-   names the consequence on the site («عند الإيقاف يختفي قسم … من الصفحة الرئيسية»).
+   names the consequence on the site («يختفي قسم … من الصفحة الرئيسية عند الإيقاف»).
 6. **Nothing reaches the public site.** The admin stylesheet and components live in
    `src/app/(payload)/admin.css` and `src/modules/cms/admin/**`; the site's Tailwind sources
    exclude them and the budget e2e guards the public CSS and JS.
@@ -128,16 +128,22 @@ The admin's strings are interface copy (ADR-031): written by us, under the ux-ar
   example if one helps a decision («حتى 70 حرفاً», «1200×630 أو أكبر»); nothing the label
   already says, nothing about how it is stored, no second sentence that repeats the first.
   The English is written first and trimmed; the Arabic is written **by meaning**, never a
-  calque. Every field an editor sees carries one, per entity in
+  calque, and a sentence that says where the value shows opens with its verb, the field the
+  implied subject and the gender agreeing with it («يظهر تحت العنوان بخط أخف؛ فارغ يخفيه»,
+  «تظهر خلف الشريحة على الجوال», «يعلو شبكة البطاقات»), never with a bare place preposition
+  («في البطاقة…»: not helper text, a fragment); a spec sentence may stay nominal («كلمتان إلى
+  أربع.», «بنسبة 4:5.», «من صفر إلى 5؛ بلا شارات يختفي الصف.»); the English may keep its
+  fragment. Every field an editor sees carries one, per entity in
   `modules/cms/admin/descriptions/*.ts`, applied by `describeFields()`; the config test
-  enforces both languages, a cap of 140 characters in each (two lines under a field on a
-  400 px column; a named exception carries its reason), never opening with the label's own
-  noun, never a storage word. Three before and after:
+  enforces both languages, a cap of 140 characters in each as rendered (two lines under a
+  field on a 400 px column; a bilingual list may exceed it by its one-clause shared-rows
+  note; a named exception carries its reason), never opening with the label's own noun,
+  never a storage word, never an Arabic place fragment. Three before and after:
   - Product, «الاسم» (Name). Before: «اسم المنتج كما يظهر في البطاقة، وعنوان صفحته، وقائمة
     المصمّم، وملف llms.txt.» / "The product's name on its card, its page title, the
-    designer's picker and llms.txt." After: «في البطاقة، وعنوان صفحته، وقائمة المصمّم، وملف
-    llms.txt.» / "On the card, the page title, the designer's picker and llms.txt." (the label
-    already says "name").
+    designer's picker and llms.txt." After: «يظهر في البطاقة، وعنوان صفحته، وقائمة المصمّم،
+    وملف llms.txt.» / "On the card, the page title, the designer's picker and llms.txt." (the
+    label already says "name"; the Arabic opens with its verb).
   - Connections, «مفتاح API» (API key). Before: «المفتاح من لوحة الخدمة؛ لـ Search Console ملف
     حساب الخدمة (JSON). يُحفظ مشفّراً ولا يُعرض ثانية؛ اترك القناع للإبقاء عليه.» After: «من
     لوحة الخدمة؛ ولـ Search Console ملف حساب الخدمة (JSON). لا يُعرض ثانية؛ اترك القناع للإبقاء
@@ -147,16 +153,17 @@ The admin's strings are interface copy (ADR-031): written by us, under the ux-ar
     ولا مسافات، لرابط wa.me في الأداة وكل أزرار WhatsApp: 966501699572.» (a brand stays
     Latin; the label already says whose digits).
 - **The glossary** (`docs/ADMIN-GLOSSARY.md`, rendered from `modules/cms/admin/glossary.ts`
-  by `pnpm glossary`): one word per concept in each language, and which terms stay Latin
-  inside Arabic copy (API, JSON, URL, slug, UTM, CSV, IndexNow, Search Console, Bing
+  by `pnpm glossary`): one word per concept in each language, in both directions (no two
+  concepts share a word: the test refuses a second row with the same Arabic), and which
+  terms stay Latin inside Arabic copy (API, JSON, URL, slug, UTM, CSV, IndexNow, Search Console, Bing
   Webmaster Tools, PageSpeed, Umami, GA4, WhatsApp, Turnstile, Resend, the model ids,
   `alt`, `og:image`, the brands and the product names; Salla, Zid and Misk keep their own
   Arabic names). A refused alternate («الشعار النصي» for the tagline, «سطح المكتب» for the
   desktop, «مزوّد» for the service, «سقف» for a limit, «واتساب») fails
   `tests/admin-glossary.test.ts` anywhere in the panel; the site's copy (BRD-verbatim) is
   reported on, never gated. A new concept is a new row before its first string.
-- Consequences before switches: «عند الإيقاف يختفي قسم «لماذا بحر» من الصفحة الرئيسية.» A
-  switch is «مفعّل» / «معطّل»; a thing that runs is «يعمل» / «متوقف».
+- A switch names its consequence, verb first: «يختفي قسم «لماذا بحر» من الصفحة الرئيسية عند
+  الإيقاف.» A switch is «مفعّل» / «معطّل»; a thing that runs is «يعمل» / «متوقف».
 - Success and status: light passives or nominal («حُفظت المسودة», «الوظائف تعمل»), never «تم».
 - Empty states: why it is empty + the next step: «لا صفحات بعد. أضف الأولى.»
 - Errors: what happened + how to recover, no blame: «تعذّر الحفظ. تحقق من الحقول المعلّمة.»
@@ -323,8 +330,8 @@ per language, no switch, no note.
   and its entry is keyed by the row's id from the form state, never by the index
   (`hero.slides.<id>.headline`, `blocks.<id>.items.<id>.title`; `data-admin-bilingual`
   carries that key), so a moved row keeps its English, a deleted row's entry is dropped,
-  and a duplicated row copies the Arabic only, its English starting empty. The list's
-  description ends with that sentence (`SHARED_ROWS_NOTE` in `describe.ts`, appended by the
+  and a duplicated row copies the Arabic only (its English starts empty). The list's
+  description ends with that one clause (`SHARED_ROWS_NOTE` in `describe.ts`, appended by the
   pass to every list whose rows are bilingual). A row added and typed in both languages
   lands with both on the same save. The number twin renders Payload's own number markup
   (`field-type number`, an `<input type="number">`; `@payloadcms/ui` exports the field, not

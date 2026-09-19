@@ -37,19 +37,28 @@ bilingual census, the description rule), `tests/admin-glossary.test.ts` (the glo
    editor sees: one sentence of what the thing does *on the site* and where, then the limit
    or an example if one helps ("Up to 70 characters", "1200×630 or larger"); nothing the
    label already says, nothing about how it is stored, no second sentence that repeats the
-   first. **The glossary** (`docs/ADMIN-GLOSSARY.md`, rendered from
-   `src/modules/cms/admin/glossary.ts`) fixes one word per concept in each language and
-   which terms stay Latin inside Arabic (API, JSON, URL, slug, the services, the brands, the
-   model ids, `alt`, `og:image`); a new concept is a new row before its first string.
-   Enforced: `tests/admin-config.test.ts` refuses a field without both languages, a map key
-   that names no field, an inline sentence where the map names the field, a description over
-   140 characters in either language (exceptions named per path with a reason, in
-   `CAP_EXCEPTIONS`), one that opens with the label's own noun, and one that says "stored",
-   "database", "table" or "column" (or their Arabic); `tests/admin-glossary.test.ts` refuses
-   a Latin-kept term translated and a settled word's alternate anywhere in the panel;
-   `tests/admin-strings.test.ts` and `tests/visibility-rules-strings.test.ts` keep the
-   ux-araby rules. A form with more than one screen of fields is tabs, one per section of
-   the site in site order (named tabs where a group existed: same columns).
+   first. In Arabic, a sentence that says where the value shows opens with its verb, the
+   field the implied subject, the gender agreeing with the thing («يظهر في البطاقة، وعنوان
+   صفحته»، «تظهر خلف الشريحة»، «يعلو شبكة البطاقات؛ فارغ يعرض البطاقات وحدها»), never with a
+   bare place preposition («في البطاقة…»); a spec sentence (a limit, a format, an example)
+   may stay nominal («كلمتان إلى أربع.», «بنسبة 4:5.», «من صفر إلى 5»). English may keep its
+   prepositional fragment. **The glossary** (`docs/ADMIN-GLOSSARY.md`, rendered from
+   `src/modules/cms/admin/glossary.ts`) fixes one word per concept in each language, in both
+   directions (no two concepts share a word), and which terms stay Latin inside Arabic (API,
+   JSON, URL, slug, the services, the brands, the model ids, `alt`, `og:image`); a new
+   concept is a new row before its first string. Enforced: `tests/admin-config.test.ts`
+   refuses a field without both languages, a map key that names no field, an inline
+   sentence where the map names the field, a description over 140 characters in either
+   language as rendered (a bilingual list may exceed it by its shared-rows note; exceptions
+   named per path with a reason, in `CAP_EXCEPTIONS`), one that opens with the label's own
+   noun, one that says "stored", "database", "table" or "column" (or their Arabic), and an
+   Arabic one that opens with «في», «تحت», «فوق», «خلف», «بجانب», «أمام», «على», «عند», «داخل»
+   or «ضمن»; `tests/admin-glossary.test.ts` refuses a Latin-kept term translated and a
+   settled word's alternate anywhere in the panel; `tests/admin-strings.test.ts` keeps the
+   ux-araby rules over the trees, the overrides and every config text, and
+   `tests/visibility-rules-strings.test.ts` over the rules' sentences. A form with more than
+   one screen of fields is tabs, one per section of the site in site order (named tabs
+   where a group existed: same columns).
 5. `admin.useAsTitle` (collections) on the field an editor recognises; `admin.defaultColumns`
    with the 3–5 columns that answer "which one is this?"; `admin.listSearchableFields` on the
    title-like fields (the command palette searches the same fields).
@@ -126,7 +135,11 @@ bilingual census, the description rule), `tests/admin-glossary.test.ts` (the glo
    `admin/format.ts`; a technical token inside Arabic (a model id, a path, a key) stays
    Latin, wrapped in `<bdi>` or the pill so it reads left-to-right (ADR-039 and ADR-056
    stand). A control that carries meaning by colour carries its word too; a chrome change is
-   measured at 390, 1024, 1280 and 1440 in both languages.
+   measured at 390, 1024, 1280 and 1440 in both languages. **The known gap:** a validator's
+   refusal (`inLanguage(req, { ar, en })` inside a `validate` closure, a `Refused` reason in
+   a hook) is outside every gate above, since no test can call the closure; it is written
+   under the same rules by hand, and a regex over `src/` for `inLanguage(` literals would
+   feed those pairs to the checks when the gap is closed.
 
 ## Adding an admin component
 
