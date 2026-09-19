@@ -3,6 +3,7 @@ import { ar } from '@/content/copy/ar';
 import { en } from '@/content/copy/en';
 import { LOCALES } from '@/lib/i18n';
 import { normalisePhone } from '@/lib/phone';
+import { PATH_MAX, UTM_MAX } from '@/lib/traffic/landing';
 import { EMAIL_MAX, MESSAGE_MAX, NAME_MAX, NAME_MIN } from '@/modules/contact/validate';
 
 /**
@@ -17,6 +18,8 @@ export type Inquiry = (typeof INQUIRY_OPTIONS)[number];
  * in `validate.ts` (server only, so zod never reaches the browser). The API answers a
  * generic `invalid`; `website` is the honeypot.
  */
+const utmValue = z.string().max(UTM_MAX).optional();
+
 export const contactBodySchema = z.object({
   name: z.string().trim().min(NAME_MIN).max(NAME_MAX),
   phone: z
@@ -37,6 +40,13 @@ export const contactBodySchema = z.object({
   locale: z.enum(LOCALES).default('ar'),
   website: z.string().max(200).optional(),
   turnstileToken: z.string().max(4096).optional(),
+  /**
+   * Where the form was (ADR-061): the page's path and the campaign parameters its address
+   * carried, for the inbox row. Bounded here; the route folds a value that is not a site
+   * path or an empty parameter away rather than refusing the message over it.
+   */
+  page: z.string().max(PATH_MAX).optional(),
+  utm: z.object({ source: utmValue, medium: utmValue, campaign: utmValue }).partial().optional(),
 });
 
 export type ContactBody = z.infer<typeof contactBodySchema>;

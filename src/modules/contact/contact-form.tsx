@@ -33,6 +33,13 @@ type Status = 'idle' | 'submitting' | 'success' | 'failure';
 
 const EMPTY: Values = { name: '', phone: '', email: '', inquiry: '', message: '' };
 
+/** The campaign parameters on the page's own address, for the inbox row (ADR-061). */
+function utmOfPage(): Record<'source' | 'medium' | 'campaign', string | undefined> {
+  const search = new URLSearchParams(location.search);
+  const read = (key: string) => search.get(`utm_${key}`) ?? undefined;
+  return { source: read('source'), medium: read('medium'), campaign: read('campaign') };
+}
+
 /**
  * Contact form (BRD 6.9, 4.11): the BRD messages under each field on submit,
  * honeypot, Turnstile executed at submit, «جارٍ الإرسال» while pending, a success card on
@@ -68,7 +75,14 @@ export function ContactForm({ locale, copy, whatsappHref, turnstileSiteKey }: Co
       const res = await fetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...values, locale, website, turnstileToken }),
+        body: JSON.stringify({
+          ...values,
+          locale,
+          website,
+          turnstileToken,
+          page: location.pathname,
+          utm: utmOfPage(),
+        }),
       });
       if (res.ok) {
         setStatus('success');

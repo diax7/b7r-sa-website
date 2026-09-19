@@ -44,3 +44,21 @@ export function originOfReferer(referer: string | null): { page?: string; utm?: 
   const utm = utmOf(url.searchParams);
   return { ...(page ? { page } : {}), ...(utm ? { utm } : {}) };
 }
+
+/**
+ * Where a submission came from (ADR-061): what the form posted (`page`, `utm`), each
+ * folded by the rules above, else what the `Referer` header says. Never a refusal: a
+ * message without its page is still a message.
+ */
+export function originOf(
+  body: {
+    page?: string | undefined;
+    utm?: Partial<Record<keyof Utm, string | undefined>> | undefined;
+  },
+  referer: string | null,
+): { page?: string; utm?: Utm } {
+  const fallback = originOfReferer(referer);
+  const page = (body.page === undefined ? null : pagePath(body.page)) ?? fallback.page;
+  const utm = (body.utm ? utmFrom(body.utm) : undefined) ?? fallback.utm;
+  return { ...(page ? { page } : {}), ...(utm ? { utm } : {}) };
+}

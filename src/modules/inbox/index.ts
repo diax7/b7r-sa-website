@@ -12,7 +12,7 @@ export {
   Messages,
   type MessageStatus,
 } from '@/modules/inbox/messages';
-export { originOfReferer, type Utm, utmFrom, utmOf } from '@/modules/inbox/origin';
+export { originOf, originOfReferer, type Utm, utmFrom, utmOf } from '@/modules/inbox/origin';
 export {
   type IncomingMessage,
   markEmailed,
