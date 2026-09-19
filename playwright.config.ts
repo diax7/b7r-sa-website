@@ -6,8 +6,16 @@ nextEnv.loadEnvConfig(process.cwd());
 
 const PORT = 3004;
 export const BASE_URL = `http://localhost:${PORT}`;
-/** Suites that mutate the CMS (serial files): the admin seats, the bookings (they switch the global on). */
-const CMS_SPECS = '**/{admin,bookings}.spec.ts';
+/** Suites that mutate the CMS (one serial file). */
+const CMS_SPECS = '**/admin.spec.ts';
+/**
+ * The bookings suite (ADR-062) mutates the CMS too (it switches the booking global on and
+ * signs in as the admin), so it is a project of its own that runs after the admin suite:
+ * two files in one project would run in two workers at once, and the one admin account's
+ * parallel logins race on its sessions list (a later login drops an earlier session's id,
+ * and the earlier suite's writes answer 403).
+ */
+const BOOKING_SPECS = '**/bookings.spec.ts';
 
 export default defineConfig({
   testDir: './e2e',
@@ -36,10 +44,10 @@ export default defineConfig({
     {
       name: 'desktop-chrome',
       use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 } },
-      testIgnore: CMS_SPECS,
+      testIgnore: [CMS_SPECS, BOOKING_SPECS],
     },
-    { name: 'pixel-7', use: { ...devices['Pixel 7'] }, testIgnore: CMS_SPECS },
-    { name: 'iphone-15', use: { ...devices['iPhone 15'] }, testIgnore: CMS_SPECS },
+    { name: 'pixel-7', use: { ...devices['Pixel 7'] }, testIgnore: [CMS_SPECS, BOOKING_SPECS] },
+    { name: 'iphone-15', use: { ...devices['iPhone 15'] }, testIgnore: [CMS_SPECS, BOOKING_SPECS] },
     {
       // The admin suite publishes, drafts and switches sections off: it runs alone, after the
       // device projects, so a mutation never overlaps a public assertion on another worker.
@@ -55,6 +63,14 @@ export default defineConfig({
       },
       testMatch: CMS_SPECS,
       dependencies: ['desktop-chrome', 'pixel-7', 'iphone-15'],
+    },
+    {
+      // After the admin suite, never beside it (the one admin account, above); an Arabic
+      // browser, since the merchant's pages are the site's.
+      name: 'cms-bookings',
+      use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 } },
+      testMatch: BOOKING_SPECS,
+      dependencies: ['cms'],
     },
   ],
 });

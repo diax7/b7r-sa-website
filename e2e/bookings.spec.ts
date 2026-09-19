@@ -12,9 +12,10 @@ import { ADMIN, API, hasAdmin, login } from './helpers/cms';
  * Bookings of our own (ADR-062) from the merchant's seat: `/book` in both languages books a
  * slot, the confirmation, the manage page's move and cancel, an off-grid start refused, the
  * contact card's inline picker, the `/contact` JS budget with the island out of the first
- * paint, axe at 1440 and 390 in both languages. Runs in the `cms` project (serial, after the
- * public projects): it switches the booking global on and restores it, and removes the rows
- * it made. The calendar is the mock connection where the kind exists (PR 4b phase 2), else
+ * paint, axe at 1440 and 390 in both languages. Runs in the `cms-bookings` project (serial,
+ * after the admin suite, never beside it: the one admin account's parallel logins race on
+ * its sessions list): it switches the booking global on and restores it, and removes the
+ * rows it made. The calendar is the mock connection where the kind exists (PR 4b phase 2), else
  * off: the booking then stands without a Meet link and says the link follows.
  */
 declare global {
