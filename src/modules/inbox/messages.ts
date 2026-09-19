@@ -54,7 +54,9 @@ export const Messages: CollectionConfig = {
     defaultColumns: ['name', 'inquiry', 'status', 'createdAt'],
     listSearchableFields: ['name', 'email', 'phone'],
     group: adminGroup('site'),
-    components: collectionComponents(MESSAGES),
+    components: collectionComponents(MESSAGES, {
+      beforeDocumentControls: ['@/modules/inbox/admin/message-actions#MessageActions'],
+    }),
     custom: {
       shows: {
         ar: 'لا يظهر في الموقع: ما يرسله نموذج التواصل',

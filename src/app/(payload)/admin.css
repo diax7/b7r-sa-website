@@ -16,6 +16,7 @@
 @source '../../modules/cms/admin';
 @source '../../modules/ai-content/admin';
 @source '../../modules/connections/admin';
+@source '../../modules/inbox/admin';
 @source '../../modules/traffic/admin';
 @source '../../modules/visibility/admin';
 @source '../../components';

@@ -1,5 +1,6 @@
 import { fold } from '@/lib/arabic-fold';
 import type { NavEntity, NavGroup } from '@/modules/cms/admin/nav/groups';
+import { groupBlocks } from '@/modules/cms/admin/nav/order';
 
 /**
  * The sidebar's keyboard model (ADR-058), pure. The tree is one tab stop: Tab lands on the
@@ -67,8 +68,9 @@ export const rowKey = {
 
 /**
  * The rows of the tree in document order for the groups as rendered: the dashboard, then
- * each group's row followed by its entries (primary, their secondary ones, then the
- * sections' entries) when the group is open. A section's heading is not a row.
+ * each group's row followed by its entries (a section placed first, the primary entries
+ * with their secondary ones, a section placed last: `groupBlocks`) when the group is open.
+ * A section's heading is not a row.
  */
 export function treeRows(
   groups: readonly NavGroup[],
@@ -85,7 +87,11 @@ export function treeRows(
     ...groups.flatMap((g) => [
       { key: rowKey.group(g.key), label: g.label },
       ...(isOpen(g.key)
-        ? [...entityRows(g.entities), ...g.sections.flatMap((s) => entityRows(s.entities))]
+        ? groupBlocks(g).flatMap((block) =>
+            block.kind === 'entity'
+              ? entityRows([block.entity])
+              : entityRows(block.section.entities),
+          )
         : []),
     ]),
   ];
