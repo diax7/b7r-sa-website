@@ -1,9 +1,9 @@
 import { type BookingSettings, BookingSettingsSchema } from '@/content/schema';
 import { booking as seed } from '@/content/seed/booking';
-import type { Booking } from '@/payload-types';
+import type { Config } from '@/payload-types';
 
 /** What the mapper reads of the global: the document, or the empty one Payload answers before a first save. */
-export type BookingDoc = Partial<Omit<Booking, 'id'>>;
+export type BookingDoc = Partial<Omit<Config['globals']['booking'], 'id'>>;
 
 /**
  * The `booking` global as the site's contract (ADR-062). A global that has never been saved

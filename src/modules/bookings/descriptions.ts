@@ -63,3 +63,75 @@ export const BOOKING_DESCRIPTIONS: Described = {
     en: 'The Google Workspace account on b7r.sa whose calendar is read and takes the appointments with their Meet link.',
   },
 };
+
+/** A booking row, field by field: what each is for the person following it up. */
+export const BOOKINGS_DESCRIPTIONS: Described = {
+  name: {
+    ar: 'كما كتبه التاجر في صفحة الحجز؛ يظهر في القائمة وفي عنوان الحدث في التقويم.',
+    en: "As the merchant typed it on the booking page; the list's title and the calendar event's name.",
+  },
+  email: {
+    ar: 'يستقبل التأكيد والتذكيرين ورابط التغيير أو الإلغاء؛ ويُدعى به إلى حدث Meet.',
+    en: 'Receives the confirmation, the two reminders and the change-or-cancel link; invited to the Meet event by it.',
+  },
+  phone: {
+    ar: 'يفتح زر «ذكّر على WhatsApp» محادثة على هذا الرقم برسالة جاهزة بلغة التاجر.',
+    en: 'The "Remind on WhatsApp" button opens a chat to this number with a prefilled message in their language.',
+  },
+  start: {
+    ar: 'يُعرض بتوقيت الرياض؛ يغيّره التاجر من رابطه لا من هنا، ليتبعه حدث التقويم.',
+    en: 'Shown in Riyadh time; the merchant moves it from their link, never here, so the calendar event follows.',
+  },
+  end: {
+    ar: 'يُحسب من الموعد ومدة الاستشارة في إعدادات الحجز.',
+    en: 'Computed from the start and the length in the booking settings.',
+  },
+  locale: {
+    ar: 'تُرسل بها رسائل البريد ورسالة WhatsApp الجاهزة؛ لغة الصفحة التي حجز منها.',
+    en: 'The e-mails and the prefilled WhatsApp message go out in it; the language of the page they booked from.',
+  },
+  status: {
+    ar: 'محجوز عند الحجز، مُعاد جدولته بعد تغيير، ملغى بعد إلغاء، مكتمل تلقائياً بعد انتهاء الموعد.',
+    en: 'Booked on booking, Rescheduled after a change, Cancelled after a cancel, Completed on its own once the time has passed.',
+  },
+  notes: {
+    ar: 'لك ولزملائك: ما اتُّفق عليه وما يلزم متابعته. لا يقرؤها التاجر.',
+    en: 'For you and your colleagues: what was agreed and what to follow up. The merchant never reads them.',
+  },
+  meetLink: {
+    ar: 'يُنشئه Google مع الحدث ويصل التاجر في بريد التأكيد؛ فارغ حين يتعثّر التقويم.',
+    en: 'Created by Google with the event and sent to the merchant in the confirmation; empty while the calendar fails.',
+  },
+  calendar: {
+    ar: 'مُسجَّل حين قُيّد الحدث؛ متعثّر حين رفض Google فتُعاد المحاولة ثلاث مرات بفاصل ساعة؛ بلا تقويم حين لا اتصال.',
+    en: 'On the calendar once the event exists; Failed when Google refused (three retries, an hour apart); No calendar without a connection.',
+  },
+  googleEventId: {
+    ar: 'يربط الحجز بحدثه في تقويم صاحب التقويم، للتغيير والإلغاء.',
+    en: "Ties the booking to its event on the owner's calendar, for a move and a delete.",
+  },
+  calendarAttempts: {
+    ar: 'كم مرة أعاد المسح طلب الحدث من Google بعد رفضه؛ يتوقف عند 3.',
+    en: 'How many times the sweep asked Google again after a refusal; it stops at 3.',
+  },
+  calendarAttemptAt: {
+    ar: 'متى أعاد المسح المحاولة آخر مرة؛ التالية بعد ساعة.',
+    en: 'When the sweep last tried again; the next is an hour later.',
+  },
+  reminded24h: {
+    ar: 'يُعلَّم بعد خروج بريد التذكير قبل يوم إلى التاجر وإليك، فلا يُرسل مرتين.',
+    en: 'Set once the day-before reminder left, to the merchant and to you, so it never goes twice.',
+  },
+  reminded1h: {
+    ar: 'يُعلَّم بعد خروج بريد التذكير قبل ساعة، فلا يُرسل مرتين.',
+    en: 'Set once the hour-before reminder left, so it never goes twice.',
+  },
+  page: {
+    ar: 'المسار الذي حُجز منه: /book أو /contact، وبالإنجليزية تحت /en.',
+    en: 'The path the booking was made from: /book or /contact, under /en in English.',
+  },
+  utm: {
+    ar: 'تظهر حين وصل التاجر برابط حملة (utm): المصدر والوسيط والحملة كما كُتبت فيه.',
+    en: 'Shown when the merchant arrived by a campaign link (utm): the source, the medium and the campaign as written in it.',
+  },
+};

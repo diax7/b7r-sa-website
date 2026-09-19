@@ -103,6 +103,7 @@ export const COLLECTION_ICONS: Record<CollectionSlug, LucideIcon> = {
   metrics: Camera,
   prompts: MessageCircleQuestion,
   citations: Quote,
+  bookings: CalendarClock,
 };
 
 export const GLOBAL_ICONS: Record<GlobalSlug, LucideIcon> = {
@@ -328,6 +329,8 @@ export const ADMIN_NAV: {
     metrics: { group: 'visibility', order: 2, parent: SCORE_VIEW },
     prompts: { group: 'visibility', order: 3, parent: SCORE_VIEW },
     citations: { group: 'visibility', order: 4, parent: SCORE_VIEW },
+    // Under Site until PR 4a's Inbox section lands; then a section entry beside the messages.
+    bookings: { group: 'site', order: 4 },
     users: { group: 'admin', order: 0 },
     connections: { group: 'admin', order: 1 },
   },

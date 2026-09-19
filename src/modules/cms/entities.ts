@@ -2,6 +2,7 @@ import type { CollectionConfig, GlobalConfig } from 'payload';
 import { AiRuns } from '@/modules/ai-content/runs';
 import { AiSettings } from '@/modules/ai-content/settings';
 import { AiTopics } from '@/modules/ai-content/topics';
+import { Bookings } from '@/modules/bookings/collection';
 import { Booking } from '@/modules/bookings/global';
 import { Authors } from '@/modules/cms/collections/authors';
 import { Categories } from '@/modules/cms/collections/categories';
@@ -44,6 +45,7 @@ export const COLLECTIONS: CollectionConfig[] = [
   AiTopics,
   AiRuns,
   Connections,
+  Bookings,
   Traffic,
   Metrics,
   Prompts,

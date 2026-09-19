@@ -1,5 +1,7 @@
-import type { PayloadRequest } from 'payload';
+import type { Access, FieldAccess, PayloadRequest } from 'payload';
 import { describe, expect, it } from 'vitest';
+import { Bookings } from '@/modules/bookings/collection';
+import { Booking } from '@/modules/bookings/global';
 import {
   adminField,
   canDeleteVersioned,
@@ -53,5 +55,75 @@ describe('CMS access (BRD 9.3): admin does everything, editor edits content only
     expect(run(isAdminOrSelf, 'anonymous')).toBe(false);
     expect(isAdminOrSelf({ req: req('editor', 42) })).toEqual({ id: { equals: 42 } });
     expect(run(isAdminOrSelf, 'admin')).toBe(true);
+  });
+});
+
+/** The `access.update` rule of a named field of the bookings, at any depth. */
+function fieldUpdate(name: string, fields: unknown[] = Bookings.fields): FieldAccess | undefined {
+  for (const f of fields) {
+    const field = f as { name?: string; fields?: unknown[]; access?: { update?: FieldAccess } };
+    if (field.name === name) return field.access?.update;
+    if (field.fields) {
+      const found = fieldUpdate(name, field.fields);
+      if (found) return found;
+    }
+  }
+  return undefined;
+}
+
+/**
+ * The outsider's seat on the bookings (ADR-062): the public key reads, lists, creates,
+ * changes and deletes nothing; an editor follows up (status, notes) and never rewrites the
+ * merchant's fields or the facts the routes wrote; an admin corrects and deletes; nobody
+ * creates through the API (the booking route is the only writer).
+ */
+describe('bookings access (ADR-062)', () => {
+  const collection = Bookings.access as Record<string, Access>;
+  const global = Booking.access as Record<string, Access>;
+
+  it.each<[Actor, boolean, boolean, boolean]>([
+    ['anonymous', false, false, false],
+    ['editor', true, true, false],
+    ['admin', true, true, true],
+  ])('%s: read=%s update=%s delete=%s, create never', (actor, read, update, del) => {
+    expect(run(collection['read']!, actor)).toBe(read);
+    expect(run(collection['update']!, actor)).toBe(update);
+    expect(run(collection['delete']!, actor)).toBe(del);
+    expect(run(collection['create']!, actor)).toBe(false);
+  });
+
+  it("the merchant's fields are an admin's to correct; the facts are nobody's", () => {
+    for (const name of ['name', 'email', 'phone']) {
+      const update = fieldUpdate(name)!;
+      expect(update({ req: req('editor') } as never), name).toBe(false);
+      expect(update({ req: req('admin') } as never), name).toBe(true);
+    }
+    for (const name of [
+      'start',
+      'end',
+      'locale',
+      'meetLink',
+      'googleEventId',
+      'calendar',
+      'reminded24h',
+      'reminded1h',
+      'page',
+      'source',
+    ]) {
+      const update = fieldUpdate(name)!;
+      expect(update({ req: req('admin') } as never), name).toBe(false);
+    }
+    // The status and the notes carry no field rule: the collection's update decides.
+    expect(fieldUpdate('status')).toBeUndefined();
+    expect(fieldUpdate('notes')).toBeUndefined();
+  });
+
+  it('the booking settings are read and changed by admins only', () => {
+    for (const actor of ['anonymous', 'editor'] as const) {
+      expect(run(global['read']!, actor)).toBe(false);
+      expect(run(global['update']!, actor)).toBe(false);
+    }
+    expect(run(global['read']!, 'admin')).toBe(true);
+    expect(run(global['update']!, 'admin')).toBe(true);
   });
 });

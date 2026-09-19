@@ -81,6 +81,7 @@ export interface Config {
     'ai-topics': AiTopic;
     'ai-runs': AiRun;
     connections: Connection;
+    bookings: Booking;
     traffic: Traffic;
     metrics: Metric;
     prompts: Prompt;
@@ -108,6 +109,7 @@ export interface Config {
     'ai-topics': AiTopicsSelect<false> | AiTopicsSelect<true>;
     'ai-runs': AiRunsSelect<false> | AiRunsSelect<true>;
     connections: ConnectionsSelect<false> | ConnectionsSelect<true>;
+    bookings: BookingsSelect<false> | BookingsSelect<true>;
     traffic: TrafficSelect<false> | TrafficSelect<true>;
     metrics: MetricsSelect<false> | MetricsSelect<true>;
     prompts: PromptsSelect<false> | PromptsSelect<true>;
@@ -126,7 +128,7 @@ export interface Config {
   globals: {
     home: Home;
     'site-settings': SiteSetting;
-    booking: Booking;
+    booking: Booking1;
     'seo-defaults': SeoDefault;
     'ai-settings': AiSetting;
     'visibility-checklist': VisibilityChecklist;
@@ -1536,6 +1538,89 @@ export interface Connection {
   createdAt: string;
 }
 /**
+ * A consultation booked on the site: who, when and the Meet link. The status and the notes are yours; a change or a cancel goes through the merchant's link.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "bookings".
+ */
+export interface Booking {
+  id: number;
+  /**
+   * As the merchant typed it on the booking page; the list's title and the calendar event's name.
+   */
+  name: string;
+  /**
+   * Receives the confirmation, the two reminders and the change-or-cancel link; invited to the Meet event by it.
+   */
+  email: string;
+  /**
+   * The "Remind on WhatsApp" button opens a chat to this number with a prefilled message in their language.
+   */
+  phone: string;
+  /**
+   * Shown in Riyadh time; the merchant moves it from their link, never here, so the calendar event follows.
+   */
+  start: string;
+  /**
+   * Computed from the start and the length in the booking settings.
+   */
+  end: string;
+  /**
+   * The e-mails and the prefilled WhatsApp message go out in it; the language of the page they booked from.
+   */
+  locale: 'ar' | 'en';
+  /**
+   * Booked on booking, Rescheduled after a change, Cancelled after a cancel, Completed on its own once the time has passed.
+   */
+  status: 'booked' | 'rescheduled' | 'cancelled' | 'completed';
+  /**
+   * For you and your colleagues: what was agreed and what to follow up. The merchant never reads them.
+   */
+  notes?: string | null;
+  /**
+   * Created by Google with the event and sent to the merchant in the confirmation; empty while the calendar fails.
+   */
+  meetLink?: string | null;
+  /**
+   * On the calendar once the event exists; Failed when Google refused (three retries, an hour apart); No calendar without a connection.
+   */
+  calendar: 'synced' | 'failed' | 'off';
+  /**
+   * Ties the booking to its event on the owner's calendar, for a move and a delete.
+   */
+  googleEventId?: string | null;
+  /**
+   * How many times the sweep asked Google again after a refusal; it stops at 3.
+   */
+  calendarAttempts?: number | null;
+  /**
+   * When the sweep last tried again; the next is an hour later.
+   */
+  calendarAttemptAt?: string | null;
+  /**
+   * Set once the day-before reminder left, to the merchant and to you, so it never goes twice.
+   */
+  reminded24h?: boolean | null;
+  /**
+   * Set once the hour-before reminder left, so it never goes twice.
+   */
+  reminded1h?: boolean | null;
+  /**
+   * The path the booking was made from: /book or /contact, under /en in English.
+   */
+  page?: string | null;
+  /**
+   * Shown when the merchant arrived by a campaign link (utm): the source, the medium and the campaign as written in it.
+   */
+  utm?: {
+    source?: string | null;
+    medium?: string | null;
+    campaign?: string | null;
+  };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * Where visitors come from and what the AI crawlers read: the site's own daily count, no cookies, no IP addresses. Read-only.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1984,6 +2069,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'connections';
         value: number | Connection;
+      } | null)
+    | ({
+        relationTo: 'bookings';
+        value: number | Booking;
       } | null)
     | ({
         relationTo: 'traffic';
@@ -2607,6 +2696,37 @@ export interface ConnectionsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "bookings_select".
+ */
+export interface BookingsSelect<T extends boolean = true> {
+  name?: T;
+  email?: T;
+  phone?: T;
+  start?: T;
+  end?: T;
+  locale?: T;
+  status?: T;
+  notes?: T;
+  meetLink?: T;
+  calendar?: T;
+  googleEventId?: T;
+  calendarAttempts?: T;
+  calendarAttemptAt?: T;
+  reminded24h?: T;
+  reminded1h?: T;
+  page?: T;
+  utm?:
+    | T
+    | {
+        source?: T;
+        medium?: T;
+        campaign?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "traffic_select".
  */
 export interface TrafficSelect<T extends boolean = true> {
@@ -3221,7 +3341,7 @@ export interface SiteSetting {
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "booking".
  */
-export interface Booking {
+export interface Booking1 {
   id: number;
   /**
    * The heading of the booking page and the subject of the confirmation e-mail: "Free consultation, 30 minutes".
