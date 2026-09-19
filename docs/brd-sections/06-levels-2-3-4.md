@@ -248,5 +248,5 @@ What the site guarantees by construction (required fields, publish rules, the ge
 
 1. A contact submission and a booking both appear in the inbox within a minute, with working reply actions.
 2. `/book` and the contact page book a real test consultation: the row, the event with its Meet link on the host's calendar, the two e-mails, the manage link's move and cancel (ADR-062).
-3. Newsletter subscribers list matches the Resend audience.
-4. Analytics view shows Umami, GA4, and Search Console numbers for the last 30 days from the cache; Search Console queries create at least five suggested topics.
+3. Newsletter subscribers list matches the Resend audience. *Deferred 2026-09-19 (ADR-061): the subscribers sync is a future block (§12.6); Resend's own audience is the list.*
+4. Analytics view shows Umami, GA4, and Search Console numbers for the last 30 days from the cache; Search Console queries create at least five suggested topics. *Amended 2026-09-19 (ADR-048 amended, ADR-049): the dashboard's visits card shows the site's own landings and Umami's visitors and page views for 7, 30 and 90 days from `metrics`; Search Console, Bing and PageSpeed read on the Score page; GA4 stays in GA; the Search Console suggestions as written.*
