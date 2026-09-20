@@ -11,7 +11,10 @@
  */
 import type { ImageLoaderProps } from 'next/image';
 import type { ImageSize } from 'payload';
-import { PHOTO_QUALITY } from '@/lib/photo';
+// A sibling path, not the `@/` alias: `next.config.ts` imports this module, and Next's config
+// transpiler rewrites an alias against the project root, which resolves from `src/lib/` to
+// nothing (`tests/next-config-imports.test.ts` guards every module the config reaches).
+import { PHOTO_QUALITY } from './photo';
 
 /** The candidate widths `next/image` may ask for: `DEVICE_SIZES` and `IMAGE_SIZES`, merged. */
 export const RENDITION_WIDTHS = [128, 384, 640, 828, 1080, 1200, 1536, 1920, 2560, 3840] as const;

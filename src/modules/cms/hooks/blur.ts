@@ -31,7 +31,7 @@ export async function blurDataUrl(data: Buffer, mimetype: string): Promise<strin
 }
 
 /** The bytes of the request's file: in memory, or on disk when Payload buffers to a temp file. */
-async function bytesOf(file: NonNullable<PayloadRequest['file']>): Promise<Buffer | null> {
+export async function bytesOf(file: NonNullable<PayloadRequest['file']>): Promise<Buffer | null> {
   if (file.data?.length) return file.data;
   if (file.tempFilePath) return readFile(file.tempFilePath);
   return null;

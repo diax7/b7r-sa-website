@@ -38,7 +38,7 @@ const nextConfig: NextConfig = {
     // the admin's thumbnail of a photo without renditions yet at 75. The photos' own encode
     // is `RENDITION_ENCODE`, done once on upload.
     qualities: [75, 82],
-    // An optimised rendition is cached for a year (CMS media filenames are unique, ADR-029);
+    // An optimised transform is cached for a year (CMS media filenames are unique, ADR-029);
     // a `public/` image that changes must change its name to reach a returning browser.
     minimumCacheTTL: 31536000,
     // CMS media on S3: the optimizer fetches an original for the `og:image` and the

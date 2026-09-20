@@ -1,33 +1,30 @@
 'use client';
 
-import Image, { getImageProps } from 'next/image';
-import type { CSSProperties, SyntheticEvent } from 'react';
+import Image, { getImageProps, type ImageProps } from 'next/image';
 import { preload as preloadResource } from 'react-dom';
 import { blurPlaceholder } from '@/lib/image-url';
 import { avifLoader, webpLoader } from '@/lib/renditions';
 
-export interface PhotoProps {
+/**
+ * `next/image`'s props minus what the renditions decide (the loader, the quality, the
+ * placeholder pair) and the two preload spellings, which `preload` below replaces.
+ */
+type ImageRest = Omit<
+  ImageProps,
+  'src' | 'loader' | 'quality' | 'placeholder' | 'blurDataURL' | 'priority' | 'preload' | 'loading'
+>;
+
+export interface PhotoProps extends ImageRest {
   /** The media document's URL (`mediaUrl`), never a rendition. */
   src: string;
-  alt: string;
-  /** The `sizes` the box takes; the candidates are the ladder (ADR-064). */
-  sizes?: string;
-  fill?: boolean;
-  width?: number;
-  height?: number;
-  className?: string;
-  style?: CSSProperties;
   /** The blur-up placeholder the library computed on upload, when the document has one. */
   blur?: string | undefined;
   /**
-   * The LCP or an above-the-fold photo: a typed AVIF preload in `<head>` with this priority
-   * and an eager `<img>`. Never with `loading`.
+   * The LCP or an above-the-fold photo: a typed AVIF preload in `<head>` with the photo's
+   * `fetchPriority`, and an eager `<img>`. Never with `loading`.
    */
-  preload?: boolean;
-  fetchPriority?: 'high' | 'low' | 'auto';
-  loading?: 'lazy' | 'eager';
-  decoding?: 'async' | 'sync' | 'auto';
-  onLoad?: (event: SyntheticEvent<HTMLImageElement>) => void;
+  preload?: boolean | undefined;
+  loading?: 'lazy' | 'eager' | undefined;
 }
 
 /**
@@ -46,28 +43,23 @@ export interface PhotoProps {
  */
 export function Photo({
   src,
-  alt,
-  sizes,
+  blur,
+  preload = false,
+  loading,
   fill,
   width,
   height,
-  className,
-  style,
-  blur,
-  preload = false,
-  fetchPriority,
-  loading,
-  decoding,
-  onLoad,
+  ...rest
 }: PhotoProps) {
-  // `exactOptionalPropertyTypes`: an absent prop stays absent rather than `undefined`.
+  // `exactOptionalPropertyTypes`: `fill`, `width` and `height` are next/image's own props and
+  // take no explicit `undefined`; every img attribute in `rest` does.
   const box = fill
     ? { fill: true }
     : { ...(width ? { width } : {}), ...(height ? { height } : {}) };
   const avif = getImageProps({
     src,
-    alt,
-    ...(sizes ? { sizes } : {}),
+    alt: rest.alt,
+    sizes: rest.sizes,
     loader: avifLoader,
     ...box,
   }).props;
@@ -75,26 +67,22 @@ export function Photo({
     preloadResource(avif.src, {
       as: 'image',
       type: 'image/avif',
-      ...(avif.srcSet ? { imageSrcSet: avif.srcSet } : {}),
-      ...(avif.sizes ? { imageSizes: avif.sizes } : {}),
-      ...(fetchPriority ? { fetchPriority } : {}),
+      imageSrcSet: avif.srcSet,
+      imageSizes: avif.sizes,
+      fetchPriority: rest.fetchPriority,
     });
   }
-  const img = {
-    ...(sizes ? { sizes } : {}),
-    ...(className ? { className } : {}),
-    ...(style ? { style } : {}),
-    ...(fetchPriority ? { fetchPriority } : {}),
-    ...(decoding ? { decoding } : {}),
-    ...(onLoad ? { onLoad } : {}),
-    ...(preload ? { loading: 'eager' as const } : loading ? { loading } : {}),
-    ...box,
-    ...blurPlaceholder(blur),
-  };
   return (
     <picture>
       <source type="image/avif" srcSet={avif.srcSet} sizes={avif.sizes} />
-      <Image src={src} alt={alt} loader={webpLoader} {...img} />
+      <Image
+        src={src}
+        loader={webpLoader}
+        loading={preload ? 'eager' : loading}
+        {...rest}
+        {...box}
+        {...blurPlaceholder(blur)}
+      />
     </picture>
   );
 }

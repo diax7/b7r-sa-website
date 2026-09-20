@@ -1,6 +1,6 @@
-import { readFile } from 'node:fs/promises';
-import { APIError, type CollectionBeforeOperationHook, type PayloadRequest } from 'payload';
+import { APIError, type CollectionBeforeOperationHook } from 'payload';
 import { inLanguage } from '@/modules/cms/fields/message';
+import { bytesOf } from '@/modules/cms/hooks/blur';
 
 /**
  * An animated upload is refused before anything is encoded (ADR-064): the library accepts
@@ -24,12 +24,6 @@ export async function frameCount(data: Buffer): Promise<number> {
   } catch {
     return 1;
   }
-}
-
-async function bytesOf(file: NonNullable<PayloadRequest['file']>): Promise<Buffer | null> {
-  if (file.data?.length) return file.data;
-  if (file.tempFilePath) return readFile(file.tempFilePath);
-  return null;
 }
 
 export const refuseAnimated: CollectionBeforeOperationHook = async ({ args, operation, req }) => {

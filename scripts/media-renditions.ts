@@ -8,7 +8,8 @@
  * production build runs it after the migration on every deploy (`railpack.json`, the
  * Dockerfile) and pays nothing when there is nothing to do. A document uploaded on the
  * old code, and one saved between the migration and a deploy, are both healed by the
- * next run. Prints what it changed.
+ * next run. Prints what it changed; a failure is reported per document and the run goes on,
+ * so a systematic one reads as one line per photo, and the exit code fails the build.
  *
  *   pnpm exec tsx scripts/media-renditions.ts [--env .env.cranl.local] [--dry-run] [--force]
  */
@@ -58,10 +59,10 @@ async function main(): Promise<void> {
         user,
       });
       if (after.filename !== doc.filename) {
-        throw new Error(`Payload stored ${after.filename}, not ${doc.filename}; stopping`);
+        throw new Error(`Payload stored ${after.filename}, not ${doc.filename}`);
       }
       const left = missingRenditions(after);
-      if (left.length > 0) throw new Error(`still missing ${left.join(', ')}; stopping`);
+      if (left.length > 0) throw new Error(`still missing ${left.join(', ')}`);
       const total = Object.values(after.sizes ?? {}).reduce((n, s) => n + (s?.filesize ?? 0), 0);
       console.log(
         `    ${RENDITION_NAMES.length} renditions, ${kb(total)}, ${Date.now() - started} ms`,
@@ -72,7 +73,6 @@ async function main(): Promise<void> {
       console.error(
         `  ${doc.id} ${doc.filename}: ${error instanceof Error ? error.message : error}`,
       );
-      break;
     }
   }
   console.log(

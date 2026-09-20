@@ -6,7 +6,8 @@
  * migration", go in the same pass: no image since then has listed them, so the running one
  * is unaffected. `focal_x` and `focal_y` stay: Payload keeps the two hidden fields whenever
  * `imageSizes` is set, whatever `focalPoint` says (`uploads/getBaseFields.js`), and the
- * running image still selects them.
+ * running image still selects them. `down()` removes the new groups only: the old ones were
+ * unread since 2026-09-18 and are not restored.
  */
 import { type MigrateDownArgs, type MigrateUpArgs, sql } from '@payloadcms/db-postgres';
 
