@@ -202,13 +202,14 @@ describe('font files', () => {
 });
 
 describe('rendered and static images', () => {
-  it('are cached for a day under /og, /icons and /images (site audit 2026-09-18)', () => {
+  it('are cached for a day under /og, /icons, /images and /video (site audit 2026-09-18, ADR-064)', () => {
     const routes = headerRoutes();
     for (const source of IMAGE_ROUTE_SOURCES) {
       const route = routes.find((r) => r.source === source);
       expect(route?.headers, source).toEqual([IMAGE_CACHE]);
     }
     expect(IMAGE_CACHE.value).toBe('public, max-age=86400');
+    expect(IMAGE_ROUTE_SOURCES).toContain('/video/:path*');
     // The admin set still follows every cache rule, so its no-store wins on its own sources.
     const lastImage = Math.max(
       ...IMAGE_ROUTE_SOURCES.map((s) => routes.findIndex((r) => r.source === s)),

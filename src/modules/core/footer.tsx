@@ -1,8 +1,8 @@
-import Image from 'next/image';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { InstagramIcon, TikTokIcon, WhatsAppIcon, XIcon } from '@/components/shared/brand-icons';
 import { Container } from '@/components/shared/container';
+import { StaticImage } from '@/components/shared/static-image';
 import { copyFor, type SiteCopy } from '@/content/copy';
 import type { Navigation, SiteSettings } from '@/content/schema';
 import { cn } from '@/lib/cn';
@@ -86,7 +86,7 @@ export function Footer({
               className="inline-block rounded-inner"
               aria-label={site.brandName}
             >
-              <Image
+              <StaticImage
                 src="/images/logo/logo-white-footer.png"
                 alt=""
                 width={220}
@@ -166,7 +166,7 @@ export function Footer({
                   key={b.file}
                   className="grid h-9 place-items-center rounded-inner bg-white px-2.5"
                 >
-                  <Image
+                  <StaticImage
                     src={`/images/badges/${b.file}`}
                     alt={b.name}
                     width={44}
@@ -182,7 +182,7 @@ export function Footer({
                   key={b.file}
                   className="grid h-9 place-items-center rounded-inner bg-white px-2.5"
                 >
-                  <Image
+                  <StaticImage
                     src={`/images/badges/${b.file}`}
                     alt={b.name}
                     width={b.w}
@@ -192,12 +192,11 @@ export function Footer({
                 </li>
               ))}
             </ul>
-            <Image
-              src="/images/badges/misk-foundation-logo.png"
+            <StaticImage
+              src="/images/badges/misk-foundation-logo-128.png"
               alt={copy.media.trustBadges.misk}
-              width={400}
-              height={230}
-              sizes="64px"
+              width={128}
+              height={74}
               className="h-10 w-auto rounded-inner bg-white p-1"
             />
           </div>

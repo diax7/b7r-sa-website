@@ -2,16 +2,8 @@
 
 import { useEffect } from 'react';
 import type { Product } from '@/content/schema';
-import { designerColorFor } from '@/lib/product-helpers';
 import { loadMockup, preloadMockups } from '@/modules/designer/canvas/mockup-image';
-
-/** The front photo the designer shows a product in: the same one the chips and the canvas use. */
-export function mockupSourceOf(product: Product): string | undefined {
-  const colour = designerColorFor(product);
-  return (
-    product.colors.find((c) => c.slug === colour)?.images.front ?? product.colors[0]?.images.front
-  );
-}
+import { mockupSourceOf } from '@/modules/designer/mockup';
 
 /**
  * Warms the other products' mockups once the current one has arrived (ADR-064): five files

@@ -2,7 +2,7 @@ import { renderToString } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import type { Product } from '@/content/schema';
 import { MockupPicture } from '@/modules/designer/mockup-picture';
-import { mockupSourceOf } from '@/modules/designer/canvas/use-preloaded-mockups';
+import { mockupSourceOf } from '@/modules/designer/mockup';
 
 const SRC = 'https://storage.example/media/tee-essential-white-front-37b6722f.jpg';
 

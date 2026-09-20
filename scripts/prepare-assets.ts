@@ -40,6 +40,12 @@ async function logos() {
     .resize(512, 512)
     .png({ palette: true, quality: 90, compressionLevel: 9 })
     .toFile(pub('images', 'logo', 'icon.png'));
+  // The mark the site shows itself (the WhatsApp widget at 36 px, the status page at 64):
+  // 2x of the larger box, served as is from the edge (ADR-064), never through the optimizer.
+  await sharp(res('brand', 'logo', 'icon.png'))
+    .resize(128, 128)
+    .png({ palette: true, quality: 90, compressionLevel: 9 })
+    .toFile(pub('images', 'logo', 'icon-128.png'));
   // Header lockups at 2x of their rendered height (36 px desktop) keep bytes small.
   await sharp(res('brand', 'logo', 'logo.png'))
     .resize({ height: 144 })
@@ -145,10 +151,14 @@ async function badges() {
     join(low, 'ministry-of-commerce.png'),
     pub('images', 'badges', 'ministry-of-commerce.png'),
   );
-  await sharp(res('brand', 'trust-badges', 'misk-foundation-logo.png'))
-    .resize({ width: 400 })
-    .png()
-    .toFile(pub('images', 'badges', 'misk-foundation-logo.png'));
+  // The Misk logo at 2x of its two boxes: 64 px in the footer, 180 px in the credential
+  // block (ADR-064: a public image is served as is, at the pixels it is shown at).
+  for (const width of [128, 360]) {
+    await sharp(res('brand', 'trust-badges', 'misk-foundation-logo.png'))
+      .resize({ width })
+      .png({ palette: true, quality: 90, compressionLevel: 9 })
+      .toFile(pub('images', 'badges', `misk-foundation-logo-${width}.png`));
+  }
 }
 
 async function video() {

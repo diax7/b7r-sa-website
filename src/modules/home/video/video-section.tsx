@@ -1,7 +1,7 @@
-import Image from 'next/image';
 import { Button } from '@/components/shared/button';
 import { Container } from '@/components/shared/container';
 import { Section, type SectionTone } from '@/components/shared/section';
+import { StaticImage } from '@/components/shared/static-image';
 import { copyFor } from '@/content/copy';
 import { getHome, getSiteSettings } from '@/lib/cms';
 import type { Locale } from '@/lib/i18n';
@@ -31,7 +31,13 @@ export async function VideoSection({
   return (
     <Section id="video" tone={tone} className="py-0 md:py-0" aria-labelledby="video-title">
       <div className="relative isolate min-h-[420px] overflow-hidden md:min-h-[520px]">
-        <Image src={VIDEO_POSTER} alt={posterAlt} fill sizes="100vw" className="object-cover" />
+        <StaticImage
+          src={VIDEO_POSTER}
+          alt={posterAlt}
+          width={1280}
+          height={720}
+          className="absolute inset-0 size-full object-cover"
+        />
         <VideoLoopLoader src={VIDEO_SRC} poster={VIDEO_POSTER} />
         {/* Scrim: the copy stays readable whatever the frame shows. */}
         <div aria-hidden="true" className="absolute inset-0 bg-navy/60" />

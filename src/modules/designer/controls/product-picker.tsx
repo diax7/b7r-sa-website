@@ -3,7 +3,7 @@
 import { Photo } from '@/components/shared/photo';
 import type { Product } from '@/content/schema';
 import { cn } from '@/lib/cn';
-import { designerColorFor } from '@/lib/product-helpers';
+import { mockupSourceOf } from '@/modules/designer/mockup';
 
 interface ProductPickerProps {
   products: Product[];
@@ -32,11 +32,7 @@ export function ProductPicker({
       <div className="flex flex-wrap gap-2">
         {products.map((product) => {
           const checked = product.slug === value;
-          const thumbColor = designerColorFor(product);
-          const thumb =
-            product.colors.find((c) => c.slug === thumbColor)?.images.front ??
-            product.colors[0]?.images.front ??
-            '';
+          const thumb = mockupSourceOf(product) ?? '';
           return (
             <label
               key={product.slug}

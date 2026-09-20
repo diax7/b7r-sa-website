@@ -1,11 +1,11 @@
 'use client';
 
-import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState, type CSSProperties } from 'react';
 import { InstagramIcon, TikTokIcon, WhatsAppIcon, XIcon } from '@/components/shared/brand-icons';
 import { Button } from '@/components/shared/button';
 import { Container } from '@/components/shared/container';
+import { StaticImage } from '@/components/shared/static-image';
 import {
   Dialog,
   DialogClose,
@@ -86,12 +86,11 @@ export function MobileMenu({
             aria-label={site.brandName}
             onClick={() => setOpen(false)}
           >
-            <Image
+            <StaticImage
               src="/images/logo/logo-header.png"
               alt=""
               width={198}
               height={72}
-              sizes="88px"
               className="h-8 w-auto"
             />
           </Link>

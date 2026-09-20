@@ -1,8 +1,8 @@
-import Image from 'next/image';
 import Link from 'next/link';
 import { WhatsAppIcon } from '@/components/shared/whatsapp-icon';
 import { Button } from '@/components/shared/button';
 import { Container } from '@/components/shared/container';
+import { StaticImage } from '@/components/shared/static-image';
 import { whatsappUrl } from '@/lib/utm';
 
 interface StatusPageProps {
@@ -19,8 +19,8 @@ interface StatusPageProps {
 export function StatusPage({ title, text, button, home, whatsapp }: StatusPageProps) {
   return (
     <Container className="flex min-h-[70svh] flex-col items-center justify-center gap-6 py-24 text-center">
-      <Image
-        src="/images/logo/icon.png"
+      <StaticImage
+        src="/images/logo/icon-128.png"
         alt=""
         width={64}
         height={64}

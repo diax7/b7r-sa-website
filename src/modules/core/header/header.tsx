@@ -1,11 +1,11 @@
 'use client';
 
-import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/shared/button';
 import { Container } from '@/components/shared/container';
+import { StaticImage } from '@/components/shared/static-image';
 import type { ShellCopy } from '@/content/copy';
 import type { Navigation, SiteSettings } from '@/content/schema';
 import { cn } from '@/lib/cn';
@@ -81,13 +81,12 @@ export function Header({ navigation, site, locale, locales, copy }: ShellData) {
               className="shrink-0 rounded-inner"
               aria-label={site.brandName}
             >
-              <Image
+              <StaticImage
                 src="/images/logo/logo-header.png"
                 alt=""
                 width={198}
                 height={72}
-                sizes="(min-width: 768px) 198px, 88px"
-                priority
+                preload
                 className={cn(
                   'w-auto transition-[height] duration-(--duration-base) ease-(--ease-standard)',
                   scrolled ? 'h-8 lg:h-9' : 'h-8 lg:h-11',

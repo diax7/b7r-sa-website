@@ -1,3 +1,5 @@
+import type { Product } from '@/content/schema';
+import { designerColorFor } from '@/lib/product-helpers';
 import { renditionUrl } from '@/lib/renditions';
 
 /**
@@ -13,7 +15,24 @@ export interface MockupUrls {
   webp: string;
 }
 
-/** The mockup's two renditions for a colour's front photo (a media URL). */
+/**
+ * The front photo the designer shows a product in: the `designerColorFor` colour (white, or
+ * the product's only one), else the first colour's. The static preview, the chips, the
+ * canvas and the preload all read this one rule, which is what keeps them on one file.
+ */
+export function mockupSourceOf(product: Product): string | undefined {
+  const colour = designerColorFor(product);
+  return (
+    product.colors.find((c) => c.slug === colour)?.images.front ?? product.colors[0]?.images.front
+  );
+}
+
+/**
+ * The mockup's two renditions for a colour's front photo (a media URL). The current
+ * product's file can be asked for twice while the island mounts (the lazy preview `<img>`
+ * and the detached picture can both start before either completes): one small file,
+ * bounded, not worth a lock.
+ */
 export function mockupUrls(src: string): MockupUrls {
   return {
     avif: renditionUrl(src, MOCKUP_WIDTH, 'avif'),

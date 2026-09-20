@@ -180,12 +180,17 @@ export const FONT_CACHE: HeaderEntry = {
 };
 
 /**
- * The Open Graph renders, the app icons and the brand and product images keep their names
- * across deploys, so a day is the cache (site audit 2026-09-18, item 16); Next's default for
- * `public/` is `max-age=0`.
+ * The Open Graph renders, the app icons, the brand images and the video with its poster keep
+ * their names across deploys, so a day is the cache (site audit 2026-09-18, item 16; ADR-064
+ * serves every public image as is, from the edge); Next's default for `public/` is `max-age=0`.
  */
 export const IMAGE_CACHE: HeaderEntry = { key: 'Cache-Control', value: 'public, max-age=86400' };
-export const IMAGE_ROUTE_SOURCES = ['/og/:path*', '/icons/:path*', '/images/:path*'];
+export const IMAGE_ROUTE_SOURCES = [
+  '/og/:path*',
+  '/icons/:path*',
+  '/images/:path*',
+  '/video/:path*',
+];
 
 export function headerRoutes(options: SecurityHeaderOptions = {}): HeaderRoute[] {
   return [
