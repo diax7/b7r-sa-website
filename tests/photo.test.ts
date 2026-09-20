@@ -9,9 +9,9 @@ import {
   squareBox,
 } from '@/lib/photo';
 
-/** The pipeline's numbers are data (ADR-029, amended 2026-09-19): one lossy encode, then q90. */
+/** The pipeline's numbers are data (ADR-029, ADR-064): one q92 source encode, then the q90 renditions. */
 describe('the photo encode (ADR-029)', () => {
-  it('writes JPEG q92 with full chroma through mozjpeg, and the components ask for 90', () => {
+  it('writes JPEG q92 with full chroma through mozjpeg, and the renditions are at 90', () => {
     expect(PHOTO_JPEG).toEqual({ quality: 92, mozjpeg: true, chromaSubsampling: '4:4:4' });
     expect(PHOTO_QUALITY).toBe(90);
     expect(PHOTO_MAX_WIDTH).toBe(3840);

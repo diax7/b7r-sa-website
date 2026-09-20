@@ -1,4 +1,4 @@
-/** The two hero renditions (BRD 6.4.1): a 16:9 desktop photo and a 4:5 mobile crop. */
+/** The two hero frames (BRD 6.4.1): a 16:9 desktop photo and a 4:5 mobile crop. */
 export const DESKTOP = { width: 1920, height: 1080 };
 export const MOBILE = { width: 1080, height: 1350 };
 

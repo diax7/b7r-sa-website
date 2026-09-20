@@ -17,11 +17,14 @@ import { Icon } from '@/components/shared/icon';
 import type { HeroSlide } from '@/content/schema';
 import { cn } from '@/lib/cn';
 import { useReducedMotion } from '@/lib/reduced-motion';
-import { DESKTOP_SIZES } from '@/modules/home/hero/renditions';
+import { DESKTOP_SIZES } from '@/modules/home/hero/frames';
 
-interface HeroImage {
+export interface HeroImage {
+  /** The WebP `<img>`: its largest candidate, and every candidate of the ladder (ADR-064). */
   src: string;
   srcSet: string | undefined;
+  /** The same candidates as AVIF, for the typed `<source>` above the `<img>`. */
+  avifSrcSet: string | undefined;
   width: number;
   height: number;
   /** The blur-up placeholder as a CSS `background-image` value (ADR-029), when the media has one. */
@@ -29,9 +32,9 @@ interface HeroImage {
 }
 
 export interface HeroImageSet {
-  /** Props from `getImageProps` for the desktop 16:9 rendition. */
+  /** Props from `getImageProps` for the desktop 16:9 frame. */
   desktop: HeroImage;
-  /** Props from `getImageProps` for the mobile 4:5 rendition. */
+  /** Props from `getImageProps` for the mobile 4:5 frame. */
   mobile: HeroImage;
 }
 
@@ -157,9 +160,16 @@ export function HeroCarousel({ slides, images, overlay, copy }: HeroCarouselProp
             >
               <source
                 media="(min-width: 768px)"
+                type="image/avif"
+                srcSet={img.desktop.avifSrcSet}
+                sizes={DESKTOP_SIZES}
+              />
+              <source
+                media="(min-width: 768px)"
                 srcSet={img.desktop.srcSet}
                 sizes={DESKTOP_SIZES}
               />
+              <source type="image/avif" srcSet={img.mobile.avifSrcSet} sizes="100vw" />
               <img
                 src={img.mobile.src}
                 srcSet={img.mobile.srcSet}

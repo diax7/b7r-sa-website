@@ -1,12 +1,10 @@
 import { MapPin } from 'lucide-react';
-import Image from 'next/image';
 import { Container } from '@/components/shared/container';
 import { Icon } from '@/components/shared/icon';
+import { Photo } from '@/components/shared/photo';
 import { SarAmount } from '@/components/shared/sar-amount';
 import { Section } from '@/components/shared/section';
 import { getHome, getSiteSettings } from '@/lib/cms';
-import { blurPlaceholder } from '@/lib/image-url';
-import { PHOTO_QUALITY } from '@/lib/photo';
 import type { BlockProps } from '@/modules/pages/blocks/types';
 
 /**
@@ -42,13 +40,12 @@ export async function StoryBlock({ block, locale, tone, anchor, heading }: Block
           </div>
           <div className="relative aspect-[4/3] overflow-hidden rounded-lg bg-ground lg:aspect-[5/4]">
             {/* Decorative: the story carries the meaning; the photo is the LCP element. */}
-            <Image
+            <Photo
               src={block.photo.src}
               alt=""
               fill
-              quality={PHOTO_QUALITY}
-              {...blurPlaceholder(block.photo.blur)}
-              priority
+              blur={block.photo.blur}
+              preload
               fetchPriority="high"
               sizes="(min-width: 1024px) 640px, 100vw"
               className="object-cover"

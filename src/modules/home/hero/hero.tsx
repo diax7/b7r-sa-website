@@ -6,53 +6,53 @@ import { getHome, getSiteSettings } from '@/lib/cms';
 import { env } from '@/lib/env';
 import { type Locale, localePath } from '@/lib/i18n';
 import { blurPlaceholder } from '@/lib/image-url';
-import { PHOTO_QUALITY } from '@/lib/photo';
+import { avifLoader, webpLoader } from '@/lib/renditions';
 import { registerUrl } from '@/lib/utm';
-import { HeroCarousel, type HeroImageSet } from '@/modules/home/hero/hero-carousel';
-import { DESKTOP, DESKTOP_SIZES, MOBILE } from '@/modules/home/hero/renditions';
+import { HeroCarousel, type HeroImage, type HeroImageSet } from '@/modules/home/hero/hero-carousel';
+import { DESKTOP, DESKTOP_SIZES, MOBILE } from '@/modules/home/hero/frames';
 
 // `priority` is deliberately not passed: it would call ReactDOM.preload() without a media
-// query and fetch both renditions. The media-gated <link>s below do the preloading. The
-// blur-up placeholder (ADR-029) rides along as the `background-image` value Next computes
-// for `placeholder="blur"`; the carousel applies it per breakpoint until the photo decodes.
-function imageSet(slide: HeroSlide): HeroImageSet {
-  const common = { alt: '', quality: PHOTO_QUALITY };
-  const d = getImageProps({
-    ...common,
-    sizes: DESKTOP_SIZES,
-    src: slide.imageDesktop,
-    ...blurPlaceholder(slide.blurDesktop),
-    ...DESKTOP,
+// query and fetch both frames. The media-gated <link>s below do the preloading. The blur-up
+// placeholder (ADR-029) rides along as the `background-image` value Next computes for
+// `placeholder="blur"`; the carousel applies it per breakpoint until the photo decodes. The
+// candidates are the renditions the upload wrote (ADR-064): the WebP set is the `<img>`'s,
+// the AVIF set its typed `<source>`, the same widths in both.
+function frame(
+  src: string,
+  sizes: string,
+  blur: string | undefined,
+  box: { width: number; height: number },
+): HeroImage {
+  const webp = getImageProps({
+    alt: '',
+    src,
+    sizes,
+    loader: webpLoader,
+    ...blurPlaceholder(blur),
+    ...box,
   }).props;
-  const m = getImageProps({
-    ...common,
-    sizes: '100vw',
-    src: slide.imageMobile,
-    ...blurPlaceholder(slide.blurMobile),
-    ...MOBILE,
-  }).props;
+  const avif = getImageProps({ alt: '', src, sizes, loader: avifLoader, ...box }).props;
   return {
-    desktop: {
-      src: d.src,
-      srcSet: d.srcSet,
-      width: DESKTOP.width,
-      height: DESKTOP.height,
-      ...(d.style?.backgroundImage ? { blur: d.style.backgroundImage } : {}),
-    },
-    mobile: {
-      src: m.src,
-      srcSet: m.srcSet,
-      width: MOBILE.width,
-      height: MOBILE.height,
-      ...(m.style?.backgroundImage ? { blur: m.style.backgroundImage } : {}),
-    },
+    src: webp.src,
+    srcSet: webp.srcSet,
+    avifSrcSet: avif.srcSet,
+    ...box,
+    ...(webp.style?.backgroundImage ? { blur: webp.style.backgroundImage } : {}),
+  };
+}
+
+function imageSet(slide: HeroSlide): HeroImageSet {
+  return {
+    desktop: frame(slide.imageDesktop, DESKTOP_SIZES, slide.blurDesktop, DESKTOP),
+    mobile: frame(slide.imageMobile, '100vw', slide.blurMobile, MOBILE),
   };
 }
 
 /**
  * Server shell for the hero (BRD 6.4.1, ADR-006). Builds the responsive sources and emits
- * two media-gated preloads for slide 1 so exactly one LCP image is fetched per viewport;
- * `getImageProps` alone emits none. React 19 hoists the <link>s into <head>.
+ * two media-gated, AVIF-typed preloads for slide 1 so exactly one LCP image is fetched per
+ * viewport (a browser without AVIF ignores a typed preload and takes the WebP from the
+ * markup); `getImageProps` alone emits none. React 19 hoists the <link>s into <head>.
  */
 export async function Hero({ locale }: { locale: Locale }) {
   const [{ hero }, site] = await Promise.all([getHome(locale), getSiteSettings(locale)]);
@@ -75,8 +75,8 @@ export async function Hero({ locale }: { locale: Locale }) {
           <link
             rel="preload"
             as="image"
-            href={first.desktop.src}
-            imageSrcSet={first.desktop.srcSet}
+            type="image/avif"
+            imageSrcSet={first.desktop.avifSrcSet}
             imageSizes={DESKTOP_SIZES}
             media="(min-width: 768px)"
             fetchPriority="high"
@@ -84,8 +84,8 @@ export async function Hero({ locale }: { locale: Locale }) {
           <link
             rel="preload"
             as="image"
-            href={first.mobile.src}
-            imageSrcSet={first.mobile.srcSet}
+            type="image/avif"
+            imageSrcSet={first.mobile.avifSrcSet}
             imageSizes="100vw"
             media="(max-width: 767px)"
             fetchPriority="high"
