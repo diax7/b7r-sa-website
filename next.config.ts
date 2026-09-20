@@ -3,6 +3,7 @@ import { withPayload } from '@payloadcms/next/withPayload';
 import { createRequire } from 'node:module';
 import { redirectRules } from './src/lib/redirects';
 import { s3PublicOrigin, s3RemotePatterns } from './src/lib/image-url';
+import { DEVICE_SIZES, IMAGE_SIZES } from './src/lib/renditions';
 import { headerRoutes } from './src/lib/security-headers';
 
 const require = createRequire(import.meta.url);
@@ -26,19 +27,22 @@ const nextConfig: NextConfig = {
   },
   images: {
     formats: ['image/avif', 'image/webp'],
-    // 1536 is the 2x candidate of the 760 px reading column (a blog cover, ADR-029 amended
-    // 2026-09-19): without it that column fetched the 1920 rendition, twice the bytes (120 KB
-    // against 60 KB for the pricing cover) for pixels the box never shows. 3840 lets a 2x
-    // screen at 1920 ask for a full-width photo once the 3000 px photographs land;
-    // `PHOTO_MAX_WIDTH` in src/lib/photo.ts is this value.
-    deviceSizes: [640, 750, 828, 1080, 1200, 1536, 1920, 2048, 2560, 3840],
-    // 75 is Next's default (logos, icons, badges), 82 the designer's mock-up (`optimizedSrc`),
-    // 90 every photo (`PHOTO_QUALITY`): one lossy encode over a q92 source.
-    qualities: [75, 82, 90],
+    // The candidate widths are the rendition ladder, one file per candidate (ADR-064): a CMS
+    // photo's `<Photo>` points every candidate at a file the upload wrote to the bucket, so
+    // the two lists must agree, and `src/lib/renditions.ts` owns them. 1536 is the 2x
+    // candidate of the 760 px reading column (a blog cover); 3840 lets a 2x screen at 1920
+    // ask for a full-width photo once the 3000 px photographs land.
+    deviceSizes: [...DEVICE_SIZES],
+    imageSizes: [...IMAGE_SIZES],
+    // What still goes through the optimizer: the `og:image` JPEG at 82 (`optimizedSrc`) and
+    // the admin's thumbnail of a photo without renditions yet at 75. The photos' own encode
+    // is `RENDITION_ENCODE`, done once on upload.
+    qualities: [75, 82],
     // An optimised rendition is cached for a year (CMS media filenames are unique, ADR-029);
     // a `public/` image that changes must change its name to reach a returning browser.
     minimumCacheTTL: 31536000,
-    // CMS media on S3 (ADR-029): the optimizer fetches it, the browser never does.
+    // CMS media on S3: the optimizer fetches an original for the `og:image` and the
+    // thumbnail fallback; the browser fetches the renditions from the same host (ADR-064).
     remotePatterns: s3RemotePatterns(),
     // Next refuses to optimise images from a private IP (SSRF guard). Only the CI MinIO job
     // serves media from localhost; production media sits on a public host.

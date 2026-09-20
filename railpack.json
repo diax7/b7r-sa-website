@@ -4,6 +4,7 @@
     "build": {
       "commands": [
         "bash scripts/ci/migrate.sh",
+        "pnpm exec tsx scripts/media-renditions.ts",
         "pnpm run build",
         "node scripts/standalone-assets.mjs"
       ]

@@ -2,10 +2,12 @@ import type { CollectionConfig } from 'payload';
 import { isAdmin, isEditorOrAdmin } from '@/modules/cms/access';
 import { inLanguage } from '@/modules/cms/fields/message';
 import { savedByField, stampSavedBy } from '@/modules/cms/fields/saved-by';
+import { refuseAnimated } from '@/modules/cms/hooks/animated';
 import { BLUR_FIELD, stampBlur } from '@/modules/cms/hooks/blur';
 import { applyTranslations } from '@/modules/cms/hooks/translations';
 import { optimizedSrc } from '@/lib/image-url';
 import { mediaUrl } from '@/lib/cms/mappers';
+import { hasRendition, mediaImageSizes, renditionUrl } from '@/lib/renditions';
 import { collectionComponents } from '@/modules/cms/admin/document/config';
 import { adminGroup } from '@/modules/cms/admin/icons';
 import { MEDIA_DESCRIPTIONS } from '@/modules/cms/admin/descriptions/site';
@@ -16,13 +18,16 @@ const ARABIC = /[؀-ۿ]/;
 type Validation = { req: { locale?: string; i18n?: { language?: string } } };
 
 /**
- * The image library (BRD 9.2, 9.5): the original only, alt text required per language.
- * Called "Images" in the panel since it accepts raster images only. Storage is S3 when
- * configured (payload.config) and `public/media` on disk otherwise; either way the site
- * requests images only through `next/image` (ADR-029), which is why no rendition is
- * generated on upload (amended 2026-09-19): the optimizer resizes the original on demand,
- * and the admin's own thumbnail comes from it too. A hidden `blur` field holds the blur-up
- * placeholder the photo components inline (`stampBlur`).
+ * The image library (BRD 9.2, 9.5): the original and its renditions, alt text required per
+ * language. Called "Images" in the panel since it accepts raster images only. Storage is S3
+ * when configured (payload.config) and `public/media` on disk otherwise. Every upload is
+ * encoded once into the ladder of `src/lib/renditions.ts` (ADR-064): ten widths in AVIF and
+ * WebP, named `{stem}-{width}.{format}` beside the original, which is what the site's
+ * `<Photo>` and the designer request straight from the storage CDN; the image optimizer
+ * keeps only the `og:image` JPEG. No focal point and no crop: a width-only rendition keeps
+ * the whole frame, and a crop would rewrite the file under its own name, which the edge
+ * caches for a month (replace a photo by uploading it again; it gets a new name). A hidden
+ * `blur` field holds the blur-up placeholder the photo components inline (`stampBlur`).
  */
 export const Media: CollectionConfig = {
   slug: 'media',
@@ -55,15 +60,25 @@ export const Media: CollectionConfig = {
     staticDir: 'public/media',
     // Raster only: an editor-uploaded SVG served same-origin would run script in the admin.
     mimeTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/avif'],
-    focalPoint: true,
-    // The panel's thumbnail is a 384 px transform of the original by the image optimizer
-    // (a same-host URL stays relative, an S3 one is in `remotePatterns`), never the original.
+    imageSizes: mediaImageSizes(),
+    focalPoint: false,
+    crop: false,
+    // The panel's thumbnail is the 384 px WebP rendition (a same-host URL stays relative, an
+    // S3 one is on the admin's `img-src`); a document uploaded before the renditions existed
+    // falls back to the optimizer's transform of the original until the backfill runs.
     adminThumbnail: ({ doc }) => {
       const url = typeof doc['url'] === 'string' ? mediaUrl({ url: doc['url'] }) : undefined;
-      return url ? optimizedSrc(url, 384, 75) : null;
+      if (!url) return null;
+      return hasRendition(doc, 'webp384')
+        ? renditionUrl(url, 384, 'webp')
+        : optimizedSrc(url, 384, 75);
     },
   },
-  hooks: { beforeChange: [stampSavedBy, stampBlur], afterChange: [applyTranslations] },
+  hooks: {
+    beforeOperation: [refuseAnimated],
+    beforeChange: [stampSavedBy, stampBlur],
+    afterChange: [applyTranslations],
+  },
   fields: describeFields(
     [
       {

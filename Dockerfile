@@ -1,7 +1,8 @@
 # syntax=docker/dockerfile:1
 # Multi-stage build (BRD §8.6): deps -> build -> runner. Target image <= 250 MB.
 #
-# The build migrates the database and prerenders every page from it (ADR-025), so it needs
+# The build migrates the database, generates any missing photo renditions (ADR-064) and
+# prerenders every page from it (ADR-025), so it needs
 # the production database and the Payload secret. They reach the build stage one of two ways
 # and never the runner image (assembled from this stage's files, not its layers):
 #   - BuildKit secrets, from a CI build (.github/workflows/deploy.yml):
@@ -62,6 +63,7 @@ RUN --mount=type=secret,id=DATABASE_URL \
          echo "DATABASE_URL and PAYLOAD_SECRET must reach the build: BuildKit secrets or build args (docs/RUNBOOK.md, Deploy)" >&2; exit 1; \
        fi \
     && bash scripts/ci/migrate.sh \
+    && pnpm exec tsx scripts/media-renditions.ts \
     && pnpm build
 
 FROM node:22-alpine AS runner

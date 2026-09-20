@@ -19,7 +19,7 @@ export interface HeaderRoute {
 }
 
 export interface SecurityHeaderOptions {
-  /** Origin of the S3 public URL: the admin shows upload previews straight from storage. */
+  /** Origin of the S3 public URL: the site loads the renditions from it (ADR-064), the admin its previews. */
   mediaOrigin?: string | undefined;
   /** Next dev needs `eval` for React Refresh; never set in production builds. */
   allowEval?: boolean;
@@ -61,7 +61,10 @@ function unique(values: Array<string | undefined>): string[] {
   return [...new Set(values.filter((v): v is string => Boolean(v)))];
 }
 
-export function contentSecurityPolicy({ allowEval = false }: SecurityHeaderOptions = {}): string {
+export function contentSecurityPolicy({
+  mediaOrigin,
+  allowEval = false,
+}: SecurityHeaderOptions = {}): string {
   const directives: Array<[string, string[]]> = [
     ['default-src', ["'self'"]],
     [
@@ -76,9 +79,22 @@ export function contentSecurityPolicy({ allowEval = false }: SecurityHeaderOptio
       ]),
     ],
     ['style-src', ["'self'", "'unsafe-inline'"]],
-    // GA's tag also reports through image pixels and fetches on googletagmanager.com (its
-    // documented CSP asks for the host on both directives; WebKit took the pixel path first).
-    ['img-src', ["'self'", 'data:', 'blob:', 'https://www.google-analytics.com', ...GA_HOSTS, GTM]],
+    // The photos come from the storage CDN (ADR-064; none when media is on disk, then the
+    // URLs are same-origin). GA's tag also reports through image pixels and fetches on
+    // googletagmanager.com (its documented CSP asks for the host on both directives; WebKit
+    // took the pixel path first).
+    [
+      'img-src',
+      unique([
+        "'self'",
+        'data:',
+        'blob:',
+        mediaOrigin,
+        'https://www.google-analytics.com',
+        ...GA_HOSTS,
+        GTM,
+      ]),
+    ],
     ['connect-src', unique(["'self'", ...GA_HOSTS, GA_REGION, GTM, ...UMAMI_HOSTS])],
     ['frame-src', [TURNSTILE]],
     ['font-src', ["'self'"]],
