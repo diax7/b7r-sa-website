@@ -37,5 +37,5 @@ export {
 } from '@/modules/bookings/routes';
 export { routeFailure } from '@/modules/bookings/route-failure';
 export { toBookingSettings } from '@/modules/bookings/settings';
-export { BookingPicker } from '@/modules/bookings/site';
+export { Booker } from '@/modules/bookings/site';
 export { CALENDAR_TESTS } from '@/modules/bookings/tests';

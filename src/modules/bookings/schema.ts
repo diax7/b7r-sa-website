@@ -3,7 +3,7 @@ import { LOCALES } from '@/lib/i18n';
 import { normalisePhone } from '@/lib/phone';
 import { MONTH_KEY } from '@/modules/bookings/days-of-month';
 import { DAY_KEY } from '@/modules/bookings/slots';
-import { EMAIL_MAX, NAME_MAX, NAME_MIN, NOTE_MAX } from '@/modules/bookings/picker/validate';
+import { EMAIL_MAX, NAME_MAX, NAME_MIN, NOTE_MAX } from '@/modules/bookings/booker/copy';
 /** The page the booking was made from: a site path (`/book`, `/en/contact`). */
 const sitePath = z
   .string()
@@ -30,7 +30,7 @@ const instant = z.iso.datetime({ offset: true }).transform((value) => new Date(v
  * The body of `POST /api/bookings` (ADR-062): the contact form's limits for the person,
  * the slot as an instant, the language of the page, where it was booked from and the
  * campaign that brought them, the honeypot and the Turnstile token. Server only: zod stays
- * out of the picker's chunk, whose rules read the copy they are given.
+ * out of the booker's chunk, whose rules read the copy they are given.
  */
 export const bookingBodySchema = z.object({
   name: z.string().trim().min(NAME_MIN).max(NAME_MAX),

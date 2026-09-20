@@ -332,42 +332,65 @@ The block’s fixed words (`content/copy/ar.ts`, `compare`):
 
 SEO row (§4.16): route `/compare-printful`, title «بحر برنت مقابل Printful لمتجر سعودي», description «مقارنة بالأرقام: الطباعة في جدة والتوصيل خلال 5 أيام مقابل الشحن من الخارج خلال أسابيع؛ الأسعار بالريال وربط سلة وزد.».
 
-### 4.19 The booking page `/book` and its e-mails (ADR-062; a draft for Dhia's read, `TODO(copy)`)
+### 4.19 The booking page `/book` and its e-mails (ADR-062, ADR-063; a draft for Dhia's read, `TODO(copy)`)
 
-Bookings are built inside b7r.sa (no Cal.com): the page `/book` and the contact page's booking card hold one picker, a strip of days on the Riyadh clock, the day's free times with Western digits, the merchant's name, phone, e-mail and an optional note, then the confirmation with the Google Meet link and the calendar file; the manage page `/book/manage` (by the signed link in the confirmation e-mail) moves or cancels the booking. The name, phone and e-mail labels, placeholders and validation are §4.11's. Written under §0.5's fallback rule and listed in `TODO_COPY` of the verbatim test until Dhia approves; then the markers go and this section is the check.
+Bookings are built inside b7r.sa (no Cal.com): the page `/book` and the contact page's booking card hold one booker (ADR-063), a card in three panes. The event pane says who the merchant meets (the host's photo, name and role from the author record), the consultation's name, the blurb, the length, «Google Meet» and «توقيت الرياض (GMT+3)». The calendar pane is a month grid, Sunday first, with the open days marked. The times pane lists the day's free times with Western digits and ص/م; a tap splits the time into the time and «أكّد». The form takes the merchant's name, phone, e-mail and optional notes, then the success view lists what, when, with whom and where, offers «أضف إلى التقويم» (Google, Outlook, Apple) and the way to change or cancel. The manage page `/book/manage` (by the signed link in the confirmation e-mail) moves or cancels the booking in the same card. The name, phone and e-mail labels, placeholders and validation are §4.11's. Written under §0.5's fallback rule and listed in `TODO_COPY` of the verbatim test until Dhia approves; then the markers go and this section is the check.
 
-The page and the picker (`content/copy/ar.ts`, `booking`):
+The page and the booker (`content/copy/ar.ts`, `booking`):
 
 | Key | Arabic |
 |---|---|
 | `title` | احجز استشارة مجانية |
 | `lead` | 30 دقيقة على Google Meet نجاوب فيها على أسئلتك ونساعدك تبدأ. |
 | `riyadhTime` | بتوقيت الرياض |
+| `timezone` | توقيت الرياض (GMT+3) |
+| `googleMeet` | Google Meet |
+| `duration` | {minutes} دقيقة |
 | `pickDay` | اختر اليوم |
 | `pickTime` | اختر الوقت |
-| `duration` | {minutes} دقيقة |
+| `previousMonth` | الشهر السابق |
+| `nextMonth` | الشهر التالي |
+| `today` | اليوم |
+| `loadingDays` | جارٍ تحميل الأيام |
 | `loadingSlots` | جارٍ تحميل المواعيد |
 | `noSlots` | لا مواعيد متاحة في هذا اليوم. اختر يوماً آخر. |
 | `closed` | مغلق: {reason} |
+| `confirm` | أكّد |
+| `back` | رجوع |
 | `chosen` | موعدك: {day}، {time} |
-| `change` | غيّر الوقت |
-| `note` | ملاحظة (اختياري) |
+| `note` | ملاحظات إضافية (اختياري) |
 | `notePlaceholder` | ما الذي تريد أن نناقشه؟ |
 | `submit` | أكّد الحجز |
 | `submitting` | جارٍ الحجز |
 | `taken` | حُجز هذا الموعد للتو. اختر موعداً آخر. |
 | `failure` | تعذّر الحجز. حاول مرة أخرى أو راسلنا على واتساب. |
 | `confirmedTitle` | موعدك محجوز |
-| `confirmedText` | أرسلنا التفاصيل إلى بريدك: رابط الاجتماع ورابط تغيير الموعد أو إلغائه. |
+| `confirmedText` | أرسلنا التفاصيل إلى بريدك. |
+| `what` | ماذا |
+| `when` | متى |
+| `who` | مع من |
+| `where` | أين |
+| `notes` | ملاحظاتك |
 | `meetLink` | رابط الاجتماع |
-| `linkFollows` | رابط الاجتماع يصلك على بريدك قبل الموعد. |
-| `addToCalendar` | أضف إلى تقويمك |
+| `linkFollows` | الرابط يصلك على بريدك قبل الموعد. |
+| `addToCalendar` | أضف إلى التقويم |
+| `googleCalendar` | تقويم Google |
+| `outlookCalendar` | تقويم Outlook |
+| `appleCalendar` | تقويم Apple |
+| `needChange` | تحتاج تغييراً؟ |
 | `manageLink` | غيّر الموعد أو ألغِه |
 | `manageTitle` | إدارة حجزك |
 | `manageLead` | غيّر موعد استشارتك أو ألغِه من هنا. |
+| `status.booked` | محجوز |
+| `status.rescheduled` | مُعاد جدولته |
+| `status.cancelled` | ملغى |
+| `status.completed` | مكتمل |
+| `current` | موعدك الحالي |
 | `reschedule` | غيّر الموعد |
+| `confirmReschedule` | أكّد التغيير |
 | `cancel` | ألغِ الحجز |
-| `confirmCancel` | أكّد الإلغاء |
+| `cancelTitle` | إلغاء الحجز؟ |
+| `cancelText` | يُلغى موعدك ويُحذف من التقويم، ويصلك بريد بذلك. تقدر تحجز موعداً آخر متى شئت. |
 | `keep` | أبقِ الموعد |
 | `rescheduled` | تغيّر موعدك. أرسلنا التفاصيل الجديدة إلى بريدك. |
 | `cancelled` | أُلغي حجزك. نرحّب بك في موعد آخر متى شئت. |
@@ -376,6 +399,8 @@ The page and the picker (`content/copy/ar.ts`, `booking`):
 | `invalid` | هذا الرابط غير صالح. راسلنا على واتساب ونساعدك. |
 | `bookAgain` | احجز موعداً جديداً |
 | `whatsappMessage` | مرحباً، أرغب بحجز استشارة مجانية. |
+
+The booking settings (§11.2) add two content fields the booker reads: the **host**, an author record (the seed's is Dhia's), and the **blurb** under the consultation's name: «نجاوب على أسئلتك ونساعدك تبدأ» / "We answer your questions and help you start".
 
 The e-mails (`content/copy/ar.ts`, `bookingEmail`): `{name}` is the merchant, `{title}` the consultation's name from the booking settings, `{when}` the time in Riyadh.
 
