@@ -80,6 +80,37 @@ test.describe('designer and profit calculator (BRD 6.4.3)', () => {
     await expect(page.locator('[data-print-area-prompt]')).toHaveCount(0);
   });
 
+  test('the mockups are one file each in one format, the other products arrive before a click, a switch fetches nothing (ADR-064)', async ({
+    page,
+    browserName,
+  }) => {
+    // The designer shows every product in white (the tote in its beige): those fronts at the
+    // one mockup width. The strip on a phone fetches the black fronts at the same rung.
+    const MOCKUP = /-(white|beige)-front-[0-9a-f]+-1080\.(avif|webp)(\?|$)/;
+    const mockups: string[] = [];
+    page.on('request', (r) => {
+      if (MOCKUP.test(r.url())) mockups.push(r.url());
+    });
+    await openDesigner(page);
+    await expect.poll(() => mockups.length).toBeGreaterThan(0);
+    // The static preview and the canvas name the same file, and the browser chooses the
+    // format once for both, the detached picture included: Chromium takes the AVIF
+    // `<source>`; Playwright's WebKit has no AVIF and takes the WebP `<img>` for both.
+    const formats = new Set(mockups.map((u) => u.slice(u.lastIndexOf('.') + 1)));
+    expect([...formats]).toEqual([browserName === 'webkit' ? 'webp' : 'avif']);
+    expect(mockups.filter((u) => u.includes('tee-essential')).length).toBeLessThanOrEqual(2);
+    // The other four products' mockups are fetched on their own, one file each.
+    await expect.poll(() => new Set(mockups).size, { timeout: 15_000 }).toBe(5);
+    const before = mockups.length;
+    await page.locator('label', { hasText: 'هودي' }).click();
+    await expect(page.getByLabel('سعر البيع بالريال')).toHaveValue('189');
+    await page.waitForFunction(
+      () => window.Konva?.stages[0]?.findOne('Image')?.isVisible() === true,
+    );
+    // Drawn from memory: not one more request.
+    expect(mockups.length).toBe(before);
+  });
+
   test('warns below cost and shows zero at cost', async ({ page }) => {
     await openDesigner(page);
     const input = page.getByLabel('سعر البيع بالريال');

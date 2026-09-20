@@ -38,7 +38,6 @@ export async function Steps({ locale, tone = 'surface' }: { locale: Locale; tone
                     width={96}
                     height={96}
                     className="steps-item-icon size-24 shrink-0 rounded-base"
-                    sizes="96px"
                   />
                   <span className="steps-badge" aria-hidden="true">
                     {step.order}
@@ -60,7 +59,6 @@ export async function Steps({ locale, tone = 'surface' }: { locale: Locale; tone
                   height={480}
                   className="steps-panel-icon"
                   data-step={i}
-                  sizes="(min-width: 1024px) 480px, 0px"
                 />
               ))}
             </div>

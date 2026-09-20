@@ -1,6 +1,6 @@
 'use client';
 
-import Image from 'next/image';
+import { Photo } from '@/components/shared/photo';
 import type { Product } from '@/content/schema';
 import { cn } from '@/lib/cn';
 import { designerColorFor } from '@/lib/product-helpers';
@@ -56,7 +56,7 @@ export function ProductPicker({
                 onChange={() => onChange(product)}
                 className="sr-only"
               />
-              <Image
+              <Photo
                 src={thumb}
                 alt=""
                 width={32}

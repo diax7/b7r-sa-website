@@ -16,6 +16,7 @@ import type { Product } from '@/content/schema';
 import { cn } from '@/lib/cn';
 import { track } from '@/modules/core/analytics/track';
 import { DesignCanvas } from '@/modules/designer/canvas/design-canvas';
+import { usePreloadedMockups } from '@/modules/designer/canvas/use-preloaded-mockups';
 import { PricingControls } from '@/modules/designer/controls/pricing-controls';
 import { PrintAreaOverlay } from '@/modules/designer/controls/print-area-overlay';
 import { ResultsCard } from '@/modules/designer/controls/results-card';
@@ -114,6 +115,9 @@ export function DesignerIsland({
   }, []);
 
   useBottomDock(stickyVisible);
+
+  // The other products' mockups arrive while the person reads the calculator (ADR-064).
+  usePreloadedMockups(products, state.product);
 
   // Debounced calculator event (800 ms); the mount-time defaults are not a change.
   const mounted = useRef(false);

@@ -52,6 +52,6 @@ describe('the modules next.config.ts reaches', () => {
     const source = readFileSync(config, 'utf8');
     expect(source).toContain('deviceSizes: [...DEVICE_SIZES]');
     expect(source).toContain('imageSizes: [...IMAGE_SIZES]');
-    expect(modules.some((f) => f.endsWith(resolve('src', 'lib', 'renditions.ts')))).toBe(true);
+    expect(modules).toContain(resolve(ROOT, 'src/lib/renditions.ts'));
   });
 });

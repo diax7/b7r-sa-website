@@ -46,7 +46,6 @@ export async function AuthorPage({
                 width={112}
                 height={112}
                 preload
-                fetchPriority="high"
                 className="size-28 rounded-pill object-cover"
               />
             ) : (

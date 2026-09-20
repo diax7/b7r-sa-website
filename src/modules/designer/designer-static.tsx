@@ -1,12 +1,13 @@
 import { Upload } from 'lucide-react';
-import Image from 'next/image';
 import { Button } from '@/components/shared/button';
 import { Icon } from '@/components/shared/icon';
+import { Photo } from '@/components/shared/photo';
 import { SarAmount } from '@/components/shared/sar-amount';
 import { SarSymbol } from '@/components/shared/sar-symbol';
 import type { Product } from '@/content/schema';
 import { designerColorFor } from '@/lib/product-helpers';
 import { cn } from '@/lib/cn';
+import { MockupPicture } from '@/modules/designer/mockup-picture';
 import { monthlyProfit, perPieceProfit } from '@/modules/designer/profit';
 import type { DesignerCopy } from '@/modules/designer/types';
 
@@ -34,11 +35,10 @@ export function DesignerStatic({ products, product, copy, ctaHref }: DesignerSta
       <div className="order-first lg:order-last lg:w-[54%]">
         <div className="relative mx-auto aspect-square w-full max-w-[600px] overflow-hidden rounded-lg bg-ground">
           {color && (
-            <Image
+            <MockupPicture
               src={color.images.front}
               alt={copy.mockupAlt.replace('{product}', product.name).replace('{color}', color.name)}
-              fill
-              sizes="(min-width: 1024px) 600px, 100vw"
+              blur={color.images.frontBlur}
               className="object-contain"
             />
           )}
@@ -81,7 +81,7 @@ export function DesignerStatic({ products, product, copy, ctaHref }: DesignerSta
                       : 'border-border text-text',
                   )}
                 >
-                  <Image
+                  <Photo
                     src={thumb}
                     alt=""
                     width={32}

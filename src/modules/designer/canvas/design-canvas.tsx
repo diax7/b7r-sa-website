@@ -3,9 +3,8 @@
 import Konva from 'konva';
 import type { KonvaEventObject } from 'konva/lib/Node';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { optimizedSrc } from '@/lib/image-url';
 import { Group, Image as KImage, Layer, Rect, Stage, Transformer } from 'react-konva';
-import { useImage } from '@/modules/designer/canvas/use-image';
+import { useImage, useMockup } from '@/modules/designer/canvas/use-image';
 import {
   initialDesignBox,
   insideRatio,
@@ -42,9 +41,6 @@ interface Point {
   y: number;
 }
 
-/** Largest stage is 640 px; 1080 is the next `deviceSizes` step, so retina stays crisp. */
-const MOCKUP_WIDTH = 1080;
-
 function tokens() {
   const css = getComputedStyle(document.documentElement);
   return {
@@ -78,8 +74,9 @@ export function DesignCanvas({
   onInteract,
   onChromeChange,
 }: DesignCanvasProps) {
-  // The mockup goes through the optimizer (same origin, ADR-029): no CORS taint, CSP stays 'self'.
-  const mockup = useImage(optimizedSrc(mockupSrc, MOCKUP_WIDTH));
+  // The mockup is the rendition the static preview showed, from the module cache when the
+  // preload has it (ADR-064); the person's own design is a blob URL of this origin.
+  const mockup = useMockup(mockupSrc);
   const designImg = useImage(design?.url ?? null);
   const [prevMockup, setPrevMockup] = useState<HTMLImageElement | null>(null);
   // Client-only component: tokens are read from the live stylesheet, never hard-coded.
