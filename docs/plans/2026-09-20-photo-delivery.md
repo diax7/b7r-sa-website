@@ -302,7 +302,7 @@ rewritten to what was measured).
 ## As shipped (2026-09-20)
 
 Five commits on `site/photo-delivery`, each reviewed by the CTO (plan 89 → Phase 1 82 then
-94 after a build-time fix, Phase 2 94, Phase 3 93, Phase 4 and 5 in the PR). Departures from
+94 after a build-time fix, Phase 2 94, Phase 3 93, Phase 4 95, Phase 5 96). Departures from
 the text above: `blurPlaceholder` stays in `image-url.ts` with two users rather than moving;
 the picture test proves the two formats agree candidate for candidate and the ladder is
 proven by `renditions.test.ts` plus `next-config-imports.test.ts` (vitest cannot feed

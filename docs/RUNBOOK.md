@@ -125,11 +125,11 @@ poster) are plain files `pnpm assets` writes at 2x of the box they are shown in,
 deploy so the build's own run finds nothing to do (the build would do it otherwise, more
 slowly on the build machine):
 
-1. After the merge, from a machine with `.env.cranl.local`: `pnpm migrate` is not needed by
-   hand (the build migrates), but the script needs the columns, so either run the build
-   first or `DATABASE_URL=… pnpm migrate` against production. Then
+1. After the merge, from a machine with `.env.cranl.local`: `DATABASE_URL=<production>
+   pnpm migrate` (additive; the old image keeps serving), then
    `pnpm exec tsx scripts/media-renditions.ts --env .env.cranl.local --dry-run`, then
-   without the flag: about two seconds per photo.
+   without the flag: about two seconds per photo. (Skipping this step is safe: the build
+   migrates and backfills on its own, only more slowly on the build machine.)
 2. Check that the edge serves what the pages will name, twice each so the second answer is
    the edge's: `curl -sI https://storage-b7r-media.cranl.net/media/<stem>-1080.avif` and the
    `-1080.webp`; expect `content-type: image/avif` and `image/webp` (the plugin sets the
