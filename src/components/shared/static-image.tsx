@@ -10,7 +10,8 @@ interface StaticImageProps {
   /**
    * Above the fold on every page (the header logo): a `<head>` preload at high priority and
    * an eager `<img>`. The `<img>` itself carries no `fetchpriority`: the preload does, and the
-   * page's one `fetchpriority="high"` image stays its LCP photo.
+   * page's one `fetchpriority="high"` image stays its LCP photo. One preload per page is
+   * enough: the mobile menu shows the same file and needs none of its own.
    */
   preload?: boolean;
 }
