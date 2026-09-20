@@ -86,19 +86,28 @@ test.describe('designer and profit calculator (BRD 6.4.3)', () => {
   }) => {
     // The designer shows every product in white (the tote in its beige): those fronts at the
     // one mockup width. The strip on a phone fetches the black fronts at the same rung. The
-    // seed names a file `{slug}-{colour}-front.jpg`; a re-upload adds 8 hex (RUNBOOK, "Assets").
-    const MOCKUP = /-(white|beige)-front(-[0-9a-f]{8})?-1080\.(avif|webp)(\?|$)/;
+    // seed names a file `{slug}-{colour}-front.jpg`; a re-upload adds 8 hex (RUNBOOK,
+    // "Assets") and Payload adds a counter when the name is taken.
+    const MOCKUP = /-(white|beige)-front(-[0-9a-z]+)?-1080\.(avif|webp)(\?|$)/;
     const mockups: string[] = [];
+    const failed: string[] = [];
     page.on('request', (r) => {
       if (MOCKUP.test(r.url())) mockups.push(r.url());
+    });
+    // A rendition the bucket does not hold answers 404 (XML), which Chromium reports as an
+    // ORB block: the 2026-09-20 seed left every document but the first without objects.
+    page.on('requestfailed', (r) => {
+      if (MOCKUP.test(r.url())) failed.push(`${r.url()} ${r.failure()?.errorText}`);
     });
     await openDesigner(page);
     await expect.poll(() => mockups.length).toBeGreaterThan(0);
     // The static preview and the canvas name the same file, and the browser chooses the
-    // format once for both, the detached picture included: Chromium takes the AVIF
-    // `<source>`; Playwright's WebKit has no AVIF and takes the WebP `<img>` for both.
+    // format once for both, the detached picture included: one format for every mockup
+    // request. Chromium takes the AVIF `<source>`; Playwright's WebKit takes AVIF where its
+    // build decodes it (Linux) and the WebP `<img>` where it does not (Windows).
     const formats = new Set(mockups.map((u) => u.slice(u.lastIndexOf('.') + 1)));
-    expect([...formats]).toEqual([browserName === 'webkit' ? 'webp' : 'avif']);
+    expect(formats.size, [...formats].join(', ')).toBe(1);
+    if (browserName === 'chromium') expect([...formats]).toEqual(['avif']);
     expect(mockups.filter((u) => u.includes('tee-essential')).length).toBeLessThanOrEqual(2);
     // The other four products' mockups are fetched on their own, one file each.
     await expect.poll(() => new Set(mockups).size, { timeout: 15_000 }).toBe(5);
@@ -108,8 +117,9 @@ test.describe('designer and profit calculator (BRD 6.4.3)', () => {
     await page.waitForFunction(
       () => window.Konva?.stages[0]?.findOne('Image')?.isVisible() === true,
     );
-    // Drawn from memory: not one more request.
+    // Drawn from memory: not one more request, and none of them failed.
     expect(mockups.length).toBe(before);
+    expect(failed).toEqual([]);
   });
 
   test('warns below cost and shows zero at cost', async ({ page }) => {

@@ -2865,7 +2865,15 @@ renditions from the storage CDN, never through the optimizer.
   anyone backfilled by hand still prerenders pages whose files exist, and an upload made
   between the migrate and the deploy heals on the next build. The fast path, by hand after
   the merge, is in the RUNBOOK ("Assets"). On this machine the 33 photos took one minute; a
-  large upload in the admin takes seconds, once.
+  large upload in the admin takes seconds, once. **A script that creates or updates media
+  passes a fresh `context` object to every operation, never one shared constant**: the
+  storage plugin sets `skipCloudStorage` on the context it is handed before its own
+  metadata update, Payload's nested operation swaps `req.context` for a copy, and the
+  plugin's cleanup clears the copy, so a flag set on a shared object sticks and every
+  upload after the first skips the bucket while its rows and URLs look complete. The first
+  CI run under S3 found it (33 documents, one document's objects, every other rendition a
+  404 that Chromium reports as an ORB block); the seeds now build a context per call, and
+  the designer e2e fails on a failed mockup request rather than a timeout.
 
 **What stays of ADR-029.** The one q92 source encode (`src/lib/photo.ts`, the assets
 scripts), the unique names on replacement and the redeploy after a rename, the blur-up
