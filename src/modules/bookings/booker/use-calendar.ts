@@ -66,6 +66,9 @@ export function useCalendar({ locale, horizonDays, autoSelect }: UseCalendarOpti
   const [refresh, setRefresh] = useState(0);
   const [slotsByKey, setSlotsByKey] = useState<Record<string, SlotsLoaded>>({});
   const [split, dispatch] = useReducer(reduceSplit, SPLIT_IDLE);
+  // The day whose rows have staggered in: a re-render of the same day (the return from the
+  // form step, the read after a refusal) draws them standing, so nothing blinks.
+  const [staggeredDay, setStaggeredDay] = useState<string | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
 
   const loaded = daysByMonth[month];
@@ -144,6 +147,7 @@ export function useCalendar({ locale, horizonDays, autoSelect }: UseCalendarOpti
 
   const press = useCallback((slot: string) => dispatch({ type: 'press', slot }), []);
   const clearSplit = useCallback(() => dispatch({ type: 'dayChanged' }), []);
+  const markStaggered = useCallback(() => setStaggeredDay(day), [day]);
 
   return {
     rootRef,
@@ -162,5 +166,8 @@ export function useCalendar({ locale, horizonDays, autoSelect }: UseCalendarOpti
     armed: split.armed,
     press,
     clearSplit,
+    /** The rows stagger in when the day changed since they last did; the last row says so. */
+    stagger: day !== null && day !== staggeredDay,
+    markStaggered,
   };
 }

@@ -722,6 +722,15 @@ test.describe('the booker (ADR-063)', () => {
     );
     await expect(island).toHaveAttribute('data-booking-step', 'pick');
     await expect(island.locator('[data-booking-slots="ready"]')).toBeVisible({ timeout: 15_000 });
+    // The same day again: the rows stand at once, no stagger (it would read as a blink).
+    expect(
+      await island.locator('[data-booking-row]').evaluateAll((rows) =>
+        rows.every((row) => {
+          const style = getComputedStyle(row);
+          return style.opacity === '1' && style.animationName === 'none';
+        }),
+      ),
+    ).toBe(true);
     await expect(island.locator(`[data-booking-slot="${target}"]`)).toHaveCount(0);
     await expect(island.locator('[data-booking-confirm]')).toHaveCount(0);
     await expect(page.getByTestId('booking-form')).toHaveCount(0);
@@ -840,7 +849,7 @@ test.describe('the booker (ADR-063)', () => {
     // primitive and its positioning for the add-to-calendar menu. The line holds a margin.
     const island = book.later();
     expect(island.length).toBeGreaterThan(0);
-    expect(book.sum(island), book.list(island)).toBeLessThanOrEqual(56 * 1024);
+    expect(book.sum(island), book.list(island)).toBeLessThanOrEqual(52 * 1024);
     const contact = await scriptsOf(await page.context().newPage(), baseURL!, '/contact');
     expect(contact.firstPaint(), contact.list(contact.js)).toBeLessThanOrEqual(180 * 1024);
     for (const url of contact.referenced) {

@@ -4,7 +4,11 @@ import { type MigrateDownArgs, type MigrateUpArgs, sql } from '@payloadcms/db-po
  * The booker's event pane (ADR-063): the `host` relationship to the author record and the
  * localized `blurb` on the booking global. The diff also carries the `status` index of the
  * bookings collection (declared in PR 4b's second phase after its migration was generated):
- * `IF NOT EXISTS`, since a database the dev push touched may hold it already.
+ * `IF NOT EXISTS`, since a database the dev push touched may hold it already. That
+ * `IF NOT EXISTS` is hand-written: a regenerated drizzle diff carries a plain
+ * `CREATE INDEX` and must be edited back, so a future regeneration on top of a newer main
+ * keeps this file (its snapshot JSON beside it) rather than replacing it, as the enum
+ * migration of the Umami kind does.
  */
 export async function up({ db }: MigrateUpArgs): Promise<void> {
   await db.execute(sql`

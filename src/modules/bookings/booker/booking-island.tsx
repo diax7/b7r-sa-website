@@ -254,6 +254,8 @@ export function BookingIsland({
                     confirmLabel={copy.booking.confirm}
                     copy={copy}
                     idPrefix={id}
+                    stagger={calendar.stagger}
+                    onStaggered={calendar.markStaggered}
                     onPress={calendar.press}
                     onConfirm={confirm}
                   />

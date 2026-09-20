@@ -407,6 +407,8 @@ export function ManageIsland({ locale, copy, settings, whatsappHref }: ManageIsl
               confirmLabel={copy.booking.confirmReschedule}
               copy={copy}
               idPrefix={id}
+              stagger={calendar.stagger}
+              onStaggered={calendar.markStaggered}
               onPress={calendar.press}
               onConfirm={(chosen) =>
                 !busy && void post({ action: 'reschedule', start: chosen.toISOString() })
