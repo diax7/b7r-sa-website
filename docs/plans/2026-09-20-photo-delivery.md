@@ -175,12 +175,11 @@ bytes per format.
 `sizes_*` columns and their filename indexes and drops the four dead groups of the old config
 (`thumbnail`, `card`, `hero`, `og`, the 24 columns and 4 indexes
 `20260918_213027_media_no_renditions.ts` left for "a later migration"); the running image
-ignores columns it does not know and reads none of those. `focal_x` and `focal_y` stay one
-release longer: the image on `main` still lists them in its drizzle schema, and drizzle reads
-name every column (`buildFindManyArgs.js`), so dropping them now would fail every media read
-on the old image between the migrate and the switch, and on the image a rollback returns to
-(RUNBOOK "Deploy" step 9). The generated `DROP COLUMN` lines for the pair come out of the
-migration by hand with the note the 2026-09-18 migration set the pattern for. The build itself makes the deploy self-sufficient: `railpack.json` and the
+ignores columns it does not know and reads none of those. `focal_x` and `focal_y` stay:
+Payload keeps the two hidden fields whenever `imageSizes` is set, whatever `focalPoint`
+says (`uploads/getBaseFields.js`), so the generator emitted no drop for them, which is also
+what the old image needs (drizzle reads name every column, and the image on `main` lists
+the pair; RUNBOOK "Deploy" step 9). The build itself makes the deploy self-sufficient: `railpack.json` and the
 Dockerfile run `bash scripts/ci/migrate.sh`, then `pnpm exec tsx scripts/media-renditions.ts`,
 then `pnpm build`; both builds already hold the database, the secret and the S3 credentials
 (the Railpack build gets the app's environment, the Docker build mounts the four secrets),
@@ -299,6 +298,18 @@ rewritten to what was measured).
 4. The public images: `prepare-assets.ts`, the plain `<img>` sites, `/video/*` cache, tests.
 5. Docs: ADR-064, ADR-029's pointer, RUNBOOK "Assets" (the cut-over, the container's upload
    timing) and "Deploy" step 8, the PR.
+
+## As shipped (2026-09-20)
+
+Five commits on `site/photo-delivery`, each reviewed by the CTO (plan 89 → Phase 1 82 then
+94 after a build-time fix, Phase 2 94, Phase 3 93, Phase 4 and 5 in the PR). Departures from
+the text above: `blurPlaceholder` stays in `image-url.ts` with two users rather than moving;
+the picture test proves the two formats agree candidate for candidate and the ladder is
+proven by `renditions.test.ts` plus `next-config-imports.test.ts` (vitest cannot feed
+`__NEXT_IMAGE_OPTS` an object); `<StaticImage>` carries the brand images with one lint
+exception instead of ten; the blog's "own JS" budget line reads 12 KB because next/image's
+client runtime left the layout's shared chunk when the header stopped importing it (ADR-064
+records the measurement); the warm scripts warm pages only.
 
 ## Judgment calls
 

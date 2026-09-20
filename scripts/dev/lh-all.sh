@@ -13,12 +13,10 @@ for _ in $(seq 1 30); do curl -sf -o /dev/null http://localhost:3004/api/health 
 LH=$(ls -d node_modules/.pnpm/lighthouse@*/node_modules/lighthouse | head -1)
 URLS="${*:-/ /products /products/tee-essential /contact /blog/how-to-price-printed-tshirt-saudi}"
 mkdir -p .lighthouseci
-# The first request for each next/image transform is slow (cold cache) and drags LCP; warm
-# every page once so the runs measure the steady state LHCI sees with numberOfRuns: 2.
+# Warm every page once (the ISR entry) so the runs measure the steady state LHCI sees with
+# numberOfRuns: 2; the photos are files since ADR-064, nothing else to warm.
 for path in $URLS; do
-  (curl -s "http://localhost:3004$path" | grep -o '/_next/image[^" ]*' | sort -u || true) | while read -r img; do
-    curl -s -o /dev/null "http://localhost:3004${img//&amp;/&}" || true
-  done
+  curl -s -o /dev/null "http://localhost:3004$path" || true
 done
 for path in $URLS; do
   out=".lighthouseci/lh-$(echo "$path" | tr '/' '_').json"
