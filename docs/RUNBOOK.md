@@ -412,6 +412,16 @@ wired.
    missing), or add the row by hand from BRD §4.16. Without it the page still answers with
    the bank's title and stays out of the sitemap.
 
+**The booker (ADR-063).** `/book` and the contact card show one card in three panes: who
+the merchant meets, the month grid, the day's times; then the form, then the success view
+with the add-to-calendar menu (Google, Outlook, Apple) and the way to the manage page. The
+grid reads the month's open days from `GET /api/bookings/days?month=` (the rules, the
+closed dates, the notice and the day's bookings; never the calendar), so a day can open in
+the grid and then show "no times" when the host is busy all day on Google; both routes
+answer with a minute's cache, which is why a slot taken a moment ago still answers 409 at
+the booking and returns the merchant to the times. A change to the booker's words is in
+`src/content/copy/{ar,en}.ts` (`booking`), BRD §4.19.
+
 **The host and the blurb (ADR-063).** The booking card's event pane shows who the merchant
 meets: Site → Booking names the **host**, an author record (Blog → Authors; the seed points
 at Dhia's, `dhia`), and the card reads the name, the role and the photo from that record in

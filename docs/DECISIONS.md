@@ -2655,3 +2655,125 @@ the Workspace Admin console add domain-wide delegation for the account's client 
 two scopes; paste the key on a Google Calendar connection and Test it; set the calendar
 owner's address and switch the booking on (RUNBOOK "Bookings"). A leak is a key rotation
 in the Cloud console, never a row edit.
+
+## ADR-063: The booker: one card in three panes, the days endpoint, the split confirm, the add-to-calendar menu, the host as the author record (2026-09-20)
+
+**Context.** PR 4b (ADR-062) shipped the mechanism behind a functional but flat picker: a
+strip of days, pills of times, a form appended under them, a plain success card. Dhia, after
+booking a test slot: "it needs much better UI/UX in all the steps from the client side;
+similar to the premium options like Cal.com itself or the same level; very nice, smooth,
+easy, professional; this is so important." The plan (`docs/plans/2026-09-20-booker.md`, CTO
+plan review 90, GO) replaces the client-facing surfaces only; the routes, the store, the
+calendar client, the e-mails and the sweep are what ADR-062 made them.
+
+**One card, three panes, three modes.** Cal.com's booker translated into the site's design
+system, never its look: one card on the surface tone with the 13 px corner, the hairline
+and `--shadow-island`, the panes divided by hairlines. The **event pane** (who the merchant
+meets, the consultation's name, the blurb, then the length, "Google Meet" and «توقيت الرياض
+(GMT+3)» as meta rows with monochrome icons), the **calendar pane** (a month grid) and the
+**times pane** (the day's free starts down a column). At lg and up three columns (event 280
+px, calendar 1fr, times 220 px, the times scrolling inside their cell), from md the event
+pane over the other two side by side, under md one column with the times unfolding under
+the grid on a pick and the page scrolling to them. `page` is `/book` (the island mounts
+eagerly: the card is the hero), `inline` the contact card (the event pane collapsed to a
+header row carrying the card's own title, the times only after a pick, the island near the
+viewport as before), `reschedule` the manage page. `src/modules/bookings/booker/*` replaces
+`picker/*`; the class strings live in `styles.ts` because the island and its stand-in draw
+the same card.
+
+**The host is the author record.** Rather than three host fields of their own, the booking
+global names a `host` (a relationship to `authors`; the seed points at Dhia's record, whose
+bilingual name and role and photo are maintained in one place already) and a bilingual
+`blurb`. The site reads the global at Payload's default depth, so the record and its photo
+come populated; no photo shows the initial in the accent tint. `hostEmail` stays the
+technical field it is (the calendar owner, an account). A database seeded before gets both
+from `pnpm content:migrate --force`, which runs the booking pass after the blog pass so the
+author exists. One additive migration (`20260920_001023_booking_host`), which also carries
+the `status` index PR 4b's second phase declared after its migration was generated.
+
+**The month's open days come from `GET /api/bookings/days?month=YYYY-MM`.** The rules, the
+closed dates, the notice, the horizon and the day's bookings against `maxPerDay`, and never
+the host calendar: Google decides the exact slots on the day click, so a day can open in
+the grid and then show the empty state when the host is busy all day. Each day answers its
+**free count**, not a boolean: the grid mutes a full day and the times pane's skeleton draws
+the right number of rows. A month outside today's..the horizon's is refused (the host's
+pattern cannot be read for a year), the switch off too; sixty a minute per address like the
+slots, cached a minute. The pure arithmetic is `days-of-month.ts` beside `slots.ts`.
+
+**The grid.** Sunday first, the weekday initials of the locale (Intl's narrow names: «ح ن ث
+ر خ ج س», "S M T W T F S"), six rows always so the pane keeps its height from month to
+month (the blank sixth row hides under md, where the times sit beneath), ‹ › bounded by
+today's and the horizon's months and mirrored by meaning (previous is toward the past in
+either direction: the icon is the mirrored chevron the `Icon` wrapper already draws),
+today ringed, an open day a real button on the ground tone with the accent dot, a closed,
+past or full day muted and never focusable, the selected day the filled disc. `role="grid"`
+with `aria-selected` on the cells, one cell in the Tab order (the selected day, else the
+first open one), the arrows moving by reading direction (Left is "next" in RTL), a week up
+and down, Home and End along the row, skipping closed days and turning the page at the
+month's edge with the focus landing on the new month's first or last open day; Enter and
+Space select; the month line is `aria-live`, so a page turn is announced. On `/book` the
+first open day is selected on arrival (the next month's when this one has none), so the
+times column is never empty; the contact card waits for a pick.
+
+**The split confirm, under three accessibility conditions.** A tap on a time splits the row
+into the time and «أكّد» (Cal.com's pattern): the split is two real buttons, the time with
+`aria-pressed` and the confirm focusable the moment it appears (Enter on a time reveals it,
+Tab reaches it); a pointer anywhere else collapses it, never a focus-out (a keyboard user
+Tabs from the time to the confirm without the row closing under them); the reveal is a
+grid-column transition on a row that stays mounted, so the focus stays where it was, and
+it is instant under reduced motion. The state machine is `split.ts`, pure and unit-tested.
+
+**The form step and the success view.** The two right panes give way to the form (200 ms,
+8 px, honoured by reduced motion), the event pane keeping the chosen time with a «رجوع»
+that returns to the times; the name field takes the focus. The card keeps its height across
+the step on md and up by a min-height read from the pick step. A slot taken meanwhile (409)
+returns to the times with the day read again (a cache-busting count on the read, since the
+routes answer with a minute's cache) and a line saying so; a failure keeps the values and
+points to WhatsApp. The success view fills the card: the check disc that scales in once,
+«موعدك محجوز», the rows What / When / Who / Where with icons (the merchant's name as typed,
+never from a later read; the Meet link as a button, or the sentence that says it follows),
+the note, then the add-to-calendar menu and the way to the manage page.
+
+**Add to calendar is one button and a menu of three.** Dhia's instruction on the success
+view: not a bare download link but «أضف إلى التقويم» opening a menu, each entry with its
+mark: Google Calendar (the `calendar.google.com/calendar/r/eventedit` link with the compact
+UTC span and `ctz=Asia/Riyadh`, a new tab), Outlook Calendar (the `outlook.live.com`
+compose deep link with the Riyadh wall clock and its offset; an Office 365 account lands on
+its own calendar from it), Apple Calendar (the site's own `.ics` route: on an iPhone or a
+Mac the file opens Calendar, which is how Cal.com's own Apple entry behaves). The menu is
+the site's Radix dropdown primitive (keyboard, typeahead, Escape, the focus return, the
+close on an outside pointer); the three marks are inline SVGs of our own, 20 px, monochrome
+like the site's other brand glyphs (the CSP admits no external asset). The same menu stands
+on the manage page. The builders are `calendar-links.ts`, pure and unit-tested.
+
+**The manage page in the same card.** The event pane carries the booking's time and its
+status pill; the right panes the summary rows, «غيّر الموعد», «ألغِ الحجز» and the menu.
+The reschedule opens the calendar and the times inline: the booking's own slot (not free,
+so the route lists no row for it) is put back in its place, marked and not selectable; the
+confirm reads «أكّد التغيير» and patches under the same notice rule on both ends; a move
+reads the day again afterwards. The cancel goes through the site's `Dialog` («إلغاء
+الحجز؟», the consequence, «أبقِ الموعد» as the way back since a destructive dialog's dismiss
+should say what it keeps, «ألغِ الحجز» in red) opened from a trigger so the focus returns;
+a cancelled, past or invalid link is a full-card message with the way to book again.
+
+**Loading and weight.** On `/book` the island mounts eagerly over a stand-in that is the
+real event pane rendered on the server (the LCP words) with the island's own loading state
+for the other panes at the same dimensions, so the hydration moves nothing; the manage
+page's stand-in the same with a loading line where the booking goes. The booking island's
+chunk measured 5,722 B gzipped before; the booker's own chunks, read by the e2e as every
+script the server HTML does not reference, 49,359 B on 2026-09-20 (of which 16,764 B the
+menu primitive and its positioning), the line at 56 KB; `/book` and `/contact` first paints
+stay under 180 KB and the island out of both. `/book` joins the LHCI list at 0.9; the CI
+switches the booking on for that run only (`scripts/ci/booking-on.ts`), since the public
+e2e projects assert the WhatsApp fallback with it off.
+
+**Words.** Every string in both banks under ux-araby (verb-first actions: «أكّد», «أكّد
+الحجز», «أكّد التغيير» rather than the plan's nominal «تأكيد», as the rest of the site's
+buttons; Western digits; Riyadh times with ص/م), BRD §4.19 rewritten and §6.9's card
+paragraph, still `TODO(copy)` for Dhia's read. The panel's glossary gains "host (who the
+merchant meets)" as «مقدّم الاستشارة», kept apart from the calendar owner.
+
+**Not in scope.** A timezone picker (every merchant is on Riyadh time; the line says so), a
+12/24 h toggle, guests, a week or column layout, a custom success URL, an Office 365 link
+of its own, host fields of our own, screenshots in the repository (a scratch folder outside
+it, linked from the PR).
