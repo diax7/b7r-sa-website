@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { LOCALES } from '@/lib/i18n';
 import { normalisePhone } from '@/lib/phone';
+import { MONTH_KEY } from '@/modules/bookings/days-of-month';
 import { DAY_KEY } from '@/modules/bookings/slots';
 import { EMAIL_MAX, NAME_MAX, NAME_MIN, NOTE_MAX } from '@/modules/bookings/picker/validate';
 /** The page the booking was made from: a site path (`/book`, `/en/contact`). */
@@ -63,10 +64,13 @@ export type ManageBody = z.infer<typeof manageBodySchema>;
 /** `?date=YYYY-MM-DD` of the slots route. */
 export const slotsQuerySchema = z.object({ date: z.string().regex(DAY_KEY) });
 
+/** `?month=YYYY-MM` of the days route (ADR-063). */
+export const daysQuerySchema = z.object({ month: z.string().regex(MONTH_KEY) });
+
 /** `POST /api/bookings`: five per IP per ten minutes, the contact form's budget. */
 export const BOOKING_RATE_LIMIT = 5;
 export const BOOKING_WINDOW_MS = 10 * 60_000;
-/** `GET /api/bookings/slots`: a person paging through a month; a scraper is cut short. */
+/** `GET /api/bookings/slots` and `/days`: a person paging through a month; a scraper is cut short. */
 export const SLOTS_RATE_LIMIT = 60;
 export const SLOTS_WINDOW_MS = 60_000;
 /** The manage routes: a handful of reads and one or two actions per visit. */

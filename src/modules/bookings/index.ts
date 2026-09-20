@@ -10,6 +10,7 @@ export {
   BOOKING_RATE_LIMIT,
   BOOKING_WINDOW_MS,
   bookingBodySchema,
+  daysQuerySchema,
   MANAGE_RATE_LIMIT,
   MANAGE_WINDOW_MS,
   manageBodySchema,
@@ -20,6 +21,7 @@ export {
 export {
   book,
   cancel,
+  daysFor,
   icsFor,
   type ManageResult,
   type PublicBooking,
