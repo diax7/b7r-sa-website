@@ -269,20 +269,24 @@ test.describe('the booker (ADR-063)', () => {
   });
 
   test.afterAll(async () => {
-    for (const id of made) {
-      await admin.delete(`${API}/bookings/${id}`, { headers: auth });
-    }
-    if (calendarId !== null) {
-      await admin.patch(`${API}/connections/${calendarId}`, {
-        headers: { ...auth, ...json },
-        data: { enabled: false, model: 'ok' },
+    // The switch goes back whatever the rows' clean-up did: the review database is shared.
+    try {
+      for (const id of made) {
+        await admin.delete(`${API}/bookings/${id}`, { headers: auth });
+      }
+      if (calendarId !== null) {
+        await admin.patch(`${API}/connections/${calendarId}`, {
+          headers: { ...auth, ...json },
+          data: { enabled: false, model: 'ok' },
+        });
+      }
+    } finally {
+      await writeGlobal(admin, auth, {
+        enabled: before.enabled === true,
+        noticeHours: before['noticeHours'] ?? 24,
       });
+      await admin.dispose();
     }
-    await writeGlobal(admin, auth, {
-      enabled: before.enabled === true,
-      noticeHours: before['noticeHours'] ?? 24,
-    });
-    await admin.dispose();
   });
 
   test('the server renders the event pane as the stand-in on /book and inline in the contact card; the pages are in the sitemap', async ({
