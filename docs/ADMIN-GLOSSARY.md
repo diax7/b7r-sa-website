@@ -106,6 +106,7 @@ test refuses (translations of a Latin term, or synonyms of the settled word).
 | Inbox | consultation | استشارة |  | جلسة استشارية، مكالمة تعريفية | What the merchant books; the settings name it («استشارة مجانية، 30 دقيقة»). |
 | Inbox | appointment (a slot on the grid) | موعد |  | فترة زمنية، خانة زمنية | Plural «المواعيد»: the settings count appointments per day; a booking holds its appointment. |
 | Inbox | calendar owner (the host) | صاحب التقويم |  | المضيف، مالك التقويم | The Workspace account whose calendar the bookings write to (the settings field, the Test). |
+| Inbox | host (who the merchant meets) | مقدّم الاستشارة |  | المستضيف، المستشار | The author record the booking card shows with its photo (ADR-063); kept apart from the calendar owner, an account. |
 | Inbox | Meet link | رابط Meet | yes | رابط الاجتماع، رابط ميت | Google creates it with the event; the row shows it, the reminder sends it. |
 | Inbox | booked | محجوز |  | مؤكد، مؤكّد | Green: the appointment stands. |
 | Inbox | rescheduled | مُعاد جدولته |  | أعيد جدولته، مؤجل، مؤجّل | Amber: the merchant moved it from the link in the e-mail. |

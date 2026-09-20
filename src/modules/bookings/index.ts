@@ -10,6 +10,7 @@ export {
   BOOKING_RATE_LIMIT,
   BOOKING_WINDOW_MS,
   bookingBodySchema,
+  daysQuerySchema,
   MANAGE_RATE_LIMIT,
   MANAGE_WINDOW_MS,
   manageBodySchema,
@@ -20,6 +21,7 @@ export {
 export {
   book,
   cancel,
+  daysFor,
   icsFor,
   type ManageResult,
   type PublicBooking,
@@ -35,5 +37,5 @@ export {
 } from '@/modules/bookings/routes';
 export { routeFailure } from '@/modules/bookings/route-failure';
 export { toBookingSettings } from '@/modules/bookings/settings';
-export { BookingPicker } from '@/modules/bookings/site';
+export { Booker } from '@/modules/bookings/site';
 export { CALENDAR_TESTS } from '@/modules/bookings/tests';

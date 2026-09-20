@@ -5,7 +5,7 @@ import {
   NAME_MAX as CONTACT_NAME_MAX,
   NAME_MIN as CONTACT_NAME_MIN,
 } from '@/modules/contact/validate';
-import { EMAIL_MAX, NAME_MAX, NAME_MIN, validatePicker } from '@/modules/bookings/picker/validate';
+import { EMAIL_MAX, NAME_MAX, NAME_MIN, validateBooker } from '@/modules/bookings/booker/copy';
 import { bookingBodySchema, manageBodySchema, slotsQuerySchema } from '@/modules/bookings/schema';
 import {
   book,
@@ -50,7 +50,7 @@ const input = (start: Date, extra: Record<string, unknown> = {}) => ({
 beforeEach(() => resetBusyCache());
 
 describe('the bodies (ADR-062)', () => {
-  it("the picker keeps the contact form's limits, and its rules answer the BRD messages", () => {
+  it("the booker keeps the contact form's limits, and its rules answer the BRD messages", () => {
     expect([NAME_MIN, NAME_MAX, EMAIL_MAX]).toEqual([
       CONTACT_NAME_MIN,
       CONTACT_NAME_MAX,
@@ -65,13 +65,13 @@ describe('the bodies (ADR-062)', () => {
       loading: copyFor('ar').a11y.loading,
       dateLocale: copyFor('ar').dateLocale,
     };
-    expect(validatePicker({ name: 'x', phone: '123', email: 'nope', note: '' }, copy)).toEqual({
+    expect(validateBooker({ name: 'x', phone: '123', email: 'nope', note: '' }, copy)).toEqual({
       name: copy.validation.name,
       phone: copy.validation.phone,
       email: copy.validation.email,
     });
     expect(
-      validatePicker({ name: 'ضياء', phone: '050 169 9572', email: 'm@x.co', note: '' }, copy),
+      validateBooker({ name: 'ضياء', phone: '050 169 9572', email: 'm@x.co', note: '' }, copy),
     ).toEqual({});
   });
 

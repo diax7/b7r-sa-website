@@ -4,7 +4,7 @@
 # ISR entries and the next/image cache are warm (a cold AVIF transform takes seconds on the
 # runner and shows up as a slow LCP or a `load` event that never fires in a no-JS test).
 # Production behaves the same after the first visitor per image size.
-WARM_URLS="/ /products /products/tee-essential /contact /blog/how-to-price-printed-tshirt-saudi /en /en/products/tee-essential /how-it-works /faq /privacy /en/compare-printful"
+WARM_URLS="/ /products /products/tee-essential /contact /book /blog/how-to-price-printed-tshirt-saudi /en /en/products/tee-essential /how-it-works /faq /privacy /en/compare-printful"
 
 start_server() {
   pnpm start >/tmp/ci-server.log 2>&1 &

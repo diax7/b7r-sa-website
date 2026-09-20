@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { Card } from '@/components/shared/card';
 import { Container } from '@/components/shared/container';
 import { Section } from '@/components/shared/section';
 import { SectionHeader } from '@/components/shared/section-header';
@@ -10,42 +9,62 @@ import { getSeo, getSiteSettings } from '@/lib/cms';
 import { siteLocales } from '@/lib/cms/locales';
 import { env, siteBase } from '@/lib/env';
 import { type Locale, localePath } from '@/lib/i18n';
+import { riyadh } from '@/lib/riyadh';
 import { whatsappUrl } from '@/lib/utm';
 import { JsonLd, jsonLd } from '@/modules/core';
 import { CtaRibbon } from '@/modules/core/cta-ribbon';
 import { pageMetadata } from '@/modules/core/seo/metadata';
-import { PickerFallback } from '@/modules/bookings/picker/picker-fallback';
-import { BookingLoader, ManageLoader } from '@/modules/bookings/picker/picker-loader';
-import { pickerCopy, pickerSettings } from '@/modules/bookings/picker/props';
+import { BookingLoader, ManageLoader } from '@/modules/bookings/booker/loader';
+import { bookerCopy, bookerSettings } from '@/modules/bookings/booker/props';
+import { BookerStandIn } from '@/modules/bookings/booker/stand-in';
 import { getBooking } from '@/modules/bookings/read';
 
 /**
- * The picker as the pages and the contact card mount it (ADR-062): the island near the
- * viewport over its stand-in. Only while the switch is on: the contact card shows its
- * WhatsApp button otherwise, and `/book` is a 404.
+ * The booker as the page and the contact card mount it (ADR-063): the island over its
+ * server-rendered stand-in, at once on `/book` (the card is the hero) and near the viewport
+ * in the contact card (`inline`, with the card's own title as the header row's heading).
+ * Only while the switch is on: the contact card shows its WhatsApp button otherwise, and
+ * `/book` is a 404.
  */
-export async function BookingPicker({
+export async function Booker({
   locale,
   settings,
   page,
+  mode,
+  heading,
 }: {
   locale: Locale;
   settings: BookingSettings;
   page: string;
+  mode: 'page' | 'inline';
+  heading?: string;
 }) {
   const site = await getSiteSettings(locale);
-  const copy = pickerCopy(locale);
+  const copy = bookerCopy(locale);
   const whatsappHref = whatsappUrl(site.contact.whatsapp, copy.booking.whatsappMessage);
-  const picker = pickerSettings(settings);
+  const booker = bookerSettings(settings);
+  const now = riyadh(new Date());
   return (
     <BookingLoader
       locale={locale}
       copy={copy}
-      settings={picker}
+      settings={booker}
+      mode={mode}
+      {...(heading ? { heading } : {})}
       turnstileSiteKey={env.turnstileSiteKey}
       whatsappHref={whatsappHref}
       page={page}
-      fallback={<PickerFallback copy={copy} settings={picker} />}
+      eager={mode === 'page'}
+      fallback={
+        <BookerStandIn
+          mode={mode}
+          copy={copy}
+          settings={booker}
+          {...(heading ? { heading } : {})}
+          month={now.monthKey}
+          today={now.dateKey}
+        />
+      }
     />
   );
 }
@@ -72,10 +91,10 @@ async function bookSeo(
 }
 
 /**
- * `/book` (BRD 4.19): the H1 and the lead from the bank, the picker, the ribbon; a 404 while
- * the switch is off (the page is out of the sitemap then, and the contact card keeps the
- * WhatsApp way). The manage page stays: a booking made before the switch went off keeps
- * its link.
+ * `/book` (BRD 4.19): the H1 and the lead from the bank, the booker as the hero, the
+ * ribbon; a 404 while the switch is off (the page is out of the sitemap then, and the
+ * contact card keeps the WhatsApp way). The manage page stays: a booking made before the
+ * switch went off keeps its link.
  */
 export async function BookPage({ locale }: { locale: Locale }) {
   const [settings, seo] = await Promise.all([getBooking(locale), bookSeo(locale)]);
@@ -96,16 +115,14 @@ export async function BookPage({ locale }: { locale: Locale }) {
       <Section tone="surface" className="pt-10 md:pt-16" aria-labelledby="book-title">
         <Container className="flex flex-col gap-10">
           <SectionHeader as="h1" id="book-title" title={booking.title} lead={booking.lead} />
-          <Card className="p-6 md:p-8" radius="lg" data-book-card="">
-            <div className="flex flex-col gap-6">
-              <p className="text-h4 text-text">{settings.title}</p>
-              <BookingPicker
-                locale={locale}
-                settings={settings}
-                page={localePath(locale, '/book')}
-              />
-            </div>
-          </Card>
+          <div className="mx-auto w-full max-w-[1000px]" data-book-card="">
+            <Booker
+              locale={locale}
+              settings={settings}
+              page={localePath(locale, '/book')}
+              mode="page"
+            />
+          </div>
         </Container>
       </Section>
       <CtaRibbon locale={locale} topTone="surface" page="book" />
@@ -116,7 +133,9 @@ export async function BookPage({ locale }: { locale: Locale }) {
 /** `/book/manage?token=`: the H1 and the island that reads the booking by its token. */
 export async function ManagePage({ locale }: { locale: Locale }) {
   const [settings, site] = await Promise.all([getBooking(locale), getSiteSettings(locale)]);
-  const copy = pickerCopy(locale);
+  const copy = bookerCopy(locale);
+  const booker = bookerSettings(settings);
+  const now = riyadh(new Date());
   return (
     <Section tone="surface" className="pt-10 md:pt-16" aria-labelledby="manage-title">
       <Container className="flex flex-col gap-10">
@@ -126,15 +145,23 @@ export async function ManagePage({ locale }: { locale: Locale }) {
           title={copy.booking.manageTitle}
           lead={copy.booking.manageLead}
         />
-        <Card className="p-6 md:p-8" radius="lg" data-manage-card="">
+        <div className="mx-auto w-full max-w-[1000px]" data-manage-card="">
           <ManageLoader
             locale={locale}
             copy={copy}
-            settings={pickerSettings(settings)}
+            settings={booker}
             whatsappHref={whatsappUrl(site.contact.whatsapp, copy.booking.whatsappMessage)}
-            fallback={<p className="text-body text-text-muted">{copy.loading}</p>}
+            fallback={
+              <BookerStandIn
+                mode="reschedule"
+                copy={copy}
+                settings={booker}
+                month={now.monthKey}
+                today={now.dateKey}
+              />
+            }
           />
-        </Card>
+        </div>
       </Container>
     </Section>
   );

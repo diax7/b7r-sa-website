@@ -117,31 +117,54 @@ Every interface string of the English site, key for key with the Arabic bank of 
 | `booking.title` | Book a free consultation |
 | `booking.lead` | 30 minutes on Google Meet to answer your questions and help you start. |
 | `booking.riyadhTime` | Riyadh time |
+| `booking.timezone` | Riyadh time (GMT+3) |
+| `booking.googleMeet` | Google Meet |
+| `booking.duration` | {minutes} minutes |
 | `booking.pickDay` | Pick a day |
 | `booking.pickTime` | Pick a time |
-| `booking.duration` | {minutes} minutes |
+| `booking.previousMonth` | Previous month |
+| `booking.nextMonth` | Next month |
+| `booking.today` | Today |
+| `booking.loadingDays` | Loading the days |
 | `booking.loadingSlots` | Loading the times |
 | `booking.noSlots` | No times free on this day. Pick another day. |
 | `booking.closed` | Closed: {reason} |
+| `booking.confirm` | Confirm |
+| `booking.back` | Back |
 | `booking.chosen` | Your slot: {day}, {time} |
-| `booking.change` | Change the time |
-| `booking.note` | Note (optional) |
+| `booking.note` | Additional notes (optional) |
 | `booking.notePlaceholder` | What would you like to talk about? |
 | `booking.submit` | Confirm the booking |
 | `booking.submitting` | Booking |
 | `booking.taken` | That time was just taken. Pick another one. |
 | `booking.failure` | The booking did not go through. Try again or message us on WhatsApp. |
 | `booking.confirmedTitle` | Your consultation is booked |
-| `booking.confirmedText` | The details are in your inbox: the meeting link and the link to change or cancel. |
+| `booking.confirmedText` | The details are in your inbox. |
+| `booking.what` | What |
+| `booking.when` | When |
+| `booking.who` | Who |
+| `booking.where` | Where |
+| `booking.notes` | Your notes |
 | `booking.meetLink` | Meeting link |
-| `booking.linkFollows` | The meeting link reaches your inbox before the time. |
-| `booking.addToCalendar` | Add to your calendar |
+| `booking.linkFollows` | The link reaches your inbox before the time. |
+| `booking.addToCalendar` | Add to Calendar |
+| `booking.googleCalendar` | Google Calendar |
+| `booking.outlookCalendar` | Outlook Calendar |
+| `booking.appleCalendar` | Apple Calendar |
+| `booking.needChange` | Need to make a change? |
 | `booking.manageLink` | Change or cancel |
 | `booking.manageTitle` | Your booking |
 | `booking.manageLead` | Change the time of your consultation or cancel it here. |
+| `booking.status.booked` | Booked |
+| `booking.status.rescheduled` | Rescheduled |
+| `booking.status.cancelled` | Cancelled |
+| `booking.status.completed` | Completed |
+| `booking.current` | Your current time |
 | `booking.reschedule` | Change the time |
+| `booking.confirmReschedule` | Confirm the change |
 | `booking.cancel` | Cancel the booking |
-| `booking.confirmCancel` | Confirm the cancellation |
+| `booking.cancelTitle` | Cancel the booking? |
+| `booking.cancelText` | Your consultation is cancelled and leaves the calendar; an e-mail confirms it. You can book another time whenever you like. |
 | `booking.keep` | Keep the booking |
 | `booking.rescheduled` | Your time has changed. The new details are in your inbox. |
 | `booking.cancelled` | Your booking is cancelled. Book another time whenever you like. |

@@ -288,7 +288,7 @@ Amended 2026-09-13 (ADR-037): the marketing video in §6.4.5 is the second conti
 
 ### 3.10 Component inventory (build these once, reuse everywhere)
 
-`Button` (variants primary, secondary [white with primary border], ghost, link, shiny and inverseShiny [the sheen, ADR-054, the site-wide admin switch]; sizes md 44 px, lg 52 px; optional trailing arrow icon mirrored in RTL; loading state) · `Chip` (pill, optional check icon) · `Badge` (tint background, 10% colour rule: `bg-{color}/10 text-{color} border-{color}/20`) · `Card` · `SectionHeader` (eyebrow + H2 + lead, start-aligned) · `Accordion` (single-open, chevron rotates, `aria-expanded`) · `Input`, `Textarea`, `Select`, `Stepper` (numeric with +/−), `Slider` · `Dialog` · `Toast` · `SarAmount` (§3.11) · `ProductCard` · `WaveDivider` · `CtaRibbon` · `WhatsAppWidget` · `ConsentBar` · `VideoPlayer` · `Breadcrumbs` · `Icon` (RTL-aware Lucide wrapper) · `Container`, `Section` · `BookingPicker` (Level 4, ADR-062: the strip of days on the Riyadh clock as 56×64 px chips, the weekday above the day number, the selected one filled primary, a closed day greyed with its reason as a title; the free times as 44 px pills with Western digits; the form reuses `Input`, `Textarea` and `Button`; a client island loaded near the viewport over a server-rendered stand-in, on `/book` and inline in the contact card).
+`Button` (variants primary, secondary [white with primary border], ghost, link, shiny and inverseShiny [the sheen, ADR-054, the site-wide admin switch]; sizes md 44 px, lg 52 px; optional trailing arrow icon mirrored in RTL; loading state) · `Chip` (pill, optional check icon) · `Badge` (tint background, 10% colour rule: `bg-{color}/10 text-{color} border-{color}/20`) · `Card` · `SectionHeader` (eyebrow + H2 + lead, start-aligned) · `Accordion` (single-open, chevron rotates, `aria-expanded`) · `Input`, `Textarea`, `Select`, `Stepper` (numeric with +/−), `Slider` · `Dialog` · `Toast` · `SarAmount` (§3.11) · `ProductCard` · `WaveDivider` · `CtaRibbon` · `WhatsAppWidget` · `ConsentBar` · `VideoPlayer` · `Breadcrumbs` · `Icon` (RTL-aware Lucide wrapper) · `Container`, `Section` · `Booker` (Level 4, ADR-063, `src/modules/bookings/booker/*`): one card in three panes on the surface tone, the 13 px corner, the hairline, `--shadow-island`, the panes divided by hairlines. **Modes**: `page` on `/book` (the island mounts eagerly over a stand-in that is the real event pane with the loading state of the other two panes at the same dimensions), `inline` in the contact card (the event pane collapsed to a header row: the host's 40 px photo or initial, the card's title, the host's name and role, the meta rows in one line; the times only after a pick; the island near the viewport), `reschedule` on the manage page (the event pane with the status pill and the booking's time; the summary rows and the actions; the calendar and the times inline on «غيّر الموعد» with the current slot marked and not selectable). **Breakpoints**: lg and up three columns, event 280 px · calendar 1fr · times 220 px, the times scrolling inside their cell; md the event pane over calendar and times side by side; under md one column, the times unfolding under the grid on a pick and the page scrolling to them (`scroll-mt-24`); the card is at most 1000 px wide, centred. **The panes**: the event pane's 56 px photo or initial disc in the accent tint, the name in body medium, the role in caption muted, the title in h4, the blurb in small muted, the meta rows (length, "Google Meet", the clock) in small muted with 18 px monochrome icons, and from the form step on the chosen time with the calendar icon and a «رجوع» link; the calendar pane's month line (body medium, `aria-live`) with ‹ › as 36 px pill buttons at the end, mirrored by meaning and dimmed at the bounds, the weekday initials in caption muted, six rows of square cells (the blank sixth row hidden under md) each a 40 px disc (44 at md): open days on the ground tone with the accent dot and a hover to the tint, the selected day filled primary, today ringed (`inset-ring-1 inset-ring-primary/50`), the current booking ringed in primary, muted days at 45 % of the muted text and never focusable; the times pane's day header (small medium), the free starts as 44 px full-width buttons in the primary with a 35 % primary border (hover: the border in full, a 1 px lift, `--shadow-card-hover`), a pressed time on the tint, the confirm half in the primary. **States**: the days and the times loading (the grid's numbers muted under `aria-busy`, the times as pulsing rows on the ground tone, as many as the day's free count, three to eight), the empty day (a muted disc with the calendar-off icon and the sentence), a failed read (the failure line in the error tone), a taken slot (the line above the times), the form's rules under the fields with `aria-invalid`, the pending button («جارٍ الحجز»), the success view (the 56 px check disc in the success tint, h3, the rows in a `dl` with the labels in a 112 px column), the manage page's notices as a tinted line (success or error), the full-card messages (cancelled, past, invalid) with one way on. **Motion**: a step pane rises 8 px over `--duration-base` (`animate-step-in`), the check disc pops once over `--duration-slow` with `--ease-expand` (`animate-pop-in`), the slot rows stagger in 60 ms apart capped at the ninth (`.booker-row`), the split is a grid-column transition over `--duration-base`, the day discs and the time buttons transition over `--duration-fast`; all instant under reduced motion. Keyboard: the grid's roving tab stop with the arrows by reading direction, Enter on a time reveals the confirm and Tab reaches it, the form opens on its first field, the dialog and the menu come from the Radix primitives. Reuses `Button`, `Input`, `Textarea`, `Icon`, `Dialog` and `DropdownMenu`.
 
 Use shadcn/ui primitives (Radix) for Accordion, Dialog, Select, Slider, Toast, and Tabs; restyle them to these tokens. Do not ship shadcn's default look.
 
@@ -654,42 +654,65 @@ The block’s fixed words (`content/copy/ar.ts`, `compare`):
 
 SEO row (§4.16): route `/compare-printful`, title «بحر برنت مقابل Printful لمتجر سعودي», description «مقارنة بالأرقام: الطباعة في جدة والتوصيل خلال 5 أيام مقابل الشحن من الخارج خلال أسابيع؛ الأسعار بالريال وربط سلة وزد.».
 
-### 4.19 The booking page `/book` and its e-mails (ADR-062; a draft for Dhia's read, `TODO(copy)`)
+### 4.19 The booking page `/book` and its e-mails (ADR-062, ADR-063; a draft for Dhia's read, `TODO(copy)`)
 
-Bookings are built inside b7r.sa (no Cal.com): the page `/book` and the contact page's booking card hold one picker, a strip of days on the Riyadh clock, the day's free times with Western digits, the merchant's name, phone, e-mail and an optional note, then the confirmation with the Google Meet link and the calendar file; the manage page `/book/manage` (by the signed link in the confirmation e-mail) moves or cancels the booking. The name, phone and e-mail labels, placeholders and validation are §4.11's. Written under §0.5's fallback rule and listed in `TODO_COPY` of the verbatim test until Dhia approves; then the markers go and this section is the check.
+Bookings are built inside b7r.sa (no Cal.com): the page `/book` and the contact page's booking card hold one booker (ADR-063), a card in three panes. The event pane says who the merchant meets (the host's photo, name and role from the author record), the consultation's name, the blurb, the length, «Google Meet» and «توقيت الرياض (GMT+3)». The calendar pane is a month grid, Sunday first, with the open days marked. The times pane lists the day's free times with Western digits and ص/م; a tap splits the time into the time and «أكّد». The form takes the merchant's name, phone, e-mail and optional notes, then the success view lists what, when, with whom and where, offers «أضف إلى التقويم» (Google, Outlook, Apple) and the way to change or cancel. The manage page `/book/manage` (by the signed link in the confirmation e-mail) moves or cancels the booking in the same card. The name, phone and e-mail labels, placeholders and validation are §4.11's. Written under §0.5's fallback rule and listed in `TODO_COPY` of the verbatim test until Dhia approves; then the markers go and this section is the check.
 
-The page and the picker (`content/copy/ar.ts`, `booking`):
+The page and the booker (`content/copy/ar.ts`, `booking`):
 
 | Key | Arabic |
 |---|---|
 | `title` | احجز استشارة مجانية |
 | `lead` | 30 دقيقة على Google Meet نجاوب فيها على أسئلتك ونساعدك تبدأ. |
 | `riyadhTime` | بتوقيت الرياض |
+| `timezone` | توقيت الرياض (GMT+3) |
+| `googleMeet` | Google Meet |
+| `duration` | {minutes} دقيقة |
 | `pickDay` | اختر اليوم |
 | `pickTime` | اختر الوقت |
-| `duration` | {minutes} دقيقة |
+| `previousMonth` | الشهر السابق |
+| `nextMonth` | الشهر التالي |
+| `today` | اليوم |
+| `loadingDays` | جارٍ تحميل الأيام |
 | `loadingSlots` | جارٍ تحميل المواعيد |
 | `noSlots` | لا مواعيد متاحة في هذا اليوم. اختر يوماً آخر. |
 | `closed` | مغلق: {reason} |
+| `confirm` | أكّد |
+| `back` | رجوع |
 | `chosen` | موعدك: {day}، {time} |
-| `change` | غيّر الوقت |
-| `note` | ملاحظة (اختياري) |
+| `note` | ملاحظات إضافية (اختياري) |
 | `notePlaceholder` | ما الذي تريد أن نناقشه؟ |
 | `submit` | أكّد الحجز |
 | `submitting` | جارٍ الحجز |
 | `taken` | حُجز هذا الموعد للتو. اختر موعداً آخر. |
 | `failure` | تعذّر الحجز. حاول مرة أخرى أو راسلنا على واتساب. |
 | `confirmedTitle` | موعدك محجوز |
-| `confirmedText` | أرسلنا التفاصيل إلى بريدك: رابط الاجتماع ورابط تغيير الموعد أو إلغائه. |
+| `confirmedText` | أرسلنا التفاصيل إلى بريدك. |
+| `what` | ماذا |
+| `when` | متى |
+| `who` | مع من |
+| `where` | أين |
+| `notes` | ملاحظاتك |
 | `meetLink` | رابط الاجتماع |
-| `linkFollows` | رابط الاجتماع يصلك على بريدك قبل الموعد. |
-| `addToCalendar` | أضف إلى تقويمك |
+| `linkFollows` | الرابط يصلك على بريدك قبل الموعد. |
+| `addToCalendar` | أضف إلى التقويم |
+| `googleCalendar` | تقويم Google |
+| `outlookCalendar` | تقويم Outlook |
+| `appleCalendar` | تقويم Apple |
+| `needChange` | تحتاج تغييراً؟ |
 | `manageLink` | غيّر الموعد أو ألغِه |
 | `manageTitle` | إدارة حجزك |
 | `manageLead` | غيّر موعد استشارتك أو ألغِه من هنا. |
+| `status.booked` | محجوز |
+| `status.rescheduled` | مُعاد جدولته |
+| `status.cancelled` | ملغى |
+| `status.completed` | مكتمل |
+| `current` | موعدك الحالي |
 | `reschedule` | غيّر الموعد |
+| `confirmReschedule` | أكّد التغيير |
 | `cancel` | ألغِ الحجز |
-| `confirmCancel` | أكّد الإلغاء |
+| `cancelTitle` | إلغاء الحجز؟ |
+| `cancelText` | يُلغى موعدك ويُحذف من التقويم، ويصلك بريد بذلك. تقدر تحجز موعداً آخر متى شئت. |
 | `keep` | أبقِ الموعد |
 | `rescheduled` | تغيّر موعدك. أرسلنا التفاصيل الجديدة إلى بريدك. |
 | `cancelled` | أُلغي حجزك. نرحّب بك في موعد آخر متى شئت. |
@@ -698,6 +721,8 @@ The page and the picker (`content/copy/ar.ts`, `booking`):
 | `invalid` | هذا الرابط غير صالح. راسلنا على واتساب ونساعدك. |
 | `bookAgain` | احجز موعداً جديداً |
 | `whatsappMessage` | مرحباً، أرغب بحجز استشارة مجانية. |
+
+The booking settings (§11.2) add two content fields the booker reads: the **host**, an author record (the seed's is Dhia's), and the **blurb** under the consultation's name: «نجاوب على أسئلتك ونساعدك تبدأ» / "We answer your questions and help you start".
 
 The e-mails (`content/copy/ar.ts`, `bookingEmail`): `{name}` is the merchant, `{title}` the consultation's name from the booking settings, `{when}` the time in Riyadh.
 
@@ -959,7 +984,7 @@ Amended 2026-09-13 (Dhia's design review, same copy): the lifestyle photo sits b
 
 **API `POST /api/contact`:** validates with the same zod schema; rejects if the honeypot is filled (returns 200 to fool bots); verifies Turnstile server-side when configured; rate-limits 5 requests per IP per 10 minutes (in-memory map; note the single-instance assumption); sends the email through Resend (§4.17) to the contact address in the site settings (amended 2026-09-17, ADR-052); returns `{ ok: true }` or `{ ok: false, error }` with 400/429/500. Never logs message bodies in production.
 
-**Booking card:** while the booking switch (the `booking` global, §11.2) is on, the card holds the booking picker itself, the same island as `/book`, and a booking made here records the contact page as its origin; while it is off, the button opens WhatsApp with the §4.11 prefilled message. Amended 2026-09-19 (ADR-062): the Cal.com link and the `bookingUrl` setting are gone.
+**Booking card:** while the booking switch (the `booking` global, §11.2) is on, the card is the booker itself in its `inline` mode (ADR-063): the event pane collapsed to a header row (the host's photo, the card's title, the host's name and role, the length, Google Meet and the Riyadh clock in one line) in place of the old card's title and text, the month grid under it, the day's times unfolding under the grid on a pick and the page scrolling to them, then the form and the success view inside the same card; the island mounts near the viewport over a server-rendered stand-in, and a booking made here records the contact page as its origin. While the switch is off, the card keeps its icon, title and text, and the button opens WhatsApp with the §4.11 prefilled message. Amended 2026-09-19 (ADR-062): the Cal.com link and the `bookingUrl` setting are gone.
 
 Amended 2026-09-13 (ADR-031): the section is the `contact` block of the contact page in the CMS (card titles and the booking card are content; the form's strings stay in code) and sits on the surface tone like the first section of every page.
 
@@ -2136,31 +2161,54 @@ Every interface string of the English site, key for key with the Arabic bank of 
 | `booking.title` | Book a free consultation |
 | `booking.lead` | 30 minutes on Google Meet to answer your questions and help you start. |
 | `booking.riyadhTime` | Riyadh time |
+| `booking.timezone` | Riyadh time (GMT+3) |
+| `booking.googleMeet` | Google Meet |
+| `booking.duration` | {minutes} minutes |
 | `booking.pickDay` | Pick a day |
 | `booking.pickTime` | Pick a time |
-| `booking.duration` | {minutes} minutes |
+| `booking.previousMonth` | Previous month |
+| `booking.nextMonth` | Next month |
+| `booking.today` | Today |
+| `booking.loadingDays` | Loading the days |
 | `booking.loadingSlots` | Loading the times |
 | `booking.noSlots` | No times free on this day. Pick another day. |
 | `booking.closed` | Closed: {reason} |
+| `booking.confirm` | Confirm |
+| `booking.back` | Back |
 | `booking.chosen` | Your slot: {day}, {time} |
-| `booking.change` | Change the time |
-| `booking.note` | Note (optional) |
+| `booking.note` | Additional notes (optional) |
 | `booking.notePlaceholder` | What would you like to talk about? |
 | `booking.submit` | Confirm the booking |
 | `booking.submitting` | Booking |
 | `booking.taken` | That time was just taken. Pick another one. |
 | `booking.failure` | The booking did not go through. Try again or message us on WhatsApp. |
 | `booking.confirmedTitle` | Your consultation is booked |
-| `booking.confirmedText` | The details are in your inbox: the meeting link and the link to change or cancel. |
+| `booking.confirmedText` | The details are in your inbox. |
+| `booking.what` | What |
+| `booking.when` | When |
+| `booking.who` | Who |
+| `booking.where` | Where |
+| `booking.notes` | Your notes |
 | `booking.meetLink` | Meeting link |
-| `booking.linkFollows` | The meeting link reaches your inbox before the time. |
-| `booking.addToCalendar` | Add to your calendar |
+| `booking.linkFollows` | The link reaches your inbox before the time. |
+| `booking.addToCalendar` | Add to Calendar |
+| `booking.googleCalendar` | Google Calendar |
+| `booking.outlookCalendar` | Outlook Calendar |
+| `booking.appleCalendar` | Apple Calendar |
+| `booking.needChange` | Need to make a change? |
 | `booking.manageLink` | Change or cancel |
 | `booking.manageTitle` | Your booking |
 | `booking.manageLead` | Change the time of your consultation or cancel it here. |
+| `booking.status.booked` | Booked |
+| `booking.status.rescheduled` | Rescheduled |
+| `booking.status.cancelled` | Cancelled |
+| `booking.status.completed` | Completed |
+| `booking.current` | Your current time |
 | `booking.reschedule` | Change the time |
+| `booking.confirmReschedule` | Confirm the change |
 | `booking.cancel` | Cancel the booking |
-| `booking.confirmCancel` | Confirm the cancellation |
+| `booking.cancelTitle` | Cancel the booking? |
+| `booking.cancelText` | Your consultation is cancelled and leaves the calendar; an e-mail confirms it. You can book another time whenever you like. |
 | `booking.keep` | Keep the booking |
 | `booking.rescheduled` | Your time has changed. The new details are in your inbox. |
 | `booking.cancelled` | Your booking is cancelled. Book another time whenever you like. |

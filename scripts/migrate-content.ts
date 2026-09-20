@@ -14,7 +14,7 @@ import nextEnv from '@next/env';
 import { convertMarkdownToLexical, editorConfigFactory } from '@payloadcms/richtext-lexical';
 import { getPayload, type Payload } from 'payload';
 import { blogAuthor, blogHubs, blogPostBody, blogPosts } from '../src/content/seed/blog';
-import { booking } from '../src/content/seed/booking';
+import { BOOKING_HOST_SLUG, booking } from '../src/content/seed/booking';
 import { bookingEn } from '../src/content/seed/en/booking';
 import { faq } from '../src/content/seed/faq';
 import { home } from '../src/content/seed/home';
@@ -425,32 +425,64 @@ async function ensureGlobals(payload: Payload): Promise<void> {
   }
 }
 
+/** The author record the booker shows as the host (ADR-063), seeded by the blog pass. */
+async function bookingHostId(payload: Payload): Promise<number | null> {
+  const { docs } = await payload.find({
+    collection: 'authors',
+    where: { slug: { equals: BOOKING_HOST_SLUG } },
+    limit: 1,
+    depth: 0,
+  });
+  return docs[0]?.id ?? null;
+}
+
 /**
  * The `booking` global (ADR-062): the seed's numbers and hours, the switch off, once; a
- * database that has the settings keeps them.
+ * database that has the settings keeps them. The host and the blurb (ADR-063) are added to
+ * a global saved before they existed (`--force` on a seeded database), never changed after.
  */
 async function ensureBooking(payload: Payload): Promise<void> {
   // An unsaved global reads its defaults with no id; a saved one has been someone's.
   const doc = await payload.findGlobal({ slug: 'booking', depth: 0 });
+  const host = await bookingHostId(payload);
   if (doc.id !== undefined) {
-    summary.skipped.push('global booking');
+    const missing = {
+      ...(doc.host || host === null ? {} : { host }),
+      ...(doc.blurb ? {} : { blurb: booking.blurb }),
+    };
+    if (Object.keys(missing).length === 0) {
+      summary.skipped.push('global booking');
+      return;
+    }
+    await payload.updateGlobal({ slug: 'booking', data: missing, context: CONTEXT });
+    if (!doc.blurb) {
+      await payload.updateGlobal({
+        slug: 'booking',
+        locale: 'en',
+        data: { blurb: bookingEn.blurb },
+        context: CONTEXT,
+      });
+    }
+    summary.created.push(`global booking ${Object.keys(missing).join(', ')}`);
     return;
   }
   await payload.updateGlobal({
     slug: 'booking',
     data: {
       ...booking,
+      host,
       hours: booking.hours.map((row) => ({ ...row, day: String(row.day) as '0' })),
       closedDates: [],
     },
     context: CONTEXT,
   });
-  // The English name lands here too: the field's per-locale default would make the English
-  // pass read it as already set and count a skip on a fresh database (the CI seed check).
+  // The English name and blurb land here too: the field's per-locale default would make the
+  // English pass read them as already set and count a skip on a fresh database (the CI seed
+  // check).
   await payload.updateGlobal({
     slug: 'booking',
     locale: 'en',
-    data: { title: bookingEn.title },
+    data: { title: bookingEn.title, blurb: bookingEn.blurb },
     context: CONTEXT,
   });
   summary.created.push('global booking');
@@ -786,7 +818,6 @@ async function main(): Promise<number> {
     await ensureProduct(payload, product);
   }
   await ensureGlobals(payload);
-  await ensureBooking(payload);
   await ensureHome(payload);
   for (const page of pages) {
     // A seeded slug is a designed page (its route folder is in code) or a plain `/[slug]`
@@ -801,6 +832,8 @@ async function main(): Promise<number> {
   for (const [i, item] of testimonials.entries()) await ensureTestimonial(payload, item, i + 1);
   for (const [i, item] of integrations.entries()) await ensureIntegration(payload, item, i + 1);
   await ensureBlog(payload);
+  // After the blog: the booking's host is the author record the blog pass seeds (ADR-063).
+  await ensureBooking(payload);
   // The English values of every localised field, once the Arabic documents exist (ADR-043).
   const english = await ensureEnglish(payload);
   summary.created.push(...english.written);

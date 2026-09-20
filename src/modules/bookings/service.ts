@@ -10,6 +10,7 @@ import {
 import { type Locale, localePath } from '@/lib/i18n';
 import { riyadh } from '@/lib/riyadh';
 import type { BookingStatus } from '@/modules/bookings/status';
+import { daysOfMonth, monthDays, withinMonths } from '@/modules/bookings/days-of-month';
 import type { CalendarClient } from '@/modules/bookings/google';
 import {
   daySlots,
@@ -139,6 +140,34 @@ export async function slotsFor(
     return { ok: false, reason: 'out_of_range' };
   }
   return { ok: true, slots: await freeOn(ports, settings, day) };
+}
+
+export type DaysResult =
+  | { ok: true; days: Record<string, number> }
+  | { ok: false; reason: 'disabled' | 'out_of_range' };
+
+/**
+ * `GET /api/bookings/days?month=`: the month's days within the horizon with their free
+ * counts from the rules and the month's bookings alone (ADR-063), or why there is nothing
+ * to ask for. The calendar is not asked: the day click does that.
+ */
+export async function daysFor(
+  ports: BookingPorts,
+  month: string,
+  locale: Locale,
+): Promise<DaysResult> {
+  const settings = await ports.store.settings(locale);
+  if (!settings.enabled) return { ok: false, reason: 'disabled' };
+  const rules = rulesOf(settings);
+  const now = ports.now();
+  if (!withinMonths(month, rules, now)) return { ok: false, reason: 'out_of_range' };
+  const days = daysOfMonth(month);
+  const gap = settings.bufferMinutes * MINUTE_MS;
+  const rows = await ports.store.activeBetween(
+    new Date(riyadhInstant(days[0]!).getTime() - gap - settings.durationMinutes * MINUTE_MS),
+    new Date(riyadhInstant(days.at(-1)!, 24 * 60).getTime() + gap),
+  );
+  return { ok: true, days: monthDays({ month, rules, bookings: rows.map(intervalOf), now }) };
 }
 
 export type BookingState = 'active' | 'cancelled' | 'past';

@@ -14,7 +14,7 @@ import { env } from '@/lib/env';
 import { type Locale, localePath } from '@/lib/i18n';
 import { displayPhone } from '@/lib/phone';
 import { whatsappUrl } from '@/lib/utm';
-import { BookingPicker, getBooking } from '@/modules/bookings';
+import { Booker, getBooking } from '@/modules/bookings';
 import { ContactFormLoader } from '@/modules/contact/contact-form-loader';
 
 function ContactCard({
@@ -58,8 +58,9 @@ interface ContactSectionProps {
 
 /**
  * The contact section (BRD 6.9) as a page block: the form card at the start (its strings
- * are interface copy in code, ADR-031), the contact cards and the booking card at the end;
- * on phones the cards come first (WhatsApp is the fastest path), then booking, then the form.
+ * are interface copy in code, ADR-031), the contact cards and the booking card at the end
+ * (the booker inline while the switch is on, ADR-063; the WhatsApp way otherwise); on
+ * phones the cards come first (WhatsApp is the fastest path), then booking, then the form.
  */
 export async function ContactSection({
   block,
@@ -160,25 +161,31 @@ export async function ContactSection({
                 ))}
               </ul>
             </Card>
-            <Card
-              className="flex flex-col gap-4 bg-accent-tint/60 p-6"
-              data-booking=""
-              data-booking-mode={booking.enabled ? 'inline' : 'whatsapp'}
-            >
-              <span className="grid size-11 place-items-center rounded-pill bg-surface text-primary">
-                <Icon icon={CalendarCheck} size={22} />
-              </span>
-              <div className="flex flex-col gap-1">
-                <h2 className="text-h4 text-text">{block.booking.title}</h2>
-                <p className="text-body text-text-muted">{block.booking.text}</p>
-              </div>
-              {booking.enabled ? (
-                <BookingPicker
+            {booking.enabled ? (
+              // The booker inline (ADR-063): its own card, the header row in place of the
+              // card's title, the times unfolding under the grid on a pick.
+              <div data-booking="" data-booking-mode="inline">
+                <Booker
                   locale={locale}
                   settings={booking}
                   page={localePath(locale, '/contact')}
+                  mode="inline"
+                  heading={block.booking.title}
                 />
-              ) : (
+              </div>
+            ) : (
+              <Card
+                className="flex flex-col gap-4 bg-accent-tint/60 p-6"
+                data-booking=""
+                data-booking-mode="whatsapp"
+              >
+                <span className="grid size-11 place-items-center rounded-pill bg-surface text-primary">
+                  <Icon icon={CalendarCheck} size={22} />
+                </span>
+                <div className="flex flex-col gap-1">
+                  <h2 className="text-h4 text-text">{block.booking.title}</h2>
+                  <p className="text-body text-text-muted">{block.booking.text}</p>
+                </div>
                 <Button asChild className="self-start" trailingArrow={false}>
                   <a
                     href={bookingHref}
@@ -191,8 +198,8 @@ export async function ContactSection({
                     {block.booking.button}
                   </a>
                 </Button>
-              )}
-            </Card>
+              </Card>
+            )}
           </div>
         </div>
       </Container>

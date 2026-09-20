@@ -52,7 +52,7 @@ const BIDI_MARKS = /[‎‏]/g;
 /**
  * The banks' `Intl` tags (BRD 3.9): Gregorian, Western digits in both languages. The copy
  * banks read their `dateLocale` from here, and a client that knows only the content locale
- * (the picker island, the panel's reminder) picks the tag by it without a bank of its own.
+ * (the booker island, the panel's reminder) picks the tag by it without a bank of its own.
  */
 export const DATE_LOCALES = { ar: 'ar-u-nu-latn-ca-gregory', en: 'en-GB' } as const;
 export type DateLocaleKey = keyof typeof DATE_LOCALES;
@@ -98,21 +98,17 @@ export function riyadhSpanLabel(start: Date, end: Date, locale: DateLocaleKey): 
   return `${riyadhDayLabel(start, tag)}${comma} ${riyadhTimeLabel(start, tag)}${joiner}${riyadhTimeLabel(end, tag)}`;
 }
 
-/** The month a day of the picker's strip belongs to: «سبتمبر 2026» / "September 2026". */
-export function riyadhMonthLabel(date: Date, dateLocale: string): string {
-  return new Intl.DateTimeFormat(dateLocale, { timeZone: RIYADH, month: 'long', year: 'numeric' })
+/**
+ * The day without its year, as the booker's times pane and event pane say it (ADR-063):
+ * «الاثنين، 21 سبتمبر» / "Monday 21 September".
+ */
+export function riyadhDayShortLabel(date: Date, dateLocale: string): string {
+  return new Intl.DateTimeFormat(dateLocale, {
+    timeZone: RIYADH,
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+  })
     .format(date)
     .replaceAll(BIDI_MARKS, '');
-}
-
-/** The strip's chip: the short weekday and the day of the month, on the Riyadh clock. */
-export function riyadhChipLabel(date: Date, dateLocale: string): { weekday: string; day: string } {
-  const pieces = new Intl.DateTimeFormat(dateLocale, {
-    timeZone: RIYADH,
-    weekday: 'short',
-    day: 'numeric',
-  }).formatToParts(date);
-  const piece = (type: string) =>
-    pieces.find((p) => p.type === type)?.value.replaceAll(BIDI_MARKS, '') ?? '';
-  return { weekday: piece('weekday'), day: piece('day') };
 }

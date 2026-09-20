@@ -412,6 +412,29 @@ wired.
    missing), or add the row by hand from BRD §4.16. Without it the page still answers with
    the bank's title and stays out of the sitemap.
 
+**The booker (ADR-063).** `/book` and the contact card show one card in three panes: who
+the merchant meets, the month grid, the day's times; then the form, then the success view
+with the add-to-calendar menu (Google, Outlook, Apple) and the way to the manage page. The
+grid reads the month's open days from `GET /api/bookings/days?month=` (the rules, the
+closed dates, the notice and the day's bookings; never the calendar), so a day can open in
+the grid and then show "no times" when the host is busy all day on Google; both routes
+answer with a minute's cache, which is why a slot taken a moment ago still answers 409 at
+the booking and returns the merchant to the times. A change to the booker's words is in
+`src/content/copy/{ar,en}.ts` (`booking`), BRD §4.19.
+
+**The host and the blurb (ADR-063).** The booking card's event pane shows who the merchant
+meets: Site → Booking names the **host**, an author record (Blog → Authors; the seed points
+at Dhia's, `dhia`), and the card reads the name, the role and the photo from that record in
+the page's language, so they are kept in one place. No photo on the record shows the
+initial in the accent tint until one is uploaded there. The **blurb** is the one line under
+the consultation's name («نجاوب على أسئلتك ونساعدك تبدأ» / "We answer your questions and
+help you start"), both languages side by side in the form; an empty blurb hides the line. A
+database seeded before these fields existed gets both from `pnpm content:migrate --force`.
+An empty blurb after that is a review-server artefact (a save of the global by a build that
+predates the column, before the merge, re-inserts the locales row without it; the same
+command fills it again); production runs the migration before the app, so the seed's fill
+stands. The calendar owner e-mail is a separate, technical field and stays what it was.
+
 **What the row's calendar state means.** `synced`: the event exists with its Meet link.
 `failed`: Google refused (the key, the delegation, the API off, an outage) or answered
 without a Meet link; the merchant's confirmation says the link follows, Dhia's says the

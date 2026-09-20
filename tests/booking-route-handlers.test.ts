@@ -51,6 +51,7 @@ vi.mock('@/modules/bookings/ports', () => ({
 const { POST: postBooking } = await import('@/app/api/bookings/route');
 const { GET: getManage, POST: postManage } = await import('@/app/api/bookings/manage/route');
 const { GET: getSlots } = await import('@/app/api/bookings/slots/route');
+const { GET: getDays } = await import('@/app/api/bookings/days/route');
 const { GET: getIcs } = await import('@/app/api/bookings/ics/route');
 
 const DAY = '2026-09-22';
@@ -179,5 +180,30 @@ describe('the booking routes catch their own failures (rule 18)', () => {
     };
     expect((await getSlots(request(`/api/bookings/slots?date=${DAY}`))).status).toBe(500);
     expect(logged[0]!.entry).toEqual({ msg: 'bookings: GET /api/bookings/slots failed (string)' });
+  });
+
+  it('the days route (ADR-063): the month with its counts cached a minute, a bad or out-of-range month a 400, a failed read a 500', async () => {
+    const res = await getDays(request('/api/bookings/days?month=2026-09'));
+    expect(res.status).toBe(200);
+    expect(res.headers.get('cache-control')).toBe('public, max-age=60');
+    const body = (await res.json()) as { ok: boolean; month: string; days: Record<string, number> };
+    expect(body.ok).toBe(true);
+    expect(body.month).toBe('2026-09');
+    expect(body.days[DAY]).toBe(12);
+    expect(body.days['2026-09-19']).toBeUndefined();
+    for (const month of ['2026-9', '2026-13', 'nope', '']) {
+      expect((await getDays(request(`/api/bookings/days?month=${month}`))).status, month).toBe(400);
+    }
+    const past = await getDays(request('/api/bookings/days?month=2026-08'));
+    expect(past.status).toBe(400);
+    await expect(past.json()).resolves.toEqual({ ok: false, error: 'out_of_range' });
+    ports.store.activeBetween = async () => {
+      throw drizzleFailure({ ...MERCHANT });
+    };
+    expect((await getDays(request('/api/bookings/days?month=2026-09'))).status).toBe(500);
+    expect(logged[0]!.entry).toEqual({
+      msg: 'bookings: GET /api/bookings/days failed (DrizzleQueryError)',
+    });
+    for (const line of wholeLog()) for (const value of PERSONAL) expect(line).not.toContain(value);
   });
 });

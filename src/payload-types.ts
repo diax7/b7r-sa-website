@@ -3455,6 +3455,14 @@ export interface Booking1 {
    */
   title: string;
   /**
+   * One line under the consultation name on the booking card: "We answer your questions and help you start". A few words.
+   */
+  blurb?: string | null;
+  /**
+   * Who the merchant meets: the name, the role and the photo come from their author record and show on the booking card.
+   */
+  host?: (number | null) | Author;
+  /**
    * How long each appointment lasts and where the slots fall in the day: 30.
    */
   durationMinutes: number;
@@ -3991,6 +3999,8 @@ export interface SiteSettingsSelect<T extends boolean = true> {
  */
 export interface BookingSelect<T extends boolean = true> {
   title?: T;
+  blurb?: T;
+  host?: T;
   durationMinutes?: T;
   bufferMinutes?: T;
   noticeHours?: T;

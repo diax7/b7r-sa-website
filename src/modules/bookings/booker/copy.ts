@@ -1,8 +1,8 @@
 import type { SiteCopy } from '@/content/copy';
 import { normalisePhone } from '@/lib/phone';
 
-/** The strings the picker reads: its own bank section, and the contact form's field labels and rules. */
-export interface PickerCopy {
+/** The strings the booker reads: its own bank section, and the contact form's field labels and rules. */
+export interface BookerCopy {
   booking: SiteCopy['booking'];
   labels: SiteCopy['contactForm']['labels'];
   placeholders: SiteCopy['contactForm']['placeholders'];
@@ -21,21 +21,29 @@ export const EMAIL_MAX = 254;
 export const NOTE_MAX = 1000;
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-export type PickerField = 'name' | 'phone' | 'email';
-export type PickerValues = Record<PickerField | 'note', string>;
-export type PickerErrors = Partial<Record<PickerField, string>>;
+export type BookerField = 'name' | 'phone' | 'email';
+export type BookerValues = Record<BookerField | 'note', string>;
+export type BookerErrors = Partial<Record<BookerField, string>>;
 
 /**
- * Client-side rules for the picker's form (ADR-062): the contact form's messages under the
+ * Client-side rules for the booker's form (ADR-062): the contact form's messages under the
  * name, the phone and the e-mail; the note is capped by its box. Free of zod, so the
  * island's chunk stays small; the API re-validates with `bookingBodySchema`.
  */
-export function validatePicker(values: PickerValues, copy: PickerCopy): PickerErrors {
-  const errors: PickerErrors = {};
+export function validateBooker(values: BookerValues, copy: BookerCopy): BookerErrors {
+  const errors: BookerErrors = {};
   const name = values.name.trim();
   if (name.length < NAME_MIN || name.length > NAME_MAX) errors.name = copy.validation.name;
   if (!normalisePhone(values.phone)) errors.phone = copy.validation.phone;
   const email = values.email.trim();
   if (!EMAIL.test(email) || email.length > EMAIL_MAX) errors.email = copy.validation.email;
   return errors;
+}
+
+/** `{minutes}` and the like, filled. */
+export function fill(template: string, values: Record<string, string | number>): string {
+  return Object.entries(values).reduce(
+    (out, [key, value]) => out.replaceAll(`{${key}}`, String(value)),
+    template,
+  );
 }
