@@ -85,8 +85,9 @@ test.describe('designer and profit calculator (BRD 6.4.3)', () => {
     browserName,
   }) => {
     // The designer shows every product in white (the tote in its beige): those fronts at the
-    // one mockup width. The strip on a phone fetches the black fronts at the same rung.
-    const MOCKUP = /-(white|beige)-front-[0-9a-f]+-1080\.(avif|webp)(\?|$)/;
+    // one mockup width. The strip on a phone fetches the black fronts at the same rung. The
+    // seed names a file `{slug}-{colour}-front.jpg`; a re-upload adds 8 hex (RUNBOOK, "Assets").
+    const MOCKUP = /-(white|beige)-front(-[0-9a-f]{8})?-1080\.(avif|webp)(\?|$)/;
     const mockups: string[] = [];
     page.on('request', (r) => {
       if (MOCKUP.test(r.url())) mockups.push(r.url());
