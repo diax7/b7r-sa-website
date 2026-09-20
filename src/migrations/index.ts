@@ -33,6 +33,7 @@ import * as migration_20260919_170624_connections_umami from './20260919_170624_
 import * as migration_20260919_183008_messages from './20260919_183008_messages';
 import * as migration_20260919_195745_bookings from './20260919_195745_bookings';
 import * as migration_20260919_195800_bookings_start_active from './20260919_195800_bookings_start_active';
+import * as migration_20260920_001023_booking_host from './20260920_001023_booking_host';
 
 export const migrations = [
   {
@@ -209,5 +210,10 @@ export const migrations = [
     up: migration_20260919_195800_bookings_start_active.up,
     down: migration_20260919_195800_bookings_start_active.down,
     name: '20260919_195800_bookings_start_active',
+  },
+  {
+    up: migration_20260920_001023_booking_host.up,
+    down: migration_20260920_001023_booking_host.down,
+    name: '20260920_001023_booking_host',
   },
 ];

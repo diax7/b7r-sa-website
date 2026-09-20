@@ -65,7 +65,9 @@ function minutes(
  * The booking settings (BRD 11.2 as rewritten by ADR-062): a place on the site with its own
  * switch and its own revalidation, admin only like the site settings. The slot arithmetic in
  * `slots.ts` reads it through `getBooking()`; the seed's numbers are the defaults, so a
- * database that has never saved it reads the same values.
+ * database that has never saved it reads the same values. The booker's event pane (ADR-063)
+ * reads the host from the author record the `host` relationship names (the one place the
+ * name, the role and the photo are kept) and the `blurb` under the consultation's name.
  */
 export const Booking: GlobalConfig = {
   slug: BOOKING,
@@ -100,6 +102,20 @@ export const Booking: GlobalConfig = {
         localized: true,
         defaultValue: ({ locale }) => (locale === 'en' ? bookingEn.title : seed.title),
         label: { ar: 'اسم الاستشارة', en: 'Consultation name' },
+      },
+      {
+        name: 'blurb',
+        type: 'text',
+        localized: true,
+        maxLength: 80,
+        defaultValue: ({ locale }) => (locale === 'en' ? bookingEn.blurb : seed.blurb),
+        label: { ar: 'سطر تعريفي', en: 'Blurb' },
+      },
+      {
+        name: 'host',
+        type: 'relationship',
+        relationTo: 'authors',
+        label: { ar: 'مقدّم الاستشارة', en: 'Host' },
       },
       {
         type: 'row',

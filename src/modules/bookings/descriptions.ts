@@ -10,6 +10,14 @@ export const BOOKING_DESCRIPTIONS: Described = {
     ar: 'يظهر عنواناً في صفحة الحجز وفي بريد التأكيد: «استشارة مجانية، 30 دقيقة».',
     en: 'The heading of the booking page and the subject of the confirmation e-mail: "Free consultation, 30 minutes".',
   },
+  blurb: {
+    ar: 'يظهر تحت اسم الاستشارة في بطاقة الحجز: «نجاوب على أسئلتك ونساعدك تبدأ». كلمات قليلة.',
+    en: 'One line under the consultation name on the booking card: "We answer your questions and help you start". A few words.',
+  },
+  host: {
+    ar: 'من يقابله التاجر: اسمه وصفته وصورته تُقرأ من سجلّه في الكتّاب وتظهر في بطاقة الحجز.',
+    en: 'Who the merchant meets: the name, the role and the photo come from their author record and show on the booking card.',
+  },
   durationMinutes: {
     ar: 'تحدّد طول كل موعد وموضع المواعيد في اليوم: 30 دقيقة.',
     en: 'How long each appointment lasts and where the slots fall in the day: 30.',

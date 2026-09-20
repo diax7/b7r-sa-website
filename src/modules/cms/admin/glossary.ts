@@ -465,6 +465,14 @@ export const GLOSSARY: readonly GlossaryRow[] = [
   },
   {
     area: 'inbox',
+    en: 'host (who the merchant meets)',
+    ar: 'مقدّم الاستشارة',
+    latin: false,
+    refused: ['المستضيف', 'المستشار'],
+    note: 'The author record the booking card shows with its photo (ADR-063); kept apart from the calendar owner, an account.',
+  },
+  {
+    area: 'inbox',
     en: 'Meet link',
     ar: 'رابط Meet',
     latin: true,

@@ -412,6 +412,16 @@ wired.
    missing), or add the row by hand from BRD §4.16. Without it the page still answers with
    the bank's title and stays out of the sitemap.
 
+**The host and the blurb (ADR-063).** The booking card's event pane shows who the merchant
+meets: Site → Booking names the **host**, an author record (Blog → Authors; the seed points
+at Dhia's, `dhia`), and the card reads the name, the role and the photo from that record in
+the page's language, so they are kept in one place. No photo on the record shows the
+initial in the accent tint until one is uploaded there. The **blurb** is the one line under
+the consultation's name («نجاوب على أسئلتك ونساعدك تبدأ» / "We answer your questions and
+help you start"), both languages side by side in the form. A database seeded before these
+fields existed gets both from `pnpm content:migrate --force`; the calendar owner e-mail is a
+separate, technical field and stays what it was.
+
 **What the row's calendar state means.** `synced`: the event exists with its Meet link.
 `failed`: Google refused (the key, the delegation, the API off, an outage) or answered
 without a Meet link; the merchant's confirmation says the link follows, Dhia's says the

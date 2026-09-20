@@ -43,13 +43,27 @@ export const CLOCK_TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
 const weekday = z.int().min(0).max(6);
 
 /**
+ * The host as the booker's event pane shows them (ADR-063): the author record's name and
+ * role in the page's language, and its photo when it has one (the initials disc otherwise).
+ */
+export const BookingHostSchema = z.object({
+  name: nonEmpty,
+  role: z.string(),
+  photo: z.string().nullable(),
+});
+export type BookingHost = z.infer<typeof BookingHostSchema>;
+
+/**
  * The booking settings (BRD 11.2 as rewritten by ADR-062): the switch, the consultation's
- * name, the slot arithmetic (minutes and days), the weekly hours and the closed dates, all
- * in Riyadh time, and the Workspace user whose calendar takes the events.
+ * name, the host and the blurb of the event pane (ADR-063), the slot arithmetic (minutes and
+ * days), the weekly hours and the closed dates, all in Riyadh time, and the Workspace user
+ * whose calendar takes the events.
  */
 export const BookingSettingsSchema = z.object({
   enabled: z.boolean(),
   title: nonEmpty,
+  blurb: z.string(),
+  host: BookingHostSchema.nullable(),
   durationMinutes: z.int().min(10).max(240),
   bufferMinutes: z.int().min(0).max(120),
   noticeHours: z.int().min(0).max(336),
