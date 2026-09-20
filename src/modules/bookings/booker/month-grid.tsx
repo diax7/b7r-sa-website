@@ -44,6 +44,8 @@ export interface MonthGridProps {
   copy: BookerCopy;
   dir: 'ltr' | 'rtl';
   idPrefix: string;
+  /** The times sit under the grid at every width (the contact card): no blank sixth row. */
+  compact?: boolean;
   onSelect(day: string): void;
   onMonth(month: string): void;
 }
@@ -72,6 +74,7 @@ export function MonthGrid({
   copy,
   dir,
   idPrefix,
+  compact,
   onSelect,
   onMonth,
 }: MonthGridProps) {
@@ -177,7 +180,7 @@ export function MonthGrid({
               <div
                 key={`${month}-blank`}
                 aria-hidden="true"
-                className="grid grid-cols-7 max-md:hidden"
+                className={cn('grid grid-cols-7', compact ? 'hidden' : 'max-md:hidden')}
               >
                 {row.map((_, c) => (
                   <div key={weekdays[c]?.long} className={DAY_CELL} />

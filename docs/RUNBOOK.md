@@ -428,9 +428,11 @@ at Dhia's, `dhia`), and the card reads the name, the role and the photo from tha
 the page's language, so they are kept in one place. No photo on the record shows the
 initial in the accent tint until one is uploaded there. The **blurb** is the one line under
 the consultation's name («نجاوب على أسئلتك ونساعدك تبدأ» / "We answer your questions and
-help you start"), both languages side by side in the form. A database seeded before these
-fields existed gets both from `pnpm content:migrate --force`; the calendar owner e-mail is a
-separate, technical field and stays what it was.
+help you start"), both languages side by side in the form; an empty blurb hides the line. A
+database seeded before these fields existed gets both from `pnpm content:migrate --force`
+(a save of the global by a build that predates the field, the review server before the
+merge for one, empties the blurb again, and the same command fills it); the calendar owner
+e-mail is a separate, technical field and stays what it was.
 
 **What the row's calendar state means.** `synced`: the event exists with its Meet link.
 `failed`: Google refused (the key, the delegation, the API off, an outage) or answered

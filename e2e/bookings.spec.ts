@@ -314,7 +314,6 @@ test.describe('the booker (ADR-063)', () => {
     // The stand-in is the real event pane: the host, the title, the blurb, the meta rows.
     expect(book).toContain('data-booking-stand-in=""');
     expect(book).toContain('data-booking-host=""');
-    expect(book).toContain('data-booking-blurb=""');
     expect(book).toContain('توقيت الرياض (GMT+3)');
     expect(book).toContain('data-booking-days="loading"');
     const en = await (await request.get('/en/book')).text();

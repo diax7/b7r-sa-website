@@ -38,7 +38,8 @@ function MonthGridStandIn({
   month,
   today,
   copy,
-}: Pick<BookerStandInProps, 'month' | 'today' | 'copy'>) {
+  mode,
+}: Pick<BookerStandInProps, 'month' | 'today' | 'copy' | 'mode'>) {
   const weekdays = weekdayNames(copy.dateLocale);
   return (
     <div className="flex flex-col gap-3" data-booking-calendar="">
@@ -76,7 +77,10 @@ function MonthGridStandIn({
         {monthRows(month).map((row) => (
           <div
             key={row.find(Boolean)?.key ?? `${month}-blank`}
-            className={cn('grid grid-cols-7', !row.some(Boolean) && 'max-md:hidden')}
+            className={cn(
+              'grid grid-cols-7',
+              !row.some(Boolean) && (mode === 'inline' ? 'hidden' : 'max-md:hidden'),
+            )}
           >
             {row.map((cell, c) =>
               cell ? (
@@ -158,7 +162,7 @@ export function BookerStandIn({ mode, copy, settings, heading, month, today }: B
       <div className={PANES[mode]}>
         <EventPane settings={settings} copy={copy} mode={mode} {...(heading ? { heading } : {})} />
         <div className={CALENDAR_PANE[mode]}>
-          <MonthGridStandIn month={month} today={today} copy={copy} />
+          <MonthGridStandIn month={month} today={today} copy={copy} mode={mode} />
         </div>
         {mode === 'page' && <TimesStandIn mode={mode} copy={copy} />}
       </div>

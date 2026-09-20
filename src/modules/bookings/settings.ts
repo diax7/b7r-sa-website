@@ -25,7 +25,8 @@ export function toBookingSettings(doc: BookingDoc): BookingSettings {
   return BookingSettingsSchema.parse({
     enabled: doc.enabled === true,
     title: doc.title || seed.title,
-    blurb: doc.blurb ?? seed.blurb,
+    // Empty hides the line: the seed's blurb is Arabic and would show on the English page.
+    blurb: doc.blurb ?? '',
     host: hostOf(doc.host),
     durationMinutes: doc.durationMinutes ?? seed.durationMinutes,
     bufferMinutes: doc.bufferMinutes ?? seed.bufferMinutes,

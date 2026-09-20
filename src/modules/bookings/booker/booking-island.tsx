@@ -238,6 +238,7 @@ export function BookingIsland({
                     copy={copy}
                     dir={htmlDir(locale)}
                     idPrefix={id}
+                    compact={mode === 'inline'}
                     onSelect={calendar.selectDay}
                     onMonth={calendar.turnMonth}
                   />
