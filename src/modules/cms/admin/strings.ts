@@ -472,16 +472,14 @@ export const adminStrings = {
     },
     /**
      * The inbox card (ADR-061, ADR-062): the new messages and the newest three, today's
-     * bookings and the next three; the two counts added are the sidebar's badge, whose
-     * sentence is `waiting`.
+     * bookings and the next three; the two counts are the sidebar's badges on Messages
+     * and on Bookings, which read the same two sentences.
      */
     inbox: {
       title: 'Inbox',
       newMessages: (n: number) =>
         n === 0 ? 'No new messages' : `${n} new message${n === 1 ? '' : 's'}`,
       link: 'All messages',
-      waiting: (n: number) =>
-        n === 0 ? 'Nothing waiting in the inbox' : `${n} waiting in the inbox`,
       todayBookings: (n: number) =>
         n === 0 ? 'No bookings today' : `${n} booking${n === 1 ? '' : 's'} today`,
       bookingsLink: 'All bookings',
@@ -1031,10 +1029,6 @@ export const adminStringsAr: AdminStrings = {
               many: 'رسالة جديدة',
             }),
       link: 'كل الرسائل',
-      waiting: (n) =>
-        n === 0
-          ? 'لا شيء بانتظارك في الوارد'
-          : `${arabicCount(n, { one: 'عنصر واحد', two: 'عنصران', few: 'عناصر', many: 'عنصراً' })} بانتظارك في الوارد`,
       todayBookings: (n) =>
         n === 0
           ? 'لا حجوزات اليوم'

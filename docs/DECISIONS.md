@@ -2656,6 +2656,21 @@ two scopes; paste the key on a Google Calendar connection and Test it; set the c
 owner's address and switch the booking on (RUNBOOK "Bookings"). A leak is a key rotation
 in the Cloud console, never a row edit.
 
+**Amendment, 2026-09-22: each inbox number on its own entry.** ADR-062 hung one badge on
+Messages carrying the new messages and today's bookings added, its sentence "{n} waiting in
+the inbox". On a panel with no message at all and one booking today that reads as a red mark
+over an empty list: the number sends the reader to the wrong screen, and a count of one at 11
+px is taken for a warning glyph rather than a figure (Dhia, 2026-09-22, on the Messages list
+showing "No Results" under a badge). Two badges replace it (ADR-058's rule 14 unchanged, the
+count of kinds now five): `newMessages` on Messages and `todayBookings` on Bookings, both red,
+each reading the Inbox card's own line (`dashboard.inbox.newMessages`,
+`dashboard.inbox.todayBookings`) so the badge and the card still say one number in one
+sentence. `inboxReading` keeps both counts for the card and loses `waiting`; the sidebar reads
+`newMessages()` and `todayBookings()` in `dashboard/readers.ts`, one `count` each with the
+user's access, never the card's preview `find`s, and a user who cannot see Bookings runs no
+bookings query. The sentence `dashboard.inbox.waiting` and the card's
+`data-admin-inbox-waiting` hook go with it, in both string trees.
+
 ## ADR-063: The booker: one card in three panes, the days endpoint, the split confirm, the add-to-calendar menu, the host as the author record (2026-09-20)
 
 **Context.** PR 4b (ADR-062) shipped the mechanism behind a functional but flat picker: a

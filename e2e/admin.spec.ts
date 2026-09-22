@@ -1949,12 +1949,8 @@ test.describe('CMS admin', () => {
       await expect(card.locator('[data-admin-hue]')).toHaveCount(1);
       const newBefore = Number(await card.getAttribute('data-admin-inbox-new'));
       expect(newBefore).toBeGreaterThanOrEqual(1);
-      // The badge adds today's bookings to the new messages (ADR-062); the card says which.
-      const todayBefore = Number(await card.getAttribute('data-admin-inbox-today'));
-      await expect(card).toHaveAttribute(
-        'data-admin-inbox-waiting',
-        String(newBefore + todayBefore),
-      );
+      // The badge on Messages is the new messages alone; today's bookings have their own
+      // badge on Bookings (ADR-062 amended), so an empty list never carries a badge.
       await expect(card.locator('[data-admin-figure="new-messages"]')).toHaveText(
         newBefore === 1 ? '1 new message' : `${newBefore} new messages`,
       );
@@ -1966,7 +1962,7 @@ test.describe('CMS admin', () => {
       await expect(row).toContainText('أرغب بربط متجري بمنصة بحر برنت');
       await expect(row).toContainText('…');
       await expect(row).not.toContainText(`؟ ${stamp}`);
-      expect(await badgeCount(), 'the badge').toBe(newBefore + todayBefore);
+      expect(await badgeCount(), 'the badge').toBe(newBefore);
       await expect(page.locator('#nav-messages [data-admin-badge]')).toHaveAttribute(
         'data-admin-badge',
         'error',
@@ -2019,7 +2015,7 @@ test.describe('CMS admin', () => {
       await expect(listRow.locator('td.cell-status [data-admin-status="handled"]')).toHaveText(
         'Handled',
       );
-      expect(await badgeCount(), 'the badge after').toBe(newBefore - 1 + todayBefore);
+      expect(await badgeCount(), 'the badge after').toBe(newBefore - 1);
       await page.goto('/admin');
       await expect(card).toHaveAttribute('data-admin-inbox-new', String(newBefore - 1));
       if (newBefore === 1) {

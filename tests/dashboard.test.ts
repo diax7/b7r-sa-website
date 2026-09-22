@@ -8,8 +8,10 @@ import {
   INBOX_PREVIEW,
   inboxReading,
   missingEnglish,
+  newMessages,
   publishedInRange,
   rangeStart,
+  todayBookings,
 } from '@/modules/cms/admin/dashboard/readers';
 import { excerptOf } from '@/modules/inbox/excerpt';
 import {
@@ -420,7 +422,7 @@ describe('the content readers (ADR-059)', () => {
     });
   });
 
-  it("reads the inbox with the user's access: the new messages and the newest three (ADR-061), today's bookings and the next three (ADR-062), the badge's sum", async () => {
+  it("reads the inbox with the user's access: the new messages and the newest three (ADR-061), today's bookings and the next three (ADR-062)", async () => {
     const { payload, calls } = fakePayload({
       find: (args) =>
         args['collection'] === 'messages'
@@ -446,7 +448,6 @@ describe('the content readers (ADR-059)', () => {
         { id: 7, name: 'Nora', start: '2026-09-18T07:00:00.000Z', status: 'booked' },
         { id: 8, name: 'سعد', start: '2026-09-19T08:00:00.000Z', status: 'rescheduled' },
       ],
-      waiting: 3,
     });
     expect(calls).toHaveLength(3);
     expect(calls[0]!.args).toMatchObject({
@@ -490,6 +491,41 @@ describe('the content readers (ADR-059)', () => {
       overrideAccess: false,
     });
     expect(INBOX_PREVIEW).toBe(3);
+  });
+
+  it("counts the two inbox numbers on their own for the sidebar's badges, one count each with the user's access (ADR-062 amended)", async () => {
+    const { payload, calls } = fakePayload({
+      count: (args) => (args['collection'] === 'messages' ? 4 : 1),
+    });
+    await expect(newMessages(payload, { user })).resolves.toBe(4);
+    await expect(todayBookings(payload, { user, now: NOW })).resolves.toBe(1);
+    // The same queries the inbox reading runs, so the badge and the card show one number.
+    expect(calls).toEqual([
+      {
+        op: 'count',
+        args: {
+          collection: 'messages',
+          where: { status: { equals: 'new' } },
+          user,
+          overrideAccess: false,
+        },
+      },
+      {
+        op: 'count',
+        args: {
+          collection: 'bookings',
+          where: {
+            and: [
+              { status: { in: ['booked', 'rescheduled'] } },
+              { start: { greater_than_equal: '2026-09-17T21:00:00.000Z' } },
+              { start: { less_than: '2026-09-18T21:00:00.000Z' } },
+            ],
+          },
+          user,
+          overrideAccess: false,
+        },
+      },
+    ]);
   });
 
   it('cuts a message to its first words for the card: one line, at a word, an ellipsis', () => {

@@ -215,20 +215,29 @@ describe('the badge rule: a number only where it asks for action', () => {
     expect(badgeFor('failedRuns', 3)).toEqual({ kind: 'failedRuns', count: 3, tone: 'error' });
     expect(badgeFor('drafts', 1)).toEqual({ kind: 'drafts', count: 1, tone: 'warning' });
     expect(badgeFor('overLimit', 2)).toEqual({ kind: 'overLimit', count: 2, tone: 'error' });
-    expect(badgeFor('inbox', 4)).toEqual({ kind: 'inbox', count: 4, tone: 'error' });
+    expect(badgeFor('newMessages', 4)).toEqual({ kind: 'newMessages', count: 4, tone: 'error' });
+    expect(badgeFor('todayBookings', 1)).toEqual({
+      kind: 'todayBookings',
+      count: 1,
+      tone: 'error',
+    });
     for (const n of [0, -1, 1.5, Number.NaN])
       expect(badgeFor('drafts', n), String(n)).toBeUndefined();
     expect(BADGE_TONE).toEqual({
       failedRuns: 'error',
       drafts: 'warning',
       overLimit: 'error',
-      inbox: 'error',
+      newMessages: 'error',
+      todayBookings: 'error',
     });
+    // Each inbox number on its own entry (ADR-062 amended): a badge on Messages while the
+    // list is empty was a booking counted into it.
     expect(BADGE_ENTRY).toEqual({
       failedRuns: 'ai-runs',
       drafts: 'posts',
       overLimit: 'connections',
-      inbox: 'messages',
+      newMessages: 'messages',
+      todayBookings: 'bookings',
     });
   });
 
@@ -244,7 +253,10 @@ describe('the badge rule: a number only where it asks for action', () => {
       }
       expect(sentences.failedRuns).toBe(strings.dashboard.hand.failedRuns);
       expect(sentences.drafts).toBe(strings.dashboard.tiles.drafts);
-      expect(sentences.inbox).toBe(strings.dashboard.inbox.waiting);
+      // The two inbox badges read the Inbox card's two lines (ADR-062 amended).
+      expect(sentences.newMessages).toBe(strings.dashboard.inbox.newMessages);
+      expect(sentences.todayBookings).toBe(strings.dashboard.inbox.todayBookings);
+      expect(strings.dashboard.inbox).not.toHaveProperty('waiting');
     }
     const en = badgeStrings(adminStrings);
     const ar = badgeStrings(adminStringsAr);
@@ -253,18 +265,18 @@ describe('the badge rule: a number only where it asks for action', () => {
     expect(ar.drafts(2)).toBe('مسودتان بانتظارك');
     expect(ar.failedRuns(1)).toBe('جولة فاشلة واحدة هذا الأسبوع');
     expect(ar.overLimit(11)).toBe('11 اتصالاً تجاوز حدّه الشهري');
-    // The inbox's number is the new messages and today's bookings added (ADR-062): the
-    // badge counts what waits; the card's two lines say which is which.
-    expect(en.inbox(1)).toBe('1 waiting in the inbox');
-    expect(en.inbox(3)).toBe('3 waiting in the inbox');
-    expect(ar.inbox(1)).toBe('عنصر واحد بانتظارك في الوارد');
-    expect(ar.inbox(2)).toBe('عنصران بانتظارك في الوارد');
-    expect(ar.inbox(3)).toBe('3 عناصر بانتظارك في الوارد');
-    expect(ar.inbox(11)).toBe('11 عنصراً بانتظارك في الوارد');
-    expect(en.inbox(0)).toBe('Nothing waiting in the inbox');
-    expect(ar.inbox(0)).toBe('لا شيء بانتظارك في الوارد');
-    expect(adminStrings.dashboard.inbox.newMessages(2)).toBe('2 new messages');
-    expect(adminStringsAr.dashboard.inbox.todayBookings(2)).toBe('حجزان اليوم');
+    expect(en.newMessages(1)).toBe('1 new message');
+    expect(en.newMessages(3)).toBe('3 new messages');
+    expect(ar.newMessages(1)).toBe('رسالة جديدة واحدة');
+    expect(ar.newMessages(2)).toBe('رسالتان جديدتان');
+    expect(ar.newMessages(3)).toBe('3 رسائل جديدة');
+    expect(ar.newMessages(11)).toBe('11 رسالة جديدة');
+    expect(en.todayBookings(1)).toBe('1 booking today');
+    expect(en.todayBookings(2)).toBe('2 bookings today');
+    expect(ar.todayBookings(1)).toBe('حجز واحد اليوم');
+    expect(ar.todayBookings(2)).toBe('حجزان اليوم');
+    expect(ar.todayBookings(3)).toBe('3 حجوزات اليوم');
+    expect(ar.todayBookings(11)).toBe('11 حجزاً اليوم');
   });
 
   it('reads the dashboard readers for the entries the user sees, and survives a failed read', async () => {
@@ -293,6 +305,11 @@ describe('the badge rule: a number only where it asks for action', () => {
           });
           return { totalDocs: 2 };
         }
+        if (args.collection === 'messages') {
+          // The messages nobody has opened (ADR-061): one count, never the preview's find.
+          expect(args.where).toEqual({ status: { equals: 'new' } });
+          return { totalDocs: 5 };
+        }
         return { totalDocs: 0 };
       },
       countVersions: async (args: { collection: string; where: { and: unknown[] } }) => {
@@ -303,12 +320,8 @@ describe('the badge rule: a number only where it asks for action', () => {
         ]);
         return { totalDocs: args.where.and.length === 2 ? 2 : 1 };
       },
-      find: async (args: { collection: string; where: unknown }) => {
+      find: async (args: { collection: string }) => {
         asked.push(`find:${args.collection}`);
-        if (args.collection === 'messages') {
-          expect(args.where).toEqual({ status: { equals: 'new' } });
-          return { docs: [{ id: 9 }], totalDocs: 5 };
-        }
         return { docs: [], totalDocs: 0 };
       },
       logger: { error: () => {} },
@@ -316,22 +329,36 @@ describe('the badge rule: a number only where it asks for action', () => {
     const badges = await navBadges({
       payload,
       user: undefined,
-      visible: new Set(['posts', 'ai-runs', 'pages', 'messages']),
+      visible: new Set(['posts', 'ai-runs', 'pages', 'messages', 'bookings']),
       now,
     });
     expect(badges).toEqual({
       posts: { kind: 'drafts', count: 2, tone: 'warning' },
-      // Five new messages and two bookings today: one number on the inbox entry.
-      messages: { kind: 'inbox', count: 7, tone: 'error' },
+      // Five new messages on Messages, two bookings today on Bookings: each its own number.
+      messages: { kind: 'newMessages', count: 5, tone: 'error' },
+      bookings: { kind: 'todayBookings', count: 2, tone: 'error' },
     });
     expect(asked.toSorted()).toEqual([
       'count:ai-runs',
       'count:bookings',
-      'find:bookings',
-      'find:messages',
+      'count:messages',
       'versions:posts',
       'versions:posts',
     ]);
+  });
+
+  it('reads no badge for an entry the user does not see: no bookings query without the entry', async () => {
+    const asked: string[] = [];
+    const payload = {
+      count: async (args: { collection: string }) => {
+        asked.push(`count:${args.collection}`);
+        return { totalDocs: 1 };
+      },
+      logger: { error: () => {} },
+    } as unknown as Payload;
+    const badges = await navBadges({ payload, user: undefined, visible: new Set(['messages']) });
+    expect(badges).toEqual({ messages: { kind: 'newMessages', count: 1, tone: 'error' } });
+    expect(asked).toEqual(['count:messages']);
   });
 
   it('counts the enabled connections whose month has reached the limit, in two queries', async () => {
