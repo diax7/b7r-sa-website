@@ -40,3 +40,6 @@ public/media/
 
 # The brainstorming companion (superpowers)
 .superpowers/
+
+# The autonomous task state (multi-session progress notes)
+.autonomous/
