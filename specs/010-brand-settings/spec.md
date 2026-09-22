@@ -29,6 +29,8 @@ variable the whole site reads).
 | 5b | The licence boundary is recorded in the screen | B7R holds a **web licence for Rayat Round that permits serving only from b7r.sa** (BRD §3.2). The curated alternates are openly licensed and carry no such restriction. The typeface field's description names this, so nobody later serves Rayat from another host without knowing. |
 | 6 | The list: ITF Rayat Round (default), Baloo Bhaijaan 2, IBM Plex Sans Arabic, Tajawal | Rayat is the brand. Baloo is the closest rounded character and is already the merchant app's font, so choosing it aligns the website with the platform. The other two give a neutral and a geometric register. Families come from Google Fonts; the **files are downloaded and self-hosted**, never loaded from `fonts.googleapis.com` (a third-party request on every page, LCP we do not have, and visitor IPs in front of Google). |
 | 7 | The panel's **colours** stay as they are; its **typeface** follows the brand | `tokens.css` is shared by both stylesheets, so the font token reaches the panel by construction. The panel's colours are its own system (ADR-039, ADR-060) and theming them doubles the work for no gain. |
+| 7b | The global is called **Appearance** («المظهر»), not Brand | `site-settings.ts:164` already has a Brand section holding `brandName`, `brandNameLatin` and `ctaShiny` (ADR-054), and the BRD names it "Site settings → Brand". Two entries reading "Brand" breaks the glossary's one-word-per-concept rule. The split is clean: **Brand** is who we are in words, **Appearance** is how the site looks. Site settings is left untouched; `ctaShiny` is a known adjacency to revisit only if it confuses someone. |
+| 7c | The work carries **ADR-065** and a dated amendment to BRD §3.2 | The gradient contradicts "never gradients between hues, a single flat colour per surface" (`docs/brd-sections/01-design-system.md:34`). Dhia approved it, so the decision stands, but every comparable deviation in this project is recorded as a dated in-line BRD amendment plus an ADR (ADR-054 for the button sheen, ADR-061 through ADR-064 for the recent features). ADR-065 is next. |
 | 8 | The six 3D feature icons stay brand-locked | No source files exist (confirmed with Dhia). The blue is in the shading, not only the background, so a programmatic recolour would look wrong. Instead the Brand screen carries a **"what will not follow"** panel naming every raster asset still holding the old colour. |
 
 ## Out of scope
@@ -50,28 +52,35 @@ Brand screen  ->  derive.ts  ->  brand global  ->  root layout  ->  every utilit
 
 No component changes colour by hand. They already use tokens; the tokens stop being frozen.
 
-### The `@theme inline` restructure
+### No restructure is needed (corrected 2026-09-22 after the CTO review)
 
-`tokens.css` and `globals.css` declare tokens with plain `@theme`. Tailwind emits those as
-custom properties on `:root` and utilities reference them, so a **root-level** override works
-today. A **scoped** override does not: `var(--color-surface)` resolves where the variable is
-defined, which is `:root`, so a section that redefines it would be ignored.
+An earlier draft of this spec claimed that a scoped override could not work today and that
+the tokens had to move to `@theme inline`. **That was wrong**, and the correction deletes a
+whole phase of work.
 
-Phase 2 is exactly a scoped override. So phase 1a restructures the themeable tokens to:
+Custom properties inherit, and `var()` substitutes at computed-value time on the element the
+declaration applies to, not where the property was declared. Plain `@theme` emits
+`:root { --color-surface: #ffffff }` and `.bg-surface { background-color: var(--color-surface) }`,
+so this is all phase 2 needs, with the stylesheets exactly as they are:
 
 ```css
-:root { --b7r-surface: #ffffff; --b7r-text: #14181f; }
-[data-surface='deep-sea'] { --b7r-surface: #0a2f5e; --b7r-text: #ffffff; }
-
-@theme inline {
-  --color-surface: var(--b7r-surface);
-  --color-text: var(--b7r-text);
+[data-surface='deep-sea'] {
+  --color-surface: #0a2f5e;
+  --color-text: #ffffff;
+  --color-text-muted: #c3d2e4;
 }
 ```
 
-With `inline`, the utility carries the value expression rather than a reference, so a section
-subtree resolves it locally. **This is the change that makes phase 2 possible at all**, and it
-is why it lands in phase 1 rather than being discovered later.
+`@theme inline` would have been required only for the indirection the earlier draft proposed
+to introduce, and it would have been actively harmful: it inlines a token into its utilities
+and **emits no `--color-*` property at all**, which the repo already documents at
+`src/app/(payload)/admin.css:63-65`. Forty-three hand-written rules read those properties
+directly, including `body { background: var(--color-surface); font-family: var(--font-sans) }`
+in `globals.css:83-85` and the panel's own typeface in `admin.css`. The restructure would have
+removed the site's background, body colour, focus ring, selection colour and both typefaces.
+
+The emitted runtime block is written as `:root:root { … }` so it outranks Tailwind's
+`:root, :host` regardless of stylesheet order, which cannot be verified here without a build.
 
 ### Modules
 
@@ -104,22 +113,39 @@ Four sets ship as defaults and reproduce today's site exactly: `surface` (white)
 | Derived | Rule |
 |---|---|
 | `primary-hover` | primary, darkened one step |
-| `primary-dark` | primary, darkened two steps |
 | `accent-tint` | accent at 10% over surface |
 | `accent-on-tint` | accent, darkened until it passes AA on `accent-tint` |
-| `ground` | surface, shifted toward primary's hue by a fixed small amount |
-| `border` | ink at 10% over surface |
+| `border` | primary at a fixed low percentage over surface |
 | `text-muted` | ink, lightened until it sits at exactly 4.6:1 on surface |
 | `on-navy` | accent, lightened until it passes AA on navy |
+
+**The rules are calibrated against today's values, not invented.** The first task of phase 1a
+is to take the four sources and check, token by token, whether each rule reproduces the hex
+currently shipping. Three outcomes, decided per token with the arithmetic shown in the commit:
+
+- **It reproduces exactly**: the rule stands. `accent-tint` already does (`#0098e0` at 10% over
+  white gives `#e6f5fc`).
+- **It nearly reproduces it**: the rule's constant is tuned until it does. A rule that needs a
+  constant nobody can predict is not a rule, so the constant must be a round number with a
+  stated meaning, not a fudge factor.
+- **It cannot be expressed as a rule**: the token is **promoted to a source**, not locked to a
+  magic value. `primary-dark` (`#1858a8`) is the likely case: the BRD calls it "the secondary
+  blue from the logo", a different hue from primary rather than a darkening of it, so it is a
+  brand fact and belongs beside the other four. The count of sources is an outcome of this
+  calibration, not a decision taken in advance.
+
+`ground` was dropped from the derived set for this reason. "Surface shifted toward primary's
+hue by a fixed small amount" is a knob whose output nobody can predict or want; today's
+`#f6f8fb` is a designed value. It is a source or it is a rule, and calibration decides which.
 
 ## Phases
 
 | Phase | Lands | Gate |
 |---|---|---|
-| **1a** | `derive.ts`, `contrast.ts`, `css.ts`, the `@theme inline` restructure, the root layout emitting the block. Defaults equal today's values. | **The site renders pixel-identical.** A screenshot diff across the five BRD pages at 1440 and 390 in both languages shows zero change. |
-| **1b** | The global, the screen, the access rules, the revalidation. | An admin changes primary and the site follows. A non-admin can neither read nor write the global. |
+| **1a** | The five pure modules and their tests, plus the root layout emitting `brandCss(DEFAULT_BRAND)`. No stylesheet is restructured. ADR-065 and the BRD §3.2 amendment land here. | **The emitted block re-states the values Tailwind already emits**, proven token by token against a fixture taken from the pre-change files, plus the reverse assertion that every `var(--…)` read anywhere is defined. |
+| **1b** | The Appearance global, the screen, the access rules, the revalidation, **and the "what will not follow" panel**. | An admin changes primary and the site follows. A non-admin can neither read nor write the global. Nothing stale goes unnamed. |
 | **1c** | The surfaces library, the gradient reproduced and registered, `Section` taking a set by name. | Existing pages keep their look through the default keys. |
-| **1d** | The raster cleanup: an SVG logo inheriting the token, the e-mails reading the brand at send time, the favicon and PWA colour generated, the "what will not follow" panel. | A brand change leaves nothing stale except what the panel names. |
+| **1d** | The raster cleanup: an SVG logo inheriting the token, the e-mails reading the brand at send time, the favicon and PWA colour generated. | A brand change leaves nothing stale except what 1b's panel already names. |
 | **2** | The `background` select on each home section tab and each page block, reading the library. | An editor sets the FAQ section to Sea mist and it renders, with its text tone. |
 
 ## Testing
@@ -144,6 +170,8 @@ Four sets ship as defaults and reproduce today's site exactly: `surface` (white)
 |---|---|
 | The `@theme inline` restructure touches every token and the admin shares the file | It lands alone in 1a behind a zero-diff gate, before any feature depends on it |
 | A brand save must invalidate every cached page | `afterChange` revalidates the layout; brand changes are rare so the cost is acceptable |
+| A derivation that cannot satisfy its requirement would throw inside the root layout | `SiteDocument` renders every page **and the global 404**, so a throw there takes the whole site down. `derive()` returns a result (`{ ok: true, value }` or `{ ok: false, failures }`) and `brandCss` falls back to `DEFAULT_BRAND` and logs rather than propagating, matching the project's standing rule that a failure degrades rather than cascades (ADR-061, `routeFailure()`). The editor's refusal happens in the validator, long before a render. |
+| `src/lib/tokens.ts` is a third source of truth | `BRAND_PRIMARY_HEX` and `TOKEN_HEX` feed the viewport theme colour, the manifest, the OG image builder and the static 410 page, all rendered outside the Tailwind pipeline, and `tests/tokens.test.ts` keeps them in sync with `globals.css`. Phase 1b decides its fate: either it becomes a reader of the Appearance global, or it is declared "does not follow" and named in the 1b panel. It cannot be left unmentioned. |
 | The gradient's exact colours | Dhia did not supply the source PNG before going away. It will be reproduced from the image as shown in the conversation and flagged for confirmation on their return; the value is one row in the library, so refining it later is a field edit, not a code change. |
 | A curated family without a tuned fallback regresses CLS | Each family ships with its own metric overrides and its own subset from `scripts/subset-fonts.sh`; the CLS e2e covers all of them |
 | Weight preloading is per page today (Regular and Medium everywhere, Black on the home hero, Bold where the H1 is bold, ADR-010) | The preload list is derived from the chosen family rather than hardcoded, or switching family preloads files that no longer exist |
