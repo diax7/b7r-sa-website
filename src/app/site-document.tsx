@@ -7,6 +7,7 @@ import type { Navigation, SiteSettings } from '@/content/schema';
 import { htmlDir, languageTag, type Locale } from '@/lib/i18n';
 import { Footer, Header, newsletterCopy, SkipLink } from '@/modules/core';
 import { PageExtras } from '@/modules/core/page-extras';
+import { brandCss, DEFAULT_BRAND } from '@/modules/brand';
 import { NewsletterForm } from '@/modules/forms';
 import '@/styles/globals.css';
 
@@ -58,6 +59,13 @@ export function SiteDocument({
     <html lang={languageTag(locale)} dir={htmlDir(locale)}>
       <head>
         <meta httpEquiv="content-language" content={languageTag(locale)} />
+        {/*
+          The brand's colours (spec 010). `:root:root` so the block outranks Tailwind's
+          `:root, :host` whichever way Next hoists the stylesheet. Today it restates the
+          values `globals.css` already carries, proven token by token in
+          `tests/brand-css.test.ts`; phase 1b swaps the constant for the Appearance global.
+        */}
+        <style id="brand-tokens" dangerouslySetInnerHTML={{ __html: brandCss(DEFAULT_BRAND) }} />
         {/* Marks JS as running so scroll-reveal may hide content; without it nothing hides. */}
         <script
           dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('js')" }}
