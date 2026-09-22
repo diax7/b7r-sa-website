@@ -2777,3 +2777,66 @@ merchant meets)" as «مقدّم الاستشارة», kept apart from the calen
 12/24 h toggle, guests, a week or column layout, a custom success URL, an Office 365 link
 of its own, host fields of our own, screenshots in the repository (a scratch folder outside
 it, linked from the PR).
+
+## ADR-065: The Appearance global: the brand as values, not literals (2026-09-22)
+
+**Context.** Every brand value is frozen at build time: the blues, the neutrals, the typeface
+and the logo live in `src/styles/tokens.css` and `src/styles/globals.css`, and changing one is
+a code change. Dhia asked for a screen in the panel that owns all of it, so that changing the
+blue once moves the whole site, with the gradient they liked registered there as one named
+background among others. Specified in `specs/010-brand-settings/spec.md`, approved 2026-09-22.
+
+**The decisions.** A background is a **set**, not a colour: the background, the text tone on
+it, the muted tone and the button variant that reads on it, because Shopify shipped exactly
+that model, is migrating merchants away from it, and its developer forum documents the
+clashing buttons that result. A few colours are set by hand and the rest derived, with each
+rule carrying its contrast requirement, so an unreadable pair cannot be produced by choosing a
+colour; an override that fails its requirement is refused, not warned. The typeface is a
+curated self-hosted list defaulting to ITF Rayat Round, whose licence permits serving only
+from b7r.sa. The global is named **Appearance** («المظهر») because Site settings already has a
+Brand section holding the brand's words, and the glossary forbids two concepts sharing a word.
+The panel's colours stay its own; its typeface follows the brand, since `tokens.css` is shared.
+
+**What the calibration changed.** Before `derive.ts` was written, every candidate rule was
+tested against the hex the site ships (`specs/010-brand-settings/calibration.md`). Only two
+reproduce exactly on a principled constant: `primary-hover` is primary multiplied by 0.84 in
+sRGB, and `accent-tint` is accent at 10 percent over the surface. `ground` reproduces on a
+fitted constant (0.041; a round 0.04 gives `#f6f8fc`). Four tokens are designed rather than
+computed and no rule reaches them: `border`, `text-muted`, `accent-on-tint` and `navy`.
+
+Two consequences for the model this document and the BRD describe. **`primary-dark` is a
+source, not a derivation**: at L 46.7 in OKLCH against primary's 47.0 it is the same
+lightness, so "primary darkened" was never the rule; it is the logo's second blue, and
+`ground` derives from it. **`navy` stays a source too**, though BRD §3.2 called it "(derived)":
+no sRGB multiple of primary can lift navy's red channel from 0 to 10. So the screen shows five
+pickers where Dhia approved four, and the footer will not follow a rebrand until navy is
+changed with it. Both are flagged for Dhia rather than decided silently.
+
+**Two errors found in the BRD, corrected in §3.2 with this ADR.** `--color-text-muted` was
+documented at 4.6:1 on white and measures 6.00:1, which is safe. `--color-accent` was
+documented at 3.5:1 and measures **3.20:1**, which is not: that figure is the stated reason
+accent is banned for body text on white and permitted at 24 px bold, and the true value clears
+the 3:1 large-text floor by 0.20 rather than the 0.50 the document implied. The rule it
+justifies must not be relaxed on the strength of the written number.
+
+**The gradient and the BRD.** §3.2's "never gradients between hues, a single flat colour per
+surface" gains a second exception beside ADR-054's button sheen: a background set may be a
+gradient between the brand's own blues, with an optional grain overlay. Gradients between
+unrelated hues stay banned.
+
+**How it reaches a page.** No stylesheet is restructured. Custom properties inherit and
+`var()` substitutes on the element the declaration applies to, so a scoped
+`[data-surface] { --color-surface: … }` is all a per-section background needs. `SiteDocument`
+emits one `:root:root` block, which outranks Tailwind's `:root, :host` whichever way Next
+hoists the stylesheet. An earlier draft proposed moving the tokens to `@theme inline`; that
+emits no `--color-*` property at all and would have deleted the variable out from under 43
+hand-written rules, the body background and both typefaces among them.
+
+**Failure behaviour.** `brandCss` runs while every page and the global 404 render, so it never
+throws: colours are parsed at the boundary, checked again on the way into the stylesheet, and
+the whole call sits inside a catch. A brand that fails any pair falls back to the shipped
+palette and logs which pair failed and by how much. Two gates hold it: the emitted block is
+compared token by token against a checked-in fixture of `globals.css` at 9989617, and every
+`var(--…)` the three stylesheets read must be defined by a `@theme` block, by the emitted
+block, or by a designed allowlist of the properties Payload and Radix provide at runtime.
+

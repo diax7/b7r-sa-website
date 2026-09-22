@@ -8,7 +8,16 @@
  * primary makes white on white and only a refusal can stop it.
  *
  * The list mirrors `tests/contrast.test.ts`, which has held the shipped pairs since the
- * design system was written; adding a combination there means adding it here.
+ * design system was written; adding a combination there means adding it here. Four of its
+ * pairs are deliberately absent, so that a later reader diffing the two lists does not
+ * "restore" them:
+ *
+ * - **Button inverse** (primary on white) duplicates "Button secondary and ghost" for as long
+ *   as `surface` is `#ffffff`, which it is: a coloured page is a background set, not a token.
+ * - **Footer muted, white at 75 percent on navy** needs alpha compositing, which a pair of
+ *   token names cannot express. It is covered by the footer's own pair.
+ * - **Success line** and **Error text** are semantic, not brand (decision 2 of the spec). They
+ *   never follow the brand blue, so they are checked where they are defined, in the stylesheet.
  */
 
 /** WCAG AA: 4.5:1 for body text, 3:1 for large or bold text and for non-text contrast. */

@@ -190,20 +190,20 @@ All three brand blues are sampled from `logo.png`. Two darker shades are derived
 | `--color-primary` | `#0058B0` | Buttons, links, active nav underline, key numbers, section eyebrows |
 | `--color-primary-hover` | `#004A94` | Hover and pressed states of primary elements (derived, same hue) |
 | `--color-primary-dark` | `#1858A8` | Secondary blue from the logo: dark blue text on light tints, icon strokes on white |
-| `--color-navy` | `#0A2F5E` | Footer background, dark ribbon variant, hero text on light photos when extra contrast is needed (derived) |
-| `--color-accent` | `#0098E0` | The light blue. Accent only: highlighted words in headings, icon fills inside tint circles, focus rings, active step indicator, wave shapes. **Not for body text on white** (contrast 3.5:1). Allowed for text at ≥ 24 px bold or on navy/primary backgrounds. |
+| `--color-navy` | `#0A2F5E` | Footer background, dark ribbon variant, hero text on light photos when extra contrast is needed. *(Called "derived" until ADR-065: no rule reproduces it, so it is a source the owner sets.)* |
+| `--color-accent` | `#0098E0` | The light blue. Accent only: highlighted words in headings, icon fills inside tint circles, focus rings, active step indicator, wave shapes. **Not for body text on white** (contrast 3.20:1, measured; this table said 3.5:1 until ADR-065 measured it). Allowed for text at ≥ 24 px bold or on navy/primary backgrounds. |
 | `--color-accent-tint` | `#E6F5FC` | 10% tint of the accent: icon circles, chip backgrounds, table header rows |
 | `--color-ground` | `#F6F8FB` | Page background for alternating sections (very light cool grey) |
 | `--color-surface` | `#FFFFFF` | Cards, header, panels |
 | `--color-text` | `#14181F` | Body and headings |
-| `--color-text-muted` | `#5B6470` | Secondary text, captions, placeholders (4.6:1 on white) |
+| `--color-text-muted` | `#5B6470` | Secondary text, captions, placeholders (6.00:1 on white, measured; this table said 4.6:1 until ADR-065) |
 | `--color-border` | `#E5E9EF` | Hairlines, card borders, input borders |
 | `--color-success` | `#15803D` | Form success, positive profit; 4.7:1 on `ground`, 5:1 on `surface` (AA for the profit line) |
 | `--color-warning` | `#F59E0B` | Non-blocking warnings |
 | `--color-error` | `#D90000` | Validation errors, negative profit |
 | `--color-whatsapp` | `#25D366` | The WhatsApp widget button only |
 
-Rules: primary text on white and white text on primary both pass AA. Never place accent-coloured small text on white. Never introduce purple, pink, teal, magenta, orange, or gradients between hues. A single flat colour per surface. The only permitted gradient is a white-to-transparent overlay on hero photos for legibility (§6.4.1). *Amended 2026-09-17 (Dhia, ADR-054): one more, between the brand's own two blues: the main call-to-action buttons' sheen (`Button` variants `shiny` and, on the primary ribbon, `inverseShiny`), on only when the admin's site-wide "Shiny buttons" switch (Site settings → Brand) is ticked.*
+Rules: primary text on white and white text on primary both pass AA. Never place accent-coloured small text on white. Never introduce purple, pink, teal, magenta, orange, or gradients between hues. A single flat colour per surface. The only permitted gradient is a white-to-transparent overlay on hero photos for legibility (§6.4.1). *Amended 2026-09-22 (Dhia, ADR-065): a second exception, the background sets of the Appearance global. A set is a named background with the text tone that reads on it, and one of them may be a gradient between the brand's own blues, optionally with a grain overlay. The ban on gradients between unrelated hues stands, as does one flat colour per surface for any section that does not choose a set.* *Amended 2026-09-17 (Dhia, ADR-054): one more, between the brand's own two blues: the main call-to-action buttons' sheen (`Button` variants `shiny` and, on the primary ribbon, `inverseShiny`), on only when the admin's site-wide "Shiny buttons" switch (Site settings → Brand) is ticked.*
 
 ### 3.3 Typography
 

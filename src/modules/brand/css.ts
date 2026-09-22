@@ -92,7 +92,15 @@ export function resolveBrand(brand: Brand): Resolved {
   const derivation = derive(brand.sources);
   const derived: BrandDerived = { ...derivation.value };
   for (const [token, pin] of Object.entries(brand.pinned) as Array<[keyof BrandDerived, Pin]>) {
-    if (isHex(pin.value)) derived[token] = pin.value;
+    if (isHex(pin.value)) {
+      derived[token] = pin.value;
+    } else {
+      // Silently dropping it would be the same failure class as the silent fallback above:
+      // the rule's output ships and the editor's pin has vanished with nothing said.
+      console.warn(
+        `brand: ignoring the pin on ${token}; ${JSON.stringify(pin.value)} is not a #rrggbb colour, so its rule applies instead`,
+      );
+    }
   }
 
   const tokens: BrandTokens = {
