@@ -23,7 +23,7 @@ variable the whole site reads).
 |---|---|---|
 | 1 | Brand settings first, the per-section picker second | The picker is a dropdown over the library; it has nothing to list until the library exists |
 | 2 | A background is a **set**, not a colour: background, text, muted text, and the button variant that reads on it | Shopify shipped exactly this (`color_scheme_group`), is migrating merchants to a flat palette, and its developer forum in June 2026 documents the result: a custom section background leaves the buttons and inputs inside it clashing, because they were tuned against the page background. Theme authors are now each rebuilding contrast derivation by hand. We start where they are being asked to return to. |
-| 3 | Four colours set by hand, eight derived, any derived value overridable | Derivation is where the readability promise lives: a rule that says "darken until AA passes" cannot produce unreadable text whatever blue is chosen. Twelve free pickers would leave a warning as the only protection, and warnings get clicked past. |
+| 3 | A few colours set by hand, the rest derived, any derived value overridable | Derivation is where the readability promise lives: a rule that says "darken until AA passes" cannot produce unreadable text whatever blue is chosen. Twelve free pickers would leave a warning as the only protection, and warnings get clicked past. **Settled by task 1a.0 on 2026-09-22, see `calibration.md`: five sources, seven derived.** Dhia approved "four you set, eight derived". Measurement moved `primary-dark` across the line into the sources, and `navy` did not move out to meet it: despite the BRD calling navy "(derived)", no rule reproduces it. So the screen shows five pickers, not four. Flagged to Dhia, not decided silently. |
 | 4 | An override that fails its contrast requirement is **refused**, not warned | The BRD promises AA. A refusal names the pair and the ratio it got, in the editor's language. |
 | 5 | Typeface: a curated list, self-hosted, default **ITF Rayat Round** | Each family needs its own metric-tuned fallback (`size-adjust`, `ascent-override`) or CLS regresses past the e2e gate, and its own subset built with `scripts/subset-fonts.sh` (the served Rayat files are subsets of the licensed woff2, Arabic plus Basic Latin plus punctuation, about 27 kB each, BRD §3.2 as amended by ADR-010). A free upload adds Arabic coverage validation and licence checks on top, and one bad file breaks every page at once. |
 | 5b | The licence boundary is recorded in the screen | B7R holds a **web licence for Rayat Round that permits serving only from b7r.sa** (BRD §3.2). The curated alternates are openly licensed and carry no such restriction. The typeface field's description names this, so nobody later serves Rayat from another host without knowing. |
@@ -86,8 +86,8 @@ The emitted runtime block is written as `:root:root { … }` so it outranks Tail
 
 | Path | Responsibility |
 |---|---|
-| `src/modules/brand/derive.ts` | Pure. Four sources in, twelve tokens out. Each rule carries its contrast requirement. No database, no React. |
-| `src/modules/brand/contrast.ts` | WCAG relative luminance and ratio; `darkenUntil(colour, on, ratio)` and its lighten twin, in OKLCH so steps are perceptually even. |
+| `src/modules/brand/derive.ts` | Pure. The sources in, the derived tokens out, each rule carrying its contrast requirement. Returns a result, never throws. The source list is an output of the calibration task, not fixed in advance. No database, no React. |
+| `src/modules/brand/contrast.ts` | WCAG relative luminance and ratio; `darkenUntil(colour, on, ratio)` and its lighten twin, in OKLCH so steps are perceptually even. Reports failure rather than raising when no lightness satisfies the requirement. |
 | `src/modules/brand/css.ts` | The saved brand into one style block: the root variables, one scope per background set, the font stack. |
 | `src/modules/brand/surfaces.ts` | A background set and its serialization, including the gradient (stops, angle, grain). |
 | `src/modules/brand/global.ts` | The Payload global. Bilingual, under the panel's rules. `afterChange` revalidates every page. |
@@ -95,9 +95,9 @@ The emitted runtime block is written as `:root:root { … }` so it outranks Tail
 
 ## Data model
 
-The `brand` global, in the Site group, as an entry named «العلامة» / "Brand":
+The `appearance` global, in the Site group, as an entry named «المظهر» / "Appearance" (decision 7b: «العلامة» / "Brand" is taken by the Site settings section holding the brand's words):
 
-- **colours.sources**: `primary`, `accent`, `navy`, `ink`. Four hex fields.
+- **colours.sources**: the hex fields the calibration task settles on. The spec's working set was `primary`, `accent`, `navy`, `ink`; the OKLCH measurements in the CTO's review of 2026-09-22 point at `primary`, `primary-dark`, `accent`, `ink` instead, with `navy` becoming derived, which the BRD itself supports (`01-design-system.md:21` ends navy's description with "(derived)", and `:14` says the three sampled blues are primary, primary-dark and accent). Still four pickers; one of them is a different blue. Confirmed by task 1a.0 and flagged to Dhia.
 - **colours.derived**: eight rows of `{ token, value, locked }`. Written by the hook from the
   sources unless `locked`, in which case the given value is validated and kept.
 - **typography.family**: a select over the curated list.
@@ -110,33 +110,29 @@ Four sets ship as defaults and reproduce today's site exactly: `surface` (white)
 
 ### Derivation rules
 
-| Derived | Rule |
-|---|---|
-| `primary-hover` | primary, darkened one step |
-| `accent-tint` | accent at 10% over surface |
-| `accent-on-tint` | accent, darkened until it passes AA on `accent-tint` |
-| `border` | primary at a fixed low percentage over surface |
-| `text-muted` | ink, lightened until it sits at exactly 4.6:1 on surface |
-| `on-navy` | accent, lightened until it passes AA on navy |
+| Derived | Rule | Reproduces today |
+|---|---|---|
+| `primary-hover` | primary multiplied by 0.84 in sRGB (16 percent darker) | **Yes, exactly** |
+| `ground` | primary-dark at 4.1 percent over surface | **Yes, exactly** |
+| `accent-tint` | accent at 10 percent over surface | **Yes, exactly** |
+| `border` | navy at 10 percent over surface | No, one channel out by one |
+| `text-muted` | ink lightened until 6:1 on surface | No, a designed colour |
+| `accent-on-tint` | accent darkened until AA on the tint | No, the shipped value sits at 5.77:1 |
+| `on-navy` | accent lightened until AA on navy | No, a designed colour |
 
-**The rules are calibrated against today's values, not invented.** The first task of phase 1a
-is to take the four sources and check, token by token, whether each rule reproduces the hex
-currently shipping. Three outcomes, decided per token with the arithmetic shown in the commit:
+Sources: `primary`, `primary-dark`, `accent`, `navy`, `ink`. **Five, not the four Dhia
+approved**, and flagged to them: `primary-dark` is a brand blue sampled from the logo and
+`ground` derives from it.
 
-- **It reproduces exactly**: the rule stands. `accent-tint` already does (`#0098e0` at 10% over
-  white gives `#e6f5fc`).
-- **It nearly reproduces it**: the rule's constant is tuned until it does. A rule that needs a
-  constant nobody can predict is not a rule, so the constant must be a round number with a
-  stated meaning, not a fudge factor.
-- **It cannot be expressed as a rule**: the token is **promoted to a source**, not locked to a
-  magic value. `primary-dark` (`#1858a8`) is the likely case: the BRD calls it "the secondary
-  blue from the logo", a different hue from primary rather than a darkening of it, so it is a
-  brand fact and belongs beside the other four. The count of sources is an outcome of this
-  calibration, not a decision taken in advance.
+Task 1a.0 ran on 2026-09-22 and its findings are in `calibration.md`, including two errors it
+turned up in the BRD's own contrast figures. The conclusion that shapes the model: hand
+designed hexes cannot be reproduced by rule, so the two requirements that were quietly
+conflated are split. `DEFAULT_BRAND` stores the designed values verbatim, which is why the
+site cannot change; every derived token also carries its rule, and the four that are designed
+rather than computed recompute the moment a source changes, because that moment is a rebrand
+and a coherent family is the point. The property test still guarantees that any rule's output
+passes its contrast requirement for any sources.
 
-`ground` was dropped from the derived set for this reason. "Surface shifted toward primary's
-hue by a fixed small amount" is a knob whose output nobody can predict or want; today's
-`#f6f8fb` is a designed value. It is a source or it is a rule, and calibration decides which.
 
 ## Phases
 
@@ -154,21 +150,20 @@ hue by a fixed small amount" is a knob whose output nobody can predict or want; 
   derived pair passes its required ratio. This is what turns "we promise AA" into something
   mechanical. A rule will be broken deliberately to watch the test fail before it is trusted.
 - **Unit**: `css.ts` output, the gradient serializer, `darkenUntil` convergence and its
-  behaviour when no solution exists (a requirement that cannot be met must raise, not loop).
+  behaviour when no solution exists (a requirement that cannot be met is reported as a failure, never raised and never looping).
 - **Config test**: the global obeys the panel's rules (both languages on every label and
   description, the icons, the group, the description cap).
-- **Outsider test**: the public credential can neither read nor write the brand global, per
+- **Outsider test**: the public credential can neither read nor write the Appearance global, per
   the standing rule after the 28-function leak.
 - **e2e**: change a colour in the panel, assert the site's computed styles moved; axe at 1440
   and 390 in both languages on a themed section; the CLS gate holds for every family in the
   curated list.
-- **Phase 1a**: the screenshot diff is the gate, and it must be empty.
+- **Phase 1a**: two gates. Anchored equality (`brandCss(DEFAULT_BRAND)` against a checked-in fixture of the pre-change stylesheet) and the reverse assertion that every `var(--…)` read anywhere is defined. The visual check is the repo's existing `scripts/dev/golden.mjs` and runs when a database does.
 
 ## Risks
 
 | Risk | Handling |
 |---|---|
-| The `@theme inline` restructure touches every token and the admin shares the file | It lands alone in 1a behind a zero-diff gate, before any feature depends on it |
 | A brand save must invalidate every cached page | `afterChange` revalidates the layout; brand changes are rare so the cost is acceptable |
 | A derivation that cannot satisfy its requirement would throw inside the root layout | `SiteDocument` renders every page **and the global 404**, so a throw there takes the whole site down. `derive()` returns a result (`{ ok: true, value }` or `{ ok: false, failures }`) and `brandCss` falls back to `DEFAULT_BRAND` and logs rather than propagating, matching the project's standing rule that a failure degrades rather than cascades (ADR-061, `routeFailure()`). The editor's refusal happens in the validator, long before a render. |
 | `src/lib/tokens.ts` is a third source of truth | `BRAND_PRIMARY_HEX` and `TOKEN_HEX` feed the viewport theme colour, the manifest, the OG image builder and the static 410 page, all rendered outside the Tailwind pipeline, and `tests/tokens.test.ts` keeps them in sync with `globals.css`. Phase 1b decides its fate: either it becomes a reader of the Appearance global, or it is declared "does not follow" and named in the 1b panel. It cannot be left unmentioned. |
