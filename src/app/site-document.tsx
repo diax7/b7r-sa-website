@@ -7,7 +7,7 @@ import type { Navigation, SiteSettings } from '@/content/schema';
 import { htmlDir, languageTag, type Locale } from '@/lib/i18n';
 import { Footer, Header, newsletterCopy, SkipLink } from '@/modules/core';
 import { PageExtras } from '@/modules/core/page-extras';
-import { brandCss, DEFAULT_BRAND } from '@/modules/brand';
+import { SHIPPED_BRAND_CSS } from '@/modules/brand';
 import { NewsletterForm } from '@/modules/forms';
 import '@/styles/globals.css';
 
@@ -65,7 +65,7 @@ export function SiteDocument({
           values `globals.css` already carries, proven token by token in
           `tests/brand-css.test.ts`; phase 1b swaps the constant for the Appearance global.
         */}
-        <style id="brand-tokens" dangerouslySetInnerHTML={{ __html: brandCss(DEFAULT_BRAND) }} />
+        <style id="brand-tokens" dangerouslySetInnerHTML={{ __html: SHIPPED_BRAND_CSS }} />
         {/* Marks JS as running so scroll-reveal may hide content; without it nothing hides. */}
         <script
           dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('js')" }}

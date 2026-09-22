@@ -13,6 +13,7 @@
 import { assert, integer, property, record, tuple } from 'fast-check';
 import { describe, expect, it } from 'vitest';
 import { contrastRatio } from '@/modules/brand/contrast';
+import { toHex } from '@/modules/brand/types';
 import { DEFAULT_SOURCES, SHIPPED_DERIVED, SURFACE } from '@/modules/brand/defaults';
 import { derive, REQUIREMENTS } from '@/modules/brand/derive';
 
@@ -20,7 +21,7 @@ const hexArb = tuple(
   integer({ min: 0, max: 255 }),
   integer({ min: 0, max: 255 }),
   integer({ min: 0, max: 255 }),
-).map(([r, g, b]) => `#${[r, g, b].map((c) => c.toString(16).padStart(2, '0')).join('')}`);
+).map(([r, g, b]) => toHex(`#${[r, g, b].map((c) => c.toString(16).padStart(2, '0')).join('')}`)!);
 
 const sourcesArb = record({
   primary: hexArb,
@@ -84,7 +85,7 @@ describe('the property that carries the AA promise', () => {
 
   it('reports a failure rather than a bad colour when a requirement cannot be met', () => {
     // An ink with no room to lighten and still pass its requirement on white.
-    const result = derive({ ...DEFAULT_SOURCES, ink: '#ffffff' });
+    const result = derive({ ...DEFAULT_SOURCES, ink: toHex('#ffffff')! });
     if (!result.ok) {
       expect(result.failures.length).toBeGreaterThan(0);
       expect(result.failures[0]).toHaveProperty('token');

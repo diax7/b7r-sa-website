@@ -26,7 +26,7 @@ and which are derived.
 | Token | Rule | Verdict |
 |---|---|---|
 | `primary-hover` | **primary multiplied by 0.84 in sRGB** ("16 percent darker") | **Exact.** The exact range is 0.839 to 0.843, so 0.84 is the round number in the middle, not a fudge. |
-| `ground` | **primary-dark at 4.1 percent over surface** | **Exact.** Note the source: not primary and not navy. |
+| `ground` | **primary-dark at 4.1 percent over surface** | **Exact, but the constant is fitted.** A round 4 percent gives `#f6f8fc`, one off in blue; only 0.0403 to 0.0411 reproduces `#f6f8fb`. The window is wide enough not to be knife edge, and "a 4 percent wash of the logo's second blue" is a statable idea, so the rule stands. It is recorded as fitted rather than principled, which is the difference between it and the other two. |
 | `accent-tint` | **accent at 10 percent over surface** | **Exact.** The rule the spec already claimed. |
 
 ## Result: four tokens are designed, not computed
@@ -35,10 +35,26 @@ Each was tested against every plausible rule and none reproduces it.
 
 | Token | Closest rule tried | Result |
 |---|---|---|
-| `border` | navy at 10 percent over surface | `#e6eaef` against `#e5e9ef`. **One channel out by one.** Close enough to look identical, not close enough to be the same value. |
+| `border` | navy at 10 percent over surface | `#e7eaef` against `#e5e9ef`, so **two channels out**. (An earlier draft of this document said `#e6eaef`, from a script whose alpha had drifted to 0.101 through floating point accumulation; recomputed at exactly 0.1 it is `#e7eaef`. Rejected either way.) |
 | `text-muted` | ink lightened until 4.6:1 on surface | `#70767f` against `#5b6470`. Far out, and the hues differ (ink 261.6, muted 255.6), so no lightness search on ink reaches it. As an alpha blend of navy the best fit is out by 21 in a channel. |
 | `accent-on-tint` | accent darkened until 4.5:1 on the tint | `#0073b9` against `#00639c`. The shipped value sits at 5.77:1, well past AA, so it was chosen by eye rather than by threshold. |
 | `navy` | primary darkened, chroma scaled | `#002f63` against `#0a2f5e`, and no sRGB multiple of primary can produce navy's red channel of 10 from primary's 0. Despite `01-design-system.md:21` calling it "(derived)", it is not computationally derived. |
+
+### Why navy stays a source and never recomputes
+
+Three of the four designed tokens are pinned and will recompute from their rules the moment
+one of their own sources changes. `navy` alone was promoted to a source, so it will never
+recompute, and the split needs a reason rather than looking arbitrary.
+
+Two reasons. `border` derives from navy (`derive.ts`), so a navy that drifted with primary
+would drag the page's hairline colour with it, one step removed from anything the editor
+touched. And the footer is a brand surface in its own right: an owner who wants a different
+footer wants to choose it, not to receive whatever a rule computed.
+
+**The consequence, which is real and should be said out loud when the fifth picker is flagged
+to Dhia: change primary to green and the footer stays blue until navy is changed too.** That
+is the correct behaviour for a colour that is a brand fact, and it is still a surprise the
+first time.
 
 `primary-dark` is confirmed as a source, as the CTO's measurements predicted: at L 46.7 against
 primary's 47.0 it is the same lightness, so "primary darkened" was never the rule. It is the

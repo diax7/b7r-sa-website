@@ -13,6 +13,7 @@
  */
 import { contrastRatio, darkenUntil, lightestMeeting, type Search } from '@/modules/brand/contrast';
 import { type BrandSources, SURFACE } from '@/modules/brand/defaults';
+import type { Hex } from '@/modules/brand/types';
 import { mixSrgb, scaleSrgb } from '@/modules/brand/oklch';
 
 export interface BrandDerived {
@@ -54,13 +55,16 @@ const MUTED_RATIO = 6;
 /** The sRGB factor that reproduces `primary-hover` exactly; the exact range is 0.839 to 0.843. */
 const HOVER_FACTOR = 0.84;
 
-/** The alpha that reproduces `ground` exactly, over the surface. */
+/**
+ * Reproduces `ground` exactly over the surface, but **fitted**: a round 0.04 gives `#f6f8fc`.
+ * The window that works is 0.0403 to 0.0411, wide enough not to be knife edge (calibration.md).
+ */
 const GROUND_ALPHA = 0.041;
 
 /** The alpha that reproduces `accent-tint` exactly, over the surface. */
 const TINT_ALPHA = 0.1;
 
-/** The alpha for `border`: the closest rule found, one channel out from the designed value. */
+/** The alpha for `border`: the closest rule found, two channels out from the designed value. */
 const BORDER_ALPHA = 0.1;
 
 /** Takes a search's colour, or its nearest attempt, recording why it fell short. */
@@ -80,7 +84,7 @@ function settle(
  * whether every requirement was met, and `failures` names the ones that were not so the
  * panel can refuse the save and tell the editor which pair fell short.
  */
-export function derive(sources: BrandSources): Derivation {
+export function derive(sources: Record<keyof BrandSources, Hex>): Derivation {
   const failures: DerivationFailure[] = [];
 
   const primaryHover = scaleSrgb(sources.primary, HOVER_FACTOR);

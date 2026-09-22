@@ -10,42 +10,61 @@
  * three ship from here verbatim and recompute from their rules only when a source changes,
  * because that moment is a rebrand and a coherent family is the point.
  */
+import { type Hex, toHex } from '@/modules/brand/types';
 
-/** The five colours an editor sets. `primary-dark` is a brand blue sampled from the logo. */
+/**
+ * The five colours an editor sets. `primary-dark` is a brand blue sampled from the logo, not
+ * a darkening of primary: at L 46.7 against primary's 47.0 it is the same lightness
+ * (calibration.md).
+ */
 export interface BrandSources {
-  primary: string;
-  primaryDark: string;
-  navy: string;
-  accent: string;
-  ink: string;
+  primary: Hex;
+  primaryDark: Hex;
+  navy: Hex;
+  accent: Hex;
+  ink: Hex;
+}
+
+/** A literal in this file, checked at module load: a typo here is a build time bug. */
+function hex(value: string): Hex {
+  const parsed = toHex(value);
+  if (!parsed) throw new Error(`brand defaults: "${value}" is not a #rrggbb colour`);
+  return parsed;
 }
 
 /**
  * The page's base colour. Not a source: a coloured page background is a background set
  * (phase 1c), not a token an editor retypes, and the mixing rules need a fixed base.
  */
-export const SURFACE = '#ffffff';
+export const SURFACE: Hex = hex('#ffffff');
 
 export const DEFAULT_SOURCES: BrandSources = {
-  primary: '#0058b0',
-  primaryDark: '#1858a8',
-  navy: '#0a2f5e',
-  accent: '#0098e0',
-  ink: '#14181f',
+  primary: hex('#0058b0'),
+  primaryDark: hex('#1858a8'),
+  navy: hex('#0a2f5e'),
+  accent: hex('#0098e0'),
+  ink: hex('#14181f'),
 };
 
-/**
- * The derived values as the site ships them today. The first three are what the rules
- * produce; the last three are designed colours the rules do not reach.
- */
-export const SHIPPED_DERIVED = {
+/** Reproduced exactly by their rule, so they follow a source change with no jump. */
+export const COMPUTED_EXACTLY = {
   primaryHover: '#004a94',
   ground: '#f6f8fb',
   accentTint: '#e6f5fc',
+} as const;
+
+/**
+ * Designed by eye; no rule reaches them (calibration.md). These ship pinned, and phase 1b's
+ * hook releases a pin when one of that token's own sources changes.
+ */
+export const DESIGNED_NOT_COMPUTED = {
   border: '#e5e9ef',
   textMuted: '#5b6470',
   accentOnTint: '#00639c',
 } as const;
+
+/** The derived values as the site ships them today, both groups together. */
+export const SHIPPED_DERIVED = { ...COMPUTED_EXACTLY, ...DESIGNED_NOT_COMPUTED } as const;
 
 /** Meaning, not brand: a failure that followed the brand blue would stop reading as a failure. */
 export const SEMANTIC = {
