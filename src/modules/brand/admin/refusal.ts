@@ -1,5 +1,7 @@
 import { type FieldRef, type Refusal, refusalsFor } from '@/modules/brand/appearance';
+import { contrastRatio } from '@/modules/brand/contrast';
 import type { Brand } from '@/modules/brand/css';
+import { type SurfaceRole, type SurfaceSet, surfaceVerdict } from '@/modules/brand/surfaces';
 import { formatNumber } from '@/modules/cms/admin/format';
 import { adminStringsFor } from '@/modules/cms/admin/strings';
 
@@ -41,4 +43,25 @@ export function fieldVerdict(brand: Brand, field: FieldRef, language: string): t
   if (!first) return true;
   const sentence = refusalSentence(first, field, language);
   return rest.length > 0 ? `${sentence} ${adminStringsFor(language).appearance.more}` : sentence;
+}
+
+/**
+ * A text colour of a background set that does not read everywhere on it (phase 1c): the
+ * role, the weakest ratio over the whole field with the grain counted, what it needs, and
+ * which way to move. Dark text on a light field asks for darker text or a lighter field.
+ */
+export function surfaceRoleVerdict(
+  set: SurfaceSet | null,
+  role: SurfaceRole,
+  language: string,
+): true | string {
+  if (!set) return true;
+  const failure = surfaceVerdict(set).failures.find((f) => f.role === role);
+  if (!failure) return true;
+  const s = adminStringsFor(language).appearance.surfaces;
+  const darkText = contrastRatio(set[role], '#000000') < contrastRatio(set.background, '#000000');
+  return s.refusal[darkText ? 'darker' : 'lighter']
+    .replace('{role}', s.roles[role])
+    .replace('{got}', formatRatio(failure.worst, language))
+    .replace('{wanted}', formatRatio(failure.wanted, language));
 }

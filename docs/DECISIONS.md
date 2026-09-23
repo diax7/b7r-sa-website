@@ -2849,3 +2849,26 @@ compared token by token against a checked-in fixture of `globals.css` at 9989617
 `var(--…)` the three stylesheets read must be defined by a `@theme` block, by the emitted
 block, or by a designed allowlist of the properties Payload and Radix provide at runtime.
 
+
+**Amended 2026-09-23 (phase 1b review).** The three designed colours are no longer stored as
+"factory pins": a designed value applies while every brand colour its rule reads is still the
+shipped one, so a change and its undo cannot lose it. Only the colours set by hand are stored,
+as a list, because Payload hands a validator the save deep-merged over the stored document and
+a merge unions an object's keys but replaces a list.
+
+**Amended 2026-09-23 (phase 1c).** Two corrections to the text above, from the CTO's review:
+
+- *How a section reaches a page.* A scoped `--color-surface` is not all a section needs: it
+  would repaint every card inside the section. A section paints its own `--section-bg` and
+  `--section-image` and sets the text, link, border and focus colours for its words; every
+  island inside it (a white or grey card, a primary button) reads the page's tones again from
+  copies declared once at the root (`--page-text` and its kin), which no section can reach.
+  The rules that set `color` sit in the components layer so a text utility still wins; the dark
+  set's white button is unlayered so it beats the button's own `text-white`.
+- *The gradient.* Dhia chose (2026-09-23) that Sea mist keeps the colours of his reference
+  image rather than following the brand, so it is not "a gradient between the brand's own
+  blues": it is a fixed set in the library, named on the "does not follow" panel, and its deep
+  bloom was lightened (#00609b to #4e9bd6, hue and chroma kept) until its text, secondary text
+  and links read 4.5:1 at every point with the grain counted. Three sets are built from the
+  brand instead (white, light grey, deep sea) and follow it; they cannot be deleted. A set's
+  contrast check samples the whole field, grain included, not only its stops.

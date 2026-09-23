@@ -1,4 +1,5 @@
 import { expect, type APIRequestContext, type Page, test } from '@playwright/test';
+import { NOT_FOLLOWING_ITEMS } from '@/modules/brand/not-following';
 import { ADMIN, API, createEditor, hasAdmin, login, POLL, shows } from './helpers/cms';
 
 /**
@@ -13,6 +14,20 @@ test.skip(!hasAdmin, 'The Appearance suite signs in as the admin (ADMIN_EMAIL, A
 
 const GLOBAL = `${API}/globals/appearance`;
 const SCREEN = '/admin/globals/appearance';
+
+/**
+ * The screen on one of its tabs, by its position (Colours 0, Typeface 1, Logo 2, Backgrounds
+ * 3): Payload reopens a document on the tab its user last left it on.
+ */
+async function openTab(page: Page, tab: number) {
+  await page.goto(SCREEN);
+  const button = page.locator('.tabs-field__tab-button').nth(tab);
+  // A click before the form hydrates is lost: click until Payload marks the tab active.
+  await expect(async () => {
+    await button.click();
+    await expect(button).toHaveClass(/tabs-field__tab-button--active/, { timeout: 1_000 });
+  }).toPass({ timeout: 20_000 });
+}
 
 type Stored = {
   sources: Record<string, string>;
@@ -97,16 +112,18 @@ test('the screen: the pickers, the live strip, the contrast check, what does not
   test.setTimeout(120_000);
   expect((await page.request.post(`${API}/users/login`, { data: ADMIN })).status()).toBe(200);
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto(SCREEN);
+  await openTab(page, 0);
 
   const strip = page.locator('[data-admin-derived-strip]');
   await expect(strip.locator('[data-admin-derived]')).toHaveCount(6);
-  await expect(page.locator('[data-admin-contrast-pair]')).toHaveCount(11);
+  await expect(page.locator('[data-admin-contrast-pair]')).toHaveCount(13);
   await expect(page.locator('[data-admin-contrast-summary]')).toHaveAttribute(
     'data-admin-contrast-summary',
     'pass',
   );
-  await expect(page.locator('[data-admin-not-following-item]')).toHaveCount(8);
+  await expect(page.locator('[data-admin-not-following-item]')).toHaveCount(
+    NOT_FOLLOWING_ITEMS.length,
+  );
   const muted = strip.locator('[data-admin-derived="textMuted"]');
   await expect(muted).toHaveAttribute('data-admin-derived-state', 'designed');
 
@@ -145,7 +162,7 @@ test('the screen: the pickers, the live strip, the contrast check, what does not
 
   for (const language of ['en', 'ar'] as const) {
     if (language === 'ar') {
-      await page.goto(SCREEN);
+      await openTab(page, 0);
       await switchPanelLanguage(page, 'ar');
       await expect(page.locator('[data-admin-contrast-summary]')).toHaveText(
         'تنجح الأزواج كلها: يبقى الموقع مقروءاً بعد الحفظ.',
@@ -173,7 +190,7 @@ test('a colour that breaks a pair is refused on save, in a sentence that says wh
   const adminAuth = await login(request, ADMIN);
   const before = await stored(request, adminAuth);
   expect((await page.request.post(`${API}/users/login`, { data: ADMIN })).status()).toBe(200);
-  await page.goto(SCREEN);
+  await openTab(page, 0);
   const primary = page.locator('[data-admin-color-text="sources.primary"]');
   await primary.fill('#7fb2ff');
   // The check turns before the save: the editor sees every short pair at once.
@@ -291,6 +308,103 @@ test('every curated typeface keeps the home page under the CLS budget', async ({
       await page.unroute('**/fonts/*.woff2');
     }
   } finally {
+    await restore(request, adminAuth, before);
+  }
+});
+
+test('the Backgrounds tab: the three built from the brand, Sea mist with its preview and verdict, refusals, and a saved set reaching the site', async ({
+  page,
+  request,
+}) => {
+  test.setTimeout(120_000);
+  const adminAuth = await login(request, ADMIN);
+  const before = await stored(request, adminAuth);
+  const surfaces = async () =>
+    (
+      (await (await request.get(`${GLOBAL}?depth=0`, { headers: adminAuth })).json()) as {
+        surfaces: Array<Record<string, unknown>>;
+      }
+    ).surfaces;
+  const library = await surfaces();
+
+  expect((await page.request.post(`${API}/users/login`, { data: ADMIN })).status()).toBe(200);
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await openTab(page, 3);
+  await expect(page.locator('[data-admin-built-in-surface]')).toHaveCount(3);
+  const row = page.locator('[data-admin-surface-row="sea-mist"]');
+  // Payload opens a new row's fields; the label reads the name and the key.
+  await expect(row).toBeVisible();
+  const preview = page.locator('[data-admin-surface-preview]').first();
+  await expect(preview.locator('[data-admin-surface-verdict="pass"]')).toHaveCount(3);
+  const axeOnTab = async (label: string) => {
+    const { AxeBuilder } = await import('@axe-core/playwright');
+    for (const width of [1440, 390]) {
+      await page.setViewportSize({ width, height: 900 });
+      const found = await new AxeBuilder({ page })
+        .withTags(['wcag2a', 'wcag2aa'])
+        .include('[data-admin-built-in-surfaces]')
+        .include('[data-admin-surface-preview]')
+        .analyze();
+      expect(
+        found.violations
+          .filter((v) => ['serious', 'critical'].includes(v.impact ?? ''))
+          .map((v) => v.id),
+        `axe on the Backgrounds tab, ${label}, at ${width}`,
+      ).toEqual([]);
+    }
+  };
+  await axeOnTab('English');
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto(SCREEN);
+  await switchPanelLanguage(page, 'ar');
+  await openTab(page, 3);
+  await expect(page.locator('[data-admin-built-in-surface="deep-sea"]')).toContainText(
+    'أعماق البحر',
+  );
+  await axeOnTab('Arabic');
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await switchPanelLanguage(page, 'en');
+
+  // Through the API: a text colour that does not read on its background is refused in words,
+  // and a key that belongs to a set built from the brand is refused.
+  const seaMist = library.find((set) => set['key'] === 'sea-mist')!;
+  const faint = await request.post(GLOBAL, {
+    headers: adminAuth,
+    data: { surfaces: [{ ...seaMist, textMuted: '#7a8896' }] },
+  });
+  expect(faint.status()).toBe(400);
+  expect(await faint.text()).toContain('where this background is darkest and needs 4.5:1');
+  const taken = await request.post(GLOBAL, {
+    headers: adminAuth,
+    data: { surfaces: [...library, { ...seaMist, id: undefined, key: 'ground' }] },
+  });
+  expect(taken.status()).toBe(400);
+  expect(await taken.text()).toContain('belongs to a background built from the brand colours');
+
+  // A saved set reaches every page's head.
+  const dune = {
+    key: 'dune',
+    label: 'Dune',
+    kind: 'solid',
+    background: '#f3ead8',
+    text: '#14181f',
+    textMuted: '#4b4f55',
+    link: '#0b3d91',
+    button: 'primary',
+    grain: 0,
+    blooms: [],
+  };
+  try {
+    const saved = await request.post(GLOBAL, {
+      headers: adminAuth,
+      data: { surfaces: [...library, dune] },
+    });
+    expect(saved.status(), await saved.text()).toBe(200);
+    await expect
+      .poll(shows(request, '/', "[data-surface='dune']{--section-bg:#f3ead8"), POLL)
+      .toBe(true);
+  } finally {
+    await request.post(GLOBAL, { headers: adminAuth, data: { surfaces: library } });
     await restore(request, adminAuth, before);
   }
 });

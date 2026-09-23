@@ -92,8 +92,8 @@ test.describe('product detail (BRD 6.6)', () => {
     await expect(page.locator('table')).toHaveCount(0);
     await expect(page.locator('[data-gallery-view]')).toHaveCount(0);
     const tones = await page
-      .locator('section[data-tone]')
-      .evaluateAll((els) => els.map((el) => el.getAttribute('data-tone')));
+      .locator('section[data-surface]')
+      .evaluateAll((els) => els.map((el) => el.getAttribute('data-surface')));
     for (let i = 1; i < tones.length; i++)
       expect(tones[i], tones.join(' → ')).not.toBe(tones[i - 1]);
   });

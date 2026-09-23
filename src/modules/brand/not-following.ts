@@ -24,6 +24,7 @@ export const NOT_FOLLOWING = {
     'src/lib/contact-transport.ts',
     'src/modules/cms/auth/reset-email.ts',
   ],
+  seaMist: ['src/modules/brand/surfaces.ts'],
 } as const satisfies Record<Item, readonly string[]>;
 
 export type NotFollowingItem = keyof typeof NOT_FOLLOWING;

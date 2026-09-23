@@ -44,7 +44,7 @@ export async function ProductPage({ product, locale }: { product: Product; local
   const profit = product.suggestedPrice - product.baseCost;
   const hasSizeChart = product.sizes.some((s) => s.measurements);
   // surface (intro) → ground (description + sizes) → surface (related) → ribbon
-  const relatedTone: SectionTone = 'surface';
+  const relatedTone = 'surface' satisfies SectionTone;
   const crumbs = [
     { name: copy.breadcrumbHome, href: localePath(locale, '/') },
     { name: copy.title, href: localePath(locale, '/products') },

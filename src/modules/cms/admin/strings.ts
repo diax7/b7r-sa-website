@@ -281,6 +281,8 @@ export const adminStrings = {
       mutedOnGround: 'Secondary text on the grey sections',
       footerOnNavy: 'White text on the footer',
       ribbonOnPrimaryDark: 'White text on the primary dark',
+      linkOnGround: 'Links on the grey sections',
+      accentTintOnNavy: 'Secondary text and links on the deep sea background',
     },
     /** A refused save: the pair, what it reads, what it needs, and the one change that fixes it. */
     refusal: {
@@ -295,6 +297,43 @@ export const adminStrings = {
     more: 'The contrast check lists the rest.',
     notAColour: 'Write the colour as #1f6feb: a hash, then six digits or letters from a to f.',
     typefacePreview: 'Design your product; we print it and deliver it to your customer.',
+    /** The background sets (phase 1c): the three built from the brand, the preview, the refusals. */
+    surfaces: {
+      builtInTitle: 'Built from the brand colours',
+      builtInLead: 'These change with the brand colours above and cannot be deleted.',
+      builtIn: {
+        surface: 'White',
+        ground: 'Light grey',
+        'deep-sea': 'Deep sea',
+      },
+      preview: {
+        heading: 'A heading on this background',
+        text: 'Body text as a visitor reads it.',
+        muted: 'Secondary text beside it.',
+        link: 'A link',
+        button: 'Call to action',
+      },
+      roles: {
+        text: 'Text',
+        textMuted: 'Secondary text',
+        link: 'Links',
+      },
+      weakest: 'weakest {ratio}',
+      waiting: 'The preview shows once every colour of this background is a colour.',
+      untitled: 'Background {n}',
+      /** A text colour of a background that does not read everywhere on it. */
+      refusal: {
+        darker:
+          '{role} reads {got} where this background is darkest and needs {wanted}. Choose a darker colour, or a lighter background.',
+        lighter:
+          '{role} reads {got} where this background is lightest and needs {wanted}. Choose a lighter colour, or a darker background.',
+      },
+      key: {
+        notSlug: 'Lowercase Latin letters, digits and hyphens, starting with a letter: sea-mist.',
+        taken: 'Another background already has this key.',
+        builtIn: 'This key belongs to a background built from the brand colours.',
+      },
+    },
     notFollowing: {
       title: 'Does not follow',
       lead: 'These keep the shipped colours after a change: each is a file, not a field.',
@@ -330,6 +369,10 @@ export const adminStrings = {
         emails: {
           name: 'The e-mails',
           why: 'The confirmation, the message copy and the password reset carry the shipped colours.',
+        },
+        seaMist: {
+          name: 'The Sea mist background',
+          why: 'Its colours are fixed from the reference image; change them in its row under Backgrounds.',
         },
       },
     },
@@ -960,6 +1003,8 @@ export const adminStringsAr: AdminStrings = {
       mutedOnGround: 'النص الثانوي على الأقسام الرمادية',
       footerOnNavy: 'النص الأبيض على التذييل',
       ribbonOnPrimaryDark: 'النص الأبيض على الأساسي الداكن',
+      linkOnGround: 'الروابط على الأقسام الرمادية',
+      accentTintOnNavy: 'النص الثانوي والروابط على خلفية أعماق البحر',
     },
     refusal: {
       darker: '{pair}: التباين {got} والمطلوب {wanted}. غيّر {colour} إلى لون أغمق.',
@@ -972,6 +1017,41 @@ export const adminStringsAr: AdminStrings = {
     more: 'يعرض فحص التباين البقية.',
     notAColour: 'اكتب اللون بصيغة #1f6feb: علامة # ثم ستة أرقام أو حروف من a إلى f.',
     typefacePreview: 'صمّم منتجك، ونطبعه ونوصله لعميلك.',
+    surfaces: {
+      builtInTitle: 'من ألوان العلامة',
+      builtInLead: 'تتغيّر مع ألوان العلامة أعلاه، ولا يمكن حذفها.',
+      builtIn: {
+        surface: 'أبيض',
+        ground: 'رمادي فاتح',
+        'deep-sea': 'أعماق البحر',
+      },
+      preview: {
+        heading: 'عنوان على هذه الخلفية',
+        text: 'نص المحتوى كما يقرؤه الزائر.',
+        muted: 'نص ثانوي بجانبه.',
+        link: 'رابط',
+        button: 'زر الدعوة',
+      },
+      roles: {
+        text: 'النص',
+        textMuted: 'النص الثانوي',
+        link: 'الروابط',
+      },
+      weakest: 'أضعف تباين {ratio}',
+      waiting: 'تظهر المعاينة حين تكتمل ألوان هذه الخلفية كلها.',
+      untitled: 'خلفية {n}',
+      refusal: {
+        darker:
+          '{role}: أضعف تباين {got} حيث تغمق الخلفية، والمطلوب {wanted}. اختر لوناً أغمق أو خلفية أفتح.',
+        lighter:
+          '{role}: أضعف تباين {got} حيث تفتح الخلفية، والمطلوب {wanted}. اختر لوناً أفتح أو خلفية أغمق.',
+      },
+      key: {
+        notSlug: 'حروف لاتينية صغيرة وأرقام وشرطات، تبدأ بحرف: sea-mist.',
+        taken: 'مفتاح تستخدمه خلفية أخرى.',
+        builtIn: 'هذا المفتاح لخلفية من ألوان العلامة.',
+      },
+    },
     notFollowing: {
       title: 'لا يتبع المظهر',
       lead: 'تبقى هذه على الألوان الأصلية بعد أي تغيير: كل منها ملف، لا حقل.',
@@ -1007,6 +1087,10 @@ export const adminStringsAr: AdminStrings = {
         emails: {
           name: 'رسائل البريد',
           why: 'رسالة التأكيد ونسخة الرسالة وإعادة تعيين كلمة المرور تحمل الألوان الأصلية.',
+        },
+        seaMist: {
+          name: 'خلفية رذاذ البحر',
+          why: 'ألوانها ثابتة من الصورة المرجعية؛ غيّرها من صفّها في تبويب الخلفيات.',
         },
       },
     },

@@ -77,12 +77,17 @@
    Base
    --------------------------------------------------------------------------------------- */
 @layer base {
-  /* The page's own ink, copied once at the root (spec 010): a themed section rewrites
-     `--color-text` for the words on it, and a scrim over a photo must stay the page's dark
-     whatever section it sits in. A custom property resolves where it is declared, so this
-     holds the runtime brand's ink and nothing a section sets reaches it. */
+  /* The page's own tones, copied once at the root (spec 010): a background set rewrites
+     `--color-text` and its kin for the words on it, while a scrim over a photo and a card
+     inside the section must keep the page's. A custom property resolves where it is
+     declared, so these hold the runtime brand's values and nothing a section sets reaches
+     them. */
   :root {
     --page-text: var(--color-text);
+    --page-text-muted: var(--color-text-muted);
+    --page-primary: var(--color-primary);
+    --page-primary-hover: var(--color-primary-hover);
+    --page-border: var(--color-border);
   }
   html {
     scroll-behavior: smooth;
@@ -136,7 +141,8 @@
     color: inherit;
   }
   :focus-visible {
-    outline: 2px solid var(--color-accent);
+    /* A background set names its own ring colour (spec 010): the accent vanishes on a blue. */
+    outline: 2px solid var(--focus-ring, var(--color-accent));
     outline-offset: 2px;
     border-radius: var(--radius-inner);
   }
@@ -194,6 +200,64 @@
   @media (min-width: 768px) {
     padding-block: 96px;
   }
+}
+
+/* ---------------------------------------------------------------------------------------
+   Background sets (spec 010, phase 1c; `src/modules/brand/surfaces.ts`). A section names its
+   set in `data-surface` and paints `--section-bg` and `--section-image`, never
+   `--color-surface`, so a card inside stays the page's white. Three sets are built from the
+   brand here and follow it; the library's sets arrive in the head's style block.
+   --------------------------------------------------------------------------------------- */
+@layer components {
+  /* In the components layer so a text utility on the section still wins. The section sets
+     its colour itself: `color` inherits as a resolved value, so plain text would otherwise
+     keep the body's ink on a dark set. */
+  .surface {
+    background-color: var(--section-bg, var(--color-surface));
+    background-image: var(--section-image, none);
+    color: var(--color-text);
+  }
+  /* An island inside a set (a card, a panel on the page's white or grey) reads the page's
+     tones again, so its words read on its own background. */
+  :where(.surface) :where(.bg-surface, .bg-ground, .bg-white) {
+    --color-text: var(--page-text);
+    --color-text-muted: var(--page-text-muted);
+    --color-primary: var(--page-primary);
+    --color-primary-hover: var(--page-primary-hover);
+    --color-border: var(--page-border);
+    --focus-ring: var(--color-accent);
+    color: var(--color-text);
+  }
+  /* A primary button keeps the page's blue: a set's `--color-primary` is its link colour. */
+  :where(.surface) :where(.bg-primary, .btn-shiny) {
+    --color-primary: var(--page-primary);
+    --color-primary-hover: var(--page-primary-hover);
+  }
+}
+[data-surface='surface'] {
+  --section-bg: var(--color-surface);
+}
+[data-surface='ground'] {
+  --section-bg: var(--color-ground);
+}
+/* The footer's navy as a section: white text, the accent tint for secondary text and links
+   (the pair `accentTintOnNavy` of the contrast check holds them to AA on any navy). */
+[data-surface='deep-sea'] {
+  --section-bg: var(--color-navy);
+  --color-text: #ffffff;
+  --color-text-muted: var(--color-accent-tint);
+  --color-primary: var(--color-accent-tint);
+  --color-primary-hover: #ffffff;
+  --color-border: color-mix(in srgb, #ffffff 18%, var(--color-navy));
+  --focus-ring: #ffffff;
+}
+/* On a dark set the call to action is the white button with primary text, as the bottom
+   banner's is. Unlayered, so it beats the button's own `text-white`. */
+[data-surface='deep-sea'] :is(.bg-primary, .btn-shiny) {
+  --color-primary: #ffffff;
+  --color-primary-hover: var(--color-accent-tint);
+  --color-accent: var(--color-accent-tint);
+  color: var(--page-primary);
 }
 /* A CSS tooltip for an icon-only control (ADR-044): the text of `data-tooltip` under the
    control on hover and keyboard focus; the control keeps its `aria-label`. */

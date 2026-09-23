@@ -2283,7 +2283,7 @@ test.describe('CMS admin', () => {
         const page = await html();
         const afterVideo = page.slice(page.indexOf('id="video"'));
         const next = afterVideo.match(
-          /<section data-tone="(\w+)"[^>]*id="(testimonials|integrations)"/,
+          /<section data-surface="([\w-]+)"[^>]*id="(testimonials|integrations)"/,
         );
         expect(next?.[1]).toBe('surface');
       } finally {

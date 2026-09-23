@@ -9,8 +9,9 @@
  */
 import { contrastRatio } from '@/modules/brand/contrast';
 import {
+  block,
   type Brand,
-  brandCss,
+  brandTokens,
   DEFAULT_BRAND,
   DERIVED_FROM,
   resolveBrand,
@@ -19,6 +20,7 @@ import type { BrandSources } from '@/modules/brand/defaults';
 import type { BrandDerived } from '@/modules/brand/derive';
 import type { PairKey, PaletteToken } from '@/modules/brand/pairs';
 import { type Hex, toHex } from '@/modules/brand/types';
+import { librarySurfaceCss, type SurfaceSet, toLibrary } from '@/modules/brand/surfaces';
 import { toTypeface, type TypefaceKey, typefaceCss } from '@/modules/brand/typefaces';
 import type { LogoImage } from '@/modules/core/logo-image';
 
@@ -49,6 +51,8 @@ export const DERIVED_KEYS: readonly DerivedKey[] = [
 export interface Appearance {
   brand: Brand;
   typeface: TypefaceKey;
+  /** The library of background sets (phase 1c); the three built from the brand are CSS. */
+  surfaces: SurfaceSet[];
 }
 
 /** The logos the site ships with, where the Logo tab holds no upload. */
@@ -132,14 +136,23 @@ export function toAppearance(doc: unknown): { appearance: Appearance; problems: 
   const stored = isRecord(doc) ? doc : {};
   const problems: string[] = [];
   const read = readPins(stored['pins']);
-  problems.push(...read.problems);
+  const library = toLibrary(stored['surfaces']);
+  problems.push(...read.problems, ...library.problems);
   const brand: Brand = { sources: readSources(stored['sources'], problems), pinned: read.pins };
-  return { appearance: { brand, typeface: toTypeface(stored['typeface']) }, problems };
+  return {
+    appearance: { brand, typeface: toTypeface(stored['typeface']), surfaces: library.library },
+    problems,
+  };
 }
 
-/** The appearance as the one style block of the document head: colours, then the typeface. */
+/**
+ * The appearance as the one style block of the document head: the colours, the typeface, then
+ * the library's background sets, whose white button takes the primary the page paints.
+ */
 export function appearanceCss(appearance: Appearance): string {
-  return `${brandCss(appearance.brand)}${typefaceCss(appearance.typeface)}`;
+  const tokens = brandTokens(appearance.brand);
+  const sets = appearance.surfaces.map((set) => librarySurfaceCss(set, tokens)).join('');
+  return `${block(tokens)}${typefaceCss(appearance.typeface)}${sets}`;
 }
 
 /** Where an editor fixes a colour: one of the five pickers, or a derived colour set by hand. */

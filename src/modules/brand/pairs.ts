@@ -50,7 +50,9 @@ export type PairKey =
   | 'mutedOnSurface'
   | 'mutedOnGround'
   | 'footerOnNavy'
-  | 'ribbonOnPrimaryDark';
+  | 'ribbonOnPrimaryDark'
+  | 'linkOnGround'
+  | 'accentTintOnNavy';
 
 export interface Pair {
   /** The pair's name in both string trees (`appearance.pairs`), where the editor reads it. */
@@ -114,6 +116,16 @@ export const PALETTE_PAIRS: readonly Pair[] = [
     use: 'Ribbon text on primary dark',
     fg: '#ffffff',
     bg: 'primary-dark',
+    min: AA_TEXT,
+  },
+  // The background sets built from the brand (phase 1c): links on the grey sections, and the
+  // secondary text and links of Deep sea, which are the accent tint on navy.
+  { key: 'linkOnGround', use: 'Links on ground', fg: 'primary', bg: 'ground', min: AA_TEXT },
+  {
+    key: 'accentTintOnNavy',
+    use: 'Deep sea: accent tint on navy',
+    fg: 'accent-tint',
+    bg: 'navy',
     min: AA_TEXT,
   },
 ] as const;

@@ -3502,12 +3502,93 @@ export interface Appearance {
    */
   logoOnDark?: (number | null) | Media;
   /**
+   * Sets a section can pick besides the three built from the brand, each with its own text, links and button. A duplicated row copies the Arabic only.
+   */
+  surfaces?:
+    | {
+        /**
+         * Shown to editors in a section's background list: Sea mist.
+         */
+        label: string;
+        /**
+         * Names the background in the code and in the section picker; lowercase with hyphens: sea-mist.
+         */
+        key: string;
+        /**
+         * One flat colour, or a gradient of soft blooms over it.
+         */
+        kind: 'solid' | 'gradient';
+        /**
+         * Fills the section; under a gradient it is the field the blooms sit on.
+         */
+        background: string;
+        /**
+         * Sets the call to action on it: the primary blue, or the white button for a dark background.
+         */
+        button: 'primary' | 'inverse';
+        /**
+         * Colours the headings and body text on it; checked at every point of the background.
+         */
+        text: string;
+        /**
+         * Colours the secondary text on it, held to the same 4.5:1 everywhere.
+         */
+        textMuted: string;
+        /**
+         * Colours the links and the primary-coloured words on it, and the keyboard focus ring.
+         */
+        link: string;
+        /**
+         * Soft patches of colour over the field, in percent of the section: up to four.
+         */
+        blooms?:
+          | {
+              /**
+               * Shows at the bloom's centre and fades to nothing at its edge.
+               */
+              colour: string;
+              /**
+               * Where the centre sits across the section: 0 is the left edge, 100 the right.
+               */
+              x: number;
+              /**
+               * Where the centre sits down the section: 0 is the top, 100 the bottom.
+               */
+              y: number;
+              /**
+               * How far the bloom reaches across, in percent of the section's width.
+               */
+              width: number;
+              /**
+               * How far the bloom reaches down, in percent of the section's height.
+               */
+              height: number;
+              id?: string | null;
+            }[]
+          | null;
+        /**
+         * A fine texture over the gradient, from 0 to 0.2; counted in the contrast check.
+         */
+        grain?: number | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
    * Who saved the current version and when. Drafts do not change it.
    */
   lastSavedBy?: {
     name?: string | null;
     at?: string | null;
   };
+  translations?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -4080,12 +4161,37 @@ export interface AppearanceSelect<T extends boolean = true> {
   typeface?: T;
   logoPrimary?: T;
   logoOnDark?: T;
+  surfaces?:
+    | T
+    | {
+        label?: T;
+        key?: T;
+        kind?: T;
+        background?: T;
+        button?: T;
+        text?: T;
+        textMuted?: T;
+        link?: T;
+        blooms?:
+          | T
+          | {
+              colour?: T;
+              x?: T;
+              y?: T;
+              width?: T;
+              height?: T;
+              id?: T;
+            };
+        grain?: T;
+        id?: T;
+      };
   lastSavedBy?:
     | T
     | {
         name?: T;
         at?: T;
       };
+  translations?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

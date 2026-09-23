@@ -26,6 +26,7 @@ import {
   Images,
   Info,
   Languages,
+  Layers,
   LayoutTemplate,
   ListOrdered,
   MessageCircleQuestion,
@@ -244,6 +245,7 @@ export const SECTION_ICONS = {
   brandColours: Droplet,
   typeface: Type,
   logo: Stamp,
+  backgrounds: Layers,
 } as const satisfies Record<string, LucideIcon>;
 
 export type SectionIconKey = keyof typeof SECTION_ICONS;

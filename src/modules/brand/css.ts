@@ -167,20 +167,21 @@ function declarations(tokens: BrandTokens): string {
     .join(';');
 }
 
-function block(tokens: BrandTokens): string {
+/** The root block for resolved tokens: `:root:root { --color-…: #hex }`. */
+export function block(tokens: BrandTokens): string {
   return `:root:root{${declarations(tokens)}}`;
 }
 
 /**
- * The style block for a brand. A brand that fails any pair, or that cannot be read at all,
+ * The tokens a page paints with for a brand. A brand that fails any pair, or that cannot be read at all,
  * falls back to the shipped palette and says which pair failed. The panel refuses such a save
  * long before it can reach here, so this is the second line of defence, and unlike an earlier
  * draft it now actually does something.
  */
-export function brandCss(brand: Brand): string {
+export function brandTokens(brand: Brand): BrandTokens {
   try {
     const resolved = resolveBrand(brand);
-    if (resolved.failures.length === 0) return block(resolved.tokens);
+    if (resolved.failures.length === 0) return resolved.tokens;
     for (const failure of resolved.failures) {
       console.warn(
         `brand: keeping the shipped palette; ${failure.use} reads ${failure.got.toFixed(2)}:1 and needs ${failure.wanted}:1`,
@@ -193,7 +194,12 @@ export function brandCss(brand: Brand): string {
       })`,
     );
   }
-  return block(SHIPPED_TOKENS);
+  return SHIPPED_TOKENS;
+}
+
+/** The style block for a brand: the tokens `brandTokens` settles on. */
+export function brandCss(brand: Brand): string {
+  return block(brandTokens(brand));
 }
 
 /** The block for the palette the site ships with, computed once rather than on every render. */

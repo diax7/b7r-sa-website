@@ -9,6 +9,7 @@ import {
 } from '@/modules/brand/appearance';
 import { DEFAULT_SOURCES } from '@/modules/brand/defaults';
 import { APPEARANCE_DESCRIPTIONS } from '@/modules/brand/descriptions';
+import { SURFACES_FIELD } from '@/modules/brand/surfaces-field';
 import { toHex } from '@/modules/brand/types';
 import { DEFAULT_TYPEFACE, TYPEFACE_KEYS, TYPEFACES } from '@/modules/brand/typefaces';
 import { hiddenUnlessAdmin, isAdmin } from '@/modules/cms/access';
@@ -17,6 +18,7 @@ import { globalComponents } from '@/modules/cms/admin/document/config';
 import { adminGroup, sectionIcon } from '@/modules/cms/admin/icons';
 import { adminStringsFor } from '@/modules/cms/admin/strings';
 import { savedByField, stampSavedByGlobal } from '@/modules/cms/fields/saved-by';
+import { applyGlobalTranslations } from '@/modules/cms/hooks/translations';
 import {
   BLOG_LISTING_PATTERNS,
   safeRevalidatePath,
@@ -118,7 +120,7 @@ export const Appearance: GlobalConfig = {
   access: { read: isAdmin, update: isAdmin },
   hooks: {
     beforeChange: [stampSavedByGlobal],
-    afterChange: [revalidateAppearance],
+    afterChange: [revalidateAppearance, applyGlobalTranslations],
   },
   fields: describeFields(
     [
@@ -204,6 +206,20 @@ export const Appearance: GlobalConfig = {
               relationTo: 'media',
               label,
             })),
+          },
+          {
+            label: { ar: 'الخلفيات', en: 'Backgrounds' },
+            admin: sectionIcon('backgrounds'),
+            fields: [
+              {
+                name: 'builtInSurfaces',
+                type: 'ui',
+                admin: {
+                  components: { Field: '@/modules/brand/admin/built-in-surfaces#BuiltInSurfaces' },
+                },
+              },
+              SURFACES_FIELD,
+            ],
           },
         ],
       },
