@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { render } from '@testing-library/react';
@@ -5,36 +6,47 @@ import { describe, expect, it } from 'vitest';
 import { APP_ICON_ROUTES, appIconSize } from '@/modules/brand/app-icons';
 import { paintedColours, toAppearance } from '@/modules/brand/appearance';
 import { DEFAULT_SOURCES } from '@/modules/brand/defaults';
-import { BrandLogo, BrandSymbols, ShellLogo } from '@/modules/core/brand-logo';
-import { LOGO, MARK } from '@/modules/core/logo-paths';
+import { BrandLogo, ShellLogo } from '@/modules/core/brand-logo';
+import { LOGO_BOX, LOGO_SPRITE, MARK_BOX } from '@/modules/core/logo-box';
+
+const root = process.cwd();
+const sprite = readFileSync(join(root, 'public/images/logo/sprite.svg'), 'utf8');
+
+/** The fills of one symbol of the sprite, in order. */
+function fills(id: string): string[] {
+  const body = new RegExp(`<symbol id="${id}"[^>]*>(.*?)</symbol>`).exec(sprite)?.[1] ?? '';
+  return [...body.matchAll(/style="([^"]*)"/g)].map((m) => m[1]!);
+}
 
 /**
  * The drawn logo (spec 010, phase 1d): the traced paths painted with the tokens, so a saved
  * brand repaints the header, the menu, the footer, the error pages and the WhatsApp card.
  */
 describe('the drawn logo', () => {
-  it('paints every layer of both symbols with the token it stands for', () => {
-    const { container } = render(<BrandSymbols />);
-    const fills = (id: string) =>
-      [...container.querySelectorAll(`symbol#${id} path`)].map((path) =>
-        path.getAttribute('style'),
-      );
+  it('paints every layer of both symbols of the sprite with the token it stands for', () => {
     expect(fills('b7r-logo')).toEqual([
-      'fill: var(--logo-primary, var(--color-primary));',
-      'fill: var(--logo-accent, var(--color-accent));',
-      'fill: var(--logo-primary-dark, var(--color-primary-dark));',
+      'fill:var(--logo-primary, var(--color-primary))',
+      'fill:var(--logo-accent, var(--color-accent))',
+      'fill:var(--logo-primary-dark, var(--color-primary-dark))',
     ]);
     expect(fills('b7r-mark')).toEqual([
-      'fill: var(--logo-accent, var(--color-accent));',
-      'fill: var(--logo-primary-dark, var(--color-primary-dark));',
+      'fill:var(--logo-accent, var(--color-accent))',
+      'fill:var(--logo-primary-dark, var(--color-primary-dark))',
     ]);
     // No colour is baked into the artwork: every fill comes from a token.
-    expect(container.innerHTML).not.toMatch(/fill="#/);
+    expect(sprite).not.toMatch(/fill="#|#[0-9a-f]{6}/i);
   });
 
-  it('keeps the artwork in proportion: the wide logo and the square mark', () => {
-    expect(LOGO.width / LOGO.height).toBeCloseTo(2713 / 988, 3);
-    expect(MARK.width).toBe(MARK.height);
+  it('keeps the view boxes the sprite was traced at, and a URL that changes with the trace', () => {
+    expect(sprite).toContain(
+      `<symbol id="b7r-logo" viewBox="0 0 ${LOGO_BOX.width} ${LOGO_BOX.height}">`,
+    );
+    expect(sprite).toContain(
+      `<symbol id="b7r-mark" viewBox="0 0 ${MARK_BOX.width} ${MARK_BOX.height}">`,
+    );
+    expect(MARK_BOX.width).toBe(MARK_BOX.height);
+    const version = createHash('sha256').update(sprite).digest('hex').slice(0, 10);
+    expect(LOGO_SPRITE).toBe(`/images/logo/sprite.svg?v=${version}`);
   });
 
   it('draws a use of the symbol, white on a dark background through its class', () => {
@@ -45,15 +57,15 @@ describe('the drawn logo', () => {
       </>,
     );
     const [logo, mark] = [...container.querySelectorAll('svg')];
-    expect(logo!.querySelector('use')!.getAttribute('href')).toBe('#b7r-logo');
+    expect(logo!.querySelector('use')!.getAttribute('href')).toBe(`${LOGO_SPRITE}#b7r-logo`);
     expect(logo!.getAttribute('aria-hidden')).toBe('true');
     expect(logo!.classList.contains('logo-on-dark')).toBe(false);
-    expect(mark!.querySelector('use')!.getAttribute('href')).toBe('#b7r-mark');
+    expect(mark!.querySelector('use')!.getAttribute('href')).toBe(`${LOGO_SPRITE}#b7r-mark`);
     expect(mark!.classList.contains('logo-on-dark')).toBe(true);
   });
 
   it('turns every layer white on a dark background (globals.css)', () => {
-    const css = readFileSync(join(process.cwd(), 'src/styles/globals.css'), 'utf8');
+    const css = readFileSync(join(root, 'src/styles/globals.css'), 'utf8');
     const rule = /\.logo-on-dark\s*\{([^}]*)\}/.exec(css)?.[1] ?? '';
     for (const layer of ['primary', 'accent', 'primary-dark']) {
       expect(rule, layer).toMatch(new RegExp(`--logo-${layer}:\\s*#ffffff;`));

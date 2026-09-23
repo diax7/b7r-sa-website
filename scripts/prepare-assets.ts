@@ -39,13 +39,14 @@ async function logos() {
     .resize(512, 512)
     .png({ palette: true, quality: 90, compressionLevel: 9 })
     .toFile(pub('images', 'logo', 'icon.png'));
-  // The classic favicon.ico (a 32 px PNG in an ICO container), a format Next cannot draw;
-  // `src/app/icon.tsx` draws the others in the brand's colours.
+  // The classic favicon.ico (a 32 px PNG in an ICO container), a format Next cannot draw, for
+  // a client that asks for it by path. It sits in `public/`, so no page links it: the tab icon
+  // is the one `src/app/icon.tsx` draws in the brand's colours.
   const png32 = await sharp(res('brand', 'logo', 'icon.png'))
     .resize(32, 32)
     .png()
     .toBuffer();
-  writeFileSync(join(root, 'src', 'app', 'favicon.ico'), icoFromPng(png32, 32));
+  writeFileSync(pub('favicon.ico'), icoFromPng(png32, 32));
 }
 
 /** ICO container around one PNG image (valid since Windows Vista; every browser reads it). */

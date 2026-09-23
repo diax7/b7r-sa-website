@@ -123,7 +123,8 @@ and the manifest at once, but a browser keeps an icon it has for up to a day
 
 **Tracing the logo again** (a new `resources/brand/logo/logo.png` or `icon.png`): run
 `uvx --with potracer --with numpy --with pillow python scripts/trace-logo.py`, then
-`pnpm format`, and commit `src/modules/core/logo-paths.ts` (the same PNGs give the same file);
+`pnpm format`, and commit the sprite and the two modules it writes (`logo-box.ts`,
+`mark-paths.ts`; the same PNGs give the same files, and a new trace is a new sprite URL);
 compare the header at 1440 and 390 against the PNG before merging. The panel's own logo and
 `favicon.ico` are still the PNGs `pnpm assets` writes.
 

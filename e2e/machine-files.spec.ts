@@ -69,6 +69,30 @@ test.describe('machine files (BRD 7.2, 7.3, 7.5, 7.6)', () => {
     expect(font.headers()['cache-control']).toBe('public, max-age=31536000, immutable');
   });
 
+  // The traced logo is a static sprite drawn with `<use>` (spec 010, phase 1d): its path data
+  // rides in no page and no script, and the sprite itself is cached for a day.
+  test('the drawn logo lives in its sprite alone: no page or script carries its paths', async ({
+    request,
+  }) => {
+    const html = await (await request.get('/')).text();
+    const sprite = /\/images\/logo\/sprite\.svg\?v=[0-9a-f]{10}/.exec(html)?.[0];
+    expect(sprite, 'the header draws the sprite').toBeTruthy();
+    const res = await request.get(sprite!);
+    expect(res.status()).toBe(200);
+    expect(res.headers()['content-type']).toContain('image/svg+xml');
+    expect(res.headers()['cache-control']).toBe('public, max-age=86400');
+    // A stretch of the logo's first path: long enough to be the artwork and nothing else.
+    const signature = /<path[^>]* d="([^"]{40})/.exec(await res.text())?.[1];
+    expect(signature, 'the sprite holds path data').toBeTruthy();
+    expect(html.includes(signature!), 'the page carries the paths').toBe(false);
+    const scripts = [...html.matchAll(/src="(\/_next\/static\/[^"]+\.js)"/g)].map((m) => m[1]!);
+    expect(scripts.length).toBeGreaterThan(3);
+    for (const script of scripts) {
+      const code = await (await request.get(script)).text();
+      expect(code.includes(signature!), script).toBe(false);
+    }
+  });
+
   test('robots.txt disallows everything on a non-production host', async ({ request }) => {
     // Local builds leave NEXT_PUBLIC_SITE_URL unset; CI sets the production origin and checks
     // the full rule set in the Lighthouse SEO audit instead.

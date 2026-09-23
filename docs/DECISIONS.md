@@ -2879,9 +2879,14 @@ a merge unions an object's keys but replaces a list.
 **Amended 2026-09-23 (phase 1d).** What the brand reaches outside the stylesheet:
 
 - *The logo* is drawn, not shown: `scripts/trace-logo.py` traces `logo.png` and `icon.png` into
-  one path per blue (`src/modules/core/logo-paths.ts`, about 19 KB), sent once per document as
-  two `<symbol>`s and drawn with `<use>` wherever the shell shows it, each path filled with
-  `var(--logo-*, var(--color-*))`. The footer sets the three `--logo-*` to white. An upload in
+  one path per blue at whole units, written as two symbols of a static sprite
+  (`public/images/logo/sprite.svg`, about 14 KB, its URL carrying a hash of its contents) and
+  drawn with `<use href="…sprite.svg?v=…#b7r-logo">` wherever the shell shows it, each path
+  filled with `var(--logo-*, var(--color-*))`. Custom properties inherit into an external
+  `<use>` (checked in Chromium, Firefox and WebKit), so the drawing takes the page's tokens; the
+  footer sets the three `--logo-*` to white. The browser caches the sprite once: no path data
+  rides in a page's HTML or JavaScript (an e2e reads the home page and every script it loads).
+  The mark's paths are also in `mark-paths.ts`, server only, for the icon routes. An upload in
   the Logo tab replaces the drawing in that place and keeps its own colours. Dhia chose tracing
   (2026-09-23) over keeping the PNGs; the trace is Dhia's to confirm by eye (BRD 3.1, amended).
 - *The icons* are routes: `src/app/icon.tsx` draws the mark at 32, 192 and 512 px (no other
@@ -2894,5 +2899,6 @@ a merge unions an object's keys but replaces a list.
   they are sent (`readMailPalette`, which takes the sender's Payload so the reset e-mail can call
   it from inside the config graph); a failed read sends the mail in the shipped colours and
   logs a warning.
-- *Still raster, and listed as not following:* `favicon.ico` (a format Next cannot draw), the
+- *Still raster, and listed as not following:* `favicon.ico` (a format Next cannot draw; in
+  `public/`, so no page links it and the drawn 32 px icon is the tab's only candidate), the
   panel's logo, the share images, the 410 page, the 3D icons and the video poster.

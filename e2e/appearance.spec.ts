@@ -461,21 +461,28 @@ test('a saved brand reaches the drawn logo, the app icons, the browser bar and t
         .toBe(true);
     }
     await page.goto('/');
-    // The header's logo is the symbol, and the symbol's layers read the tokens.
-    await expect(page.locator('header svg[data-brand-logo="logo"]').first()).toBeVisible();
-    await expect(page.locator('#b7r-logo path').first()).toHaveCSS('fill', 'rgb(26, 92, 175)');
-    // The footer's is the same symbol, every layer white (the minifier writes `#fff`).
+    // The header's logo, as drawn: the sprite's primary layer in the saved primary. Read from
+    // the pixels, since the drawing is a `<use>` of a file the page does not hold.
+    const headerLogo = page.locator('header svg[data-brand-logo="logo"]').first();
+    await expect(headerLogo).toBeVisible();
+    await expect
+      .poll(async () => (await opaqueColours(await headerLogo.screenshot())).has('26,92,175'), {
+        ...POLL,
+        message: 'the header logo in the saved primary',
+      })
+      .toBe(true);
+    // The footer's is the same drawing, every layer white on the navy: no blue of its own.
     const footerLogo = page.locator('footer svg[data-brand-logo="logo"]');
     await expect(footerLogo).toHaveClass(/logo-on-dark/);
-    for (const layer of ['primary', 'accent', 'primary-dark']) {
-      expect(
-        await footerLogo.evaluate(
-          (el, name) => getComputedStyle(el).getPropertyValue(`--logo-${name}`),
-          layer,
-        ),
-        layer,
-      ).toMatch(/^#fff(fff)?$/i);
-    }
+    await footerLogo.scrollIntoViewIfNeeded();
+    await expect
+      .poll(async () => (await opaqueColours(await footerLogo.screenshot())).has('255,255,255'), {
+        ...POLL,
+        message: 'the footer logo in white',
+      })
+      .toBe(true);
+    const footerColours = await opaqueColours(await footerLogo.screenshot());
+    expect(footerColours.has('26,92,175'), 'no saved primary in the footer logo').toBe(false);
   } finally {
     await restore(request, adminAuth, before);
   }

@@ -1,6 +1,6 @@
 /* eslint-disable @next/next/no-img-element -- the icon is drawn by ImageResponse, not the browser */
 import { ImageResponse } from 'next/og';
-import { MARK } from '@/modules/core/logo-paths';
+import { MARK } from '@/modules/core/mark-paths';
 
 type MarkLayer = keyof typeof MARK.paths;
 
