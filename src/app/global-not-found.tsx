@@ -4,8 +4,7 @@ import { SiteDocument } from '@/app/site-document';
 import { copyFor } from '@/content/copy';
 import { getNavigation, getSiteSettings } from '@/lib/cms';
 import { siteLocales } from '@/lib/cms/locales';
-import { BRAND_PRIMARY_HEX } from '@/lib/tokens';
-import { getAppearance } from '@/modules/brand';
+import { getAppearance, siteViewport } from '@/modules/brand';
 import { StatusPage } from '@/modules/core';
 import { rootMetadata } from '@/modules/core/seo/metadata';
 
@@ -19,11 +18,9 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export const revalidate = 60;
 
-export const viewport: Viewport = {
-  width: 'device-width',
-  initialScale: 1,
-  themeColor: BRAND_PRIMARY_HEX,
-};
+export function generateViewport(): Promise<Viewport> {
+  return siteViewport();
+}
 
 /**
  * BRD 4.15 / 6.13, ADR-043. With two root layouts (site and admin) Next cannot compose a 404

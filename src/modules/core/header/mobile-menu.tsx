@@ -1,6 +1,5 @@
 'use client';
 
-import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState, type CSSProperties } from 'react';
 import { InstagramIcon, TikTokIcon, WhatsAppIcon, XIcon } from '@/components/shared/brand-icons';
@@ -20,6 +19,7 @@ import { env } from '@/lib/env';
 import { type Locale, localePath } from '@/lib/i18n';
 import { isActive } from '@/lib/nav';
 import { registerUrl, whatsappUrl } from '@/lib/utm';
+import { ShellLogo } from '@/modules/core/brand-logo';
 import type { LogoImage } from '@/modules/core/logo-image';
 import { Burger, burgerButtonClass } from '@/modules/core/header/burger';
 import { LanguageSwitch } from '@/modules/core/header/language-switch';
@@ -52,8 +52,8 @@ export function MobileMenu({
   /** Whether the site exists in the other language (the header decides). */
   switchable: boolean;
   copy: ShellCopy;
-  /** The header's logo, repeated in the sheet's top bar. */
-  logo: LogoImage;
+  /** The header's logo, repeated in the sheet's top bar; `null` for the drawn one. */
+  logo: LogoImage | null;
   autoOpen?: boolean;
 }) {
   const [open, setOpen] = useState(false);
@@ -90,14 +90,7 @@ export function MobileMenu({
             aria-label={site.brandName}
             onClick={() => setOpen(false)}
           >
-            <Image
-              src={logo.src}
-              alt=""
-              width={logo.width}
-              height={logo.height}
-              sizes="88px"
-              className="h-8 w-auto"
-            />
+            <ShellLogo logo={logo} sizes="88px" className="h-8 w-auto" />
           </Link>
           <div className="flex items-center gap-2">
             {switchable && <LanguageSwitch locale={locale} ariaLabel={copy.a11y.switchLanguage} />}

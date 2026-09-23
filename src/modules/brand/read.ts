@@ -1,8 +1,14 @@
 import 'server-only';
+import type { Viewport } from 'next';
 import { cache } from 'react';
 import { mediaUrl } from '@/lib/cms/mappers';
 import { cms } from '@/lib/cms/payload';
-import { type Appearance, APPEARANCE, toAppearance } from '@/modules/brand/appearance';
+import {
+  type Appearance,
+  APPEARANCE,
+  paintedColours,
+  toAppearance,
+} from '@/modules/brand/appearance';
 import type { LogoImage } from '@/modules/core/logo-image';
 import type { Media } from '@/payload-types';
 
@@ -47,3 +53,9 @@ export const getAppearance = cache(async (): Promise<SiteAppearance> => {
     return { ...toAppearance(null).appearance, logo: NO_LOGO };
   }
 });
+
+/** The viewport of every site document: the phone's browser bar in the primary the site paints. */
+export async function siteViewport(): Promise<Viewport> {
+  const colour = paintedColours(await getAppearance());
+  return { width: 'device-width', initialScale: 1, themeColor: colour('primary') };
+}

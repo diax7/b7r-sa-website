@@ -112,6 +112,21 @@ the panel's language only.
 panel), and `tests/brand-not-following.test.ts` fails when a shipped brand colour appears in
 a file that list does not name.
 
+**What follows** besides the pages (phase 1d): the logo in the header, the phone menu, the
+footer, the error pages and the WhatsApp card is drawn from vector paths in the brand's blues
+(an upload in the Logo tab replaces it and keeps its own colours); the browser tab icon, the
+manifest's two icons and the Apple icon are drawn by `src/app/icon.tsx` and `apple-icon.tsx`
+from the mark; the phone's browser bar and the manifest read the primary; the booking, contact
+and password-reset e-mails read the colours when they are sent. A save regenerates the icons
+and the manifest at once, but a browser keeps an icon it has for up to a day
+(`max-age=86400`), so a returning visitor's tab icon may lag the change by that much.
+
+**Tracing the logo again** (a new `resources/brand/logo/logo.png` or `icon.png`): run
+`uvx --with potracer --with numpy --with pillow python scripts/trace-logo.py`, then
+`pnpm format`, and commit `src/modules/core/logo-paths.ts` (the same PNGs give the same file);
+compare the header at 1440 and 390 against the PNG before merging. The panel's own logo and
+`favicon.ico` are still the PNGs `pnpm assets` writes.
+
 ## Assets (photos)
 
 `pnpm assets` derives `public/images` from `resources/` (ADR-002): logos, badges, the 3D
@@ -506,7 +521,7 @@ has no OG image until this runs: the page falls back to the language's default i
 
 **A changed file under `public/` keeps its old look for a year unless its name changes.**
 Since 2026-09-18 (site audit, item 16) `next/image` caches its transforms for a year
-(`images.minimumCacheTTL`) and `/og`, `/icons` and `/images` answer with `max-age=86400`, so
+(`images.minimumCacheTTL`) and `/og`, `/icon`, `/apple-icon` and `/images` answer with `max-age=86400`, so
 `pnpm og` and `pnpm assets`, which rewrite files under the same names, are served stale by
 the optimiser until the name changes or a deploy clears `.next/cache`. A CMS upload is safe:
 Payload gives a new file a new name.

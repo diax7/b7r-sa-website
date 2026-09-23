@@ -60,7 +60,7 @@ test.describe('machine files (BRD 7.2, 7.3, 7.5, 7.6)', () => {
   test('the renders, icons and brand images are cached for a day; the fonts for a year', async ({
     request,
   }) => {
-    for (const path of ['/og/default.png', '/icons/icon-192.png', '/images/logo/icon.png']) {
+    for (const path of ['/og/default.png', '/icon/192', '/apple-icon', '/images/logo/icon.png']) {
       const res = await request.get(path);
       expect(res.status(), path).toBe(200);
       expect(res.headers()['cache-control'], path).toBe('public, max-age=86400');
@@ -103,9 +103,14 @@ test.describe('machine files (BRD 7.2, 7.3, 7.5, 7.6)', () => {
     expect(manifest.dir).toBe('rtl');
     expect(manifest.display).toBe('browser');
     expect(manifest.theme_color.toLowerCase()).toBe('#0058b0');
+    // The icons are drawn from the mark in the brand's colours (spec 010); no other size is.
+    expect(manifest.icons.map((icon) => icon.src)).toEqual(['/icon/192', '/icon/512']);
     for (const icon of manifest.icons) {
-      expect((await request.get(icon.src)).status(), icon.src).toBe(200);
+      const drawn = await request.get(icon.src);
+      expect(drawn.status(), icon.src).toBe(200);
+      expect(drawn.headers()['content-type'], icon.src).toBe('image/png');
     }
+    expect((await request.get('/icon/99')).status(), '/icon/99').toBe(404);
     for (const path of ['/favicon.ico', '/og/default.png', '/og/products/hoodie.png']) {
       expect((await request.get(path)).status(), path).toBe(200);
     }

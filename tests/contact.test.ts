@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { TEST_PALETTE } from './helpers/mail-palette';
 import { copyFor } from '@/content/copy';
 import { buildContactEmail, getContactTransport } from '@/lib/contact-transport';
 import { verifyTurnstile } from '@/lib/turnstile';
@@ -85,7 +86,7 @@ describe('contact schema (BRD 4.11, 6.9)', () => {
 });
 
 describe('contact email (BRD 4.17)', () => {
-  const mail = buildContactEmail({ ...valid, phone: '966501699572' });
+  const mail = buildContactEmail({ ...valid, phone: '966501699572' }, TEST_PALETTE);
 
   it('carries the inquiry in the subject and every field in both bodies', () => {
     expect(mail.subject).toBe('رسالة جديدة من الموقع: تاجر');
@@ -103,14 +104,23 @@ describe('contact email (BRD 4.17)', () => {
   });
 
   it('omits the WhatsApp reply link for a non-Saudi number', () => {
-    const intl = buildContactEmail({ ...valid, phone: '+971501234567' });
+    const intl = buildContactEmail({ ...valid, phone: '+971501234567' }, TEST_PALETTE);
     expect(intl.html).not.toContain('wa.me');
     expect(intl.text).not.toContain('wa.me');
     expect(intl.html).toContain('<bdi dir="ltr">+971501234567</bdi>');
   });
 
+  it('is written in the brand’s colours at send time, not in literals (spec 010)', () => {
+    expect(mail.html).toContain(`color:${TEST_PALETTE.text}`);
+    expect(mail.html).toContain(`color:${TEST_PALETTE.muted}`);
+    expect(mail.html).toContain(`color:${TEST_PALETTE.primary}`);
+  });
+
   it('escapes HTML in user content', () => {
-    const hostile = buildContactEmail({ ...valid, phone: '966501699572', message: '<img src=x>' });
+    const hostile = buildContactEmail(
+      { ...valid, phone: '966501699572', message: '<img src=x>' },
+      TEST_PALETTE,
+    );
     expect(hostile.html).not.toContain('<img');
     expect(hostile.html).toContain('&lt;img src=x&gt;');
   });
@@ -120,7 +130,7 @@ describe('contact transport selection', () => {
   it('is off without configuration', async () => {
     const t = getContactTransport('contact@b7r.sa');
     expect(t.kind).toBe('off');
-    await expect(t.send({ ...valid, phone: '966501699572' })).resolves.toEqual({
+    await expect(t.send({ ...valid, phone: '966501699572' }, TEST_PALETTE)).resolves.toEqual({
       ok: false,
       status: 503,
     });

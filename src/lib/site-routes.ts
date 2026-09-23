@@ -22,6 +22,9 @@ export const CODE_TOP_LEVEL = [
   'fonts',
   'media',
   'video',
+  // The app icons Next draws from the mark (spec 010): metadata routes with no extension.
+  'icon',
+  'apple-icon',
   '__404',
   'en',
 ] as const;

@@ -169,7 +169,7 @@ export const FONT_CACHE: HeaderEntry = {
  * `public/` is `max-age=0`.
  */
 export const IMAGE_CACHE: HeaderEntry = { key: 'Cache-Control', value: 'public, max-age=86400' };
-export const IMAGE_ROUTE_SOURCES = ['/og/:path*', '/icons/:path*', '/images/:path*'];
+export const IMAGE_ROUTE_SOURCES = ['/og/:path*', '/icon/:path*', '/apple-icon', '/images/:path*'];
 
 export function headerRoutes(options: SecurityHeaderOptions = {}): HeaderRoute[] {
   return [

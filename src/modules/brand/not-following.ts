@@ -9,21 +9,16 @@ type Item = keyof AdminStrings['appearance']['notFollowing']['items'];
  * sentence in both languages is a type error, and `tests/brand-not-following.test.ts` fails
  * when a shipped brand colour turns up in a file no item names.
  *
- * Phase 1d shortens the list (the logo, the app icons, the theme colour, the e-mails).
+ * Since phase 1d the site's logo, the app icons, the browser bar and the e-mails follow; what
+ * is left is an image, a file format or a page drawn before the site loads.
  */
 export const NOT_FOLLOWING = {
   icons3d: ['public/images/icons-3d'],
-  logo: ['public/images/logo'],
-  appIcons: ['src/app/favicon.ico', 'src/app/icon.png', 'src/app/apple-icon.png', 'public/icons'],
-  themeColour: ['src/lib/tokens.ts'],
-  gonePage: ['src/lib/gone-page.ts'],
-  shareImages: ['scripts/build-og.ts'],
+  panelLogo: ['public/images/logo'],
+  favicon: ['src/app/favicon.ico'],
+  gonePage: ['src/lib/gone-page.ts', 'src/lib/tokens.ts'],
+  shareImages: ['scripts/build-og.ts', 'src/lib/tokens.ts'],
   videoPoster: ['scripts/prepare-assets.ts', 'public/video/printer-marketing-poster.jpg'],
-  emails: [
-    'src/lib/booking-mail.ts',
-    'src/lib/contact-transport.ts',
-    'src/modules/cms/auth/reset-email.ts',
-  ],
   seaMist: ['src/modules/brand/surfaces.ts'],
 } as const satisfies Record<Item, readonly string[]>;
 

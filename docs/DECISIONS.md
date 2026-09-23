@@ -2865,7 +2865,7 @@ a merge unions an object's keys but replaces a list.
   copies declared once at the root (`--page-text` and its kin), which no section can reach.
   The rules that set `color` sit in the components layer so a text utility still wins; the dark
   set's white button is unlayered so it beats the button's own `text-white`.
-- *The gradient.* Dhia chose (2026-09-23) that Sea mist keeps the colours of his reference
+- *The gradient.* Dhia chose (2026-09-23) that Sea mist keeps the colours of the reference
   image rather than following the brand, so it is not "a gradient between the brand's own
   blues": it is a fixed set in the library, named on the "does not follow" panel, and its deep
   bloom was lightened (#00609b to #4f9cd7, hue and chroma kept) until its text, secondary text
@@ -2875,3 +2875,24 @@ a merge unions an object's keys but replaces a list.
   stops. The library accepts a gradient between any colours: BRD 3.2's ban on gradients
   between unrelated hues is the admin's to keep, not a validator's, since a rule that judged
   "related" hues would refuse good sets as often as bad ones.
+
+**Amended 2026-09-23 (phase 1d).** What the brand reaches outside the stylesheet:
+
+- *The logo* is drawn, not shown: `scripts/trace-logo.py` traces `logo.png` and `icon.png` into
+  one path per blue (`src/modules/core/logo-paths.ts`, about 19 KB), sent once per document as
+  two `<symbol>`s and drawn with `<use>` wherever the shell shows it, each path filled with
+  `var(--logo-*, var(--color-*))`. The footer sets the three `--logo-*` to white. An upload in
+  the Logo tab replaces the drawing in that place and keeps its own colours. Dhia chose tracing
+  (2026-09-23) over keeping the PNGs; the trace is Dhia's to confirm by eye (BRD 3.1, amended).
+- *The icons* are routes: `src/app/icon.tsx` draws the mark at 32, 192 and 512 px (no other
+  size is drawn; `/icon/99` is a 404) and `apple-icon.tsx` at 180 px on the page's white, in
+  the painted accent and primary dark. The manifest points at them, and it and the viewport's
+  `theme-color` read the painted primary. An Appearance save revalidates the icon routes with
+  the pages. `icon` and `apple-icon` are code-owned top-level segments, since the proxy would
+  otherwise take them for page slugs.
+- *The e-mails* (a booking, a contact message, a password reset) read the painted colours when
+  they are sent (`readMailPalette`, which takes the sender's Payload so the reset e-mail can call
+  it from inside the config graph); a failed read sends the mail in the shipped colours and
+  logs a warning.
+- *Still raster, and listed as not following:* `favicon.ico` (a format Next cannot draw), the
+  panel's logo, the share images, the 410 page, the 3D icons and the video poster.

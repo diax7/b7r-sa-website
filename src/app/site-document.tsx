@@ -6,8 +6,9 @@ import { copyFor, shellCopy } from '@/content/copy';
 import type { Navigation, SiteSettings } from '@/content/schema';
 import { htmlDir, languageTag, type Locale } from '@/lib/i18n';
 import { Footer, Header, newsletterCopy, SkipLink } from '@/modules/core';
+import { BrandSymbols } from '@/modules/core/brand-logo';
 import { PageExtras } from '@/modules/core/page-extras';
-import { appearanceCss, preloadsFor, SHIPPED_LOGOS, type SiteAppearance } from '@/modules/brand';
+import { appearanceCss, preloadsFor, type SiteAppearance } from '@/modules/brand';
 import { NewsletterForm } from '@/modules/forms';
 import '@/styles/globals.css';
 
@@ -75,6 +76,8 @@ export function SiteDocument({
         )}
       </head>
       <body className="relative min-h-svh">
+        {/* The drawn logo and mark, once; every logo on the page is a `<use>` of them. */}
+        <BrandSymbols />
         <span id={SAR_NAME_ID} hidden>
           {copy.media.sarAria}
         </span>
@@ -86,7 +89,7 @@ export function SiteDocument({
           locale={locale}
           locales={locales}
           copy={shell}
-          logo={appearance.logo.primary ?? SHIPPED_LOGOS.primary}
+          logo={appearance.logo.primary}
         />
         <main id="content" className="relative">
           {children}
@@ -97,7 +100,7 @@ export function SiteDocument({
           site={site}
           locale={locale}
           copy={copy}
-          logo={appearance.logo.onDark ?? SHIPPED_LOGOS.onDark}
+          logo={appearance.logo.onDark}
         />
         <PageExtras
           gaId={site.analytics.gaId}

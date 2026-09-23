@@ -1,4 +1,4 @@
-import Image from 'next/image';
+import { BrandLogo } from '@/modules/core/brand-logo';
 import Link from 'next/link';
 import { WhatsAppIcon } from '@/components/shared/whatsapp-icon';
 import { Button } from '@/components/shared/button';
@@ -19,13 +19,7 @@ interface StatusPageProps {
 export function StatusPage({ title, text, button, home, whatsapp }: StatusPageProps) {
   return (
     <Container className="flex min-h-[70svh] flex-col items-center justify-center gap-6 py-24 text-center">
-      <Image
-        src="/images/logo/icon.png"
-        alt=""
-        width={64}
-        height={64}
-        className="size-16 rounded-inner"
-      />
+      <BrandLogo mark className="size-16" />
       <h1 className="text-h1">{title}</h1>
       <p className="lead text-text-muted">{text}</p>
       <div className="mt-2 flex flex-col items-center gap-4 sm:flex-row">

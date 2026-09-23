@@ -49,7 +49,7 @@ export default buildConfig({
     avatar: 'default',
     meta: {
       titleSuffix: ' | B7R Print Admin',
-      icons: [{ rel: 'icon', type: 'image/png', url: '/icon.png' }],
+      icons: [{ rel: 'icon', type: 'image/png', url: '/images/logo/icon.png' }],
     },
     components: {
       graphics: {

@@ -44,7 +44,7 @@ export function MobileMenuTrigger({
   locale: Locale;
   switchable: boolean;
   copy: ShellCopy;
-  logo: LogoImage;
+  logo: LogoImage | null;
 }) {
   const [wanted, setWanted] = useState(false);
 

@@ -1,6 +1,5 @@
 'use client';
 
-import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
@@ -14,6 +13,7 @@ import { type Locale, localePath, otherLocale } from '@/lib/i18n';
 import { isActive } from '@/lib/nav';
 import { registerUrl } from '@/lib/utm';
 import { LanguageSwitch } from '@/modules/core/header/language-switch';
+import { ShellLogo } from '@/modules/core/brand-logo';
 import type { LogoImage } from '@/modules/core/logo-image';
 import { MobileMenuTrigger } from '@/modules/core/header/mobile-menu-trigger';
 
@@ -32,8 +32,8 @@ export interface ShellData {
   /** The locales the site is in; the switch renders only when the other one is among them. */
   locales: readonly Locale[];
   copy: ShellCopy;
-  /** The colour logo: the Appearance screen's upload, or the shipped image (spec 010). */
-  logo: LogoImage;
+  /** The colour logo: the Appearance screen's upload, or `null` for the drawn one (spec 010). */
+  logo: LogoImage | null;
 }
 
 export function Header({ navigation, site, locale, locales, copy, logo }: ShellData) {
@@ -84,11 +84,8 @@ export function Header({ navigation, site, locale, locales, copy, logo }: ShellD
               className="shrink-0 rounded-inner"
               aria-label={site.brandName}
             >
-              <Image
-                src={logo.src}
-                alt=""
-                width={logo.width}
-                height={logo.height}
+              <ShellLogo
+                logo={logo}
                 sizes="(min-width: 768px) 198px, 88px"
                 priority
                 className={cn(

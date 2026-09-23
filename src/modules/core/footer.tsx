@@ -9,6 +9,7 @@ import { cn } from '@/lib/cn';
 import { type Locale, localePath } from '@/lib/i18n';
 import { displayPhone } from '@/lib/phone';
 import { whatsappUrl } from '@/lib/utm';
+import { ShellLogo } from '@/modules/core/brand-logo';
 import type { LogoImage } from '@/modules/core/logo-image';
 
 const PAYMENT_BADGES = [
@@ -59,8 +60,8 @@ export function Footer({
   navigation: Navigation;
   site: SiteSettings;
   locale: Locale;
-  /** The logo on the navy: the Appearance screen's upload, or the shipped white one. */
-  logo: LogoImage;
+  /** The logo on the navy: the Appearance screen's upload, or `null` for the drawn white one. */
+  logo: LogoImage | null;
   copy: SiteCopy;
 }) {
   const footerCopy = copy.footer;
@@ -90,13 +91,7 @@ export function Footer({
               className="inline-block rounded-inner"
               aria-label={site.brandName}
             >
-              <Image
-                src={logo.src}
-                alt=""
-                width={logo.width}
-                height={logo.height}
-                className="h-12 w-auto"
-              />
+              <ShellLogo logo={logo} onDark className="h-12 w-auto" />
             </Link>
             <p className="max-w-xs text-small text-white/75">{site.tagline}</p>
             <ul className="flex items-center gap-2">

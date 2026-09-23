@@ -22,7 +22,7 @@ import type { PairKey, PaletteToken } from '@/modules/brand/pairs';
 import { type Hex, toHex } from '@/modules/brand/types';
 import { librarySurfaceCss, type SurfaceSet, toLibrary } from '@/modules/brand/surfaces';
 import { toTypeface, type TypefaceKey, typefaceCss } from '@/modules/brand/typefaces';
-import type { LogoImage } from '@/modules/core/logo-image';
+import type { MailPalette } from '@/lib/mail-palette';
 
 export const APPEARANCE = 'appearance' as const;
 
@@ -54,12 +54,6 @@ export interface Appearance {
   /** The library of background sets (phase 1c); the three built from the brand are CSS. */
   surfaces: SurfaceSet[];
 }
-
-/** The logos the site ships with, where the Logo tab holds no upload. */
-export const SHIPPED_LOGOS = {
-  primary: { src: '/images/logo/logo-header.png', width: 198, height: 72 },
-  onDark: { src: '/images/logo/logo-white-footer.png', width: 220, height: 80 },
-} as const satisfies Record<string, LogoImage>;
 
 export type Pins = Brand['pinned'];
 
@@ -142,6 +136,26 @@ export function toAppearance(doc: unknown): { appearance: Appearance; problems: 
   return {
     appearance: { brand, typeface: toTypeface(stored['typeface']), surfaces: library.library },
     problems,
+  };
+}
+
+/**
+ * The colours the site paints with (`brandTokens`), by token, for what is drawn outside the
+ * stylesheet: the e-mails, the app icons, the browser bar and the manifest.
+ */
+export function paintedColours(appearance: Appearance): (token: PaletteToken) => Hex {
+  const tokens = brandTokens(appearance.brand);
+  return (token) => tokens[`color-${token}`] ?? appearance.brand.sources.ink;
+}
+
+/** The colours an e-mail is written in: the ones the site paints with. */
+export function mailPalette(appearance: Appearance): MailPalette {
+  const colour = paintedColours(appearance);
+  return {
+    text: colour('text'),
+    muted: colour('text-muted'),
+    primary: colour('primary'),
+    ground: colour('ground'),
   };
 }
 

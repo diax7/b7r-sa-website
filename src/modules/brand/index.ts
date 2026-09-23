@@ -6,8 +6,16 @@
  * (through this index it would be a cycle through the CMS client, since `read.ts` needs it);
  * the panel's widgets import their own files.
  */
-export { appearanceCss, SHIPPED_LOGOS } from '@/modules/brand/appearance';
-export { getAppearance, type SiteAppearance } from '@/modules/brand/read';
+export { appearanceCss, paintedColours } from '@/modules/brand/appearance';
+export {
+  APP_ICON_ROUTES,
+  APP_ICON_SIZES,
+  appIconSize,
+  APPLE_ICON_SIZE,
+  MANIFEST_ICON_SIZES,
+} from '@/modules/brand/app-icons';
+export { readMailPalette } from '@/modules/brand/mail';
+export { getAppearance, type SiteAppearance, siteViewport } from '@/modules/brand/read';
 export { preloadsFor, typefaceCss } from '@/modules/brand/typefaces';
 export {
   contrastRatio,

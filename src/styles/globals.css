@@ -246,6 +246,13 @@
     --color-primary-hover: var(--page-primary-hover);
   }
 }
+/* The drawn logo on a dark background (the footer): every blue white, as the shipped white
+   file was (spec 010, phase 1d; `src/modules/core/brand-logo.tsx`). */
+.logo-on-dark {
+  --logo-primary: #ffffff;
+  --logo-accent: #ffffff;
+  --logo-primary-dark: #ffffff;
+}
 [data-surface='surface'] {
   --section-bg: var(--color-surface);
 }

@@ -342,17 +342,13 @@ export const adminStrings = {
           name: 'The six 3D icons',
           why: 'The blue is in their shading and no source files exist to recolour.',
         },
-        logo: {
-          name: 'The logo',
-          why: 'Image files with the blues drawn in; an upload in the Logo tab replaces them.',
+        panelLogo: {
+          name: 'The logo in the panel',
+          why: 'The panel shows an image of the logo; the site draws it in the brand colours.',
         },
-        appIcons: {
-          name: 'The browser tab and phone icons',
-          why: 'Image files cut from the logo.',
-        },
-        themeColour: {
-          name: 'The browser bar colour on phones',
-          why: 'Set in the code as the shipped primary.',
+        favicon: {
+          name: 'The old browser icon',
+          why: 'A file format the site cannot draw; newer browsers show the icon drawn in the brand colours.',
         },
         gonePage: {
           name: 'The page for a removed address',
@@ -365,10 +361,6 @@ export const adminStrings = {
         videoPoster: {
           name: 'The video still on the home page',
           why: 'An image flattened onto the shipped grey.',
-        },
-        emails: {
-          name: 'The e-mails',
-          why: 'The confirmation, the message copy and the password reset carry the shipped colours.',
         },
         seaMist: {
           name: 'The Sea mist background',
@@ -1060,17 +1052,13 @@ export const adminStringsAr: AdminStrings = {
           name: 'الأيقونات الثلاثية الأبعاد الست',
           why: 'الأزرق جزء من ظلالها، ولا توجد ملفات مصدر لإعادة تلوينها.',
         },
-        logo: {
-          name: 'الشعار',
-          why: 'ملفات صور رُسمت فيها الألوان؛ ترفع بديلها من تبويب الشعار.',
+        panelLogo: {
+          name: 'الشعار في اللوحة',
+          why: 'تعرض اللوحة صورة للشعار، أما الموقع فيرسمه بألوان العلامة.',
         },
-        appIcons: {
-          name: 'أيقونة تبويب المتصفح وأيقونة الجوال',
-          why: 'ملفات صور مقتطعة من الشعار.',
-        },
-        themeColour: {
-          name: 'لون شريط المتصفح في الجوال',
-          why: 'مكتوب في الشيفرة باللون الأساسي الأصلي.',
+        favicon: {
+          name: 'أيقونة المتصفح القديمة',
+          why: 'ملف بصيغة لا يرسمها الموقع؛ تعرض المتصفحات الأحدث الأيقونة مرسومة بألوان العلامة.',
         },
         gonePage: {
           name: 'صفحة الرابط المحذوف',
@@ -1083,10 +1071,6 @@ export const adminStringsAr: AdminStrings = {
         videoPoster: {
           name: 'صورة الفيديو في الصفحة الرئيسية',
           why: 'صورة مدموجة على الرمادي الأصلي.',
-        },
-        emails: {
-          name: 'رسائل البريد',
-          why: 'رسالة التأكيد ونسخة الرسالة وإعادة تعيين كلمة المرور تحمل الألوان الأصلية.',
         },
         seaMist: {
           name: 'خلفية رذاذ البحر',

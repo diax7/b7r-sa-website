@@ -1,5 +1,6 @@
 import type { Field, GlobalAfterChangeHook, GlobalConfig, PayloadRequest } from 'payload';
 import { fieldVerdict } from '@/modules/brand/admin/refusal';
+import { APP_ICON_ROUTES } from '@/modules/brand/app-icons';
 import {
   APPEARANCE,
   DERIVED_KEYS,
@@ -41,12 +42,13 @@ const DOCUMENT_PATTERNS = [
 ];
 
 /**
- * A save repaints every page: the colours and the typeface are in the head of all of them.
- * No IndexNow ping, since no page's content changed.
+ * A save repaints every page (the colours and the typeface are in the head of all of them)
+ * and redraws the app icons and the manifest. No IndexNow ping, since no page's content
+ * changed.
  */
 const revalidateAppearance: GlobalAfterChangeHook = ({ doc, req }) => {
   if (!shouldRevalidate(req)) return doc;
-  for (const path of STATIC_ROUTES) safeRevalidatePath(path);
+  for (const path of [...STATIC_ROUTES, ...APP_ICON_ROUTES]) safeRevalidatePath(path);
   for (const pattern of DOCUMENT_PATTERNS) safeRevalidatePath(pattern, console, 'page');
   return doc;
 };

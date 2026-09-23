@@ -1,4 +1,5 @@
 import { expect, type APIRequestContext, type Page, test } from '@playwright/test';
+import sharp from 'sharp';
 import { NOT_FOLLOWING_ITEMS } from '@/modules/brand/not-following';
 import { ADMIN, API, createEditor, hasAdmin, login, POLL, shows } from './helpers/cms';
 
@@ -410,6 +411,72 @@ test('the Backgrounds tab: the three built from the brand, Sea mist with its pre
       .toBe(true);
   } finally {
     await request.post(GLOBAL, { headers: adminAuth, data: { surfaces: library } });
+    await restore(request, adminAuth, before);
+  }
+});
+
+/** Every fully opaque colour of a PNG, as `r,g,b`. */
+async function opaqueColours(png: Buffer): Promise<Set<string>> {
+  const { data } = await sharp(png).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+  const found = new Set<string>();
+  for (let i = 0; i < data.length; i += 4) {
+    if (data[i + 3] === 255) found.add(`${data[i]},${data[i + 1]},${data[i + 2]}`);
+  }
+  return found;
+}
+
+test('a saved brand reaches the drawn logo, the app icons, the browser bar and the manifest', async ({
+  page,
+  request,
+}) => {
+  test.setTimeout(120_000);
+  const adminAuth = await login(request, ADMIN);
+  const before = await stored(request, adminAuth);
+  // The mark is drawn in the accent and the primary dark; the bar and the manifest take the
+  // primary. Both pass every pair (the save would be refused otherwise).
+  const LONG = { ...POLL, timeout: 45_000 };
+  try {
+    const res = await request.post(GLOBAL, {
+      headers: adminAuth,
+      data: { sources: { ...before.sources, primary: '#1a5caf', primaryDark: '#1a4f99' } },
+    });
+    expect(res.status(), await res.text()).toBe(200);
+    await expect.poll(shows(request, '/', 'name="theme-color" content="#1a5caf"'), LONG).toBe(true);
+    await expect
+      .poll(async () => {
+        const manifest = await (await request.get('/manifest.webmanifest')).json();
+        return (manifest as { theme_color: string }).theme_color;
+      }, LONG)
+      .toBe('#1a5caf');
+    for (const path of ['/icon/192', '/apple-icon']) {
+      await expect
+        .poll(
+          async () =>
+            (await opaqueColours(await (await request.get(path)).body())).has('26,79,153'),
+          {
+            ...LONG,
+            message: `${path} in the saved primary dark`,
+          },
+        )
+        .toBe(true);
+    }
+    await page.goto('/');
+    // The header's logo is the symbol, and the symbol's layers read the tokens.
+    await expect(page.locator('header svg[data-brand-logo="logo"]').first()).toBeVisible();
+    await expect(page.locator('#b7r-logo path').first()).toHaveCSS('fill', 'rgb(26, 92, 175)');
+    // The footer's is the same symbol, every layer white (the minifier writes `#fff`).
+    const footerLogo = page.locator('footer svg[data-brand-logo="logo"]');
+    await expect(footerLogo).toHaveClass(/logo-on-dark/);
+    for (const layer of ['primary', 'accent', 'primary-dark']) {
+      expect(
+        await footerLogo.evaluate(
+          (el, name) => getComputedStyle(el).getPropertyValue(`--logo-${name}`),
+          layer,
+        ),
+        layer,
+      ).toMatch(/^#fff(fff)?$/i);
+    }
+  } finally {
     await restore(request, adminAuth, before);
   }
 });
