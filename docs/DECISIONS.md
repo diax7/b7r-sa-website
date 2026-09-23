@@ -2902,3 +2902,26 @@ a merge unions an object's keys but replaces a list.
 - *Still raster, and listed as not following:* `favicon.ico` (a format Next cannot draw; in
   `public/`, so no page links it and the drawn 32 px icon is the tab's only candidate), the
   panel's logo, the share images, the 410 page, the 3D icons and the video poster.
+
+**Amended 2026-09-24 (phase 2).** A section picks its background:
+
+- *The pick* is a non-localized `background` field holding a set's key, last in each of the
+  eight home tabs whose section paints a background of its own and in every page block; empty
+  is the section's own. The picker is a server component that reads the library (editors
+  cannot open the Appearance global) and draws the section's own, the three sets built from the
+  brand and the library's as swatches in their own colours. A key no set has is refused on save.
+- *A deleted set* is allowed: the content readers hand the mappers the keys of the sets that
+  exist, and a section naming any other paints the background it was designed with, never a
+  blank one; the picker names the missing set. A saved set's key is fixed instead (read-only in
+  the panel, refused on save), since changing it would do the same thing silently. An earlier
+  draft refused deleting a set in use; it had to read the home global's drafts and every page's
+  versions, and the fallback makes it unnecessary.
+- *The ribbon's top wave* no longer fills the section above's colour into the ribbon (it could
+  not match a gradient): the ribbon overlaps that section by the wave's height, the section
+  grows at its foot by as much (`globals.css`), and the wave rises from the band through a
+  see-through strip, so whatever the section paints shows above it. The page keeps its height,
+  the wave covers no words, and on a solid background a still frame matches the old seam
+  pixel for pixel (the solid layer follows the lower of the two curves). `topTone` is gone.
+- *A see-through island on a set* (the contact block's tinted booking card) composites over the
+  page's white, as it does on the page; over deep sea the tint read as a mid blue under the
+  page's grey words. The sweep that found it paints every pickable section with each set.

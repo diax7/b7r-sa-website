@@ -55,8 +55,8 @@ export const APPEARANCE_DESCRIPTIONS: Described = {
     en: "Shown to editors in a section's background list: Sea mist.",
   },
   'surfaces.key': {
-    ar: 'يعرّف الخلفية في الشيفرة وفي اختيار الأقسام؛ حروف لاتينية صغيرة وشرطات: sea-mist.',
-    en: 'Names the background in the code and in the section picker; lowercase with hyphens: sea-mist.',
+    ar: 'يعرّف الخلفية في الشيفرة وفي اختيار الأقسام، ويثبت بعد الحفظ؛ حروف لاتينية صغيرة وشرطات: sea-mist.',
+    en: 'Names the background in the code and in the section picker, fixed once saved; lowercase with hyphens: sea-mist.',
   },
   'surfaces.kind': {
     ar: 'لون واحد مسطّح، أو تدرّج من بقع لون ناعمة فوقه.',

@@ -157,3 +157,118 @@ test('the grain paints: Sea mist with its grain differs from Sea mist without it
   const without = await page.screenshot({ clip: patch });
   expect(withGrain.equals(without), 'the grain changed nothing').toBe(false);
 });
+
+/** The home sections an editor may give a set (`HOME_BACKGROUND_SECTIONS`), by element id. */
+const HOME_SECTIONS = [
+  'products',
+  'designer',
+  'steps',
+  'video',
+  'why-us',
+  'testimonials',
+  'integrations',
+  'faq',
+];
+
+/** Names a set on every given section, transitions stopped first (see `paint`). */
+async function paintAll(page: Page, selector: string, key: SetKey) {
+  await page.addStyleTag({ content: '*,*::before,*::after{transition:none!important}' });
+  return page.evaluate(
+    ({ selector: css, surface }) => {
+      const sections = [...document.querySelectorAll<HTMLElement>(css)];
+      for (const section of sections) section.dataset['surface'] = surface;
+      return sections.map((section) => section.id || section.dataset['block'] || '?');
+    },
+    { selector, surface: key },
+  );
+}
+
+async function seriousIn(page: Page, selector: string): Promise<string[]> {
+  const { AxeBuilder } = await import('@axe-core/playwright');
+  const results = await new AxeBuilder({ page })
+    .withTags(['wcag2a', 'wcag2aa'])
+    .include(selector)
+    .analyze();
+  return results.violations
+    .filter((v) => ['serious', 'critical'].includes(v.impact ?? ''))
+    .map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`);
+}
+
+// The sweep (spec 010, phase 2): every section that can take a set, on each set, with its words
+// read from the computed style (axe cannot judge text over a gradient) and axe over the rest.
+for (const path of ['/', '/en']) {
+  for (const key of Object.keys(SETS) as SetKey[]) {
+    test(`every home section takes ${key} on ${path}: its background, its words, axe at 1440 and 390`, async ({
+      page,
+    }) => {
+      const want = SETS[key];
+      for (const width of [1440, 390]) {
+        await page.setViewportSize({ width, height: 900 });
+        await page.goto(path);
+        const selector = HOME_SECTIONS.map((id) => `#${id}`).join(',');
+        const painted = await paintAll(page, selector, key);
+        expect(painted.length, 'the home sections render').toBeGreaterThan(5);
+        for (const id of painted) {
+          const section = page.locator(`#${id}`);
+          const tag = `${key} ${path} ${width} #${id}`;
+          await expect(section, tag).toHaveCSS('background-color', want.background);
+          // The video's words sit on the film, white whatever the set.
+          if (id !== 'video') await expect(section, tag).toHaveCSS('color', want.text);
+        }
+        expect(await seriousIn(page, selector), `axe: ${key} ${path} ${width}`).toEqual([]);
+      }
+    });
+  }
+}
+
+const DESIGNED_PAGES = ['/about', '/how-it-works', '/contact', '/faq', '/terms'];
+
+for (const key of Object.keys(SETS) as SetKey[]) {
+  test(`every block of the designed pages takes ${key}: its background, its words, axe`, async ({
+    page,
+  }) => {
+    test.setTimeout(120_000);
+    const want = SETS[key];
+    const seen = new Set<string>();
+    for (const path of [...DESIGNED_PAGES, ...DESIGNED_PAGES.map((p) => `/en${p}`)]) {
+      await page.goto(path);
+      const blocks = await paintAll(page, 'section[data-block]', key);
+      expect(blocks.length, path).toBeGreaterThan(0);
+      for (const block of blocks) seen.add(block);
+      const sections = page.locator('section[data-block]');
+      for (let i = 0; i < blocks.length; i += 1) {
+        const tag = `${key} ${path} ${blocks[i]}`;
+        await expect(sections.nth(i), tag).toHaveCSS('background-color', want.background);
+        await expect(sections.nth(i), tag).toHaveCSS('color', want.text);
+      }
+      expect(await seriousIn(page, 'section[data-block]'), `axe: ${key} ${path}`).toEqual([]);
+    }
+    test.info().annotations.push({ type: 'blocks', description: [...seen].toSorted().join(', ') });
+  });
+}
+
+test('the ribbon’s wave covers no words: the section above grows by the wave’s height on every page kind', async ({
+  page,
+}) => {
+  for (const width of [1440, 390]) {
+    await page.setViewportSize({ width, height: 900 });
+    for (const path of ['/', '/about', '/products', '/products/hoodie', '/blog', '/faq']) {
+      await page.goto(path);
+      const fit = await page.evaluate(() => {
+        const ribbon = document.querySelector('[data-cta-ribbon]')!;
+        const above = ribbon.previousElementSibling as HTMLElement;
+        const words = [...above.querySelectorAll('*')].filter(
+          (el) => el.childElementCount === 0 && (el.textContent ?? '').trim() !== '',
+        );
+        const lastWords = Math.max(...words.map((el) => el.getBoundingClientRect().bottom));
+        return {
+          padded: above.classList.contains('section-pad'),
+          gap: ribbon.getBoundingClientRect().top - lastWords,
+        };
+      });
+      expect(fit.padded, `${path} ${width}: a section sits above the ribbon`).toBe(true);
+      // The wave's box is the ribbon's top strip, so the words end above the ribbon itself.
+      expect(fit.gap, `${path} ${width}`).toBeGreaterThan(0);
+    }
+  }
+});

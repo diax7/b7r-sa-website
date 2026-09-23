@@ -22,6 +22,11 @@ const BOOKING_SPECS = '**/bookings.spec.ts';
  * wears another blue.
  */
 const APPEARANCE_SPECS = '**/appearance.spec.ts';
+/**
+ * The section backgrounds suite (spec 010, phase 2) writes the home global, a page and the
+ * Appearance global: a project of its own after the Appearance suite (the one admin account).
+ */
+const BACKGROUND_SPECS = '**/section-backgrounds.spec.ts';
 
 export default defineConfig({
   testDir: './e2e',
@@ -50,17 +55,17 @@ export default defineConfig({
     {
       name: 'desktop-chrome',
       use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 } },
-      testIgnore: [CMS_SPECS, BOOKING_SPECS, APPEARANCE_SPECS],
+      testIgnore: [CMS_SPECS, BOOKING_SPECS, APPEARANCE_SPECS, BACKGROUND_SPECS],
     },
     {
       name: 'pixel-7',
       use: { ...devices['Pixel 7'] },
-      testIgnore: [CMS_SPECS, BOOKING_SPECS, APPEARANCE_SPECS],
+      testIgnore: [CMS_SPECS, BOOKING_SPECS, APPEARANCE_SPECS, BACKGROUND_SPECS],
     },
     {
       name: 'iphone-15',
       use: { ...devices['iPhone 15'] },
-      testIgnore: [CMS_SPECS, BOOKING_SPECS, APPEARANCE_SPECS],
+      testIgnore: [CMS_SPECS, BOOKING_SPECS, APPEARANCE_SPECS, BACKGROUND_SPECS],
     },
     {
       // The admin suite publishes, drafts and switches sections off: it runs alone, after the
@@ -97,6 +102,16 @@ export default defineConfig({
       },
       testMatch: APPEARANCE_SPECS,
       dependencies: ['cms-bookings'],
+    },
+    {
+      name: 'cms-backgrounds',
+      use: {
+        ...devices['Desktop Chrome'],
+        viewport: { width: 1280, height: 800 },
+        locale: 'en-US',
+      },
+      testMatch: BACKGROUND_SPECS,
+      dependencies: ['cms-appearance'],
     },
   ],
 });

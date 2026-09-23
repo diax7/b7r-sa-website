@@ -17,6 +17,7 @@
  * Pure. Every stored value is parsed here, bounded, and only checked values reach a style
  * block: a key is a slug, a colour a `Hex`, a number clamped.
  */
+import { SURFACE_KEY } from '@/content/schema';
 import { contrastRatio } from '@/modules/brand/contrast';
 import type { BrandTokens } from '@/modules/brand/css';
 import { mixSrgb, scaleSrgb } from '@/modules/brand/oklch';
@@ -25,11 +26,9 @@ import { type Hex, toHex } from '@/modules/brand/types';
 export const BUILT_IN_SURFACES = ['surface', 'ground', 'deep-sea'] as const;
 export type BuiltInSurface = (typeof BUILT_IN_SURFACES)[number];
 
-const KEY = /^[a-z][a-z0-9-]{0,31}$/;
-
 /** Whether a value can name a set: a short lowercase slug that cannot leave a selector. */
 export function isSurfaceKey(value: unknown): value is string {
-  return typeof value === 'string' && KEY.test(value);
+  return typeof value === 'string' && SURFACE_KEY.test(value);
 }
 
 /** One soft radial bloom of a gradient, in percent of the section's box. */

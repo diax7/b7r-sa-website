@@ -117,7 +117,14 @@ The `appearance` global, in the Site group, as an entry named «المظهر» /
 Four sets ship. Three are built from the brand in `globals.css` and follow a rebrand:
 `surface` (white), `ground` (the grey sections) and `deep-sea` (the footer's navy); they
 reproduce today's site through the keys the sections already use. The fourth, `sea-mist` (the
-gradient), is the library's first row, with fixed colours (Dhia, 2026-09-23).
+gradient), is the library's first row, with fixed colours (Dhia, 2026-09-23). A saved set's
+key is fixed (the sections name it); its name is what an editor changes.
+
+A section's pick (phase 2) is a `background` text field, not localized, holding a set's key or
+nothing (the section's own background, as designed): on the eight home sections that paint a
+background of their own (every one but the opening slides and the bottom banner) and on every
+page block. The site keeps a pick only while its set exists; a section naming a deleted set
+paints its own background again, so deleting a set needs no refusal.
 
 ### Derivation rules
 

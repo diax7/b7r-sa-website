@@ -3,7 +3,7 @@ import { Breadcrumbs } from '@/components/shared/breadcrumbs';
 import { Button } from '@/components/shared/button';
 import { Container } from '@/components/shared/container';
 import { SarAmount } from '@/components/shared/sar-amount';
-import { Section, type SectionTone } from '@/components/shared/section';
+import { Section } from '@/components/shared/section';
 import { SectionHeader } from '@/components/shared/section-header';
 import { copyFor } from '@/content/copy';
 import type { Product } from '@/content/schema';
@@ -43,8 +43,6 @@ export async function ProductPage({ product, locale }: { product: Product; local
   const registerHref = registerUrl(env.appUrl, { campaign: 'product', content: product.slug });
   const profit = product.suggestedPrice - product.baseCost;
   const hasSizeChart = product.sizes.some((s) => s.measurements);
-  // surface (intro) → ground (description + sizes) → surface (related) → ribbon
-  const relatedTone = 'surface' satisfies SectionTone;
   const crumbs = [
     { name: copy.breadcrumbHome, href: localePath(locale, '/') },
     { name: copy.title, href: localePath(locale, '/products') },
@@ -170,7 +168,7 @@ export async function ProductPage({ product, locale }: { product: Product; local
         </Container>
       </Section>
 
-      <Section tone={relatedTone} aria-labelledby="product-related-title">
+      <Section tone="surface" aria-labelledby="product-related-title">
         <Container className="flex flex-col gap-10">
           <SectionHeader id="product-related-title" title={copy.sections.related} />
           <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3" data-reveal-stagger="">
@@ -183,7 +181,7 @@ export async function ProductPage({ product, locale }: { product: Product; local
         </Container>
       </Section>
 
-      <CtaRibbon locale={locale} topTone={relatedTone} page={`product-${product.slug}`} />
+      <CtaRibbon locale={locale} page={`product-${product.slug}`} />
       <ProductStickyBar
         shiny={site.ctaShiny}
         slug={product.slug}

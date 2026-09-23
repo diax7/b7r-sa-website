@@ -4,16 +4,11 @@ import { useFormFields } from '@payloadcms/ui';
 import type { UIFieldClientComponent } from 'payload';
 import { Badge } from '@/components/shared/badge';
 import { formatRatio } from '@/modules/brand/admin/refusal';
-import { type SampleColours, SurfaceSample } from '@/modules/brand/admin/surface-sample';
+import { libraryColours } from '@/modules/brand/admin/sample-colours';
+import { SurfaceSample } from '@/modules/brand/admin/surface-sample';
 import { useAppearanceForm } from '@/modules/brand/admin/use-appearance-form';
 import { resolveBrand } from '@/modules/brand/css';
-import { SURFACE } from '@/modules/brand/defaults';
-import {
-  type SurfaceSet,
-  surfaceStyle,
-  surfaceVerdict,
-  toSurfaceSet,
-} from '@/modules/brand/surfaces';
+import { type SurfaceSet, surfaceVerdict, toSurfaceSet } from '@/modules/brand/surfaces';
 import { useAdminLanguage, useAdminStrings } from '@/modules/cms/admin/use-admin-strings';
 
 const SCALARS = ['kind', 'background', 'text', 'textMuted', 'link', 'button', 'grain'] as const;
@@ -56,17 +51,7 @@ export const SurfacePreview: UIFieldClientComponent = ({ path }) => {
       </p>
     );
   }
-  const primary = tokens['color-primary'] ?? set.link;
-  const colours: SampleColours = {
-    background: surfaceStyle(set),
-    text: set.text,
-    textMuted: set.textMuted,
-    link: set.link,
-    button:
-      set.button === 'inverse'
-        ? { fill: SURFACE, words: primary }
-        : { fill: primary, words: SURFACE },
-  };
+  const colours = libraryColours(set, tokens);
   return (
     <div className="mb-4 flex flex-col gap-2" data-admin-ui="" data-admin-surface-preview="">
       <SurfaceSample colours={colours} />

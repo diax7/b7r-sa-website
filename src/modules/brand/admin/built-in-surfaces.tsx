@@ -1,36 +1,11 @@
 'use client';
 
-import { type SampleColours, SurfaceSample } from '@/modules/brand/admin/surface-sample';
+import { builtInColours } from '@/modules/brand/admin/sample-colours';
+import { SurfaceSample } from '@/modules/brand/admin/surface-sample';
 import { useAppearanceForm } from '@/modules/brand/admin/use-appearance-form';
-import { type BrandTokens, resolveBrand } from '@/modules/brand/css';
-import { SURFACE } from '@/modules/brand/defaults';
-import { BUILT_IN_SURFACES, type BuiltInSurface } from '@/modules/brand/surfaces';
+import { resolveBrand } from '@/modules/brand/css';
+import { BUILT_IN_SURFACES } from '@/modules/brand/surfaces';
 import { useAdminStrings } from '@/modules/cms/admin/use-admin-strings';
-
-/** What each set built from the brand paints, from the tokens (`globals.css` holds the same). */
-function coloursOf(set: BuiltInSurface, tokens: BrandTokens): SampleColours {
-  const token = (name: string) => tokens[`color-${name}`] ?? SURFACE;
-  const primaryButton = { fill: token('primary'), words: SURFACE };
-  if (set === 'deep-sea') {
-    return {
-      background: { backgroundColor: token('navy'), backgroundImage: 'none' },
-      text: SURFACE,
-      textMuted: token('accent-tint'),
-      link: token('accent-tint'),
-      button: { fill: SURFACE, words: token('primary') },
-    };
-  }
-  return {
-    background: {
-      backgroundColor: token(set === 'ground' ? 'ground' : 'surface'),
-      backgroundImage: 'none',
-    },
-    text: token('text'),
-    textMuted: token('text-muted'),
-    link: token('primary'),
-    button: primaryButton,
-  };
-}
 
 /**
  * The three sets built from the brand (spec 010, phase 1c), live from the colours typed in
@@ -64,7 +39,7 @@ export function BuiltInSurfaces() {
                 {set}
               </bdi>
             </span>
-            <SurfaceSample colours={coloursOf(set, tokens)} />
+            <SurfaceSample colours={builtInColours(set, tokens)} />
           </li>
         ))}
       </ul>

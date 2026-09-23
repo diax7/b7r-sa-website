@@ -14,7 +14,7 @@ type Item = keyof AdminStrings['appearance']['notFollowing']['items'];
  */
 export const NOT_FOLLOWING = {
   icons3d: ['public/images/icons-3d'],
-  panelLogo: ['public/images/logo'],
+  panelLogo: ['public/images/logo/logo.png', 'public/images/logo/icon.png'],
   favicon: ['public/favicon.ico'],
   gonePage: ['src/lib/gone-page.ts', 'src/lib/tokens.ts'],
   shareImages: ['scripts/build-og.ts', 'src/lib/tokens.ts'],

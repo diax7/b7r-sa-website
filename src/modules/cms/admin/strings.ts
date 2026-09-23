@@ -332,7 +332,14 @@ export const adminStrings = {
         notSlug: 'Lowercase Latin letters, digits and hyphens, starting with a letter: sea-mist.',
         taken: 'Another background already has this key.',
         builtIn: 'This key belongs to a background built from the brand colours.',
+        fixed:
+          'A saved background keeps its key: the sections that use it name it. Change its name, or add a new background.',
       },
+    },
+    background: {
+      own: "The section's own",
+      gone: 'The background “{key}” is no longer under Appearance; this section shows its own background until you choose another.',
+      unknown: "No background has the key “{key}”; choose one from the list, or the section's own.",
     },
     notFollowing: {
       title: 'Does not follow',
@@ -1042,7 +1049,14 @@ export const adminStringsAr: AdminStrings = {
         notSlug: 'حروف لاتينية صغيرة وأرقام وشرطات، تبدأ بحرف: sea-mist.',
         taken: 'مفتاح تستخدمه خلفية أخرى.',
         builtIn: 'هذا المفتاح لخلفية من ألوان العلامة.',
+        fixed:
+          'مفتاح الخلفية ثابت بعد حفظها، فالأقسام التي تستخدمها تسمّيها به. غيّر اسمها، أو أضف خلفية جديدة.',
       },
+    },
+    background: {
+      own: 'خلفية القسم الأصلية',
+      gone: 'الخلفية «{key}» لم تعد في المظهر؛ يظهر هذا القسم بخلفيته الأصلية حتى تختار غيرها.',
+      unknown: 'لا توجد خلفية بالمفتاح «{key}»؛ اختر واحدة من القائمة، أو خلفية القسم الأصلية.',
     },
     notFollowing: {
       title: 'لا يتبع المظهر',

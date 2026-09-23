@@ -36,6 +36,7 @@ import * as migration_20260919_195800_bookings_start_active from './20260919_195
 import * as migration_20260920_001023_booking_host from './20260920_001023_booking_host';
 import * as migration_20260923_184755_appearance from './20260923_184755_appearance';
 import * as migration_20260923_191525_appearance_surfaces from './20260923_191525_appearance_surfaces';
+import * as migration_20260923_211917_section_backgrounds from './20260923_211917_section_backgrounds';
 
 export const migrations = [
   {
@@ -226,6 +227,11 @@ export const migrations = [
   {
     up: migration_20260923_191525_appearance_surfaces.up,
     down: migration_20260923_191525_appearance_surfaces.down,
-    name: '20260923_191525_appearance_surfaces'
+    name: '20260923_191525_appearance_surfaces',
+  },
+  {
+    up: migration_20260923_211917_section_backgrounds.up,
+    down: migration_20260923_211917_section_backgrounds.down,
+    name: '20260923_211917_section_backgrounds'
   },
 ];

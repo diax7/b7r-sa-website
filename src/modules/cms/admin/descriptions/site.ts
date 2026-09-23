@@ -1,4 +1,4 @@
-import { HERO_CHIPS_MAX } from '@/content/schema';
+import { HERO_CHIPS_MAX, HOME_BACKGROUND_SECTIONS } from '@/content/schema';
 import type { Described } from '@/modules/cms/admin/descriptions/describe';
 
 /** What a section's switch removes from the home page (ADR-039); one sentence per switch. */
@@ -13,8 +13,18 @@ const eyebrow = (section: { ar: string; en: string }) => ({
   en: `One or two words above the ${section.en} title.`,
 });
 
+/** A section's background picker (spec 010, phase 2): the same sentence on every section. */
+export const BACKGROUND_DESCRIPTION = {
+  ar: 'يلوّن هذا القسم وكلماته لتُقرأ عليه؛ تُدار القائمة من المظهر، تبويب الخلفيات.',
+  en: "Paints this section and sets its words' colours to read on it; the list is under Appearance, Backgrounds.",
+};
+
+const backgrounds = (sections: readonly string[]): Described =>
+  Object.fromEntries(sections.map((section) => [`${section}.background`, BACKGROUND_DESCRIPTION]));
+
 /** The home page, section by section (ADR-046). */
 export const HOME_DESCRIPTIONS: Described = {
+  ...backgrounds(HOME_BACKGROUND_SECTIONS),
   'hero.slides': {
     ar: 'تتبدّل أعلى الصفحة الرئيسية، والأولى ما يراه الزائر أولاً. لكل شريحة عنوان وسطر وصورتان لكل لغة.',
     en: 'Rotate at the top of the home page, the first seen first; each has a headline, a subline and two photos per language.',

@@ -11,6 +11,7 @@ import {
   HomeFaq,
   Integrations,
   ProductStrip,
+  sectionTones,
   shouldRenderTestimonials,
   Steps,
   Testimonials,
@@ -24,7 +25,8 @@ import {
  * testimonials ground · integrations surface · FAQ ground · ribbon · footer navy. A section
  * switched off in the admin (or the testimonials omitted on the production host while every
  * entry is a placeholder, ADR-013) drops out and the sections after it swap tones so the
- * alternation (BRD 3.4) holds. The two locale routes render this with their locale.
+ * alternation (BRD 3.4) holds. A section an editor gave a background set paints that set
+ * instead (spec 010, phase 2). The two locale routes render this with their locale.
  */
 export async function HomePage({ locale }: { locale: Locale }) {
   const [site, home, testimonials, appearance] = await Promise.all([
@@ -33,34 +35,43 @@ export async function HomePage({ locale }: { locale: Locale }) {
     getTestimonials(locale),
     getAppearance(),
   ]);
-  // The designer is ground; each rendered section after it takes the opposite tone of the
-  // previous one, and the ribbon's top wave follows the last section that rendered.
-  const tones = alternateTones(
+  // The strip is surface and the designer ground; each rendered section after them takes the
+  // opposite tone of the previous one. A background set an editor picked replaces a section's
+  // designed tone (spec 010, phase 2).
+  const tones = sectionTones(
     {
-      steps: home.steps.enabled,
-      video: home.video.enabled,
-      whyUs: home.whyUs.enabled,
-      testimonials:
-        home.testimonials.enabled && shouldRenderTestimonials(testimonials, env.isProductionSite),
-      integrations: home.integrations.enabled,
-      faq: home.faq.enabled,
+      productStrip: 'surface',
+      designer: 'ground',
+      ...alternateTones(
+        {
+          steps: home.steps.enabled,
+          video: home.video.enabled,
+          whyUs: home.whyUs.enabled,
+          testimonials:
+            home.testimonials.enabled &&
+            shouldRenderTestimonials(testimonials, env.isProductionSite),
+          integrations: home.integrations.enabled,
+          faq: home.faq.enabled,
+        },
+        'ground',
+      ),
     },
-    'ground',
+    home.backgrounds,
   );
   const base = siteBase();
   return (
     <>
       <JsonLd nodes={[jsonLd.onlineStore(base, site), jsonLd.webSite(base, site)]} />
       <Hero locale={locale} displayFonts={preloadsFor(appearance.typeface, [900])} />
-      <ProductStrip locale={locale} />
-      <DesignerSection locale={locale} />
+      <ProductStrip locale={locale} tone={tones.productStrip} />
+      <DesignerSection locale={locale} tone={tones.designer} />
       <Steps locale={locale} tone={tones.steps} />
       <VideoSection locale={locale} tone={tones.video} />
       <WhyUs locale={locale} tone={tones.whyUs} />
       <Testimonials locale={locale} tone={tones.testimonials} />
       <Integrations locale={locale} tone={tones.integrations} />
       <HomeFaq locale={locale} tone={tones.faq} />
-      <CtaRibbon locale={locale} topTone={tones.faq} page="home" />
+      <CtaRibbon locale={locale} page="home" />
     </>
   );
 }

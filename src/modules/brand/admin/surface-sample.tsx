@@ -1,16 +1,8 @@
 'use client';
 
 import type { CSSProperties, ReactNode } from 'react';
+import type { SampleColours } from '@/modules/brand/admin/sample-colours';
 import { useAdminStrings } from '@/modules/cms/admin/use-admin-strings';
-
-export interface SampleColours {
-  background: { backgroundColor: string; backgroundImage: string };
-  text: string;
-  textMuted: string;
-  link: string;
-  /** The call to action on it: its fill and its words. */
-  button: { fill: string; words: string };
-}
 
 /**
  * A background set as a visitor meets it (spec 010, phase 1c): the background with its

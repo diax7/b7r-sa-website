@@ -1,5 +1,6 @@
 import type { ArrayField, Field, PayloadRequest } from 'payload';
 import { surfaceRoleVerdict } from '@/modules/brand/admin/refusal';
+import { refuseRekey } from '@/modules/brand/background-field';
 import {
   BUILT_IN_SURFACES,
   GRAIN_MAX,
@@ -118,6 +119,8 @@ export const SURFACES_FIELD: ArrayField = {
     plural: { ar: 'خلفيات', en: 'Backgrounds' },
   },
   defaultValue: ({ locale }: { locale?: string }) => [seaMistRow(locale)],
+  // A saved set's key is fixed: the sections that name it would lose it (phase 2).
+  validate: refuseRekey,
   admin: {
     components: { RowLabel: '@/modules/brand/admin/surface-row-label#SurfaceRowLabel' },
   },
@@ -137,6 +140,9 @@ export const SURFACES_FIELD: ArrayField = {
           type: 'text',
           required: true,
           label: { ar: 'المفتاح', en: 'Key' },
+          admin: {
+            components: { Field: '@/modules/brand/admin/surface-key-field#SurfaceKeyField' },
+          },
           validate: validateKey,
         },
       ],

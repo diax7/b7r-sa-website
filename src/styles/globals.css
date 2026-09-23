@@ -246,6 +246,33 @@
     --color-primary-hover: var(--page-primary-hover);
   }
 }
+/* A see-through island that lies on the section itself (the contact block's booking card, 60 %
+   of the accent tint) composites over the page's white on a set, as it does on the page: over
+   deep sea the tint would read as a mid blue under the page's grey words (spec 010, phase 2).
+   A frosted panel over a photo (the designer's print area) keeps its see-through look.
+   Unlayered, so it beats the utility. */
+.surface:not([data-surface='surface'], [data-surface='ground']) .bg-accent-tint\/60 {
+  background-color: color-mix(in srgb, var(--color-accent-tint) 60%, var(--color-surface));
+}
+/* The ribbon's top wave rises from its band into the section above (spec 010, phase 2;
+   `src/modules/core/cta-ribbon.tsx`): that section grows at its foot by the wave's height and
+   the ribbon overlaps it by as much, so the page keeps its height and the wave covers only the
+   section's own background (a set, a gradient with its grain), never its words. Unlayered, so
+   it beats the rhythm utility and a section's own `py-0` (the video). */
+.section-pad:has(+ [data-cta-ribbon]) {
+  padding-block-end: calc(64px + 32px);
+}
+.section-pad.py-0:has(+ [data-cta-ribbon]) {
+  padding-block-end: 32px;
+}
+@media (min-width: 768px) {
+  .section-pad:has(+ [data-cta-ribbon]) {
+    padding-block-end: calc(96px + 48px);
+  }
+  .section-pad.py-0:has(+ [data-cta-ribbon]) {
+    padding-block-end: 48px;
+  }
+}
 /* The drawn logo on a dark background (the footer): every blue white, as the shipped white
    file was (spec 010, phase 1d; `src/modules/core/brand-logo.tsx`). */
 .logo-on-dark {

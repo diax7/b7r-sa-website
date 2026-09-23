@@ -491,6 +491,10 @@ export interface Page {
           };
           [k: string]: unknown;
         } | null;
+        /**
+         * Paints this section and sets its words' colours to read on it; the list is under Appearance, Backgrounds.
+         */
+        background?: string | null;
         id?: string | null;
         blockName?: string | null;
         blockType: 'richText';
@@ -516,6 +520,10 @@ export interface Page {
          * On: the welcome credit and the why-us cards from the home page follow the story.
          */
         withFacts?: boolean | null;
+        /**
+         * Paints this section and sets its words' colours to read on it; the list is under Appearance, Backgrounds.
+         */
+        background?: string | null;
         id?: string | null;
         blockName?: string | null;
         blockType: 'story';
@@ -547,6 +555,10 @@ export interface Page {
           art?: (number | null) | Media;
           id?: string | null;
         }[];
+        /**
+         * Paints this section and sets its words' colours to read on it; the list is under Appearance, Backgrounds.
+         */
+        background?: string | null;
         id?: string | null;
         blockName?: string | null;
         blockType: 'cards';
@@ -570,6 +582,10 @@ export interface Page {
           icon: number | Media;
           id?: string | null;
         }[];
+        /**
+         * Paints this section and sets its words' colours to read on it; the list is under Appearance, Backgrounds.
+         */
+        background?: string | null;
         id?: string | null;
         blockName?: string | null;
         blockType: 'steps';
@@ -595,6 +611,10 @@ export interface Page {
          * Under the equation, with real catalogue numbers: "A tee at 89 SAR…".
          */
         exampleLine: string;
+        /**
+         * Paints this section and sets its words' colours to read on it; the list is under Appearance, Backgrounds.
+         */
+        background?: string | null;
         id?: string | null;
         blockName?: string | null;
         blockType: 'profitEquation';
@@ -632,6 +652,10 @@ export interface Page {
          * Becomes the link in the closing line; it must appear there exactly.
          */
         bottomLinkWord?: string | null;
+        /**
+         * Paints this section and sets its words' colours to read on it; the list is under Appearance, Backgrounds.
+         */
+        background?: string | null;
         id?: string | null;
         blockName?: string | null;
         blockType: 'faqList';
@@ -645,6 +669,10 @@ export interface Page {
          * Under the title: what the programme is and what it means for B7R.
          */
         text: string;
+        /**
+         * Paints this section and sets its words' colours to read on it; the list is under Appearance, Backgrounds.
+         */
+        background?: string | null;
         id?: string | null;
         blockName?: string | null;
         blockType: 'miskCredential';
@@ -691,6 +719,10 @@ export interface Page {
            */
           whatsappMessage: string;
         };
+        /**
+         * Paints this section and sets its words' colours to read on it; the list is under Appearance, Backgrounds.
+         */
+        background?: string | null;
         id?: string | null;
         blockName?: string | null;
         blockType: 'contact';
@@ -704,6 +736,10 @@ export interface Page {
          * ## headings become the on-this-page list; no HTML.
          */
         body: string;
+        /**
+         * Paints this section and sets its words' colours to read on it; the list is under Appearance, Backgrounds.
+         */
+        background?: string | null;
         id?: string | null;
         blockName?: string | null;
         blockType: 'legalBody';
@@ -717,6 +753,10 @@ export interface Page {
          * Under the image. Empty hides it.
          */
         caption?: string | null;
+        /**
+         * Paints this section and sets its words' colours to read on it; the list is under Appearance, Backgrounds.
+         */
+        background?: string | null;
         id?: string | null;
         blockName?: string | null;
         blockType: 'mediaBanner';
@@ -784,6 +824,10 @@ export interface Page {
          * Before the bottom banner: the verdict in two sentences.
          */
         closing?: string | null;
+        /**
+         * Paints this section and sets its words' colours to read on it; the list is under Appearance, Backgrounds.
+         */
+        background?: string | null;
         id?: string | null;
         blockName?: string | null;
         blockType: 'compare';
@@ -2349,6 +2393,7 @@ export interface PagesSelect<T extends boolean = true> {
               title?: T;
               content?: T;
               contentTwin?: T;
+              background?: T;
               id?: T;
               blockName?: T;
             };
@@ -2360,6 +2405,7 @@ export interface PagesSelect<T extends boolean = true> {
               line?: T;
               photo?: T;
               withFacts?: T;
+              background?: T;
               id?: T;
               blockName?: T;
             };
@@ -2376,6 +2422,7 @@ export interface PagesSelect<T extends boolean = true> {
                     art?: T;
                     id?: T;
                   };
+              background?: T;
               id?: T;
               blockName?: T;
             };
@@ -2390,6 +2437,7 @@ export interface PagesSelect<T extends boolean = true> {
                     icon?: T;
                     id?: T;
                   };
+              background?: T;
               id?: T;
               blockName?: T;
             };
@@ -2401,6 +2449,7 @@ export interface PagesSelect<T extends boolean = true> {
               base?: T;
               profit?: T;
               exampleLine?: T;
+              background?: T;
               id?: T;
               blockName?: T;
             };
@@ -2415,6 +2464,7 @@ export interface PagesSelect<T extends boolean = true> {
               linkHref?: T;
               bottomLine?: T;
               bottomLinkWord?: T;
+              background?: T;
               id?: T;
               blockName?: T;
             };
@@ -2423,6 +2473,7 @@ export interface PagesSelect<T extends boolean = true> {
           | {
               title?: T;
               text?: T;
+              background?: T;
               id?: T;
               blockName?: T;
             };
@@ -2442,6 +2493,7 @@ export interface PagesSelect<T extends boolean = true> {
                     button?: T;
                     whatsappMessage?: T;
                   };
+              background?: T;
               id?: T;
               blockName?: T;
             };
@@ -2450,6 +2502,7 @@ export interface PagesSelect<T extends boolean = true> {
           | {
               updatedAt?: T;
               body?: T;
+              background?: T;
               id?: T;
               blockName?: T;
             };
@@ -2458,6 +2511,7 @@ export interface PagesSelect<T extends boolean = true> {
           | {
               media?: T;
               caption?: T;
+              background?: T;
               id?: T;
               blockName?: T;
             };
@@ -2490,6 +2544,7 @@ export interface PagesSelect<T extends boolean = true> {
                     id?: T;
                   };
               closing?: T;
+              background?: T;
               id?: T;
               blockName?: T;
             };
@@ -3095,6 +3150,10 @@ export interface Home {
      * Published products only; one unpublished later drops out of the strip until it is published again.
      */
     products: (number | Product)[];
+    /**
+     * Paints this section and sets its words' colours to read on it; the list is under Appearance, Backgrounds.
+     */
+    background?: string | null;
   };
   designer: {
     /**
@@ -3113,6 +3172,10 @@ export interface Home {
      * At the end of the designer; opens the app's sign-up. Shiny or classic: Site settings, Brand, Shiny buttons.
      */
     cta: string;
+    /**
+     * Paints this section and sets its words' colours to read on it; the list is under Appearance, Backgrounds.
+     */
+    background?: string | null;
   };
   steps: {
     /**
@@ -3149,6 +3212,10 @@ export interface Home {
       icon: number | Media;
       id?: string | null;
     }[];
+    /**
+     * Paints this section and sets its words' colours to read on it; the list is under Appearance, Backgrounds.
+     */
+    background?: string | null;
   };
   video: {
     /**
@@ -3163,6 +3230,10 @@ export interface Home {
      * Under the video's heading.
      */
     lead: string;
+    /**
+     * Paints this section and sets its words' colours to read on it; the list is under Appearance, Backgrounds.
+     */
+    background?: string | null;
   };
   whyUs: {
     /**
@@ -3195,6 +3266,10 @@ export interface Home {
       text: string;
       id?: string | null;
     }[];
+    /**
+     * Paints this section and sets its words' colours to read on it; the list is under Appearance, Backgrounds.
+     */
+    background?: string | null;
   };
   testimonials: {
     /**
@@ -3209,6 +3284,10 @@ export interface Home {
      * The testimonials heading (H2); the quotes come from Testimonials.
      */
     title: string;
+    /**
+     * Paints this section and sets its words' colours to read on it; the list is under Appearance, Backgrounds.
+     */
+    background?: string | null;
   };
   integrations: {
     /**
@@ -3223,6 +3302,10 @@ export interface Home {
      * Under the connected-stores heading.
      */
     lead: string;
+    /**
+     * Paints this section and sets its words' colours to read on it; the list is under Appearance, Backgrounds.
+     */
+    background?: string | null;
   };
   faq: {
     /**
@@ -3237,6 +3320,10 @@ export interface Home {
      * Under the section; opens the FAQ page.
      */
     link: string;
+    /**
+     * Paints this section and sets its words' colours to read on it; the list is under Appearance, Backgrounds.
+     */
+    background?: string | null;
   };
   ribbon: {
     /**
@@ -3985,6 +4072,7 @@ export interface HomeSelect<T extends boolean = true> {
         pricePrefix?: T;
         button?: T;
         products?: T;
+        background?: T;
       };
   designer?:
     | T
@@ -3993,6 +4081,7 @@ export interface HomeSelect<T extends boolean = true> {
         title?: T;
         lead?: T;
         cta?: T;
+        background?: T;
       };
   steps?:
     | T
@@ -4009,6 +4098,7 @@ export interface HomeSelect<T extends boolean = true> {
               icon?: T;
               id?: T;
             };
+        background?: T;
       };
   video?:
     | T
@@ -4016,6 +4106,7 @@ export interface HomeSelect<T extends boolean = true> {
         enabled?: T;
         title?: T;
         lead?: T;
+        background?: T;
       };
   whyUs?:
     | T
@@ -4031,6 +4122,7 @@ export interface HomeSelect<T extends boolean = true> {
               text?: T;
               id?: T;
             };
+        background?: T;
       };
   testimonials?:
     | T
@@ -4038,6 +4130,7 @@ export interface HomeSelect<T extends boolean = true> {
         enabled?: T;
         eyebrow?: T;
         title?: T;
+        background?: T;
       };
   integrations?:
     | T
@@ -4045,6 +4138,7 @@ export interface HomeSelect<T extends boolean = true> {
         enabled?: T;
         title?: T;
         lead?: T;
+        background?: T;
       };
   faq?:
     | T
@@ -4052,6 +4146,7 @@ export interface HomeSelect<T extends boolean = true> {
         enabled?: T;
         title?: T;
         link?: T;
+        background?: T;
       };
   ribbon?:
     | T

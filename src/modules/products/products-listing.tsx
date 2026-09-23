@@ -55,7 +55,7 @@ export async function ProductsListing({ locale }: { locale: Locale }) {
           </ul>
         </Container>
       </Section>
-      <CtaRibbon locale={locale} topTone="surface" page="products" />
+      <CtaRibbon locale={locale} page="products" />
     </>
   );
 }

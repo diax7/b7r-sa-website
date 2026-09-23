@@ -1,7 +1,18 @@
+import { BlockSchema } from '@/content/schema';
 import type { Described } from '@/modules/cms/admin/descriptions/describe';
+import { BACKGROUND_DESCRIPTION } from '@/modules/cms/admin/descriptions/site';
+
+/** Every block's background picker (spec 010, phase 2): the same sentence on each. */
+const backgrounds: Described = Object.fromEntries(
+  BlockSchema.options.map((block) => [
+    `blocks.${block.shape.blockType.value}.background`,
+    BACKGROUND_DESCRIPTION,
+  ]),
+);
 
 /** Pages and their blocks: what each field does on the site (ADR-046). */
 export const PAGE_DESCRIPTIONS: Described = {
+  ...backgrounds,
   title: {
     ar: 'H1 أعلى الصفحة، واسمها في التبويب إن لم يُملأ عنوان البحث.',
     en: 'The H1 at the top, and the tab name when no search title is set.',

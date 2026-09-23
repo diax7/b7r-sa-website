@@ -7,6 +7,7 @@
  * the panel's widgets import their own files.
  */
 export { appearanceCss, paintedColours } from '@/modules/brand/appearance';
+export { surfaceKeys } from '@/modules/brand/surfaces';
 export {
   APP_ICON_ROUTES,
   APP_ICON_SIZES,
