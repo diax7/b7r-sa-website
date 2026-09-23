@@ -13,6 +13,7 @@ import {
 } from '@payloadcms/richtext-lexical';
 import type { Block, Field, RichTextField } from 'payload';
 import { CARD_ICONS, FAQ_SELECTIONS } from '@/content/schema';
+import { backgroundField } from '@/modules/brand/background-field';
 import { iconOptions } from '@/modules/cms/admin/icons';
 import { twinField } from '@/modules/cms/fields/bilingual';
 
@@ -414,6 +415,7 @@ export const CompareBlock: Block = {
   ],
 };
 
+/** Every block is a section of its page and may take a background set (spec 010, phase 2). */
 export const PAGE_BLOCKS: Block[] = [
   RichTextBlock,
   StoryBlock,
@@ -426,6 +428,6 @@ export const PAGE_BLOCKS: Block[] = [
   LegalBodyBlock,
   MediaBannerBlock,
   CompareBlock,
-];
+].map((block) => ({ ...block, fields: [...block.fields, backgroundField()] }));
 
 export { FAQ_SELECTIONS };

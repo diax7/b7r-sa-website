@@ -178,7 +178,7 @@ The site must feel premium, calm, and Saudi. Think of the restraint of Apple's p
 
 - **Name:** Arabic بحر برنت, Latin B7R Print. In running Arabic text write بحر برنت. In UI, the logo lockup already contains both.
 - **Motif:** the wave. It appears in the logo, the CTA ribbon edges, and the footer edge (§6.3). Nowhere else. Do not scatter wave shapes across sections.
-- **Logo files:** `resources/brand/logo/logo.png` (colour, on white or off-white), `logo-white.png` (on the primary or dark blue), `icon.png` (favicon, app icon, avatar in the WhatsApp widget), `small-icon.png` (16–32 px contexts). PNG only for now; export at 1x and 2x. Never recolour, stretch, rotate, outline, or add shadows or gradients to the logo.
+- **Logo files:** `resources/brand/logo/logo.png` (colour, on white or off-white), `logo-white.png` (on the primary or dark blue), `icon.png` (favicon, app icon, avatar in the WhatsApp widget), `small-icon.png` (16–32 px contexts). PNG only for now; export at 1x and 2x. Never recolour, stretch, rotate, outline, or add shadows or gradients to the logo. *Amended 2026-09-23 (Dhia, ADR-065): the site draws the logo from vector paths traced from `logo.png` and `icon.png`, each blue painted with the brand colour it was sampled as, so a change of brand colour carries into the logo; on a dark background every blue is drawn white, as `logo-white.png` was. This is the one sanctioned recolouring, and it keeps the artwork's shapes and proportions. An upload in the Appearance global's Logo tab replaces the drawn logo and keeps its own colours. The favicon, app and Apple icons and the WhatsApp avatar are drawn from the traced mark; `favicon.ico` and the admin panel's logo stay PNG.*
 - **Clear space:** at least the height of the "7" glyph on all sides. Minimum width 120 px for the lockup, 24 px for the icon.
 
 ### 3.2 Colour tokens
@@ -190,20 +190,20 @@ All three brand blues are sampled from `logo.png`. Two darker shades are derived
 | `--color-primary` | `#0058B0` | Buttons, links, active nav underline, key numbers, section eyebrows |
 | `--color-primary-hover` | `#004A94` | Hover and pressed states of primary elements (derived, same hue) |
 | `--color-primary-dark` | `#1858A8` | Secondary blue from the logo: dark blue text on light tints, icon strokes on white |
-| `--color-navy` | `#0A2F5E` | Footer background, dark ribbon variant, hero text on light photos when extra contrast is needed (derived) |
-| `--color-accent` | `#0098E0` | The light blue. Accent only: highlighted words in headings, icon fills inside tint circles, focus rings, active step indicator, wave shapes. **Not for body text on white** (contrast 3.5:1). Allowed for text at ≥ 24 px bold or on navy/primary backgrounds. |
+| `--color-navy` | `#0A2F5E` | Footer background, dark ribbon variant, hero text on light photos when extra contrast is needed. *(Called "derived" until ADR-065: no rule reproduces it, so it is a source the owner sets.)* |
+| `--color-accent` | `#0098E0` | The light blue. Accent only: highlighted words in headings, icon fills inside tint circles, focus rings, active step indicator, wave shapes. **Not for body text on white** (contrast 3.20:1, measured; this table said 3.5:1 until ADR-065 measured it). Allowed for text at ≥ 24 px bold or on navy/primary backgrounds. |
 | `--color-accent-tint` | `#E6F5FC` | 10% tint of the accent: icon circles, chip backgrounds, table header rows |
 | `--color-ground` | `#F6F8FB` | Page background for alternating sections (very light cool grey) |
 | `--color-surface` | `#FFFFFF` | Cards, header, panels |
 | `--color-text` | `#14181F` | Body and headings |
-| `--color-text-muted` | `#5B6470` | Secondary text, captions, placeholders (4.6:1 on white) |
+| `--color-text-muted` | `#5B6470` | Secondary text, captions, placeholders (6.00:1 on white, measured; this table said 4.6:1 until ADR-065) |
 | `--color-border` | `#E5E9EF` | Hairlines, card borders, input borders |
 | `--color-success` | `#15803D` | Form success, positive profit; 4.7:1 on `ground`, 5:1 on `surface` (AA for the profit line) |
 | `--color-warning` | `#F59E0B` | Non-blocking warnings |
 | `--color-error` | `#D90000` | Validation errors, negative profit |
 | `--color-whatsapp` | `#25D366` | The WhatsApp widget button only |
 
-Rules: primary text on white and white text on primary both pass AA. Never place accent-coloured small text on white. Never introduce purple, pink, teal, magenta, orange, or gradients between hues. A single flat colour per surface. The only permitted gradient is a white-to-transparent overlay on hero photos for legibility (§6.4.1). *Amended 2026-09-17 (Dhia, ADR-054): one more, between the brand's own two blues: the main call-to-action buttons' sheen (`Button` variants `shiny` and, on the primary ribbon, `inverseShiny`), on only when the admin's site-wide "Shiny buttons" switch (Site settings → Brand) is ticked.*
+Rules: primary text on white and white text on primary both pass AA. Never place accent-coloured small text on white. Never introduce purple, pink, teal, magenta, orange, or gradients between hues. A single flat colour per surface. The only permitted gradient is a white-to-transparent overlay on hero photos for legibility (§6.4.1). *Amended 2026-09-22 (Dhia, ADR-065): a second exception, the background sets of the Appearance global. A set is a named background with the text tone that reads on it, and one of them may be a gradient between the brand's own blues, optionally with a grain overlay. The ban on gradients between unrelated hues stands, as does one flat colour per surface for any section that does not choose a set.* *Amended 2026-09-23 (Dhia, ADR-065): the gradient, Sea mist, keeps the blues of Dhia's reference image rather than following the brand, and is named on the Appearance screen's "does not follow" panel; its deep bloom is lightened until every text colour on it reads 4.5:1 at every point, grain counted.* *Amended 2026-09-17 (Dhia, ADR-054): one more, between the brand's own two blues: the main call-to-action buttons' sheen (`Button` variants `shiny` and, on the primary ribbon, `inverseShiny`), on only when the admin's site-wide "Shiny buttons" switch (Site settings → Brand) is ticked.*
 
 ### 3.3 Typography
 

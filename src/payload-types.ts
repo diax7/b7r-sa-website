@@ -130,6 +130,7 @@ export interface Config {
   globals: {
     home: Home;
     'site-settings': SiteSetting;
+    appearance: Appearance;
     booking: Booking1;
     'seo-defaults': SeoDefault;
     'ai-settings': AiSetting;
@@ -139,6 +140,7 @@ export interface Config {
   globalsSelect: {
     home: HomeSelect<false> | HomeSelect<true>;
     'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
+    appearance: AppearanceSelect<false> | AppearanceSelect<true>;
     booking: BookingSelect<false> | BookingSelect<true>;
     'seo-defaults': SeoDefaultsSelect<false> | SeoDefaultsSelect<true>;
     'ai-settings': AiSettingsSelect<false> | AiSettingsSelect<true>;
@@ -489,6 +491,10 @@ export interface Page {
           };
           [k: string]: unknown;
         } | null;
+        /**
+         * Paints this section and sets its words' colours to read on it; the list is under Appearance, Backgrounds.
+         */
+        background?: string | null;
         id?: string | null;
         blockName?: string | null;
         blockType: 'richText';
@@ -514,6 +520,10 @@ export interface Page {
          * On: the welcome credit and the why-us cards from the home page follow the story.
          */
         withFacts?: boolean | null;
+        /**
+         * Paints this section and sets its words' colours to read on it; the list is under Appearance, Backgrounds.
+         */
+        background?: string | null;
         id?: string | null;
         blockName?: string | null;
         blockType: 'story';
@@ -545,6 +555,10 @@ export interface Page {
           art?: (number | null) | Media;
           id?: string | null;
         }[];
+        /**
+         * Paints this section and sets its words' colours to read on it; the list is under Appearance, Backgrounds.
+         */
+        background?: string | null;
         id?: string | null;
         blockName?: string | null;
         blockType: 'cards';
@@ -568,6 +582,10 @@ export interface Page {
           icon: number | Media;
           id?: string | null;
         }[];
+        /**
+         * Paints this section and sets its words' colours to read on it; the list is under Appearance, Backgrounds.
+         */
+        background?: string | null;
         id?: string | null;
         blockName?: string | null;
         blockType: 'steps';
@@ -593,6 +611,10 @@ export interface Page {
          * Under the equation, with real catalogue numbers: "A tee at 89 SAR…".
          */
         exampleLine: string;
+        /**
+         * Paints this section and sets its words' colours to read on it; the list is under Appearance, Backgrounds.
+         */
+        background?: string | null;
         id?: string | null;
         blockName?: string | null;
         blockType: 'profitEquation';
@@ -630,6 +652,10 @@ export interface Page {
          * Becomes the link in the closing line; it must appear there exactly.
          */
         bottomLinkWord?: string | null;
+        /**
+         * Paints this section and sets its words' colours to read on it; the list is under Appearance, Backgrounds.
+         */
+        background?: string | null;
         id?: string | null;
         blockName?: string | null;
         blockType: 'faqList';
@@ -643,6 +669,10 @@ export interface Page {
          * Under the title: what the programme is and what it means for B7R.
          */
         text: string;
+        /**
+         * Paints this section and sets its words' colours to read on it; the list is under Appearance, Backgrounds.
+         */
+        background?: string | null;
         id?: string | null;
         blockName?: string | null;
         blockType: 'miskCredential';
@@ -689,6 +719,10 @@ export interface Page {
            */
           whatsappMessage: string;
         };
+        /**
+         * Paints this section and sets its words' colours to read on it; the list is under Appearance, Backgrounds.
+         */
+        background?: string | null;
         id?: string | null;
         blockName?: string | null;
         blockType: 'contact';
@@ -702,6 +736,10 @@ export interface Page {
          * ## headings become the on-this-page list; no HTML.
          */
         body: string;
+        /**
+         * Paints this section and sets its words' colours to read on it; the list is under Appearance, Backgrounds.
+         */
+        background?: string | null;
         id?: string | null;
         blockName?: string | null;
         blockType: 'legalBody';
@@ -715,6 +753,10 @@ export interface Page {
          * Under the image. Empty hides it.
          */
         caption?: string | null;
+        /**
+         * Paints this section and sets its words' colours to read on it; the list is under Appearance, Backgrounds.
+         */
+        background?: string | null;
         id?: string | null;
         blockName?: string | null;
         blockType: 'mediaBanner';
@@ -782,6 +824,10 @@ export interface Page {
          * Before the bottom banner: the verdict in two sentences.
          */
         closing?: string | null;
+        /**
+         * Paints this section and sets its words' colours to read on it; the list is under Appearance, Backgrounds.
+         */
+        background?: string | null;
         id?: string | null;
         blockName?: string | null;
         blockType: 'compare';
@@ -2347,6 +2393,7 @@ export interface PagesSelect<T extends boolean = true> {
               title?: T;
               content?: T;
               contentTwin?: T;
+              background?: T;
               id?: T;
               blockName?: T;
             };
@@ -2358,6 +2405,7 @@ export interface PagesSelect<T extends boolean = true> {
               line?: T;
               photo?: T;
               withFacts?: T;
+              background?: T;
               id?: T;
               blockName?: T;
             };
@@ -2374,6 +2422,7 @@ export interface PagesSelect<T extends boolean = true> {
                     art?: T;
                     id?: T;
                   };
+              background?: T;
               id?: T;
               blockName?: T;
             };
@@ -2388,6 +2437,7 @@ export interface PagesSelect<T extends boolean = true> {
                     icon?: T;
                     id?: T;
                   };
+              background?: T;
               id?: T;
               blockName?: T;
             };
@@ -2399,6 +2449,7 @@ export interface PagesSelect<T extends boolean = true> {
               base?: T;
               profit?: T;
               exampleLine?: T;
+              background?: T;
               id?: T;
               blockName?: T;
             };
@@ -2413,6 +2464,7 @@ export interface PagesSelect<T extends boolean = true> {
               linkHref?: T;
               bottomLine?: T;
               bottomLinkWord?: T;
+              background?: T;
               id?: T;
               blockName?: T;
             };
@@ -2421,6 +2473,7 @@ export interface PagesSelect<T extends boolean = true> {
           | {
               title?: T;
               text?: T;
+              background?: T;
               id?: T;
               blockName?: T;
             };
@@ -2440,6 +2493,7 @@ export interface PagesSelect<T extends boolean = true> {
                     button?: T;
                     whatsappMessage?: T;
                   };
+              background?: T;
               id?: T;
               blockName?: T;
             };
@@ -2448,6 +2502,7 @@ export interface PagesSelect<T extends boolean = true> {
           | {
               updatedAt?: T;
               body?: T;
+              background?: T;
               id?: T;
               blockName?: T;
             };
@@ -2456,6 +2511,7 @@ export interface PagesSelect<T extends boolean = true> {
           | {
               media?: T;
               caption?: T;
+              background?: T;
               id?: T;
               blockName?: T;
             };
@@ -2488,6 +2544,7 @@ export interface PagesSelect<T extends boolean = true> {
                     id?: T;
                   };
               closing?: T;
+              background?: T;
               id?: T;
               blockName?: T;
             };
@@ -3093,6 +3150,10 @@ export interface Home {
      * Published products only; one unpublished later drops out of the strip until it is published again.
      */
     products: (number | Product)[];
+    /**
+     * Paints this section and sets its words' colours to read on it; the list is under Appearance, Backgrounds.
+     */
+    background?: string | null;
   };
   designer: {
     /**
@@ -3111,6 +3172,10 @@ export interface Home {
      * At the end of the designer; opens the app's sign-up. Shiny or classic: Site settings, Brand, Shiny buttons.
      */
     cta: string;
+    /**
+     * Paints this section and sets its words' colours to read on it; the list is under Appearance, Backgrounds.
+     */
+    background?: string | null;
   };
   steps: {
     /**
@@ -3147,6 +3212,10 @@ export interface Home {
       icon: number | Media;
       id?: string | null;
     }[];
+    /**
+     * Paints this section and sets its words' colours to read on it; the list is under Appearance, Backgrounds.
+     */
+    background?: string | null;
   };
   video: {
     /**
@@ -3161,6 +3230,10 @@ export interface Home {
      * Under the video's heading.
      */
     lead: string;
+    /**
+     * Paints this section and sets its words' colours to read on it; the list is under Appearance, Backgrounds.
+     */
+    background?: string | null;
   };
   whyUs: {
     /**
@@ -3193,6 +3266,10 @@ export interface Home {
       text: string;
       id?: string | null;
     }[];
+    /**
+     * Paints this section and sets its words' colours to read on it; the list is under Appearance, Backgrounds.
+     */
+    background?: string | null;
   };
   testimonials: {
     /**
@@ -3207,6 +3284,10 @@ export interface Home {
      * The testimonials heading (H2); the quotes come from Testimonials.
      */
     title: string;
+    /**
+     * Paints this section and sets its words' colours to read on it; the list is under Appearance, Backgrounds.
+     */
+    background?: string | null;
   };
   integrations: {
     /**
@@ -3221,6 +3302,10 @@ export interface Home {
      * Under the connected-stores heading.
      */
     lead: string;
+    /**
+     * Paints this section and sets its words' colours to read on it; the list is under Appearance, Backgrounds.
+     */
+    background?: string | null;
   };
   faq: {
     /**
@@ -3235,6 +3320,10 @@ export interface Home {
      * Under the section; opens the FAQ page.
      */
     link: string;
+    /**
+     * Paints this section and sets its words' colours to read on it; the list is under Appearance, Backgrounds.
+     */
+    background?: string | null;
   };
   ribbon: {
     /**
@@ -3423,6 +3512,154 @@ export interface SiteSetting {
      */
     umamiId?: string | null;
   };
+  /**
+   * Who saved the current version and when. Drafts do not change it.
+   */
+  lastSavedBy?: {
+    name?: string | null;
+    at?: string | null;
+  };
+  translations?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * The colours, the typeface and the logo of every page; the whole site follows on save.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "appearance".
+ */
+export interface Appearance {
+  id: number;
+  /**
+   * Chosen by hand; every other colour of the site is computed from these five.
+   */
+  sources: {
+    /**
+     * Fills the buttons, the links and the bottom banner, with white text on it.
+     */
+    primary: string;
+    /**
+     * The logo's second blue; the grey sections are a faint wash of it.
+     */
+    primaryDark: string;
+    /**
+     * Colours the badges and the focus ring, and gives the light fill behind a button under the pointer.
+     */
+    accent: string;
+    /**
+     * Colours the footer under white text, and gives the hairlines between sections.
+     */
+    navy: string;
+    /**
+     * Colours the body text of every page; the secondary text is computed from it.
+     */
+    ink: string;
+  };
+  /**
+   * Computed from the brand colours; set one by hand only when its computed colour is wrong.
+   */
+  pins?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * Sets every heading and paragraph of the site and the panel. ITF Rayat Round is licensed for b7r.sa only.
+   */
+  typeface: 'rayat' | 'baloo' | 'plex' | 'tajawal';
+  /**
+   * Replaces the colour logo in the header; empty keeps the shipped one. A wide image.
+   */
+  logoPrimary?: (number | null) | Media;
+  /**
+   * Replaces the white logo in the footer; empty keeps the shipped one.
+   */
+  logoOnDark?: (number | null) | Media;
+  /**
+   * Sets a section can pick besides the three built from the brand, each with its own text, links and button. A duplicated row copies the Arabic only.
+   */
+  surfaces?:
+    | {
+        /**
+         * Shown to editors in a section's background list: Sea mist.
+         */
+        label: string;
+        /**
+         * Names the background in the code and in the section picker; lowercase with hyphens: sea-mist.
+         */
+        key: string;
+        /**
+         * One flat colour, or a gradient of soft blooms over it.
+         */
+        kind: 'solid' | 'gradient';
+        /**
+         * Fills the section; under a gradient it is the field the blooms sit on.
+         */
+        background: string;
+        /**
+         * Sets the call to action on it: the primary blue, or the white button for a dark background.
+         */
+        button: 'primary' | 'inverse';
+        /**
+         * Colours the headings and body text on it; checked at every point of the background.
+         */
+        text: string;
+        /**
+         * Colours the secondary text on it, held to the same 4.5:1 everywhere.
+         */
+        textMuted: string;
+        /**
+         * Colours the links and the primary-coloured words on it, and the keyboard focus ring.
+         */
+        link: string;
+        /**
+         * Soft patches of colour over the field, in percent of the section: up to four.
+         */
+        blooms?:
+          | {
+              /**
+               * Shows at the bloom's centre and fades to nothing at its edge.
+               */
+              colour: string;
+              /**
+               * Where the centre sits across the section: 0 is the left edge, 100 the right.
+               */
+              x: number;
+              /**
+               * Where the centre sits down the section: 0 is the top, 100 the bottom.
+               */
+              y: number;
+              /**
+               * How far the bloom reaches across, in percent of the section's width.
+               */
+              width: number;
+              /**
+               * How far the bloom reaches down, in percent of the section's height.
+               */
+              height: number;
+              id?: string | null;
+            }[]
+          | null;
+        /**
+         * A fine texture over the gradient, from 0 to 0.2; counted in the contrast check.
+         */
+        grain?: number | null;
+        id?: string | null;
+      }[]
+    | null;
   /**
    * Who saved the current version and when. Drafts do not change it.
    */
@@ -3835,6 +4072,7 @@ export interface HomeSelect<T extends boolean = true> {
         pricePrefix?: T;
         button?: T;
         products?: T;
+        background?: T;
       };
   designer?:
     | T
@@ -3843,6 +4081,7 @@ export interface HomeSelect<T extends boolean = true> {
         title?: T;
         lead?: T;
         cta?: T;
+        background?: T;
       };
   steps?:
     | T
@@ -3859,6 +4098,7 @@ export interface HomeSelect<T extends boolean = true> {
               icon?: T;
               id?: T;
             };
+        background?: T;
       };
   video?:
     | T
@@ -3866,6 +4106,7 @@ export interface HomeSelect<T extends boolean = true> {
         enabled?: T;
         title?: T;
         lead?: T;
+        background?: T;
       };
   whyUs?:
     | T
@@ -3881,6 +4122,7 @@ export interface HomeSelect<T extends boolean = true> {
               text?: T;
               id?: T;
             };
+        background?: T;
       };
   testimonials?:
     | T
@@ -3888,6 +4130,7 @@ export interface HomeSelect<T extends boolean = true> {
         enabled?: T;
         eyebrow?: T;
         title?: T;
+        background?: T;
       };
   integrations?:
     | T
@@ -3895,6 +4138,7 @@ export interface HomeSelect<T extends boolean = true> {
         enabled?: T;
         title?: T;
         lead?: T;
+        background?: T;
       };
   faq?:
     | T
@@ -3902,6 +4146,7 @@ export interface HomeSelect<T extends boolean = true> {
         enabled?: T;
         title?: T;
         link?: T;
+        background?: T;
       };
   ribbon?:
     | T
@@ -3981,6 +4226,59 @@ export interface SiteSettingsSelect<T extends boolean = true> {
         gaId?: T;
         umamiSrc?: T;
         umamiId?: T;
+      };
+  lastSavedBy?:
+    | T
+    | {
+        name?: T;
+        at?: T;
+      };
+  translations?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "appearance_select".
+ */
+export interface AppearanceSelect<T extends boolean = true> {
+  sources?:
+    | T
+    | {
+        primary?: T;
+        primaryDark?: T;
+        accent?: T;
+        navy?: T;
+        ink?: T;
+      };
+  pins?: T;
+  typeface?: T;
+  logoPrimary?: T;
+  logoOnDark?: T;
+  surfaces?:
+    | T
+    | {
+        label?: T;
+        key?: T;
+        kind?: T;
+        background?: T;
+        button?: T;
+        text?: T;
+        textMuted?: T;
+        link?: T;
+        blooms?:
+          | T
+          | {
+              colour?: T;
+              x?: T;
+              y?: T;
+              width?: T;
+              height?: T;
+              id?: T;
+            };
+        grain?: T;
+        id?: T;
       };
   lastSavedBy?:
     | T

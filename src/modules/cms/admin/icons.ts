@@ -13,6 +13,7 @@ import {
   ClipboardCheck,
   ClipboardList,
   Coins,
+  Droplet,
   Eye,
   FileText,
   Fingerprint,
@@ -25,6 +26,7 @@ import {
   Images,
   Info,
   Languages,
+  Layers,
   LayoutTemplate,
   ListOrdered,
   MessageCircleQuestion,
@@ -43,6 +45,7 @@ import {
   MessageSquare,
   MessageSquareQuote,
   Newspaper,
+  Palette,
   PenLine,
   PenTool,
   Phone,
@@ -61,10 +64,13 @@ import {
   SlidersHorizontal,
   Sparkles,
   SquareDashed,
+  Stamp,
+  SwatchBook,
   Tag,
   Target,
   Text,
   Truck,
+  Type,
   UserPen,
   Users,
   Waypoints,
@@ -117,6 +123,7 @@ export const GLOBAL_ICONS: Record<GlobalSlug, LucideIcon> = {
   'seo-defaults': Search,
   'ai-settings': SlidersHorizontal,
   'visibility-checklist': ListTodo,
+  appearance: SwatchBook,
 };
 
 /**
@@ -233,6 +240,12 @@ export const SECTION_ICONS = {
   rates: Coins,
   // A message of the inbox.
   utm: Waypoints,
+  // The appearance (spec 010).
+  colours: Palette,
+  brandColours: Droplet,
+  typeface: Type,
+  logo: Stamp,
+  backgrounds: Layers,
 } as const satisfies Record<string, LucideIcon>;
 
 export type SectionIconKey = keyof typeof SECTION_ICONS;
@@ -353,6 +366,8 @@ export const ADMIN_NAV: {
     'site-settings': { group: 'site', order: 2 },
     // Beside Home and Site settings, before the images (ADR-062).
     booking: { group: 'site', order: 2.5 },
+    // After Site settings, which holds the brand's words: this is how the site looks (spec 010).
+    appearance: { group: 'site', order: 2.2 },
     'seo-defaults': { group: 'visibility', order: 6 },
     'visibility-checklist': { group: 'visibility', order: 1, parent: SCORE_VIEW },
     'ai-settings': { group: 'blog', order: 12, section: 'engine' },

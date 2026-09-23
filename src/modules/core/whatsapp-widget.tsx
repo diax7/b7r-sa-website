@@ -1,6 +1,5 @@
 'use client';
 
-import Image from 'next/image';
 import { X } from 'lucide-react';
 import { useEffect, useId, useRef, useState } from 'react';
 import { WhatsAppIcon } from '@/components/shared/whatsapp-icon';
@@ -8,6 +7,7 @@ import { Icon } from '@/components/shared/icon';
 import type { SiteCopy } from '@/content/copy';
 import { cn } from '@/lib/cn';
 import { whatsappUrl } from '@/lib/utm';
+import { BrandLogo } from '@/modules/core/brand-logo';
 
 const PULSE_KEY = 'b7r_wa_pulse';
 
@@ -94,13 +94,7 @@ export function WhatsAppWidget({
           data-testid="whatsapp-panel"
         >
           <div className="flex items-center gap-3 bg-primary px-4 py-3 text-white">
-            <Image
-              src="/images/logo/icon.png"
-              alt=""
-              width={36}
-              height={36}
-              className="size-9 rounded-pill bg-white p-0.5"
-            />
+            <BrandLogo mark className="size-9 shrink-0 rounded-pill bg-white p-0.5" />
             <div className="flex flex-col leading-tight">
               <span id={titleId} className="font-medium">
                 {copy.title}

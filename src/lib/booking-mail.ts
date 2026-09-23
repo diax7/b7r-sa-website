@@ -1,6 +1,7 @@
 import { copyFor } from '@/content/copy';
 import { buildIcs } from '@/lib/ics';
 import { htmlDir, type Locale } from '@/lib/i18n';
+import type { MailPalette } from '@/lib/mail-palette';
 import { formatSaudiPhone } from '@/lib/phone';
 import { riyadhSpanLabel } from '@/lib/riyadh';
 
@@ -46,6 +47,8 @@ export interface BookingMailInput {
   revision: number;
   /** The owner's mail says the calendar refused when true. */
   calendarFailed: boolean;
+  /** The brand's colours at send time (spec 010), which the mail is written in. */
+  palette: MailPalette;
 }
 
 export interface OutgoingMail {
@@ -92,23 +95,27 @@ interface Body {
   links: Link[];
 }
 
-function render(locale: Locale, body: Body): { subject: string; html: string; text: string } {
+function render(
+  locale: Locale,
+  body: Body,
+  palette: MailPalette,
+): { subject: string; html: string; text: string } {
   const align = locale === 'ar' ? 'right' : 'left';
-  const html = `<!doctype html><html lang="${locale}" dir="${htmlDir(locale)}"><body style="font-family:system-ui,sans-serif;line-height:1.7">
+  const html = `<!doctype html><html lang="${locale}" dir="${htmlDir(locale)}"><body style="font-family:system-ui,sans-serif;line-height:1.7;color:${palette.text}">
 <h2 style="margin:0 0 16px">${escapeHtml(body.subject)}</h2>
 ${body.intro ? `<p>${escapeHtml(body.intro)}</p>` : ''}
 <table cellpadding="6" style="border-collapse:collapse">
 ${body.rows
   .map(
     ([label, value, ltr]) =>
-      `<tr><th align="${align}" style="color:#5b6470;font-weight:500">${escapeHtml(label)}</th><td>${
+      `<tr><th align="${align}" style="color:${palette.muted};font-weight:500">${escapeHtml(label)}</th><td>${
         ltr ? `<bdi dir="ltr">${escapeHtml(value)}</bdi>` : escapeHtml(value)
       }</td></tr>`,
   )
   .join('\n')}
 </table>
 ${body.lines.map((line) => `<p>${escapeHtml(line)}</p>`).join('\n')}
-${body.links.map((link) => `<p><a href="${escapeHtml(link.href)}">${escapeHtml(link.label)}</a></p>`).join('\n')}
+${body.links.map((link) => `<p><a href="${escapeHtml(link.href)}" style="color:${palette.primary}">${escapeHtml(link.label)}</a></p>`).join('\n')}
 </body></html>`;
   const text = [
     ...(body.intro ? [body.intro] : []),
@@ -201,13 +208,17 @@ export function buildMerchantMail(kind: BookingMailKind, input: BookingMailInput
   const links: Link[] = active
     ? [{ href: input.manageUrl, label: e.manage }]
     : [{ href: input.manageUrl.replace(/\/book\/manage.*$/, '/book'), label: e.bookAgain }];
-  const mail = render(input.locale, {
-    subject: fill(e[MERCHANT_SUBJECT[kind]], values),
-    intro: fill(e[MERCHANT_INTRO[kind]], values),
-    rows,
-    lines,
-    links,
-  });
+  const mail = render(
+    input.locale,
+    {
+      subject: fill(e[MERCHANT_SUBJECT[kind]], values),
+      intro: fill(e[MERCHANT_INTRO[kind]], values),
+      rows,
+      lines,
+      links,
+    },
+    input.palette,
+  );
   return {
     to: input.email,
     ...mail,
@@ -244,12 +255,16 @@ export function buildOwnerMail(
   if (input.note) rows.push([e.noteLabel, input.note, false]);
   if (kind === 'confirmation') rows.push([e.pageLabel, input.page, true]);
   const lines = input.calendarFailed && kind !== 'cancelled' ? [e.calendarFailed] : [];
-  const mail = render(input.locale, {
-    subject: fill(e[OWNER_SUBJECT[kind]], values),
-    ...(kind === 'confirmation' ? { intro: e.newIntro } : {}),
-    rows,
-    lines,
-    links: [{ href: input.adminUrl, label: e.openInPanel }],
-  });
+  const mail = render(
+    input.locale,
+    {
+      subject: fill(e[OWNER_SUBJECT[kind]], values),
+      ...(kind === 'confirmation' ? { intro: e.newIntro } : {}),
+      rows,
+      lines,
+      links: [{ href: input.adminUrl, label: e.openInPanel }],
+    },
+    input.palette,
+  );
   return { to, ...mail, replyTo: input.email };
 }

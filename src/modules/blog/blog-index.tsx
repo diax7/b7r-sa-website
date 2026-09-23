@@ -115,7 +115,7 @@ export async function BlogIndex({
         </Container>
       </Section>
 
-      <CtaRibbon locale={locale} topTone="ground" page="blog" />
+      <CtaRibbon locale={locale} page="blog" />
     </>
   );
 }

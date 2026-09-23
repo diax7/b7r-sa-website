@@ -84,6 +84,8 @@ import { AiTopics } from '@/modules/ai-content/topics';
 import { COLLECTIONS, GLOBALS } from '@/modules/cms/entities';
 import { ADMIN_VIEW_COMPONENTS } from '@/modules/cms/admin/views/registry';
 import { refusedForm } from '@/modules/cms/admin/glossary';
+import { Appearance } from '@/modules/brand/global';
+import { APPEARANCE_DESCRIPTIONS } from '@/modules/brand/descriptions';
 import { Connections } from '@/modules/connections/collection';
 import { CONNECTION_DESCRIPTIONS } from '@/modules/connections/descriptions';
 import { MESSAGE_DESCRIPTIONS } from '@/modules/inbox/descriptions';
@@ -356,6 +358,7 @@ describe('the description maps name real fields (ADR-046)', () => {
     [Connections, CONNECTION_DESCRIPTIONS],
     [Traffic, TRAFFIC_DESCRIPTIONS],
     [Messages, MESSAGE_DESCRIPTIONS],
+    [Appearance, APPEARANCE_DESCRIPTIONS],
   ];
   for (const [c, map] of maps) {
     it(`${c.slug}: every key of its map is a field`, () => {
@@ -1202,7 +1205,7 @@ describe('side-by-side bilingual editing (ADR-057)', () => {
    * `beforeChange` for the language of each write). Anything else is listed by name so the
    * failure says what remains.
    */
-  it('the census gate (PR C): 134 localized fields show both languages, 128 light ones paired (56 inside rows), the four heavy ones by their twins, the two facts of the post by their widgets; nothing remains; no list is localized as a whole but the warnings', () => {
+  it('the census gate (PR C): 135 localized fields show both languages, 129 light ones paired (57 inside rows), the four heavy ones by their twins, the two facts of the post by their widgets; nothing remains; no list is localized as a whole but the warnings', () => {
     const placed = configs.flatMap((c) =>
       everyField(c.fields).map((p) => ({ ...p, slug: c.slug })),
     );
@@ -1216,9 +1219,9 @@ describe('side-by-side bilingual editing (ADR-057)', () => {
       (p) => HEAVY.has(p.field.type) && isTwinOf(p.next, p.field),
     );
     // The booking settings (ADR-062) added the consultation's name and a closed date's reason;
-    // the booker (ADR-063) its blurb.
-    expect(pairedLight.length).toBe(128);
-    expect(pairedLight.filter((p) => p.inList).length).toBe(56);
+    // the booker (ADR-063) its blurb; the Appearance library (spec 010) a background's name.
+    expect(pairedLight.length).toBe(129);
+    expect(pairedLight.filter((p) => p.inList).length).toBe(57);
     expect(pairedHeavy.map(placedName)).toEqual([
       'pages.blocks.richText.content',
       'posts.body',

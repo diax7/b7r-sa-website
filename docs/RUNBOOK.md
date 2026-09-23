@@ -86,11 +86,57 @@ again (move `public/media` aside first so filenames do not collide).
 
 ## Fonts
 
-`public/fonts/*.woff2` are subsets of the licensed ITF Rayat Round files
-(`bash scripts/subset-fonts.sh`, needs `uv`): Arabic, Basic Latin and punctuation only,
-~27 kB per weight. Re-run after `resources/brand/fonts/web` changes. The files are served
-`Cache-Control: immutable` for a year (ADR-039), so a changed woff2 must get a **new file
-name** (a version suffix); never overwrite the same path, browsers will keep the old bytes.
+`public/fonts/*.woff2` are subsets of the four curated typefaces (spec 010): the licensed
+ITF Rayat Round (served from b7r.sa only, BRD 3.2) and the openly licensed Baloo Bhaijaan 2,
+IBM Plex Sans Arabic and Tajawal, whose `*-OFL.txt` licences sit beside them.
+`bash scripts/subset-fonts.sh [rayat|baloo|plex|tajawal]` (needs `uv`) writes them: Arabic,
+Basic Latin and punctuation only. Re-run after `resources/brand/fonts` changes. The files
+are served `Cache-Control: immutable` for a year (ADR-039), so a changed woff2 must get a
+**new file name** (a version suffix); never overwrite the same path, browsers will keep the
+old bytes. Each family's metric fallback in `tokens.css` is measured, not guessed (ADR-010,
+amended 2026-09-23); `e2e/appearance.spec.ts` holds every family to the CLS budget.
+
+## Appearance (spec 010, ADR-065)
+
+Site → Appearance owns the brand colours, the colours derived from them, the typeface, the
+logo uploads and the library of background sets. A save repaints every page within the
+request; nothing is rebuilt.
+
+**After the merge that brings it, once:** the deploy migrates the schema; then run
+`pnpm content:migrate --force` against production. It only adds what is missing: it saves
+the Appearance global with Sea mist named in both languages. Without it the site still
+paints Sea mist (the library's default), but the panel's first save would store its name in
+the panel's language only.
+
+**A section's background** (phase 2) is picked in the section's own tab (Home) or block
+(Pages): the section's own, or any set. Deleting a set under Backgrounds is safe: the sections
+that used it go back to their own background, and their picker says which set is gone. A saved
+set's key cannot change; rename the set instead. The deploy's migration adds the columns;
+nothing needs seeding. A new block type is swept on each set before it ships: add it to the
+page `e2e/section-backgrounds.spec.ts` publishes for the kinds no published page holds (the
+public sweep in `e2e/surfaces.spec.ts` only reaches published pages).
+
+**What does not follow** a change of colour is listed on the screen itself (the sidebar
+panel), and `tests/brand-not-following.test.ts` fails when a shipped brand colour appears in
+a file that list does not name.
+
+**What follows** besides the pages (phase 1d): the logo in the header, the phone menu, the
+footer, the error pages and the WhatsApp card is drawn from vector paths in the brand's blues
+(an upload in the Logo tab replaces it and keeps its own colours); the browser tab icon, the
+manifest's two icons and the Apple icon are drawn by `src/app/icon.tsx` and `apple-icon.tsx`
+from the mark; the phone's browser bar and the manifest read the primary; the booking, contact
+and password-reset e-mails read the colours when they are sent. A save regenerates the icons
+and the manifest at once, but a browser keeps an icon it has for up to a day
+(`max-age=86400`), so a returning visitor's tab icon may lag the change by that much.
+
+**Tracing the logo again** (a new `resources/brand/logo/logo.png` or `icon.png`): run
+`uvx --with potracer --with numpy --with pillow python scripts/trace-logo.py`, then
+`pnpm format`, and commit the sprite and the two modules it writes (`logo-box.ts`,
+`mark-paths.ts`; the same PNGs give the same files, and a new trace is a new sprite URL);
+compare the header at 1440 and 390 against the PNG before merging. The sprite keeps its file
+name and a new trace changes only its `?v=` query: after deploying one, check that the CDN pull
+zone keys its cache on the query string, or purge `/images/logo/sprite.svg`. The panel's own
+logo and `favicon.ico` are still the PNGs `pnpm assets` writes.
 
 ## Assets (photos)
 
@@ -486,7 +532,7 @@ has no OG image until this runs: the page falls back to the language's default i
 
 **A changed file under `public/` keeps its old look for a year unless its name changes.**
 Since 2026-09-18 (site audit, item 16) `next/image` caches its transforms for a year
-(`images.minimumCacheTTL`) and `/og`, `/icons` and `/images` answer with `max-age=86400`, so
+(`images.minimumCacheTTL`) and `/og`, `/icon`, `/apple-icon` and `/images` answer with `max-age=86400`, so
 `pnpm og` and `pnpm assets`, which rewrite files under the same names, are served stale by
 the optimiser until the name changes or a deploy clears `.next/cache`. A CMS upload is safe:
 Payload gives a new file a new name.

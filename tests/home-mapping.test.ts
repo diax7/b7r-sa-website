@@ -5,7 +5,7 @@ import { integrations } from '@/content/seed/integrations';
 import { testimonials } from '@/content/seed/testimonials';
 import { toFaq, toHome, toIntegration, toTestimonial } from '@/lib/cms/mappers';
 import { homeFlagProblem, HOME_FAQ_LIMIT } from '@/modules/cms/collections/faqs';
-import { alternateTones } from '@/modules/home/tones';
+import { alternateTones, sectionTones } from '@/modules/home/tones';
 import type {
   Faq as FaqDoc,
   Home as HomeDoc,
@@ -243,6 +243,45 @@ describe('testimonials and integrations', () => {
     };
     expect(toIntegration(doc)).toEqual(salla);
     expect(toIntegration({ ...doc, platform: 'zid' }).logo).toBe('/images/integrations/zid.svg');
+  });
+});
+
+describe('a section background (spec 010, phase 2)', () => {
+  it('carries the sets an editor picked, by section, and drops a key of the wrong shape', () => {
+    const doc = homeDoc();
+    const mapped = toHome({
+      ...doc,
+      faq: { ...doc.faq, background: 'sea-mist' },
+      designer: { ...doc.designer, background: 'deep-sea' },
+      steps: { ...doc.steps, background: "x'] body{color:red" },
+      video: { ...doc.video, background: null },
+    });
+    expect(mapped.backgrounds).toEqual({ faq: 'sea-mist', designer: 'deep-sea' });
+    expect(toHome(homeDoc()).backgrounds).toEqual({});
+  });
+
+  it('keeps a section’s own background when its set no longer exists', () => {
+    const doc = homeDoc();
+    const known = new Set(['surface', 'ground', 'deep-sea']);
+    const mapped = toHome(
+      {
+        ...doc,
+        faq: { ...doc.faq, background: 'sea-mist' },
+        video: { ...doc.video, background: 'deep-sea' },
+      },
+      { backgrounds: known },
+    );
+    expect(mapped.backgrounds).toEqual({ video: 'deep-sea' });
+  });
+
+  it('paints the pick over the designed tone, and the designed tone where there is none', () => {
+    const designed = { productStrip: 'surface', designer: 'ground', faq: 'ground' } as const;
+    expect(sectionTones(designed, { faq: 'sea-mist' })).toEqual({
+      productStrip: 'surface',
+      designer: 'ground',
+      faq: 'sea-mist',
+    });
+    expect(sectionTones(designed)).toEqual(designed);
   });
 });
 

@@ -54,19 +54,25 @@ function imageSet(slide: HeroSlide): HeroImageSet {
  * two media-gated preloads for slide 1 so exactly one LCP image is fetched per viewport;
  * `getImageProps` alone emits none. React 19 hoists the <link>s into <head>.
  */
-export async function Hero({ locale }: { locale: Locale }) {
+export async function Hero({
+  locale,
+  displayFonts,
+}: {
+  locale: Locale;
+  /** The display weight's font files for the chosen typeface (spec 010), from the page. */
+  displayFonts: readonly string[];
+}) {
   const [{ hero }, site] = await Promise.all([getHome(locale), getSiteSettings(locale)]);
   const messages = copyFor(locale);
   const images = hero.slides.map(imageSet);
   const first = images[0];
 
-  // The H1 is the only Black-weight text; preloading it here (home only) removes a font swap
-  // from the LCP path (measured: LCP fell below the 2.5 s gate, see ADR-010).
-  preload('/fonts/ITFRayatRound-Black.woff2', {
-    as: 'font',
-    type: 'font/woff2',
-    crossOrigin: 'anonymous',
-  });
+  // The H1 is the only display-weight text; preloading it here (home only) removes a font
+  // swap from the LCP path (measured: LCP fell below the 2.5 s gate, see ADR-010). The file is
+  // the chosen family's (spec 010); a family without a Black resolves to its heaviest.
+  for (const href of displayFonts) {
+    preload(href, { as: 'font', type: 'font/woff2', crossOrigin: 'anonymous' });
+  }
 
   return (
     <>

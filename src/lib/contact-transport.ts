@@ -2,6 +2,7 @@ import 'server-only';
 import { Resend } from 'resend';
 import { copyFor } from '@/content/copy';
 import { htmlDir, type Locale } from '@/lib/i18n';
+import type { MailPalette } from '@/lib/mail-palette';
 import { contactEnv } from '@/lib/env-server';
 import { formatSaudiPhone, isSaudiMobile } from '@/lib/phone';
 import { whatsappUrl } from '@/lib/utm';
@@ -21,7 +22,8 @@ export type SendResult = { ok: true } | { ok: false; status: 500 | 503 };
 
 export interface ContactTransport {
   kind: 'live' | 'mock' | 'off';
-  send(message: ContactMessage): Promise<SendResult>;
+  /** `palette`: the brand's colours at send time (spec 010), which the live mail is written in. */
+  send(message: ContactMessage, palette: MailPalette): Promise<SendResult>;
 }
 
 function escapeHtml(value: string): string {
@@ -33,7 +35,10 @@ function escapeHtml(value: string): string {
 }
 
 /** Subject and bodies per BRD 4.17: every field, LTR-safe phone and email, a WhatsApp reply link when the phone is Saudi. */
-export function buildContactEmail(message: ContactMessage): {
+export function buildContactEmail(
+  message: ContactMessage,
+  palette: MailPalette,
+): {
   subject: string;
   html: string;
   text: string;
@@ -50,20 +55,20 @@ export function buildContactEmail(message: ContactMessage): {
     [labels.email, message.email, true],
     [labels.inquiry, message.inquiry, false],
   ];
-  const html = `<!doctype html><html lang="${locale}" dir="${htmlDir(locale)}"><body style="font-family:system-ui,sans-serif;line-height:1.7">
+  const html = `<!doctype html><html lang="${locale}" dir="${htmlDir(locale)}"><body style="font-family:system-ui,sans-serif;line-height:1.7;color:${palette.text}">
 <h2 style="margin:0 0 16px">${escapeHtml(subject)}</h2>
 <table cellpadding="6" style="border-collapse:collapse">
 ${rows
   .map(
     ([label, value, ltr]) =>
-      `<tr><th align="${locale === 'ar' ? 'right' : 'left'}" style="color:#5b6470;font-weight:500">${escapeHtml(label)}</th><td>${
+      `<tr><th align="${locale === 'ar' ? 'right' : 'left'}" style="color:${palette.muted};font-weight:500">${escapeHtml(label)}</th><td>${
         ltr ? `<bdi dir="ltr">${escapeHtml(value)}</bdi>` : escapeHtml(value)
       }</td></tr>`,
   )
   .join('\n')}
 </table>
 <p style="white-space:pre-wrap;margin:16px 0"><strong>${escapeHtml(labels.message)}</strong><br>${escapeHtml(message.message)}</p>
-${wa ? `<p><a href="${wa}">${escapeHtml(contactEmail.replyOnWhatsapp)}</a></p>` : ''}
+${wa ? `<p><a href="${wa}" style="color:${palette.primary}">${escapeHtml(contactEmail.replyOnWhatsapp)}</a></p>` : ''}
 </body></html>`;
   const text = [
     ...rows.map(([label, value]) => `${label}: ${value}`),
@@ -102,8 +107,8 @@ function liveTransport(apiKey: string, from: string, to: string): ContactTranspo
   const resend = resendClient(apiKey);
   return {
     kind: 'live',
-    async send(message) {
-      const { subject, html, text } = buildContactEmail(message);
+    async send(message, palette) {
+      const { subject, html, text } = buildContactEmail(message, palette);
       // `replyTo` is the sender's address so Dhia answers from the inbox.
       const { error } = await resend.emails.send({
         from,

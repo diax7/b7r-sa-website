@@ -67,7 +67,7 @@ export async function HubPage({ hub, locale, page }: { hub: Hub; locale: Locale;
           />
         </Container>
       </Section>
-      <CtaRibbon locale={locale} topTone="surface" page={`hub-${hub.slug}`} />
+      <CtaRibbon locale={locale} page={`hub-${hub.slug}`} />
     </>
   );
 }

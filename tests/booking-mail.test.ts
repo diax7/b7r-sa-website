@@ -16,6 +16,7 @@ import {
 } from '@/lib/booking-mailer';
 import { buildIcs, icsStamp, icsText } from '@/lib/ics';
 import type { Locale } from '@/lib/i18n';
+import { TEST_PALETTE } from './helpers/mail-palette';
 
 const input = (locale: Locale, extra: Partial<BookingMailInput> = {}): BookingMailInput => ({
   locale,
@@ -33,6 +34,7 @@ const input = (locale: Locale, extra: Partial<BookingMailInput> = {}): BookingMa
   id: 1,
   revision: 0,
   calendarFailed: false,
+  palette: TEST_PALETTE,
   ...extra,
 });
 
@@ -240,6 +242,19 @@ describe("Dhia's mails, at the contact address", () => {
       );
     });
   }
+});
+
+describe('the colours: the brand’s at send time, never a literal (spec 010)', () => {
+  it('writes both mails in the palette they are handed', () => {
+    for (const mail of [
+      buildMerchantMail('confirmation', input('ar')),
+      buildOwnerMail('confirmation', input('en'), 'contact@b7r.sa'),
+    ]) {
+      expect(mail.html).toContain(`color:${TEST_PALETTE.text}`);
+      expect(mail.html).toContain(`color:${TEST_PALETTE.muted}`);
+      expect(mail.html).toContain(`color:${TEST_PALETTE.primary}`);
+    }
+  });
 });
 
 describe('the mailer', () => {

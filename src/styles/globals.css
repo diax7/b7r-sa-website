@@ -6,6 +6,7 @@
 @source not '../modules/cms/admin';
 @source not '../modules/ai-content/admin';
 @source not '../modules/bookings/admin';
+@source not '../modules/brand/admin';
 @source not '../modules/connections/admin';
 @source not '../modules/inbox/admin';
 @source not '../modules/traffic/admin';
@@ -46,12 +47,16 @@
   --color-current: currentColor;
 
   --shadow-*: initial;
-  --shadow-card: 0 1px 2px rgb(20 24 31 / 0.06), 0 1px 3px rgb(20 24 31 / 0.04);
-  --shadow-card-hover: 0 4px 12px rgb(20 24 31 / 0.08);
-  --shadow-popover: 0 8px 24px rgb(20 24 31 / 0.12);
-  --shadow-header: 0 1px 0 rgb(20 24 31 / 0.06);
+  --shadow-card:
+    0 1px 2px color-mix(in srgb, var(--color-text) 6%, transparent),
+    0 1px 3px color-mix(in srgb, var(--color-text) 4%, transparent);
+  --shadow-card-hover: 0 4px 12px color-mix(in srgb, var(--color-text) 8%, transparent);
+  --shadow-popover: 0 8px 24px color-mix(in srgb, var(--color-text) 12%, transparent);
+  --shadow-header: 0 1px 0 color-mix(in srgb, var(--color-text) 6%, transparent);
   /* The island header: a hairline under it and a blue-tinted lift (ADR-053). */
-  --shadow-island: 0 1px 0 rgb(20 24 31 / 0.04), 0 16px 36px -16px rgb(0 88 176 / 0.35);
+  --shadow-island:
+    0 1px 0 color-mix(in srgb, var(--color-text) 4%, transparent),
+    0 16px 36px -16px color-mix(in srgb, var(--color-primary) 35%, transparent);
 
   /* Resting heights (Dhia, 2026-09-14: the bar sits lower); scrolled shrinks to 60. */
   --header-h: 88px;
@@ -72,6 +77,18 @@
    Base
    --------------------------------------------------------------------------------------- */
 @layer base {
+  /* The page's own tones, copied once at the root (spec 010): a background set rewrites
+     `--color-text` and its kin for the words on it, while a scrim over a photo and a card
+     inside the section must keep the page's. A custom property resolves where it is
+     declared, so these hold the runtime brand's values and nothing a section sets reaches
+     them. */
+  :root {
+    --page-text: var(--color-text);
+    --page-text-muted: var(--color-text-muted);
+    --page-primary: var(--color-primary);
+    --page-primary-hover: var(--color-primary-hover);
+    --page-border: var(--color-border);
+  }
   html {
     scroll-behavior: smooth;
     /* In-page anchors and the designer deep link land below the sticky header (BRD 6.2). */
@@ -124,7 +141,8 @@
     color: inherit;
   }
   :focus-visible {
-    outline: 2px solid var(--color-accent);
+    /* A background set names its own ring colour (spec 010): the accent vanishes on a blue. */
+    outline: 2px solid var(--focus-ring, var(--color-accent));
     outline-offset: 2px;
     border-radius: var(--radius-inner);
   }
@@ -176,12 +194,124 @@
     display: none;
   }
 }
-/* Section rhythm (§3.4): 96 px desktop, 64 px mobile. */
-@utility section-pad {
-  padding-block: 64px;
-  @media (min-width: 768px) {
-    padding-block: 96px;
+/* Section rhythm (§3.4): 96 px desktop, 64 px mobile; the sea motif's wave is 48 and 32 px
+   (BRD 6.3.4). The ribbon's overlap and the section above it read the same two values. */
+:root {
+  --section-pad-y: 64px;
+  --wave-height: 32px;
+}
+@media (min-width: 768px) {
+  :root {
+    --section-pad-y: 96px;
+    --wave-height: 48px;
   }
+}
+/* In the components layer, so a section's own padding utility (`py-0`, `pt-6`, `pb-28`) adjusts
+   the rhythm at every width. */
+@layer components {
+  .section-pad {
+    padding-block: var(--section-pad-y);
+  }
+}
+
+/* ---------------------------------------------------------------------------------------
+   Background sets (spec 010, phase 1c; `src/modules/brand/surfaces.ts`). A section names its
+   set in `data-surface` and paints `--section-bg` and `--section-image`, never
+   `--color-surface`, so a card inside stays the page's white. Three sets are built from the
+   brand here and follow it; the library's sets arrive in the head's style block.
+   --------------------------------------------------------------------------------------- */
+@layer components {
+  /* In the components layer so a text utility on the section still wins. The section sets
+     its colour itself: `color` inherits as a resolved value, so plain text would otherwise
+     keep the body's ink on a dark set. */
+  .surface {
+    background-color: var(--section-bg, var(--color-surface));
+    background-image: var(--section-image, none);
+    color: var(--color-text);
+  }
+  /* An island inside a set (a card, a panel on the page's white, grey or accent tint, at any
+     opacity that still reads as that background) reads the page's tones again, so its words
+     read on its own background. `tests/brand-surfaces.test.ts` fails when the site uses an
+     island class this list does not name. */
+  :where(.surface)
+    :where(
+      .bg-surface,
+      .bg-surface\/95,
+      .bg-surface\/85,
+      .bg-surface\/70,
+      .bg-ground,
+      .bg-white,
+      .bg-accent-tint,
+      .bg-accent-tint\/60
+    ) {
+    --color-text: var(--page-text);
+    --color-text-muted: var(--page-text-muted);
+    --color-primary: var(--page-primary);
+    --color-primary-hover: var(--page-primary-hover);
+    --color-border: var(--page-border);
+    --focus-ring: var(--color-accent);
+    color: var(--color-text);
+  }
+  /* A primary button keeps the page's blue: a set's `--color-primary` is its link colour. */
+  :where(.surface) :where(.bg-primary, .btn-shiny) {
+    --color-primary: var(--page-primary);
+    --color-primary-hover: var(--page-primary-hover);
+  }
+}
+/* A see-through island that lies on the section itself (the contact block's booking card, 60 %
+   of the accent tint) composites over the page's white on a set, as it does on the page: over
+   deep sea the tint would read as a mid blue under the page's grey words (spec 010, phase 2).
+   A frosted panel over a photo (the designer's print area) keeps its see-through look.
+   Unlayered, so it beats the utility. */
+.surface:not([data-surface='surface'], [data-surface='ground']) .bg-accent-tint\/60 {
+  background-color: color-mix(in srgb, var(--color-accent-tint) 60%, var(--color-surface));
+}
+/* The ribbon's top wave rises from its band into the section above (spec 010, phase 2;
+   `src/modules/core/cta-ribbon.tsx`): that section grows at its foot by the wave's height and
+   the ribbon overlaps it by as much, so the page keeps its height and the wave covers only the
+   section's own background (a set, a gradient with its grain), never its words. Unlayered, so
+   it beats the rhythm utility and a section's own `py-0` (the video). */
+[data-cta-ribbon] {
+  margin-block-start: calc(-1 * var(--wave-height));
+  padding-block-start: var(--wave-height);
+}
+.section-pad:has(+ [data-cta-ribbon]) {
+  padding-block-end: calc(var(--section-pad-y) + var(--wave-height));
+}
+.section-pad.py-0:has(+ [data-cta-ribbon]) {
+  padding-block-end: var(--wave-height);
+}
+/* The drawn logo on a dark background (the footer): every blue white, as the shipped white
+   file was (spec 010, phase 1d; `src/modules/core/brand-logo.tsx`). */
+.logo-on-dark {
+  --logo-primary: #ffffff;
+  --logo-accent: #ffffff;
+  --logo-primary-dark: #ffffff;
+}
+[data-surface='surface'] {
+  --section-bg: var(--color-surface);
+}
+[data-surface='ground'] {
+  --section-bg: var(--color-ground);
+}
+/* The footer's navy as a section: white text, the accent tint for secondary text and links
+   (the pair `accentTintOnNavy` of the contrast check holds them to AA on any navy). */
+[data-surface='deep-sea'] {
+  --section-bg: var(--color-navy);
+  --color-text: #ffffff;
+  --color-text-muted: var(--color-accent-tint);
+  --color-primary: var(--color-accent-tint);
+  --color-primary-hover: #ffffff;
+  --color-border: color-mix(in srgb, #ffffff 18%, var(--color-navy));
+  --focus-ring: #ffffff;
+}
+/* On a dark set the call to action is the white button with primary text, as the bottom
+   banner's is. Unlayered, so it beats the button's own `text-white`. */
+[data-surface='deep-sea'] :is(.bg-primary, .btn-shiny) {
+  --color-primary: #ffffff;
+  --color-primary-hover: var(--color-accent-tint);
+  --color-accent: var(--color-accent-tint);
+  color: var(--page-primary);
 }
 /* A CSS tooltip for an icon-only control (ADR-044): the text of `data-tooltip` under the
    control on hover and keyboard focus; the control keeps its `aria-label`. */
@@ -258,10 +388,11 @@
   background-size: 280% auto;
   background-position: 0% 50%;
   box-shadow:
-    0 0 10px rgb(0 152 224 / 0.22),
-    0 4px 6px -2px rgb(0 88 176 / 0.25),
-    inset 2px 2px 8px rgb(230 245 252 / 0.35),
-    inset -2px -2px 8px rgb(0 63 128 / 0.35);
+    0 0 10px color-mix(in srgb, var(--color-accent) 22%, transparent),
+    0 4px 6px -2px color-mix(in srgb, var(--color-primary) 25%, transparent),
+    inset 2px 2px 8px color-mix(in srgb, var(--color-accent-tint) 35%, transparent),
+    inset -2px -2px 8px
+      color-mix(in srgb, color-mix(in srgb, var(--color-primary) 72%, black) 35%, transparent);
   transition:
     background-position 700ms var(--ease-standard),
     box-shadow var(--duration-base) var(--ease-standard),
@@ -270,29 +401,37 @@
 .btn-shiny:hover {
   background-position: 100% 50%;
   box-shadow:
-    0 0 14px rgb(0 152 224 / 0.32),
-    0 6px 8px -2px rgb(0 88 176 / 0.3),
-    inset 2px 2px 8px rgb(230 245 252 / 0.4),
-    inset -2px -2px 8px rgb(0 63 128 / 0.35);
+    0 0 14px color-mix(in srgb, var(--color-accent) 32%, transparent),
+    0 6px 8px -2px color-mix(in srgb, var(--color-primary) 30%, transparent),
+    inset 2px 2px 8px color-mix(in srgb, var(--color-accent-tint) 40%, transparent),
+    inset -2px -2px 8px
+      color-mix(in srgb, color-mix(in srgb, var(--color-primary) 72%, black) 35%, transparent);
 }
 /* On the primary ribbon the button is white: the same sheen in white and the accent tint. */
 .btn-shiny-inverse {
   background-image: linear-gradient(325deg, #ffffff 0%, var(--color-accent-tint) 55%, #ffffff 90%);
   box-shadow:
     0 0 10px rgb(255 255 255 / 0.35),
-    0 4px 6px -2px rgb(0 63 128 / 0.3),
+    0 4px 6px -2px
+      color-mix(in srgb, color-mix(in srgb, var(--color-primary) 72%, black) 30%, transparent),
     inset 2px 2px 8px rgb(255 255 255 / 0.9),
-    inset -2px -2px 8px rgb(0 88 176 / 0.12);
+    inset -2px -2px 8px color-mix(in srgb, var(--color-primary) 12%, transparent);
 }
 .btn-shiny-inverse:hover {
   box-shadow:
     0 0 14px rgb(255 255 255 / 0.5),
-    0 6px 8px -2px rgb(0 63 128 / 0.35),
+    0 6px 8px -2px
+      color-mix(in srgb, color-mix(in srgb, var(--color-primary) 72%, black) 35%, transparent),
     inset 2px 2px 8px rgb(255 255 255 / 0.9),
-    inset -2px -2px 8px rgb(0 88 176 / 0.12);
+    inset -2px -2px 8px color-mix(in srgb, var(--color-primary) 12%, transparent);
 }
 .btn-shiny-inverse::after {
-  background: linear-gradient(100deg, transparent 30%, rgb(0 152 224 / 0.16) 50%, transparent 70%);
+  background: linear-gradient(
+    100deg,
+    transparent 30%,
+    color-mix(in srgb, var(--color-accent) 16%, transparent) 50%,
+    transparent 70%
+  );
 }
 .btn-shiny::after {
   content: '';
@@ -367,7 +506,7 @@
      inside it share one corner (Dhia, 2026-09-17: the pill read as off-brand). */
   border-radius: var(--radius-base);
   background: var(--color-surface);
-  border-color: rgb(20 24 31 / 0.08);
+  border-color: color-mix(in srgb, var(--color-text) 8%, transparent);
   box-shadow: var(--shadow-island);
 }
 .header-bar .header-inner {
@@ -517,7 +656,11 @@
   flex-direction: column;
   align-items: flex-start;
   gap: 8px;
-  background: linear-gradient(to top, rgb(20 24 31 / 0.55), rgb(20 24 31 / 0));
+  background: linear-gradient(
+    to top,
+    color-mix(in srgb, var(--page-text) 55%, transparent),
+    color-mix(in srgb, var(--page-text) 0%, transparent)
+  );
 }
 @media (min-width: 1024px) {
   .strip {

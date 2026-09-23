@@ -115,14 +115,17 @@ describe('robots (BRD 7.2)', () => {
 });
 
 describe('manifest (BRD 7.3)', () => {
-  it('is Arabic, RTL, brand-coloured, display browser, with two icons', () => {
-    const m = manifest(site);
+  it('is Arabic, RTL, in the colours it is handed, display browser, with the drawn icons', () => {
+    const m = manifest(site, { theme: '#1a5caf', background: '#fbfcfe', iconSizes: [192, 512] });
     expect(m.name).toBe(site.brandName);
     expect(m.lang).toBe('ar');
     expect(m.dir).toBe('rtl');
     expect(m.display).toBe('browser');
-    expect(m.theme_color?.toLowerCase()).toBe('#0058b0');
-    expect(m.background_color?.toLowerCase()).toBe('#ffffff');
-    expect(m.icons?.map((i) => i.sizes)).toEqual(['192x192', '512x512']);
+    expect(m.theme_color).toBe('#1a5caf');
+    expect(m.background_color).toBe('#fbfcfe');
+    expect(m.icons).toEqual([
+      { src: '/icon/192', sizes: '192x192', type: 'image/png' },
+      { src: '/icon/512', sizes: '512x512', type: 'image/png' },
+    ]);
   });
 });
