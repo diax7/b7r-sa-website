@@ -130,6 +130,7 @@ export interface Config {
   globals: {
     home: Home;
     'site-settings': SiteSetting;
+    appearance: Appearance;
     booking: Booking1;
     'seo-defaults': SeoDefault;
     'ai-settings': AiSetting;
@@ -139,6 +140,7 @@ export interface Config {
   globalsSelect: {
     home: HomeSelect<false> | HomeSelect<true>;
     'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
+    appearance: AppearanceSelect<false> | AppearanceSelect<true>;
     booking: BookingSelect<false> | BookingSelect<true>;
     'seo-defaults': SeoDefaultsSelect<false> | SeoDefaultsSelect<true>;
     'ai-settings': AiSettingsSelect<false> | AiSettingsSelect<true>;
@@ -3443,6 +3445,73 @@ export interface SiteSetting {
   createdAt?: string | null;
 }
 /**
+ * The colours, the typeface and the logo of every page; the whole site follows on save.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "appearance".
+ */
+export interface Appearance {
+  id: number;
+  /**
+   * Chosen by hand; every other colour of the site is computed from these five.
+   */
+  sources: {
+    /**
+     * Fills the buttons, the links and the bottom banner, with white text on it.
+     */
+    primary: string;
+    /**
+     * The logo's second blue; the grey sections are a faint wash of it.
+     */
+    primaryDark: string;
+    /**
+     * Colours the badges and the focus ring, and gives the light fill behind a button under the pointer.
+     */
+    accent: string;
+    /**
+     * Colours the footer under white text, and gives the hairlines between sections.
+     */
+    navy: string;
+    /**
+     * Colours the body text of every page; the secondary text is computed from it.
+     */
+    ink: string;
+  };
+  /**
+   * Computed from the brand colours; set one by hand only when its computed colour is wrong.
+   */
+  pins?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * Sets every heading and paragraph of the site and the panel. ITF Rayat Round is licensed for b7r.sa only.
+   */
+  typeface: 'rayat' | 'baloo' | 'plex' | 'tajawal';
+  /**
+   * Replaces the colour logo in the header; empty keeps the shipped one. A wide image.
+   */
+  logoPrimary?: (number | null) | Media;
+  /**
+   * Replaces the white logo in the footer; empty keeps the shipped one.
+   */
+  logoOnDark?: (number | null) | Media;
+  /**
+   * Who saved the current version and when. Drafts do not change it.
+   */
+  lastSavedBy?: {
+    name?: string | null;
+    at?: string | null;
+  };
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
  * The free consultation booking: its length, the hours, the closed days, and the Google calendar the appointments land in.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -3989,6 +4058,34 @@ export interface SiteSettingsSelect<T extends boolean = true> {
         at?: T;
       };
   translations?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "appearance_select".
+ */
+export interface AppearanceSelect<T extends boolean = true> {
+  sources?:
+    | T
+    | {
+        primary?: T;
+        primaryDark?: T;
+        accent?: T;
+        navy?: T;
+        ink?: T;
+      };
+  pins?: T;
+  typeface?: T;
+  logoPrimary?: T;
+  logoOnDark?: T;
+  lastSavedBy?:
+    | T
+    | {
+        name?: T;
+        at?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

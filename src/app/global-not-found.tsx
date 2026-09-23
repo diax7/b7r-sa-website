@@ -5,6 +5,7 @@ import { copyFor } from '@/content/copy';
 import { getNavigation, getSiteSettings } from '@/lib/cms';
 import { siteLocales } from '@/lib/cms/locales';
 import { BRAND_PRIMARY_HEX } from '@/lib/tokens';
+import { getAppearance } from '@/modules/brand';
 import { StatusPage } from '@/modules/core';
 import { rootMetadata } from '@/modules/core/seo/metadata';
 
@@ -31,13 +32,20 @@ export const viewport: Viewport = {
  * line with a link to `/en` (once the site is in English). HTTP 404, no ribbon.
  */
 export default async function GlobalNotFound() {
-  const [site, navigation, locales] = await Promise.all([
+  const [site, navigation, locales, appearance] = await Promise.all([
     getSiteSettings('ar'),
     getNavigation('ar'),
     siteLocales(),
+    getAppearance(),
   ]);
   return (
-    <SiteDocument locale="ar" locales={locales} site={site} navigation={navigation}>
+    <SiteDocument
+      locale="ar"
+      locales={locales}
+      site={site}
+      navigation={navigation}
+      appearance={appearance}
+    >
       <StatusPage
         title={ar.notFoundPage.title}
         text={ar.notFoundPage.text}

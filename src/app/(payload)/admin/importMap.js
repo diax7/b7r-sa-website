@@ -45,6 +45,10 @@ import { StrikethroughFeatureClient as StrikethroughFeatureClient_e70f5e05f09f93
 import { UnderlineFeatureClient as UnderlineFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { MessageActions as MessageActions_10261637d5499b8c795d9e55ab437e8a } from '@/modules/inbox/admin/message-actions'
 import { ColorField as ColorField_282b4ad6df406826ab892b1c7d71f9f7 } from '@/modules/cms/admin/fields/color-field'
+import { DerivedStrip as DerivedStrip_a89230fdd53233a1f558fa66d3abf1c1 } from '@/modules/brand/admin/derived-strip'
+import { ContrastVerdict as ContrastVerdict_375c40cc871e97955b0982a4c68358f6 } from '@/modules/brand/admin/contrast-verdict'
+import { TypefacePreview as TypefacePreview_7130134ce9a3d400dd8d5249923bdb3c } from '@/modules/brand/admin/typeface-preview'
+import { NotFollowingPanel as NotFollowingPanel_b3bac716dce56d5b9d37f5a346d45535 } from '@/modules/brand/admin/not-following-panel'
 import { FactsSheetField as FactsSheetField_4b2565ddfaf33dc17fa1b7f1540c1828 } from '@/modules/ai-content/admin/facts-sheet-field'
 import { Nav as Nav_3d0835c3ea58bf93ee82386aa839961f } from '@/modules/cms/admin/nav/nav'
 import { Icon as Icon_f980e649448e4d4ce46e5f6506a165f6 } from '@/modules/cms/components/logo'
@@ -107,6 +111,10 @@ export const importMap = {
   "@payloadcms/richtext-lexical/client#UnderlineFeatureClient": UnderlineFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@/modules/inbox/admin/message-actions#MessageActions": MessageActions_10261637d5499b8c795d9e55ab437e8a,
   "@/modules/cms/admin/fields/color-field#ColorField": ColorField_282b4ad6df406826ab892b1c7d71f9f7,
+  "@/modules/brand/admin/derived-strip#DerivedStrip": DerivedStrip_a89230fdd53233a1f558fa66d3abf1c1,
+  "@/modules/brand/admin/contrast-verdict#ContrastVerdict": ContrastVerdict_375c40cc871e97955b0982a4c68358f6,
+  "@/modules/brand/admin/typeface-preview#TypefacePreview": TypefacePreview_7130134ce9a3d400dd8d5249923bdb3c,
+  "@/modules/brand/admin/not-following-panel#NotFollowingPanel": NotFollowingPanel_b3bac716dce56d5b9d37f5a346d45535,
   "@/modules/ai-content/admin/facts-sheet-field#FactsSheetField": FactsSheetField_4b2565ddfaf33dc17fa1b7f1540c1828,
   "@/modules/cms/admin/nav/nav#Nav": Nav_3d0835c3ea58bf93ee82386aa839961f,
   "@/modules/cms/components/logo#Icon": Icon_f980e649448e4d4ce46e5f6506a165f6,

@@ -1,8 +1,14 @@
 /**
  * The brand the site paints itself with (spec 010): the colours an editor sets, the tones
- * derived from them, and the style block the document head carries. Phase 1b puts the
- * Appearance global behind it; nothing outside this module reaches past this file.
+ * derived from them, the typeface, and the style block the document head carries, read from
+ * the Appearance global through `getAppearance`. Nothing outside this module reaches past
+ * this file. The Payload config imports `global.ts` directly, as it does for every module
+ * (through this index it would be a cycle through the CMS client, since `read.ts` needs it);
+ * the panel's widgets import their own files.
  */
+export { appearanceCss, SHIPPED_LOGOS } from '@/modules/brand/appearance';
+export { getAppearance, type SiteAppearance } from '@/modules/brand/read';
+export { preloadsFor, typefaceCss } from '@/modules/brand/typefaces';
 export {
   contrastRatio,
   darkenUntil,

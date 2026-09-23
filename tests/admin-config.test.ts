@@ -84,6 +84,8 @@ import { AiTopics } from '@/modules/ai-content/topics';
 import { COLLECTIONS, GLOBALS } from '@/modules/cms/entities';
 import { ADMIN_VIEW_COMPONENTS } from '@/modules/cms/admin/views/registry';
 import { refusedForm } from '@/modules/cms/admin/glossary';
+import { Appearance } from '@/modules/brand/global';
+import { APPEARANCE_DESCRIPTIONS } from '@/modules/brand/descriptions';
 import { Connections } from '@/modules/connections/collection';
 import { CONNECTION_DESCRIPTIONS } from '@/modules/connections/descriptions';
 import { MESSAGE_DESCRIPTIONS } from '@/modules/inbox/descriptions';
@@ -356,6 +358,7 @@ describe('the description maps name real fields (ADR-046)', () => {
     [Connections, CONNECTION_DESCRIPTIONS],
     [Traffic, TRAFFIC_DESCRIPTIONS],
     [Messages, MESSAGE_DESCRIPTIONS],
+    [Appearance, APPEARANCE_DESCRIPTIONS],
   ];
   for (const [c, map] of maps) {
     it(`${c.slug}: every key of its map is a field`, () => {

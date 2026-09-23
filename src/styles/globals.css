@@ -6,6 +6,7 @@
 @source not '../modules/cms/admin';
 @source not '../modules/ai-content/admin';
 @source not '../modules/bookings/admin';
+@source not '../modules/brand/admin';
 @source not '../modules/connections/admin';
 @source not '../modules/inbox/admin';
 @source not '../modules/traffic/admin';

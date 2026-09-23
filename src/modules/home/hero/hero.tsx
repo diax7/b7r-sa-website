@@ -8,6 +8,8 @@ import { type Locale, localePath } from '@/lib/i18n';
 import { blurPlaceholder } from '@/lib/image-url';
 import { PHOTO_QUALITY } from '@/lib/photo';
 import { registerUrl } from '@/lib/utm';
+import { getAppearance } from '@/modules/brand/read';
+import { preloadsFor } from '@/modules/brand/typefaces';
 import { HeroCarousel, type HeroImageSet } from '@/modules/home/hero/hero-carousel';
 import { DESKTOP, DESKTOP_SIZES, MOBILE } from '@/modules/home/hero/renditions';
 
@@ -55,18 +57,21 @@ function imageSet(slide: HeroSlide): HeroImageSet {
  * `getImageProps` alone emits none. React 19 hoists the <link>s into <head>.
  */
 export async function Hero({ locale }: { locale: Locale }) {
-  const [{ hero }, site] = await Promise.all([getHome(locale), getSiteSettings(locale)]);
+  const [{ hero }, site, appearance] = await Promise.all([
+    getHome(locale),
+    getSiteSettings(locale),
+    getAppearance(),
+  ]);
   const messages = copyFor(locale);
   const images = hero.slides.map(imageSet);
   const first = images[0];
 
-  // The H1 is the only Black-weight text; preloading it here (home only) removes a font swap
-  // from the LCP path (measured: LCP fell below the 2.5 s gate, see ADR-010).
-  preload('/fonts/ITFRayatRound-Black.woff2', {
-    as: 'font',
-    type: 'font/woff2',
-    crossOrigin: 'anonymous',
-  });
+  // The H1 is the only display-weight text; preloading it here (home only) removes a font
+  // swap from the LCP path (measured: LCP fell below the 2.5 s gate, see ADR-010). The file is
+  // the chosen family's (spec 010); a family without a Black resolves to its heaviest.
+  for (const href of preloadsFor(appearance.typeface, [900])) {
+    preload(href, { as: 'font', type: 'font/woff2', crossOrigin: 'anonymous' });
+  }
 
   return (
     <>

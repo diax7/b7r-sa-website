@@ -20,6 +20,7 @@ import { env } from '@/lib/env';
 import { type Locale, localePath } from '@/lib/i18n';
 import { isActive } from '@/lib/nav';
 import { registerUrl, whatsappUrl } from '@/lib/utm';
+import type { LogoImage } from '@/modules/core/logo-image';
 import { Burger, burgerButtonClass } from '@/modules/core/header/burger';
 import { LanguageSwitch } from '@/modules/core/header/language-switch';
 
@@ -41,6 +42,7 @@ export function MobileMenu({
   locale,
   switchable,
   copy,
+  logo,
   autoOpen = false,
 }: {
   pathname: string;
@@ -50,6 +52,8 @@ export function MobileMenu({
   /** Whether the site exists in the other language (the header decides). */
   switchable: boolean;
   copy: ShellCopy;
+  /** The header's logo, repeated in the sheet's top bar. */
+  logo: LogoImage;
   autoOpen?: boolean;
 }) {
   const [open, setOpen] = useState(false);
@@ -87,10 +91,10 @@ export function MobileMenu({
             onClick={() => setOpen(false)}
           >
             <Image
-              src="/images/logo/logo-header.png"
+              src={logo.src}
               alt=""
-              width={198}
-              height={72}
+              width={logo.width}
+              height={logo.height}
               sizes="88px"
               className="h-8 w-auto"
             />

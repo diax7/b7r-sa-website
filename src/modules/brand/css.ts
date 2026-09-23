@@ -16,7 +16,7 @@
 import { contrastRatio } from '@/modules/brand/contrast';
 import { DEFAULT_SOURCES, SHIPPED_DERIVED, SURFACE } from '@/modules/brand/defaults';
 import { type BrandDerived, derive } from '@/modules/brand/derive';
-import { type Pair, PALETTE_PAIRS, type PaletteToken } from '@/modules/brand/pairs';
+import { type Pair, type PairKey, PALETTE_PAIRS, type PaletteToken } from '@/modules/brand/pairs';
 import { type Hex, isHex, toHex, toHexRecord } from '@/modules/brand/types';
 
 /**
@@ -66,13 +66,25 @@ export const DEFAULT_BRAND: Brand = {
 export type BrandTokens = Record<string, Hex>;
 
 export interface PairFailure {
+  key: PairKey;
   use: string;
   wanted: number;
   got: number;
 }
 
+/** One pair of the contrast check as the finished palette paints it. */
+export interface PairRow {
+  pair: Pair;
+  fg: Hex;
+  bg: Hex;
+  ratio: number;
+  passes: boolean;
+}
+
 export interface Resolved {
   tokens: BrandTokens;
+  /** Every pair of `PALETTE_PAIRS`, in order: what the panel's contrast check draws. */
+  rows: PairRow[];
   /** Every pair the finished palette fails, pins included. Empty means the brand is usable. */
   failures: PairFailure[];
 }
@@ -118,15 +130,18 @@ export function resolveBrand(brand: Brand): Resolved {
     'color-border': derived.border as Hex,
   };
 
-  const failures: PairFailure[] = [];
+  const rows: PairRow[] = [];
   for (const pair of PALETTE_PAIRS satisfies readonly Pair[]) {
     const fg = colourOf(tokens, pair.fg);
     const bg = colourOf(tokens, pair.bg);
     if (!fg || !bg) continue;
-    const got = contrastRatio(fg, bg);
-    if (got < pair.min) failures.push({ use: pair.use, wanted: pair.min, got });
+    const ratio = contrastRatio(fg, bg);
+    rows.push({ pair, fg, bg, ratio, passes: ratio >= pair.min });
   }
-  return { tokens, failures };
+  const failures: PairFailure[] = rows
+    .filter((row) => !row.passes)
+    .map(({ pair, ratio }) => ({ key: pair.key, use: pair.use, wanted: pair.min, got: ratio }));
+  return { tokens, rows, failures };
 }
 
 /** The shipped palette, resolved once: the fallback can never itself be the failing input. */

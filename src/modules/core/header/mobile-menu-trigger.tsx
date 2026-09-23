@@ -5,6 +5,7 @@ import { useState } from 'react';
 import type { ShellCopy } from '@/content/copy';
 import type { Navigation, SiteSettings } from '@/content/schema';
 import type { Locale } from '@/lib/i18n';
+import type { LogoImage } from '@/modules/core/logo-image';
 import { Burger, burgerButtonClass } from '@/modules/core/header/burger';
 
 const MobileMenu = dynamic(
@@ -35,6 +36,7 @@ export function MobileMenuTrigger({
   locale,
   switchable,
   copy,
+  logo,
 }: {
   pathname: string;
   navigation: Navigation;
@@ -42,6 +44,7 @@ export function MobileMenuTrigger({
   locale: Locale;
   switchable: boolean;
   copy: ShellCopy;
+  logo: LogoImage;
 }) {
   const [wanted, setWanted] = useState(false);
 
@@ -54,6 +57,7 @@ export function MobileMenuTrigger({
         locale={locale}
         switchable={switchable}
         copy={copy}
+        logo={logo}
         autoOpen
       />
     );

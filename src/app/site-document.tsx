@@ -7,7 +7,7 @@ import type { Navigation, SiteSettings } from '@/content/schema';
 import { htmlDir, languageTag, type Locale } from '@/lib/i18n';
 import { Footer, Header, newsletterCopy, SkipLink } from '@/modules/core';
 import { PageExtras } from '@/modules/core/page-extras';
-import { SHIPPED_BRAND_CSS } from '@/modules/brand';
+import { appearanceCss, preloadsFor, SHIPPED_LOGOS, type SiteAppearance } from '@/modules/brand';
 import { NewsletterForm } from '@/modules/forms';
 import '@/styles/globals.css';
 
@@ -15,7 +15,7 @@ import '@/styles/globals.css';
 const CONSENT_DEFAULT =
   "window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}window.gtag=gtag;gtag('consent','default',{analytics_storage:'denied',ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied'});";
 
-const FONT_WEIGHTS = ['Regular', 'Medium', 'Bold'] as const;
+const FONT_WEIGHTS = [400, 500, 700] as const;
 
 interface SiteDocumentProps {
   locale: Locale;
@@ -25,6 +25,8 @@ interface SiteDocumentProps {
   banner?: ReactNode;
   site: SiteSettings;
   navigation: Navigation;
+  /** The Appearance global (spec 010): the colours, the typeface and the logos. */
+  appearance: SiteAppearance;
   children: ReactNode;
 }
 
@@ -39,6 +41,7 @@ export function SiteDocument({
   locales,
   site,
   navigation,
+  appearance,
   banner,
   children,
 }: SiteDocumentProps) {
@@ -46,26 +49,23 @@ export function SiteDocument({
   const shell = shellCopy(locale);
   // Browsers fetch a weight as soon as any text in the document uses it, so the three weights
   // present on every page (body, nav/buttons, H2s) are preloaded together; the home page adds
-  // Black for its H1 (ADR-010). `preload()` emits one deduplicated <link> per font, where a
-  // literal <link rel="preload"> in a server component is emitted twice by React.
-  for (const weight of FONT_WEIGHTS) {
-    preload(`/fonts/ITFRayatRound-${weight}.woff2`, {
-      as: 'font',
-      type: 'font/woff2',
-      crossOrigin: 'anonymous',
-    });
+  // the display weight for its H1 (ADR-010). The files are the chosen family's (spec 010): a
+  // family with one variable file preloads it once. `preload()` emits one deduplicated <link>
+  // per font, where a literal <link rel="preload"> in a server component is emitted twice.
+  for (const href of preloadsFor(appearance.typeface, FONT_WEIGHTS)) {
+    preload(href, { as: 'font', type: 'font/woff2', crossOrigin: 'anonymous' });
   }
   return (
     <html lang={languageTag(locale)} dir={htmlDir(locale)}>
       <head>
         <meta httpEquiv="content-language" content={languageTag(locale)} />
         {/*
-          The brand's colours (spec 010). `:root:root` so the block outranks Tailwind's
-          `:root, :host` whichever way Next hoists the stylesheet. Today it restates the
-          values `globals.css` already carries, proven token by token in
-          `tests/brand-css.test.ts`; phase 1b swaps the constant for the Appearance global.
+          The Appearance global's colours and typeface (spec 010). `:root:root` so the block
+          outranks Tailwind's `:root, :host` whichever way Next hoists the stylesheet. Only
+          checked hex values and a family from the registry reach it (`appearanceCss`); a
+          never-saved global restates `globals.css` exactly (`tests/brand-appearance.test.ts`).
         */}
-        <style id="brand-tokens" dangerouslySetInnerHTML={{ __html: SHIPPED_BRAND_CSS }} />
+        <style id="brand-tokens" dangerouslySetInnerHTML={{ __html: appearanceCss(appearance) }} />
         {/* Marks JS as running so scroll-reveal may hide content; without it nothing hides. */}
         <script
           dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('js')" }}
@@ -86,6 +86,7 @@ export function SiteDocument({
           locale={locale}
           locales={locales}
           copy={shell}
+          logo={appearance.logo.primary ?? SHIPPED_LOGOS.primary}
         />
         <main id="content" className="relative">
           {children}
@@ -96,6 +97,7 @@ export function SiteDocument({
           site={site}
           locale={locale}
           copy={copy}
+          logo={appearance.logo.onDark ?? SHIPPED_LOGOS.onDark}
         />
         <PageExtras
           gaId={site.analytics.gaId}

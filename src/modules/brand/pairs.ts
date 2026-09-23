@@ -39,8 +39,23 @@ export type PaletteToken =
   | 'text-muted'
   | 'border';
 
+export type PairKey =
+  | 'buttonPrimary'
+  | 'buttonPrimaryHover'
+  | 'buttonSecondary'
+  | 'buttonInverseHover'
+  | 'badgeAccent'
+  | 'bodyOnSurface'
+  | 'bodyOnGround'
+  | 'mutedOnSurface'
+  | 'mutedOnGround'
+  | 'footerOnNavy'
+  | 'ribbonOnPrimaryDark';
+
 export interface Pair {
-  /** What this combination is on the page, for the refusal the editor reads. */
+  /** The pair's name in both string trees (`appearance.pairs`), where the editor reads it. */
+  key: PairKey;
+  /** What this combination is on the page, in English, for the log. */
   use: string;
   fg: PaletteToken | '#ffffff';
   bg: PaletteToken | '#ffffff';
@@ -48,20 +63,57 @@ export interface Pair {
 }
 
 export const PALETTE_PAIRS: readonly Pair[] = [
-  { use: 'Button primary', fg: '#ffffff', bg: 'primary', min: AA_TEXT },
-  { use: 'Button primary hover', fg: '#ffffff', bg: 'primary-hover', min: AA_TEXT },
-  { use: 'Button secondary and ghost', fg: 'primary', bg: 'surface', min: AA_TEXT },
-  { use: 'Button inverse hover', fg: 'primary', bg: 'accent-tint', min: AA_TEXT },
+  { key: 'buttonPrimary', use: 'Button primary', fg: '#ffffff', bg: 'primary', min: AA_TEXT },
   {
+    key: 'buttonPrimaryHover',
+    use: 'Button primary hover',
+    fg: '#ffffff',
+    bg: 'primary-hover',
+    min: AA_TEXT,
+  },
+  {
+    key: 'buttonSecondary',
+    use: 'Button secondary and ghost',
+    fg: 'primary',
+    bg: 'surface',
+    min: AA_TEXT,
+  },
+  {
+    key: 'buttonInverseHover',
+    use: 'Button inverse hover',
+    fg: 'primary',
+    bg: 'accent-tint',
+    min: AA_TEXT,
+  },
+  {
+    key: 'badgeAccent',
     use: 'Badge accent, the accent as text on its tint',
     fg: 'accent-on-tint',
     bg: 'accent-tint',
     min: AA_TEXT,
   },
-  { use: 'Body text on surface', fg: 'text', bg: 'surface', min: AA_TEXT },
-  { use: 'Body text on ground', fg: 'text', bg: 'ground', min: AA_TEXT },
-  { use: 'Muted text on surface', fg: 'text-muted', bg: 'surface', min: AA_TEXT },
-  { use: 'Muted text on ground', fg: 'text-muted', bg: 'ground', min: AA_TEXT },
-  { use: 'Footer text on navy', fg: '#ffffff', bg: 'navy', min: AA_TEXT },
-  { use: 'Ribbon text on primary dark', fg: '#ffffff', bg: 'primary-dark', min: AA_TEXT },
+  { key: 'bodyOnSurface', use: 'Body text on surface', fg: 'text', bg: 'surface', min: AA_TEXT },
+  { key: 'bodyOnGround', use: 'Body text on ground', fg: 'text', bg: 'ground', min: AA_TEXT },
+  {
+    key: 'mutedOnSurface',
+    use: 'Muted text on surface',
+    fg: 'text-muted',
+    bg: 'surface',
+    min: AA_TEXT,
+  },
+  {
+    key: 'mutedOnGround',
+    use: 'Muted text on ground',
+    fg: 'text-muted',
+    bg: 'ground',
+    min: AA_TEXT,
+  },
+  { key: 'footerOnNavy', use: 'Footer text on navy', fg: '#ffffff', bg: 'navy', min: AA_TEXT },
+  {
+    key: 'ribbonOnPrimaryDark',
+    use: 'Ribbon text on primary dark',
+    fg: '#ffffff',
+    bg: 'primary-dark',
+    min: AA_TEXT,
+  },
 ] as const;

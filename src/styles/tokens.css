@@ -287,3 +287,103 @@
   descent-override: 30%;
   line-gap-override: 0%;
 }
+
+/* The curated alternates (spec 010, `src/modules/brand/typefaces.ts`), under the SIL Open
+   Font License, subset by scripts/subset-fonts.sh. Declared here always, downloaded only when
+   the Appearance screen picks one. Each fallback is measured, not guessed: HarfBuzz-shaped
+   widths of the site's Arabic copy (85 percent) and a Latin line (15 percent) against Segoe
+   UI give size-adjust; the face's own ascent and descent over it give the overrides. */
+@font-face {
+  font-family: 'Baloo Bhaijaan 2';
+  src: url('/fonts/BalooBhaijaan2-Variable.woff2') format('woff2');
+  font-weight: 400 800;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Baloo Fallback';
+  src: local('Segoe UI'), local('Tahoma'), local('Roboto'), local('Noto Naskh Arabic');
+  size-adjust: 91.1%;
+  ascent-override: 118.6%;
+  descent-override: 69.4%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: 'IBM Plex Sans Arabic';
+  src: url('/fonts/IBMPlexSansArabic-Light.woff2') format('woff2');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'IBM Plex Sans Arabic';
+  src: url('/fonts/IBMPlexSansArabic-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'IBM Plex Sans Arabic';
+  src: url('/fonts/IBMPlexSansArabic-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'IBM Plex Sans Arabic';
+  src: url('/fonts/IBMPlexSansArabic-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Plex Fallback';
+  src: local('Segoe UI'), local('Tahoma'), local('Roboto'), local('Noto Naskh Arabic');
+  size-adjust: 92.3%;
+  ascent-override: 117.6%;
+  descent-override: 45%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: 'Tajawal';
+  src: url('/fonts/Tajawal-Light.woff2') format('woff2');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Tajawal';
+  src: url('/fonts/Tajawal-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Tajawal';
+  src: url('/fonts/Tajawal-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Tajawal';
+  src: url('/fonts/Tajawal-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Tajawal';
+  src: url('/fonts/Tajawal-Black.woff2') format('woff2');
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Tajawal Fallback';
+  src: local('Segoe UI'), local('Tahoma'), local('Roboto'), local('Noto Naskh Arabic');
+  size-adjust: 98.9%;
+  ascent-override: 65%;
+  descent-override: 36.1%;
+  line-gap-override: 20.2%;
+}

@@ -216,6 +216,124 @@ export const adminStrings = {
       en: 'Meet link: {link}',
     } as Record<string, string>,
   },
+  appearance: {
+    /** The five brand colours inside a sentence ("Choose a darker {colour}"). */
+    colours: {
+      primary: 'primary',
+      primaryDark: 'primary dark',
+      accent: 'accent',
+      navy: 'navy',
+      ink: 'ink',
+    },
+    /** The derived colours: the strip's names. */
+    derived: {
+      primaryHover: 'Primary under the pointer',
+      accentTint: 'Accent tint',
+      accentOnTint: 'Accent on its tint',
+      ground: 'Grey sections',
+      border: 'Hairlines',
+      textMuted: 'Secondary text',
+    },
+    /** The derived colours inside a sentence. */
+    derivedInSentence: {
+      primaryHover: 'primary under the pointer',
+      accentTint: 'accent tint',
+      accentOnTint: 'accent on its tint',
+      ground: 'grey sections',
+      border: 'hairlines',
+      textMuted: 'secondary text',
+    },
+    strip: {
+      title: 'Derived colours',
+      lead: 'Computed from the brand colours as you change them. Set one by hand only when its computed colour is wrong for the site.',
+      computed: 'Computed',
+      designed: 'Designed value',
+      byHand: 'Set by hand',
+      from: 'From the {colour}',
+      designedNote: 'Kept until the {colour} changes',
+      setByHand: 'Set it by hand',
+      compute: 'Compute it',
+      valueLabel: '{name}: the value set by hand',
+      waiting: 'Waiting for a valid brand colour',
+    },
+    verdict: {
+      title: 'Contrast check',
+      lead: 'Every pair of colours the site puts together, as the colours above stand now.',
+      allPass: 'Every pair passes: saving keeps the site readable.',
+      failing: (n: number) =>
+        n === 1
+          ? '1 pair falls short: saving is refused until it passes.'
+          : `${n} pairs fall short: saving is refused until they pass.`,
+      passes: 'Passes',
+      short: 'Too low',
+      needs: 'needs {ratio}',
+    },
+    /** Every pair the check reads (`src/modules/brand/pairs.ts`), where it shows on the site. */
+    pairs: {
+      buttonPrimary: 'White text on the primary (the buttons, the bottom banner)',
+      buttonPrimaryHover: 'White text on a button under the pointer',
+      buttonSecondary: 'Primary text on the page (links, outline buttons)',
+      buttonInverseHover: 'Primary text on the accent tint (a light button under the pointer)',
+      badgeAccent: 'Accent text on its tint (the badges)',
+      bodyOnSurface: 'Body text on the page',
+      bodyOnGround: 'Body text on the grey sections',
+      mutedOnSurface: 'Secondary text on the page',
+      mutedOnGround: 'Secondary text on the grey sections',
+      footerOnNavy: 'White text on the footer',
+      ribbonOnPrimaryDark: 'White text on the primary dark',
+    },
+    /** A refused save: the pair, what it reads, what it needs, and the one change that fixes it. */
+    refusal: {
+      darker: '{pair} reads {got} and needs {wanted}. Choose a darker {colour}.',
+      lighter: '{pair} reads {got} and needs {wanted}. Choose a lighter {colour}.',
+    },
+    /** The same on a colour set by hand, which can also go back to being computed. */
+    pinRefusal: {
+      darker: '{pair} reads {got} and needs {wanted}. Choose a darker {colour}, or compute it.',
+      lighter: '{pair} reads {got} and needs {wanted}. Choose a lighter {colour}, or compute it.',
+    },
+    more: 'The contrast check lists the rest.',
+    notAColour: 'Write the colour as #1f6feb: a hash, then six digits or letters from a to f.',
+    typefacePreview: 'Design your product; we print it and deliver it to your customer.',
+    notFollowing: {
+      title: 'Does not follow',
+      lead: 'These keep the shipped colours after a change: each is a file, not a field.',
+      items: {
+        icons3d: {
+          name: 'The six 3D icons',
+          why: 'The blue is in their shading and no source files exist to recolour.',
+        },
+        logo: {
+          name: 'The logo',
+          why: 'Image files with the blues drawn in; an upload in the Logo tab replaces them.',
+        },
+        appIcons: {
+          name: 'The browser tab and phone icons',
+          why: 'Image files cut from the logo.',
+        },
+        themeColour: {
+          name: 'The browser bar colour on phones',
+          why: 'Set in the code as the shipped primary.',
+        },
+        gonePage: {
+          name: 'The page for a removed address',
+          why: 'Served before the site loads, with the shipped colours in the code.',
+        },
+        shareImages: {
+          name: 'The share images',
+          why: 'Drawn once at each deploy with the shipped colours.',
+        },
+        videoPoster: {
+          name: 'The video still on the home page',
+          why: 'An image flattened onto the shipped grey.',
+        },
+        emails: {
+          name: 'The e-mails',
+          why: 'The confirmation, the message copy and the password reset carry the shipped colours.',
+        },
+      },
+    },
+  },
   inbox: {
     /** The three actions above a message (ADR-061); the outcome beside the third. */
     replyWhatsApp: 'Reply on WhatsApp',
@@ -779,6 +897,118 @@ export const adminStringsAr: AdminStrings = {
     reminderLink: {
       ar: 'رابط Meet: {link}',
       en: 'Meet link: {link}',
+    },
+  },
+  appearance: {
+    colours: {
+      primary: 'اللون الأساسي',
+      primaryDark: 'الأساسي الداكن',
+      accent: 'لون التمييز',
+      navy: 'الكحلي',
+      ink: 'لون النص',
+    },
+    derived: {
+      primaryHover: 'الأساسي تحت المؤشر',
+      accentTint: 'التمييز الفاتح',
+      accentOnTint: 'التمييز على لونه الفاتح',
+      ground: 'الأقسام الرمادية',
+      border: 'الخطوط الفاصلة',
+      textMuted: 'النص الثانوي',
+    },
+    derivedInSentence: {
+      primaryHover: 'الأساسي تحت المؤشر',
+      accentTint: 'التمييز الفاتح',
+      accentOnTint: 'التمييز على لونه الفاتح',
+      ground: 'الأقسام الرمادية',
+      border: 'الخطوط الفاصلة',
+      textMuted: 'النص الثانوي',
+    },
+    strip: {
+      title: 'الألوان المشتقة',
+      lead: 'تُحسب من ألوان العلامة كلما غيّرتها. ثبّت لوناً يدوياً فقط إذا لم يناسب الموقع لونه المحسوب.',
+      computed: 'محسوب',
+      designed: 'قيمة مصمّمة',
+      byHand: 'مثبّت يدوياً',
+      from: 'من {colour}',
+      designedNote: 'تبقى حتى يتغيّر {colour}',
+      setByHand: 'ثبّته يدوياً',
+      compute: 'احسبه',
+      valueLabel: '{name}: القيمة المثبّتة يدوياً',
+      waiting: 'بانتظار لون علامة صالح',
+    },
+    verdict: {
+      title: 'فحص التباين',
+      lead: 'كل زوج من الألوان يجمعه الموقع، بالألوان المختارة أعلاه الآن.',
+      allPass: 'تنجح الأزواج كلها: يبقى الموقع مقروءاً بعد الحفظ.',
+      failing: (n: number) =>
+        n === 1
+          ? 'زوج واحد دون الحد: يُرفض الحفظ حتى ينجح.'
+          : `${arabicCount(n, { one: 'زوج واحد', two: 'زوجان', few: 'أزواج', many: 'زوجاً' })} دون الحد: يُرفض الحفظ حتى تنجح كلها.`,
+      passes: 'ناجح',
+      short: 'منخفض',
+      needs: 'المطلوب {ratio}',
+    },
+    pairs: {
+      buttonPrimary: 'النص الأبيض على اللون الأساسي (الأزرار وشريط الدعوة)',
+      buttonPrimaryHover: 'النص الأبيض على الزر تحت المؤشر',
+      buttonSecondary: 'النص الأساسي على الصفحة (الروابط والأزرار المفرّغة)',
+      buttonInverseHover: 'النص الأساسي على التمييز الفاتح (الزر الفاتح تحت المؤشر)',
+      badgeAccent: 'نص التمييز على لونه الفاتح (الشارات)',
+      bodyOnSurface: 'نص المحتوى على الصفحة',
+      bodyOnGround: 'نص المحتوى على الأقسام الرمادية',
+      mutedOnSurface: 'النص الثانوي على الصفحة',
+      mutedOnGround: 'النص الثانوي على الأقسام الرمادية',
+      footerOnNavy: 'النص الأبيض على التذييل',
+      ribbonOnPrimaryDark: 'النص الأبيض على الأساسي الداكن',
+    },
+    refusal: {
+      darker: '{pair}: التباين {got} والمطلوب {wanted}. غيّر {colour} إلى لون أغمق.',
+      lighter: '{pair}: التباين {got} والمطلوب {wanted}. غيّر {colour} إلى لون أفتح.',
+    },
+    pinRefusal: {
+      darker: '{pair}: التباين {got} والمطلوب {wanted}. غيّر {colour} إلى لون أغمق، أو احسبه.',
+      lighter: '{pair}: التباين {got} والمطلوب {wanted}. غيّر {colour} إلى لون أفتح، أو احسبه.',
+    },
+    more: 'يعرض فحص التباين البقية.',
+    notAColour: 'اكتب اللون بصيغة #1f6feb: علامة # ثم ستة أرقام أو حروف من a إلى f.',
+    typefacePreview: 'صمّم منتجك، ونطبعه ونوصله لعميلك.',
+    notFollowing: {
+      title: 'لا يتبع المظهر',
+      lead: 'تبقى هذه على الألوان الأصلية بعد أي تغيير: كل منها ملف، لا حقل.',
+      items: {
+        icons3d: {
+          name: 'الأيقونات الثلاثية الأبعاد الست',
+          why: 'الأزرق جزء من ظلالها، ولا توجد ملفات مصدر لإعادة تلوينها.',
+        },
+        logo: {
+          name: 'الشعار',
+          why: 'ملفات صور رُسمت فيها الألوان؛ ترفع بديلها من تبويب الشعار.',
+        },
+        appIcons: {
+          name: 'أيقونة تبويب المتصفح وأيقونة الجوال',
+          why: 'ملفات صور مقتطعة من الشعار.',
+        },
+        themeColour: {
+          name: 'لون شريط المتصفح في الجوال',
+          why: 'مكتوب في الشيفرة باللون الأساسي الأصلي.',
+        },
+        gonePage: {
+          name: 'صفحة الرابط المحذوف',
+          why: 'تُعرض قبل تحميل الموقع، وألوانها الأصلية مكتوبة في الشيفرة.',
+        },
+        shareImages: {
+          name: 'صور المشاركة',
+          why: 'تُرسم مرة عند كل نشر للموقع بالألوان الأصلية.',
+        },
+        videoPoster: {
+          name: 'صورة الفيديو في الصفحة الرئيسية',
+          why: 'صورة مدموجة على الرمادي الأصلي.',
+        },
+        emails: {
+          name: 'رسائل البريد',
+          why: 'رسالة التأكيد ونسخة الرسالة وإعادة تعيين كلمة المرور تحمل الألوان الأصلية.',
+        },
+      },
     },
   },
   inbox: {

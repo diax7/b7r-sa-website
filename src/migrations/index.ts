@@ -34,6 +34,7 @@ import * as migration_20260919_183008_messages from './20260919_183008_messages'
 import * as migration_20260919_195745_bookings from './20260919_195745_bookings';
 import * as migration_20260919_195800_bookings_start_active from './20260919_195800_bookings_start_active';
 import * as migration_20260920_001023_booking_host from './20260920_001023_booking_host';
+import * as migration_20260923_180919_appearance from './20260923_180919_appearance';
 
 export const migrations = [
   {
@@ -215,5 +216,10 @@ export const migrations = [
     up: migration_20260920_001023_booking_host.up,
     down: migration_20260920_001023_booking_host.down,
     name: '20260920_001023_booking_host',
+  },
+  {
+    up: migration_20260923_180919_appearance.up,
+    down: migration_20260923_180919_appearance.down,
+    name: '20260923_180919_appearance'
   },
 ];

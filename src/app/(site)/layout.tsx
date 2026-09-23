@@ -4,6 +4,7 @@ import { SiteDocument } from '@/app/site-document';
 import { getNavigation, getSeoDefaults, getSiteSettings } from '@/lib/cms';
 import { siteLocales } from '@/lib/cms/locales';
 import { BRAND_PRIMARY_HEX } from '@/lib/tokens';
+import { getAppearance } from '@/modules/brand';
 import { DraftBar } from '@/modules/core/draft-bar';
 import { rootMetadata } from '@/modules/core/seo/metadata';
 
@@ -33,10 +34,11 @@ export const viewport: Viewport = {
 
 /** Root layout of every Arabic page: the shared document around the page content. */
 export default async function RootLayout({ children }: { children: ReactNode }) {
-  const [site, navigation, locales] = await Promise.all([
+  const [site, navigation, locales, appearance] = await Promise.all([
     getSiteSettings('ar'),
     getNavigation('ar'),
     siteLocales(),
+    getAppearance(),
   ]);
   return (
     <SiteDocument
@@ -44,6 +46,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
       locales={locales}
       site={site}
       navigation={navigation}
+      appearance={appearance}
       banner={<DraftBar locale="ar" />}
     >
       {children}
