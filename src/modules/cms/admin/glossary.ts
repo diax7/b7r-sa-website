@@ -372,6 +372,14 @@ export const GLOSSARY: readonly GlossaryRow[] = [
     latin: false,
     refused: ['نويز', 'تشويش'],
   },
+  {
+    area: 'site',
+    en: "the section's own (background, as the section was designed)",
+    ar: 'خلفية القسم الأصلية',
+    latin: false,
+    refused: ['الخلفية الافتراضية'],
+    note: "The first choice of every section's background picker: white or light grey, as that section always had.",
+  },
   { area: 'site', en: 'designer', ar: 'المصمّم', latin: false, refused: ['أداة التصميم'] },
   { area: 'site', en: 'calculator', ar: 'الحاسبة', latin: false, refused: ['الآلة الحاسبة'] },
   {

@@ -83,6 +83,7 @@ test refuses (translations of a Latin term, or synonyms of the settled word).
 | The site | white button (white with primary text, on a dark background) | الزر الأبيض |  | الزر المعكوس | The call to action on a dark background, as on the bottom banner. |
 | The site | built from the brand (a background that follows the brand colours) | من ألوان العلامة |  |  | White, light grey and deep sea: they change with the brand colours and cannot be deleted. |
 | The site | grain (the fine texture over a gradient) | حبيبات |  | نويز، تشويش |  |
+| The site | the section's own (background, as the section was designed) | خلفية القسم الأصلية |  | الخلفية الافتراضية | The first choice of every section's background picker: white or light grey, as that section always had. |
 | The site | designer | المصمّم |  | أداة التصميم |  |
 | The site | calculator | الحاسبة |  | الآلة الحاسبة |  |
 | The site | welcome credit | الرصيد الترحيبي |  | رصيد الترحيب، الرصيد المجاني |  |
