@@ -83,6 +83,15 @@ scripts). The category gate (Performance ≥ 90) and the DevTools-throttled LCP 
 Amended 2026-09-13 (ADR-039): `/fonts/*` is served immutable for a year, so a changed font
 file takes a new name; the same path is never reused (RUNBOOK, fonts).
 
+Amended 2026-09-23 (spec 010, ADR-065): the Rayat fallback's metrics were approximations
+(size-adjust 104%, ascent 96%, descent 30%). Measured instead, from HarfBuzz-shaped widths of
+the site's Arabic copy (85 percent) and a Latin line (15 percent) against Segoe UI and the
+face's own ascent and descent, they are 87.3%, 104.2% and 60.5%. With the font files held back
+800 ms so the page paints in the fallback first, home-page CLS was 0.094 with the old values,
+0.006 under the budget, and is 0.0003 with the measured ones (`e2e/appearance.spec.ts` records
+the value per family). The three curated alternates' fallbacks are measured the same way. No
+font file changed: the fallback is a `local()` face in `tokens.css`.
+
 ## ADR-011: Mobile menu sheet loads on first intent (2026-09-13)
 
 The Radix Dialog (focus trap, scroll lock, portal) costs ~15 kB gzip and is used only after a

@@ -284,7 +284,9 @@ test('every curated typeface keeps the home page under the CLS budget', async ({
             void document.fonts.ready.then(() => setTimeout(() => resolve(total), 1_000));
           }),
       );
-      test.info().annotations.push({ type: 'cls', description: `${typeface}: ${shift.toFixed(4)}` });
+      test
+        .info()
+        .annotations.push({ type: 'cls', description: `${typeface}: ${shift.toFixed(4)}` });
       expect(shift, `CLS on the home page in ${typeface}`).toBeLessThanOrEqual(0.1);
       await page.unroute('**/fonts/*.woff2');
     }

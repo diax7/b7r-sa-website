@@ -9,8 +9,6 @@ import { type Hex, toHex } from '@/modules/brand/types';
 export interface AppearanceForm {
   /** The five colours as typed, valid or not. */
   typed: Record<SourceKey, string>;
-  /** The five colours as last saved: what a designed value is kept against. */
-  saved: Record<SourceKey, string>;
   /** Whether every colour typed is a colour; nothing is computed from a half-typed hex. */
   valid: boolean;
   /** The brand the form describes now: the typed colours, the shipped ones where a colour is unreadable. */
@@ -29,19 +27,15 @@ export function useAppearanceForm(pinsOverride?: unknown): AppearanceForm {
   const typedKey = useFormFields(([fields]) =>
     SOURCE_KEYS.map((key) => String(fields[`sources.${key}`]?.value ?? '')).join(SEPARATOR),
   );
-  const savedKey = useFormFields(([fields]) =>
-    SOURCE_KEYS.map((key) => String(fields[`sources.${key}`]?.initialValue ?? '')).join(SEPARATOR),
-  );
   const formPins = useFormFields(([fields]) => fields['pins']?.value);
   const pins = pinsOverride === undefined ? formPins : pinsOverride;
 
   return useMemo(() => {
     const typed = record(typedKey);
-    const saved = record(savedKey);
     const valid = SOURCE_KEYS.every((key) => toHex(typed[key]) !== null);
     const { brand } = toAppearance({ sources: typed, pins }).appearance;
-    return { typed, saved, valid, brand };
-  }, [typedKey, savedKey, pins]);
+    return { typed, valid, brand };
+  }, [typedKey, pins]);
 }
 
 function record(joined: string): Record<SourceKey, string> {
