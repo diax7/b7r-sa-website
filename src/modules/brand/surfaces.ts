@@ -83,7 +83,7 @@ export const SEA_MIST: SurfaceSet = {
   kind: 'gradient',
   background: hex('#bbd0d9'),
   blooms: [
-    { colour: hex('#4e9bd6'), x: 103.8, y: 3.3, width: 33.1, height: 109.4 },
+    { colour: hex('#4f9cd7'), x: 103.8, y: 3.3, width: 33.1, height: 109.4 },
     { colour: hex('#4f92bc'), x: 45.1, y: 120.5, width: 37.9, height: 63 },
     { colour: hex('#71a7c6'), x: 86.5, y: 58.7, width: 38.8, height: 34.7 },
   ],
@@ -245,7 +245,7 @@ const COLUMNS = 32;
 const ROWS = 18;
 
 /**
- * The colours of a set's field at a 32 by 18 grid of points, each twice: under the grain's
+ * The colours of a set's field at a 32 by 18 grid of points from edge to edge, each twice: under the grain's
  * darkest pixel and under its lightest (the grain is black and white noise at `grain`
  * opacity). A dark text meets the first, a light text the second; the verdict reads both.
  */
@@ -255,8 +255,9 @@ export function sampleField(set: SurfaceSet): Hex[] {
   const blooms = set.blooms.map((bloom) => ({ ...bloom, rgb: rgbOf(bloom.colour) }));
   for (let row = 0; row < ROWS; row++) {
     for (let column = 0; column < COLUMNS; column++) {
-      const x = ((column + 0.5) / COLUMNS) * 100;
-      const y = ((row + 0.5) / ROWS) * 100;
+      // Edge to edge: the corners, where a bloom sits deepest, are points of the field too.
+      const x = (column / (COLUMNS - 1)) * 100;
+      const y = (row / (ROWS - 1)) * 100;
       let pixel = rgbOf(set.background);
       for (const bloom of blooms.toReversed()) {
         const t = Math.hypot((x - bloom.x) / bloom.width, (y - bloom.y) / bloom.height);
@@ -303,12 +304,17 @@ function bloomCss({ colour, x, y, width, height }: Bloom): string {
 }
 
 /**
- * The grain: SVG fractal noise in black and white at the set's opacity, 160 px, tiled. Built
- * here from a bounded number, never from a stored string.
+ * The grain: SVG fractal noise thresholded to pure black and pure white, every pixel at the
+ * set's opacity, 160 px, tiled. That is the model `sampleField` checks (the darkest pixel is
+ * black at `grain`, the lightest white at `grain`), so the check reads what the page paints.
+ * Built here from a bounded number, never from a stored string. The noise is in the red
+ * channel; the matrix copies it to all three and sets the alpha, the transfer rounds each
+ * channel to 0 or 1 and puts the alpha at the grain.
  */
-function grainCss(grain: number): string {
+export function grainCss(grain: number): string {
   const opacity = Math.round(Math.min(GRAIN_MAX, Math.max(0, grain)) * 1000) / 1000;
-  const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='g'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .5 0 0 0 0 .5 0 0 0 0 .5 0 0 0 0 0'/><feComponentTransfer><feFuncA type='table' tableValues='0 ${opacity}'/></feComponentTransfer></filter><rect width='100%' height='100%' filter='url(#g)'/></svg>`;
+  const matrix = '1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0 0 0 0 1';
+  const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='g'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='${matrix}'/><feComponentTransfer><feFuncR type='discrete' tableValues='0 1'/><feFuncG type='discrete' tableValues='0 1'/><feFuncB type='discrete' tableValues='0 1'/><feFuncA type='linear' slope='0' intercept='${opacity}'/></feComponentTransfer></filter><rect width='100%' height='100%' filter='url(#g)'/></svg>`;
   return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
 }
 

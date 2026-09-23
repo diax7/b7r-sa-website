@@ -57,6 +57,8 @@ async function serious(page: Page): Promise<string[]> {
     .withTags(['wcag2a', 'wcag2aa'])
     .include('#why-us')
     .include('#faq')
+    .include('#video')
+    .include('#integrations')
     .analyze();
   return results.violations
     .filter((v) => ['serious', 'critical'].includes(v.impact ?? ''))
@@ -125,3 +127,23 @@ for (const path of ['/', '/en']) {
     });
   }
 }
+
+test('the grain paints: Sea mist with its grain differs from Sea mist without it', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await paint(page, 'sea-mist');
+  const section = page.locator('#why-us');
+  await section.scrollIntoViewIfNeeded();
+  const clip = await section.boundingBox();
+  // A patch of the field near the top, where no card sits.
+  const patch = { x: clip!.x + 8, y: clip!.y + 8, width: 160, height: 24 };
+  const withGrain = await page.screenshot({ clip: patch });
+  // The same section with the grain layer (the first) taken away, the blooms kept.
+  await section.evaluate((el) => {
+    const image = getComputedStyle(el).backgroundImage;
+    el.style.backgroundImage = image.slice(image.indexOf('radial-gradient'));
+  });
+  const without = await page.screenshot({ clip: patch });
+  expect(withGrain.equals(without), 'the grain changed nothing').toBe(false);
+});

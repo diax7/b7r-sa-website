@@ -1,3 +1,5 @@
+import { readdirSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { contrastRatio } from '@/modules/brand/contrast';
 import { DEFAULT_BRAND, resolveBrand } from '@/modules/brand/css';
@@ -143,12 +145,12 @@ describe('reading the stored library', () => {
         link: '#0a2a50',
         button: 'primary',
         grain: 5,
-        blooms: [{ colour: '#4e9bd6', x: 900, y: -40, width: 0, height: 1e9 }],
+        blooms: [{ colour: '#4f9cd7', x: 900, y: -40, width: 0, height: 1e9 }],
       },
     ]);
     const [storm] = library;
     expect(storm!.grain).toBe(GRAIN_MAX);
-    expect(storm!.blooms[0]).toEqual({ colour: '#4e9bd6', x: 150, y: -40, width: 1, height: 200 });
+    expect(storm!.blooms[0]).toEqual({ colour: '#4f9cd7', x: 150, y: -40, width: 1, height: 200 });
   });
 });
 
@@ -180,5 +182,45 @@ describe('the scoped style of a library set', () => {
   it('turns the buttons white on a set whose button is inverse', () => {
     const css = librarySurfaceCss({ ...SEA_MIST, key: 'night', button: 'inverse' }, tokens);
     expect(css).toContain("[data-surface='night'] :is(.bg-primary,.btn-shiny)");
+  });
+});
+
+/** Every island background the site's components use: the page's white, grey or tint. */
+function used(dir: string): string[] {
+  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    const path = join(dir, entry.name);
+    if (entry.isDirectory()) return entry.name === 'admin' ? [] : used(path);
+    if (!entry.name.endsWith('.tsx')) return [];
+    return (
+      [
+        ...readFileSync(path, 'utf8').matchAll(
+          /(?<![\w:-])bg-(?:surface|ground|white|accent-tint)(?:\/(\d+))?(?![\w-])/g,
+        ),
+      ]
+        // A veil (white at 5 or 10 percent on a dark background) is not an island.
+        .filter((m) => !m[1] || Number(m[1]) >= 50)
+        .map((m) => m[0])
+    );
+  });
+}
+
+describe('every island a section can hold keeps the page’s tones (globals.css)', () => {
+  const root = process.cwd();
+  const css = readFileSync(join(root, 'src/styles/globals.css'), 'utf8');
+  /** The classes the island rule names, unescaped: `bg-surface/95`. */
+  const listed = new Set(
+    [
+      ...(/:where\(\.surface\)\s*:where\(([^)]*)\)/.exec(css)?.[1] ?? '').matchAll(
+        /\.([\w\\/-]+)/g,
+      ),
+    ].map((m) => m[1]!.replaceAll(String.fromCharCode(92), '')),
+  );
+  it('names every one of them', () => {
+    const classes = new Set([
+      ...used(join(root, 'src/modules')),
+      ...used(join(root, 'src/components')),
+    ]);
+    expect(classes.size).toBeGreaterThan(3);
+    expect([...classes].filter((c) => !listed.has(c))).toEqual([]);
   });
 });

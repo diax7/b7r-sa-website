@@ -217,9 +217,21 @@
     background-image: var(--section-image, none);
     color: var(--color-text);
   }
-  /* An island inside a set (a card, a panel on the page's white or grey) reads the page's
-     tones again, so its words read on its own background. */
-  :where(.surface) :where(.bg-surface, .bg-ground, .bg-white) {
+  /* An island inside a set (a card, a panel on the page's white, grey or accent tint, at any
+     opacity that still reads as that background) reads the page's tones again, so its words
+     read on its own background. `tests/brand-surfaces.test.ts` fails when the site uses an
+     island class this list does not name. */
+  :where(.surface)
+    :where(
+      .bg-surface,
+      .bg-surface\/95,
+      .bg-surface\/85,
+      .bg-surface\/70,
+      .bg-ground,
+      .bg-white,
+      .bg-accent-tint,
+      .bg-accent-tint\/60
+    ) {
     --color-text: var(--page-text);
     --color-text-muted: var(--page-text-muted);
     --color-primary: var(--page-primary);

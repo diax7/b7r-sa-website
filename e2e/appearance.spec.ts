@@ -237,8 +237,13 @@ test('a saved colour and typeface reach every page: the static ones and a produc
       data: { sources: { ...before.sources, primary: '#1a5caf' }, typeface: 'tajawal' },
     });
     expect(res.status(), await res.text()).toBe(200);
+    // A document route serves one stale response after the save and regenerates behind it;
+    // the first regeneration after a fresh build is slow on a CI runner, so the ceiling is
+    // longer than the helper's.
     for (const path of ['/', '/faq', `/products/${slug}`, '/en']) {
-      await expect.poll(shows(request, path, '--color-primary:#1a5caf'), POLL).toBe(true);
+      await expect
+        .poll(shows(request, path, '--color-primary:#1a5caf'), { ...POLL, timeout: 45_000 })
+        .toBe(true);
     }
     const home = await (await request.get('/')).text();
     expect(home).toContain("--font-sans:'Tajawal', 'Tajawal Fallback'");

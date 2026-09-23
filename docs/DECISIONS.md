@@ -2868,7 +2868,10 @@ a merge unions an object's keys but replaces a list.
 - *The gradient.* Dhia chose (2026-09-23) that Sea mist keeps the colours of his reference
   image rather than following the brand, so it is not "a gradient between the brand's own
   blues": it is a fixed set in the library, named on the "does not follow" panel, and its deep
-  bloom was lightened (#00609b to #4e9bd6, hue and chroma kept) until its text, secondary text
+  bloom was lightened (#00609b to #4f9cd7, hue and chroma kept) until its text, secondary text
   and links read 4.5:1 at every point with the grain counted. Three sets are built from the
   brand instead (white, light grey, deep sea) and follow it; they cannot be deleted. A set's
-  contrast check samples the whole field, grain included, not only its stops.
+  contrast check samples the whole field from edge to edge, grain included, not only its
+  stops. The library accepts a gradient between any colours: BRD 3.2's ban on gradients
+  between unrelated hues is the admin's to keep, not a validator's, since a rule that judged
+  "related" hues would refuse good sets as often as bad ones.

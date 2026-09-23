@@ -86,11 +86,31 @@ again (move `public/media` aside first so filenames do not collide).
 
 ## Fonts
 
-`public/fonts/*.woff2` are subsets of the licensed ITF Rayat Round files
-(`bash scripts/subset-fonts.sh`, needs `uv`): Arabic, Basic Latin and punctuation only,
-~27 kB per weight. Re-run after `resources/brand/fonts/web` changes. The files are served
-`Cache-Control: immutable` for a year (ADR-039), so a changed woff2 must get a **new file
-name** (a version suffix); never overwrite the same path, browsers will keep the old bytes.
+`public/fonts/*.woff2` are subsets of the four curated typefaces (spec 010): the licensed
+ITF Rayat Round (served from b7r.sa only, BRD 3.2) and the openly licensed Baloo Bhaijaan 2,
+IBM Plex Sans Arabic and Tajawal, whose `*-OFL.txt` licences sit beside them.
+`bash scripts/subset-fonts.sh [rayat|baloo|plex|tajawal]` (needs `uv`) writes them: Arabic,
+Basic Latin and punctuation only. Re-run after `resources/brand/fonts` changes. The files
+are served `Cache-Control: immutable` for a year (ADR-039), so a changed woff2 must get a
+**new file name** (a version suffix); never overwrite the same path, browsers will keep the
+old bytes. Each family's metric fallback in `tokens.css` is measured, not guessed (ADR-010,
+amended 2026-09-23); `e2e/appearance.spec.ts` holds every family to the CLS budget.
+
+## Appearance (spec 010, ADR-065)
+
+Site → Appearance owns the brand colours, the colours derived from them, the typeface, the
+logo uploads and the library of background sets. A save repaints every page within the
+request; nothing is rebuilt.
+
+**After the merge that brings it, once:** the deploy migrates the schema; then run
+`pnpm content:migrate --force` against production. It only adds what is missing: it saves
+the Appearance global with Sea mist named in both languages. Without it the site still
+paints Sea mist (the library's default), but the panel's first save would store its name in
+the panel's language only.
+
+**What does not follow** a change of colour is listed on the screen itself (the sidebar
+panel), and `tests/brand-not-following.test.ts` fails when a shipped brand colour appears in
+a file that list does not name.
 
 ## Assets (photos)
 
