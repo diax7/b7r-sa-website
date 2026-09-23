@@ -36,7 +36,14 @@ const SETS = {
 
 type SetKey = keyof typeof SETS;
 
+/**
+ * Names the set on the sections of a live page. A visitor gets `data-surface` from the server
+ * and never sees it change, but here it flips after the render, so the buttons' and links'
+ * `transition-colors` would animate from the old colour: transitions are stopped first, and
+ * every read after the flip is an assertion that retries.
+ */
 async function paint(page: Page, key: SetKey) {
+  await page.addStyleTag({ content: '*,*::before,*::after{transition:none!important}' });
   await page.evaluate((surface) => {
     for (const id of ['why-us', 'faq', 'video', 'integrations']) {
       const section = document.getElementById(id);
@@ -45,11 +52,7 @@ async function paint(page: Page, key: SetKey) {
   }, key);
 }
 
-const colourOf = (page: Page, selector: string, property = 'color') =>
-  page
-    .locator(selector)
-    .first()
-    .evaluate((el, p) => getComputedStyle(el).getPropertyValue(p), property);
+const first = (page: Page, selector: string) => page.locator(selector).first();
 
 async function serious(page: Page): Promise<string[]> {
   const { AxeBuilder } = await import('@axe-core/playwright');
@@ -97,31 +100,38 @@ for (const path of ['/', '/en']) {
         await paint(page, key);
         const tag = `${key} ${path} ${width}`;
 
-        expect(await colourOf(page, '#why-us', 'background-color'), tag).toBe(want.background);
-        const image = await colourOf(page, '#why-us', 'background-image');
-        if (want.gradient) expect(image, tag).toContain('radial-gradient');
-        else expect(image, tag).toBe('none');
+        const section = first(page, '#why-us');
+        await expect(section, tag).toHaveCSS('background-color', want.background);
+        await expect(section, tag).toHaveCSS(
+          'background-image',
+          want.gradient ? /radial-gradient/ : 'none',
+        );
         // The section's own words: its heading and the eyebrow over it.
-        expect(await colourOf(page, '#why-us-title'), tag).toBe(want.text);
-        expect(await colourOf(page, '#why-us .eyebrow'), tag).toBe(want.link);
+        await expect(first(page, '#why-us-title'), tag).toHaveCSS('color', want.text);
+        await expect(first(page, '#why-us .eyebrow'), tag).toHaveCSS('color', want.link);
         // A card inside keeps the page's white and ink, whatever the set.
         const card = '#why-us .bg-surface';
-        expect(await colourOf(page, card, 'background-color'), tag).toBe(WHITE);
-        expect(await colourOf(page, `${card} h3`), tag).toBe(INK);
+        await expect(first(page, card), tag).toHaveCSS('background-color', WHITE);
+        await expect(first(page, `${card} h3`), tag).toHaveCSS('color', INK);
         // The FAQ's link reads the set's link colour.
-        expect(await colourOf(page, '#faq a.text-primary'), tag).toBe(want.link);
+        await expect(first(page, '#faq a.text-primary'), tag).toHaveCSS('color', want.link);
         // The call to action: the primary blue with white words on a light set, the white
         // button with primary words on a dark one. The shiny variant (Site settings) paints its
         // fill as a gradient, so the fill is read from whichever of the two it uses.
         const button = page.locator('#video a[data-location="video"]');
         const [fill, words] =
           key === 'deep-sea' ? [WHITE, 'rgb(0, 88, 176)'] : ['rgb(0, 88, 176)', WHITE];
-        const painted = await button.evaluate((el) => {
-          const style = getComputedStyle(el);
-          return { colour: style.color, fill: `${style.backgroundColor} ${style.backgroundImage}` };
-        });
-        expect(painted.colour, tag).toBe(words);
-        expect(painted.fill, tag).toContain(fill);
+        await expect(button, tag).toHaveCSS('color', words);
+        await expect
+          .poll(
+            () =>
+              button.evaluate((el) => {
+                const style = getComputedStyle(el);
+                return `${style.backgroundColor} ${style.backgroundImage}`;
+              }),
+            { message: tag },
+          )
+          .toContain(fill);
         expect(await serious(page), `axe: ${tag}`).toEqual([]);
       }
     });

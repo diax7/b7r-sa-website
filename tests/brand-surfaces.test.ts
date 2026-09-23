@@ -185,12 +185,15 @@ describe('the scoped style of a library set', () => {
   });
 });
 
-/** Every island background the site's components use: the page's white, grey or tint. */
+/**
+ * Every island background the site's components use: the page's white, grey or tint, in a
+ * component or in a module of class strings (`bookings/booker/styles.ts`).
+ */
 function used(dir: string): string[] {
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
     const path = join(dir, entry.name);
     if (entry.isDirectory()) return entry.name === 'admin' ? [] : used(path);
-    if (!entry.name.endsWith('.tsx')) return [];
+    if (!/\.tsx?$/.test(entry.name)) return [];
     return (
       [
         ...readFileSync(path, 'utf8').matchAll(
