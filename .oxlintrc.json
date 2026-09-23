@@ -128,7 +128,9 @@
                   "@/modules/contact",
                   "@/modules/contact/*",
                   "@/modules/cms",
-                  "@/modules/cms/*"
+                  "@/modules/cms/*",
+                  "@/modules/brand",
+                  "@/modules/brand/*"
                 ],
                 "message": "A feature module may import only components/*, content/*, lib/*, modules/core, and its own files (constitution VII)."
               }
@@ -163,7 +165,9 @@
                   "@/modules/contact",
                   "@/modules/contact/*",
                   "@/modules/cms",
-                  "@/modules/cms/*"
+                  "@/modules/cms/*",
+                  "@/modules/brand",
+                  "@/modules/brand/*"
                 ],
                 "message": "A feature module may import only components/*, content/*, lib/*, modules/core, and its own files (constitution VII)."
               }
@@ -198,7 +202,9 @@
                   "@/modules/contact",
                   "@/modules/contact/*",
                   "@/modules/cms",
-                  "@/modules/cms/*"
+                  "@/modules/cms/*",
+                  "@/modules/brand",
+                  "@/modules/brand/*"
                 ],
                 "message": "A feature module may import only components/*, content/*, lib/*, modules/core, and its own files (constitution VII)."
               }
@@ -233,7 +239,9 @@
                   "@/modules/contact",
                   "@/modules/contact/*",
                   "@/modules/cms",
-                  "@/modules/cms/*"
+                  "@/modules/cms/*",
+                  "@/modules/brand",
+                  "@/modules/brand/*"
                 ],
                 "message": "A feature module may import only components/*, content/*, lib/*, modules/core, and its own files (constitution VII)."
               }
@@ -268,7 +276,9 @@
                   "@/modules/contact",
                   "@/modules/contact/*",
                   "@/modules/cms",
-                  "@/modules/cms/*"
+                  "@/modules/cms/*",
+                  "@/modules/brand",
+                  "@/modules/brand/*"
                 ],
                 "message": "A feature module may import only components/*, content/*, lib/*, modules/core, and its own files (constitution VII)."
               }
@@ -303,7 +313,9 @@
                   "@/modules/contact",
                   "@/modules/contact/*",
                   "@/modules/cms",
-                  "@/modules/cms/*"
+                  "@/modules/cms/*",
+                  "@/modules/brand",
+                  "@/modules/brand/*"
                 ],
                 "message": "A feature module may import only components/*, content/*, lib/*, modules/core, and its own files (constitution VII)."
               }
@@ -338,9 +350,35 @@
                   "@/modules/forms",
                   "@/modules/forms/*",
                   "@/modules/cms",
-                  "@/modules/cms/*"
+                  "@/modules/cms/*",
+                  "@/modules/brand",
+                  "@/modules/brand/*"
                 ],
                 "message": "A feature module may import only components/*, content/*, lib/*, modules/core, and its own files (constitution VII)."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["src/modules/core/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["../*", "./../*"],
+                "message": "Use absolute imports via @/… (constitution VII)."
+              },
+              {
+                "group": ["@/modules/*/*", "!@/modules/core/*"],
+                "message": "Import a feature module only through its index (@/modules/<name>)."
+              },
+              {
+                "group": ["@/modules/brand", "@/modules/brand/*"],
+                "message": "The shell takes the appearance as props from the app layer; it never reads the brand module (constitution VII)."
               }
             ]
           }

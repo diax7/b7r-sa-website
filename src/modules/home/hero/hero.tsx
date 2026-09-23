@@ -8,8 +8,6 @@ import { type Locale, localePath } from '@/lib/i18n';
 import { blurPlaceholder } from '@/lib/image-url';
 import { PHOTO_QUALITY } from '@/lib/photo';
 import { registerUrl } from '@/lib/utm';
-import { getAppearance } from '@/modules/brand/read';
-import { preloadsFor } from '@/modules/brand/typefaces';
 import { HeroCarousel, type HeroImageSet } from '@/modules/home/hero/hero-carousel';
 import { DESKTOP, DESKTOP_SIZES, MOBILE } from '@/modules/home/hero/renditions';
 
@@ -56,12 +54,15 @@ function imageSet(slide: HeroSlide): HeroImageSet {
  * two media-gated preloads for slide 1 so exactly one LCP image is fetched per viewport;
  * `getImageProps` alone emits none. React 19 hoists the <link>s into <head>.
  */
-export async function Hero({ locale }: { locale: Locale }) {
-  const [{ hero }, site, appearance] = await Promise.all([
-    getHome(locale),
-    getSiteSettings(locale),
-    getAppearance(),
-  ]);
+export async function Hero({
+  locale,
+  displayFonts,
+}: {
+  locale: Locale;
+  /** The display weight's font files for the chosen typeface (spec 010), from the page. */
+  displayFonts: readonly string[];
+}) {
+  const [{ hero }, site] = await Promise.all([getHome(locale), getSiteSettings(locale)]);
   const messages = copyFor(locale);
   const images = hero.slides.map(imageSet);
   const first = images[0];
@@ -69,7 +70,7 @@ export async function Hero({ locale }: { locale: Locale }) {
   // The H1 is the only display-weight text; preloading it here (home only) removes a font
   // swap from the LCP path (measured: LCP fell below the 2.5 s gate, see ADR-010). The file is
   // the chosen family's (spec 010); a family without a Black resolves to its heaviest.
-  for (const href of preloadsFor(appearance.typeface, [900])) {
+  for (const href of displayFonts) {
     preload(href, { as: 'font', type: 'font/woff2', crossOrigin: 'anonymous' });
   }
 

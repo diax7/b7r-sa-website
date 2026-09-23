@@ -110,18 +110,24 @@ test('the screen: the pickers, the live strip, the contrast check, what does not
   const muted = strip.locator('[data-admin-derived="textMuted"]');
   await expect(muted).toHaveAttribute('data-admin-derived-state', 'designed');
 
-  // Live: a new ink releases the designed secondary text, as the save would.
+  // Live: a new ink computes the secondary text; typing the ink back restores the designed
+  // value, and nothing is lost on the way (the round trip the CTO's review caught).
   const ink = page.locator('[data-admin-color-text="sources.ink"]');
   const shippedInk = await ink.inputValue();
   await ink.fill('#1b1f27');
   await expect(muted).toHaveAttribute('data-admin-derived-state', 'computed');
+  await ink.fill(shippedInk.toUpperCase());
+  await expect(muted).toHaveAttribute('data-admin-derived-state', 'designed');
+  await expect(muted).toContainText('#5b6470');
   await ink.fill(shippedInk);
 
   // Keyboard: Tab reaches the row's action, Enter sets it by hand, the ring shows.
   const setByHand = strip.locator('[data-admin-derived="border"] button', {
     hasText: 'Set it by hand',
   });
-  await strip.locator('[data-admin-derived="border"] button', { hasText: 'Compute it' }).focus();
+  await strip
+    .locator('[data-admin-derived="ground"] button', { hasText: 'Set it by hand' })
+    .focus();
   await page.keyboard.press('Tab');
   await expect(setByHand).toBeFocused();
   expect(await setByHand.evaluate((el) => getComputedStyle(el).outlineStyle)).toBe('solid');
@@ -133,8 +139,9 @@ test('the screen: the pickers, the live strip, the contrast check, what does not
     'data-admin-contrast-summary',
     'pass',
   );
-  await border.getByRole('button', { name: 'Compute it' }).press('Enter');
-  await expect(border).toHaveAttribute('data-admin-derived-state', 'computed');
+  await border.getByRole('button', { name: 'Reset it' }).press('Enter');
+  // The hairline returns to its designed value: navy is still the shipped one.
+  await expect(border).toHaveAttribute('data-admin-derived-state', 'designed');
 
   for (const language of ['en', 'ar'] as const) {
     if (language === 'ar') {
@@ -225,6 +232,10 @@ test('a saved colour and typeface reach every page: the static ones and a produc
     const button = page.locator('main .bg-primary').first();
     await expect(button).toHaveCSS('background-color', 'rgb(26, 92, 175)');
     await expect(page.locator('body')).toHaveCSS('font-family', /^Tajawal, "Tajawal Fallback"/);
+    // The panel follows the typeface too (decision 7), and only the typeface.
+    expect((await page.request.post(`${API}/users/login`, { data: ADMIN })).status()).toBe(200);
+    await page.goto('/admin');
+    await expect(page.locator('body')).toHaveCSS('font-family', /^Tajawal, "Tajawal Fallback"/);
   } finally {
     await restore(request, adminAuth, before);
   }
@@ -252,6 +263,12 @@ test('every curated typeface keeps the home page under the CLS budget', async ({
       const res = await request.post(GLOBAL, { headers: adminAuth, data: { typeface } });
       expect(res.status(), await res.text()).toBe(200);
       await expect.poll(shows(request, '/', `/fonts/${file}.woff2`), POLL).toBe(true);
+      // Locally the files arrive before the first paint and the fallback never shows; held
+      // back 800 ms, the page paints in the fallback and swaps, which is what CLS measures.
+      await page.route('**/fonts/*.woff2', async (route) => {
+        await new Promise((resolve) => setTimeout(resolve, 800));
+        await route.continue();
+      });
       await page.goto('/', { waitUntil: 'load' });
       const shift = await page.evaluate(
         () =>
@@ -267,7 +284,9 @@ test('every curated typeface keeps the home page under the CLS budget', async ({
             void document.fonts.ready.then(() => setTimeout(() => resolve(total), 1_000));
           }),
       );
+      test.info().annotations.push({ type: 'cls', description: `${typeface}: ${shift.toFixed(4)}` });
       expect(shift, `CLS on the home page in ${typeface}`).toBeLessThanOrEqual(0.1);
+      await page.unroute('**/fonts/*.woff2');
     }
   } finally {
     await restore(request, adminAuth, before);

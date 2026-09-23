@@ -14,28 +14,25 @@
  * (ADR-061, and `CLAUDE.md`: never swallow a failure silently).
  */
 import { contrastRatio } from '@/modules/brand/contrast';
-import { DEFAULT_SOURCES, SHIPPED_DERIVED, SURFACE } from '@/modules/brand/defaults';
+import { DEFAULT_SOURCES, DESIGNED_NOT_COMPUTED, SURFACE } from '@/modules/brand/defaults';
 import { type BrandDerived, derive } from '@/modules/brand/derive';
 import { type Pair, type PairKey, PALETTE_PAIRS, type PaletteToken } from '@/modules/brand/pairs';
 import { type Hex, isHex, toHex, toHexRecord } from '@/modules/brand/types';
 
 /**
- * A value standing in place of its rule's output.
+ * The brand an editor sets: the five colours, and the derived colours they set by hand
+ * (`pinned`), each standing in place of its rule's output until they hand it back.
  *
- * `origin` is load bearing, not bookkeeping. The factory pins the three colours the
- * calibration found are designed rather than computed; phase 1b's hook clears a factory pin
- * when one of *its own* sources changes, so editing the primary blue cannot silently move
- * every muted caption on the site, whose rule reads ink. An editor's pin is theirs and is
- * kept until they reset it.
+ * The three designed colours are not stored. A designed value applies while every brand
+ * colour its rule reads is still the shipped one (`designedApplies`), so changing ink
+ * recomputes the secondary text and changing ink back restores the designed grey, with no
+ * state to lose on the way (the CTO's 2026-09-23 review of phase 1b found a stored "factory
+ * pin" could be dropped for good by a change and its undo). Editing the primary blue never
+ * moves a muted caption, whose rule reads ink.
  */
-export interface Pin {
-  value: Hex;
-  origin: 'factory' | 'editor';
-}
-
 export interface Brand {
   sources: Record<keyof typeof DEFAULT_SOURCES, Hex>;
-  pinned: Partial<Record<keyof BrandDerived, Pin>>;
+  pinned: Partial<Record<keyof BrandDerived, Hex>>;
 }
 
 /** Which sources each derived token's rule actually reads (calibration.md). */
@@ -51,17 +48,27 @@ export const DERIVED_FROM: Record<
   accentOnTint: ['accent'],
 };
 
-const factory = (value: string): Pin => ({ value: toHex(value)!, origin: 'factory' });
-
-/** The brand the site ships with: today's palette, exactly. */
+/** The brand the site ships with: today's palette, exactly, with nothing set by hand. */
 export const DEFAULT_BRAND: Brand = {
   sources: toHexRecord(DEFAULT_SOURCES)!,
-  pinned: {
-    border: factory(SHIPPED_DERIVED.border),
-    textMuted: factory(SHIPPED_DERIVED.textMuted),
-    accentOnTint: factory(SHIPPED_DERIVED.accentOnTint),
-  },
+  pinned: {},
 };
+
+const SHIPPED_SOURCES: Record<keyof typeof DEFAULT_SOURCES, Hex> = DEFAULT_BRAND.sources;
+
+/**
+ * Whether a derived colour shows its designed value (`DESIGNED_NOT_COMPUTED`): it is one of
+ * the three designed colours and every brand colour its rule reads is still the shipped one.
+ */
+export function designedApplies(
+  token: keyof BrandDerived,
+  sources: Readonly<Record<keyof typeof DEFAULT_SOURCES, string>>,
+): boolean {
+  return (
+    token in DESIGNED_NOT_COMPUTED &&
+    DERIVED_FROM[token].every((source) => toHex(sources[source]) === SHIPPED_SOURCES[source])
+  );
+}
 
 export type BrandTokens = Record<string, Hex>;
 
@@ -103,14 +110,19 @@ function colourOf(tokens: BrandTokens, token: PaletteToken | '#ffffff'): Hex | u
 export function resolveBrand(brand: Brand): Resolved {
   const derivation = derive(brand.sources);
   const derived: BrandDerived = { ...derivation.value };
-  for (const [token, pin] of Object.entries(brand.pinned) as Array<[keyof BrandDerived, Pin]>) {
-    if (isHex(pin.value)) {
-      derived[token] = pin.value;
+  for (const token of Object.keys(DESIGNED_NOT_COMPUTED) as Array<keyof BrandDerived>) {
+    if (designedApplies(token, brand.sources)) {
+      derived[token] = DESIGNED_NOT_COMPUTED[token as keyof typeof DESIGNED_NOT_COMPUTED];
+    }
+  }
+  for (const [token, pin] of Object.entries(brand.pinned) as Array<[keyof BrandDerived, Hex]>) {
+    if (isHex(pin)) {
+      derived[token] = pin;
     } else {
       // Silently dropping it would be the same failure class as the silent fallback above:
-      // the rule's output ships and the editor's pin has vanished with nothing said.
+      // the rule's output ships and the editor's value has vanished with nothing said.
       console.warn(
-        `brand: ignoring the pin on ${token}; ${JSON.stringify(pin.value)} is not a #rrggbb colour, so its rule applies instead`,
+        `brand: ignoring the value set by hand on ${token}; ${JSON.stringify(pin)} is not a #rrggbb colour, so its rule applies instead`,
       );
     }
   }

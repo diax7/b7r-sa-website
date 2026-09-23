@@ -4,8 +4,7 @@ import type { ServerFunctionClient } from 'payload';
 import { handleServerFunctions, RootLayout } from '@payloadcms/next/layouts';
 import type { ReactNode } from 'react';
 import { preload } from 'react-dom';
-import { getAppearance } from '@/modules/brand/read';
-import { preloadsFor, typefaceCss } from '@/modules/brand/typefaces';
+import { getAppearance, preloadsFor, typefaceCss } from '@/modules/brand';
 import { importMap } from './admin/importMap.js';
 import './admin.css';
 

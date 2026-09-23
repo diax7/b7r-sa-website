@@ -1,16 +1,22 @@
 import { describe, expect, it } from 'vitest';
 import {
   appearanceCss,
-  DEFAULT_PINS,
+  readPins,
   refusals,
   refusalsFor,
-  releaseFactoryPins,
   SOURCE_KEYS,
   toAppearance,
+  toStoredPins,
 } from '@/modules/brand/appearance';
 import { formatRatio } from '@/modules/brand/admin/refusal';
-import { brandCss, DEFAULT_BRAND, SHIPPED_BRAND_CSS } from '@/modules/brand/css';
-import { DEFAULT_SOURCES } from '@/modules/brand/defaults';
+import {
+  brandCss,
+  DEFAULT_BRAND,
+  designedApplies,
+  resolveBrand,
+  SHIPPED_BRAND_CSS,
+} from '@/modules/brand/css';
+import { DEFAULT_SOURCES, DESIGNED_NOT_COMPUTED } from '@/modules/brand/defaults';
 import { toHex, toHexRecord, type Hex } from '@/modules/brand/types';
 import { fontStack } from '@/modules/brand/typefaces';
 
@@ -19,8 +25,8 @@ const sources = (over: Partial<Record<keyof typeof DEFAULT_SOURCES, string>> = {
   toHexRecord({ ...DEFAULT_SOURCES, ...over })!;
 
 describe('reading the stored Appearance document', () => {
-  it('reads a never-saved global as the shipped brand, factory pins included', () => {
-    for (const doc of [null, undefined, {}, { sources: null, pins: null }]) {
+  it('reads a never-saved global as the shipped brand', () => {
+    for (const doc of [null, undefined, {}, { sources: null, pins: null }, { pins: [] }]) {
       const { appearance, problems } = toAppearance(doc);
       expect(appearance.brand).toEqual(DEFAULT_BRAND);
       expect(appearance.typeface).toBe('rayat');
@@ -33,15 +39,10 @@ describe('reading the stored Appearance document', () => {
     expect(brandCss(appearance.brand)).toBe(SHIPPED_BRAND_CSS);
   });
 
-  it('keeps an empty pin set as the editor left it: every derived colour computed', () => {
-    const { appearance } = toAppearance({ sources: DEFAULT_SOURCES, pins: {} });
-    expect(appearance.brand.pinned).toEqual({});
-  });
-
   it('reads the five colours, normalising case and spaces', () => {
     const { appearance, problems } = toAppearance({
       sources: { ...DEFAULT_SOURCES, primary: ' #1A5CAF ' },
-      pins: DEFAULT_PINS,
+      pins: [],
       typeface: 'tajawal',
     });
     expect(appearance.brand.sources.primary).toBe('#1a5caf');
@@ -52,7 +53,7 @@ describe('reading the stored Appearance document', () => {
   it('replaces an unreadable colour with the shipped one and names it', () => {
     const { appearance, problems } = toAppearance({
       sources: { ...DEFAULT_SOURCES, navy: '#fff', ink: null },
-      pins: DEFAULT_PINS,
+      pins: [],
     });
     expect(appearance.brand.sources.navy).toBe(DEFAULT_SOURCES.navy);
     expect(appearance.brand.sources.ink).toBe(DEFAULT_SOURCES.ink);
@@ -62,47 +63,59 @@ describe('reading the stored Appearance document', () => {
     ]);
   });
 
-  it('drops a pin that names no derived colour or holds no colour, and says so', () => {
-    const { appearance, problems } = toAppearance({
-      sources: DEFAULT_SOURCES,
-      pins: {
-        border: { value: '#e5e9ef', origin: 'factory' },
-        halo: { value: '#000000', origin: 'editor' },
-        ground: { value: 'grey', origin: 'editor' },
-        textMuted: { value: '#5b6470', origin: 'someone' },
-        __proto__: { value: '#000000', origin: 'editor' },
-      },
-    });
-    expect(appearance.brand.pinned).toEqual({ border: { value: '#e5e9ef', origin: 'factory' } });
-    expect(problems).toHaveLength(3);
+  it('reads the colours set by hand as a list, dropping a row it cannot use and naming it', () => {
+    const { pins, problems } = readPins([
+      { token: 'border', value: '#E1E5EB' },
+      { token: 'halo', value: '#000000' },
+      { token: 'ground', value: 'grey' },
+      { token: 'border', value: '#000000' },
+      'textMuted',
+    ]);
+    expect(pins).toEqual({ border: '#e1e5eb' });
+    expect(problems).toHaveLength(4);
+  });
+
+  it('refuses the old object shape rather than guessing at it', () => {
+    const { pins, problems } = readPins({ textMuted: { value: '#5b6470', origin: 'factory' } });
+    expect(pins).toEqual({});
+    expect(problems).toHaveLength(1);
+  });
+
+  it('writes the list back in the strip’s order', () => {
+    expect(toStoredPins({ textMuted: hex('#4a5260'), primaryHover: hex('#003f80') })).toEqual([
+      { token: 'primaryHover', value: '#003f80' },
+      { token: 'textMuted', value: '#4a5260' },
+    ]);
   });
 });
 
-describe('releasing a factory pin (the designed values follow a rebrand)', () => {
-  it('releases a designed value only when one of its own brand colours moves', () => {
-    const after = sources({ primary: '#1a5caf' });
-    // Primary feeds only the hover blue, which is computed exactly: nothing designed moves.
-    expect(releaseFactoryPins(sources(), after, DEFAULT_BRAND.pinned)).toEqual(
-      DEFAULT_BRAND.pinned,
-    );
-    const inkMoved = releaseFactoryPins(
-      sources(),
-      sources({ ink: '#1b1f27' }),
-      DEFAULT_BRAND.pinned,
-    );
-    expect(Object.keys(inkMoved)).toEqual(['border', 'accentOnTint']);
+describe('a designed value holds while its own brand colour is the shipped one', () => {
+  const muted = (ink: string) =>
+    resolveBrand({ ...DEFAULT_BRAND, sources: sources({ ink }) }).tokens['color-text-muted'];
+
+  it('shows the designed grey with the shipped ink, computes after a change, and comes back', () => {
+    expect(muted(DEFAULT_SOURCES.ink)).toBe(DESIGNED_NOT_COMPUTED.textMuted);
+    expect(muted('#1b1f27')).not.toBe(DESIGNED_NOT_COMPUTED.textMuted);
+    // Typed back, in capitals: the designed value returns, nothing was lost on the way.
+    expect(muted('#14181F')).toBe(DESIGNED_NOT_COMPUTED.textMuted);
   });
 
-  it('never releases an editor pin, whatever moves', () => {
-    const pinned = { textMuted: { value: hex('#4a5260'), origin: 'editor' as const } };
-    expect(releaseFactoryPins(sources(), sources({ ink: '#000000' }), pinned)).toEqual(pinned);
+  it('is moved only by the colour its rule reads: a new primary keeps every designed value', () => {
+    const typed = sources({ primary: '#1a5caf' });
+    for (const token of ['border', 'textMuted', 'accentOnTint'] as const) {
+      expect(designedApplies(token, typed), token).toBe(true);
+    }
+    expect(designedApplies('textMuted', sources({ ink: '#000000' }))).toBe(false);
+    expect(designedApplies('border', sources({ navy: '#102a4f' }))).toBe(false);
   });
 
-  it('compares colours case-insensitively, so a re-typed value is not a move', () => {
-    const before = { ...sources(), navy: '#0A2F5E' as Hex };
-    expect(releaseFactoryPins(before, sources(), DEFAULT_BRAND.pinned)).toEqual(
-      DEFAULT_BRAND.pinned,
-    );
+  it('never applies to a colour computed exactly by its rule', () => {
+    expect(designedApplies('primaryHover', sources())).toBe(false);
+  });
+
+  it('gives way to a colour set by hand', () => {
+    const brand = { ...DEFAULT_BRAND, pinned: { textMuted: hex('#4a5260') } };
+    expect(resolveBrand(brand).tokens['color-text-muted']).toBe('#4a5260');
   });
 });
 
@@ -133,10 +146,7 @@ describe('refusals: every failing pair, named by the field that fixes it', () =>
   it('puts a failing hand-set value on its own pin, not on a brand colour', () => {
     const brand = {
       ...DEFAULT_BRAND,
-      pinned: {
-        ...DEFAULT_BRAND.pinned,
-        textMuted: { value: hex('#c0c4ca'), origin: 'editor' as const },
-      },
+      pinned: { textMuted: hex('#c0c4ca') },
     };
     const onPin = refusalsFor(brand, { kind: 'pin', key: 'textMuted' });
     expect(onPin.map((r) => r.pair)).toEqual(['mutedOnSurface', 'mutedOnGround']);
@@ -165,10 +175,7 @@ describe('refusals: every failing pair, named by the field that fixes it', () =>
     // The accent tint sits under darker text: a tint set too deep has to go lighter.
     const deep = {
       ...DEFAULT_BRAND,
-      pinned: {
-        ...DEFAULT_BRAND.pinned,
-        accentTint: { value: hex('#9fd3f0'), origin: 'editor' as const },
-      },
+      pinned: { accentTint: hex('#9fd3f0') },
     };
     const onTint = refusalsFor(deep, { kind: 'pin', key: 'accentTint' });
     expect(onTint.map((r) => r.pair)).toEqual(['buttonInverseHover', 'badgeAccent']);
@@ -193,7 +200,7 @@ describe('the style block of a whole appearance', () => {
   it('is the colours, then the typeface', () => {
     const { appearance } = toAppearance({
       sources: DEFAULT_SOURCES,
-      pins: DEFAULT_PINS,
+      pins: [],
       typeface: 'plex',
     });
     const css = appearanceCss(appearance);

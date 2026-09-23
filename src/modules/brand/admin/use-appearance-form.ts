@@ -52,12 +52,12 @@ function record(joined: string): Record<SourceKey, string> {
   >;
 }
 
-/** A pin set by hand at a colour. */
+/** A derived colour set by hand at a colour. */
 export function editorPin(pins: Pins, key: keyof Pins, value: Hex): Pins {
-  return { ...pins, [key]: { value, origin: 'editor' } };
+  return { ...pins, [key]: value };
 }
 
-/** A derived colour handed back to its rule. */
+/** A derived colour handed back: to its designed value or its rule, whichever applies. */
 export function withoutPin(pins: Pins, key: keyof Pins): Pins {
   const next = { ...pins };
   delete next[key];

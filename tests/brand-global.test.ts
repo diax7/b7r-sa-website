@@ -1,6 +1,6 @@
-import type { Access, Field, GlobalBeforeValidateHook, PayloadRequest } from 'payload';
+import type { Access, Field, PayloadRequest } from 'payload';
+import { deepMergeWithSourceArrays } from 'payload/shared';
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_PINS } from '@/modules/brand/appearance';
 import { DEFAULT_SOURCES } from '@/modules/brand/defaults';
 import { Appearance } from '@/modules/brand/global';
 import { adminStrings, adminStringsAr } from '@/modules/cms/admin/strings';
@@ -38,7 +38,7 @@ const validate = (path: string) => {
   return found.validate;
 };
 
-const doc = (sources: Record<string, string> = {}, pins: unknown = DEFAULT_PINS) => ({
+const doc = (sources: Record<string, string> = {}, pins: unknown = []) => ({
   sources: { ...DEFAULT_SOURCES, ...sources },
   pins,
 });
@@ -110,50 +110,54 @@ describe('a brand colour is refused in the editor’s language, naming the pair 
 
 describe('a derived colour set by hand is refused when it breaks a pair', () => {
   it('names the pair and offers computing it instead', () => {
-    const pins = { ...DEFAULT_PINS, textMuted: { value: '#c0c4ca', origin: 'editor' } };
+    const pins = [{ token: 'textMuted', value: '#c0c4ca' }];
     const refusal = validate('pins')(pins, { req: panel('en'), data: doc({}, pins) });
     expect(refusal).toMatch(
-      /^Secondary text on the page reads 1\.\d+:1 and needs 4\.5:1\. Choose a darker secondary text, or compute it\./,
+      /^Secondary text on the page reads 1\.\d+:1 and needs 4\.5:1\. Choose a darker secondary text, or reset it\./,
     );
   });
 
   it('accepts a readable value set by hand, and every designed value', () => {
-    const pins = { ...DEFAULT_PINS, textMuted: { value: '#4a5260', origin: 'editor' } };
+    const pins = [{ token: 'textMuted', value: '#4a5260' }];
     expect(validate('pins')(pins, { req: panel('en'), data: doc({}, pins) })).toBe(true);
-    expect(validate('pins')(DEFAULT_PINS, { req: panel('en'), data: doc() })).toBe(true);
+    expect(validate('pins')([], { req: panel('en'), data: doc() })).toBe(true);
   });
 
-  it('refuses pins it cannot read', () => {
-    const pins = { textMuted: { value: 'grey', origin: 'editor' } };
+  it('refuses a list it cannot read, never dropping it quietly', () => {
+    const pins = [{ token: 'textMuted', value: 'grey' }];
     expect(validate('pins')(pins, { req: panel('en'), data: doc({}, pins) })).toBe(
       adminStrings.appearance.notAColour,
     );
   });
 });
 
-describe('the save releases a designed value when its own brand colour moved', () => {
-  const [release] = Appearance.hooks!.beforeValidate! as GlobalBeforeValidateHook[];
-  const run = (data: Record<string, unknown>, originalDoc: unknown) =>
-    release!({ data, originalDoc, req: panel('en') } as never) as Record<string, unknown>;
+describe('the validators read what the save writes, not the stored document merged under it', () => {
+  // Payload hands a field's validator `deepMergeWithSourceArrays(originalDoc, data)`
+  // (payload/dist/fields/hooks/beforeChange/promise.js); the list of colours set by hand is
+  // replaced by the save's, so a colour reset in this save is not judged.
+  const stored = doc({}, [{ token: 'textMuted', value: '#c0c4ca' }]);
 
-  it('releases nothing on the first save of a never-saved global with the shipped colours', () => {
-    const out = run(doc(), { sources: null, pins: null });
-    expect(out['pins']).toEqual(DEFAULT_PINS);
+  it('passes a save that resets the failing colour set by hand', () => {
+    const data = deepMergeWithSourceArrays(stored, { pins: [] });
+    expect(validate('pins')([], { req: panel('en'), data })).toBe(true);
+    expect(validate('sources.ink')(DEFAULT_SOURCES.ink, { req: panel('en'), data })).toBe(true);
   });
 
-  it('releases the secondary text when ink changes, and nothing else', () => {
-    const out = run(doc({ ink: '#1b1f27' }), doc());
-    expect(Object.keys(out['pins'] as object)).toEqual(['border', 'accentOnTint']);
+  it('still refuses when the save keeps it', () => {
+    const data = deepMergeWithSourceArrays(stored, { sources: { ...DEFAULT_SOURCES } });
+    expect(validate('pins')((data as { pins: unknown }).pins, { req: panel('en'), data })).not.toBe(
+      true,
+    );
   });
+});
 
-  it('releases from the stored pins when the write carries none (an API write)', () => {
-    const out = run({ sources: { navy: '#102a4f' } }, doc());
-    expect(Object.keys(out['pins'] as object)).toEqual(['textMuted', 'accentOnTint']);
-  });
-
-  it('keeps an editor’s pin whatever moves', () => {
-    const pins = { textMuted: { value: '#4a5260', origin: 'editor' } };
-    const out = run(doc({ ink: '#000000' }, pins), doc({}, pins));
-    expect(out['pins']).toEqual(pins);
+describe('the brand colours are stored as the site reads them', () => {
+  it('lowercases and trims a colour on save', () => {
+    const found = field(Appearance.fields, 'sources.primary') as {
+      hooks?: { beforeChange?: Array<(args: { value: unknown }) => unknown> };
+    };
+    const [normalise] = found.hooks!.beforeChange!;
+    expect(normalise!({ value: ' #1A5CAF ' })).toBe('#1a5caf');
+    expect(normalise!({ value: 'grey' })).toBe('grey');
   });
 });

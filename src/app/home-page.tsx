@@ -1,6 +1,7 @@
 import { env, siteBase } from '@/lib/env';
 import { getHome, getSiteSettings, getTestimonials } from '@/lib/cms';
 import type { Locale } from '@/lib/i18n';
+import { getAppearance, preloadsFor } from '@/modules/brand';
 import { JsonLd, jsonLd } from '@/modules/core';
 import { CtaRibbon } from '@/modules/core/cta-ribbon';
 import { DesignerSection } from '@/modules/designer';
@@ -26,10 +27,11 @@ import {
  * alternation (BRD 3.4) holds. The two locale routes render this with their locale.
  */
 export async function HomePage({ locale }: { locale: Locale }) {
-  const [site, home, testimonials] = await Promise.all([
+  const [site, home, testimonials, appearance] = await Promise.all([
     getSiteSettings(locale),
     getHome(locale),
     getTestimonials(locale),
+    getAppearance(),
   ]);
   // The designer is ground; each rendered section after it takes the opposite tone of the
   // previous one, and the ribbon's top wave follows the last section that rendered.
@@ -49,7 +51,7 @@ export async function HomePage({ locale }: { locale: Locale }) {
   return (
     <>
       <JsonLd nodes={[jsonLd.onlineStore(base, site), jsonLd.webSite(base, site)]} />
-      <Hero locale={locale} />
+      <Hero locale={locale} displayFonts={preloadsFor(appearance.typeface, [900])} />
       <ProductStrip locale={locale} />
       <DesignerSection locale={locale} />
       <Steps locale={locale} tone={tones.steps} />

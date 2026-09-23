@@ -19239,7 +19239,7 @@
           "type": "jsonb",
           "primaryKey": false,
           "notNull": false,
-          "default": "'{\"border\":{\"value\":\"#e5e9ef\",\"origin\":\"factory\"},\"textMuted\":{\"value\":\"#5b6470\",\"origin\":\"factory\"},\"accentOnTint\":{\"value\":\"#00639c\",\"origin\":\"factory\"}}'::jsonb"
+          "default": "'[]'::jsonb"
         },
         "typeface": {
           "name": "typeface",
@@ -21036,6 +21036,6 @@
     "tables": {},
     "columns": {}
   },
-  "id": "d23c01b4-987c-4957-86cf-16f2e0629b88",
+  "id": "7afdb4ac-01bf-459b-a39f-f375b6de8e32",
   "prevId": "00000000-0000-0000-0000-000000000000"
 }

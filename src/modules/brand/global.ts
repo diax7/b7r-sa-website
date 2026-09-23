@@ -1,16 +1,9 @@
-import type {
-  Field,
-  GlobalAfterChangeHook,
-  GlobalBeforeValidateHook,
-  GlobalConfig,
-  PayloadRequest,
-} from 'payload';
+import type { Field, GlobalAfterChangeHook, GlobalConfig, PayloadRequest } from 'payload';
 import { fieldVerdict } from '@/modules/brand/admin/refusal';
 import {
   APPEARANCE,
-  DEFAULT_PINS,
   DERIVED_KEYS,
-  releaseFactoryPins,
+  readPins,
   type SourceKey,
   toAppearance,
 } from '@/modules/brand/appearance';
@@ -41,7 +34,7 @@ const language = (req: PayloadRequest | undefined) => req?.i18n?.language ?? 'en
  * true`, so revalidating a pattern is safe (ADR-030's 404 comes only with `false`).
  */
 const DOCUMENT_PATTERNS = [
-  ...withEnglish(['/products/[slug]', '/[slug]', '/blog/[slug]']),
+  ...withEnglish(['/products/[slug]', '/[slug]', '/blog/[slug]', '/author/[slug]/page/[n]']),
   ...BLOG_LISTING_PATTERNS,
 ];
 
@@ -56,24 +49,6 @@ const revalidateAppearance: GlobalAfterChangeHook = ({ doc, req }) => {
   return doc;
 };
 
-/**
- * Releases a designed value when one of its own brand colours moved (spec 010): the screen
- * does the same live, and this covers a write through the API. It runs before validation, so
- * the refusal reads the pins that will be saved. The first save of a never-saved global
- * compares against the shipped colours, so it releases nothing it should not.
- */
-const releaseOnSourceChange: GlobalBeforeValidateHook = ({ data, originalDoc }) => {
-  if (!data) return data;
-  const before = toAppearance(originalDoc).appearance.brand;
-  const after = {
-    ...before.sources,
-    ...(data['sources'] as Record<SourceKey, string> | undefined),
-  };
-  const pins =
-    data['pins'] === undefined ? before.pinned : toAppearance(data).appearance.brand.pinned;
-  return { ...data, pins: releaseFactoryPins(before.sources, after, pins) };
-};
-
 /** One of the five brand colours: a picker, refused when it is not a colour or breaks a pair. */
 function sourceField(key: SourceKey, label: { ar: string; en: string }): Field {
   return {
@@ -83,6 +58,8 @@ function sourceField(key: SourceKey, label: { ar: string; en: string }): Field {
     defaultValue: DEFAULT_SOURCES[key],
     label,
     admin: { components: { Field: '@/modules/cms/admin/fields/color-field#ColorField' } },
+    // Stored as the site reads it: lowercase, trimmed.
+    hooks: { beforeChange: [({ value }) => toHex(value) ?? value] },
     validate: (value: unknown, { req, data }: Validation) => {
       if (!toHex(value)) return adminStringsFor(language(req)).appearance.notAColour;
       const { brand } = toAppearance(data).appearance;
@@ -91,13 +68,17 @@ function sourceField(key: SourceKey, label: { ar: string; en: string }): Field {
   };
 }
 
-/** The derived colours an editor set by hand, each refused when it breaks a pair. */
+/**
+ * The derived colours an editor set by hand, each refused when it breaks a pair. A list the
+ * strip did not write (a malformed API write) is refused, never quietly dropped.
+ */
 function validatePins(value: unknown, { req, data }: Validation): true | string {
-  const { appearance, problems } = toAppearance({ ...data, pins: value });
+  const { problems } = readPins(value);
   if (problems.length > 0) return adminStringsFor(language(req)).appearance.notAColour;
+  const { brand } = toAppearance({ ...data, pins: value }).appearance;
   for (const key of DERIVED_KEYS) {
-    if (appearance.brand.pinned[key]?.origin !== 'editor') continue;
-    const verdict = fieldVerdict(appearance.brand, { kind: 'pin', key }, language(req));
+    if (!brand.pinned[key]) continue;
+    const verdict = fieldVerdict(brand, { kind: 'pin', key }, language(req));
     if (verdict !== true) return verdict;
   }
   return true;
@@ -136,7 +117,6 @@ export const Appearance: GlobalConfig = {
   },
   access: { read: isAdmin, update: isAdmin },
   hooks: {
-    beforeValidate: [releaseOnSourceChange],
     beforeChange: [stampSavedByGlobal],
     afterChange: [revalidateAppearance],
   },
@@ -176,7 +156,7 @@ export const Appearance: GlobalConfig = {
                 name: 'pins',
                 type: 'json',
                 label: { ar: 'الألوان المشتقة', en: 'Derived colours' },
-                defaultValue: DEFAULT_PINS,
+                defaultValue: [],
                 validate: validatePins,
                 admin: {
                   components: { Field: '@/modules/brand/admin/derived-strip#DerivedStrip' },

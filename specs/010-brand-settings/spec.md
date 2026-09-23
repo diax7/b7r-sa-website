@@ -97,16 +97,27 @@ The emitted runtime block is written as `:root:root { … }` so it outranks Tail
 
 The `appearance` global, in the Site group, as an entry named «المظهر» / "Appearance" (decision 7b: «العلامة» / "Brand" is taken by the Site settings section holding the brand's words):
 
-- **colours.sources**: the hex fields the calibration task settles on. The spec's working set was `primary`, `accent`, `navy`, `ink`; the OKLCH measurements in the CTO's review of 2026-09-22 point at `primary`, `primary-dark`, `accent`, `ink` instead, with `navy` becoming derived, which the BRD itself supports (`01-design-system.md:21` ends navy's description with "(derived)", and `:14` says the three sampled blues are primary, primary-dark and accent). Still four pickers; one of them is a different blue. Confirmed by task 1a.0 and flagged to Dhia.
-- **colours.derived**: eight rows of `{ token, value, locked }`. Written by the hook from the
-  sources unless `locked`, in which case the given value is validated and kept.
-- **typography.family**: a select over the curated list.
-- **logo**: `primary`, `onDark`, `icon` uploads.
-- **surfaces**: an ordered array of sets, each `{ key, label{ar,en}, kind, background, text,
-  textMuted, buttonVariant }` where `kind` is `solid`, `gradient` or `gradientGrain`.
+- **sources**: the five brand colours, `primary`, `primary-dark`, `accent`, `navy`, `ink` (the
+  calibration's outcome; Dhia confirmed five pickers on 2026-09-23).
+- **pins**: the derived colours an editor set by hand, a list of `{ token, value }`. Stored as a
+  list because Payload hands a field's validator the save deep-merged over the stored
+  document, and a merge unions an object's keys but replaces a list. Six colours are derived:
+  `primary-hover`, `accent-tint`, `accent-on-tint`, `ground`, `border`, `text-muted`. Three of
+  them (`border`, `text-muted`, `accent-on-tint`) are designed rather than computed; their
+  designed value is **not stored**: it applies while every brand colour its rule reads is still
+  the shipped one, so a change and its undo can never lose it (amended 2026-09-23 after the
+  CTO's phase 1b review, which found a stored "factory pin" could be dropped for good).
+- **typeface**: a select over the curated list.
+- **logo**: two uploads, `logoPrimary` (the header and the phone menu) and `logoOnDark` (the
+  footer). A square icon upload was dropped: its only places are the client error pages and
+  the structured data, neither of which reads the global, so it would have done nothing.
+- **surfaces** (phase 1c): the library of background sets the brand cannot derive, a list of
+  `{ key, label, kind, background, blooms, grain, text, textMuted, link, button }`.
 
-Four sets ship as defaults and reproduce today's site exactly: `surface` (white),
-`ground` (#f6f8fb), `sea-mist` (the gradient) and `deep-sea` (navy).
+Four sets ship. Three are built from the brand in `globals.css` and follow a rebrand:
+`surface` (white), `ground` (the grey sections) and `deep-sea` (the footer's navy); they
+reproduce today's site through the keys the sections already use. The fourth, `sea-mist` (the
+gradient), is the library's first row, with fixed colours (Dhia, 2026-09-23).
 
 ### Derivation rules
 

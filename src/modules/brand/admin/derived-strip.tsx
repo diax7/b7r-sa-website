@@ -2,16 +2,11 @@
 
 import { useField } from '@payloadcms/ui';
 import type { JSONFieldClientComponent } from 'payload';
-import { useEffect, useId, useState } from 'react';
+import { useId, useState } from 'react';
 import { Badge } from '@/components/shared/badge';
 import { Input } from '@/components/shared/input';
-import {
-  DERIVED_KEYS,
-  type DerivedKey,
-  type Pins,
-  releaseFactoryPins,
-} from '@/modules/brand/appearance';
-import { DERIVED_FROM, resolveBrand } from '@/modules/brand/css';
+import { DERIVED_KEYS, type DerivedKey, type Pins, toStoredPins } from '@/modules/brand/appearance';
+import { DERIVED_FROM, designedApplies, resolveBrand } from '@/modules/brand/css';
 import { toHex } from '@/modules/brand/types';
 import {
   editorPin,
@@ -34,25 +29,19 @@ const TOKEN: Record<DerivedKey, string> = {
 /**
  * The derived colours, live (spec 010, phase 1b): each one's swatch as the site would paint
  * it with the brand colours typed above, its state in words (computed, a designed value, set
- * by hand), where it comes from, and the one action that changes that state. A designed value
- * is released the moment one of its own brand colours moves, exactly as the save does, so
- * the strip never shows a colour the save would not keep. The field's refusal (a colour set
- * by hand that breaks a pair) shows above the strip.
+ * by hand), where it comes from, and the one action that changes that state. Everything but
+ * the colours set by hand is derived on each render, never written: a designed value shows
+ * while its brand colour is the shipped one and comes back when it is typed back, exactly as
+ * the site resolves it. The field's refusal (a colour set by hand that breaks a pair) shows
+ * above the strip.
  */
 export const DerivedStrip: JSONFieldClientComponent = ({ field, path, readOnly }) => {
-  const { value, setValue, showError, errorMessage, disabled } = useField<Pins>({ path });
+  const { value, setValue, showError, errorMessage, disabled } = useField<unknown>({ path });
   const form = useAppearanceForm(value);
   const id = useId();
   const off = Boolean(disabled || readOnly);
   const pins: Pins = form.brand.pinned;
-
-  // A brand colour moved: release the designed values that follow it, as the save would.
-  useEffect(() => {
-    if (!form.valid) return;
-    const released = releaseFactoryPins(form.saved, form.typed, pins);
-    if (Object.keys(released).length !== Object.keys(pins).length) setValue(released);
-  }, [form, pins, setValue]);
-
+  const write = (next: Pins) => setValue(toStoredPins(next));
   const { tokens } = resolveBrand(form.brand);
 
   return (
@@ -73,9 +62,10 @@ export const DerivedStrip: JSONFieldClientComponent = ({ field, path, readOnly }
             token={key}
             colour={tokens[TOKEN[key]] ?? ''}
             waiting={!form.valid && DERIVED_FROM[key].some((source) => !toHex(form.typed[source]))}
+            designed={designedApplies(key, form.typed)}
             pins={pins}
             off={off}
-            onChange={setValue}
+            onChange={write}
           />
         ))}
       </ul>
@@ -87,6 +77,7 @@ function DerivedRow({
   token,
   colour,
   waiting,
+  designed,
   pins,
   off,
   onChange,
@@ -94,6 +85,8 @@ function DerivedRow({
   token: DerivedKey;
   colour: string;
   waiting: boolean;
+  /** Whether the site shows this colour's designed value (`designedApplies`). */
+  designed: boolean;
   pins: Pins;
   off: boolean;
   onChange: (pins: Pins) => void;
@@ -102,7 +95,7 @@ function DerivedRow({
   const pin = pins[token];
   const sourceName = DERIVED_FROM[token].map((source) => s.colours[source]).join(', ');
   const name = s.derived[token];
-  const state = pin?.origin === 'editor' ? 'byHand' : pin ? 'designed' : 'computed';
+  const state = pin ? 'byHand' : designed ? 'designed' : 'computed';
   const note =
     state === 'designed'
       ? s.strip.designedNote.replace('{colour}', sourceName)
@@ -137,13 +130,13 @@ function DerivedRow({
         </Badge>
         <span className="text-caption text-text-muted">{note}</span>
       </div>
-      {state === 'byHand' && pin ? (
-        <HandValue token={token} value={pin.value} pins={pins} off={off} onChange={onChange} />
+      {pin ? (
+        <HandValue token={token} value={pin} pins={pins} off={off} onChange={onChange} />
       ) : null}
       <div className="flex flex-wrap gap-2">
-        {state === 'byHand' || state === 'designed' ? (
+        {state === 'byHand' ? (
           <RowAction disabled={off} onClick={() => onChange(withoutPin(pins, token))}>
-            {s.strip.compute}
+            {s.strip.reset}
           </RowAction>
         ) : null}
         {state !== 'byHand' ? (

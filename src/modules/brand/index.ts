@@ -22,7 +22,6 @@ export {
   DEFAULT_BRAND,
   DERIVED_FROM,
   type PairFailure,
-  type Pin,
   resolveBrand,
   SHIPPED_BRAND_CSS,
 } from '@/modules/brand/css';

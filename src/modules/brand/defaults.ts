@@ -54,8 +54,9 @@ export const COMPUTED_EXACTLY = {
 } as const;
 
 /**
- * Designed by eye; no rule reaches them (calibration.md). These ship pinned, and phase 1b's
- * hook releases a pin when one of that token's own sources changes.
+ * Designed by eye; no rule reaches them (calibration.md). Each applies while every brand
+ * colour its rule reads is still the shipped one (`designedApplies` in `css.ts`), and its
+ * rule takes over once one of them changes.
  */
 export const DESIGNED_NOT_COMPUTED = {
   border: '#e5e9ef',

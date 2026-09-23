@@ -1,8 +1,7 @@
 /**
  * The Appearance global as the site and the panel read it (spec 010, phase 1b): the stored
- * document parsed at one boundary, the rule that releases a designed value when its own
- * brand colour moves, and the refusals, each attributed to the field an editor changes to
- * fix it.
+ * document parsed at one boundary, and the refusals, each attributed to the field an editor
+ * changes to fix it.
  *
  * Pure: no Payload, no React, no IO. The global's config (`global.ts`), its validators and
  * the admin components all call into here, and so does the root layout through
@@ -14,13 +13,12 @@ import {
   brandCss,
   DEFAULT_BRAND,
   DERIVED_FROM,
-  type Pin,
   resolveBrand,
 } from '@/modules/brand/css';
 import type { BrandSources } from '@/modules/brand/defaults';
 import type { BrandDerived } from '@/modules/brand/derive';
 import type { PairKey, PaletteToken } from '@/modules/brand/pairs';
-import { toHex } from '@/modules/brand/types';
+import { type Hex, toHex } from '@/modules/brand/types';
 import { toTypeface, type TypefaceKey, typefaceCss } from '@/modules/brand/typefaces';
 import type { LogoImage } from '@/modules/core/logo-image';
 
@@ -61,9 +59,6 @@ export const SHIPPED_LOGOS = {
 
 export type Pins = Brand['pinned'];
 
-/** The pins a never-saved global starts with: the three designed values, as shipped. */
-export const DEFAULT_PINS: Pins = DEFAULT_BRAND.pinned;
-
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
 
@@ -89,40 +84,44 @@ function readSources(value: unknown, problems: string[]): Brand['sources'] {
   return sources;
 }
 
-function readPin(key: string, raw: unknown, problems: string[]): [DerivedKey, Pin] | null {
-  if (!isDerivedKey(key)) {
-    problems.push(`appearance: pins.${key} names no derived colour; dropped`);
-    return null;
-  }
-  const value = isRecord(raw) ? toHex(raw['value']) : null;
-  const origin = isRecord(raw) ? raw['origin'] : undefined;
-  if (!value || (origin !== 'factory' && origin !== 'editor')) {
-    problems.push(
-      `appearance: pins.${key} is ${JSON.stringify(raw)}; dropped, so its rule applies`,
-    );
-    return null;
-  }
-  return [key, { value, origin }];
+/** A derived colour set by hand, as the global stores it: a row of a list. */
+export interface StoredPin {
+  token: DerivedKey;
+  value: Hex;
 }
 
 /**
- * The pins: `null` (never saved) is the shipped designed values; `{}` is an editor's choice
- * that every derived colour be computed, and is kept as it is.
+ * The derived colours set by hand, stored as a list rather than an object: Payload hands a
+ * field's validator the saved document deep-merged over the stored one, and a merge unions
+ * an object's keys but replaces a list, so a colour handed back to its rule in this save is
+ * gone from what the validators read (the CTO's review of phase 1b). `null` (never saved)
+ * and `[]` both mean nothing is set by hand. A row that cannot be read is dropped and named.
  */
-function readPins(value: unknown, problems: string[]): Pins {
-  if (value === null || value === undefined) return { ...DEFAULT_PINS };
-  if (!isRecord(value)) {
-    problems.push(
-      `appearance: pins is ${JSON.stringify(value)}; the shipped designed values apply`,
-    );
-    return { ...DEFAULT_PINS };
+export function readPins(value: unknown): { pins: Pins; problems: string[] } {
+  if (value === null || value === undefined) return { pins: {}, problems: [] };
+  if (!Array.isArray(value)) {
+    return { pins: {}, problems: [`appearance: pins is ${JSON.stringify(value)}, not a list`] };
   }
   const pins: Pins = {};
-  for (const key of Object.keys(value)) {
-    const pin = readPin(key, value[key], problems);
-    if (pin) pins[pin[0]] = pin[1];
+  const problems: string[] = [];
+  for (const raw of value) {
+    const token = isRecord(raw) ? raw['token'] : undefined;
+    const colour = isRecord(raw) ? toHex(raw['value']) : null;
+    if (typeof token !== 'string' || !isDerivedKey(token) || !colour || token in pins) {
+      problems.push(`appearance: dropped the row ${JSON.stringify(raw)} of pins`);
+      continue;
+    }
+    pins[token] = colour;
   }
-  return pins;
+  return { pins, problems };
+}
+
+/** The colours set by hand as the list the global stores, in the strip's order. */
+export function toStoredPins(pins: Pins): StoredPin[] {
+  return DERIVED_KEYS.flatMap((token) => {
+    const value = pins[token];
+    return value ? [{ token, value }] : [];
+  });
 }
 
 /**
@@ -132,37 +131,15 @@ function readPins(value: unknown, problems: string[]): Pins {
 export function toAppearance(doc: unknown): { appearance: Appearance; problems: string[] } {
   const stored = isRecord(doc) ? doc : {};
   const problems: string[] = [];
-  const brand: Brand = {
-    sources: readSources(stored['sources'], problems),
-    pinned: readPins(stored['pins'], problems),
-  };
+  const read = readPins(stored['pins']);
+  problems.push(...read.problems);
+  const brand: Brand = { sources: readSources(stored['sources'], problems), pinned: read.pins };
   return { appearance: { brand, typeface: toTypeface(stored['typeface']) }, problems };
 }
 
 /** The appearance as the one style block of the document head: colours, then the typeface. */
 export function appearanceCss(appearance: Appearance): string {
   return `${brandCss(appearance.brand)}${typefaceCss(appearance.typeface)}`;
-}
-
-/**
- * The pins after a save that moved `before` to `after`: a designed value (a factory pin) is
- * released when one of its own brand colours moved, so a rebrand recomputes the hairlines
- * and the secondary text rather than keeping a grey tuned for the old blue; changing the
- * primary does not touch the secondary text, whose rule reads ink. An editor's pin is theirs
- * and stays until they release it.
- */
-export function releaseFactoryPins(
-  before: Readonly<Record<SourceKey, string>>,
-  after: Readonly<Record<SourceKey, string>>,
-  pins: Pins,
-): Pins {
-  const moved = (key: SourceKey) => toHex(before[key]) !== toHex(after[key]);
-  const kept: Pins = {};
-  for (const [token, pin] of Object.entries(pins) as Array<[DerivedKey, Pin]>) {
-    if (pin.origin === 'factory' && DERIVED_FROM[token].some(moved)) continue;
-    kept[token] = pin;
-  }
-  return kept;
 }
 
 /** Where an editor fixes a colour: one of the five pickers, or a derived colour set by hand. */
@@ -201,8 +178,8 @@ const DERIVED_TOKENS: Partial<Record<PaletteToken, DerivedKey>> = {
 
 /**
  * The fields behind a colour of the palette. A brand colour is its own picker; a derived
- * colour set by hand is its own pin; a computed or designed one is fixed at its brand colour,
- * since that is what the editor can change. White and the page surface are fixed.
+ * colour set by hand is its own row of the strip; a computed or designed one is fixed at its
+ * brand colour, since that is what the editor can change. White and the surface are fixed.
  */
 function fieldsOf(token: PaletteToken | '#ffffff', brand: Brand): FieldRef[] {
   if (token === '#ffffff' || token === 'surface') return [];
@@ -210,7 +187,7 @@ function fieldsOf(token: PaletteToken | '#ffffff', brand: Brand): FieldRef[] {
   if (source) return [{ kind: 'source', key: source }];
   const derived = DERIVED_TOKENS[token];
   if (!derived) return [];
-  if (brand.pinned[derived]?.origin === 'editor') return [{ kind: 'pin', key: derived }];
+  if (brand.pinned[derived]) return [{ kind: 'pin', key: derived }];
   return DERIVED_FROM[derived].map((key) => ({ kind: 'source', key }));
 }
 

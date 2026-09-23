@@ -47,12 +47,16 @@
   --color-current: currentColor;
 
   --shadow-*: initial;
-  --shadow-card: 0 1px 2px rgb(20 24 31 / 0.06), 0 1px 3px rgb(20 24 31 / 0.04);
-  --shadow-card-hover: 0 4px 12px rgb(20 24 31 / 0.08);
-  --shadow-popover: 0 8px 24px rgb(20 24 31 / 0.12);
-  --shadow-header: 0 1px 0 rgb(20 24 31 / 0.06);
+  --shadow-card:
+    0 1px 2px color-mix(in srgb, var(--color-text) 6%, transparent),
+    0 1px 3px color-mix(in srgb, var(--color-text) 4%, transparent);
+  --shadow-card-hover: 0 4px 12px color-mix(in srgb, var(--color-text) 8%, transparent);
+  --shadow-popover: 0 8px 24px color-mix(in srgb, var(--color-text) 12%, transparent);
+  --shadow-header: 0 1px 0 color-mix(in srgb, var(--color-text) 6%, transparent);
   /* The island header: a hairline under it and a blue-tinted lift (ADR-053). */
-  --shadow-island: 0 1px 0 rgb(20 24 31 / 0.04), 0 16px 36px -16px rgb(0 88 176 / 0.35);
+  --shadow-island:
+    0 1px 0 color-mix(in srgb, var(--color-text) 4%, transparent),
+    0 16px 36px -16px color-mix(in srgb, var(--color-primary) 35%, transparent);
 
   /* Resting heights (Dhia, 2026-09-14: the bar sits lower); scrolled shrinks to 60. */
   --header-h: 88px;
@@ -73,6 +77,13 @@
    Base
    --------------------------------------------------------------------------------------- */
 @layer base {
+  /* The page's own ink, copied once at the root (spec 010): a themed section rewrites
+     `--color-text` for the words on it, and a scrim over a photo must stay the page's dark
+     whatever section it sits in. A custom property resolves where it is declared, so this
+     holds the runtime brand's ink and nothing a section sets reaches it. */
+  :root {
+    --page-text: var(--color-text);
+  }
   html {
     scroll-behavior: smooth;
     /* In-page anchors and the designer deep link land below the sticky header (BRD 6.2). */
@@ -259,10 +270,11 @@
   background-size: 280% auto;
   background-position: 0% 50%;
   box-shadow:
-    0 0 10px rgb(0 152 224 / 0.22),
-    0 4px 6px -2px rgb(0 88 176 / 0.25),
-    inset 2px 2px 8px rgb(230 245 252 / 0.35),
-    inset -2px -2px 8px rgb(0 63 128 / 0.35);
+    0 0 10px color-mix(in srgb, var(--color-accent) 22%, transparent),
+    0 4px 6px -2px color-mix(in srgb, var(--color-primary) 25%, transparent),
+    inset 2px 2px 8px color-mix(in srgb, var(--color-accent-tint) 35%, transparent),
+    inset -2px -2px 8px
+      color-mix(in srgb, color-mix(in srgb, var(--color-primary) 72%, black) 35%, transparent);
   transition:
     background-position 700ms var(--ease-standard),
     box-shadow var(--duration-base) var(--ease-standard),
@@ -271,29 +283,37 @@
 .btn-shiny:hover {
   background-position: 100% 50%;
   box-shadow:
-    0 0 14px rgb(0 152 224 / 0.32),
-    0 6px 8px -2px rgb(0 88 176 / 0.3),
-    inset 2px 2px 8px rgb(230 245 252 / 0.4),
-    inset -2px -2px 8px rgb(0 63 128 / 0.35);
+    0 0 14px color-mix(in srgb, var(--color-accent) 32%, transparent),
+    0 6px 8px -2px color-mix(in srgb, var(--color-primary) 30%, transparent),
+    inset 2px 2px 8px color-mix(in srgb, var(--color-accent-tint) 40%, transparent),
+    inset -2px -2px 8px
+      color-mix(in srgb, color-mix(in srgb, var(--color-primary) 72%, black) 35%, transparent);
 }
 /* On the primary ribbon the button is white: the same sheen in white and the accent tint. */
 .btn-shiny-inverse {
   background-image: linear-gradient(325deg, #ffffff 0%, var(--color-accent-tint) 55%, #ffffff 90%);
   box-shadow:
     0 0 10px rgb(255 255 255 / 0.35),
-    0 4px 6px -2px rgb(0 63 128 / 0.3),
+    0 4px 6px -2px
+      color-mix(in srgb, color-mix(in srgb, var(--color-primary) 72%, black) 30%, transparent),
     inset 2px 2px 8px rgb(255 255 255 / 0.9),
-    inset -2px -2px 8px rgb(0 88 176 / 0.12);
+    inset -2px -2px 8px color-mix(in srgb, var(--color-primary) 12%, transparent);
 }
 .btn-shiny-inverse:hover {
   box-shadow:
     0 0 14px rgb(255 255 255 / 0.5),
-    0 6px 8px -2px rgb(0 63 128 / 0.35),
+    0 6px 8px -2px
+      color-mix(in srgb, color-mix(in srgb, var(--color-primary) 72%, black) 35%, transparent),
     inset 2px 2px 8px rgb(255 255 255 / 0.9),
-    inset -2px -2px 8px rgb(0 88 176 / 0.12);
+    inset -2px -2px 8px color-mix(in srgb, var(--color-primary) 12%, transparent);
 }
 .btn-shiny-inverse::after {
-  background: linear-gradient(100deg, transparent 30%, rgb(0 152 224 / 0.16) 50%, transparent 70%);
+  background: linear-gradient(
+    100deg,
+    transparent 30%,
+    color-mix(in srgb, var(--color-accent) 16%, transparent) 50%,
+    transparent 70%
+  );
 }
 .btn-shiny::after {
   content: '';
@@ -368,7 +388,7 @@
      inside it share one corner (Dhia, 2026-09-17: the pill read as off-brand). */
   border-radius: var(--radius-base);
   background: var(--color-surface);
-  border-color: rgb(20 24 31 / 0.08);
+  border-color: color-mix(in srgb, var(--color-text) 8%, transparent);
   box-shadow: var(--shadow-island);
 }
 .header-bar .header-inner {
@@ -518,7 +538,11 @@
   flex-direction: column;
   align-items: flex-start;
   gap: 8px;
-  background: linear-gradient(to top, rgb(20 24 31 / 0.55), rgb(20 24 31 / 0));
+  background: linear-gradient(
+    to top,
+    color-mix(in srgb, var(--page-text) 55%, transparent),
+    color-mix(in srgb, var(--page-text) 0%, transparent)
+  );
 }
 @media (min-width: 1024px) {
   .strip {

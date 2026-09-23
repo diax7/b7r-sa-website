@@ -121,6 +121,9 @@ describe('the curated typefaces (spec 010 decision 6)', () => {
       expect(TYPEFACES[key].licence).toBe('ofl');
       const dir = TYPEFACES[key].sources;
       expect(existsSync(join(root, dir, 'OFL.txt')), dir).toBe(true);
+      // The licence travels with the served files, as the OFL asks of a redistributed font.
+      const stem = Object.values(TYPEFACES[key].files)[0]!.split('-')[0]!;
+      expect(existsSync(join(root, 'public/fonts', `${stem}-OFL.txt`)), stem).toBe(true);
     }
   });
 });

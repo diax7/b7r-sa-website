@@ -82,10 +82,7 @@ describe('the emitted block restates the shipped palette', () => {
     // of the spec refuses such a save; this proves the refusal reaches the stylesheet.
     const pinned: Brand = {
       ...DEFAULT_BRAND,
-      pinned: {
-        ...DEFAULT_BRAND.pinned,
-        textMuted: { value: toHex('#eeeeee')!, origin: 'editor' },
-      },
+      pinned: { textMuted: toHex('#eeeeee')! },
     };
     const resolved = resolveBrand(pinned);
     expect(resolved.failures.map((f) => f.use)).toContain('Muted text on surface');
@@ -109,7 +106,7 @@ describe('the emitted block restates the shipped palette', () => {
   it('never throws on a malformed pin either', () => {
     const brand = {
       ...DEFAULT_BRAND,
-      pinned: { textMuted: { value: 'not a colour' as never, origin: 'editor' as const } },
+      pinned: { textMuted: 'not a colour' as never },
     };
     expect(() => brandCss(brand)).not.toThrow();
   });

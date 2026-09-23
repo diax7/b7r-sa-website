@@ -252,7 +252,7 @@ export const adminStrings = {
       from: 'From the {colour}',
       designedNote: 'Kept until the {colour} changes',
       setByHand: 'Set it by hand',
-      compute: 'Compute it',
+      reset: 'Reset it',
       valueLabel: '{name}: the value set by hand',
       waiting: 'Waiting for a valid brand colour',
     },
@@ -287,10 +287,10 @@ export const adminStrings = {
       darker: '{pair} reads {got} and needs {wanted}. Choose a darker {colour}.',
       lighter: '{pair} reads {got} and needs {wanted}. Choose a lighter {colour}.',
     },
-    /** The same on a colour set by hand, which can also go back to being computed. */
+    /** The same on a colour set by hand, which can also be reset to what the site computes. */
     pinRefusal: {
-      darker: '{pair} reads {got} and needs {wanted}. Choose a darker {colour}, or compute it.',
-      lighter: '{pair} reads {got} and needs {wanted}. Choose a lighter {colour}, or compute it.',
+      darker: '{pair} reads {got} and needs {wanted}. Choose a darker {colour}, or reset it.',
+      lighter: '{pair} reads {got} and needs {wanted}. Choose a lighter {colour}, or reset it.',
     },
     more: 'The contrast check lists the rest.',
     notAColour: 'Write the colour as #1f6feb: a hash, then six digits or letters from a to f.',
@@ -932,7 +932,7 @@ export const adminStringsAr: AdminStrings = {
       from: 'من {colour}',
       designedNote: 'تبقى حتى يتغيّر {colour}',
       setByHand: 'ثبّته يدوياً',
-      compute: 'احسبه',
+      reset: 'أعِده',
       valueLabel: '{name}: القيمة المثبّتة يدوياً',
       waiting: 'بانتظار لون علامة صالح',
     },
@@ -966,8 +966,8 @@ export const adminStringsAr: AdminStrings = {
       lighter: '{pair}: التباين {got} والمطلوب {wanted}. غيّر {colour} إلى لون أفتح.',
     },
     pinRefusal: {
-      darker: '{pair}: التباين {got} والمطلوب {wanted}. غيّر {colour} إلى لون أغمق، أو احسبه.',
-      lighter: '{pair}: التباين {got} والمطلوب {wanted}. غيّر {colour} إلى لون أفتح، أو احسبه.',
+      darker: '{pair}: التباين {got} والمطلوب {wanted}. غيّر {colour} إلى لون أغمق، أو أعِده.',
+      lighter: '{pair}: التباين {got} والمطلوب {wanted}. غيّر {colour} إلى لون أفتح، أو أعِده.',
     },
     more: 'يعرض فحص التباين البقية.',
     notAColour: 'اكتب اللون بصيغة #1f6feb: علامة # ثم ستة أرقام أو حروف من a إلى f.',

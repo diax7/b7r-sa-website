@@ -277,14 +277,16 @@
   font-style: normal;
   font-display: swap;
 }
-/* Metric-adjusted fallback to keep the swap from shifting layout (CLS ≤ 0.1). Values are
-   approximations for a rounded Arabic sans; the CLS e2e is the real gate. */
+/* Metric-adjusted fallback to keep the swap from shifting layout (CLS ≤ 0.1), measured the
+   way the curated alternates below are (spec 010). The approximations it replaced (104%, 96%,
+   30%) measured CLS 0.094 on the home page with the font held back 800 ms; these measure
+   about a tenth of that. `e2e/appearance.spec.ts` holds every family to the budget. */
 @font-face {
   font-family: 'Rayat Fallback';
   src: local('Segoe UI'), local('Tahoma'), local('Roboto'), local('Noto Naskh Arabic');
-  size-adjust: 104%;
-  ascent-override: 96%;
-  descent-override: 30%;
+  size-adjust: 87.3%;
+  ascent-override: 104.2%;
+  descent-override: 60.5%;
   line-gap-override: 0%;
 }
 

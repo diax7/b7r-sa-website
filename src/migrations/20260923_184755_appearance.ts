@@ -10,7 +10,7 @@ export async function up({ db }: MigrateUpArgs): Promise<void> {
   	"sources_accent" varchar DEFAULT '#0098e0' NOT NULL,
   	"sources_navy" varchar DEFAULT '#0a2f5e' NOT NULL,
   	"sources_ink" varchar DEFAULT '#14181f' NOT NULL,
-  	"pins" jsonb DEFAULT '{"border":{"value":"#e5e9ef","origin":"factory"},"textMuted":{"value":"#5b6470","origin":"factory"},"accentOnTint":{"value":"#00639c","origin":"factory"}}'::jsonb,
+  	"pins" jsonb DEFAULT '[]'::jsonb,
   	"typeface" "enum_appearance_typeface" DEFAULT 'rayat' NOT NULL,
   	"logo_primary_id" integer,
   	"logo_on_dark_id" integer,
