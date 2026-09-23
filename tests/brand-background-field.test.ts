@@ -42,6 +42,16 @@ describe('a section background (spec 010, phase 2)', () => {
     );
   });
 
+  it('lets a stored key whose set was deleted through, so the document still publishes', async () => {
+    const { req, findGlobal } = request();
+    expect(await validateBackground('dune', { req, previousValue: 'dune' })).toBe(true);
+    expect(findGlobal).not.toHaveBeenCalled();
+    // A changed value is judged again: a stale set chosen anew is refused.
+    expect(await validateBackground('dune', { req, previousValue: 'sea-mist' })).toContain(
+      '“dune”',
+    );
+  });
+
   it('accepts a set the editor added to the library', async () => {
     const { req } = request({ appearance: { surfaces: [dune] } });
     expect(await validateBackground('dune', { req })).toBe(true);

@@ -112,7 +112,9 @@ the panel's language only.
 (Pages): the section's own, or any set. Deleting a set under Backgrounds is safe: the sections
 that used it go back to their own background, and their picker says which set is gone. A saved
 set's key cannot change; rename the set instead. The deploy's migration adds the columns;
-nothing needs seeding.
+nothing needs seeding. A new block type is swept on each set before it ships: add it to the
+page `e2e/section-backgrounds.spec.ts` publishes for the kinds no published page holds (the
+public sweep in `e2e/surfaces.spec.ts` only reaches published pages).
 
 **What does not follow** a change of colour is listed on the screen itself (the sidebar
 panel), and `tests/brand-not-following.test.ts` fails when a shipped brand colour appears in

@@ -248,11 +248,107 @@ test('a key no set has is refused; a saved set keeps its key; a deleted set leav
     expect(deleted.status(), await deleted.text()).toBe(200);
     // The FAQ goes back to the background it was designed with, never a blank one.
     await expect.poll(faqSurface(request), LONG).toBe(designed);
+    // The stored key still publishes (a scheduled publish saves the same way): nobody touched it.
+    const stale = await readHome(request, auth);
+    expect(stale.faq['background']).toBe('sea-mist');
+    const republished = await publishHome(request, auth, stale);
+    expect(republished.status(), await republished.text()).toBe(200);
     expect((await page.request.post(`${API}/users/login`, { data: ADMIN })).status()).toBe(200);
     const picker = await openFaqTab(page);
     await expect(picker.locator('[data-admin-background-gone]')).toContainText('“sea-mist”');
   } finally {
     expect((await publishHome(request, auth, home)).status()).toBe(200);
     expect((await request.post(APPEARANCE, { headers: auth, data: stored })).status()).toBe(200);
+  }
+});
+
+/** A one-paragraph Lexical editor state, as the panel saves it. */
+const paragraph = (text: string) => ({
+  root: {
+    type: 'root',
+    format: '',
+    indent: 0,
+    version: 1,
+    direction: 'rtl',
+    children: [
+      {
+        type: 'paragraph',
+        format: '',
+        indent: 0,
+        version: 1,
+        direction: 'rtl',
+        textFormat: 0,
+        textStyle: '',
+        children: [
+          { type: 'text', text, format: 0, detail: 0, mode: 'normal', style: '', version: 1 },
+        ],
+      },
+    ],
+  },
+});
+
+test('the block kinds no published page holds (rich text, a media banner) take each set too', async ({
+  page,
+  request,
+}) => {
+  test.setTimeout(120_000);
+  const auth = await login(request, ADMIN);
+  const media = (
+    (await (await request.get(`${API}/media?limit=1&depth=0`, { headers: auth })).json()) as {
+      docs: Array<{ id: number }>;
+    }
+  ).docs[0]!;
+  const slug = `e2e-backgrounds-${Date.now()}`;
+  const created = await request.post(`${API}/pages`, {
+    headers: auth,
+    data: {
+      title: 'صفحة اختبار الخلفيات',
+      slug,
+      _status: 'published',
+      seo: { title: 'صفحة اختبار الخلفيات', description: 'صفحة مؤقتة يحذفها الاختبار بعد انتهائه.' },
+      blocks: [
+        {
+          blockType: 'richText',
+          title: 'نص منسّق',
+          content: paragraph('فقرة تُقرأ على الخلفية، وفيها رابط.'),
+          background: 'deep-sea',
+        },
+        {
+          blockType: 'mediaBanner',
+          media: media.id,
+          caption: 'تعليق تحت الصورة',
+          background: 'deep-sea',
+        },
+      ],
+    },
+  });
+  expect(created.status(), await created.text()).toBe(201);
+  const { id } = ((await created.json()) as { doc: { id: number } }).doc;
+  try {
+    await expect.poll(async () => (await request.get(`/${slug}`)).status(), LONG).toBe(200);
+    for (const [key, want] of [
+      ['deep-sea', { background: 'rgb(10, 47, 94)', text: WHITE }],
+      ['sea-mist', { background: 'rgb(187, 208, 217)', text: INK }],
+    ] as const) {
+      await page.goto(`/${slug}`);
+      // Both blocks were saved as deep sea, and the server renders them so.
+      await expect(page.locator('section[data-surface="deep-sea"][data-block]')).toHaveCount(2);
+      await page.addStyleTag({ content: '*,*::before,*::after{transition:none!important}' });
+      // Sea mist is then named on the live page, as the sweep does.
+      await page.evaluate((surface) => {
+        for (const el of document.querySelectorAll<HTMLElement>('section[data-block]')) {
+          el.dataset['surface'] = surface;
+        }
+      }, key);
+      const sections = page.locator('section[data-block]');
+      await expect(sections).toHaveCount(2);
+      for (let i = 0; i < 2; i += 1) {
+        await expect(sections.nth(i), `${key} ${i}`).toHaveCSS('background-color', want.background);
+        await expect(sections.nth(i), `${key} ${i}`).toHaveCSS('color', want.text);
+      }
+      expect(await serious(page, 'section[data-block]'), key).toEqual([]);
+    }
+  } finally {
+    await request.delete(`${API}/pages/${id}`, { headers: auth });
   }
 });

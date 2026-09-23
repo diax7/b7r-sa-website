@@ -147,7 +147,8 @@ export const SURFACE_KEY = /^[a-z][a-z0-9-]{0,31}$/;
 
 /**
  * A section's background (spec 010, phase 2): the key of a set, or absent for the section's
- * own. Only its shape is checked here; a key no set has paints the page's white.
+ * own. Only its shape is checked here; the content readers drop a key whose set no longer
+ * exists, and the section keeps the background it was designed with.
  */
 const surfaceKey = z.string().regex(SURFACE_KEY);
 const background = { background: surfaceKey.optional() };

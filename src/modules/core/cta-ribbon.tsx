@@ -26,10 +26,11 @@ export async function CtaRibbon({ locale, page }: CtaRibbonProps) {
   return (
     <section
       aria-labelledby="cta-ribbon-title"
+      // The overlap and the see-through strip are `[data-cta-ribbon]` in `globals.css`, the
+      // wave's height read from the same property as the section above's extra foot. Padding,
+      // not the band's margin, holds the strip open: a margin would collapse through.
       data-cta-ribbon=""
-      // Padding, not the band's margin, holds the strip open: a margin would collapse through
-      // the section and cancel the overlap.
-      className="relative -mt-8 pt-8 text-white md:-mt-12 md:pt-12"
+      className="relative text-white"
     >
       <WaveDivider fill="primary" position="top" />
       <div className="bg-primary">

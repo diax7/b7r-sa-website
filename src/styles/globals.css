@@ -194,11 +194,23 @@
     display: none;
   }
 }
-/* Section rhythm (§3.4): 96 px desktop, 64 px mobile. */
-@utility section-pad {
-  padding-block: 64px;
-  @media (min-width: 768px) {
-    padding-block: 96px;
+/* Section rhythm (§3.4): 96 px desktop, 64 px mobile; the sea motif's wave is 48 and 32 px
+   (BRD 6.3.4). The ribbon's overlap and the section above it read the same two values. */
+:root {
+  --section-pad-y: 64px;
+  --wave-height: 32px;
+}
+@media (min-width: 768px) {
+  :root {
+    --section-pad-y: 96px;
+    --wave-height: 48px;
+  }
+}
+/* In the components layer, so a section's own padding utility (`py-0`, `pt-6`, `pb-28`) adjusts
+   the rhythm at every width. */
+@layer components {
+  .section-pad {
+    padding-block: var(--section-pad-y);
   }
 }
 
@@ -259,19 +271,15 @@
    the ribbon overlaps it by as much, so the page keeps its height and the wave covers only the
    section's own background (a set, a gradient with its grain), never its words. Unlayered, so
    it beats the rhythm utility and a section's own `py-0` (the video). */
+[data-cta-ribbon] {
+  margin-block-start: calc(-1 * var(--wave-height));
+  padding-block-start: var(--wave-height);
+}
 .section-pad:has(+ [data-cta-ribbon]) {
-  padding-block-end: calc(64px + 32px);
+  padding-block-end: calc(var(--section-pad-y) + var(--wave-height));
 }
 .section-pad.py-0:has(+ [data-cta-ribbon]) {
-  padding-block-end: 32px;
-}
-@media (min-width: 768px) {
-  .section-pad:has(+ [data-cta-ribbon]) {
-    padding-block-end: calc(96px + 48px);
-  }
-  .section-pad.py-0:has(+ [data-cta-ribbon]) {
-    padding-block-end: 48px;
-  }
+  padding-block-end: var(--wave-height);
 }
 /* The drawn logo on a dark background (the footer): every blue white, as the shipped white
    file was (spec 010, phase 1d; `src/modules/core/brand-logo.tsx`). */

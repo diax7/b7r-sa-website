@@ -37,8 +37,8 @@ function OwnSwatch({ halves }: { halves: BackgroundChoicesData['own'] }) {
 
 /**
  * A section's background (spec 010, phase 2): the section's own first, then every set as a
- * swatch in its own colours. A key no set has any more (a set deleted by a write that went
- * round the refusal) is named under the choices with what the section shows meanwhile.
+ * swatch in its own colours. A key whose set was deleted under Appearance is named under the
+ * choices, with what the section shows meanwhile (its own background).
  */
 export function BackgroundChoices({
   field,

@@ -62,7 +62,7 @@ export function WaveDivider({ fill, position, className }: WaveDividerProps) {
       // (via a local LTR context) keeps the container covered for the whole loop.
       dir="ltr"
       className={cn(
-        'pointer-events-none absolute start-0 end-0 z-10 h-8 overflow-hidden md:h-12',
+        'pointer-events-none absolute start-0 end-0 z-10 h-(--wave-height) overflow-hidden',
         position === 'top' ? 'top-0' : 'bottom-0 rotate-180',
         className,
       )}

@@ -24,12 +24,18 @@ function allowedKeys(req: PayloadRequest): Promise<string[]> {
   return memo.backgroundKeys;
 }
 
-/** A key no set has is refused (a stale form, or a write through the API). */
+/**
+ * A key no set has is refused when the save brings it (a stale form, or a write through the
+ * API). A stored key whose set was deleted since passes: the site already paints the section's
+ * own background for it, and refusing it would block every publish of the document, a scheduled
+ * one included, over a field nobody touched. The picker names the missing set instead.
+ */
 export async function validateBackground(
   value: unknown,
-  { req }: Validation,
+  { req, previousValue }: Validation & { previousValue?: unknown },
 ): Promise<true | string> {
   if (value === null || value === undefined || value === '') return true;
+  if (value === previousValue) return true;
   const key = String(value);
   if ((await allowedKeys(req)).includes(key)) return true;
   return adminStringsFor(language(req)).appearance.background.unknown.replace('{key}', key);

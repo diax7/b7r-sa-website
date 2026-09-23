@@ -221,7 +221,14 @@ for (const path of ['/', '/en']) {
   }
 }
 
-const DESIGNED_PAGES = ['/about', '/how-it-works', '/contact', '/faq', '/terms'];
+const DESIGNED_PAGES = [
+  '/about',
+  '/how-it-works',
+  '/contact',
+  '/faq',
+  '/terms',
+  '/compare-printful',
+];
 
 for (const key of Object.keys(SETS) as SetKey[]) {
   test(`every block of the designed pages takes ${key}: its background, its words, axe`, async ({
