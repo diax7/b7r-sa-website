@@ -79,6 +79,9 @@ test refuses (translations of a Latin term, or synonyms of the settled word).
 | The site | logo | الشعار |  | اللوجو، اللوغو |  |
 | The site | background (a set: the colour, its text and its button) | خلفية |  | نظام الألوان | A section picks one by name; the text and the button on it come with it. |
 | The site | gradient | تدرّج |  | جريدينت |  |
+| The site | bloom (a soft patch of colour in a gradient) | بقعة لون |  | فقاعة، دائرة لونية |  |
+| The site | white button (white with primary text, on a dark background) | الزر الأبيض |  | الزر المعكوس | The call to action on a dark background, as on the bottom banner. |
+| The site | built from the brand (a background that follows the brand colours) | من ألوان العلامة |  |  | White, light grey and deep sea: they change with the brand colours and cannot be deleted. |
 | The site | grain (the fine texture over a gradient) | حبيبات |  | نويز، تشويش |  |
 | The site | designer | المصمّم |  | أداة التصميم |  |
 | The site | calculator | الحاسبة |  | الآلة الحاسبة |  |
