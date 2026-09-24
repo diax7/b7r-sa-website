@@ -9,6 +9,8 @@ import { cn } from '@/lib/cn';
 import { type Locale, localePath } from '@/lib/i18n';
 import { displayPhone } from '@/lib/phone';
 import { whatsappUrl } from '@/lib/utm';
+import { ShellLogo } from '@/modules/core/brand-logo';
+import type { LogoImage } from '@/modules/core/logo-image';
 
 const PAYMENT_BADGES = [
   { file: 'paypal.png', name: 'PayPal' },
@@ -52,11 +54,14 @@ export function Footer({
   site,
   locale,
   copy,
+  logo,
 }: {
   newsletter: ReactNode;
   navigation: Navigation;
   site: SiteSettings;
   locale: Locale;
+  /** The logo on the navy: the Appearance screen's upload, or `null` for the drawn white one. */
+  logo: LogoImage | null;
   copy: SiteCopy;
 }) {
   const footerCopy = copy.footer;
@@ -86,13 +91,7 @@ export function Footer({
               className="inline-block rounded-inner"
               aria-label={site.brandName}
             >
-              <Image
-                src="/images/logo/logo-white-footer.png"
-                alt=""
-                width={220}
-                height={80}
-                className="h-12 w-auto"
-              />
+              <ShellLogo logo={logo} onDark className="h-12 w-auto" />
             </Link>
             <p className="max-w-xs text-small text-white/75">{site.tagline}</p>
             <ul className="flex items-center gap-2">

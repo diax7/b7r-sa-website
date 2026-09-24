@@ -3,8 +3,6 @@ import type { SectionTone } from '@/components/shared/section';
 import type { Block, BlockOf, Page } from '@/content/schema';
 import type { Locale } from '@/lib/i18n';
 
-export type BlockTone = Extract<SectionTone, 'surface' | 'ground'>;
-
 /** The page's own heading, handed to the first block so the H1 sits inside its section. */
 export interface PageHeading {
   title: string;
@@ -15,7 +13,8 @@ export interface BlockProps<T extends Block['blockType']> {
   block: BlockOf<T>;
   page: Page;
   locale: Locale;
-  tone: BlockTone;
+  /** The block's background: an editor's pick, else the page's alternation. */
+  tone: SectionTone;
   /**
    * Unique per page and readable in a URL: the block's short name, numbered from the second
    * block of the same type (`faq`, `faq-2`). Element ids derive from it.

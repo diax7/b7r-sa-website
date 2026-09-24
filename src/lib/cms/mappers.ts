@@ -2,6 +2,7 @@ import {
   type Block,
   FaqItemSchema,
   HERO_OVERLAY_DEFAULT,
+  HOME_BACKGROUND_SECTIONS,
   HomeSchema,
   PageSchema,
   IntegrationSchema,
@@ -9,6 +10,7 @@ import {
   PageSeoSchema,
   ProductSchema,
   SiteSettingsSchema,
+  SURFACE_KEY,
   TestimonialSchema,
   type FaqItem,
   type Home,
@@ -218,6 +220,33 @@ function mediaAlt(value: number | Media | null | undefined): string {
 export interface MapOptions {
   /** A preview render (ADR-039): the latest draft is what the editor asked to see. */
   draft?: boolean;
+  /**
+   * The background sets that exist (spec 010, phase 2): the three built from the brand and the
+   * library's. A section naming any other keeps its own background. Absent, any well-formed
+   * key passes (a caller that cannot read the library).
+   */
+  backgrounds?: ReadonlySet<string>;
+}
+
+/**
+ * A section's background as stored (spec 010, phase 2), or none: a key of the wrong shape, or
+ * of a set that no longer exists, is dropped rather than failing the page or painting a
+ * background nobody chose, and the section keeps the one it was designed with.
+ */
+function backgroundOf(value: unknown, options: MapOptions): { background?: string } {
+  if (typeof value !== 'string' || !SURFACE_KEY.test(value)) return {};
+  if (options.backgrounds && !options.backgrounds.has(value)) return {};
+  return { background: value };
+}
+
+/** The home sections an editor gave a background set, by section. */
+function homeBackgrounds(doc: HomeDoc, options: MapOptions): NonNullable<Home['backgrounds']> {
+  return Object.fromEntries(
+    HOME_BACKGROUND_SECTIONS.flatMap((section) => {
+      const { background } = backgroundOf(doc[section].background, options);
+      return background ? [[section, background]] : [];
+    }),
+  );
 }
 
 export function toHome(doc: HomeDoc, options: MapOptions = {}): Home {
@@ -300,6 +329,7 @@ export function toHome(doc: HomeDoc, options: MapOptions = {}): Home {
     },
     faq: { enabled: doc.faq.enabled ?? true, title: doc.faq.title, link: doc.faq.link },
     ribbon: { title: doc.ribbon.title, lead: doc.ribbon.lead, button: doc.ribbon.button },
+    backgrounds: homeBackgrounds(doc, options),
   });
 }
 
@@ -342,7 +372,12 @@ type BlockDoc = PageDoc['blocks'][number];
 const optional = (v: string | null | undefined) => (v ? { title: v } : {});
 
 /** One block document → the block contract; media populated (depth ≥ 1) becomes `{ src, alt }`. */
-function toBlock(block: BlockDoc, where: string, index: number): Block {
+/** A block as the site renders it: its content, and the background set it names if any. */
+function toBlock(block: BlockDoc, where: string, index: number, options: MapOptions): Block {
+  return { ...blockContent(block, where, index), ...backgroundOf(block.background, options) };
+}
+
+function blockContent(block: BlockDoc, where: string, index: number): Block {
   const id = block.id ?? `${block.blockType}-${index}`;
   switch (block.blockType) {
     case 'richText':
@@ -466,7 +501,7 @@ export function toPage(doc: PageDoc, options: MapOptions = {}): Page {
   if (!options.draft && doc._status !== 'published') {
     throw new Error(`page ${doc.slug}: not published`);
   }
-  const blocks = doc.blocks.map((b, i) => toBlock(b, `page ${doc.slug} blocks[${i}]`, i));
+  const blocks = doc.blocks.map((b, i) => toBlock(b, `page ${doc.slug} blocks[${i}]`, i, options));
   const legal = blocks.find((b) => b.blockType === 'legalBody');
   const ogImage = mediaUrl(doc.seo.ogImage);
   // A draft may not have its search title and description yet; a preview shows the page's.

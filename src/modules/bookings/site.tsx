@@ -125,7 +125,7 @@ export async function BookPage({ locale }: { locale: Locale }) {
           </div>
         </Container>
       </Section>
-      <CtaRibbon locale={locale} topTone="surface" page="book" />
+      <CtaRibbon locale={locale} page="book" />
     </>
   );
 }

@@ -19,3 +19,16 @@ export function alternateTones<K extends string>(
   }
   return tones;
 }
+
+/**
+ * The tone each section paints (spec 010, phase 2): the background set an editor picked for
+ * it, else the tone it was designed with.
+ */
+export function sectionTones<K extends string>(
+  designed: Record<K, SectionTone>,
+  picks: Partial<Record<string, string>> = {},
+): Record<K, SectionTone> {
+  const tones = {} as Record<K, SectionTone>;
+  for (const key of Object.keys(designed) as K[]) tones[key] = picks[key] ?? designed[key];
+  return tones;
+}

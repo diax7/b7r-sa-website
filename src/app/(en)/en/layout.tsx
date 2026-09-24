@@ -5,7 +5,7 @@ import { SiteDocument } from '@/app/site-document';
 import { getNavigation, getSiteSettings } from '@/lib/cms';
 import { localeEnabled } from '@/lib/cms/settings';
 import { LOCALES } from '@/lib/i18n';
-import { BRAND_PRIMARY_HEX } from '@/lib/tokens';
+import { getAppearance, siteViewport } from '@/modules/brand';
 import { DraftBar } from '@/modules/core/draft-bar';
 import { rootMetadata } from '@/modules/core/seo/metadata';
 
@@ -16,11 +16,9 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export const revalidate = 60;
 
-export const viewport: Viewport = {
-  width: 'device-width',
-  initialScale: 1,
-  themeColor: BRAND_PRIMARY_HEX,
-};
+export function generateViewport(): Promise<Viewport> {
+  return siteViewport();
+}
 
 /**
  * Root layout of every English page (ADR-043): a second root layout, so `/en/*` is a real
@@ -35,13 +33,18 @@ export default async function EnglishLayout({ children }: { children: ReactNode 
     console.error('The site is not in English yet: /en answers 404 until the English seed runs');
     notFound();
   }
-  const [site, navigation] = await Promise.all([getSiteSettings('en'), getNavigation('en')]);
+  const [site, navigation, appearance] = await Promise.all([
+    getSiteSettings('en'),
+    getNavigation('en'),
+    getAppearance(),
+  ]);
   return (
     <SiteDocument
       locale="en"
       locales={LOCALES}
       site={site}
       navigation={navigation}
+      appearance={appearance}
       banner={<DraftBar locale="en" />}
     >
       {children}

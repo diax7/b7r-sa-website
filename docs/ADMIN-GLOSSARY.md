@@ -67,6 +67,23 @@ test refuses (translations of a Latin term, or synonyms of the settled word).
 | The site | line under the title | السطر تحت العنوان |  | العنوان الفرعي |  |
 | The site | tagline | الجملة التعريفية |  | الشعار النصي، السطر التعريفي |  |
 | The site | brand | العلامة |  | البراند، الماركة |  |
+| The site | appearance | المظهر |  | الثيم، السمة | How the site looks (spec 010): the colours, the typeface, the logo, the backgrounds. Its words are «العلامة», in the site settings. |
+| The site | brand colour (one of the five set by hand) | لون العلامة |  |  | Primary, primary dark, accent, navy and ink; every other colour of the site is computed from them. |
+| The site | derived colour | لون مشتق |  | لون فرعي | Computed from a brand colour (the hover blue, the grey sections, the hairlines); never «درجة», which is the visibility score. |
+| The site | computed (a derived colour following its brand colour) | محسوب |  |  |  |
+| The site | set by hand (a derived colour held at a value) | مثبّت يدوياً |  |  |  |
+| The site | designed value (a derived colour as shipped) | قيمة مصمّمة |  |  | The shipped hairline, secondary text and badge colours: kept until their brand colour changes. |
+| The site | contrast | التباين |  |  | Written as a ratio in Western digits, 4.5:1; the check under the colours reads every pair the site puts together. |
+| The site | does not follow (the appearance) | لا يتبع المظهر |  |  | An image or file still holding the old colours after a change: the list on the Appearance screen. |
+| The site | typeface | الخط |  | الفونت، نوع الخط |  |
+| The site | logo | الشعار |  | اللوجو، اللوغو |  |
+| The site | background (a set: the colour, its text and its button) | خلفية |  | نظام الألوان | A section picks one by name; the text and the button on it come with it. |
+| The site | gradient | تدرّج |  | جريدينت |  |
+| The site | bloom (a soft patch of colour in a gradient) | بقعة لون |  | فقاعة، دائرة لونية |  |
+| The site | white button (white with primary text, on a dark background) | الزر الأبيض |  | الزر المعكوس | The call to action on a dark background, as on the bottom banner. |
+| The site | built from the brand (a background that follows the brand colours) | من ألوان العلامة |  |  | White, light grey and deep sea: they change with the brand colours and cannot be deleted. |
+| The site | grain (the fine texture over a gradient) | حبيبات |  | نويز، تشويش |  |
+| The site | the section's own (background, as the section was designed) | خلفية القسم الأصلية |  | الخلفية الافتراضية | The first choice of every section's background picker: white or light grey, as that section always had. |
 | The site | designer | المصمّم |  | أداة التصميم |  |
 | The site | calculator | الحاسبة |  | الآلة الحاسبة |  |
 | The site | welcome credit | الرصيد الترحيبي |  | رصيد الترحيب، الرصيد المجاني |  |

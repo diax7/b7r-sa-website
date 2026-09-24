@@ -216,6 +216,166 @@ export const adminStrings = {
       en: 'Meet link: {link}',
     } as Record<string, string>,
   },
+  appearance: {
+    /** The five brand colours inside a sentence ("Choose a darker {colour}"). */
+    colours: {
+      primary: 'primary',
+      primaryDark: 'primary dark',
+      accent: 'accent',
+      navy: 'navy',
+      ink: 'ink',
+    },
+    /** The derived colours: the strip's names. */
+    derived: {
+      primaryHover: 'Primary under the pointer',
+      accentTint: 'Accent tint',
+      accentOnTint: 'Accent on its tint',
+      ground: 'Grey sections',
+      border: 'Hairlines',
+      textMuted: 'Secondary text',
+    },
+    /** The derived colours inside a sentence. */
+    derivedInSentence: {
+      primaryHover: 'primary under the pointer',
+      accentTint: 'accent tint',
+      accentOnTint: 'accent on its tint',
+      ground: 'grey sections',
+      border: 'hairlines',
+      textMuted: 'secondary text',
+    },
+    strip: {
+      title: 'Derived colours',
+      lead: 'Computed from the brand colours as you change them. Set one by hand only when its computed colour is wrong for the site.',
+      computed: 'Computed',
+      designed: 'Designed value',
+      byHand: 'Set by hand',
+      from: 'From the {colour}',
+      designedNote: 'Kept until the {colour} changes',
+      setByHand: 'Set it by hand',
+      reset: 'Reset it',
+      valueLabel: '{name}: the value set by hand',
+      waiting: 'Waiting for a valid brand colour',
+    },
+    verdict: {
+      title: 'Contrast check',
+      lead: 'Every pair of colours the site puts together, as the colours above stand now.',
+      allPass: 'Every pair passes: saving keeps the site readable.',
+      failing: (n: number) =>
+        n === 1
+          ? '1 pair falls short: saving is refused until it passes.'
+          : `${n} pairs fall short: saving is refused until they pass.`,
+      passes: 'Passes',
+      short: 'Too low',
+      needs: 'needs {ratio}',
+    },
+    /** Every pair the check reads (`src/modules/brand/pairs.ts`), where it shows on the site. */
+    pairs: {
+      buttonPrimary: 'White text on the primary (the buttons, the bottom banner)',
+      buttonPrimaryHover: 'White text on a button under the pointer',
+      buttonSecondary: 'Primary text on the page (links, outline buttons)',
+      buttonInverseHover: 'Primary text on the accent tint (a light button under the pointer)',
+      badgeAccent: 'Accent text on its tint (the badges)',
+      bodyOnSurface: 'Body text on the page',
+      bodyOnGround: 'Body text on the grey sections',
+      mutedOnSurface: 'Secondary text on the page',
+      mutedOnGround: 'Secondary text on the grey sections',
+      footerOnNavy: 'White text on the footer',
+      ribbonOnPrimaryDark: 'White text on the primary dark',
+      linkOnGround: 'Links on the grey sections',
+      accentTintOnNavy: 'Secondary text and links on the deep sea background',
+    },
+    /** A refused save: the pair, what it reads, what it needs, and the one change that fixes it. */
+    refusal: {
+      darker: '{pair} reads {got} and needs {wanted}. Choose a darker {colour}.',
+      lighter: '{pair} reads {got} and needs {wanted}. Choose a lighter {colour}.',
+    },
+    /** The same on a colour set by hand, which can also be reset to what the site computes. */
+    pinRefusal: {
+      darker: '{pair} reads {got} and needs {wanted}. Choose a darker {colour}, or reset it.',
+      lighter: '{pair} reads {got} and needs {wanted}. Choose a lighter {colour}, or reset it.',
+    },
+    more: 'The contrast check lists the rest.',
+    notAColour: 'Write the colour as #1f6feb: a hash, then six digits or letters from a to f.',
+    typefacePreview: 'Design your product; we print it and deliver it to your customer.',
+    /** The background sets (phase 1c): the three built from the brand, the preview, the refusals. */
+    surfaces: {
+      builtInTitle: 'Built from the brand colours',
+      builtInLead: 'These change with the brand colours above and cannot be deleted.',
+      builtIn: {
+        surface: 'White',
+        ground: 'Light grey',
+        'deep-sea': 'Deep sea',
+      },
+      preview: {
+        heading: 'A heading on this background',
+        text: 'Body text as a visitor reads it.',
+        muted: 'Secondary text beside it.',
+        link: 'A link',
+        button: 'Call to action',
+      },
+      roles: {
+        text: 'Text',
+        textMuted: 'Secondary text',
+        link: 'Links',
+      },
+      weakest: 'weakest {ratio}',
+      waiting: 'The preview shows once every colour of this background is a colour.',
+      untitled: 'Background {n}',
+      /** A text colour of a background that does not read everywhere on it. */
+      refusal: {
+        darker:
+          '{role} reads {got} where this background is darkest and needs {wanted}. Choose a darker colour, or a lighter background.',
+        lighter:
+          '{role} reads {got} where this background is lightest and needs {wanted}. Choose a lighter colour, or a darker background.',
+      },
+      key: {
+        notSlug: 'Lowercase Latin letters, digits and hyphens, starting with a letter: sea-mist.',
+        taken: 'Another background already has this key.',
+        builtIn: 'This key belongs to a background built from the brand colours.',
+        fixed:
+          'A saved background keeps its key: the sections that use it name it. Change its name, or add a new background.',
+      },
+    },
+    background: {
+      own: "The section's own",
+      gone: 'The background “{key}” is no longer under Appearance; this section shows its own background until you choose another.',
+      unknown: "No background has the key “{key}”; choose one from the list, or the section's own.",
+    },
+    notFollowing: {
+      title: 'Does not follow',
+      lead: 'These keep the shipped colours after a change: each is a file, not a field.',
+      items: {
+        icons3d: {
+          name: 'The six 3D icons',
+          why: 'The blue is in their shading and no source files exist to recolour.',
+        },
+        panelLogo: {
+          name: 'The logo in the panel',
+          why: 'The panel shows an image of the logo; the site draws it in the brand colours.',
+        },
+        favicon: {
+          name: 'The old browser icon',
+          why: 'A file format the site cannot draw; newer browsers show the icon drawn in the brand colours.',
+        },
+        gonePage: {
+          name: 'The page for a removed address',
+          why: 'Served before the site loads, with the shipped colours in the code.',
+        },
+        shareImages: {
+          name: 'The share images',
+          why: 'Drawn once at each deploy with the shipped colours.',
+        },
+        videoPoster: {
+          name: 'The video still on the home page',
+          why: 'An image flattened onto the shipped grey.',
+        },
+        seaMist: {
+          name: 'The Sea mist background',
+          why: 'Its colours are fixed from the reference image; change them in its row under Backgrounds.',
+        },
+      },
+    },
+  },
   inbox: {
     /** The three actions above a message (ADR-061); the outcome beside the third. */
     replyWhatsApp: 'Reply on WhatsApp',
@@ -777,6 +937,158 @@ export const adminStringsAr: AdminStrings = {
     reminderLink: {
       ar: 'رابط Meet: {link}',
       en: 'Meet link: {link}',
+    },
+  },
+  appearance: {
+    colours: {
+      primary: 'اللون الأساسي',
+      primaryDark: 'الأساسي الداكن',
+      accent: 'لون التمييز',
+      navy: 'الكحلي',
+      ink: 'لون النص',
+    },
+    derived: {
+      primaryHover: 'الأساسي تحت المؤشر',
+      accentTint: 'التمييز الفاتح',
+      accentOnTint: 'التمييز على لونه الفاتح',
+      ground: 'الأقسام الرمادية',
+      border: 'الخطوط الفاصلة',
+      textMuted: 'النص الثانوي',
+    },
+    derivedInSentence: {
+      primaryHover: 'الأساسي تحت المؤشر',
+      accentTint: 'التمييز الفاتح',
+      accentOnTint: 'التمييز على لونه الفاتح',
+      ground: 'الأقسام الرمادية',
+      border: 'الخطوط الفاصلة',
+      textMuted: 'النص الثانوي',
+    },
+    strip: {
+      title: 'الألوان المشتقة',
+      lead: 'تُحسب من ألوان العلامة كلما غيّرتها. ثبّت لوناً يدوياً فقط إذا لم يناسب الموقع لونه المحسوب.',
+      computed: 'محسوب',
+      designed: 'قيمة مصمّمة',
+      byHand: 'مثبّت يدوياً',
+      from: 'من {colour}',
+      designedNote: 'تبقى حتى يتغيّر {colour}',
+      setByHand: 'ثبّته يدوياً',
+      reset: 'أعِده',
+      valueLabel: '{name}: القيمة المثبّتة يدوياً',
+      waiting: 'بانتظار لون علامة صالح',
+    },
+    verdict: {
+      title: 'فحص التباين',
+      lead: 'كل زوج من الألوان يجمعه الموقع، بالألوان المختارة أعلاه الآن.',
+      allPass: 'تنجح الأزواج كلها: يبقى الموقع مقروءاً بعد الحفظ.',
+      failing: (n: number) =>
+        n === 1
+          ? 'زوج واحد دون الحد: يُرفض الحفظ حتى ينجح.'
+          : `${arabicCount(n, { one: 'زوج واحد', two: 'زوجان', few: 'أزواج', many: 'زوجاً' })} دون الحد: يُرفض الحفظ حتى تنجح كلها.`,
+      passes: 'ناجح',
+      short: 'منخفض',
+      needs: 'المطلوب {ratio}',
+    },
+    pairs: {
+      buttonPrimary: 'النص الأبيض على اللون الأساسي (الأزرار وشريط الدعوة)',
+      buttonPrimaryHover: 'النص الأبيض على الزر تحت المؤشر',
+      buttonSecondary: 'النص الأساسي على الصفحة (الروابط والأزرار المفرّغة)',
+      buttonInverseHover: 'النص الأساسي على التمييز الفاتح (الزر الفاتح تحت المؤشر)',
+      badgeAccent: 'نص التمييز على لونه الفاتح (الشارات)',
+      bodyOnSurface: 'نص المحتوى على الصفحة',
+      bodyOnGround: 'نص المحتوى على الأقسام الرمادية',
+      mutedOnSurface: 'النص الثانوي على الصفحة',
+      mutedOnGround: 'النص الثانوي على الأقسام الرمادية',
+      footerOnNavy: 'النص الأبيض على التذييل',
+      ribbonOnPrimaryDark: 'النص الأبيض على الأساسي الداكن',
+      linkOnGround: 'الروابط على الأقسام الرمادية',
+      accentTintOnNavy: 'النص الثانوي والروابط على خلفية أعماق البحر',
+    },
+    refusal: {
+      darker: '{pair}: التباين {got} والمطلوب {wanted}. غيّر {colour} إلى لون أغمق.',
+      lighter: '{pair}: التباين {got} والمطلوب {wanted}. غيّر {colour} إلى لون أفتح.',
+    },
+    pinRefusal: {
+      darker: '{pair}: التباين {got} والمطلوب {wanted}. غيّر {colour} إلى لون أغمق، أو أعِده.',
+      lighter: '{pair}: التباين {got} والمطلوب {wanted}. غيّر {colour} إلى لون أفتح، أو أعِده.',
+    },
+    more: 'يعرض فحص التباين البقية.',
+    notAColour: 'اكتب اللون بصيغة #1f6feb: علامة # ثم ستة أرقام أو حروف من a إلى f.',
+    typefacePreview: 'صمّم منتجك، ونطبعه ونوصله لعميلك.',
+    surfaces: {
+      builtInTitle: 'من ألوان العلامة',
+      builtInLead: 'تتغيّر مع ألوان العلامة أعلاه، ولا يمكن حذفها.',
+      builtIn: {
+        surface: 'أبيض',
+        ground: 'رمادي فاتح',
+        'deep-sea': 'أعماق البحر',
+      },
+      preview: {
+        heading: 'عنوان على هذه الخلفية',
+        text: 'نص المحتوى كما يقرؤه الزائر.',
+        muted: 'نص ثانوي بجانبه.',
+        link: 'رابط',
+        button: 'زر الدعوة',
+      },
+      roles: {
+        text: 'النص',
+        textMuted: 'النص الثانوي',
+        link: 'الروابط',
+      },
+      weakest: 'أضعف تباين {ratio}',
+      waiting: 'تظهر المعاينة حين تكتمل ألوان هذه الخلفية كلها.',
+      untitled: 'خلفية {n}',
+      refusal: {
+        darker:
+          '{role}: أضعف تباين {got} حيث تغمق الخلفية، والمطلوب {wanted}. اختر لوناً أغمق أو خلفية أفتح.',
+        lighter:
+          '{role}: أضعف تباين {got} حيث تفتح الخلفية، والمطلوب {wanted}. اختر لوناً أفتح أو خلفية أغمق.',
+      },
+      key: {
+        notSlug: 'حروف لاتينية صغيرة وأرقام وشرطات، تبدأ بحرف: sea-mist.',
+        taken: 'مفتاح تستخدمه خلفية أخرى.',
+        builtIn: 'هذا المفتاح لخلفية من ألوان العلامة.',
+        fixed:
+          'مفتاح الخلفية ثابت بعد حفظها، فالأقسام التي تستخدمها تسمّيها به. غيّر اسمها، أو أضف خلفية جديدة.',
+      },
+    },
+    background: {
+      own: 'خلفية القسم الأصلية',
+      gone: 'الخلفية «{key}» لم تعد في المظهر؛ يظهر هذا القسم بخلفيته الأصلية حتى تختار غيرها.',
+      unknown: 'لا توجد خلفية بالمفتاح «{key}»؛ اختر واحدة من القائمة، أو خلفية القسم الأصلية.',
+    },
+    notFollowing: {
+      title: 'لا يتبع المظهر',
+      lead: 'تبقى هذه على الألوان الأصلية بعد أي تغيير: كل منها ملف، لا حقل.',
+      items: {
+        icons3d: {
+          name: 'الأيقونات الثلاثية الأبعاد الست',
+          why: 'الأزرق جزء من ظلالها، ولا توجد ملفات مصدر لإعادة تلوينها.',
+        },
+        panelLogo: {
+          name: 'الشعار في اللوحة',
+          why: 'تعرض اللوحة صورة للشعار، أما الموقع فيرسمه بألوان العلامة.',
+        },
+        favicon: {
+          name: 'أيقونة المتصفح القديمة',
+          why: 'ملف بصيغة لا يرسمها الموقع؛ تعرض المتصفحات الأحدث الأيقونة مرسومة بألوان العلامة.',
+        },
+        gonePage: {
+          name: 'صفحة الرابط المحذوف',
+          why: 'تُعرض قبل تحميل الموقع، وألوانها الأصلية مكتوبة في الشيفرة.',
+        },
+        shareImages: {
+          name: 'صور المشاركة',
+          why: 'تُرسم مرة عند كل نشر للموقع بالألوان الأصلية.',
+        },
+        videoPoster: {
+          name: 'صورة الفيديو في الصفحة الرئيسية',
+          why: 'صورة مدموجة على الرمادي الأصلي.',
+        },
+        seaMist: {
+          name: 'خلفية رذاذ البحر',
+          why: 'ألوانها ثابتة من الصورة المرجعية؛ غيّرها من صفّها في تبويب الخلفيات.',
+        },
+      },
     },
   },
   inbox: {

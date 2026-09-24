@@ -2,7 +2,7 @@
  * Derives `public/` from `resources/` (ADR-002). Idempotent; run with `pnpm assets`.
  *
  * - fonts:    see scripts/subset-fonts.sh (subset woff2 -> public/fonts/)
- * - logos:    resources/brand/logo/*.png             -> public/images/logo/ (+ app icons)
+ * - logos:    resources/brand/logo/*.png             -> public/images/logo/ (+ favicon.ico)
  * - products: resources/products/{slug}/*.jpg        -> public/images/products/{slug}/ (1:1)
  * - badges:   payment + trust + misk                 -> public/images/badges/
  * - icons-3d: resources/icons-3d/*.jpg (not sheet)   -> public/images/icons-3d/
@@ -30,49 +30,23 @@ function ensure(dir: string) {
 
 async function logos() {
   ensure(pub('images', 'logo'));
-  for (const f of ['logo.png', 'logo-white.png', 'logo-black.png', 'small-icon.png']) {
-    copyFileSync(res('brand', 'logo', f), pub('images', 'logo', f));
-  }
-  // The icon is the Organization logo in every page's JSON-LD and a 36 px mark in the panel
-  // and the admin: 512 px, palette PNG (two flat colours), about 16 KB against the 223 KB
-  // source (site audit 2026-09-18, item 15).
+  // The panel's logo and the share images' (both raster, on the "does not follow" list); the
+  // site draws its logo and its app icons from the traced paths (spec 010, phase 1d).
+  copyFileSync(res('brand', 'logo', 'logo.png'), pub('images', 'logo', 'logo.png'));
+  // The panel's 36 px mark and the admin's favicon: 512 px, palette PNG (two flat colours),
+  // about 16 KB against the 223 KB source (site audit 2026-09-18, item 15).
   await sharp(res('brand', 'logo', 'icon.png'))
     .resize(512, 512)
     .png({ palette: true, quality: 90, compressionLevel: 9 })
     .toFile(pub('images', 'logo', 'icon.png'));
-  // Header lockups at 2x of their rendered height (36 px desktop) keep bytes small.
-  await sharp(res('brand', 'logo', 'logo.png'))
-    .resize({ height: 144 })
-    .png()
-    .toFile(pub('images', 'logo', 'logo-header.png'));
-  await sharp(res('brand', 'logo', 'logo-white.png'))
-    .resize({ height: 160 })
-    .png()
-    .toFile(pub('images', 'logo', 'logo-white-footer.png'));
-  // App Router file-convention icons (served as <link rel="icon"> / apple-touch-icon). The
-  // favicon is fetched at high priority on every page, so it stays small (96 px).
-  await sharp(res('brand', 'logo', 'icon.png'))
-    .resize(96, 96)
-    .png()
-    .toFile(join(root, 'src', 'app', 'icon.png'));
-  await sharp(res('brand', 'logo', 'icon.png'))
-    .resize(180, 180)
-    .flatten({ background: '#ffffff' })
-    .png()
-    .toFile(join(root, 'src', 'app', 'apple-icon.png'));
-  // Manifest icons (BRD 7.3) and a classic favicon.ico (a 32 px PNG in an ICO container).
-  ensure(pub('icons'));
-  for (const size of [192, 512]) {
-    await sharp(res('brand', 'logo', 'icon.png'))
-      .resize(size, size)
-      .png({ palette: true, quality: 90, compressionLevel: 9 })
-      .toFile(pub('icons', `icon-${size}.png`));
-  }
+  // The classic favicon.ico (a 32 px PNG in an ICO container), a format Next cannot draw, for
+  // a client that asks for it by path. It sits in `public/`, so no page links it: the tab icon
+  // is the one `src/app/icon.tsx` draws in the brand's colours.
   const png32 = await sharp(res('brand', 'logo', 'icon.png'))
     .resize(32, 32)
     .png()
     .toBuffer();
-  writeFileSync(join(root, 'src', 'app', 'favicon.ico'), icoFromPng(png32, 32));
+  writeFileSync(pub('favicon.ico'), icoFromPng(png32, 32));
 }
 
 /** ICO container around one PNG image (valid since Windows Vista; every browser reads it). */

@@ -83,6 +83,15 @@ scripts). The category gate (Performance ≥ 90) and the DevTools-throttled LCP 
 Amended 2026-09-13 (ADR-039): `/fonts/*` is served immutable for a year, so a changed font
 file takes a new name; the same path is never reused (RUNBOOK, fonts).
 
+Amended 2026-09-23 (spec 010, ADR-065): the Rayat fallback's metrics were approximations
+(size-adjust 104%, ascent 96%, descent 30%). Measured instead, from HarfBuzz-shaped widths of
+the site's Arabic copy (85 percent) and a Latin line (15 percent) against Segoe UI and the
+face's own ascent and descent, they are 87.3%, 104.2% and 60.5%. With the font files held back
+800 ms so the page paints in the fallback first, home-page CLS was 0.094 with the old values,
+0.006 under the budget, and is 0.0003 with the measured ones (`e2e/appearance.spec.ts` records
+the value per family). The three curated alternates' fallbacks are measured the same way. No
+font file changed: the fallback is a `local()` face in `tokens.css`.
+
 ## ADR-011: Mobile menu sheet loads on first intent (2026-09-13)
 
 The Radix Dialog (focus trap, scroll lock, portal) costs ~15 kB gzip and is used only after a
@@ -2792,3 +2801,142 @@ merchant meets)" as «مقدّم الاستشارة», kept apart from the calen
 12/24 h toggle, guests, a week or column layout, a custom success URL, an Office 365 link
 of its own, host fields of our own, screenshots in the repository (a scratch folder outside
 it, linked from the PR).
+
+## ADR-065: The Appearance global: the brand as values, not literals (2026-09-22)
+
+**Context.** Every brand value is frozen at build time: the blues, the neutrals, the typeface
+and the logo live in `src/styles/tokens.css` and `src/styles/globals.css`, and changing one is
+a code change. Dhia asked for a screen in the panel that owns all of it, so that changing the
+blue once moves the whole site, with the gradient they liked registered there as one named
+background among others. Specified in `specs/010-brand-settings/spec.md`, approved 2026-09-22.
+
+**The decisions.** A background is a **set**, not a colour: the background, the text tone on
+it, the muted tone and the button variant that reads on it, because Shopify shipped exactly
+that model, is migrating merchants away from it, and its developer forum documents the
+clashing buttons that result. A few colours are set by hand and the rest derived, with each
+rule carrying its contrast requirement, so an unreadable pair cannot be produced by choosing a
+colour; an override that fails its requirement is refused, not warned. The typeface is a
+curated self-hosted list defaulting to ITF Rayat Round, whose licence permits serving only
+from b7r.sa. The global is named **Appearance** («المظهر») because Site settings already has a
+Brand section holding the brand's words, and the glossary forbids two concepts sharing a word.
+The panel's colours stay its own; its typeface follows the brand, since `tokens.css` is shared.
+
+**What the calibration changed.** Before `derive.ts` was written, every candidate rule was
+tested against the hex the site ships (`specs/010-brand-settings/calibration.md`). Only two
+reproduce exactly on a principled constant: `primary-hover` is primary multiplied by 0.84 in
+sRGB, and `accent-tint` is accent at 10 percent over the surface. `ground` reproduces on a
+fitted constant (0.041; a round 0.04 gives `#f6f8fc`). Four tokens are designed rather than
+computed and no rule reaches them: `border`, `text-muted`, `accent-on-tint` and `navy`.
+
+Two consequences for the model this document and the BRD describe. **`primary-dark` is a
+source, not a derivation**: at L 46.7 in OKLCH against primary's 47.0 it is the same
+lightness, so "primary darkened" was never the rule; it is the logo's second blue, and
+`ground` derives from it. **`navy` stays a source too**, though BRD §3.2 called it "(derived)":
+no sRGB multiple of primary can lift navy's red channel from 0 to 10. So the screen shows five
+pickers where Dhia approved four, and the footer will not follow a rebrand until navy is
+changed with it. Both are flagged for Dhia rather than decided silently.
+
+**Two errors found in the BRD, corrected in §3.2 with this ADR.** `--color-text-muted` was
+documented at 4.6:1 on white and measures 6.00:1, which is safe. `--color-accent` was
+documented at 3.5:1 and measures **3.20:1**, which is not: that figure is the stated reason
+accent is banned for body text on white and permitted at 24 px bold, and the true value clears
+the 3:1 large-text floor by 0.20 rather than the 0.50 the document implied. The rule it
+justifies must not be relaxed on the strength of the written number.
+
+**The gradient and the BRD.** §3.2's "never gradients between hues, a single flat colour per
+surface" gains a second exception beside ADR-054's button sheen: a background set may be a
+gradient between the brand's own blues, with an optional grain overlay. Gradients between
+unrelated hues stay banned.
+
+**How it reaches a page.** No stylesheet is restructured. Custom properties inherit and
+`var()` substitutes on the element the declaration applies to, so a scoped
+`[data-surface] { --color-surface: … }` is all a per-section background needs. `SiteDocument`
+emits one `:root:root` block, which outranks Tailwind's `:root, :host` whichever way Next
+hoists the stylesheet. An earlier draft proposed moving the tokens to `@theme inline`; that
+emits no `--color-*` property at all and would have deleted the variable out from under 43
+hand-written rules, the body background and both typefaces among them.
+
+**Failure behaviour.** `brandCss` runs while every page and the global 404 render, so it never
+throws: colours are parsed at the boundary, checked again on the way into the stylesheet, and
+the whole call sits inside a catch. A brand that fails any pair falls back to the shipped
+palette and logs which pair failed and by how much. Two gates hold it: the emitted block is
+compared token by token against a checked-in fixture of `globals.css` at 9989617, and every
+`var(--…)` the three stylesheets read must be defined by a `@theme` block, by the emitted
+block, or by a designed allowlist of the properties Payload and Radix provide at runtime.
+
+
+**Amended 2026-09-23 (phase 1b review).** The three designed colours are no longer stored as
+"factory pins": a designed value applies while every brand colour its rule reads is still the
+shipped one, so a change and its undo cannot lose it. Only the colours set by hand are stored,
+as a list, because Payload hands a validator the save deep-merged over the stored document and
+a merge unions an object's keys but replaces a list.
+
+**Amended 2026-09-23 (phase 1c).** Two corrections to the text above, from the CTO's review:
+
+- *How a section reaches a page.* A scoped `--color-surface` is not all a section needs: it
+  would repaint every card inside the section. A section paints its own `--section-bg` and
+  `--section-image` and sets the text, link, border and focus colours for its words; every
+  island inside it (a white or grey card, a primary button) reads the page's tones again from
+  copies declared once at the root (`--page-text` and its kin), which no section can reach.
+  The rules that set `color` sit in the components layer so a text utility still wins; the dark
+  set's white button is unlayered so it beats the button's own `text-white`.
+- *The gradient.* Dhia chose (2026-09-23) that Sea mist keeps the colours of the reference
+  image rather than following the brand, so it is not "a gradient between the brand's own
+  blues": it is a fixed set in the library, named on the "does not follow" panel, and its deep
+  bloom was lightened (#00609b to #4f9cd7, hue and chroma kept) until its text, secondary text
+  and links read 4.5:1 at every point with the grain counted. Three sets are built from the
+  brand instead (white, light grey, deep sea) and follow it; they cannot be deleted. A set's
+  contrast check samples the whole field from edge to edge, grain included, not only its
+  stops. The library accepts a gradient between any colours: BRD 3.2's ban on gradients
+  between unrelated hues is the admin's to keep, not a validator's, since a rule that judged
+  "related" hues would refuse good sets as often as bad ones.
+
+**Amended 2026-09-23 (phase 1d).** What the brand reaches outside the stylesheet:
+
+- *The logo* is drawn, not shown: `scripts/trace-logo.py` traces `logo.png` and `icon.png` into
+  one path per blue at whole units, written as two symbols of a static sprite
+  (`public/images/logo/sprite.svg`, about 14 KB, its URL carrying a hash of its contents) and
+  drawn with `<use href="…sprite.svg?v=…#b7r-logo">` wherever the shell shows it, each path
+  filled with `var(--logo-*, var(--color-*))`. Custom properties inherit into an external
+  `<use>` (checked in Chromium, Firefox and WebKit), so the drawing takes the page's tokens; the
+  footer sets the three `--logo-*` to white. The browser caches the sprite once: no path data
+  rides in a page's HTML or JavaScript (an e2e reads the home page and every script it loads).
+  The mark's paths are also in `mark-paths.ts`, server only, for the icon routes. An upload in
+  the Logo tab replaces the drawing in that place and keeps its own colours. Dhia chose tracing
+  (2026-09-23) over keeping the PNGs; the trace is Dhia's to confirm by eye (BRD 3.1, amended).
+- *The icons* are routes: `src/app/icon.tsx` draws the mark at 32, 192 and 512 px (no other
+  size is drawn; `/icon/99` is a 404) and `apple-icon.tsx` at 180 px on the page's white, in
+  the painted accent and primary dark. The manifest points at them, and it and the viewport's
+  `theme-color` read the painted primary. An Appearance save revalidates the icon routes with
+  the pages. `icon` and `apple-icon` are code-owned top-level segments, since the proxy would
+  otherwise take them for page slugs.
+- *The e-mails* (a booking, a contact message, a password reset) read the painted colours when
+  they are sent (`readMailPalette`, which takes the sender's Payload so the reset e-mail can call
+  it from inside the config graph); a failed read sends the mail in the shipped colours and
+  logs a warning.
+- *Still raster, and listed as not following:* `favicon.ico` (a format Next cannot draw; in
+  `public/`, so no page links it and the drawn 32 px icon is the tab's only candidate), the
+  panel's logo, the share images, the 410 page, the 3D icons and the video poster.
+
+**Amended 2026-09-24 (phase 2).** A section picks its background:
+
+- *The pick* is a non-localized `background` field holding a set's key, last in each of the
+  eight home tabs whose section paints a background of its own and in every page block; empty
+  is the section's own. The picker is a server component that reads the library (editors
+  cannot open the Appearance global) and draws the section's own, the three sets built from the
+  brand and the library's as swatches in their own colours. A key no set has is refused on save.
+- *A deleted set* is allowed: the content readers hand the mappers the keys of the sets that
+  exist, and a section naming any other paints the background it was designed with, never a
+  blank one; the picker names the missing set. A saved set's key is fixed instead (read-only in
+  the panel, refused on save), since changing it would do the same thing silently. An earlier
+  draft refused deleting a set in use; it had to read the home global's drafts and every page's
+  versions, and the fallback makes it unnecessary.
+- *The ribbon's top wave* no longer fills the section above's colour into the ribbon (it could
+  not match a gradient): the ribbon overlaps that section by the wave's height, the section
+  grows at its foot by as much (`globals.css`), and the wave rises from the band through a
+  see-through strip, so whatever the section paints shows above it. The page keeps its height,
+  the wave covers no words, and on a solid background a still frame matches the old seam
+  pixel for pixel (the solid layer follows the lower of the two curves). `topTone` is gone.
+- *A see-through island on a set* (the contact block's tinted booking card) composites over the
+  page's white, as it does on the page; over deep sea the tint read as a mid blue under the
+  page's grey words. The sweep that found it paints every pickable section with each set.

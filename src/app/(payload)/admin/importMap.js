@@ -19,6 +19,7 @@ import { BoldFeatureClient as BoldFeatureClient_e70f5e05f09f93e00b997edb1ef0c864
 import { ItalicFeatureClient as ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { HeadingFeatureClient as HeadingFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { ParagraphFeatureClient as ParagraphFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
+import { BackgroundPicker as BackgroundPicker_d38aaafcca7e4a5bada8b42a4b7d4cce } from '@/modules/brand/admin/background-picker'
 import { BoolCell as BoolCell_ddc0406e32e5001e13c7589ed2437e2f } from '@/modules/cms/admin/fields/bool-cell'
 import { IconSelect as IconSelect_864a7deb37ea334ede14512c58d1df70 } from '@/modules/cms/admin/fields/icon-select'
 import { PlatformSelect as PlatformSelect_13d4e9c129758ea64a712b0ddc9960bb } from '@/modules/cms/admin/fields/platform-select'
@@ -45,6 +46,14 @@ import { StrikethroughFeatureClient as StrikethroughFeatureClient_e70f5e05f09f93
 import { UnderlineFeatureClient as UnderlineFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { MessageActions as MessageActions_10261637d5499b8c795d9e55ab437e8a } from '@/modules/inbox/admin/message-actions'
 import { ColorField as ColorField_282b4ad6df406826ab892b1c7d71f9f7 } from '@/modules/cms/admin/fields/color-field'
+import { DerivedStrip as DerivedStrip_a89230fdd53233a1f558fa66d3abf1c1 } from '@/modules/brand/admin/derived-strip'
+import { ContrastVerdict as ContrastVerdict_375c40cc871e97955b0982a4c68358f6 } from '@/modules/brand/admin/contrast-verdict'
+import { TypefacePreview as TypefacePreview_7130134ce9a3d400dd8d5249923bdb3c } from '@/modules/brand/admin/typeface-preview'
+import { BuiltInSurfaces as BuiltInSurfaces_6b40d6842d3c786a84c3123c1a4eaaa5 } from '@/modules/brand/admin/built-in-surfaces'
+import { SurfaceKeyField as SurfaceKeyField_a73a71edb5bb089cfcbc949599b51cf1 } from '@/modules/brand/admin/surface-key-field'
+import { SurfacePreview as SurfacePreview_a2089351e47fad703546f589e14aa691 } from '@/modules/brand/admin/surface-preview'
+import { SurfaceRowLabel as SurfaceRowLabel_5b189d1abffc7fc4a773414c7d6ecbfc } from '@/modules/brand/admin/surface-row-label'
+import { NotFollowingPanel as NotFollowingPanel_b3bac716dce56d5b9d37f5a346d45535 } from '@/modules/brand/admin/not-following-panel'
 import { FactsSheetField as FactsSheetField_4b2565ddfaf33dc17fa1b7f1540c1828 } from '@/modules/ai-content/admin/facts-sheet-field'
 import { Nav as Nav_3d0835c3ea58bf93ee82386aa839961f } from '@/modules/cms/admin/nav/nav'
 import { Icon as Icon_f980e649448e4d4ce46e5f6506a165f6 } from '@/modules/cms/components/logo'
@@ -81,6 +90,7 @@ export const importMap = {
   "@payloadcms/richtext-lexical/client#ItalicFeatureClient": ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@payloadcms/richtext-lexical/client#HeadingFeatureClient": HeadingFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@payloadcms/richtext-lexical/client#ParagraphFeatureClient": ParagraphFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
+  "@/modules/brand/admin/background-picker#BackgroundPicker": BackgroundPicker_d38aaafcca7e4a5bada8b42a4b7d4cce,
   "@/modules/cms/admin/fields/bool-cell#BoolCell": BoolCell_ddc0406e32e5001e13c7589ed2437e2f,
   "@/modules/cms/admin/fields/icon-select#IconSelect": IconSelect_864a7deb37ea334ede14512c58d1df70,
   "@/modules/cms/admin/fields/platform-select#PlatformSelect": PlatformSelect_13d4e9c129758ea64a712b0ddc9960bb,
@@ -107,6 +117,14 @@ export const importMap = {
   "@payloadcms/richtext-lexical/client#UnderlineFeatureClient": UnderlineFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@/modules/inbox/admin/message-actions#MessageActions": MessageActions_10261637d5499b8c795d9e55ab437e8a,
   "@/modules/cms/admin/fields/color-field#ColorField": ColorField_282b4ad6df406826ab892b1c7d71f9f7,
+  "@/modules/brand/admin/derived-strip#DerivedStrip": DerivedStrip_a89230fdd53233a1f558fa66d3abf1c1,
+  "@/modules/brand/admin/contrast-verdict#ContrastVerdict": ContrastVerdict_375c40cc871e97955b0982a4c68358f6,
+  "@/modules/brand/admin/typeface-preview#TypefacePreview": TypefacePreview_7130134ce9a3d400dd8d5249923bdb3c,
+  "@/modules/brand/admin/built-in-surfaces#BuiltInSurfaces": BuiltInSurfaces_6b40d6842d3c786a84c3123c1a4eaaa5,
+  "@/modules/brand/admin/surface-key-field#SurfaceKeyField": SurfaceKeyField_a73a71edb5bb089cfcbc949599b51cf1,
+  "@/modules/brand/admin/surface-preview#SurfacePreview": SurfacePreview_a2089351e47fad703546f589e14aa691,
+  "@/modules/brand/admin/surface-row-label#SurfaceRowLabel": SurfaceRowLabel_5b189d1abffc7fc4a773414c7d6ecbfc,
+  "@/modules/brand/admin/not-following-panel#NotFollowingPanel": NotFollowingPanel_b3bac716dce56d5b9d37f5a346d45535,
   "@/modules/ai-content/admin/facts-sheet-field#FactsSheetField": FactsSheetField_4b2565ddfaf33dc17fa1b7f1540c1828,
   "@/modules/cms/admin/nav/nav#Nav": Nav_3d0835c3ea58bf93ee82386aa839961f,
   "@/modules/cms/components/logo#Icon": Icon_f980e649448e4d4ce46e5f6506a165f6,

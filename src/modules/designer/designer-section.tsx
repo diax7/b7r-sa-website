@@ -1,5 +1,5 @@
 import { Container } from '@/components/shared/container';
-import { Section } from '@/components/shared/section';
+import { Section, type SectionTone } from '@/components/shared/section';
 import { SectionHeader } from '@/components/shared/section-header';
 import { copyFor } from '@/content/copy';
 import { getHome, getProduct, getProducts, getSiteSettings } from '@/lib/cms';
@@ -17,7 +17,13 @@ const DEFAULT_SLUG = 'tee-essential';
  * static preview (default mockup + labels) so the page is complete without JS; the Konva
  * island replaces the preview when the section nears the viewport.
  */
-export async function DesignerSection({ locale }: { locale: Locale }) {
+export async function DesignerSection({
+  locale,
+  tone = 'ground',
+}: {
+  locale: Locale;
+  tone?: SectionTone;
+}) {
   const [{ designer }, products, site] = await Promise.all([
     getHome(locale),
     getProducts(locale),
@@ -42,7 +48,7 @@ export async function DesignerSection({ locale }: { locale: Locale }) {
     <Section
       id="designer"
       reveal={false}
-      tone="ground"
+      tone={tone}
       aria-labelledby="designer-title"
       className="pb-28 lg:pb-24"
     >

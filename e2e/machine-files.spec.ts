@@ -60,13 +60,37 @@ test.describe('machine files (BRD 7.2, 7.3, 7.5, 7.6)', () => {
   test('the renders, icons and brand images are cached for a day; the fonts for a year', async ({
     request,
   }) => {
-    for (const path of ['/og/default.png', '/icons/icon-192.png', '/images/logo/icon.png']) {
+    for (const path of ['/og/default.png', '/icon/192', '/apple-icon', '/images/logo/icon.png']) {
       const res = await request.get(path);
       expect(res.status(), path).toBe(200);
       expect(res.headers()['cache-control'], path).toBe('public, max-age=86400');
     }
     const font = await request.get('/fonts/ITFRayatRound-Regular.woff2');
     expect(font.headers()['cache-control']).toBe('public, max-age=31536000, immutable');
+  });
+
+  // The traced logo is a static sprite drawn with `<use>` (spec 010, phase 1d): its path data
+  // rides in no page and no script, and the sprite itself is cached for a day.
+  test('the drawn logo lives in its sprite alone: no page or script carries its paths', async ({
+    request,
+  }) => {
+    const html = await (await request.get('/')).text();
+    const sprite = /\/images\/logo\/sprite\.svg\?v=[0-9a-f]{10}/.exec(html)?.[0];
+    expect(sprite, 'the header draws the sprite').toBeTruthy();
+    const res = await request.get(sprite!);
+    expect(res.status()).toBe(200);
+    expect(res.headers()['content-type']).toContain('image/svg+xml');
+    expect(res.headers()['cache-control']).toBe('public, max-age=86400');
+    // A stretch of the logo's first path: long enough to be the artwork and nothing else.
+    const signature = /<path[^>]* d="([^"]{40})/.exec(await res.text())?.[1];
+    expect(signature, 'the sprite holds path data').toBeTruthy();
+    expect(html.includes(signature!), 'the page carries the paths').toBe(false);
+    const scripts = [...html.matchAll(/src="(\/_next\/static\/[^"]+\.js)"/g)].map((m) => m[1]!);
+    expect(scripts.length).toBeGreaterThan(3);
+    for (const script of scripts) {
+      const code = await (await request.get(script)).text();
+      expect(code.includes(signature!), script).toBe(false);
+    }
   });
 
   test('robots.txt disallows everything on a non-production host', async ({ request }) => {
@@ -103,9 +127,14 @@ test.describe('machine files (BRD 7.2, 7.3, 7.5, 7.6)', () => {
     expect(manifest.dir).toBe('rtl');
     expect(manifest.display).toBe('browser');
     expect(manifest.theme_color.toLowerCase()).toBe('#0058b0');
+    // The icons are drawn from the mark in the brand's colours (spec 010); no other size is.
+    expect(manifest.icons.map((icon) => icon.src)).toEqual(['/icon/192', '/icon/512']);
     for (const icon of manifest.icons) {
-      expect((await request.get(icon.src)).status(), icon.src).toBe(200);
+      const drawn = await request.get(icon.src);
+      expect(drawn.status(), icon.src).toBe(200);
+      expect(drawn.headers()['content-type'], icon.src).toBe('image/png');
     }
+    expect((await request.get('/icon/99')).status(), '/icon/99').toBe(404);
     for (const path of ['/favicon.ico', '/og/default.png', '/og/products/hoodie.png']) {
       expect((await request.get(path)).status(), path).toBe(200);
     }

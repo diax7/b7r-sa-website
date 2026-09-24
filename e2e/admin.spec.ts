@@ -579,9 +579,9 @@ test.describe('CMS admin', () => {
       'aria-current',
       'page',
     );
-    // The Inbox section's messages and bookings, then home, pages, site settings, booking
-    // (ADR-062) and images.
-    await expect(flyout.locator('[role="menuitem"]')).toHaveCount(7);
+    // The Inbox section's messages and bookings, then home, pages, site settings, appearance
+    // (spec 010), booking (ADR-062) and images.
+    await expect(flyout.locator('[role="menuitem"]')).toHaveCount(8);
     expect(
       await page.evaluate(() => document.activeElement?.closest('[data-admin-flyout]') !== null),
     ).toBe(true);
@@ -685,6 +685,7 @@ test.describe('CMS admin', () => {
       await expect(editorNav.locator('#nav-pages')).toBeVisible();
       await expect(editorNav.locator('#nav-redirects')).toHaveCount(0);
       await expect(editorNav.locator('#nav-global-site-settings')).toHaveCount(0);
+      await expect(editorNav.locator('#nav-global-appearance')).toHaveCount(0);
       await expect(editorNav.locator('[data-admin-group="Visibility"]')).toHaveCount(0);
       // Users stays (an editor opens their own account), so Admin still lists it.
       await expect(editorNav.locator('[data-admin-group="Admin"] #nav-users')).toBeVisible();
@@ -2278,7 +2279,7 @@ test.describe('CMS admin', () => {
         const page = await html();
         const afterVideo = page.slice(page.indexOf('id="video"'));
         const next = afterVideo.match(
-          /<section data-tone="(\w+)"[^>]*id="(testimonials|integrations)"/,
+          /<section data-surface="([\w-]+)"[^>]*id="(testimonials|integrations)"/,
         );
         expect(next?.[1]).toBe('surface');
       } finally {

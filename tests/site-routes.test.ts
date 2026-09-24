@@ -114,6 +114,9 @@ describe('B0: the proxy and the (site) routes agree on the code-owned segments (
     expect(topLevelSlug('/about')).toBeNull();
     expect(topLevelSlug('/products/hoodie')).toBeNull();
     expect(topLevelSlug('/sitemap.xml')).toBeNull();
+    // The app icons have no extension, so they are named (spec 010).
+    expect(topLevelSlug('/apple-icon')).toBeNull();
+    expect(topLevelSlug('/icon')).toBeNull();
     expect(topLevelSlug('/')).toBeNull();
     expect(topLevelSlug('/creators')).toBe('creators');
     expect(topLevelSlug('/creators/')).toBe('creators');
@@ -129,6 +132,7 @@ describe('B0: the proxy and the (site) routes agree on the code-owned segments (
     expect(pageSlugProblem('products')?.en).toMatch(/reserved/);
     expect(pageSlugProblem('products')?.ar).toMatch(/محجوز/);
     expect(pageSlugProblem('en')?.en).toMatch(/reserved/);
+    expect(pageSlugProblem('apple-icon')?.en).toMatch(/reserved/);
     expect(pageSlugProblem('__404')).not.toBeNull();
     expect(pageSlugProblem(undefined)).not.toBeNull();
     expect(SLUG_SHAPE.test('no-such-page')).toBe(true);

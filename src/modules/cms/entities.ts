@@ -3,6 +3,7 @@ import { AiRuns } from '@/modules/ai-content/runs';
 import { AiSettings } from '@/modules/ai-content/settings';
 import { AiTopics } from '@/modules/ai-content/topics';
 import { Bookings } from '@/modules/bookings/collection';
+import { Appearance } from '@/modules/brand/global';
 import { Booking } from '@/modules/bookings/global';
 import { Authors } from '@/modules/cms/collections/authors';
 import { Categories } from '@/modules/cms/collections/categories';
@@ -57,6 +58,7 @@ export const COLLECTIONS: CollectionConfig[] = [
 export const GLOBALS: GlobalConfig[] = [
   Home,
   SiteSettings,
+  Appearance,
   Booking,
   SeoDefaults,
   AiSettings,

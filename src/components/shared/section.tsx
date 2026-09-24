@@ -1,7 +1,12 @@
 import type { ComponentPropsWithoutRef } from 'react';
 import { cn } from '@/lib/cn';
 
-export type SectionTone = 'surface' | 'ground';
+/**
+ * A section's background set, by key (spec 010, phase 1c): `surface` and `ground` are today's
+ * two tones, `deep-sea` the footer's navy, and any other key names a set of the Appearance
+ * global's library (Sea mist ships there). An unknown key paints the page's white.
+ */
+export type SectionTone = 'surface' | 'ground' | 'deep-sea' | (string & {});
 
 interface SectionProps extends ComponentPropsWithoutRef<'section'> {
   tone?: SectionTone;
@@ -13,13 +18,17 @@ interface SectionProps extends ComponentPropsWithoutRef<'section'> {
   reveal?: boolean;
 }
 
-/** Vertical rhythm and alternating background (§3.4). */
+/**
+ * Vertical rhythm and the section's background set (§3.4, spec 010). `data-surface` names
+ * the set; `globals.css` and the head's style block paint it: the background, its text, its
+ * links and its button, while the cards inside keep the page's tones.
+ */
 export function Section({ tone = 'surface', reveal = true, className, ...rest }: SectionProps) {
   return (
     <section
-      data-tone={tone}
+      data-surface={tone}
       data-reveal={reveal ? '' : undefined}
-      className={cn('section-pad', tone === 'ground' ? 'bg-ground' : 'bg-surface', className)}
+      className={cn('section-pad surface', className)}
       {...rest}
     />
   );
