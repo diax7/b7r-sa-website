@@ -152,9 +152,10 @@ under `resources/hero/examples` or a 2000 by 2000 product export under
 **Renditions (ADR-064).** Every media upload is encoded on upload into the ladder of
 `src/lib/renditions.ts` (ten widths, AVIF and WebP, `{stem}-{width}.{format}` beside the
 original) and the site loads those files from the storage CDN; the image optimizer serves
-only the `og:image` JPEG and the admin's fallback thumbnail. An upload in the admin takes a
-few seconds longer than before (twenty encodes, once); measure the first large one on the
-container and write the number here. Brand images (the logos, the badges, the video's
+only the `og:image` JPEG and the admin's fallback thumbnail. An upload in the admin waits
+for its twenty encodes: a 3000 by 2250 photo of 3.5 MB took 32 s on the CranL container
+(measured 2026-09-24, twice, 32.4 and 31.4 s), so an editor sees the save spin for about half a
+minute; a smaller photo takes less. Brand images (the logos, the badges, the video's
 poster) are plain files `pnpm assets` writes at 2x of the box they are shown in, through
 `<StaticImage>`; they never go through the optimizer.
 
