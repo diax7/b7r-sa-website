@@ -32,6 +32,20 @@ const withoutRowIds = (rows: unknown) =>
 const sidewaysOverflow = (page: Page) =>
   page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
 
+/**
+ * Waits for every running transition to land, so axe reads the colours an editor sees, never
+ * a blend mid-fade (the rail's flyout fades its entries' colours in).
+ */
+const transitionsLanded = (page: Page) =>
+  page.evaluate(() =>
+    Promise.all(
+      document
+        .getAnimations()
+        .filter((a) => a.effect?.getComputedTiming().endTime !== Infinity)
+        .map((a) => a.finished.catch(() => undefined)),
+    ),
+  );
+
 /** The colour of an element's `::after` (the active tab's bar); runs in the browser. */
 const barColour = (el: Element) => getComputedStyle(el, '::after').backgroundColor;
 
@@ -410,6 +424,7 @@ test.describe('CMS admin', () => {
     // and popup buttons, its engine, not the shell).
     const { AxeBuilder } = await import('@axe-core/playwright');
     const serious = async (...include: string[]) => {
+      await transitionsLanded(page);
       let builder = new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']);
       for (const sel of include) builder = builder.include(sel);
       return (await builder.analyze()).violations
@@ -1201,6 +1216,7 @@ test.describe('CMS admin', () => {
       await expect(nav).toHaveClass(/nav--nav-open/);
       const { AxeBuilder } = await import('@axe-core/playwright');
       const serious = async (...include: string[]) => {
+        await transitionsLanded(page);
         let builder = new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']);
         for (const sel of include) builder = builder.include(sel);
         return (await builder.analyze()).violations
@@ -1648,8 +1664,15 @@ test.describe('CMS admin', () => {
     // Ten tabs at 390 px: the strip is a horizontal scroller, the active tab reads in the text
     // colour with its bar in the Site blue (ADR-060), and the page never scrolls sideways.
     const strip = page.locator('.tabs-field__tabs-wrap').first();
-    const scrollable = await strip.evaluate((el) => el.scrollWidth > el.clientWidth + 8);
-    expect(scrollable, 'the tab strip overflows into a scroller').toBe(true);
+    // The strip's width is read once all ten tabs have rendered, and polled: a one-shot read
+    // before the last labels land sees a strip that still fits.
+    await expect(page.locator('.tabs-field__tab-button')).toHaveCount(10);
+    await expect
+      .poll(() => strip.evaluate((el) => el.scrollWidth > el.clientWidth + 8), {
+        ...POLL,
+        message: 'the tab strip overflows into a scroller',
+      })
+      .toBe(true);
     // The strip scrolls smoothly, so the position is read once the scroll has moved.
     await strip.evaluate((el) => {
       el.scrollLeft = el.scrollWidth;
@@ -1723,6 +1746,7 @@ test.describe('CMS admin', () => {
     });
     const { AxeBuilder } = await import('@axe-core/playwright');
     const serious = async (...include: string[]) => {
+      await transitionsLanded(page);
       let builder = new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']);
       for (const sel of include) builder = builder.include(sel);
       return (await builder.analyze()).violations
@@ -1933,6 +1957,7 @@ test.describe('CMS admin', () => {
     };
     const { AxeBuilder } = await import('@axe-core/playwright');
     const serious = async (...include: string[]) => {
+      await transitionsLanded(page);
       let builder = new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']);
       for (const sel of include) builder = builder.include(sel);
       return (await builder.analyze()).violations
