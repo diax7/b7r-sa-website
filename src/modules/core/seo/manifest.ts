@@ -1,9 +1,18 @@
 import type { MetadataRoute } from 'next';
 import type { SiteSettings } from '@/content/schema';
-import { TOKEN_HEX } from '@/lib/tokens';
 
-/** Web app manifest (BRD 7.3): Arabic, RTL, brand colours, `display: browser`. */
-export function manifest(site: SiteSettings): MetadataRoute.Manifest {
+/** What the manifest takes from the brand (spec 010), read by the app layer. */
+export interface ManifestBrand {
+  /** The phone's browser bar: the primary the site paints. */
+  theme: string;
+  /** The splash behind the icon: the page's white. */
+  background: string;
+  /** The widths the icon route draws from the mark, each served at `/icon/<width>`. */
+  iconSizes: readonly number[];
+}
+
+/** Web app manifest (BRD 7.3): Arabic, RTL, the brand's colours, `display: browser`. */
+export function manifest(site: SiteSettings, brand: ManifestBrand): MetadataRoute.Manifest {
   return {
     name: site.brandName,
     short_name: site.brandName,
@@ -12,11 +21,12 @@ export function manifest(site: SiteSettings): MetadataRoute.Manifest {
     dir: 'rtl',
     start_url: '/',
     display: 'browser',
-    theme_color: TOKEN_HEX.primary,
-    background_color: TOKEN_HEX.surface,
-    icons: [
-      { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
-      { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
-    ],
+    theme_color: brand.theme,
+    background_color: brand.background,
+    icons: brand.iconSizes.map((size) => ({
+      src: `/icon/${size}`,
+      sizes: `${size}x${size}`,
+      type: 'image/png',
+    })),
   };
 }

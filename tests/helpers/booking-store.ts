@@ -1,4 +1,5 @@
 import type { Where } from 'payload';
+import { TEST_PALETTE } from './mail-palette';
 import type { BookingSettings } from '@/content/schema';
 import { booking as seed } from '@/content/seed/booking';
 import type { BookingMailer, OutgoingMail } from '@/lib/booking-mail';
@@ -193,6 +194,7 @@ export function testPorts<C extends CalendarClient | null = RecordedCalendar>(
     siteUrl: 'https://b7r.sa',
     adminUrl: 'https://b7r.sa/admin',
     ownerEmail: 'contact@b7r.sa',
+    palette: TEST_PALETTE,
     logger: recordedLogger(),
     secret: SECRET,
     clock,

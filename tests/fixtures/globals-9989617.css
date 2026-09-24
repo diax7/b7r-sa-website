@@ -1,0 +1,980 @@
+@import 'tailwindcss';
+@import './tokens.css';
+/* The admin has its own stylesheet (ADR-039); its components never reach the public CSS: the
+   shell under modules/cms/admin, every module's own admin folder, and the (payload) routes.
+   tests/admin-css.test.ts holds the two lists together. */
+@source not '../modules/cms/admin';
+@source not '../modules/ai-content/admin';
+@source not '../modules/bookings/admin';
+@source not '../modules/connections/admin';
+@source not '../modules/inbox/admin';
+@source not '../modules/traffic/admin';
+@source not '../modules/visibility/admin';
+@source not '../app/(payload)';
+/* This sheet reaches /admin through the root error boundary, where Tailwind's `table`
+   utility (generated from the word in copy) would turn Payload's list scroller `div.table`
+   into a table box and Chrome would drop its `overflow: auto`. Nothing of ours uses it;
+   admin.css blocks it for the same reason. */
+@source not inline('table');
+
+/* ---------------------------------------------------------------------------------------
+   Design tokens (BRD §3). The only place raw hex is allowed. Components use utilities or
+   var(--token); never literal colours.
+   --------------------------------------------------------------------------------------- */
+@theme {
+  --color-*: initial;
+  --color-primary: #0058b0;
+  --color-primary-hover: #004a94;
+  --color-primary-dark: #1858a8;
+  --color-navy: #0a2f5e;
+  --color-accent: #0098e0;
+  --color-accent-tint: #e6f5fc;
+  /* The accent as text on its own tint (a Badge's `accent` tone): darkened for the light tint. */
+  --color-accent-on-tint: #00639c;
+  --color-ground: #f6f8fb;
+  --color-surface: #ffffff;
+  --color-text: #14181f;
+  --color-text-muted: #5b6470;
+  --color-border: #e5e9ef;
+  --color-success: #15803d;
+  --color-warning: #f59e0b;
+  --color-error: #d90000;
+  --color-whatsapp: #25d366;
+  --color-white: #ffffff;
+  --color-black: #000000;
+  --color-transparent: transparent;
+  --color-current: currentColor;
+
+  --shadow-*: initial;
+  --shadow-card: 0 1px 2px rgb(20 24 31 / 0.06), 0 1px 3px rgb(20 24 31 / 0.04);
+  --shadow-card-hover: 0 4px 12px rgb(20 24 31 / 0.08);
+  --shadow-popover: 0 8px 24px rgb(20 24 31 / 0.12);
+  --shadow-header: 0 1px 0 rgb(20 24 31 / 0.06);
+  /* The island header: a hairline under it and a blue-tinted lift (ADR-053). */
+  --shadow-island: 0 1px 0 rgb(20 24 31 / 0.04), 0 16px 36px -16px rgb(0 88 176 / 0.35);
+
+  /* Resting heights (Dhia, 2026-09-14: the bar sits lower); scrolled shrinks to 60. */
+  --header-h: 88px;
+  --header-h-mobile: 72px;
+  --island-h: 58px;
+  --island-h-desktop: 64px;
+  --island-offset: 12px;
+  /* Settles like a physical object: an easy start, a long soft landing (the island, ADR-053). */
+  --ease-settle: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --duration-settle: 720ms;
+
+  --container-page: 1280px;
+  --container-prose: 760px;
+  --container-measure: 38rem;
+}
+
+/* ---------------------------------------------------------------------------------------
+   Base
+   --------------------------------------------------------------------------------------- */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    /* In-page anchors and the designer deep link land below the sticky header (BRD 6.2). */
+    scroll-padding-block-start: var(--header-h);
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+  body {
+    background: var(--color-surface);
+    color: var(--color-text);
+    font-family: var(--font-sans);
+    font-size: var(--text-body);
+    line-height: var(--text-body--line-height);
+    font-feature-settings: 'kern';
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    overflow-x: clip;
+  }
+  @media (max-width: 360px) {
+    body {
+      font-size: 16px;
+    }
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    text-wrap: balance;
+    overflow-wrap: normal;
+    hyphens: none;
+  }
+  p {
+    text-wrap: pretty;
+  }
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+  img,
+  video,
+  svg {
+    display: block;
+    max-width: 100%;
+  }
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+    color: inherit;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+    border-radius: var(--radius-inner);
+  }
+  ::selection {
+    background: var(--color-accent-tint);
+    color: var(--color-primary);
+  }
+  [inert] {
+    pointer-events: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------------------
+   Utilities that encode §3 rules once
+   --------------------------------------------------------------------------------------- */
+@utility display {
+  font-size: var(--text-display);
+  line-height: var(--text-display--line-height);
+  font-weight: 900;
+  letter-spacing: 0;
+  /* The English document (ADR-044): Latin Black wants a tighter leading and tracking, and a
+     size that matches the Arabic presence (measured: two rows per headline at 1280). */
+  &:where([dir='ltr'], [dir='ltr'] *) {
+    font-size: clamp(34px, 4.6vw, 56px);
+    line-height: 1.12;
+    letter-spacing: -0.02em;
+  }
+}
+@utility lead {
+  font-size: var(--text-lead);
+  line-height: var(--text-lead--line-height);
+  font-weight: 400;
+}
+@utility eyebrow {
+  font-size: var(--text-caption);
+  line-height: var(--text-caption--line-height);
+  font-weight: 500;
+  color: var(--color-primary);
+}
+@utility measure {
+  max-width: var(--container-measure);
+}
+@utility tabular {
+  font-variant-numeric: tabular-nums;
+}
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+/* Section rhythm (§3.4): 96 px desktop, 64 px mobile. */
+@utility section-pad {
+  padding-block: 64px;
+  @media (min-width: 768px) {
+    padding-block: 96px;
+  }
+}
+/* A CSS tooltip for an icon-only control (ADR-044): the text of `data-tooltip` under the
+   control on hover and keyboard focus; the control keeps its `aria-label`. */
+@utility tooltip {
+  position: relative;
+  &::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    inset-inline-start: 50%;
+    inset-block-start: calc(100% + 6px);
+    transform: translateX(-50%);
+    padding: 4px 10px;
+    border-radius: var(--radius-inner);
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    color: var(--color-text);
+    box-shadow: var(--shadow-popover);
+    font-size: var(--text-caption);
+    line-height: var(--text-caption--line-height);
+    font-weight: 500;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--duration-fast) var(--ease-standard);
+  }
+  &:where([dir='rtl'], [dir='rtl'] *)::after {
+    transform: translateX(50%);
+  }
+  &:is(:hover, :focus-visible)::after {
+    opacity: 1;
+  }
+}
+
+/* Directional icons flip in RTL (§3.8); the wrapper applies this only for arrows/chevrons. */
+@utility mirror-rtl {
+  &:where([dir='rtl'], [dir='rtl'] *) {
+    transform: scaleX(-1);
+  }
+}
+
+/* Header nav underline (BRD 6.2): 2 px accent, offset 10 px, grows from the start edge. */
+.nav-link::after {
+  content: '';
+  position: absolute;
+  inset-inline-start: 0;
+  inset-block-end: -2px;
+  block-size: 2px;
+  inline-size: 100%;
+  border-radius: var(--radius-pill);
+  background: var(--color-accent);
+  transform: scaleX(0);
+  transform-origin: 100% 50%; /* the start edge in RTL */
+  transition: transform var(--duration-base) var(--ease-standard);
+}
+.nav-link.is-active::after,
+.nav-link:hover::after {
+  transform: scaleX(1);
+}
+
+/* The shiny CTA (ADR-054): the primary button in the brand's two blues as one sheen that
+   slides on hover, a soft blue glow, and a glint of light crossing it every few seconds at
+   rest, from the start edge in both directions of writing. Our radius and type; nothing
+   else changes. Still under reduced motion. */
+.btn-shiny {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background-image: linear-gradient(
+    325deg,
+    var(--color-primary) 0%,
+    var(--color-accent) 55%,
+    var(--color-primary) 90%
+  );
+  background-size: 280% auto;
+  background-position: 0% 50%;
+  box-shadow:
+    0 0 10px rgb(0 152 224 / 0.22),
+    0 4px 6px -2px rgb(0 88 176 / 0.25),
+    inset 2px 2px 8px rgb(230 245 252 / 0.35),
+    inset -2px -2px 8px rgb(0 63 128 / 0.35);
+  transition:
+    background-position 700ms var(--ease-standard),
+    box-shadow var(--duration-base) var(--ease-standard),
+    transform var(--duration-base) var(--ease-standard);
+}
+.btn-shiny:hover {
+  background-position: 100% 50%;
+  box-shadow:
+    0 0 14px rgb(0 152 224 / 0.32),
+    0 6px 8px -2px rgb(0 88 176 / 0.3),
+    inset 2px 2px 8px rgb(230 245 252 / 0.4),
+    inset -2px -2px 8px rgb(0 63 128 / 0.35);
+}
+/* On the primary ribbon the button is white: the same sheen in white and the accent tint. */
+.btn-shiny-inverse {
+  background-image: linear-gradient(325deg, #ffffff 0%, var(--color-accent-tint) 55%, #ffffff 90%);
+  box-shadow:
+    0 0 10px rgb(255 255 255 / 0.35),
+    0 4px 6px -2px rgb(0 63 128 / 0.3),
+    inset 2px 2px 8px rgb(255 255 255 / 0.9),
+    inset -2px -2px 8px rgb(0 88 176 / 0.12);
+}
+.btn-shiny-inverse:hover {
+  box-shadow:
+    0 0 14px rgb(255 255 255 / 0.5),
+    0 6px 8px -2px rgb(0 63 128 / 0.35),
+    inset 2px 2px 8px rgb(255 255 255 / 0.9),
+    inset -2px -2px 8px rgb(0 88 176 / 0.12);
+}
+.btn-shiny-inverse::after {
+  background: linear-gradient(100deg, transparent 30%, rgb(0 152 224 / 0.16) 50%, transparent 70%);
+}
+.btn-shiny::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(
+    100deg,
+    transparent 30%,
+    rgb(255 255 255 / 0.32) 50%,
+    transparent 70%
+  );
+  transform: translateX(-160%);
+  animation: btn-glint 4.5s var(--ease-standard) infinite;
+}
+[dir='rtl'] .btn-shiny::after {
+  animation-name: btn-glint-rtl;
+}
+@keyframes btn-glint {
+  0%,
+  72% {
+    transform: translateX(-160%);
+  }
+  100% {
+    transform: translateX(160%);
+  }
+}
+@keyframes btn-glint-rtl {
+  0%,
+  72% {
+    transform: translateX(160%);
+  }
+  100% {
+    transform: translateX(-160%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .btn-shiny {
+    transition: none;
+  }
+  .btn-shiny::after {
+    animation: none;
+  }
+}
+
+/* The island header (BRD 6.2 amended 2026-09-17, ADR-053). At rest a full-width bar; past
+   the 24 px sentinel it settles into a capsule a finger's width below the top edge: white,
+   a hairline, a blue-tinted lift, never a blur. The sticky wrapper keeps the rest height,
+   so the page never shifts. Same on the phone: the logo, the button and the burger. */
+.header-bar {
+  width: 100%;
+  max-width: 100%;
+  height: var(--header-h-mobile);
+  margin-inline: auto;
+  border: 1px solid transparent;
+  border-radius: 0;
+  transform: translateY(0);
+  transition:
+    max-width var(--duration-settle) var(--ease-settle),
+    height var(--duration-settle) var(--ease-settle),
+    transform var(--duration-settle) var(--ease-settle),
+    border-radius var(--duration-settle) var(--ease-settle),
+    background-color 320ms var(--ease-standard),
+    border-color 320ms var(--ease-standard),
+    box-shadow 480ms var(--ease-standard);
+}
+.header-bar[data-scrolled] {
+  max-width: calc(100% - 24px);
+  height: var(--island-h);
+  transform: translateY(var(--island-offset));
+  /* The brand's corner: the same 13 px as every button, so the capsule and the button
+     inside it share one corner (Dhia, 2026-09-17: the pill read as off-brand). */
+  border-radius: var(--radius-base);
+  background: var(--color-surface);
+  border-color: rgb(20 24 31 / 0.08);
+  box-shadow: var(--shadow-island);
+}
+.header-bar .header-inner {
+  transition: padding var(--duration-settle) var(--ease-settle);
+}
+.header-bar[data-scrolled] .header-inner {
+  padding-inline: 16px 8px;
+}
+.header-bar .header-nav {
+  transition: gap var(--duration-settle) var(--ease-settle);
+}
+.header-bar .nav-link {
+  transition:
+    font-size var(--duration-settle) var(--ease-settle),
+    color var(--duration-fast) var(--ease-standard);
+}
+@media (min-width: 1024px) {
+  .header-bar {
+    height: var(--header-h);
+  }
+  .header-bar[data-scrolled] {
+    max-width: 880px;
+    height: var(--island-h-desktop);
+  }
+  .header-bar[data-scrolled] .header-inner {
+    padding-inline: 26px 10px;
+  }
+  .header-bar[data-scrolled] .header-nav {
+    gap: 24px;
+  }
+  .header-bar[data-scrolled] .nav-link {
+    font-size: var(--text-button);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .header-bar,
+  .header-bar .header-inner,
+  .header-bar .header-nav,
+  .header-bar .nav-link {
+    transition: none;
+  }
+}
+
+/* Hero (BRD 6.4.1). Pulled under the transparent header; the legibility overlay is the one
+   permitted gradient (the admin's colour to transparent, `--hero-overlay`, ADR-044). It
+   starts at the start edge, where the copy sits: the right in Arabic, the left in English,
+   each document with its own photos (calm area under the copy). */
+.hero {
+  margin-block-start: calc(-1 * var(--header-h-mobile));
+  padding-block-start: var(--header-h-mobile);
+  min-height: 100svh;
+}
+@media (min-width: 1024px) {
+  .hero {
+    margin-block-start: calc(-1 * var(--header-h));
+    padding-block-start: var(--header-h);
+  }
+}
+/* Beyond Full HD (ADR-051): the hero never grows wider than its photo (1920 px). On a wider
+   screen it stays centred with the page's white on both sides; nothing else changes. */
+.hero {
+  max-width: 1920px;
+  margin-inline: auto;
+}
+.hero-overlay {
+  --hero-overlay: #ffffff;
+  background: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--hero-overlay) 96%, transparent) 55%,
+    transparent 75%
+  );
+}
+@media (min-width: 768px) {
+  .hero-overlay {
+    background: linear-gradient(
+      to left,
+      color-mix(in srgb, var(--hero-overlay) 92%, transparent) 0%,
+      color-mix(in srgb, var(--hero-overlay) 85%, transparent) 30%,
+      transparent 55%
+    );
+  }
+  [dir='ltr'] .hero-overlay {
+    background: linear-gradient(
+      to right,
+      color-mix(in srgb, var(--hero-overlay) 92%, transparent) 0%,
+      color-mix(in srgb, var(--hero-overlay) 85%, transparent) 30%,
+      transparent 55%
+    );
+  }
+}
+.hero-image {
+  object-fit: cover;
+  object-position: 50% 70%;
+}
+/* Blur-up (ADR-029): the placeholder the media library computed, as the photo's background
+   until it decodes, one per breakpoint like the photo, anchored where the photo is. */
+.hero-image[data-blur] {
+  background: var(--hero-blur-mobile) 50% 70% / cover no-repeat;
+}
+@media (min-width: 768px) {
+  .hero-image {
+    object-position: 20% 60%;
+  }
+  .hero-image[data-blur] {
+    background: var(--hero-blur-desktop) 20% 60% / cover no-repeat;
+  }
+  [dir='ltr'] .hero-image {
+    object-position: 80% 60%;
+  }
+  [dir='ltr'] .hero-image[data-blur] {
+    background-position: 80% 60%;
+  }
+}
+
+/* Product strip (BRD 6.4.2): five panels, hover/focus expands one to 2.6 of the others. */
+.strip {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: 16px;
+  padding-inline: 16px;
+  scrollbar-width: none;
+}
+.strip::-webkit-scrollbar {
+  display: none;
+}
+.strip-panel {
+  position: relative;
+  flex: 0 0 78vw;
+  aspect-ratio: 4 / 5;
+  scroll-snap-align: start;
+  overflow: hidden;
+  border-radius: var(--radius-base);
+  background: var(--color-ground);
+  outline-offset: 4px;
+}
+.strip-panel img {
+  transition: transform var(--duration-slower) var(--ease-expand);
+}
+.strip-label {
+  position: absolute;
+  inset-inline: 0;
+  inset-block-end: 0;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  background: linear-gradient(to top, rgb(20 24 31 / 0.55), rgb(20 24 31 / 0));
+}
+@media (min-width: 1024px) {
+  .strip {
+    height: 520px;
+    gap: 8px;
+    overflow: visible;
+    padding-inline: 24px;
+    scroll-snap-type: none;
+  }
+  .strip-panel {
+    flex: 1 1 0;
+    aspect-ratio: auto;
+    transition: flex-grow var(--duration-slower) var(--ease-expand);
+  }
+  .strip-panel:hover,
+  .strip-panel:focus-visible {
+    flex-grow: 2.6;
+    will-change: flex-grow;
+  }
+  .strip-panel:hover img,
+  .strip-panel:focus-visible img {
+    transform: scale(1.04);
+  }
+  .strip-label {
+    opacity: 0;
+    transition: opacity var(--duration-base) var(--ease-standard) 200ms;
+  }
+  .strip-panel:hover .strip-label,
+  .strip-panel:focus-visible .strip-label {
+    opacity: 1;
+  }
+}
+
+/* Steps (BRD 6.4.4). Default = vertical list: 96 px icon at the start, connector line between
+   rows. Pinned scroll-driven layout only with JS, at lg, without reduced motion. */
+.steps-list {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  position: relative;
+}
+.steps-item {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  position: relative;
+}
+.steps-item + .steps-item::before {
+  content: '';
+  position: absolute;
+  inset-inline-start: 47px;
+  inset-block-start: -32px;
+  block-size: 32px;
+  inline-size: 2px;
+  background: var(--color-border);
+}
+.steps-badge {
+  display: none;
+}
+.steps-panel {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  html.js .steps {
+    min-height: 300vh;
+    padding-block: 0;
+  }
+  html.js .steps .steps-pin {
+    position: sticky;
+    top: var(--header-h);
+    height: calc(100vh - var(--header-h));
+    display: flex;
+    align-items: center;
+    padding-block: 48px;
+  }
+  html.js .steps .steps-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 480px;
+    gap: 64px;
+    align-items: center;
+  }
+  html.js .steps .steps-list {
+    gap: 40px;
+    padding-inline-start: 24px;
+  }
+  /* The link sits at the bottom-start of the pinned grid; keep it clear of the WhatsApp
+     button, which lives at the physical bottom-right (BRD 6.15). */
+  html.js .steps .steps-link {
+    margin-inline-end: 96px;
+  }
+  /* 2 px accent progress line beside the list, growing with --progress. */
+  html.js .steps .steps-list::before {
+    content: '';
+    position: absolute;
+    inset-inline-start: 0;
+    inset-block: 0;
+    inline-size: 2px;
+    background: linear-gradient(
+      to bottom,
+      var(--color-accent) calc(var(--progress, 0) * 100%),
+      var(--color-border) calc(var(--progress, 0) * 100%)
+    );
+    border-radius: var(--radius-pill);
+  }
+  /* A step waiting its turn reads muted, never faded: text at 0.4 opacity fails the 4.5:1
+     contrast the BRD holds every page to (found by the English axe scan, Level 5). */
+  html.js .steps .steps-item {
+    color: var(--color-text-muted);
+    transition: color var(--duration-slow) var(--ease-standard);
+  }
+  html.js .steps .steps-item h3 {
+    color: inherit;
+    transition: color var(--duration-slow) var(--ease-standard);
+  }
+  html.js .steps .steps-item .steps-item-icon {
+    opacity: 0.6;
+  }
+  html.js .steps .steps-item + .steps-item::before {
+    display: none;
+  }
+  html.js .steps .steps-item-icon {
+    display: none;
+  }
+  html.js .steps .steps-badge {
+    display: grid;
+    place-items: center;
+    inline-size: 40px;
+    block-size: 40px;
+    flex-shrink: 0;
+    border-radius: var(--radius-pill);
+    border: 2px solid var(--color-border);
+    font-weight: 500;
+    color: var(--color-text-muted);
+    font-variant-numeric: tabular-nums;
+    transition:
+      background-color var(--duration-slow) var(--ease-standard),
+      border-color var(--duration-slow) var(--ease-standard),
+      color var(--duration-slow) var(--ease-standard);
+  }
+  html.js .steps .steps-item[aria-current='step'] {
+    color: var(--color-text);
+  }
+  html.js .steps .steps-item[aria-current='step'] .steps-badge {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: var(--color-white);
+  }
+  html.js .steps .steps-panel {
+    display: grid;
+    inline-size: 480px;
+    block-size: 480px;
+    border-radius: var(--radius-lg);
+    background: var(--color-accent-tint);
+    overflow: hidden;
+    justify-self: end;
+  }
+  html.js .steps .steps-panel-icon {
+    grid-area: 1 / 1;
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+    border-radius: var(--radius-lg);
+    opacity: 0;
+    transform: scale(1.02);
+    transition:
+      opacity var(--duration-slow) var(--ease-standard),
+      transform var(--duration-slow) var(--ease-standard);
+  }
+  html.js .steps[data-active='0'] .steps-panel-icon[data-step='0'],
+  html.js .steps[data-active='1'] .steps-panel-icon[data-step='1'],
+  html.js .steps[data-active='2'] .steps-panel-icon[data-step='2'] {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  /* Desktop renders the mobile list under reduced motion (BRD 6.4.4). */
+  html.js .steps {
+    min-height: auto;
+  }
+  html.js .steps .steps-pin {
+    position: static;
+    height: auto;
+  }
+  html.js .steps .steps-grid {
+    display: block;
+  }
+  html.js .steps .steps-panel,
+  html.js .steps .steps-badge,
+  html.js .steps .steps-list::before {
+    display: none;
+  }
+  html.js .steps .steps-item {
+    opacity: 1;
+  }
+  html.js .steps .steps-item-icon {
+    display: block;
+  }
+  html.js .steps .steps-item + .steps-item::before {
+    display: block;
+  }
+}
+
+/* ---------------------------------------------------------------------------------------
+   How-it-works journey (§6.7, amended 2026-09-13): five steps on one connected path. Phones
+   stack the steps down the start side; from lg the steps sit in a row and the path runs
+   across the top through the icons. The progress line fills as the track scrolls through the
+   viewport (a view timeline named on the track, whose size never changes) and is simply full
+   where that is unsupported or under reduced motion.
+   --------------------------------------------------------------------------------------- */
+.flow {
+  position: relative;
+}
+.flow-list {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+.flow-item {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+}
+.flow-icon {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  inline-size: 96px;
+  block-size: 96px;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}
+.flow-number {
+  position: absolute;
+  inset-block-start: 6px;
+  inset-inline-start: 6px;
+  display: grid;
+  place-items: center;
+  inline-size: 24px;
+  block-size: 24px;
+  border-radius: var(--radius-pill);
+  background: var(--color-primary);
+  color: var(--color-white);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+.flow-track {
+  position: absolute;
+  inset-inline-start: 47px;
+  inset-block: 48px;
+  inline-size: 2px;
+  background: var(--color-border);
+  view-timeline: --flow block;
+}
+.flow-progress {
+  position: absolute;
+  inset-inline: 0;
+  inset-block-start: 0;
+  block-size: 100%;
+  background: var(--color-primary);
+}
+@media (min-width: 1024px) {
+  .flow-list {
+    flex-direction: row;
+    gap: 24px;
+  }
+  .flow-item {
+    flex: 1 1 0;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  .flow-icon {
+    inline-size: 120px;
+    block-size: 120px;
+  }
+  .flow-track {
+    inset-inline: 10%;
+    inset-block: 59px auto;
+    inline-size: auto;
+    block-size: 3px;
+  }
+  .flow-progress {
+    inset-inline: 0 auto;
+    inset-block: 0;
+    inline-size: 100%;
+    block-size: auto;
+  }
+}
+@supports (animation-timeline: view()) {
+  .flow-progress {
+    animation: flow-grow-block linear both;
+    animation-timeline: --flow;
+    animation-range: entry 30% cover 80%;
+  }
+  @media (min-width: 1024px) {
+    .flow-progress {
+      animation-name: flow-grow-inline;
+    }
+  }
+  /* Scroll-driven progress ignores the global 0.01 ms duration: switch it off outright. */
+  @media (prefers-reduced-motion: reduce) {
+    .flow-progress {
+      animation: none;
+    }
+  }
+}
+@keyframes flow-grow-block {
+  from {
+    block-size: 0;
+  }
+  to {
+    block-size: 100%;
+  }
+}
+@keyframes flow-grow-inline {
+  from {
+    inline-size: 0;
+  }
+  to {
+    inline-size: 100%;
+  }
+}
+
+/* ---------------------------------------------------------------------------------------
+   Scroll reveal (§3.7, ADR-055). `[data-reveal]` on every Section and on the children of a
+   `[data-reveal-stagger]` group. The CSS hides nothing by itself: the observer
+   (modules/core/reveal-arm, mounted after hydration) adds `is-hidden` only to elements
+   below the fold, then `is-visible` as they enter, staggered 60 ms by `--i` inside a group
+   (capped at the ninth child, so a long grid never waits past half a second). A printed
+   page shows everything.
+   --------------------------------------------------------------------------------------- */
+[data-reveal] {
+  transition:
+    opacity 400ms var(--ease-standard),
+    transform 400ms var(--ease-standard);
+  transition-delay: calc(min(var(--i, 0), 8) * 60ms);
+}
+/* The hide is instant (a transition here would fade a card out over 400 ms while axe and
+   Lighthouse read it half-transparent); only the reveal animates. */
+[data-reveal].is-hidden {
+  opacity: 0;
+  transform: translateY(12px);
+  transition: none;
+}
+[data-reveal].is-visible {
+  opacity: 1;
+  transform: none;
+}
+@media print {
+  [data-reveal],
+  [data-reveal].is-hidden {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+/* The booker's times (ADR-063): the slot rows stagger in 60 ms apart, the ninth and after
+   together, like the reveal; instant under reduced motion (the global rule below). */
+.booker-row {
+  animation: booker-row-in var(--duration-base) var(--ease-standard) both;
+  animation-delay: calc(min(var(--i, 0), 8) * 60ms);
+}
+@keyframes booker-row-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------------------
+   Reduced motion (§0.4.11, §3.7)
+   --------------------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  [data-reveal],
+  [data-reveal].is-hidden {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .booker-row {
+    animation: none;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 150ms !important;
+    transition-property: opacity, color, background-color, border-color !important;
+  }
+}
+
+/* Long-form text (BRD 6.11, 6.12): rendered Markdown from lib/markdown.ts. */
+.prose {
+  max-width: var(--container-prose);
+  color: var(--color-text);
+  font-size: var(--text-body);
+  line-height: 1.8;
+}
+.prose > * + * {
+  margin-block-start: 1em;
+}
+.prose h2 {
+  font-size: var(--text-h3);
+  line-height: var(--text-h3--line-height);
+  font-weight: 700;
+  margin-block-start: 2em;
+  scroll-margin-block-start: calc(var(--header-h) + 24px);
+}
+.prose h3 {
+  font-size: var(--text-h4);
+  font-weight: 700;
+  margin-block-start: 1.5em;
+}
+.prose p,
+.prose li {
+  color: var(--color-text);
+}
+.prose ul,
+.prose ol {
+  padding-inline-start: 1.5em;
+}
+.prose ul {
+  list-style: disc;
+}
+.prose ol {
+  list-style: decimal;
+}
+.prose li + li {
+  margin-block-start: 0.4em;
+}
+.prose a {
+  color: var(--color-primary);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.prose strong {
+  font-weight: 700;
+}
+.prose blockquote {
+  border-inline-start: 3px solid var(--color-accent);
+  padding-inline-start: 1em;
+  color: var(--color-text-muted);
+}

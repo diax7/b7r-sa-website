@@ -5,46 +5,56 @@ import { cn } from '@/lib/cn';
 import { env } from '@/lib/env';
 import type { Locale } from '@/lib/i18n';
 import { registerUrl } from '@/lib/utm';
-import { WaveDivider, type WaveFill } from '@/modules/core/wave-divider';
+import { WaveDivider } from '@/modules/core/wave-divider';
 
 interface CtaRibbonProps {
   locale: Locale;
-  /** Background of the section directly above, so the top wave blends into it. */
-  topTone: Extract<WaveFill, 'surface' | 'ground'>;
   /** Route name for `utm_content` (BRD 4.4). */
   page: string;
 }
 
 /**
- * Full-bleed primary band before the footer on every page (BRD 6.3.1). Sits between two
- * waves: the section above flows in from the top, the navy footer rises from the bottom.
+ * Full-bleed primary band before the footer on every page (BRD 6.3.1), between two waves.
+ * The top wave rises from the band into the bottom of the section above: the ribbon overlaps
+ * that section by the wave's height, and the strip is see-through but for the wave, so the
+ * section above shows behind it whatever it paints (spec 010, phase 2: an editor may give it
+ * any background set, a gradient with grain included). The navy footer rises from the bottom.
  */
-export async function CtaRibbon({ locale, topTone, page }: CtaRibbonProps) {
+export async function CtaRibbon({ locale, page }: CtaRibbonProps) {
   const [{ ribbon }, site] = await Promise.all([getHome(locale), getSiteSettings(locale)]);
   const { title, lead, button } = ribbon;
   return (
-    <section aria-labelledby="cta-ribbon-title" className="relative bg-primary text-white">
-      <WaveDivider fill={topTone} position="top" />
-      <Container className="flex flex-col items-center gap-6 py-24 text-center md:py-32">
-        <h2 id="cta-ribbon-title" className="text-h2 max-w-3xl text-white">
-          {title}
-        </h2>
-        <p className="lead max-w-xl text-white/85">{lead}</p>
-        <Button
-          asChild
-          variant={site.ctaShiny ? 'inverseShiny' : 'inverse'}
-          size="lg"
-          className={cn('mt-2', !site.ctaShiny && 'shadow-popover')}
-        >
-          <a
-            href={registerUrl(env.appUrl, { campaign: 'ribbon', content: page })}
-            data-track="cta_click"
-            data-location="ribbon"
+    <section
+      aria-labelledby="cta-ribbon-title"
+      // The overlap and the see-through strip are `[data-cta-ribbon]` in `globals.css`, the
+      // wave's height read from the same property as the section above's extra foot. Padding,
+      // not the band's margin, holds the strip open: a margin would collapse through.
+      data-cta-ribbon=""
+      className="relative text-white"
+    >
+      <WaveDivider fill="primary" position="top" />
+      <div className="bg-primary">
+        <Container className="flex flex-col items-center gap-6 pt-16 pb-24 text-center md:pt-20 md:pb-32">
+          <h2 id="cta-ribbon-title" className="text-h2 max-w-3xl text-white">
+            {title}
+          </h2>
+          <p className="lead max-w-xl text-white/85">{lead}</p>
+          <Button
+            asChild
+            variant={site.ctaShiny ? 'inverseShiny' : 'inverse'}
+            size="lg"
+            className={cn('mt-2', !site.ctaShiny && 'shadow-popover')}
           >
-            {button}
-          </a>
-        </Button>
-      </Container>
+            <a
+              href={registerUrl(env.appUrl, { campaign: 'ribbon', content: page })}
+              data-track="cta_click"
+              data-location="ribbon"
+            >
+              {button}
+            </a>
+          </Button>
+        </Container>
+      </div>
       <WaveDivider fill="navy" position="bottom" />
     </section>
   );

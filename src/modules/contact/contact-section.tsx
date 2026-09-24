@@ -50,7 +50,7 @@ function ContactCard({
 interface ContactSectionProps {
   block: BlockOf<'contact'>;
   locale: Locale;
-  tone: Extract<SectionTone, 'surface' | 'ground'>;
+  tone: SectionTone;
   /** Unique per page (`contact`, `contact-2`); element ids derive from it. */
   anchor: string;
   heading?: { title: string; lead?: string | undefined } | undefined;

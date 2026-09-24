@@ -180,11 +180,7 @@ export async function BlogPostPage({ post, locale }: { post: Post; locale: Local
         </Section>
       )}
 
-      <CtaRibbon
-        locale={locale}
-        topTone={related.length > 0 ? 'ground' : 'surface'}
-        page={`post-${post.slug}`}
-      />
+      <CtaRibbon locale={locale} page={`post-${post.slug}`} />
     </>
   );
 }

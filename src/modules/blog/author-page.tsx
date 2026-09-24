@@ -106,7 +106,7 @@ export async function AuthorPage({
           />
         </Container>
       </Section>
-      <CtaRibbon locale={locale} topTone="surface" page={`author-${author.slug}`} />
+      <CtaRibbon locale={locale} page={`author-${author.slug}`} />
     </>
   );
 }

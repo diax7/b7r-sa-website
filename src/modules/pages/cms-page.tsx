@@ -8,10 +8,10 @@ import { JsonLd, jsonLd } from '@/modules/core';
 import { CtaRibbon } from '@/modules/core/cta-ribbon';
 import { rendererFor } from '@/modules/pages/blocks';
 import { faqItemsFor } from '@/modules/pages/blocks/faq-list';
+import { blockTones } from '@/modules/pages/tones';
 import {
   blockAnchors,
   type BlockComponent,
-  type BlockTone,
   type ExtraRenderers,
 } from '@/modules/pages/blocks/types';
 
@@ -37,11 +37,6 @@ export async function faqSchemaItems(
   return block ? faqItemsFor(block, locale) : [];
 }
 
-/** Tones alternate over the blocks (BRD 3.4), the first section on surface. */
-export function blockTones(count: number): BlockTone[] {
-  return Array.from({ length: count }, (_, i) => (i % 2 === 0 ? 'surface' : 'ground'));
-}
-
 /**
  * A page from the `pages` collection (BRD 9.4, 9.5; ADR-031): JSON-LD, the blocks in order,
  * the first one carries the page title as its H1, and the CTA ribbon. `notFound()` when the
@@ -65,7 +60,7 @@ export async function CmsPageBody({
   const base = siteBase();
   const route = `/${page.slug}`;
   const productsPage = copyFor(locale).productsPage;
-  const tones = blockTones(page.blocks.length);
+  const tones = blockTones(page.blocks);
   const anchors = blockAnchors(page.blocks);
   const legal = page.blocks.find((b) => b.blockType === 'legalBody');
   const faq = jsonLd.faqPage(base, locale, route, await faqSchemaItems(page, locale));
@@ -105,11 +100,7 @@ export async function CmsPageBody({
           />
         );
       })}
-      <CtaRibbon
-        locale={locale}
-        topTone={tones[page.blocks.length - 1] ?? 'surface'}
-        page={page.slug}
-      />
+      <CtaRibbon locale={locale} page={page.slug} />
     </>
   );
 }

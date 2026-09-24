@@ -29,6 +29,7 @@ import { site } from '../src/content/seed/site';
 import { testimonials } from '../src/content/seed/testimonials';
 import { nextWindow, seedTopics } from '../src/content/seed/topics';
 import { ensureEnglish } from './migrate-content-en';
+import { SEA_MIST, SEA_MIST_NAME, seaMistRow } from '../src/modules/brand/surfaces';
 import { seedTopicsEn } from '../src/content/seed/en/topics';
 import { SEED_EVERY_DAYS, SEED_PROMPTS } from '../src/modules/visibility/ledger/seed';
 import { factsSheet } from '../src/modules/ai-content/facts';
@@ -495,6 +496,36 @@ async function ensureBooking(payload: Payload): Promise<void> {
   summary.created.push('global booking');
 }
 
+/**
+ * The `appearance` global (spec 010): the shipped brand, and the library with Sea mist named
+ * in both languages, once. A localized field inside a list takes its default only in the
+ * language being written, so the English name lands in a second write, as the booking's
+ * does. A database whose appearance someone saved keeps it.
+ */
+async function ensureAppearance(payload: Payload): Promise<void> {
+  const doc = await payload.findGlobal({ slug: 'appearance', depth: 0 });
+  if (doc.id !== undefined) {
+    summary.skipped.push('global appearance');
+    return;
+  }
+  const saved = await payload.updateGlobal({
+    slug: 'appearance',
+    data: { surfaces: [seaMistRow('ar')] },
+    context: seedContext(),
+  });
+  await payload.updateGlobal({
+    slug: 'appearance',
+    locale: 'en',
+    data: {
+      surfaces: (saved.surfaces ?? []).map((row) =>
+        row.key === SEA_MIST.key ? { ...row, label: SEA_MIST_NAME.en } : row,
+      ),
+    },
+    context: seedContext(),
+  });
+  summary.created.push('global appearance');
+}
+
 /** Routes the code owns; every other BRD 4.16 row lives in the page's own `seo` group (ADR-031). */
 const CODE_ROUTES = new Set(['/', '/products', '/blog', '/book']);
 
@@ -841,6 +872,7 @@ async function main(): Promise<number> {
   await ensureBlog(payload);
   // After the blog: the booking's host is the author record the blog pass seeds (ADR-063).
   await ensureBooking(payload);
+  await ensureAppearance(payload);
   // The English values of every localised field, once the Arabic documents exist (ADR-043).
   const english = await ensureEnglish(payload);
   summary.created.push(...english.written);

@@ -1,7 +1,11 @@
 import { preload as preloadResource } from 'react-dom';
 
 interface StaticImageProps {
-  /** A file under `public/images` or `public/video`, written by `pnpm assets` at its shown pixels. */
+  /**
+   * A file under `public/images` or `public/video`, written by `pnpm assets` at its shown
+   * pixels, or a logo uploaded under Appearance (spec 010), the file as uploaded from the
+   * storage CDN.
+   */
   src: string;
   alt: string;
   width: number;

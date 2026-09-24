@@ -16,6 +16,7 @@ vi.mock('@/app/site-document', () => ({
   SiteDocument: (props: { locale: string; locales: readonly string[] }) => props,
 }));
 vi.mock('@/modules/core/draft-bar', () => ({ DraftBar: () => null }));
+vi.mock('@/modules/brand', () => ({ getAppearance: async () => ({}) }));
 vi.mock('@/modules/core/seo/metadata', () => ({ rootMetadata: async () => ({}) }));
 
 describe('the English root layout (ADR-043)', () => {

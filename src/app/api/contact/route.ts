@@ -13,6 +13,7 @@ import {
   type ContactBody,
   contactBodySchema,
 } from '@/modules/contact';
+import { readMailPalette } from '@/modules/brand';
 import { type IncomingMessage, markEmailed, originOf, storeMessage } from '@/modules/inbox';
 
 export const dynamic = 'force-dynamic';
@@ -41,7 +42,7 @@ async function storeThenSend(
   }
   // The recipient is the contact address in the site settings (ADR-052).
   const to = (await getSiteSettings('ar')).contact.email;
-  const sent = await getContactTransport(to).send(message);
+  const sent = await getContactTransport(to).send(message, await readMailPalette(payload));
   if (stored === null) return { stored, sent };
   if (sent.ok) await markEmailed(payload, stored);
   else {

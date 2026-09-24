@@ -12,6 +12,15 @@ import { toFaq, toHome, toIntegration, toPage, toTestimonial } from '@/lib/cms/m
 import { cms, inLocale, publicRead } from '@/lib/cms/payload';
 import { readsDrafts, versionedRead } from '@/lib/cms/read-mode';
 import type { Locale } from '@/lib/i18n';
+import { getAppearance, surfaceKeys } from '@/modules/brand';
+
+/**
+ * The background sets a section may paint (spec 010, phase 2): a section naming a set that
+ * was deleted keeps its own background. Read once per render, from the same read as the head.
+ */
+const backgrounds = cache(
+  async (): Promise<ReadonlySet<string>> => new Set(surfaceKeys((await getAppearance()).surfaces)),
+);
 
 /**
  * Home-page content reads (BRD 9.6, ADR-030): the `home` global and the three small
@@ -27,7 +36,7 @@ export const getHome = cache(async (locale: Locale): Promise<Home> => {
   const payload = await cms();
   const draft = await readsDrafts();
   const doc = await payload.findGlobal({ slug: 'home', ...publicRead(locale), draft, depth: 1 });
-  return toHome(doc, { draft });
+  return toHome(doc, { draft, backgrounds: await backgrounds() });
 });
 
 const groupIndex = (group: FaqItem['group']) => FAQ_GROUPS.indexOf(group);
@@ -102,7 +111,8 @@ export const getPages = cache(async (locale: Locale): Promise<Page[]> => {
     pagination: false,
     sort: '-updatedAt',
   });
-  return docs.map((doc) => toPage(doc, { draft: read.draft }));
+  const known = await backgrounds();
+  return docs.map((doc) => toPage(doc, { draft: read.draft, backgrounds: known }));
 });
 
 /** One published page by slug, or undefined. */

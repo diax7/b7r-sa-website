@@ -139,6 +139,37 @@ export type WhyUsItem = z.infer<typeof WhyUsItemSchema>;
  * The home page content (BRD 4.4): what an editor writes. Interface strings (aria labels,
  * hints, input labels, validation) live in `src/messages/ar.json` (ADR-031).
  */
+/**
+ * The shape of a background set's key (spec 010): a short lowercase slug that starts with a
+ * letter, so it cannot leave the `data-surface` selector it is written into.
+ */
+export const SURFACE_KEY = /^[a-z][a-z0-9-]{0,31}$/;
+
+/**
+ * A section's background (spec 010, phase 2): the key of a set, or absent for the section's
+ * own. Only its shape is checked here; the content readers drop a key whose set no longer
+ * exists, and the section keeps the background it was designed with.
+ */
+const surfaceKey = z.string().regex(SURFACE_KEY);
+const background = { background: surfaceKey.optional() };
+
+/**
+ * The home sections that may take a background set: every section but the opening slides (a
+ * photograph) and the bottom banner (the brand's blue between two waves).
+ */
+export const HOME_BACKGROUND_SECTIONS = [
+  'productStrip',
+  'designer',
+  'steps',
+  'video',
+  'whyUs',
+  'testimonials',
+  'integrations',
+  'faq',
+] as const;
+
+export type HomeBackgroundSection = (typeof HOME_BACKGROUND_SECTIONS)[number];
+
 export const HomeSchema = z.object({
   hero: z.object({
     slides: z.array(HeroSlideSchema).length(4),
@@ -177,6 +208,8 @@ export const HomeSchema = z.object({
   integrations: z.object({ enabled: z.boolean(), title: nonEmpty, lead: nonEmpty }),
   faq: z.object({ enabled: z.boolean(), title: nonEmpty, link: nonEmpty }),
   ribbon: z.object({ title: nonEmpty, lead: nonEmpty, button: nonEmpty }),
+  /** The sections an editor gave a background set, by section; the rest keep their own. */
+  backgrounds: z.partialRecord(z.enum(HOME_BACKGROUND_SECTIONS), surfaceKey).optional(),
 });
 export type Home = z.infer<typeof HomeSchema>;
 
@@ -292,7 +325,7 @@ const optionalText = z.string().trim().optional();
  * Page blocks (BRD 9.4, 9.5; ADR-031): each is a designed section. `richText` carries the
  * Lexical editor state as Payload stores it; every other block is plain fields.
  */
-const blockId = { id: nonEmpty };
+const blockId = { id: nonEmpty, ...background };
 
 export const BlockSchema = z.discriminatedUnion('blockType', [
   z.object({

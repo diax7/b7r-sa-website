@@ -8,6 +8,7 @@ import {
   buildOwnerMail,
 } from '@/lib/booking-mail';
 import { type Locale, localePath } from '@/lib/i18n';
+import type { MailPalette } from '@/lib/mail-palette';
 import { riyadh } from '@/lib/riyadh';
 import type { BookingStatus } from '@/modules/bookings/status';
 import { daysOfMonth, monthDays, withinMonths } from '@/modules/bookings/days-of-month';
@@ -53,6 +54,8 @@ export interface BookingPorts {
   adminUrl: string;
   /** The contact address Dhia's mails go to. */
   ownerEmail: string;
+  /** The brand's colours at send time (spec 010), which the mails are written in. */
+  palette: MailPalette;
   logger: BookingLogger;
   /** `PAYLOAD_SECRET` for the manage token; the tests hand one in. */
   secret?: string;
@@ -248,6 +251,7 @@ function mailInput(
     id: row.id,
     revision: row.status === 'rescheduled' ? 1 : 0,
     calendarFailed: row.calendar === 'failed',
+    palette: ports.palette,
   };
 }
 

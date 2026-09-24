@@ -42,7 +42,8 @@ export interface Crumb {
   path: string;
 }
 
-export const LOGO_PATH = '/images/logo/icon.png';
+/** The Organization logo: the mark drawn in the brand's colours at 512 px (`src/app/icon.tsx`). */
+export const LOGO_PATH = '/icon/512';
 export const RETURN_WINDOW_DAYS = 10;
 
 export function onlineStore(base: string, site: SiteSettings): JsonLdNode {

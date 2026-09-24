@@ -3,7 +3,7 @@ import { Button } from '@/components/shared/button';
 import { Container } from '@/components/shared/container';
 import { Photo } from '@/components/shared/photo';
 import { SarAmount } from '@/components/shared/sar-amount';
-import { Section } from '@/components/shared/section';
+import { Section, type SectionTone } from '@/components/shared/section';
 import { SectionHeader } from '@/components/shared/section-header';
 import { copyFor } from '@/content/copy';
 import { getHome, getProduct } from '@/lib/cms';
@@ -15,7 +15,13 @@ import { StripHint } from '@/modules/home/product-strip/strip-hint';
  * Hover-expand product strip (BRD 6.4.2). Five real links; CSS owns the expansion so it works
  * with keyboard focus and without JS. Mobile: native snap carousel with labels always visible.
  */
-export async function ProductStrip({ locale }: { locale: Locale }) {
+export async function ProductStrip({
+  locale,
+  tone = 'surface',
+}: {
+  locale: Locale;
+  tone?: SectionTone;
+}) {
   const { productStrip } = await getHome(locale);
   const messages = copyFor(locale);
   const found = await Promise.all(productStrip.order.map((slug) => getProduct(locale, slug)));
@@ -34,12 +40,7 @@ export async function ProductStrip({ locale }: { locale: Locale }) {
   });
 
   return (
-    <Section
-      id="products"
-      tone="surface"
-      aria-labelledby="products-title"
-      className="overflow-x-clip"
-    >
+    <Section id="products" tone={tone} aria-labelledby="products-title" className="overflow-x-clip">
       <Container className="flex flex-col gap-10">
         <SectionHeader
           id="products-title"

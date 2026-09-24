@@ -50,6 +50,8 @@ vi.mock('@/lib/cms/payload', () => ({
         writes.push({ op: 'update', args });
         return { id: args['id'] };
       },
+      // The Appearance global, never saved: the e-mail goes out in the shipped colours.
+      findGlobal: async () => null,
       logger: {
         error: (entry: Record<string, unknown>) => logged.push({ level: 'error', entry }),
         warn: (entry: Record<string, unknown>) => logged.push({ level: 'warn', entry }),

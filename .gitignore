@@ -37,3 +37,9 @@ public/media/
 # Golden HTML snapshots of the review server (scripts/dev/golden.mjs), local only
 .golden/
 .claude/worktrees/
+
+# The brainstorming companion (superpowers)
+.superpowers/
+
+# The autonomous task state (multi-session progress notes)
+.autonomous/

@@ -202,7 +202,7 @@ describe('font files', () => {
 });
 
 describe('rendered and static images', () => {
-  it('are cached for a day under /og, /icons, /images and /video (site audit 2026-09-18, ADR-064)', () => {
+  it('are cached for a day under /og, /icon, /apple-icon, /images and /video (site audit 2026-09-18, ADR-064, spec 010)', () => {
     const routes = headerRoutes();
     for (const source of IMAGE_ROUTE_SOURCES) {
       const route = routes.find((r) => r.source === source);

@@ -2,6 +2,7 @@ import type { Payload } from 'payload';
 import { getBookingMailer } from '@/lib/booking-mailer';
 import { siteBase } from '@/lib/env';
 import { ADMIN_PREFIX } from '@/lib/site-routes';
+import { readMailPalette } from '@/modules/brand';
 import { calendarFor } from '@/modules/bookings/calendar';
 import type { BookingPorts } from '@/modules/bookings/service';
 import { payloadBookingStore } from '@/modules/bookings/store';
@@ -14,9 +15,10 @@ import { payloadBookingStore } from '@/modules/bookings/store';
  */
 export async function bookingPorts(payload: Payload): Promise<BookingPorts> {
   const store = payloadBookingStore(payload);
-  const [settings, site] = await Promise.all([
+  const [settings, site, palette] = await Promise.all([
     store.settings('ar'),
     payload.findGlobal({ slug: 'site-settings', depth: 0, overrideAccess: true }),
+    readMailPalette(payload),
   ]);
   const calendar = await calendarFor(payload, settings);
   return {
@@ -27,6 +29,7 @@ export async function bookingPorts(payload: Payload): Promise<BookingPorts> {
     siteUrl: siteBase(),
     adminUrl: `${payload.config.serverURL}${ADMIN_PREFIX}`,
     ownerEmail: site.contact.email,
+    palette,
     logger: {
       info: (msg) => payload.logger.info({ msg }),
       warn: (msg) => payload.logger.warn({ msg }),

@@ -1,4 +1,5 @@
-import type { Field, GlobalConfig, PayloadRequest, UploadField } from 'payload';
+import type { Field, GlobalConfig, PayloadRequest, Tab, UploadField } from 'payload';
+import { backgroundField } from '@/modules/brand/background-field';
 import { isEditorOrAdmin } from '@/modules/cms/access';
 import { revalidateGlobal } from '@/modules/cms/hooks/revalidate';
 import { twinField } from '@/modules/cms/fields/bilingual';
@@ -7,11 +8,26 @@ import { applyGlobalTranslations } from '@/modules/cms/hooks/translations';
 import { savedByField, stampSavedByGlobal } from '@/modules/cms/fields/saved-by';
 import { populateGlobalTwins } from '@/modules/cms/fields/twins';
 import { previewUrl } from '@/lib/preview-token';
-import { HERO_CHIPS_MAX, HERO_OVERLAY_DEFAULT, HEX_COLOR } from '@/content/schema';
+import {
+  HERO_CHIPS_MAX,
+  HERO_OVERLAY_DEFAULT,
+  HEX_COLOR,
+  HOME_BACKGROUND_SECTIONS,
+} from '@/content/schema';
 import { globalComponents } from '@/modules/cms/admin/document/config';
 import { adminGroup, iconOptions, sectionIcon } from '@/modules/cms/admin/icons';
 import { HOME_DESCRIPTIONS } from '@/modules/cms/admin/descriptions/site';
 import { describeFields } from '@/modules/cms/admin/descriptions/describe';
+
+/** The background picker, last in each tab of a section that may take a set (spec 010). */
+function withBackgrounds(tabs: Tab[]): Tab[] {
+  const sections: readonly string[] = HOME_BACKGROUND_SECTIONS;
+  return tabs.map((tab) =>
+    'name' in tab && tab.name && sections.includes(tab.name)
+      ? { ...tab, fields: [...tab.fields, backgroundField()] }
+      : tab,
+  );
+}
 
 /** The three why-us icons the section knows how to draw (BRD 6.4.6). */
 export const WHY_US_ICONS = ['ShieldCheck', 'Workflow', 'Zap'] as const;
@@ -103,7 +119,7 @@ export const Home: GlobalConfig = {
       // under the same path and the same columns as the group it replaced: no migration.
       {
         type: 'tabs',
-        tabs: [
+        tabs: withBackgrounds([
           {
             name: 'hero',
             label: { ar: 'الشرائح الافتتاحية', en: 'Opening slides' },
@@ -361,7 +377,7 @@ export const Home: GlobalConfig = {
             },
             fields: [...header(false), text('button', { ar: 'الزر', en: 'Button' })],
           },
-        ],
+        ]),
       },
       savedByField,
     ],

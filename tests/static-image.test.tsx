@@ -30,13 +30,19 @@ describe('<StaticImage> (ADR-064)', () => {
 
   it('preloads the header logo at high priority and loads it eagerly', () => {
     const html = renderToString(
-      <StaticImage src="/images/logo/logo-header.png" alt="" width={198} height={72} preload />,
+      <StaticImage
+        src="/images/badges/misk-foundation-logo-128.png"
+        alt=""
+        width={198}
+        height={72}
+        preload
+      />,
     );
     expect(html).toContain('loading="eager"');
     // The priority rides on the preload, never on the img: a page has one high-priority
     // image, its LCP photo.
     expect(html).not.toContain('fetchPriority');
-    expect(preload).toHaveBeenCalledWith('/images/logo/logo-header.png', {
+    expect(preload).toHaveBeenCalledWith('/images/badges/misk-foundation-logo-128.png', {
       as: 'image',
       fetchPriority: 'high',
     });
