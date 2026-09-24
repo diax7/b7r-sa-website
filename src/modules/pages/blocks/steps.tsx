@@ -1,5 +1,5 @@
-import Image from 'next/image';
 import { Container } from '@/components/shared/container';
+import { Photo } from '@/components/shared/photo';
 import { Reveal } from '@/components/shared/reveal';
 import { Section } from '@/components/shared/section';
 import { SectionHeader } from '@/components/shared/section-header';
@@ -38,7 +38,7 @@ export function StepsBlock({ block, tone, anchor, heading }: BlockProps<'steps'>
             {block.items.map((step, i) => (
               <Reveal as="li" key={step.order} index={i} className="flow-item">
                 <span className="flow-icon">
-                  <Image
+                  <Photo
                     src={step.icon}
                     alt=""
                     width={120}

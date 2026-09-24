@@ -298,7 +298,7 @@ in the admin CSP.
 the admin e2e records `securitypolicyviolation` events and expects none. `robots.txt` keeps
 `Disallow: /admin/` and the sitemap never lists it.
 
-## ADR-029: Media is served through the image optimizer (2026-09-13)
+## ADR-029: Media is served through the image optimizer (2026-09-13; the delivery rule superseded by ADR-064)
 
 Uploads live on S3 in production (`@payloadcms/storage-s3`, public-read bucket) and on the
 container's disk locally. The browser never loads a storage URL directly: `next/image` and
@@ -2801,6 +2801,119 @@ merchant meets)" as «مقدّم الاستشارة», kept apart from the calen
 12/24 h toggle, guests, a week or column layout, a custom success URL, an Office 365 link
 of its own, host fields of our own, screenshots in the repository (a scratch folder outside
 it, linked from the PR).
+
+## ADR-064: Photos are renditions served from the storage CDN; the designer preloads its mockups; brand images are static files (2026-09-20)
+
+**Context.** Dhia: "the speed of render of the photos feels slow; the blurry version stays
+a long time before the real photo replaces it; the designer takes a long time to show a
+product when I click between them; why weren't those photos loaded before I touch them?"
+Measured on b7r.sa the same day: every photo was a request to `/_next/image?url=…`
+(ADR-029), and CranL's edge, a Bunny pull zone, answers every URL without a file extension
+with `cache-control: no-cache` and `cdn-cache: MISS`, on every request, and drops `Vary`
+(Bunny's Smart Cache caches by extension and MIME type and does not follow the HTTP `Vary`
+header). On one connection: a file from the bucket's edge in 0.10 s; the optimizer with the
+size on disk in 0.15 to 0.45 s; a size nobody had asked for since the last deploy (the
+container's `.next/cache/images` dies with it) in 1.5 to 3.2 s. The home page made about
+25 such requests; the first visitor after every deploy paid the cold path on each. The
+designer asked for the same product photo under five URLs (the static preview at q75, the
+picker thumbs at 32 and 64, the canvas at 1080 and q82, the strip at q90), so nothing warmed
+the canvas, and a product switch fetched at the click. Caching `/_next/image` at the edge
+was not a fix: one format pinned for every browser and for WhatsApp's `og:image` fetch, and
+the cold encode after each deploy would stay (`docs/plans/2026-09-20-photo-delivery.md`).
+
+**Decision.** The delivery rule of ADR-029 is superseded: the browser loads a photo's
+renditions from the storage CDN, never through the optimizer.
+
+- **One ladder, two formats, deterministic names** (`src/lib/renditions.ts`, pure data).
+  Every media upload is encoded once, on upload, into `RENDITION_WIDTHS` (128, 384, 640,
+  828, 1080, 1200, 1536, 1920, 2560, 3840) in AVIF and WebP, twenty Payload `imageSizes`
+  named `{stem}-{width}.{format}` beside the original (`withoutEnlargement`, so every name
+  exists for every upload; a 1000 px photo's 1920 file is the photo at 1000). The encode is
+  the one the optimizer shipped (`RENDITION_ENCODE`: AVIF at `round(90 * 50 / 80)` = 56
+  with `effort: 3`, the mapping Next verified with dssim and ssimulacra2; WebP at 90): the
+  hero desktop AVIF measures 38,297 B against 38,662 B through the optimizer. `deviceSizes`
+  and `imageSizes` in `next.config.ts` are the ladder itself, imported, so every `next/image`
+  candidate is one file. The storage plugin uploads and deletes the sizes with the original.
+- **`<Photo>`** (`src/components/shared/photo.tsx`, a client module like `next/image`) is
+  the one way a CMS photo renders: `<picture>` with an AVIF `<source>` and `next/image` as
+  the WebP `<img>` through two loaders, the browser choosing format and size, the blur-up
+  placeholder in the server HTML and cleared on load; `preload` gives a typed AVIF
+  `ReactDOM.preload` with the caller's `fetchPriority` (a WebP preload beside it would make
+  an AVIF browser fetch both). The hero's own `<picture>` carries the four sources and two
+  AVIF-typed, media-gated preloads. The site's CSP `img-src` gains the storage origin. What
+  keeps the optimizer: the `og:image` JPEG at 1200 (the file a scraper without `Accept`
+  gets) and the admin's thumbnail of a document without renditions yet.
+- **The designer** names one file per mockup: `mockupUrls(src)` at 1080 (the stage is 640
+  at most), read by the static preview (`<MockupPicture>`, one candidate per format, not
+  `<Photo>`, since a candidate list would let a 2x screen pick a wider rung than the
+  canvas's fixed one), the chips and the canvas alike, through one rule (`mockupSourceOf`).
+  The canvas loads it through a `<picture>` built off the document (`loadMockup`), so the
+  browser runs the one source selection it ran for the preview and the file is the
+  preview's by construction; the loaded elements stay in a module map, and once the current
+  mockup has arrived the other products' are fetched one at a time at low priority and
+  decoded (`usePreloadedMockups`; five files of about 12 KB; about 23 MB of bitmaps in
+  memory), so a switch draws from memory under the crossfade with no request. Skipped under
+  Data Saver; a failed preload is dropped and the click loads it the normal way. No
+  `crossOrigin` on the mockups: nothing reads the canvas back (the mockup node is only
+  cached, Konva's hit canvas draws colour keys); the day an export ships, `crossOrigin` goes
+  on the preview, the preload and the canvas alike and the cut-over check gains the CORS
+  header. Playwright's WebKit build has no AVIF decoder and takes the WebP for the preview
+  and the canvas alike; the e2e asserts one format per engine.
+- **Brand images** (the logos, the badges, the video poster) are plain files under
+  `public/images` and `public/video`, written by `pnpm assets` at 2x of the box they are
+  shown in (palette PNGs; the marks have alpha), served from the edge with a day of cache
+  (`/video/*` joins `IMAGE_ROUTE_SOURCES`), through `<StaticImage>`: lazy unless
+  preloaded (React's server renderer preloads every eager `<img>` it meets, a fallback's
+  included), the header logo preloaded at high priority with no `fetchpriority` on its
+  `<img>` (a page's one `fetchpriority="high"` image is its LCP photo). With the header
+  off `next/image`, its client runtime left the layout's shared chunk for the chunk of each
+  route that renders a photo (Turbopack merges per route): the blog's own JS rose from 1.9
+  to 10.2 KB gzipped, about 8 KB once more per additional photo route a person visits; a
+  server-only `<Photo>` would not remove it (a client import of `getImageProps` drags the
+  component along) and would lose the blur clearing, so the client `<Photo>` stands and the
+  budget line reads 12 KB.
+- **The media collection** has no focal point and no crop: a width-only rendition keeps the
+  whole frame, and the admin's crop rewrites the file under its own name, which the edge
+  holds for a month; replace a photo by uploading it again, it gets a new name. Payload keeps
+  the hidden `focalX`/`focalY` fields whenever `imageSizes` is set, so the columns stay. An
+  animated WebP is refused before the operation (`refuseAnimated`, sharp `pages > 1`, a
+  400 with a sentence in both languages): Payload would otherwise hand sharp a tall strip of
+  frames for each of the twenty renditions. The list view shows none of the size columns.
+- **The cut-over and every deploy after it.** The migration adds the twenty groups and drops
+  the four dead ones of the 2026-09-13 config; `scripts/media-renditions.ts` re-saves every
+  document lacking a size under its own name through the Local API as the admin (Payload
+  encodes, the plugin uploads, the blur is recomputed to the same value), idempotent,
+  reporting every failing document and failing the run. Both builds run it after
+  `scripts/ci/migrate.sh` and before `pnpm build` (`railpack.json`, the Dockerfile; both
+  hold the database, the secret and the S3 credentials), so a deploy that runs before
+  anyone backfilled by hand still prerenders pages whose files exist, and an upload made
+  between the migrate and the deploy heals on the next build. The fast path, by hand after
+  the merge, is in the RUNBOOK ("Assets"). On this machine the 33 photos took one minute; a
+  large upload in the admin takes seconds, once. **A script that creates or updates media
+  passes a fresh `context` object to every operation, never one shared constant**: the
+  storage plugin sets `skipCloudStorage` on the context it is handed before its own
+  metadata update, Payload's nested operation swaps `req.context` for a copy, and the
+  plugin's cleanup clears the copy, so a flag set on a shared object sticks and every
+  upload after the first skips the bucket while its rows and URLs look complete. The first
+  CI run under S3 found it (33 documents, one document's objects, every other rendition a
+  404 that Chromium reports as an ORB block); the seeds now build a context per call, and
+  the designer e2e fails on a failed mockup request rather than a timeout.
+
+**What stays of ADR-029.** The one q92 source encode (`src/lib/photo.ts`, the assets
+scripts), the unique names on replacement and the redeploy after a rename, the blur-up
+field and `stampBlur`, `mediaUrl`, the `og:image` through the optimizer.
+
+**Not in scope.** A dedupe of the rungs above a photo's width (six identical files for a
+1000 px photo, about 180 KB in the bucket, nothing on the wire; the mappers would have to
+know each document's width); a dedicated image CDN; a CranL console setting (Bunny ignores
+`Vary`, and the cold encode would stay); the real photographs (checklist row 40), which the
+pipeline serves whole when they land.
+
+**Amended 2026-09-24 (merged after ADR-065).** The logos are no longer brand images: the header,
+the phone menu, the footer, the error pages and the WhatsApp card draw the traced logo from its
+sprite (`public/images/logo/sprite.svg`, ADR-065 phase 1d), a static file from the edge like the
+others, and the app icons are routes. A logo uploaded under Appearance is served as uploaded,
+from the storage CDN, through `StaticImage`; the optimizer still appears on no public page.
 
 ## ADR-065: The Appearance global: the brand as values, not literals (2026-09-22)
 

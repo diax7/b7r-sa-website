@@ -1,5 +1,5 @@
-import Image from 'next/image';
 import { Container } from '@/components/shared/container';
+import { Photo } from '@/components/shared/photo';
 import { Section } from '@/components/shared/section';
 import { copyFor } from '@/content/copy';
 import { type Author, getPostPage } from '@/lib/cms/blog';
@@ -40,12 +40,12 @@ export async function AuthorPage({
         <Container className="flex flex-col gap-10">
           <header className="flex flex-col items-start gap-5 md:flex-row md:items-center md:gap-8">
             {author.photo ? (
-              <Image
+              <Photo
                 src={author.photo}
                 alt=""
                 width={112}
                 height={112}
-                priority
+                preload
                 className="size-28 rounded-pill object-cover"
               />
             ) : (

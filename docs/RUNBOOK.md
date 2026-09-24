@@ -23,8 +23,9 @@ On Windows `pnpm lhci` completes the audit but chrome-launcher fails to delete i
 profile (EPERM) and reports failure; use `bash scripts/dev/lh-all.sh` locally, which builds,
 serves, warms the image cache and prints the same mobile scores. CI runs
 `bash scripts/ci/lighthouse.sh` on Ubuntu: it starts the server, requests every audited page
-and its image transforms once (ISR entries and the `next/image` cache warm, the steady state
-production reaches after the first visitor), then runs `lhci autorun` with three runs.
+once (the ISR entries warm, the steady state production reaches after the first visitor;
+the photos are files since ADR-064, nothing to warm), then runs `lhci autorun` with three
+runs.
 
 CI runs on the pull request only (ADR-045). Merge with `bash scripts/merge-pr.sh <number>
 [subject]` (`gh` signed in with access to the repository): it refuses a branch whose remote
@@ -143,10 +144,45 @@ logo and `favicon.ico` are still the PNGs `pnpm assets` writes.
 `pnpm assets` derives `public/images` from `resources/` (ADR-002): logos, badges, the 3D
 icons, the product photos, the blog covers, the hero crops. Since 2026-09-19 (ADR-029
 amended) a photo is written **once**, at the source's own resolution, JPEG q92 with full
-chroma and never upscaled (`src/lib/photo.ts` holds the numbers); the image optimizer's
-encode at quality 90 is the only lossy step after it. Put a 3000 px hero photograph under
-`resources/hero/examples` or a 2000 by 2000 product export under `resources/products/{slug}/`
-and the same command serves it whole; nothing else changes.
+chroma and never upscaled (`src/lib/photo.ts` holds the numbers); the upload's encode of
+the renditions at quality 90 is the only lossy step after it. Put a 3000 px hero photograph
+under `resources/hero/examples` or a 2000 by 2000 product export under
+`resources/products/{slug}/` and the same command serves it whole; nothing else changes.
+
+**Renditions (ADR-064).** Every media upload is encoded on upload into the ladder of
+`src/lib/renditions.ts` (ten widths, AVIF and WebP, `{stem}-{width}.{format}` beside the
+original) and the site loads those files from the storage CDN; the image optimizer serves
+only the `og:image` JPEG and the admin's fallback thumbnail. An upload in the admin takes a
+few seconds longer than before (twenty encodes, once); measure the first large one on the
+container and write the number here. Brand images (the logos, the badges, the video's
+poster) are plain files `pnpm assets` writes at 2x of the box they are shown in, through
+`<StaticImage>`; they never go through the optimizer.
+
+- `pnpm exec tsx scripts/media-renditions.ts [--env <file>] [--dry-run] [--force]`
+  generates the renditions of every document lacking one, by re-saving its stored file
+  under its own name through the Local API as the admin (Payload encodes, the storage
+  plugin uploads, the blur is recomputed to the same value). Idempotent: a document holding
+  every size is skipped, so **both builds run it after the migration and before `next
+  build`** (`railpack.json`, the Dockerfile) and pay nothing when there is nothing to do; a
+  failing document is reported and the run exits 1, which fails the build. `--force`
+  regenerates everything (after a change to the ladder or the encode).
+
+**The cut-over to renditions, or any later change to the ladder**, by hand and before the
+deploy so the build's own run finds nothing to do (the build would do it otherwise, more
+slowly on the build machine):
+
+1. After the merge, from a machine with `.env.cranl.local`: `DATABASE_URL=<production>
+   pnpm migrate` (additive; the old image keeps serving), then
+   `pnpm exec tsx scripts/media-renditions.ts --env .env.cranl.local --dry-run`, then
+   without the flag: about two seconds per photo. (Skipping this step is safe: the build
+   migrates and backfills on its own, only more slowly on the build machine.)
+2. Check that the edge serves what the pages will name, twice each so the second answer is
+   the edge's: `curl -sI https://storage-b7r-media.cranl.net/media/<stem>-1080.avif` and the
+   `-1080.webp`; expect `content-type: image/avif` and `image/webp` (the plugin sets the
+   type per object) and `cdn-cache: HIT` on the second call.
+3. Deploy by hand as usual. The new build's pages name files that already exist; the old
+   image kept serving throughout (the migration adds columns the old image never reads and
+   keeps `focal_x`/`focal_y`, which it does read).
 
 The media library holds the same files under the seed's names (`{slug}-{colour}-{side}.jpg`,
 `hero-set-a-desktop.jpg`, `lifestyle-cover-pricing.jpg`, `icons-3d-printer-print.jpg`). Two
@@ -163,17 +199,18 @@ scripts keep it current, both taking `--env <file>` for another database and buc
 
 **A replaced photo gets a new name** (`{name}-{8 hex}.jpg`), on purpose. The bucket's CDN
 (`storage-b7r-media.cranl.net`, a BunnyCDN pull zone in front of R2) answers with
-`cache-control: public, max-age=31536000, immutable` and `cdn-cache: HIT` (checked with
-`curl -I` on 2026-09-19; `media-to-bucket.mjs` set that header on the objects it uploaded),
-and `next/image` caches its transforms by URL for a year (`images.minimumCacheTTL`): an
-object replaced under its old name keeps serving the old bytes to the optimizer and to the
-browser for up to a year. The document's `url` changes with the name and the old object goes
-when Payload deletes it. **The production run ends with a redeploy** (the script says so
+`cache-control: public, max-age=2592000` and `cdn-cache: HIT` (checked with `curl -I` on
+2026-09-20; the objects `media-to-bucket.mjs` uploaded carry a year as `immutable`), and the
+renditions carry the stem, so an object replaced under its old name would keep serving the
+old bytes from the edge for a month, and its renditions with it. That is why the admin's
+crop and focal point are off (ADR-064): replace a photo by uploading it again. The
+document's `url` changes with the name and the old object goes when Payload deletes it,
+its renditions with it. **The production run ends with a redeploy** (the script says so
 when it changed anything): a media document revalidates no page of its own, so the
 prerendered pages keep the old names until their 60 s timer runs (ADR-030), and in that
-minute a photo not cached at the CDN edge or by the optimizer answers 404, the old file
-being gone; the rebuild prerenders every page with the new names at once and clears the
-optimizer's cache. An upload from the admin is safe for the same reason as the rename:
+minute a photo not cached at the CDN edge answers 404, the old file being gone; the rebuild
+prerenders every page with the new names at once. An upload from the admin is safe for the
+same reason as the rename:
 Payload names a new file uniquely; the page that uses it is saved after, and its own hook
 revalidates it.
 
@@ -256,9 +293,15 @@ database, then prerenders every page from it. Two builds exist, one per kind of 
    sixth signup or message in ten minutes site-wide is refused.
 7. HSTS carries `preload`. Submitting `b7r.sa` to the preload list commits every future
    `*.b7r.sa` subdomain to HTTPS; do that only once every subdomain (app, umami, …) serves TLS.
-8. CDN / proxy rule: cache `/_next/static/*` and `/_next/image*` freely; never cache `/admin*`
-   or `/api/*` (they answer `Cache-Control: private, no-store`); pages carry Next's own
-   `s-maxage=60, stale-while-revalidate` and may be cached at the edge on those terms.
+8. CDN / proxy rule: cache `/_next/static/*`, `/images/*`, `/fonts/*`, `/icons/*`, `/og/*`
+   and `/video/*` on the headers the app sends; never cache `/admin*` or `/api/*` (they
+   answer `Cache-Control: private, no-store`). Measured on CranL's edge (a Bunny pull zone)
+   on 2026-09-20: every URL without a file extension, the pages and `/_next/image?…` alike,
+   comes back `cache-control: no-cache` and `cdn-cache: MISS` on every request, and the
+   `Vary` header is dropped (Bunny does not follow it). The photos no longer depend on it:
+   they are files on the storage CDN (ADR-064); what remains on `/_next/image` is the
+   `og:image` JPEG and the admin's fallback thumbnail. Do not ask the edge to cache
+   `/_next/image`: without `Vary` it would pin one format for every browser.
 9. Rollback: redeploy the previous build from the platform's deployment list. The database
    is shared and migrations are additive, so the previous image runs on the current schema.
    Release order on every push to `main`: the build migrates → the new image starts → the

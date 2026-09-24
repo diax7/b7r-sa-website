@@ -19,7 +19,7 @@ export interface HeaderRoute {
 }
 
 export interface SecurityHeaderOptions {
-  /** Origin of the S3 public URL: the admin shows upload previews straight from storage. */
+  /** Origin of the S3 public URL: the site loads the renditions from it (ADR-064), the admin its previews. */
   mediaOrigin?: string | undefined;
   /** Next dev needs `eval` for React Refresh; never set in production builds. */
   allowEval?: boolean;
@@ -61,7 +61,10 @@ function unique(values: Array<string | undefined>): string[] {
   return [...new Set(values.filter((v): v is string => Boolean(v)))];
 }
 
-export function contentSecurityPolicy({ allowEval = false }: SecurityHeaderOptions = {}): string {
+export function contentSecurityPolicy({
+  mediaOrigin,
+  allowEval = false,
+}: SecurityHeaderOptions = {}): string {
   const directives: Array<[string, string[]]> = [
     ['default-src', ["'self'"]],
     [
@@ -76,9 +79,22 @@ export function contentSecurityPolicy({ allowEval = false }: SecurityHeaderOptio
       ]),
     ],
     ['style-src', ["'self'", "'unsafe-inline'"]],
-    // GA's tag also reports through image pixels and fetches on googletagmanager.com (its
-    // documented CSP asks for the host on both directives; WebKit took the pixel path first).
-    ['img-src', ["'self'", 'data:', 'blob:', 'https://www.google-analytics.com', ...GA_HOSTS, GTM]],
+    // The photos come from the storage CDN (ADR-064; none when media is on disk, then the
+    // URLs are same-origin). GA's tag also reports through image pixels and fetches on
+    // googletagmanager.com (its documented CSP asks for the host on both directives; WebKit
+    // took the pixel path first).
+    [
+      'img-src',
+      unique([
+        "'self'",
+        'data:',
+        'blob:',
+        mediaOrigin,
+        'https://www.google-analytics.com',
+        ...GA_HOSTS,
+        GTM,
+      ]),
+    ],
     ['connect-src', unique(["'self'", ...GA_HOSTS, GA_REGION, GTM, ...UMAMI_HOSTS])],
     ['frame-src', [TURNSTILE]],
     ['font-src', ["'self'"]],
@@ -164,12 +180,19 @@ export const FONT_CACHE: HeaderEntry = {
 };
 
 /**
- * The Open Graph renders, the app icons and the brand and product images keep their names
- * across deploys, so a day is the cache (site audit 2026-09-18, item 16); Next's default for
- * `public/` is `max-age=0`.
+ * The Open Graph renders, the app icons (drawn from the brand, spec 010), the brand images and
+ * the video with its poster keep their names across deploys, so a day is the cache (site audit
+ * 2026-09-18, item 16; ADR-064 serves every public image as is, from the edge); Next's default
+ * for `public/` is `max-age=0`.
  */
 export const IMAGE_CACHE: HeaderEntry = { key: 'Cache-Control', value: 'public, max-age=86400' };
-export const IMAGE_ROUTE_SOURCES = ['/og/:path*', '/icon/:path*', '/apple-icon', '/images/:path*'];
+export const IMAGE_ROUTE_SOURCES = [
+  '/og/:path*',
+  '/icon/:path*',
+  '/apple-icon',
+  '/images/:path*',
+  '/video/:path*',
+];
 
 export function headerRoutes(options: SecurityHeaderOptions = {}): HeaderRoute[] {
   return [

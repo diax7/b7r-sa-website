@@ -1,4 +1,4 @@
-import Image from 'next/image';
+import { StaticImage } from '@/components/shared/static-image';
 import { cn } from '@/lib/cn';
 import { LOGO_BOX, LOGO_SPRITE, MARK_BOX } from '@/modules/core/logo-box';
 import type { LogoImage } from '@/modules/core/logo-image';
@@ -39,31 +39,29 @@ export function BrandLogo({
 
 /**
  * The logo a place of the shell shows (spec 010): the Appearance screen's upload when there
- * is one, else the drawn logo in the brand's colours. The upload keeps its own colours; the
- * drawn one follows the brand.
+ * is one, else the drawn logo in the brand's colours. The upload keeps its own colours and is
+ * served as it was uploaded, from the storage CDN, never through the image optimizer
+ * (ADR-064); `priority` preloads it, as the header's is.
  */
 export function ShellLogo({
   logo,
   className,
-  sizes,
   priority = false,
   onDark = false,
 }: {
   logo: LogoImage | null;
   className: string;
-  sizes?: string;
   priority?: boolean;
   onDark?: boolean;
 }) {
   if (!logo) return <BrandLogo onDark={onDark} className={className} />;
   return (
-    <Image
+    <StaticImage
       src={logo.src}
       alt=""
       width={logo.width}
       height={logo.height}
-      sizes={sizes}
-      priority={priority}
+      preload={priority}
       className={className}
     />
   );

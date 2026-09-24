@@ -1,8 +1,9 @@
 /**
- * The photo pipeline's numbers (ADR-029, amended 2026-09-19): one lossy encode before the
- * image optimizer. The files under `public/images` and in the media library are written once
- * at the source's own resolution, JPEG q92 with full-resolution chroma (mozjpeg); `next/image`
- * then encodes what the browser asked for at quality 90 (`PHOTO_QUALITY`). A second lossy
+ * The photo pipeline's numbers (ADR-029, amended 2026-09-19; ADR-064): one lossy encode
+ * over the source. The files under `public/images` and in the media library are written
+ * once at the source's own resolution, JPEG q92 with full-resolution chroma (mozjpeg); the
+ * upload then encodes the renditions of `src/lib/renditions.ts` from it at quality 90
+ * (`PHOTO_QUALITY`, mapped for AVIF the way Next's optimizer mapped it). A second lossy
  * pass at q80 over a q82 file was what made every photo soft (docs/audits/2026-09-19-photo-quality.md).
  * Pure data and arithmetic, so the scripts and the tests share one definition.
  */
@@ -11,10 +12,7 @@ import type { Region } from 'sharp';
 /** The JPEG the assets scripts write: sharp's `jpeg()` options. */
 export const PHOTO_JPEG = { quality: 92, mozjpeg: true, chromaSubsampling: '4:4:4' } as const;
 
-/**
- * The `quality` the photo components hand `next/image` (one value serves AVIF and WebP);
- * logos, icons and badges keep Next's default. Must be in `images.qualities`.
- */
+/** The quality every photo rendition is encoded at (`RENDITION_ENCODE` derives both formats' from it). */
 export const PHOTO_QUALITY = 90;
 
 /**

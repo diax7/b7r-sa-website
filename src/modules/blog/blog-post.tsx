@@ -1,8 +1,8 @@
-import Image from 'next/image';
 import Link from 'next/link';
 import { Breadcrumbs } from '@/components/shared/breadcrumbs';
 import { Button } from '@/components/shared/button';
 import { Container } from '@/components/shared/container';
+import { Photo } from '@/components/shared/photo';
 import { Section } from '@/components/shared/section';
 import { copyFor } from '@/content/copy';
 import { getSiteSettings } from '@/lib/cms';
@@ -17,9 +17,7 @@ import { cn } from '@/lib/cn';
 import { formatDate, isoDay } from '@/lib/dates';
 import { env, siteBase } from '@/lib/env';
 import { type Locale, localePath } from '@/lib/i18n';
-import { blurPlaceholder } from '@/lib/image-url';
 import { headingIds, headings, splitAfterSecondHeading } from '@/lib/lexical';
-import { PHOTO_QUALITY } from '@/lib/photo';
 import { registerUrl } from '@/lib/utm';
 import { JsonLd, jsonLd } from '@/modules/core';
 import { CtaRibbon } from '@/modules/core/cta-ribbon';
@@ -119,13 +117,12 @@ export async function BlogPostPage({ post, locale }: { post: Post; locale: Local
                 </p>
               </header>
               <div className="relative aspect-video overflow-hidden rounded-lg bg-ground">
-                <Image
+                <Photo
                   src={post.cover.src}
                   alt={post.cover.alt}
                   fill
-                  quality={PHOTO_QUALITY}
-                  {...blurPlaceholder(post.cover.blur)}
-                  priority
+                  blur={post.cover.blur}
+                  preload
                   fetchPriority="high"
                   sizes="(min-width: 800px) 760px, 100vw"
                   className="object-cover"
@@ -192,7 +189,7 @@ function AuthorCard({ author, locale }: { author: Post['author']; locale: Locale
   return (
     <div className="flex items-center gap-4" data-author="">
       {author.photo ? (
-        <Image
+        <Photo
           src={author.photo}
           alt=""
           width={48}

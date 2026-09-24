@@ -1,12 +1,10 @@
 'use client';
 
-import Image from 'next/image';
 import { useId, useState, type KeyboardEvent } from 'react';
 import { ColorPicker } from '@/components/shared/color-picker';
+import { Photo } from '@/components/shared/photo';
 import type { ProductColor } from '@/content/schema';
 import { cn } from '@/lib/cn';
-import { blurPlaceholder } from '@/lib/image-url';
-import { PHOTO_QUALITY } from '@/lib/photo';
 
 export interface GalleryCopy {
   label: string;
@@ -68,14 +66,13 @@ export function Gallery({ productName, colors, copy }: GalleryProps) {
         data-gallery-photo={color.slug}
         data-gallery-side={showBack ? 'back' : 'front'}
       >
-        <Image
+        <Photo
           src={color.images.front}
           alt={`${productName}${copy.separator}${color.name}${copy.separator}${copy.front}`}
           fill
           sizes="(min-width: 1024px) 560px, 100vw"
-          quality={PHOTO_QUALITY}
-          {...blurPlaceholder(color.images.frontBlur)}
-          priority
+          blur={color.images.frontBlur}
+          preload
           fetchPriority="high"
           className={cn(
             'object-cover transition-opacity duration-(--duration-slow) ease-(--ease-standard)',
@@ -83,13 +80,12 @@ export function Gallery({ productName, colors, copy }: GalleryProps) {
           )}
         />
         {color.images.back && (
-          <Image
+          <Photo
             src={color.images.back}
             alt={`${productName}${copy.separator}${color.name}${copy.separator}${copy.back}`}
             fill
             sizes="(min-width: 1024px) 560px, 100vw"
-            quality={PHOTO_QUALITY}
-            {...blurPlaceholder(color.images.backBlur)}
+            blur={color.images.backBlur}
             className={cn(
               'object-cover transition-opacity duration-(--duration-slow) ease-(--ease-standard)',
               showBack ? 'opacity-100' : 'opacity-0',

@@ -5,7 +5,7 @@ type DeepPartial<T> = { [K in keyof T]?: T[K] extends object ? DeepPartial<T[K]>
 /**
  * Our Arabic on top of Payload's (ADR-056). Payload's `ar` pack is community work: the
  * strings an editor meets every day carry «تم» + مصدر, «قم بـ», wrong hamzas («أنشاء»),
- * mistranslations («محصول» for crop, «واضح» for clear, «المواقع» for locales), an
+ * mistranslations («واضح» for clear, «المواقع» for locales), an
  * untranslated «Toggle block», a translated placeholder («{{العنوان}}») and one string that
  * is a leaked instruction to a translation model (`general.restoring`). These entries are
  * merged over the pack by `i18n.translations.ar` in the config (`deepMergeSimple`: a key
@@ -156,13 +156,10 @@ export const payloadArabic: DeepPartial<DefaultTranslationsObject> = {
   upload: {
     addFile: 'أضف ملفاً',
     bulkUpload: 'رفع دفعة',
-    crop: 'قصّ',
-    cropToolDescription: 'اسحب زوايا المنطقة المحددة، أو ارسم منطقة جديدة، أو اضبط القيم أدناه.',
     download: 'تنزيل',
     dragAndDrop: 'اسحب ملفاً وأفلته',
     filesToUpload: 'ملفات للرفع',
     fileToUpload: 'ملف للرفع',
-    focalPointDescription: 'اسحب نقطة التركيز على المعاينة أو اضبط القيم أدناه.',
     selectFile: 'اختر ملفاً',
   },
   validation: {

@@ -1,15 +1,13 @@
-import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/shared/button';
 import { Container } from '@/components/shared/container';
+import { Photo } from '@/components/shared/photo';
 import { SarAmount } from '@/components/shared/sar-amount';
 import { Section, type SectionTone } from '@/components/shared/section';
 import { SectionHeader } from '@/components/shared/section-header';
 import { copyFor } from '@/content/copy';
 import { getHome, getProduct } from '@/lib/cms';
 import { type Locale, localePath } from '@/lib/i18n';
-import { blurPlaceholder } from '@/lib/image-url';
-import { PHOTO_QUALITY } from '@/lib/photo';
 import { stripColorFor } from '@/lib/product-helpers';
 import { StripHint } from '@/modules/home/product-strip/strip-hint';
 
@@ -66,13 +64,12 @@ export async function ProductStrip({
                 className="strip-panel"
                 data-strip-panel={product.slug}
               >
-                <Image
+                <Photo
                   src={color.images.front}
                   alt=""
                   fill
                   sizes="(min-width: 1024px) 20vw, 78vw"
-                  quality={PHOTO_QUALITY}
-                  {...blurPlaceholder(color.images.frontBlur)}
+                  blur={color.images.frontBlur}
                   className="object-cover object-center"
                 />
                 <span className="strip-label">

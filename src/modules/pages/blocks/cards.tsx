@@ -1,8 +1,8 @@
 import { Eye, Heart, ShieldCheck, Target, Workflow, Zap, type LucideIcon } from 'lucide-react';
-import Image from 'next/image';
 import { Card } from '@/components/shared/card';
 import { Container } from '@/components/shared/container';
 import { Icon } from '@/components/shared/icon';
+import { Photo } from '@/components/shared/photo';
 import { Reveal } from '@/components/shared/reveal';
 import { Section } from '@/components/shared/section';
 import { SectionHeader } from '@/components/shared/section-header';
@@ -57,7 +57,7 @@ export function CardsBlock({ block, locale, tone, anchor, heading }: BlockProps<
               <Card className="flex h-full flex-col overflow-hidden">
                 {card.art && (
                   <div className="relative aspect-[16/9] bg-ground">
-                    <Image
+                    <Photo
                       src={card.art}
                       alt=""
                       fill

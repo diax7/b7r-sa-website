@@ -86,7 +86,6 @@ export function Header({ navigation, site, locale, locales, copy, logo }: ShellD
             >
               <ShellLogo
                 logo={logo}
-                sizes="(min-width: 768px) 198px, 88px"
                 priority
                 className={cn(
                   'w-auto transition-[height] duration-(--duration-base) ease-(--ease-standard)',

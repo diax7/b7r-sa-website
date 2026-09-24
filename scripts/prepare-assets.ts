@@ -119,10 +119,14 @@ async function badges() {
     join(low, 'ministry-of-commerce.png'),
     pub('images', 'badges', 'ministry-of-commerce.png'),
   );
-  await sharp(res('brand', 'trust-badges', 'misk-foundation-logo.png'))
-    .resize({ width: 400 })
-    .png()
-    .toFile(pub('images', 'badges', 'misk-foundation-logo.png'));
+  // The Misk logo at 2x of its two boxes: 64 px in the footer, 180 px in the credential
+  // block (ADR-064: a public image is served as is, at the pixels it is shown at).
+  for (const width of [128, 360]) {
+    await sharp(res('brand', 'trust-badges', 'misk-foundation-logo.png'))
+      .resize({ width })
+      .png({ palette: true, quality: 90, compressionLevel: 9 })
+      .toFile(pub('images', 'badges', `misk-foundation-logo-${width}.png`));
+  }
 }
 
 async function video() {

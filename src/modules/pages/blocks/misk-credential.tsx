@@ -1,6 +1,6 @@
-import Image from 'next/image';
 import { Container } from '@/components/shared/container';
 import { Section } from '@/components/shared/section';
+import { StaticImage } from '@/components/shared/static-image';
 import { cn } from '@/lib/cn';
 import type { BlockProps } from '@/modules/pages/blocks/types';
 
@@ -22,12 +22,11 @@ export function MiskCredentialBlock({
       <Container>
         <div className="grid items-center gap-8 rounded-lg bg-accent-tint p-6 md:grid-cols-[240px_1fr] md:gap-12 md:p-10">
           <div className="grid place-items-center rounded-base bg-surface p-5 shadow-card">
-            <Image
-              src="/images/badges/misk-foundation-logo.png"
+            <StaticImage
+              src="/images/badges/misk-foundation-logo-360.png"
               alt="Misk Foundation"
-              width={400}
-              height={230}
-              sizes="180px"
+              width={360}
+              height={207}
               className="h-auto w-[180px]"
             />
           </div>

@@ -90,7 +90,7 @@ export function MobileMenu({
             aria-label={site.brandName}
             onClick={() => setOpen(false)}
           >
-            <ShellLogo logo={logo} sizes="88px" className="h-8 w-auto" />
+            <ShellLogo logo={logo} className="h-8 w-auto" />
           </Link>
           <div className="flex items-center gap-2">
             {switchable && <LanguageSwitch locale={locale} ariaLabel={copy.a11y.switchLanguage} />}

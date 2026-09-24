@@ -1,12 +1,14 @@
 import { Upload } from 'lucide-react';
-import Image from 'next/image';
 import { Button } from '@/components/shared/button';
 import { Icon } from '@/components/shared/icon';
+import { Photo } from '@/components/shared/photo';
 import { SarAmount } from '@/components/shared/sar-amount';
 import { SarSymbol } from '@/components/shared/sar-symbol';
 import type { Product } from '@/content/schema';
-import { designerColorFor } from '@/lib/product-helpers';
 import { cn } from '@/lib/cn';
+import { designerColorFor } from '@/lib/product-helpers';
+import { mockupSourceOf } from '@/modules/designer/mockup';
+import { MockupPicture } from '@/modules/designer/mockup-picture';
 import { monthlyProfit, perPieceProfit } from '@/modules/designer/profit';
 import type { DesignerCopy } from '@/modules/designer/types';
 
@@ -34,11 +36,10 @@ export function DesignerStatic({ products, product, copy, ctaHref }: DesignerSta
       <div className="order-first lg:order-last lg:w-[54%]">
         <div className="relative mx-auto aspect-square w-full max-w-[600px] overflow-hidden rounded-lg bg-ground">
           {color && (
-            <Image
+            <MockupPicture
               src={color.images.front}
               alt={copy.mockupAlt.replace('{product}', product.name).replace('{color}', color.name)}
-              fill
-              sizes="(min-width: 1024px) 600px, 100vw"
+              blur={color.images.frontBlur}
               className="object-contain"
             />
           )}
@@ -66,10 +67,7 @@ export function DesignerStatic({ products, product, copy, ctaHref }: DesignerSta
           <legend className="text-small font-medium text-text">{designer.groups.product}</legend>
           <div className="flex flex-wrap gap-2">
             {products.map((p) => {
-              const thumb =
-                p.colors.find((c) => c.slug === designerColorFor(p))?.images.front ??
-                p.colors[0]?.images.front ??
-                '';
+              const thumb = mockupSourceOf(p) ?? '';
               const active = p.slug === product.slug;
               return (
                 <span
@@ -81,7 +79,7 @@ export function DesignerStatic({ products, product, copy, ctaHref }: DesignerSta
                       : 'border-border text-text',
                   )}
                 >
-                  <Image
+                  <Photo
                     src={thumb}
                     alt=""
                     width={32}

@@ -29,7 +29,14 @@ import { testimonialsEn } from '../src/content/seed/en/testimonials';
 
 const EN = { locale: 'en', fallbackLocale: false, depth: 0, overrideAccess: true } as const;
 const AR = { locale: 'ar', depth: 0, overrideAccess: true } as const;
-const CONTEXT = { disableRevalidate: true };
+/**
+ * A fresh context per operation, never one shared object: the storage plugin writes
+ * `skipCloudStorage` into the context it is handed before its own metadata update, Payload's
+ * nested operation swaps `req.context` for a copy, and the plugin's cleanup clears the copy,
+ * so a flag set on a shared object sticks and every upload after the first skips the bucket
+ * (found 2026-09-20 under S3: 33 media rows, one document's objects; ADR-064).
+ */
+const seedContext = () => ({ disableRevalidate: true });
 
 type Row = Record<string, unknown> & { id?: string | null };
 
@@ -114,7 +121,7 @@ export async function ensureEnglish(payload: Payload): Promise<EnglishSummary> {
         slug: 'site-settings',
         locale: 'en',
         data: { menu: await menuEn() },
-        context: CONTEXT,
+        context: seedContext(),
       });
       done('en site-settings: menu');
     } else {
@@ -122,7 +129,7 @@ export async function ensureEnglish(payload: Payload): Promise<EnglishSummary> {
         slug: 'site-settings',
         locale: 'en',
         data: { ...siteEn, menu: await menuEn() },
-        context: CONTEXT,
+        context: seedContext(),
       });
       done('en site-settings');
     }
@@ -139,7 +146,7 @@ export async function ensureEnglish(payload: Payload): Promise<EnglishSummary> {
         slug: 'seo-defaults',
         locale: 'en',
         data: { titleTemplate: seoEn.titleTemplate, routes: merged(ar.routes, rows) },
-        context: CONTEXT,
+        context: seedContext(),
       });
       done('en seo-defaults');
     } else {
@@ -151,7 +158,7 @@ export async function ensureEnglish(payload: Payload): Promise<EnglishSummary> {
           slug: 'seo-defaults',
           locale: 'en',
           data: { routes: merged(en.routes, rows) },
-          context: CONTEXT,
+          context: seedContext(),
         });
         done(`en seo-defaults: ${untitled.map((r) => r.route).join(', ')}`);
       }
@@ -210,7 +217,7 @@ export async function ensureEnglish(payload: Payload): Promise<EnglishSummary> {
           ribbon: { ...ar.ribbon, ...homeEn.ribbon },
           _status: 'published',
         },
-        context: CONTEXT,
+        context: seedContext(),
       });
       done('en home');
     }
@@ -251,7 +258,7 @@ export async function ensureEnglish(payload: Payload): Promise<EnglishSummary> {
           printArea: { ...ar.printArea, label: PRINT_AREA_LABEL_EN },
           printMethodLabel: PRINT_METHOD_EN,
         },
-        context: CONTEXT,
+        context: seedContext(),
       });
       done(`en product ${ar.slug}`);
     }
@@ -276,7 +283,7 @@ export async function ensureEnglish(payload: Payload): Promise<EnglishSummary> {
         id: ar.id,
         locale: 'en',
         data: english,
-        context: CONTEXT,
+        context: seedContext(),
       });
       done(`en faq ${ar.question.slice(0, 20)}`);
     }
@@ -301,7 +308,7 @@ export async function ensureEnglish(payload: Payload): Promise<EnglishSummary> {
         id: ar.id,
         locale: 'en',
         data: english,
-        context: CONTEXT,
+        context: seedContext(),
       });
       done(`en integration ${ar.platform}`);
     }
@@ -336,7 +343,7 @@ export async function ensureEnglish(payload: Payload): Promise<EnglishSummary> {
         id: ar.id,
         locale: 'en',
         data: english,
-        context: CONTEXT,
+        context: seedContext(),
       });
       done(`en testimonial ${ar.name}`);
     }
@@ -361,7 +368,7 @@ export async function ensureEnglish(payload: Payload): Promise<EnglishSummary> {
         id: ar.id,
         locale: 'en',
         data: { alt },
-        context: CONTEXT,
+        context: seedContext(),
       });
       done(`en media ${ar.filename}`);
     }
@@ -410,7 +417,7 @@ export async function ensureEnglish(payload: Payload): Promise<EnglishSummary> {
           blocks: blocks as never,
           seo: { ...ar.seo, title: english.seo.title, description: english.seo.description },
         },
-        context: CONTEXT,
+        context: seedContext(),
       });
       done(`en page ${ar.slug}`);
     }
@@ -432,7 +439,7 @@ export async function ensureEnglish(payload: Payload): Promise<EnglishSummary> {
         id: ar.id,
         locale: 'en',
         data: english,
-        context: CONTEXT,
+        context: seedContext(),
       });
       done(`en hub ${ar.slug}`);
     }
@@ -450,7 +457,7 @@ export async function ensureEnglish(payload: Payload): Promise<EnglishSummary> {
         id: ar.id,
         locale: 'en',
         data: blogAuthorEn,
-        context: CONTEXT,
+        context: seedContext(),
       });
       done(`en author ${ar.slug}`);
     }
@@ -484,7 +491,7 @@ export async function ensureEnglish(payload: Payload): Promise<EnglishSummary> {
           body: body as never,
           ...(english.seoTitle ? { seo: { ...ar.seo, title: english.seoTitle } } : {}),
         },
-        context: CONTEXT,
+        context: seedContext(),
       });
       done(`en post ${ar.slug}`);
     }

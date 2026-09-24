@@ -71,6 +71,20 @@ describe('content security policy (BRD 8.10, ADR-016)', () => {
     );
   });
 
+  it('lets the photos load from the storage CDN when media is on S3 (ADR-064)', () => {
+    const withMedia = contentSecurityPolicy({ mediaOrigin: 'https://media.b7r.sa' });
+    expect(directive(withMedia, 'img-src')).toContain('https://media.b7r.sa');
+    // Only images: scripts, fonts and fetches stay on the site's own origin.
+    for (const name of ['script-src', 'connect-src', 'font-src', 'media-src']) {
+      expect(directive(withMedia, name)).not.toContain('https://media.b7r.sa');
+    }
+    // On disk (no S3) the renditions are same-origin and nothing is added.
+    expect(directive(contentSecurityPolicy(), 'img-src')).not.toContain('undefined');
+    expect(directive(contentSecurityPolicy(), 'img-src')).toEqual(
+      directive(contentSecurityPolicy({ mediaOrigin: undefined }), 'img-src'),
+    );
+  });
+
   it('carries the hardening directives', () => {
     expect(directive(csp, 'default-src')).toEqual(["'self'"]);
     expect(directive(csp, 'object-src')).toEqual(["'none'"]);
@@ -188,13 +202,14 @@ describe('font files', () => {
 });
 
 describe('rendered and static images', () => {
-  it('are cached for a day under /og, /icons and /images (site audit 2026-09-18)', () => {
+  it('are cached for a day under /og, /icon, /apple-icon, /images and /video (site audit 2026-09-18, ADR-064, spec 010)', () => {
     const routes = headerRoutes();
     for (const source of IMAGE_ROUTE_SOURCES) {
       const route = routes.find((r) => r.source === source);
       expect(route?.headers, source).toEqual([IMAGE_CACHE]);
     }
     expect(IMAGE_CACHE.value).toBe('public, max-age=86400');
+    expect(IMAGE_ROUTE_SOURCES).toContain('/video/:path*');
     // The admin set still follows every cache rule, so its no-store wins on its own sources.
     const lastImage = Math.max(
       ...IMAGE_ROUTE_SOURCES.map((s) => routes.findIndex((r) => r.source === s)),

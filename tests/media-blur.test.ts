@@ -2,6 +2,7 @@ import type { PayloadRequest } from 'payload';
 import sharp from 'sharp';
 import { describe, expect, it, vi } from 'vitest';
 import { BLUR } from '@/lib/photo';
+import { RENDITION_NAMES } from '@/lib/renditions';
 import { BLUR_FIELD, blurDataUrl, stampBlur } from '@/modules/cms/hooks/blur';
 import { Media } from '@/modules/cms/collections/media';
 
@@ -103,17 +104,28 @@ describe('stampBlur', () => {
   });
 });
 
-describe('the media collection (ADR-029, amended 2026-09-19)', () => {
-  it('generates no renditions, hides the blur field, and runs the hook on every change', () => {
-    expect(Media.upload).not.toHaveProperty('imageSizes');
+describe('the media collection (ADR-029, ADR-064)', () => {
+  it('generates the ladder, no focal point or crop, hides the blur field, runs the hook', () => {
+    const upload = Media.upload as {
+      imageSizes: Array<{ name: string }>;
+      focalPoint: boolean;
+      crop: boolean;
+    };
+    expect(upload.imageSizes.map((s) => s.name)).toEqual([...RENDITION_NAMES]);
+    expect(upload.focalPoint).toBe(false);
+    expect(upload.crop).toBe(false);
     const blur = Media.fields.find((f) => 'name' in f && f.name === BLUR_FIELD);
     expect(blur).toMatchObject({ type: 'text', admin: { hidden: true } });
     expect(Media.hooks?.beforeChange).toContain(stampBlur);
   });
 
-  it("the panel's thumbnail is the optimizer's 384 px transform of the original", () => {
+  it("the panel's thumbnail is the 384 px WebP rendition, the optimizer's transform before the backfill", () => {
     const upload = Media.upload as { adminThumbnail: (args: { doc: unknown }) => string | null };
-    expect(upload.adminThumbnail({ doc: { url: 'https://storage.example/media/a.jpg' } })).toBe(
+    const url = 'https://storage.example/media/a.jpg';
+    expect(
+      upload.adminThumbnail({ doc: { url, sizes: { webp384: { filename: 'a-384.webp' } } } }),
+    ).toBe('https://storage.example/media/a-384.webp');
+    expect(upload.adminThumbnail({ doc: { url, sizes: { webp384: { filename: null } } } })).toBe(
       '/_next/image?url=https%3A%2F%2Fstorage.example%2Fmedia%2Fa.jpg&w=384&q=75',
     );
     expect(upload.adminThumbnail({ doc: {} })).toBeNull();

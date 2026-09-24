@@ -4,7 +4,7 @@ import {
   RichText,
 } from '@payloadcms/richtext-lexical/react';
 import type { SerializedEditorState } from '@payloadcms/richtext-lexical/lexical';
-import Image from 'next/image';
+import { Photo } from '@/components/shared/photo';
 import { mediaUrl } from '@/lib/cms/mappers';
 import { cn } from '@/lib/cn';
 import type { Locale } from '@/lib/i18n';
@@ -59,11 +59,12 @@ function converters(ids: Map<LexicalNode, string>, locale: Locale): JSXConverter
       const src = mediaUrl(value);
       if (!src || typeof value !== 'object' || !value) return null;
       return (
-        <Image
+        <Photo
           src={src}
           alt={value.alt}
           width={value.width ?? 1200}
           height={value.height ?? 800}
+          blur={value.blur ?? undefined}
           sizes="(min-width: 1024px) 760px, 100vw"
           className="rounded-base"
         />

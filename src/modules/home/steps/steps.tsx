@@ -1,8 +1,8 @@
 import { ArrowRight } from 'lucide-react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { Container } from '@/components/shared/container';
 import { Icon } from '@/components/shared/icon';
+import { Photo } from '@/components/shared/photo';
 import { Section, type SectionTone } from '@/components/shared/section';
 import { SectionHeader } from '@/components/shared/section-header';
 import { getHome } from '@/lib/cms';
@@ -32,13 +32,12 @@ export async function Steps({ locale, tone = 'surface' }: { locale: Locale; tone
                   data-step={i}
                   aria-current={i === 0 ? 'step' : undefined}
                 >
-                  <Image
+                  <Photo
                     src={step.icon}
                     alt=""
                     width={96}
                     height={96}
                     className="steps-item-icon size-24 shrink-0 rounded-base"
-                    sizes="96px"
                   />
                   <span className="steps-badge" aria-hidden="true">
                     {step.order}
@@ -52,7 +51,7 @@ export async function Steps({ locale, tone = 'surface' }: { locale: Locale; tone
             </ol>
             <div className="steps-panel" aria-hidden="true">
               {homeSteps.map((step, i) => (
-                <Image
+                <Photo
                   key={step.order}
                   src={step.icon}
                   alt=""
@@ -60,7 +59,6 @@ export async function Steps({ locale, tone = 'surface' }: { locale: Locale; tone
                   height={480}
                   className="steps-panel-icon"
                   data-step={i}
-                  sizes="(min-width: 1024px) 480px, 0px"
                 />
               ))}
             </div>

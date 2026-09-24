@@ -1,7 +1,7 @@
 import { ArrowLeft, CalendarCheck, Clock, Globe, Video } from 'lucide-react';
-import Image from 'next/image';
 import type { ReactNode } from 'react';
 import { Icon } from '@/components/shared/icon';
+import { Photo } from '@/components/shared/photo';
 import { cn } from '@/lib/cn';
 import { riyadhDayShortLabel, riyadhTimeLabel } from '@/lib/riyadh';
 import { type BookerCopy, fill } from '@/modules/bookings/booker/copy';
@@ -13,7 +13,7 @@ export function HostAvatar({ host, size }: { host: BookerSettings['host']; size:
   const box = size === 56 ? 'size-14' : 'size-10';
   if (host?.photo) {
     return (
-      <Image
+      <Photo
         src={host.photo}
         alt=""
         width={size}

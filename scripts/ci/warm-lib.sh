@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
 # Shared by the CI e2e and Lighthouse steps: `start_server` runs the production build on
-# :3004, `warm_pages` requests the audited pages and every image transform they reference so
-# ISR entries and the next/image cache are warm (a cold AVIF transform takes seconds on the
-# runner and shows up as a slow LCP or a `load` event that never fires in a no-JS test).
-# Production behaves the same after the first visitor per image size.
+# :3004, `warm_pages` requests the audited pages so their ISR entries are warm, the steady
+# state production reaches after the first visitor. The photos are files since ADR-064;
+# nothing else needs warming.
 WARM_URLS="/ /products /products/tee-essential /contact /book /blog/how-to-price-printed-tshirt-saudi /en /en/products/tee-essential /how-it-works /faq /privacy /en/compare-printful"
 
 start_server() {
@@ -39,23 +38,14 @@ stop_server() {
 }
 
 warm_pages() {
+  # The photos are files since ADR-064: nothing to warm beyond each page's ISR entry. The
+  # second round reads the cache header back.
   for round in 1 2; do
     for path in $WARM_URLS; do
-      html=$(curl -s "http://localhost:3004$path")
+      curl -s -o /dev/null "http://localhost:3004$path"
       if [ "$round" = 2 ]; then
         echo "warm $path: $(curl -s -o /dev/null -D - "http://localhost:3004$path" | grep -i x-nextjs-cache | tr -d '\r' || echo 'no cache header')"
       fi
-      # The format follows the Accept header: Lighthouse's Chrome asks for AVIF, curl's `*/*`
-      # would warm a JPEG nobody requests. The second round counts the transforms still cold.
-      misses=0
-      total=0
-      while read -r img; do
-        total=$((total + 1))
-        cache=$(curl -s -o /dev/null -D - -H 'Accept: image/avif,image/webp,*/*;q=0.8' \
-          "http://localhost:3004${img//&amp;/&}" | grep -i x-nextjs-cache | tr -d '\r' || true)
-        case "$cache" in *MISS*) misses=$((misses + 1)) ;; esac
-      done < <(echo "$html" | grep -o '/_next/image[^" ]*' | sort -u || true)
-      if [ "$round" = 2 ]; then echo "warm $path images: $total, $misses miss"; fi
     done
   done
 }

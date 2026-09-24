@@ -50,7 +50,14 @@ import {
 nextEnv.loadEnvConfig(process.cwd());
 
 const force = process.argv.includes('--force');
-const CONTEXT = { disableRevalidate: true };
+/**
+ * A fresh context per operation, never one shared object: the storage plugin writes
+ * `skipCloudStorage` into the context it is handed before its own metadata update, Payload's
+ * nested operation swaps `req.context` for a copy, and the plugin's cleanup clears the copy,
+ * so a flag set on a shared object sticks and every upload after the first skips the bucket
+ * (found 2026-09-20 under S3: 33 media rows, one document's objects; ADR-064).
+ */
+const seedContext = () => ({ disableRevalidate: true });
 const summary = { created: [] as string[], skipped: [] as string[] };
 
 /**
@@ -95,7 +102,7 @@ async function ensureMedia(payload: Payload, publicPath: string, alt: string): P
     collection: 'media',
     data: { alt },
     file: { data: file, name: filename, mimetype: mimeType(publicPath), size: file.byteLength },
-    context: CONTEXT,
+    context: seedContext(),
   });
   summary.created.push(`media ${filename}`);
   mediaIds.set(filename, doc.id);
@@ -165,7 +172,7 @@ async function ensureProduct(payload: Payload, product: Product): Promise<void> 
       printMethodLabel: product.printMethodLabel,
       _status: 'published',
     },
-    context: CONTEXT,
+    context: seedContext(),
   });
   summary.created.push(`product ${product.slug}`);
 }
@@ -261,7 +268,7 @@ async function ensureHome(payload: Payload): Promise<void> {
       ribbon: home.ribbon,
       _status: 'published',
     },
-    context: CONTEXT,
+    context: seedContext(),
   });
   summary.created.push('global home');
 }
@@ -287,7 +294,7 @@ async function ensureFaq(payload: Payload, item: FaqItem): Promise<void> {
       showOnHome: item.showOnHome,
       ...(item.homeOrder ? { homeOrder: item.homeOrder } : {}),
     },
-    context: CONTEXT,
+    context: seedContext(),
   });
   summary.created.push(`faq ${item.question}`);
 }
@@ -314,7 +321,7 @@ async function ensureTestimonial(payload: Payload, item: Testimonial, order: num
       order,
       _status: 'published',
     },
-    context: CONTEXT,
+    context: seedContext(),
   });
   summary.created.push(`testimonial ${item.name}`);
 }
@@ -333,7 +340,7 @@ async function ensureIntegration(payload: Payload, item: Integration, order: num
   await payload.create({
     collection: 'integrations',
     data: { platform: item.slug, name: item.name, nameLatin: item.nameLatin, order },
-    context: CONTEXT,
+    context: seedContext(),
   });
   summary.created.push(`integration ${item.slug}`);
 }
@@ -374,7 +381,7 @@ async function ensureGlobals(payload: Payload): Promise<void> {
       await payload.updateGlobal({
         slug: 'site-settings',
         data: { menu: menuData() },
-        context: CONTEXT,
+        context: seedContext(),
       });
       summary.created.push('global site-settings: menu');
     }
@@ -394,7 +401,7 @@ async function ensureGlobals(payload: Payload): Promise<void> {
         legalEntity: site.legalEntity,
         menu: menuData(),
       },
-      context: CONTEXT,
+      context: seedContext(),
     });
     summary.created.push('global site-settings');
   }
@@ -409,7 +416,7 @@ async function ensureGlobals(payload: Payload): Promise<void> {
       await payload.updateGlobal({
         slug: 'seo-defaults',
         data: { routes: [...(doc.routes ?? []), ...missing.map(seoRow)] },
-        context: CONTEXT,
+        context: seedContext(),
       });
       summary.created.push(`global seo-defaults: ${missing.map((r) => r.route).join(', ')}`);
     }
@@ -420,7 +427,7 @@ async function ensureGlobals(payload: Payload): Promise<void> {
         titleTemplate: ar.seo.titleTemplate,
         routes: seo.filter((row) => CODE_ROUTES.has(row.route)).map(seoRow),
       },
-      context: CONTEXT,
+      context: seedContext(),
     });
     summary.created.push('global seo-defaults');
   }
@@ -455,13 +462,13 @@ async function ensureBooking(payload: Payload): Promise<void> {
       summary.skipped.push('global booking');
       return;
     }
-    await payload.updateGlobal({ slug: 'booking', data: missing, context: CONTEXT });
+    await payload.updateGlobal({ slug: 'booking', data: missing, context: seedContext() });
     if (!doc.blurb) {
       await payload.updateGlobal({
         slug: 'booking',
         locale: 'en',
         data: { blurb: bookingEn.blurb },
-        context: CONTEXT,
+        context: seedContext(),
       });
     }
     summary.created.push(`global booking ${Object.keys(missing).join(', ')}`);
@@ -475,7 +482,7 @@ async function ensureBooking(payload: Payload): Promise<void> {
       hours: booking.hours.map((row) => ({ ...row, day: String(row.day) as '0' })),
       closedDates: [],
     },
-    context: CONTEXT,
+    context: seedContext(),
   });
   // The English name and blurb land here too: the field's per-locale default would make the
   // English pass read them as already set and count a skip on a fresh database (the CI seed
@@ -484,7 +491,7 @@ async function ensureBooking(payload: Payload): Promise<void> {
     slug: 'booking',
     locale: 'en',
     data: { title: bookingEn.title, blurb: bookingEn.blurb },
-    context: CONTEXT,
+    context: seedContext(),
   });
   summary.created.push('global booking');
 }
@@ -504,7 +511,7 @@ async function ensureAppearance(payload: Payload): Promise<void> {
   const saved = await payload.updateGlobal({
     slug: 'appearance',
     data: { surfaces: [seaMistRow('ar')] },
-    context: CONTEXT,
+    context: seedContext(),
   });
   await payload.updateGlobal({
     slug: 'appearance',
@@ -514,7 +521,7 @@ async function ensureAppearance(payload: Payload): Promise<void> {
         row.key === SEA_MIST.key ? { ...row, label: SEA_MIST_NAME.en } : row,
       ),
     },
-    context: CONTEXT,
+    context: seedContext(),
   });
   summary.created.push('global appearance');
 }
@@ -535,7 +542,7 @@ async function pruneSeoRows(payload: Payload): Promise<void> {
   await payload.updateGlobal({
     slug: 'seo-defaults',
     data: { routes: rows.filter((r) => CODE_ROUTES.has(r.route)) },
-    context: CONTEXT,
+    context: seedContext(),
   });
   console.warn(
     `content:migrate: removed ${moved.map((r) => r.route).join(', ')} from seo-defaults, their title and description now live in the page's SEO group (ADR-026 exception).`,
@@ -626,7 +633,7 @@ async function ensurePage(payload: Payload, page: Page): Promise<void> {
       },
       _status: page.draft ? 'draft' : 'published',
     },
-    context: CONTEXT,
+    context: seedContext(),
   });
   summary.created.push(`page ${page.slug}${page.draft ? ' (draft)' : ''}`);
 }
@@ -664,7 +671,7 @@ async function ensureHub(payload: Payload, hub: BlogHub, order: number): Promise
       defaultCover: await ensureMedia(payload, hub.cover, coverAlt(hub.cover)),
       order,
     },
-    context: CONTEXT,
+    context: seedContext(),
   });
   summary.created.push(`hub ${hub.slug}`);
   return doc.id;
@@ -684,7 +691,7 @@ async function ensureAuthor(payload: Payload, author: BlogAuthor): Promise<numbe
   const doc = await payload.create({
     collection: 'authors',
     data: { slug: author.slug, name: author.name, role: author.role, bio: author.bio },
-    context: CONTEXT,
+    context: seedContext(),
   });
   summary.created.push(`author ${author.slug}`);
   return doc.id;
@@ -733,7 +740,7 @@ async function ensurePost(
       factsBaseline: factsSheet({ site, products, integrations }).numbers,
       _status: 'published',
     },
-    context: CONTEXT,
+    context: seedContext(),
   });
   summary.created.push(`post ${post.slug}`);
 }
