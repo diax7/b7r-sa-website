@@ -913,7 +913,7 @@ test.describe('the booker (ADR-063)', () => {
     const editor = await createEditor(admin, auth);
     try {
       // The dashboard: the card's second line counts today's bookings, the next three list
-      // this one when it is among them, and the badge on the inbox entry adds the two lines.
+      // this one when it is among them, and the badge on Bookings reads the second line.
       await speak('en');
       await page.goto('/admin');
       const card = page.locator('[data-admin-dashboard-inbox]');
@@ -945,12 +945,19 @@ test.describe('the booker (ADR-063)', () => {
         await expect(line.locator('[data-admin-status="booked"]')).toHaveText('Booked');
         await expect(line).toContainText('Riyadh');
       }
-      const badge = page.locator('#nav-messages [data-admin-badge]');
-      const waiting = newCount + todayCount;
-      if (waiting > 0) {
-        await expect(badge.locator('[aria-hidden="true"]')).toHaveText(String(waiting));
-      } else {
-        await expect(badge).toHaveCount(0);
+      // One badge per entry (ADR-062 amended): the new messages on Messages, today's
+      // bookings on Bookings, each the card's own line; zero is no badge.
+      for (const [entry, count] of [
+        ['messages', newCount],
+        ['bookings', todayCount],
+      ] as const) {
+        const badge = page.locator(`#nav-${entry} [data-admin-badge]`);
+        if (count > 0) {
+          await expect(badge.locator('[aria-hidden="true"]'), entry).toHaveText(String(count));
+          await expect(badge, entry).toHaveAttribute('data-admin-badge', 'error');
+        } else {
+          await expect(badge, entry).toHaveCount(0);
+        }
       }
       // The section: the bookings entry after the messages, inside Site.
       const nav = page.locator('[data-admin-nav]');

@@ -1,4 +1,4 @@
-import type { Payload, PayloadRequest, TypedUser } from 'payload';
+import type { Payload, PayloadRequest, TypedUser, Where } from 'payload';
 import { localeEnabledWith } from '@/lib/cms/locale-enabled';
 import { riyadhDayWindow } from '@/lib/riyadh';
 import { BOOKINGS, type BookingStatus, UPCOMING_STATUSES } from '@/modules/bookings/status';
@@ -311,16 +311,62 @@ export interface InboxReading {
     start: string;
     status: BookingStatus;
   }>;
-  /** `newCount + todayCount`: the sidebar's badge on the inbox section (`inbox.waiting`). */
-  waiting: number;
+}
+
+/** Messages nobody has opened (ADR-061). */
+const NEW_MESSAGES = { status: { equals: 'new' } } as const;
+
+/** Bookings still ahead that start today in Riyadh (ADR-062); the sweep retires the ended. */
+function bookingsToday(now: Date): Where {
+  const [dayStart, dayEnd] = riyadhDayWindow(now);
+  return {
+    and: [
+      { status: { in: [...UPCOMING_STATUSES] } },
+      { start: { greater_than_equal: dayStart.toISOString() } },
+      { start: { less_than: dayEnd.toISOString() } },
+    ],
+  };
 }
 
 /**
- * The inbox for the dashboard and the sidebar (ADR-061, ADR-062): the count of `status:
- * new` messages with the newest three, the count of bookings still ahead that start today
- * (Riyadh) with the next three whichever day they fall on, and the two counts added for
- * the badge; read with the user's access, admins and editors alike (the two collections
- * share one read rule, so a user who sees one sees both).
+ * The new messages, counted alone: the badge on Messages (ADR-062 amended), the same query
+ * the Inbox card's first line runs, with the user's access.
+ */
+export async function newMessages(
+  payload: Payload,
+  args: { user?: TypedUser | null },
+): Promise<number> {
+  const { totalDocs } = await payload.count({
+    collection: 'messages',
+    where: NEW_MESSAGES,
+    ...accessOf(args.user),
+  });
+  return totalDocs;
+}
+
+/**
+ * Today's bookings, counted alone: the badge on Bookings (ADR-062 amended), the same query
+ * the Inbox card's second line runs, with the user's access.
+ */
+export async function todayBookings(
+  payload: Payload,
+  args: { user?: TypedUser | null; now?: Date },
+): Promise<number> {
+  const { totalDocs } = await payload.count({
+    collection: BOOKINGS,
+    where: bookingsToday(args.now ?? new Date()),
+    ...accessOf(args.user),
+  });
+  return totalDocs;
+}
+
+/**
+ * The inbox for the dashboard (ADR-061, ADR-062): the count of `status: new` messages with
+ * the newest three, the count of bookings still ahead that start today (Riyadh) with the
+ * next three whichever day they fall on; read with the user's access, admins and editors
+ * alike (the two collections share one read rule, so a user who sees one sees both). The
+ * sidebar's two badges count the same two numbers through `newMessages` and
+ * `todayBookings`.
  */
 export async function inboxReading(
   payload: Payload,
@@ -328,32 +374,25 @@ export async function inboxReading(
 ): Promise<InboxReading> {
   const now = args.now ?? new Date();
   const access = accessOf(args.user);
-  const [dayStart, dayEnd] = riyadhDayWindow(now);
-  const ahead = { status: { in: [...UPCOMING_STATUSES] } };
   const [messages, today, bookings] = await Promise.all([
     payload.find({
       collection: 'messages',
-      where: { status: { equals: 'new' } },
+      where: NEW_MESSAGES,
       sort: '-createdAt',
       limit: INBOX_PREVIEW,
       depth: 0,
       select: { name: true, inquiry: true, message: true, createdAt: true },
       ...access,
     }),
-    payload.count({
+    payload.count({ collection: BOOKINGS, where: bookingsToday(now), ...access }),
+    payload.find({
       collection: BOOKINGS,
       where: {
         and: [
-          ahead,
-          { start: { greater_than_equal: dayStart.toISOString() } },
-          { start: { less_than: dayEnd.toISOString() } },
+          { status: { in: [...UPCOMING_STATUSES] } },
+          { end: { greater_than: now.toISOString() } },
         ],
       },
-      ...access,
-    }),
-    payload.find({
-      collection: BOOKINGS,
-      where: { and: [ahead, { end: { greater_than: now.toISOString() } }] },
       sort: 'start',
       limit: INBOX_PREVIEW,
       depth: 0,
@@ -377,6 +416,5 @@ export async function inboxReading(
       start: doc.start,
       status: doc.status,
     })),
-    waiting: messages.totalDocs + today.totalDocs,
   };
 }

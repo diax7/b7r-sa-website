@@ -32,8 +32,9 @@ export function todayQuery(now: Date): string {
 /**
  * "Inbox" on the dashboard (ADR-061, ADR-062): two sentences, the count of messages nobody
  * has opened (linked to the list filtered on New) and the count of bookings still ahead
- * today (linked to the bookings of the day); the sidebar's badge reads the two added. Under
- * them the newest three new messages with the sender, the inquiry and the first words, then
+ * today (linked to the bookings of the day); the sidebar's badges on Messages and on
+ * Bookings read the same two numbers (ADR-062 amended). Under them the newest three new
+ * messages with the sender, the inquiry and the first words, then
  * the next three bookings with the merchant, the moment on the Riyadh clock and the status
  * word, each a link to its form; "All messages" and "All bookings" into the lists. The
  * Site blue on the title icon is the card's one hue; an inbox with nothing waiting says so
@@ -72,7 +73,6 @@ export function InboxCard({
       }
       data-admin-inbox-new={reading.newCount}
       data-admin-inbox-today={reading.todayCount}
-      data-admin-inbox-waiting={reading.waiting}
     >
       <div className="flex flex-col gap-1">
         {reading.newCount === 0 ? (
