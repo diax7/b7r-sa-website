@@ -331,7 +331,7 @@ WhatsApp number and the contact address (Site settings → Contact), the booking
 | `PAYLOAD_SECRET` | all | 32+ random characters; signs admin sessions and encrypts the connections' keys (rotating it signs everyone out and makes every stored key unreadable) |
 | `S3_BUCKET`, `S3_REGION`, `S3_ENDPOINT`, `S3_PUBLIC_URL` | prod (+ local MinIO) | bucket, region (`auto`), API endpoint, public base URL of objects (empty = endpoint/bucket) |
 | `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` | prod (+ local MinIO) | credentials with read/write on the bucket |
-| `RESEND_API_KEY`, `RESEND_AUDIENCE_ID` | prod | the Resend key and the newsletter audience id |
+| `RESEND_API_KEY`, `RESEND_SEGMENT_ID` | prod | the Resend key (full access: the newsletter writes contacts) and the newsletter's segment id |
 | `RESEND_FROM` | optional | the sender on the verified domain; defaults to `بحر برنت <no-reply@b7r.sa>` |
 | `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` | prod | Cloudflare pair (CI/local: the public always-pass test site key, no secret) |
 | `INDEXNOW_KEY` | optional | derived from `PAYLOAD_SECRET` when unset; set only to keep a key already registered |
@@ -410,7 +410,7 @@ the page; the gate never sends the visitor to Cloudflare's servers from the logi
 
 ## Password reset (admin)
 
-With `RESEND_API_KEY` + `RESEND_FROM` the «نسيت كلمة المرور» link sends the Arabic reset
+With `RESEND_API_KEY` + `RESEND_FROM` the «نسيت كلمة المرور» link sends the English reset
 e-mail through Resend (`/api/health` → `email: resend`). Without them (`email: console`) the
 message is printed in the app log: read the `/admin/reset/<token>` link there, or set a new
 password from a machine with the secrets: `pnpm payload …` is not needed, the
@@ -611,11 +611,14 @@ then replace the file and re-run `pnpm assets`.
 
 ## Newsletter (Resend)
 
-`RESEND_API_KEY` + `RESEND_AUDIENCE_ID` enable the live transport (`/api/health` →
-`newsletter: live`). The BRD names Resend audiences; Resend has since introduced segments and
-kept `audienceId` as a supported legacy option, migrate to `segments: [{ id }]` when the
-account moves. Without a key the endpoint answers `503 not_configured` and the form shows the
-retry copy; `NEWSLETTER_TRANSPORT=mock` (tests only) keeps subscriptions in memory.
+`RESEND_API_KEY` + `RESEND_SEGMENT_ID` enable the live transport (`/api/health` →
+`newsletter: live`): a signup is a Resend contact in the segment "b7r.sa newsletter".
+Resend keeps one contact per address across the account and
+`contacts.create` upserts, so a repeat signup, or the address of a contact the app already
+holds, answers 201 and joins the segment. The key must have full access (a sending-only key
+is refused on contacts). Without a key the endpoint answers `503 not_configured` and the
+form shows the retry copy; `NEWSLETTER_TRANSPORT=mock` (tests only) answers every signup
+`ok`.
 
 ## Analytics
 

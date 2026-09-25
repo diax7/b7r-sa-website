@@ -251,7 +251,7 @@ Centred: the wave icon, H1, text, primary button to `/`. Returns HTTP 404. No ri
 
 ### 6.14 Newsletter
 
-Component `NewsletterForm` used in the footer and blog. `POST /api/newsletter` validates the email, rejects honeypot, rate-limits 5/10 min/IP, adds the contact to the Resend audience `RESEND_AUDIENCE_ID`, returns `{ ok }`. Duplicate emails return `ok: true` (idempotent). Track `newsletter_submit`.
+Component `NewsletterForm` used in the footer and blog. `POST /api/newsletter` validates the email, rejects honeypot, rate-limits 5/10 min/IP, adds the contact to the Resend segment `RESEND_SEGMENT_ID`, returns `{ ok }`. Duplicate emails return `ok: true` (idempotent). Track `newsletter_submit`.
 
 ### 6.15 WhatsApp widget
 
