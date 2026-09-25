@@ -338,6 +338,11 @@ test.describe('CMS admin', () => {
     const html = page.locator('html');
     await expect(html).toHaveAttribute('lang', 'en');
     await expect(html).toHaveAttribute('dir', /ltr/i);
+    // The login's logo is the site's traced drawing (spec 010), named, 56 px tall; the
+    // violation record below proves the panel's CSP lets the sprite in.
+    const logo = page.locator('[role="img"][aria-label="بحر برنت"] svg[data-brand-logo="logo"]');
+    await expect(logo).toBeVisible();
+    expect(Math.round((await logo.boundingBox())!.height)).toBe(56);
     // The login gate (ADR-034): the widget renders with a site key and opens the gate; the
     // verify endpoint answers 204 with no cookie while the Turnstile secret is unset.
     if (process.env['NEXT_PUBLIC_TURNSTILE_SITE_KEY']) {
@@ -420,6 +425,8 @@ test.describe('CMS admin', () => {
     await page.goto('/admin/collections/pages');
     const nav = page.locator('[data-admin-nav]');
     await expect(nav).toHaveClass(/nav--nav-open/);
+    // The sidebar's brand is the traced mark (spec 010), not an image.
+    await expect(page.locator('[data-rail-center] svg[data-brand-logo="mark"]')).toBeVisible();
     // axe on OUR surfaces (Payload's own edit-view chrome has known gaps: unnamed drag handles
     // and popup buttons, its engine, not the shell).
     const { AxeBuilder } = await import('@axe-core/playwright');
