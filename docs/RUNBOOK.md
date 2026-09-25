@@ -37,7 +37,7 @@ branch and pulls `main`. `gh workflow run ci.yml --ref main` runs `main` by hand
 ## Local CMS (Phase 2a)
 
 ```bash
-docker compose up -d        # Postgres 16 on :5435 (db/user/password b7r) + MinIO on :9000/:9001
+docker compose up -d        # Postgres 16 on :5435 (db/user/password b7r) + SeaweedFS S3 on :9000
 pnpm migrate                # apply src/migrations to the database in DATABASE_URL
                             # rotating PAYLOAD_SECRET signs everyone out AND makes every
                             # provider key in Engine settings unreadable: re-enter them
@@ -49,8 +49,9 @@ pnpm dev                    # admin at http://localhost:3004/admin (Arabic, RTL)
 
 `.env.local` needs `DATABASE_URL`, `PAYLOAD_SECRET` (any 32+ characters locally),
 `PAYLOAD_PUBLIC_SERVER_URL=http://localhost:3004` and the admin pair. Media goes to
-`public/media/` (gitignored) unless the `S3_*` rows point at MinIO (bucket `b7r-media`,
-public download; add `IMAGES_ALLOW_LOCAL_IP=1` so the image optimiser accepts the
+`public/media/` (gitignored) unless the `S3_*` rows point at the compose S3 (endpoint
+`http://localhost:9000`, bucket `b7r-media`, public read, key `b7r-s3` / `b7r-s3-local-secret`
+from `scripts/dev/seaweedfs-s3.json`; add `IMAGES_ALLOW_LOCAL_IP=1` so the image optimiser accepts the
 localhost endpoint, never in production). `bash scripts/ci/seed-check.sh` runs the seed and admin scripts through
 their three outcomes against a fresh database, the way CI does.
 
@@ -330,8 +331,8 @@ WhatsApp number and the contact address (Site settings → Contact), the booking
 | `NEXT_PUBLIC_APP_URL` | optional | defaults to `https://b7r.app` |
 | `DATABASE_URL` | all | Postgres connection string (build **and** runtime) |
 | `PAYLOAD_SECRET` | all | 32+ random characters; signs admin sessions and encrypts the connections' keys (rotating it signs everyone out and makes every stored key unreadable) |
-| `S3_BUCKET`, `S3_REGION`, `S3_ENDPOINT`, `S3_PUBLIC_URL` | prod (+ local MinIO) | bucket, region (`auto`), API endpoint, public base URL of objects (empty = endpoint/bucket) |
-| `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` | prod (+ local MinIO) | credentials with read/write on the bucket |
+| `S3_BUCKET`, `S3_REGION`, `S3_ENDPOINT`, `S3_PUBLIC_URL` | prod (+ local SeaweedFS) | bucket, region (`auto`), API endpoint, public base URL of objects (empty = endpoint/bucket) |
+| `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` | prod (+ local SeaweedFS) | credentials with read/write on the bucket |
 | `RESEND_API_KEY`, `RESEND_AUDIENCE_ID` | prod | the Resend key and the newsletter audience id |
 | `RESEND_FROM` | optional | the sender on the verified domain; defaults to `بحر برنت <no-reply@b7r.sa>` |
 | `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` | prod | Cloudflare pair (CI/local: the public always-pass test site key, no secret) |

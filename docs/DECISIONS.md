@@ -1144,6 +1144,13 @@ clock, more billed minutes). Open, for Dhia's call: the admin suite runs twice p
 quality job on local-disk media, the S3 job on MinIO, the storage production uses); dropping
 it from the quality job would save about 3 minutes.
 
+*Amended 2026-09-25: MinIO stopped publishing its images (quay.io answers 401, Docker Hub has
+no repository) and its binaries (`dl.min.io` answers 410), and every S3 job failed at its first
+step. The S3 job and the compose stack run SeaweedFS 4.47, pinned by digest: its config gives
+the job's key full access and anyone read on the media bucket, a missing key answers 404 to an
+outsider (the step asserts it), a wrong key is refused. The unused `b7r-backups` bucket is no
+longer created.*
+
 ## ADR-046: The admin reshape: five task groups, one colour each, a header that says where (2026-09-15)
 
 Dhia's read of the admin after a week of use: too many doors, each page used differently,

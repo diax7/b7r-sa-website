@@ -24,12 +24,12 @@ Constitution VIII: features outside the current phase are written here, not buil
 - The S3 job's server log carries about 1,300 `upstream image response failed for
   http://localhost:9000/b7r-media/media/<file> 404` lines per run (since before PR #15): the
   URLs the site builds for CMS media and the keys the objects are stored under disagree in the
-  MinIO job, and no test asserts an image response there, so the job does not prove that CMS
+  S3 job, and no test asserts an image response there, so the job does not prove that CMS
   media is served through the optimizer from S3 (ADR-029). Find the key/URL disagreement, fix
   it, then one assertion in the S3 subset (`products.spec.ts`: the product image answers 200
   with an image content type) so it cannot regress silently.
 - The admin suite (the `cms` project, 24 tests) runs twice per CI event: in the quality job
-  against local-disk media and in the S3 job against MinIO, the storage production uses.
+  against local-disk media and in the S3 job against SeaweedFS (S3, the storage production uses).
   Dropping it from the quality job saves about 3 minutes of the 24; Dhia's call (the quality
   job's run is the one with Playwright's project ordering).
 
