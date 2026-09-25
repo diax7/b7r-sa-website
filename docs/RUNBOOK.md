@@ -609,6 +609,24 @@ stock photo) because ffmpeg is not available in this environment. To use a real 
 `ffmpeg -ss 00:00:03 -i resources/video/printer-marketing.mp4 -frames:v 1 -q:v 3 poster.jpg`,
 then replace the file and re-run `pnpm assets`.
 
+## E-mail (Resend)
+
+Every mail leaves as `بحر برنت <no-reply@b7r.sa>` (`RESEND_FROM` unset) from the domain
+`b7r.sa` verified in Resend (DKIM and SPF on Cloudflare); the Resend account also holds the
+app's `b7r.app`, which the site never uses. What goes where:
+
+- **To the contact address** (Site settings → Contact): the contact form's notification
+  (replies go to the sender) and the booking mails for Dhia (replies go to the merchant).
+- **To the merchant**: the booking confirmation, move, cancel, the two reminders and the
+  link mail; replies go to the contact address.
+- **To an admin**: the password reset; the content engine's weekly digest and failure
+  notices go to the engine's notify address.
+
+The contact address, the admins' addresses and the digest address must be mailboxes that
+receive: `b7r.sa` needs its MX records for any `@b7r.sa` among them. A send is followed in
+Resend → Emails: `delivered`, or `sent` that never moves on when the receiving side has no
+mail server. To try a path without touching a real inbox, send to `delivered@resend.dev`.
+
 ## Newsletter (Resend)
 
 `RESEND_API_KEY` + `RESEND_SEGMENT_ID` enable the live transport (`/api/health` →

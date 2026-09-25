@@ -195,8 +195,15 @@ export function bookingIcs(
   });
 }
 
-/** The merchant's mail of a kind, in their language. */
-export function buildMerchantMail(kind: BookingMailKind, input: BookingMailInput): OutgoingMail {
+/**
+ * The merchant's mail of a kind, in their language. `replyTo` is the contact address, so a
+ * merchant who answers the mail reaches B7R rather than the sender's no-reply box.
+ */
+export function buildMerchantMail(
+  kind: BookingMailKind,
+  input: BookingMailInput,
+  replyTo?: string,
+): OutgoingMail {
   const { bookingEmail: e } = copyFor(input.locale);
   const values = { name: input.name, title: input.title };
   const active = kind !== 'cancelled';
@@ -222,6 +229,7 @@ export function buildMerchantMail(kind: BookingMailKind, input: BookingMailInput
   return {
     to: input.email,
     ...mail,
+    ...(replyTo ? { replyTo } : {}),
     ...(kind === 'confirmation' || kind === 'rescheduled'
       ? {
           attachments: [

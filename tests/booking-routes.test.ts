@@ -282,6 +282,7 @@ describe("POST /api/bookings: the service after the route's gates", () => {
     expect(created.description).toContain('أرغب بربط متجري');
     const [merchant, owner] = ports.mailer.outbox;
     expect(merchant!.to).toBe('merchant@example.com');
+    expect(merchant!.replyTo).toBe('contact@b7r.sa');
     expect(merchant!.text).toContain('https://meet.google.com/test-1');
     expect(merchant!.text).toContain(`https://b7r.sa/book/manage?token=${result.booking.token}`);
     expect(owner!.to).toBe('contact@b7r.sa');
