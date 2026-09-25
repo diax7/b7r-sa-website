@@ -137,7 +137,7 @@ jobs:
           retention-days: 14
 
   s3:
-    name: Media on S3 (MinIO), admin, CSP, products, machine files
+    name: Media on S3 (SeaweedFS), admin, CSP, products, machine files
     runs-on: ubuntu-latest
     timeout-minutes: 20
     services:
@@ -159,24 +159,35 @@ jobs:
       S3_REGION: auto
       S3_ENDPOINT: http://localhost:9000
       S3_PUBLIC_URL: http://localhost:9000/b7r-media
-      S3_ACCESS_KEY_ID: minio-ci
-      S3_SECRET_ACCESS_KEY: minio-ci-secret
-      # MinIO answers on localhost, which the image optimiser refuses by default (SSRF guard).
+      S3_ACCESS_KEY_ID: s3-ci
+      S3_SECRET_ACCESS_KEY: s3-ci-secret
+      # The S3 server answers on localhost, which the image optimiser refuses by default (SSRF guard).
       IMAGES_ALLOW_LOCAL_IP: '1'
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
-      # GitHub service containers cannot take a command, and MinIO needs `server /data`.
-      - name: Start MinIO and create the public bucket
+      # SeaweedFS (MinIO stopped publishing images and binaries in 2026-09). Its config gives
+      # the job's key full access and anyone read on the bucket, as production's public
+      # bucket; a service container cannot take the `server` command.
+      - name: Start SeaweedFS and create the public bucket
         run: |
-          docker run -d --name minio -p 9000:9000 \
-            -e MINIO_ROOT_USER="$S3_ACCESS_KEY_ID" -e MINIO_ROOT_PASSWORD="$S3_SECRET_ACCESS_KEY" \
-            quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z server /data
-          for _ in $(seq 1 30); do curl -sf http://localhost:9000/minio/health/live && break; sleep 1; done
-          docker run --rm --network host --entrypoint sh quay.io/minio/mc:RELEASE.2025-08-13T08-35-41Z -c \
-            "mc alias set ci http://localhost:9000 $S3_ACCESS_KEY_ID $S3_SECRET_ACCESS_KEY && mc mb --ignore-existing ci/$S3_BUCKET && mc anonymous set download ci/$S3_BUCKET && mc mb --ignore-existing ci/b7r-backups"
+          cat > "$RUNNER_TEMP/s3.json" <<EOF
+          {"identities": [
+            {"name": "ci", "credentials": [{"accessKey": "$S3_ACCESS_KEY_ID", "secretKey": "$S3_SECRET_ACCESS_KEY"}],
+             "actions": ["Admin", "Read", "List", "Tagging", "Write"]},
+            {"name": "anonymous", "actions": ["Read:$S3_BUCKET"]}
+          ]}
+          EOF
+          docker run -d --name s3 -p 9000:9000 -v "$RUNNER_TEMP/s3.json:/etc/seaweedfs/s3.json:ro" \
+            chrislusf/seaweedfs:4.47@sha256:ce9e796f1fe6f06968f4c04bdaf8f678dad9c8acdfef3d244133d71bfa6bf882 \
+            server -s3 -s3.port=9000 -s3.config=/etc/seaweedfs/s3.json -dir=/data
+          for _ in $(seq 1 30); do curl -sf -o /dev/null http://localhost:9000/healthz && break; sleep 1; done
+          docker exec s3 sh -c "echo 's3.bucket.create -name $S3_BUCKET' | weed shell -master=localhost:9333"
+          # Anyone may read the bucket: a missing key is 404, not 403.
+          code=$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:9000/$S3_BUCKET/none")
+          [ "$code" = 404 ] || { echo "the bucket is not publicly readable ($code)"; docker logs s3 | tail -40; exit 1; }
 
       - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
 

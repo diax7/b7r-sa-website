@@ -1,6 +1,5 @@
 'use client';
 
-/* eslint-disable @next/next/no-img-element -- the brand mark is a plain image in the admin */
 import { Link, useNav, usePreferences, useWindowInfo } from '@payloadcms/ui';
 import { ChevronsLeft, ChevronsRight, X } from 'lucide-react';
 import { usePathname } from 'next/navigation';
@@ -14,6 +13,7 @@ import type { AdminGroupKey } from '@/modules/cms/admin/icons';
 import type { GroupState } from '@/modules/cms/admin/nav/active';
 import type { NavGroup, NavPrefs } from '@/modules/cms/admin/nav/groups';
 import { LanguageSwitch } from '@/modules/cms/admin/nav/language-switch';
+import { BrandLogo } from '@/modules/core/brand-logo';
 import { Rail, WithTooltip } from '@/modules/cms/admin/nav/rail';
 import { Tree } from '@/modules/cms/admin/nav/tree';
 import { useAdminLanguage, useAdminStrings } from '@/modules/cms/admin/use-admin-strings';
@@ -183,13 +183,7 @@ export function NavClient({ groups, prefs, account, adminRoute }: NavClientProps
                 aria-label={s.brand}
                 data-rail-center=""
               >
-                <img
-                  src="/images/logo/icon.png"
-                  alt=""
-                  width={32}
-                  height={32}
-                  className="size-8 shrink-0"
-                />
+                <BrandLogo mark className="size-8 shrink-0" />
                 <span className="truncate text-body font-semibold" data-rail-hide="">
                   {s.brand}
                 </span>

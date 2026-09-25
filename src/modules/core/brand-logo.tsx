@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react';
 import { StaticImage } from '@/components/shared/static-image';
 import { cn } from '@/lib/cn';
 import { LOGO_BOX, LOGO_SPRITE, MARK_BOX } from '@/modules/core/logo-box';
@@ -17,11 +18,14 @@ export function BrandLogo({
   mark = false,
   onDark = false,
   className,
+  style,
 }: {
   mark?: boolean;
   /** White on a dark background, as the footer's. */
   onDark?: boolean;
   className?: string;
+  /** For a place whose stylesheet has no utility for its size (Payload's login logo). */
+  style?: CSSProperties;
 }) {
   const box = mark ? MARK_BOX : LOGO_BOX;
   return (
@@ -30,6 +34,7 @@ export function BrandLogo({
       focusable="false"
       viewBox={`0 0 ${box.width} ${box.height}`}
       className={cn(onDark && 'logo-on-dark', className)}
+      style={style}
       data-brand-logo={mark ? 'mark' : 'logo'}
     >
       <use href={`${LOGO_SPRITE}#${mark ? 'b7r-mark' : 'b7r-logo'}`} />

@@ -351,7 +351,7 @@ export const adminStrings = {
         },
         panelLogo: {
           name: 'The logo in the panel',
-          why: 'The panel shows an image of the logo; the site draws it in the brand colours.',
+          why: 'The panel draws the logo in the shipped blues, and its tab icon is an image; the site draws them in the brand colours.',
         },
         favicon: {
           name: 'The old browser icon',
@@ -1066,7 +1066,7 @@ export const adminStringsAr: AdminStrings = {
         },
         panelLogo: {
           name: 'الشعار في اللوحة',
-          why: 'تعرض اللوحة صورة للشعار، أما الموقع فيرسمه بألوان العلامة.',
+          why: 'ترسم اللوحة الشعار بالألوان الأصلية، وأيقونة تبويبها صورة؛ أما الموقع فيرسمهما بألوان العلامة.',
         },
         favicon: {
           name: 'أيقونة المتصفح القديمة',
