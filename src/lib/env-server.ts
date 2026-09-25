@@ -13,15 +13,16 @@ import { DEFAULT_FROM, isProductionRuntime } from '@/lib/cms/env';
  */
 export interface NewsletterEnv {
   resendApiKey: string | undefined;
-  resendAudienceId: string | undefined;
-  /** `mock` enables the in-memory transport for tests, only ever honoured without a key. */
+  /** The Resend segment the site's subscribers join ("b7r.sa newsletter"). */
+  resendSegmentId: string | undefined;
+  /** `mock` answers every subscription `ok` for tests, only ever honoured without a key. */
   transportOverride: string | undefined;
 }
 
 export function newsletterEnv(): NewsletterEnv {
   return {
     resendApiKey: process.env.RESEND_API_KEY || undefined,
-    resendAudienceId: process.env.RESEND_AUDIENCE_ID || undefined,
+    resendSegmentId: process.env.RESEND_SEGMENT_ID || undefined,
     transportOverride: process.env.NEWSLETTER_TRANSPORT || undefined,
   };
 }
@@ -46,14 +47,14 @@ export function contactEnv(): ContactEnv {
 
 /**
  * Required in production (BRD 8.5, ADR-052): the origin, the database, the secret, the media
- * bucket, the e-mail key and audience, and the Turnstile pair (with the admin login gated by
+ * bucket, the e-mail key and the newsletter's segment, and the Turnstile pair (with the admin login gated by
  * it, ADR-034, a production boot without the keys would run the login open). Nothing a
  * person at B7R changes is here: that lives in the admin.
  */
 export const PRODUCTION_REQUIRED_ENV = [
   'NEXT_PUBLIC_SITE_URL',
   'RESEND_API_KEY',
-  'RESEND_AUDIENCE_ID',
+  'RESEND_SEGMENT_ID',
   'NEXT_PUBLIC_TURNSTILE_SITE_KEY',
   'TURNSTILE_SECRET_KEY',
   'DATABASE_URL',

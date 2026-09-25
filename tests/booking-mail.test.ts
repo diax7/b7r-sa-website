@@ -3,6 +3,7 @@ import { copyFor } from '@/content/copy';
 import {
   bookingIcs,
   type BookingMailInput,
+  type BookingMailKind,
   buildMerchantMail,
   buildOwnerMail,
   ICS_FILENAME,
@@ -38,6 +39,14 @@ const input = (locale: Locale, extra: Partial<BookingMailInput> = {}): BookingMa
   ...extra,
 });
 
+const KINDS: BookingMailKind[] = [
+  'confirmation',
+  'rescheduled',
+  'cancelled',
+  'reminder24h',
+  'reminder1h',
+  'link',
+];
 const ARABIC_DIGITS = /[٠-٩]/;
 const EM_DASH = String.fromCharCode(0x2014);
 
@@ -131,6 +140,15 @@ describe('the merchant mails, in both languages', () => {
       expect(ics).toContain('DTSTART:20260922T070000Z');
       expect(mail.text).not.toMatch(ARABIC_DIGITS);
       expect(mail.text).not.toContain(EM_DASH);
+    });
+
+    it(`${locale}: every kind replies to the contact address, none without one`, () => {
+      for (const kind of KINDS) {
+        expect(buildMerchantMail(kind, input(locale), 'contact@b7r.sa').replyTo).toBe(
+          'contact@b7r.sa',
+        );
+        expect(buildMerchantMail(kind, input(locale), '')).not.toHaveProperty('replyTo');
+      }
     });
 
     it(`${locale}: without a Meet link the confirmation says the link follows`, () => {
