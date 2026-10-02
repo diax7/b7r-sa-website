@@ -266,7 +266,7 @@ export async function sendPair(
   const token = await signManageToken(row.id, ports.secret);
   const input = mailInput(ports, row, settings, token, note);
   const mails: Array<[who: string, mail: ReturnType<typeof buildMerchantMail>]> = [
-    ['merchant', buildMerchantMail(kind, input)],
+    ['merchant', buildMerchantMail(kind, input, ports.ownerEmail)],
     ['owner', buildOwnerMail(kind, input, ports.ownerEmail)],
   ];
   await Promise.all(

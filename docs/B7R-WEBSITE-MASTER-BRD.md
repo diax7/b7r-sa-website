@@ -610,7 +610,7 @@ The English titles and descriptions (suffix ` | B7R Print`) are the `seo` rows o
 ### 4.17 Transactional emails (Level 1, sent through Resend)
 
 - Contact notification to contact@b7r.sa: subject: رسالة جديدة من الموقع: {inquiryType}; body lists all fields, LTR-safe formatting for phone and email, plus a "رد عبر واتساب" link if the phone is Saudi.
-- Newsletter: no welcome email in Level 1; the address is added to a Resend audience named "b7r.sa newsletter".
+- Newsletter: no welcome email in Level 1; the address is added to a Resend segment named "b7r.sa newsletter".
 - Booking e-mails (Level 4, ADR-062): the merchant's confirmation, move, cancel, the two reminders and the link that follows a calendar failure, and Dhia's pair of each at the contact address, in the merchant's language; the wording is §4.19's second table, the time reads in Riyadh with Western digits, the confirmation and the move attach the calendar file.
 
 ### 4.18 The compare page `/compare-printful` (ADR-050, approved by Dhia 2026-09-16)
@@ -1014,7 +1014,7 @@ Centred: the wave icon, H1, text, primary button to `/`. Returns HTTP 404. No ri
 
 ### 6.14 Newsletter
 
-Component `NewsletterForm` used in the footer and blog. `POST /api/newsletter` validates the email, rejects honeypot, rate-limits 5/10 min/IP, adds the contact to the Resend audience `RESEND_AUDIENCE_ID`, returns `{ ok }`. Duplicate emails return `ok: true` (idempotent). Track `newsletter_submit`.
+Component `NewsletterForm` used in the footer and blog. `POST /api/newsletter` validates the email, rejects honeypot, rate-limits 5/10 min/IP, adds the contact to the Resend segment `RESEND_SEGMENT_ID`, returns `{ ok }`. Duplicate emails return `ok: true` (idempotent). Track `newsletter_submit`.
 
 ### 6.15 WhatsApp widget
 
@@ -1189,7 +1189,7 @@ The key is served at `/indexnow/{INDEXNOW_KEY}.txt` by `app/indexnow/[key]/route
 | Motion | CSS transitions and keyframes, plus small scroll/intersection hooks (`lib/reduced-motion.ts`, `modules/home/steps/steps-progress.tsx`); `motion` (React) only if a later phase needs what CSS cannot do (amended 2026-09-13, ADR-012: keeps the home page inside the JS budget) | Respect reduced motion via `useReducedMotion` |
 | Canvas | `konva` + `react-konva` | Designer only; loaded lazily |
 | Validation | `zod` | Content contract, forms, API bodies |
-| Email | `resend` SDK | Contact notification, newsletter audience |
+| Email | `resend` SDK | Contact notification, newsletter segment |
 | Anti-spam | Cloudflare Turnstile (`@marsidev/react-turnstile` or a thin wrapper) + honeypot + rate limit | Turnstile keys optional in dev |
 | i18n | `next-intl` installed with a single locale `ar` and routing prepared for `en` (`localePrefix: 'as-needed'`, default `ar` at root) | UI microcopy in `messages/ar.json`; page copy in typed content files |
 | Analytics | Umami script; GA4 via `@next/third-parties/google` after consent | §6.16 |
@@ -1289,7 +1289,7 @@ A unit test parses every content file against its schema; the build fails on dri
 | `NEXT_PUBLIC_APP_URL` | The merchant app; defaults to `https://b7r.app` | no |
 | `DATABASE_URL`, `PAYLOAD_SECRET` | Postgres; the session and key-encryption secret (32+ characters) | yes |
 | `S3_BUCKET`, `S3_REGION`, `S3_ENDPOINT`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` (`S3_PUBLIC_URL` when a CDN fronts the bucket) | Media | yes |
-| `RESEND_API_KEY`, `RESEND_AUDIENCE_ID` | E-mail (the contact form, the newsletter, the admin's password reset) | yes |
+| `RESEND_API_KEY`, `RESEND_SEGMENT_ID` | E-mail (the contact form, the newsletter, the admin's password reset) | yes |
 | `RESEND_FROM` | The sender on the verified domain; defaults to `بحر برنت <no-reply@b7r.sa>` | no |
 | `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` | The forms' anti-spam and the admin login gate (ADR-034) | yes |
 | `INDEXNOW_KEY` | Optional; derived from `PAYLOAD_SECRET` when unset | no |

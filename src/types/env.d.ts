@@ -9,7 +9,7 @@ declare global {
       NEXT_PUBLIC_SITE_URL?: string;
       NEXT_PUBLIC_APP_URL?: string;
       RESEND_API_KEY?: string;
-      RESEND_AUDIENCE_ID?: string;
+      RESEND_SEGMENT_ID?: string;
       NEWSLETTER_TRANSPORT?: string;
       APP_VERSION?: string;
     }

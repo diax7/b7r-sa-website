@@ -178,7 +178,7 @@ The site must feel premium, calm, and Saudi. Think of the restraint of Apple's p
 
 - **Name:** Arabic بحر برنت, Latin B7R Print. In running Arabic text write بحر برنت. In UI, the logo lockup already contains both.
 - **Motif:** the wave. It appears in the logo, the CTA ribbon edges, and the footer edge (§6.3). Nowhere else. Do not scatter wave shapes across sections.
-- **Logo files:** `resources/brand/logo/logo.png` (colour, on white or off-white), `logo-white.png` (on the primary or dark blue), `icon.png` (favicon, app icon, avatar in the WhatsApp widget), `small-icon.png` (16–32 px contexts). PNG only for now; export at 1x and 2x. Never recolour, stretch, rotate, outline, or add shadows or gradients to the logo.
+- **Logo files:** `resources/brand/logo/logo.png` (colour, on white or off-white), `logo-white.png` (on the primary or dark blue), `icon.png` (favicon, app icon, avatar in the WhatsApp widget), `small-icon.png` (16–32 px contexts). PNG only for now; export at 1x and 2x. Never recolour, stretch, rotate, outline, or add shadows or gradients to the logo. *Amended 2026-09-23 (Dhia, ADR-065): the site draws the logo from vector paths traced from `logo.png` and `icon.png`, each blue painted with the brand colour it was sampled as, so a change of brand colour carries into the logo; on a dark background every blue is drawn white, as `logo-white.png` was. This is the one sanctioned recolouring, and it keeps the artwork's shapes and proportions. An upload in the Appearance global's Logo tab replaces the drawn logo and keeps its own colours. The favicon, app and Apple icons and the WhatsApp avatar are drawn from the traced mark; `favicon.ico` and the admin panel's logo stay PNG.*
 - **Clear space:** at least the height of the "7" glyph on all sides. Minimum width 120 px for the lockup, 24 px for the icon.
 
 ### 3.2 Colour tokens
@@ -203,7 +203,7 @@ All three brand blues are sampled from `logo.png`. Two darker shades are derived
 | `--color-error` | `#D90000` | Validation errors, negative profit |
 | `--color-whatsapp` | `#25D366` | The WhatsApp widget button only |
 
-Rules: primary text on white and white text on primary both pass AA. Never place accent-coloured small text on white. Never introduce purple, pink, teal, magenta, orange, or gradients between hues. A single flat colour per surface. The only permitted gradient is a white-to-transparent overlay on hero photos for legibility (§6.4.1). *Amended 2026-09-22 (Dhia, ADR-065): a second exception, the background sets of the Appearance global. A set is a named background with the text tone that reads on it, and one of them may be a gradient between the brand's own blues, optionally with a grain overlay. The ban on gradients between unrelated hues stands, as does one flat colour per surface for any section that does not choose a set.* *Amended 2026-09-17 (Dhia, ADR-054): one more, between the brand's own two blues: the main call-to-action buttons' sheen (`Button` variants `shiny` and, on the primary ribbon, `inverseShiny`), on only when the admin's site-wide "Shiny buttons" switch (Site settings → Brand) is ticked.*
+Rules: primary text on white and white text on primary both pass AA. Never place accent-coloured small text on white. Never introduce purple, pink, teal, magenta, orange, or gradients between hues. A single flat colour per surface. The only permitted gradient is a white-to-transparent overlay on hero photos for legibility (§6.4.1). *Amended 2026-09-22 (Dhia, ADR-065): a second exception, the background sets of the Appearance global. A set is a named background with the text tone that reads on it, and one of them may be a gradient between the brand's own blues, optionally with a grain overlay. The ban on gradients between unrelated hues stands, as does one flat colour per surface for any section that does not choose a set.* *Amended 2026-09-23 (Dhia, ADR-065): the gradient, Sea mist, keeps the blues of Dhia's reference image rather than following the brand, and is named on the Appearance screen's "does not follow" panel; its deep bloom is lightened until every text colour on it reads 4.5:1 at every point, grain counted.* *Amended 2026-09-17 (Dhia, ADR-054): one more, between the brand's own two blues: the main call-to-action buttons' sheen (`Button` variants `shiny` and, on the primary ribbon, `inverseShiny`), on only when the admin's site-wide "Shiny buttons" switch (Site settings → Brand) is ticked.*
 
 ### 3.3 Typography
 
@@ -610,7 +610,7 @@ The English titles and descriptions (suffix ` | B7R Print`) are the `seo` rows o
 ### 4.17 Transactional emails (Level 1, sent through Resend)
 
 - Contact notification to contact@b7r.sa: subject: رسالة جديدة من الموقع: {inquiryType}; body lists all fields, LTR-safe formatting for phone and email, plus a "رد عبر واتساب" link if the phone is Saudi.
-- Newsletter: no welcome email in Level 1; the address is added to a Resend audience named "b7r.sa newsletter".
+- Newsletter: no welcome email in Level 1; the address is added to a Resend segment named "b7r.sa newsletter".
 - Booking e-mails (Level 4, ADR-062): the merchant's confirmation, move, cancel, the two reminders and the link that follows a calendar failure, and Dhia's pair of each at the contact address, in the merchant's language; the wording is §4.19's second table, the time reads in Riyadh with Western digits, the confirmation and the move attach the calendar file.
 
 ### 4.18 The compare page `/compare-printful` (ADR-050, approved by Dhia 2026-09-16)
@@ -1014,7 +1014,7 @@ Centred: the wave icon, H1, text, primary button to `/`. Returns HTTP 404. No ri
 
 ### 6.14 Newsletter
 
-Component `NewsletterForm` used in the footer and blog. `POST /api/newsletter` validates the email, rejects honeypot, rate-limits 5/10 min/IP, adds the contact to the Resend audience `RESEND_AUDIENCE_ID`, returns `{ ok }`. Duplicate emails return `ok: true` (idempotent). Track `newsletter_submit`.
+Component `NewsletterForm` used in the footer and blog. `POST /api/newsletter` validates the email, rejects honeypot, rate-limits 5/10 min/IP, adds the contact to the Resend segment `RESEND_SEGMENT_ID`, returns `{ ok }`. Duplicate emails return `ok: true` (idempotent). Track `newsletter_submit`.
 
 ### 6.15 WhatsApp widget
 
@@ -1189,7 +1189,7 @@ The key is served at `/indexnow/{INDEXNOW_KEY}.txt` by `app/indexnow/[key]/route
 | Motion | CSS transitions and keyframes, plus small scroll/intersection hooks (`lib/reduced-motion.ts`, `modules/home/steps/steps-progress.tsx`); `motion` (React) only if a later phase needs what CSS cannot do (amended 2026-09-13, ADR-012: keeps the home page inside the JS budget) | Respect reduced motion via `useReducedMotion` |
 | Canvas | `konva` + `react-konva` | Designer only; loaded lazily |
 | Validation | `zod` | Content contract, forms, API bodies |
-| Email | `resend` SDK | Contact notification, newsletter audience |
+| Email | `resend` SDK | Contact notification, newsletter segment |
 | Anti-spam | Cloudflare Turnstile (`@marsidev/react-turnstile` or a thin wrapper) + honeypot + rate limit | Turnstile keys optional in dev |
 | i18n | `next-intl` installed with a single locale `ar` and routing prepared for `en` (`localePrefix: 'as-needed'`, default `ar` at root) | UI microcopy in `messages/ar.json`; page copy in typed content files |
 | Analytics | Umami script; GA4 via `@next/third-parties/google` after consent | §6.16 |
@@ -1289,7 +1289,7 @@ A unit test parses every content file against its schema; the build fails on dri
 | `NEXT_PUBLIC_APP_URL` | The merchant app; defaults to `https://b7r.app` | no |
 | `DATABASE_URL`, `PAYLOAD_SECRET` | Postgres; the session and key-encryption secret (32+ characters) | yes |
 | `S3_BUCKET`, `S3_REGION`, `S3_ENDPOINT`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` (`S3_PUBLIC_URL` when a CDN fronts the bucket) | Media | yes |
-| `RESEND_API_KEY`, `RESEND_AUDIENCE_ID` | E-mail (the contact form, the newsletter, the admin's password reset) | yes |
+| `RESEND_API_KEY`, `RESEND_SEGMENT_ID` | E-mail (the contact form, the newsletter, the admin's password reset) | yes |
 | `RESEND_FROM` | The sender on the verified domain; defaults to `بحر برنت <no-reply@b7r.sa>` | no |
 | `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` | The forms' anti-spam and the admin login gate (ADR-034) | yes |
 | `INDEXNOW_KEY` | Optional; derived from `PAYLOAD_SECRET` when unset | no |

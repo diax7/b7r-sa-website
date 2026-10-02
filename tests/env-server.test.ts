@@ -30,9 +30,9 @@ describe('production env gate (BRD 8.5)', () => {
   });
 
   it('throws naming every missing variable', () => {
-    const { RESEND_API_KEY: _a, RESEND_AUDIENCE_ID: _b, ...partial } = prod;
-    expect(missingProductionEnv(partial)).toEqual(['RESEND_API_KEY', 'RESEND_AUDIENCE_ID']);
-    expect(() => assertProductionEnv(partial)).toThrow(/RESEND_API_KEY[\s\S]*RESEND_AUDIENCE_ID/);
+    const { RESEND_API_KEY: _a, RESEND_SEGMENT_ID: _b, ...partial } = prod;
+    expect(missingProductionEnv(partial)).toEqual(['RESEND_API_KEY', 'RESEND_SEGMENT_ID']);
+    expect(() => assertProductionEnv(partial)).toThrow(/RESEND_API_KEY[\s\S]*RESEND_SEGMENT_ID/);
   });
 
   it('asks for nothing a person at B7R changes in the admin (ADR-052)', () => {

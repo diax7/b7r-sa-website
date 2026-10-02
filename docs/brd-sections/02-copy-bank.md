@@ -288,7 +288,7 @@ The English titles and descriptions (suffix ` | B7R Print`) are the `seo` rows o
 ### 4.17 Transactional emails (Level 1, sent through Resend)
 
 - Contact notification to contact@b7r.sa: subject: رسالة جديدة من الموقع: {inquiryType}; body lists all fields, LTR-safe formatting for phone and email, plus a "رد عبر واتساب" link if the phone is Saudi.
-- Newsletter: no welcome email in Level 1; the address is added to a Resend audience named "b7r.sa newsletter".
+- Newsletter: no welcome email in Level 1; the address is added to a Resend segment named "b7r.sa newsletter".
 - Booking e-mails (Level 4, ADR-062): the merchant's confirmation, move, cancel, the two reminders and the link that follows a calendar failure, and Dhia's pair of each at the contact address, in the merchant's language; the wording is §4.19's second table, the time reads in Riyadh with Western digits, the confirmation and the move attach the calendar file.
 
 ### 4.18 The compare page `/compare-printful` (ADR-050, approved by Dhia 2026-09-16)
