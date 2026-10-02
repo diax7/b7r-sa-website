@@ -38,6 +38,22 @@ test.describe('steps (BRD 6.4.4)', () => {
         'aria-current',
         'step',
       );
+      // The step's photo shows in the panel: in its frame (the panel clips), faded in, loaded.
+      const photo = page.locator(`#steps .steps-panel img[data-step="${step}"]`);
+      const offset = await photo.evaluate((img) => {
+        const frame = img.closest('.steps-panel')!.getBoundingClientRect();
+        return Math.abs(img.getBoundingClientRect().top - frame.top);
+      });
+      expect(offset, `step ${step}'s photo sits in the panel`).toBeLessThanOrEqual(12);
+      await expect(photo).toHaveCSS('opacity', '1');
+      await expect
+        .poll(
+          () => photo.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth > 0),
+          {
+            message: `step ${step}'s photo has loaded`,
+          },
+        )
+        .toBe(true);
     }
     await expect(page.locator('#steps')).toHaveCSS('min-height', /\d{3,4}px/);
     await expect(page.getByRole('link', { name: 'اعرف أكثر عن طريقة العمل' })).toHaveAttribute(

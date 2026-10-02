@@ -818,6 +818,12 @@
     overflow: hidden;
     justify-self: end;
   }
+  /* A photo is a `<picture>` (ADR-064): the wrapper gives way, so each step's photo is the grid
+     item and the three stack in the one cell. As grid items the wrappers stacked in rows, and
+     steps 2 and 3 faded in below the panel's clipped edge. */
+  html.js .steps .steps-panel > picture {
+    display: contents;
+  }
   html.js .steps .steps-panel-icon {
     grid-area: 1 / 1;
     inline-size: 100%;
