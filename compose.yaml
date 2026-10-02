@@ -39,7 +39,8 @@ services:
     depends_on:
       s3:
         condition: service_healthy
-    entrypoint: ['/bin/sh', '-c', 'echo "s3.bucket.create -name b7r-media" | weed shell -master=s3:9333']
+    entrypoint:
+      ['/bin/sh', '-c', 'echo "s3.bucket.create -name b7r-media" | weed shell -master=s3:9333']
 
 volumes:
   b7r-db:
