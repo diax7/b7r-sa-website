@@ -44,7 +44,7 @@ const nextConfig: NextConfig = {
     // CMS media on S3: the optimizer fetches an original for the `og:image` and the
     // thumbnail fallback; the browser fetches the renditions from the same host (ADR-064).
     remotePatterns: s3RemotePatterns(),
-    // Next refuses to optimise images from a private IP (SSRF guard). Only the CI MinIO job
+    // Next refuses to optimise images from a private IP (SSRF guard). Only the CI S3 job
     // serves media from localhost; production media sits on a public host.
     ...(process.env['IMAGES_ALLOW_LOCAL_IP'] === '1' ? { dangerouslyAllowLocalIP: true } : {}),
   },

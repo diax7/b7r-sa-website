@@ -1,0 +1,10 @@
+{
+  "identities": [
+    {
+      "name": "local",
+      "credentials": [{ "accessKey": "b7r-s3", "secretKey": "b7r-s3-local-secret" }],
+      "actions": ["Admin", "Read", "List", "Tagging", "Write"]
+    },
+    { "name": "anonymous", "actions": ["Read:b7r-media"] }
+  ]
+}

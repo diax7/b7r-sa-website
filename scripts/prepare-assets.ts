@@ -30,11 +30,11 @@ function ensure(dir: string) {
 
 async function logos() {
   ensure(pub('images', 'logo'));
-  // The panel's logo and the share images' (both raster, on the "does not follow" list); the
-  // site draws its logo and its app icons from the traced paths (spec 010, phase 1d).
+  // The share images' logo (raster, on the "does not follow" list); the site and the panel
+  // draw theirs from the traced sprite, the app icons from the traced mark (spec 010).
   copyFileSync(res('brand', 'logo', 'logo.png'), pub('images', 'logo', 'logo.png'));
-  // The panel's 36 px mark and the admin's favicon: 512 px, palette PNG (two flat colours),
-  // about 16 KB against the 223 KB source (site audit 2026-09-18, item 15).
+  // The admin's tab icon: 512 px, palette PNG (two flat colours), about 16 KB against the
+  // 223 KB source (site audit 2026-09-18, item 15).
   await sharp(res('brand', 'logo', 'icon.png'))
     .resize(512, 512)
     .png({ palette: true, quality: 90, compressionLevel: 9 })

@@ -1,19 +1,19 @@
-/* eslint-disable @next/next/no-img-element -- Payload's admin graphics are plain images */
+import { BrandLogo } from '@/modules/core/brand-logo';
 
-/** Brand mark for the admin login and nav (BRD 9.3). Served from the site's public folder. */
+/**
+ * The logo on the admin login (BRD 9.3): the traced logo of the site (spec 010), in the
+ * panel's shipped blues (`admin.css`), named for assistive technology since the drawing is
+ * decorative. Sized inline: the panel's stylesheet has no utility for this place.
+ */
 export function Logo() {
-  return <img src="/images/logo/logo.png" alt="بحر برنت" style={{ height: 56, width: 'auto' }} />;
+  return (
+    <span role="img" aria-label="بحر برنت" style={{ display: 'inline-block' }}>
+      <BrandLogo style={{ display: 'block', height: 56, width: 'auto' }} />
+    </span>
+  );
 }
 
-/** Square; the inline `maxWidth` beats the site preflight's `img { max-width: 100% }`. */
+/** Square; the inline `maxWidth` beats the site preflight's `max-width: 100%`. */
 export function Icon() {
-  return (
-    <img
-      src="/images/logo/icon.png"
-      alt=""
-      width={24}
-      height={24}
-      style={{ height: 24, width: 24, maxWidth: 'none', objectFit: 'contain', display: 'block' }}
-    />
-  );
+  return <BrandLogo mark style={{ display: 'block', height: 24, width: 24, maxWidth: 'none' }} />;
 }
