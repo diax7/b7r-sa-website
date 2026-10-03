@@ -271,6 +271,31 @@ describe('the weekly digest (BRD 10.2.4 step 9)', () => {
     expect(text).not.toContain(String.fromCharCode(0x2014));
   });
 
+  it('says when a post went out in one language and links the blog it is on (ADR-066)', () => {
+    const text = digestText({
+      runs: [
+        {
+          id: 9,
+          label: 'generate [en]: Connect a Shopify store',
+          kind: 'generate',
+          status: 'done',
+          score: 90,
+          costUsd: 0.1,
+          error: 'Published in English only: refused: An em dash in the text',
+          post: { title: null, slug: 'connect-shopify-store' },
+          startedAt: '2026-09-12T06:00:00.000Z',
+        },
+      ],
+      settings: { enabled: true, publishHourRiyadh: 9, postsPerDay: 1 },
+      now: new Date('2026-09-13T05:00:00Z'),
+      base: 'https://b7r.sa',
+      envOn: true,
+    });
+    expect(text).toContain(
+      '- generate [en]: Connect a Shopify store (generate, score 90, 0.10 USD; Published in English only: refused: An em dash in the text): https://b7r.sa/en/blog/connect-shopify-store',
+    );
+  });
+
   it('says the engine is off when the switch or the env stops it', () => {
     const off = digestText({
       runs: [],

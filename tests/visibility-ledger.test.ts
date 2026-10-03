@@ -300,6 +300,11 @@ describe('the cost, the labels, the tools (ADR-049 D5)', () => {
     expect(Object.keys(searchTool({ kind: 'anthropic', apiKey: 'k' }) ?? {})).toEqual([
       'web_search',
     ]);
+    // The version every Claude model runs (ADR-066): the 2026-02-09 one failed daily on Haiku.
+    const claude = searchTool({ kind: 'anthropic', apiKey: 'k' })?.['web_search'] as {
+      id?: string;
+    };
+    expect(claude.id).toBe('anthropic.web_search_20250305');
     expect(Object.keys(searchTool({ kind: 'google', apiKey: 'k' }) ?? {})).toEqual([
       'google_search',
     ]);

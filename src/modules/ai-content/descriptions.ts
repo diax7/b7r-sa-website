@@ -39,8 +39,8 @@ export const AI_SETTINGS_DESCRIPTIONS: Described = {
     en: "The model's standing instructions for every run. A change bumps the version the runs record.",
   },
   'style.bannedPhrases': {
-    ar: 'لا تبدأ بها جملة في المقال؛ كل واحدة تخسر 5 درجات في المراجعة الذاتية (حتى 25).',
-    en: 'A sentence may not start with any of them; each costs 5 points in the self-review (25 at most).',
+    ar: 'تخسر كل واحدة منها 5 درجات في المراجعة الذاتية أينما وردت (حتى 25)؛ و«هناك» في أول الجملة فقط.',
+    en: 'Each costs 5 points in the self-review wherever it appears (25 at most); the Arabic «هناك» only at the start of a sentence.',
   },
   'style.bannedClaims': {
     ar: 'ما لا يجوز للمحرّك قوله (شهادات، أرقام غير مثبتة)، سطر لكل ادعاء.',
@@ -147,8 +147,8 @@ export const AI_RUNS_DESCRIPTIONS: Described = {
     en: 'What the run produced, as a draft or published.',
   },
   error: {
-    ar: 'سبب الفشل أو التخطّي كما سجّله المحرّك، بلا مفاتيح ولا روابط.',
-    en: 'Why the run failed or was skipped, as the engine recorded it, keys and links removed.',
+    ar: 'سبب الفشل أو التخطّي، أو سبب نشر المقال بلغة واحدة، كما سجّله المحرّك بلا مفاتيح ولا روابط.',
+    en: 'Why the run failed or was skipped, or why a post went out in one language; keys and links removed.',
   },
   startedAt: {
     ar: 'اللحظة التي بدأت فيها الجولة.',
@@ -163,8 +163,8 @@ export const AI_RUNS_DESCRIPTIONS: Described = {
     en: 'The self-review score, criterion by criterion: what the post lost on each.',
   },
   steps: {
-    ar: 'بترتيبها مع وقت كل خطوة ونتيجتها: المخطط، الكتابة، المراجعة، الغلاف، النشر.',
-    en: 'In order, each with its time and outcome: outline, draft, review, cover, publish.',
+    ar: 'بترتيبها مع وقت كل خطوة ونتيجتها: المخطط، الكتابة، المراجعة، اللغة الأخرى، الغلاف، النشر.',
+    en: 'In order, each with its time and outcome: outline, draft, review, the other language, cover, publish.',
   },
   outline: {
     ar: 'ما كُتب منه المقال؛ والتحديث الآلي يعيد التوليد منه عند تغيّر الحقائق.',
@@ -179,8 +179,8 @@ export const AI_TOPICS_DESCRIPTIONS: Described = {
     en: 'For the engine only; it writes the final title itself. Not shown on the site.',
   },
   language: {
-    ar: 'يُنشر المقال على المدونة العربية أو الإنجليزية.',
-    en: 'The post lands on the Arabic or the English blog.',
+    ar: 'يُكتب المقال بها أولاً، ثم تكتب الجولة اللغة الأخرى في المقال نفسه.',
+    en: 'Written first in this one; the run then writes the other language into the same post.',
   },
   hub: {
     ar: 'يُنشر المقال فيه عند كتابته.',
@@ -191,8 +191,8 @@ export const AI_TOPICS_DESCRIPTIONS: Described = {
     en: 'Who the post is for: informational (learning), commercial (comparing to buy), seasonal (an occasion with a date).',
   },
   priority: {
-    ar: 'يأخذ المحرّك الأعلى أولاً: 1 هو الأعلى.',
-    en: 'The engine takes the highest first: 1 is the highest.',
+    ar: 'يأخذ المحرّك الأعلى أولاً: 5 هي الأعلى، و1 الأدنى.',
+    en: 'The engine takes the highest first: 5 is the highest, 1 the lowest.',
   },
   primaryKeyword: {
     ar: 'ما يبحث به الناس ويجب أن يستهدفه المقال: «تسعير تيشيرت مطبوع».',

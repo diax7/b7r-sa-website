@@ -126,7 +126,8 @@ export const adminStrings = {
     queued: 'Queued: the run starts within a minute; see Runs.',
     postTitle: 'Content engine',
     regenerate: 'Regenerate',
-    regenerateHint: 'A new run from the topic replaces the text under the same address and cover.',
+    regenerateHint:
+      'A new run from the topic replaces the text in both languages under the same address and cover.',
     importTitle: 'Add topics from CSV',
     importHint:
       'Columns: title, hub (slug), primaryKeyword, secondaryKeywords (separated by ;), intent, priority. A header row is fine.',
@@ -856,7 +857,7 @@ export const adminStringsAr: AdminStrings = {
     queued: 'في الطابور: تبدأ الجولة خلال دقيقة؛ راجع الجولات.',
     postTitle: 'محرّك المحتوى',
     regenerate: 'أعد التوليد',
-    regenerateHint: 'جولة جديدة من الموضوع تستبدل النص وتبقي الرابط والغلاف كما هما.',
+    regenerateHint: 'جولة جديدة من الموضوع تستبدل النص باللغتين وتبقي الرابط والغلاف كما هما.',
     importTitle: 'أضف مواضيع من CSV',
     importHint:
       'الأعمدة: title، hub (slug)، primaryKeyword، secondaryKeywords (مفصولة بـ ;)، intent، priority. لا بأس بصف عناوين.',

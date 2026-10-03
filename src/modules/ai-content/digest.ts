@@ -23,7 +23,8 @@ export interface DigestRun {
   score: number | null;
   costUsd: number;
   error: string | null;
-  post: { title: string; slug: string } | null;
+  /** The post's Arabic title, null when the post has no Arabic (an English topic's alone). */
+  post: { title: string | null; slug: string } | null;
   startedAt: string;
 }
 
@@ -60,9 +61,14 @@ export function digestText(args: {
   if (done.length > 0) {
     lines.push('', 'Posts:');
     for (const r of done) {
-      const where = r.post ? `${base}/blog/${r.post.slug}` : `run ${r.id}`;
-      const title = r.post?.title ?? r.label;
-      lines.push(`- ${title} (${r.kind}, score ${r.score ?? '?'}, ${usd(r.costUsd)}): ${where}`);
+      const blog = r.post?.title ? '/blog' : '/en/blog';
+      const where = r.post ? `${base}${blog}/${r.post.slug}` : `run ${r.id}`;
+      const title = r.post?.title || r.label;
+      // A post that went out in one language says so (ADR-066).
+      const note = r.error ? `; ${r.error}` : '';
+      lines.push(
+        `- ${title} (${r.kind}, score ${r.score ?? '?'}, ${usd(r.costUsd)}${note}): ${where}`,
+      );
     }
   }
   if (failed.length > 0) {
@@ -103,6 +109,8 @@ async function weekRuns(payload: Payload, now: Date): Promise<DigestRun[]> {
     pagination: false,
     sort: 'startedAt',
     locale: 'ar',
+    // No fallback: an English-only post reads with no Arabic title and links the English blog.
+    fallbackLocale: false,
     overrideAccess: true,
   });
   return docs.map((r) => ({
@@ -113,7 +121,10 @@ async function weekRuns(payload: Payload, now: Date): Promise<DigestRun[]> {
     score: r.score ?? null,
     costUsd: r.costUsd ?? 0,
     error: r.error ?? null,
-    post: typeof r.post === 'object' && r.post ? { title: r.post.title, slug: r.post.slug } : null,
+    post:
+      typeof r.post === 'object' && r.post
+        ? { title: r.post.title || null, slug: r.post.slug }
+        : null,
     startedAt: r.startedAt ?? r.createdAt,
   }));
 }

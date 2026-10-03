@@ -842,8 +842,9 @@ ignore when 2.0.2 ships.
   input tokens); read the first live runs for the real number. Save, then press "Test connection": one short call through the stored
   key; the answer shows beside the button and is recorded on the row (last test, passed,
   what the service said). The key is stored encrypted and reads back as a mask; leave the
-  mask to keep it, clear the field to remove it. Then Blog → Engine settings → Cadence →
-  Connection: pick it.
+  mask to keep it, clear the field to remove it. Then Blog → Engine settings → Schedule and
+  limits → Connection: pick it. Production runs `gpt-6.1-sol` since 2026-10-03 (Dhia's
+  choice; $2 and $10 a million tokens): a post in both languages costs about $0.12.
 - **The limit.** Each connection's "Spent this month" and "Runs this month" are read from
   the runs log (from the 1st, Riyadh time); a run is refused once the spend reaches the
   connection's monthly limit, until next month. The daily cost cap stays in the engine
@@ -853,7 +854,8 @@ ignore when 2.0.2 ships.
   "Connection off" in amber); the test still works. The engine's connection cannot be
   deleted: pick another first. With no connection picked the dashboard shows "No
   connection" in red and nothing runs.
-- **Switching on.** Cadence → "Engine on". `AI_CONTENT_ENABLED=false` in the environment stops
+- **Switching on.** Schedule and limits → "Engine on". Set Notifications → E-mail first: the
+  failure alerts and the one-language alert go nowhere without it. `AI_CONTENT_ENABLED=false` in the environment stops
   every run whatever the panel says (the kill switch outside the panel). While
   `reviewFirstRuns` is above zero, a live provider's posts land as drafts for a read.
 - **Trying it.** Add a topic (or bulk-add from CSV), open it and press "Generate now": the
@@ -861,6 +863,21 @@ ignore when 2.0.2 ships.
   cost; the post appears under Blog → Posts. A refused manual run (switch off, a cap, no
   connection, the connection off or over its limit) writes a skipped run with the reason; a
   connection without a key fails the run at its first model call, with the reason.
+- **Both languages (ADR-066).** Every run writes the post in its topic's language, then the
+  other one onto the same post; the run's label says `[ar+en]` (or `[en+ar]`). When the other
+  language fails, the post is published in one language: the run is `done`, its label `[ar]`,
+  its error "Published in Arabic only: …", and the one-language alert is mailed. Fill the
+  English in the post's form, or press Regenerate on the post (it rewrites both). Each model
+  call retries twice in process (3 s, then 10 s) on a timeout, the SDK's spent retries or a
+  schema miss; a bad key fails at once.
+- **A deploy during a run.** A run takes about three minutes in both languages. A deploy in
+  that window leaves the run `running` and its topic `generating`, and neither clears itself:
+  press Deploy away from the publish hour, and reset such a topic to `backlog` by a script.
+- **The runner at boot.** The server starts Payload, and with it the jobs runner, when it
+  boots (`src/instrumentation.ts`), outside any request. The log line "Payload did not start
+  at boot (…)" means the database was not reachable then: the first request starts Payload,
+  and until the next restart the job ticks run inside that request's context (the 2026-10-02
+  fault), so restart once the database answers.
 - **When a run fails.** Runs → the row's error and step log say which step and why; the topic
   reads `failed` with the same reason and can be retried with "Generate now". A failure
   e-mail goes to the notification address when "Failure alerts" is on.

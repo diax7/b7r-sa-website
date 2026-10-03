@@ -46,9 +46,11 @@ const SAUDI = { type: 'approximate', country: 'SA', city: 'Riyadh' } as const;
 
 /**
  * The vendor's own web search as an AI SDK tool (ADR-049 D5), keyed the way the vendor
- * names it: OpenAI's `web_search`, Anthropic's `web_search` (the 2026-02-09 version), Google's
- * `google_search` grounding. DeepSeek, a compatible endpoint (Perplexity searches on its
- * own) and the mock have none: the ledger asks them plain.
+ * names it: OpenAI's `web_search`, Anthropic's `web_search` (the 2025-03-05 version, ADR-066:
+ * the 2026-02-09 one needs programmatic tool calling, which Haiku 4.5 lacks, and the SDK
+ * sends no `allowed_callers` for a provider tool), Google's `google_search` grounding.
+ * DeepSeek, a compatible endpoint (Perplexity searches on its own) and the mock have none:
+ * the ledger asks them plain.
  */
 export function searchTool(spec: Pick<ModelSpec, 'kind' | 'apiKey'>): Record<string, Tool> | null {
   const { kind, apiKey } = spec;
@@ -60,7 +62,7 @@ export function searchTool(spec: Pick<ModelSpec, 'kind' | 'apiKey'>): Record<str
         // One search per prompt: each search's pages land in the context as input tokens
         // (three searches read 20,000 tokens an answer on 2026-09-16), and a buyer's first
         // answer comes from one search too.
-        web_search: createAnthropic({ apiKey }).tools.webSearch_20260209({
+        web_search: createAnthropic({ apiKey }).tools.webSearch_20250305({
           userLocation: SAUDI,
           maxUses: 1,
         }),
