@@ -28,6 +28,22 @@ export interface MockOptions {
   reviewScore?: number;
   /** The review score after a revision pass. */
   revisedScore?: number;
+  /** Ends every draft in this language with an em dash, which the checks refuse. */
+  emDashIn?: 'ar' | 'en';
+}
+
+/**
+ * The companion's working title and search phrase (ADR-066), fixed per language: the mock
+ * does not translate, and a prompt in English never carries the Arabic topic onward.
+ */
+const COMPANION = {
+  ar: { title: 'دليل عملي للتاجر في السعودية', keyword: 'الطباعة عند الطلب' },
+  en: { title: 'A practical guide for merchants in Saudi Arabia', keyword: 'print on demand Saudi Arabia' },
+} as const;
+
+/** A companion prompt names the language it adapts from. */
+function companion(prompt: string): boolean {
+  return /^SOURCE LANGUAGE:\s*(ar|en)$/m.test(prompt);
 }
 
 const USAGE = { inputTokens: 1200, outputTokens: 900 };
@@ -275,7 +291,8 @@ export function mockProvider(options: MockOptions): Provider & { calls: MockCall
         const text = en
           ? draftForEn(topicOf(req.prompt), keywordOf(req.prompt), hubOf(req.prompt), options.facts)
           : draftFor(req.prompt, options.facts);
-        return { text, usage: USAGE };
+        const dash = options.emDashIn === (en ? 'en' : 'ar') ? ` ${String.fromCharCode(0x2014)}` : '';
+        return { text: `${text}${dash}`, usage: USAGE };
       }
       if (req.step === 'alt') {
         const alt = en
@@ -289,7 +306,15 @@ export function mockProvider(options: MockOptions): Provider & { calls: MockCall
       calls.push({ step: req.step, kind: 'object', prompt: req.prompt });
       let value: unknown;
       const en = english(req.prompt);
-      if (req.step === 'outline') {
+      if (req.step === 'outline' && companion(req.prompt)) {
+        const named = COMPANION[en ? 'en' : 'ar'];
+        const { imageKeyword: _cover, ...adapted } = (en ? outlineForEn : outlineFor)(
+          named.title,
+          named.keyword,
+          hubOf(req.prompt),
+        );
+        value = { ...adapted, ...named };
+      } else if (req.step === 'outline') {
         value = (en ? outlineForEn : outlineFor)(
           topicOf(req.prompt),
           keywordOf(req.prompt),

@@ -146,7 +146,11 @@ describe('the weekly freshness pass (BRD 10.2.4 amendment, ADR-042)', () => {
     // The rewritten post carries today's sheet as its new baseline.
     expect(state.posts[0]!.factsBaseline).toEqual(sevenDays);
     // The outline came from the first run: the second provider never drew one.
-    expect(second.calls.filter((c) => c.step === 'outline')).toHaveLength(0);
+    // (The companion adapts its own outline from the stored one: ADR-066.)
+    const sourceOutline = second.calls.filter(
+      (c) => c.step === 'outline' && !/^SOURCE LANGUAGE:/m.test(c.prompt),
+    );
+    expect(sourceOutline).toHaveLength(0);
     const again = state.runs.get(refreshed.runId!)!;
     expect(again['kind']).toBe('freshness');
     expect(again['outline']).toEqual(run['outline']);

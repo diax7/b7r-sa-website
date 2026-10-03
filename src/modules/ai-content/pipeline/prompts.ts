@@ -48,6 +48,7 @@ function header(brief: Brief): string {
     `HUB: ${brief.hub.name}`,
     `SECONDARY: ${brief.topic.secondaryKeywords.join(t.listSeparator) || t.none}`,
     `INTENT: ${brief.topic.intent}`,
+    ...(brief.topic.notes?.trim() ? [`NOTES: ${brief.topic.notes.trim()}`] : []),
   ].join('\n');
 }
 
@@ -64,6 +65,49 @@ export const OutlineSchema = z.object({
   takeaways: z.array(z.string().min(5)).length(3),
   imageKeyword: z.string().min(3),
 });
+
+/**
+ * The companion's outline (ADR-066): the source's sections adapted for the other language's
+ * reader, with the working title and the search phrase in that language; the cover's
+ * keyword stays the source's.
+ */
+export const CompanionOutlineSchema = OutlineSchema.omit({ imageKeyword: true }).extend({
+  title: z.string().min(10).max(120),
+  keyword: z.string().min(3).max(80),
+});
+
+export type CompanionOutline = z.infer<typeof CompanionOutlineSchema>;
+
+/** The source's Markdown links reduced to their text: its paths belong to the other site. */
+export function withoutLinks(markdown: string): string {
+  return markdown.replace(/\[([^\]]+)\]\([^)]*\)/g, '$1');
+}
+
+/** The source outline as the companion prompts list it, in the companion's language. */
+function sourceOutline(outline: Outline, locale: Locale): string {
+  const t = TEXT[locale];
+  const headings = outline.headings
+    .map((h, i) => `${i + 1}. ## ${h.question}\n   ${t.directAnswer}: ${h.answer}`)
+    .join('\n');
+  const takeaways = outline.takeaways.map((k) => `- ${k}`).join('\n');
+  return `${headings}\n${t.takeawaysLabel}\n${takeaways}`;
+}
+
+export function companionOutlinePrompt(brief: Brief, source: Outline, from: Locale): string {
+  const t = TEXT[brief.locale];
+  return `${header(brief)}\nSOURCE LANGUAGE: ${from}\n\n${t.companionOutline(brief, sourceOutline(source, brief.locale))}`;
+}
+
+export function companionDraftPrompt(
+  brief: Brief,
+  outline: Outline,
+  settings: EngineSettings,
+  sourceDraft: string,
+  from: Locale,
+): string {
+  const t = TEXT[brief.locale];
+  return `${header(brief)}\nSOURCE LANGUAGE: ${from}\n\n${t.draft(brief, outline, settings)}\n\n${t.companionSource(withoutLinks(sourceDraft))}`;
+}
 
 export function outlinePrompt(brief: Brief): string {
   return `${header(brief)}\n\n${TEXT[brief.locale].outline(brief)}`;
@@ -115,12 +159,16 @@ interface PromptText {
   none: string;
   styleGuideLabel: string;
   bannedClaimsLabel: string;
+  directAnswer: string;
+  takeawaysLabel: string;
   questions(keyword: string): string[];
   outline(brief: Brief): string;
   draft(brief: Brief, outline: Outline, settings: EngineSettings): string;
   revise(brief: Brief, draft: string, critique: string, problems: string[]): string;
   review(brief: Brief, draft: string): string;
   seo(draft: string): string;
+  companionOutline(brief: Brief, source: string): string;
+  companionSource(source: string): string;
 }
 
 const TEXT: Record<Locale, PromptText> = {
@@ -129,6 +177,8 @@ const TEXT: Record<Locale, PromptText> = {
     none: 'لا شيء',
     styleGuideLabel: 'دليل الأسلوب:',
     bannedClaimsLabel: 'ادعاءات ممنوعة:',
+    directAnswer: 'الجواب المباشر',
+    takeawaysLabel: 'أهم النقاط:',
     questions: (keyword) => [
       `ما المقصود بـ${keyword} ولماذا يهم تاجراً في السعودية؟`,
       `كيف يبدأ التاجر عملياً، خطوة بخطوة، بأقل تكلفة؟`,
@@ -200,12 +250,35 @@ ${brief.facts.text}`,
 
 المقال:
 ${draft.slice(0, 2500)}`,
+    companionOutline: (
+      brief,
+      source,
+    ) => `هذا مخطط مقال منشور بالإنجليزية عن الموضوع أعلاه. اكتبه لقارئ عربي في السعودية كما يكتبه كاتب عربي، لا كما يُترجم:
+- الأقسام نفسها بالترتيب نفسه، وكل عنوان H2 سؤال يتبعه جواب مباشر في جملة واحدة.
+- النقاط الثلاث نفسها في "أهم النقاط".
+- title: عنوان المقال بالعربية، حتى 70 حرفاً.
+- keyword: العبارة التي يبحث بها القارئ العربي عن هذا الموضوع، من كلمتين إلى ست.
+- لا تنقل الصياغة الإنجليزية حرفياً؛ اختر ما يقوله التاجر السعودي.
+
+المخطط الإنجليزي:
+${source}
+
+ورقة الحقائق:
+${brief.facts.text}`,
+    companionSource: (
+      source,
+    ) => `المقال كما نُشر بالإنجليزية، للرجوع إليه: احفظ حقائقه وأرقامه وأمثلته وترتيب أقسامه، واكتب العربية كما يكتبها كاتب عربي لا كما تُترجم. روابطه تشير إلى الموقع الإنجليزي: استخدم المسارات العربية المذكورة أعلاه فقط.
+
+المقال الإنجليزي:
+${source}`,
   },
   en: {
     listSeparator: ', ',
     none: 'none',
     styleGuideLabel: 'Style guide:',
     bannedClaimsLabel: 'Banned claims:',
+    directAnswer: 'Direct answer',
+    takeawaysLabel: 'Key takeaways:',
     questions: (keyword) => [
       `What does "${keyword}" mean and why does it matter to a merchant in Saudi Arabia?`,
       `How does a merchant start in practice, step by step, at the lowest cost?`,
@@ -277,5 +350,26 @@ ${brief.facts.text}`,
 
 Article:
 ${draft.slice(0, 2500)}`,
+    companionOutline: (
+      brief,
+      source,
+    ) => `Below is the outline of an article published in Arabic on the topic above. Write it for an English-speaking reader in Saudi Arabia as a native English writer would, not as a translation:
+- The same sections in the same order, each H2 a question followed by a direct one-sentence answer.
+- The same three key takeaways.
+- title: the article's working title in English, up to 70 characters.
+- keyword: the phrase an English reader searches this subject with, two to six words.
+- Do not carry the Arabic phrasing over word for word; use what a merchant would say in English.
+
+Arabic outline:
+${source}
+
+Facts sheet:
+${brief.facts.text}`,
+    companionSource: (
+      source,
+    ) => `The article as published in Arabic, for reference: keep its facts, numbers, examples and order of sections, and write the English as a native writer would, not as a translation. Its links point to the Arabic site: use only the English paths listed above.
+
+Arabic article:
+${source}`,
   },
 };

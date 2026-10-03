@@ -1,24 +1,27 @@
 import { createHash } from 'node:crypto';
+import type { Locale } from '@/lib/i18n';
 import { capDecision } from '@/modules/ai-content/caps';
 import { safeMessage } from '@/modules/connections/safe-message';
-import { checkDraft, deterministicScore } from '@/modules/ai-content/checks';
 import { addUsage, estimateCostUsd, type Usage, ZERO_USAGE } from '@/modules/ai-content/cost';
 import { duplicateReason } from '@/modules/ai-content/dedupe';
+import {
+  type Companion,
+  MIN_INTERNAL_LINKS,
+  otherLocale,
+  writeCompanion,
+} from '@/modules/ai-content/pipeline/companion';
 import { sanitizeLinks } from '@/modules/ai-content/pipeline/links';
 import {
-  type Brief,
   buildBrief,
   draftPrompt,
   OutlineSchema,
   outlinePrompt,
-  reviewPrompt,
-  revisePrompt,
-  RubricSchema,
-  rubricTotal,
   SeoSchema,
   seoPrompt,
   systemPrompt,
 } from '@/modules/ai-content/pipeline/prompts';
+import { stripSharp, writeReviewed } from '@/modules/ai-content/pipeline/review';
+import { PipelineStop } from '@/modules/ai-content/pipeline/stop';
 import type {
   EngineSettings,
   MediaUpload,
@@ -26,8 +29,8 @@ import type {
   PipelineContext,
   PipelineInput,
   PipelineResult,
-  Rubric,
   StepRecord,
+  StepTools,
   Store,
 } from '@/modules/ai-content/pipeline/types';
 import type { Provider } from '@/modules/ai-content/provider/types';
@@ -36,31 +39,21 @@ import { SLUG_MAX, slugFor } from '@/modules/ai-content/transliterate';
 /** A run's error keeps more of a message than a test's line (a validation report has detail). */
 const RUN_MESSAGE_MAX = 1000;
 
-/**
- * The `generatePost` pipeline (BRD 10.2.4): nine steps in order, each recorded on the run
- * row as it goes, the topic marked `published` or `failed` at the end. Pure over a `Store`
- * and a `Provider`; Payload's workflow wraps each step in an inline task for retries.
- */
-const MIN_INTERNAL_LINKS = 2;
-
-class PipelineStop extends Error {
-  constructor(
-    message: string,
-    readonly status: 'failed' | 'skipped',
-  ) {
-    super(message);
-    this.name = 'PipelineStop';
-  }
-}
+/** The languages as the run's error and the alert name them. */
+const LANGUAGE_NAMES: Record<Locale, string> = { ar: 'Arabic', en: 'English' };
 
 function hash(value: unknown): string {
   return createHash('sha256').update(JSON.stringify(value)).digest('hex').slice(0, 12);
 }
 
-function stripSharp(text: string): string {
-  return text.replace(/^#\s.*$/gm, '').trim();
-}
-
+/**
+ * The `generatePost` pipeline (BRD 10.2.4, ADR-066): the steps in order, each recorded on the
+ * run row as it goes, the topic marked `published` or `failed` at the end. The post is written
+ * in the topic's language, then in the other one by the companion (`companion.ts`); a
+ * companion that fails leaves the source published in one language, said on the run and in
+ * the alert. Pure over a `Store` and a `Provider`; the workflow logs each step as an inline
+ * task, and the provider retries its own calls (`provider/retry.ts`).
+ */
 export async function runPipeline(
   ctx: PipelineContext,
   input: PipelineInput = {},
@@ -71,41 +64,34 @@ export async function runPipeline(
   let usage: Usage = ZERO_USAGE;
   let runId: number | null = null;
   let topicId: number | null = null;
+  let label: string | null = null;
   const settings = await store.settings();
   // Every message that leaves the pipeline (the run row, the e-mail) is scrubbed of the key.
   const apiKey = settings.connection?.apiKey ?? null;
+  const message = (error: unknown) => safeMessage(error, apiKey, RUN_MESSAGE_MAX);
 
-  /** One step: timed, hashed on its input, written to the run row, retried by the runner. */
-  async function step<T>(
-    name: string,
-    inputForHash: unknown,
-    fn: () => Promise<T>,
-    summary: (out: T) => string,
-  ): Promise<T> {
-    const t0 = Date.now();
-    try {
-      const out = await ctx.run(name, fn, { retries: LLM_STEPS.has(name) ? 2 : 0 });
-      steps.push({
-        name,
-        inputHash: hash(inputForHash),
-        summary: summary(out),
-        ms: Date.now() - t0,
-        ok: true,
-      });
+  /** The step machinery: timed, hashed on its input, written to the run row as it goes. */
+  const tools: StepTools = {
+    async step(name, inputForHash, fn, summary) {
+      const t0 = Date.now();
+      const inputHash = hash(inputForHash);
+      try {
+        const out = await ctx.run(name, fn);
+        await tools.record({ name, inputHash, summary: summary(out), ms: Date.now() - t0, ok: true });
+        return out;
+      } catch (error) {
+        await tools.record({ name, inputHash, summary: message(error), ms: Date.now() - t0, ok: false });
+        throw error;
+      }
+    },
+    async record(record) {
+      steps.push(record);
       if (runId !== null) await store.updateRun(runId, { steps });
-      return out;
-    } catch (error) {
-      steps.push({
-        name,
-        inputHash: hash(inputForHash),
-        summary: safeMessage(error, apiKey, RUN_MESSAGE_MAX),
-        ms: Date.now() - t0,
-        ok: false,
-      });
-      if (runId !== null) await store.updateRun(runId, { steps });
-      throw error;
-    }
-  }
+    },
+    addUsage(u) {
+      usage = addUsage(usage, u);
+    },
+  };
 
   const finish = async (result: PipelineResult, error?: string): Promise<PipelineResult> => {
     const rates = settings.connection?.rates ?? { inputPerMillionUsd: 0, outputPerMillionUsd: 0 };
@@ -119,6 +105,7 @@ export async function runPipeline(
         costUsd,
         durationMs: Date.now() - startedAt.getTime(),
         finishedAt: ctx.now().toISOString(),
+        ...(label ? { label } : {}),
         ...(result.postId !== null ? { post: result.postId } : {}),
         ...(result.score !== null ? { score: result.score } : {}),
         ...(error ? { error } : {}),
@@ -205,7 +192,7 @@ export async function runPipeline(
         usage,
       });
     }
-    const topic = await step(
+    const topic = await tools.step(
       'pickTopic',
       { topicId: input.topicId ?? regen?.topicId ?? null },
       () =>
@@ -227,9 +214,11 @@ export async function runPipeline(
     }
     topicId = topic.id;
     const locale = topic.language;
-    runId = await store.createRun({
-      label: `${input.kind ?? 'generate'}${locale === 'ar' ? '' : ` [${locale}]`}: ${topic.title}`,
-      kind: input.kind ?? 'generate',
+    const kind = input.kind ?? 'generate';
+    label = `${kind} [${locale}]: ${topic.title}`;
+    const run = await store.createRun({
+      label,
+      kind,
       topic: topic.id,
       ...(settings.connection ? { connection: settings.connection.id } : {}),
       provider: provider.name,
@@ -237,7 +226,8 @@ export async function runPipeline(
       systemPromptVersion: settings.systemPromptVersion,
       startedAt: startedAt.toISOString(),
     });
-    await store.updateTopic(topic.id, { lastRun: runId });
+    runId = run;
+    await store.updateTopic(topic.id, { lastRun: run });
     if (!regen) {
       const published = await store.publishedPosts(locale);
       const duplicate = duplicateReason(topic, published, startedAt);
@@ -264,7 +254,7 @@ export async function runPipeline(
       store.hub(topic.hubId, locale),
       store.style(locale),
     ]);
-    const brief = await step(
+    const brief = await tools.step(
       'brief',
       { topic: topic.id, hub: hub.id, locale },
       async () => buildBrief(topic, hub, facts, style),
@@ -274,7 +264,7 @@ export async function runPipeline(
 
     // 3. outline: a freshness run keeps the structure its post has and rewrites the prose.
     const stored = input.kind === 'freshness' ? (regen?.outline ?? null) : null;
-    const outline = await step(
+    const outline = await tools.step(
       'outline',
       { brief: brief.topic.id, hub: hub.slug, stored: stored !== null },
       async () => {
@@ -286,15 +276,15 @@ export async function runPipeline(
           schema: OutlineSchema,
           name: 'outline',
         });
-        usage = addUsage(usage, res.usage);
+        tools.addUsage(res.usage);
         return res.value as Outline;
       },
       (o) => `${o.headings.length} H2s${stored ? ' (stored)' : ''}`,
     );
-    await store.updateRun(runId, { outline });
+    await store.updateRun(run, { outline });
 
-    // 4. draft, 5. review (+ one revision pass).
-    let draft = await step(
+    // 4. draft, 5. review (+ revision passes).
+    const draft = await tools.step(
       'draft',
       { outline: hash(outline), version: settings.systemPromptVersion },
       async () => {
@@ -303,110 +293,85 @@ export async function runPipeline(
           system,
           prompt: draftPrompt(brief, outline, settings),
         });
-        usage = addUsage(usage, res.usage);
+        tools.addUsage(res.usage);
         return stripSharp(res.text);
       },
       (d) => `${d.length} chars`,
     );
-    let review = await reviewDraft(
+    const reviewed = await writeReviewed(
       ctx,
       settings,
       brief,
       draft,
-      false,
-      (u) => (usage = addUsage(usage, u)),
+      tools,
+      { review: 'review', revise: 'revise' },
+      (r) => store.updateRun(run, { score: r.score, rubric: r.rubric }),
     );
-    steps.push(review.record);
-    await store.updateRun(runId, { steps, score: review.score, rubric: review.rubric });
-    let passes = 0;
-    while (
-      review.score < settings.qualityThreshold &&
-      passes < settings.maxRevisionPasses &&
-      review.refused.length === 0
-    ) {
-      passes += 1;
-      // A revision pass reads the previous review: sequential by nature.
-      // oxlint-disable-next-line no-await-in-loop
-      draft = await step(
-        'revise',
-        { pass: passes, score: review.score },
-        async () => {
-          const res = await provider.text({
-            step: 'revise',
-            system,
-            prompt: revisePrompt(brief, draft, review.rubric.critique, review.problems),
-          });
-          usage = addUsage(usage, res.usage);
-          return stripSharp(res.text);
-        },
-        (d) => `${d.length} chars`,
-      );
-      // oxlint-disable-next-line no-await-in-loop
-      review = await reviewDraft(
-        ctx,
-        settings,
-        brief,
-        draft,
-        true,
-        (u) => (usage = addUsage(usage, u)),
-      );
-      steps.push(review.record);
-      // Each pass depends on the previous review; they cannot run in parallel.
-      // oxlint-disable-next-line no-await-in-loop
-      await store.updateRun(runId, { steps, score: review.score, rubric: review.rubric });
-    }
-    if (review.refused.length > 0) {
-      throw new PipelineStop(`refused: ${review.refused.join('; ')}`, 'failed');
-    }
-    if (review.score < settings.qualityThreshold) {
-      throw new PipelineStop(
-        `score ${review.score} below the threshold ${settings.qualityThreshold}: ${review.rubric.critique}`,
-        'failed',
-      );
-    }
-    const links = sanitizeLinks(draft, brief.linkTargets);
+    const links = sanitizeLinks(reviewed.draft, brief.linkTargets);
     if (links.internal < MIN_INTERNAL_LINKS) {
       throw new PipelineStop(
         `only ${links.internal} internal link(s) after the allowlist (${links.dropped.join(', ') || 'none dropped'})`,
         'failed',
       );
     }
-    draft = links.markdown;
+    const article = links.markdown;
 
     // 7. seo (before the image: its alt text serves a stock photo).
-    const seo = await step(
+    const seo = await tools.step(
       'seo',
-      { draft: hash(draft) },
+      { draft: hash(article) },
       async () => {
         const res = await provider.object({
           step: 'seo',
           system,
-          prompt: seoPrompt(brief, draft),
+          prompt: seoPrompt(brief, article),
           schema: SeoSchema,
           name: 'seo',
         });
-        usage = addUsage(usage, res.usage);
+        tools.addUsage(res.usage);
         return res.value;
       },
       (s) => s.title,
     );
 
+    // The other language (ADR-066): its failure never fails the run.
+    let companion: Companion | null = null;
+    let oneLanguage: string | null = null;
+    try {
+      companion = await writeCompanion({
+        ctx,
+        settings,
+        tools,
+        topic,
+        source: { locale, outline, draft: article },
+      });
+    } catch (error) {
+      oneLanguage = message(error);
+      await tools.record({
+        name: 'companion',
+        inputHash: hash(topic.id),
+        summary: oneLanguage,
+        ms: 0,
+        ok: false,
+      });
+    }
+
     // 6. image.
     const cover = regen
-      ? regen.cover
-      : await step(
+      ? { id: regen.cover, uploaded: false }
+      : await tools.step(
           'image',
           { mode: settings.imageMode, keyword: outline.imageKeyword },
-          () => coverFor(store, settings, hub, outline, seo.alt),
-          (id) => `media ${id}`,
+          () => coverFor(store, settings, hub, outline, { alt: seo.alt, locale }),
+          (c) => `media ${c.id}`,
         );
 
-    // 8. publish.
-    const body = await store.markdownToLexical(draft);
+    // 8. publish, the source then the other language.
+    const body = await store.markdownToLexical(article);
     // The first posts of a live provider land as drafts for a read; the mock never counts
     // `reviewFirstRuns` down (tests and the review server publish straight away).
     const status = provider.name !== 'mock' && settings.reviewFirstRuns > 0 ? 'draft' : 'published';
-    const post = await step(
+    const post = await tools.step(
       'publish',
       { slug: regen?.slug ?? seo.slug, status },
       async () => {
@@ -425,83 +390,103 @@ export async function runPipeline(
           return store.replacePost(input.replacePostId, base, locale);
         }
         const slug = await freeSlug(store, slugFor(seo.slug, topic.primaryKeyword));
-        return store.createPost({ ...base, slug, cover, status }, locale);
+        return store.createPost({ ...base, slug, cover: cover.id, status }, locale);
       },
       (p) => `post ${p.id} (${status})`,
     );
+    if (companion) {
+      // A regeneration republishes (`replacePost`), so its other language is live too.
+      const written = regen ? 'published' : status;
+      try {
+        await publishCompanion(store, tools, post.id, companion, written, cover);
+      } catch (error) {
+        oneLanguage = message(error);
+      }
+    }
     if (status === 'draft') await store.decrementReviewFirstRuns();
 
-    // 9. notify: the run row is the digest's source; nothing to send on success.
-    return finish({
-      status: 'done',
-      runId,
-      postId: post.id,
-      score: review.score,
-      reason: status === 'draft' ? 'held as a draft (reviewFirstRuns)' : null,
-      usage,
-    });
+    // 9. notify: the run row is the digest's source; one language only is said and mailed.
+    const both = companion !== null && oneLanguage === null;
+    label = `${kind} [${both ? `${locale}+${otherLocale(locale)}` : locale}]: ${topic.title}`;
+    const warning =
+      oneLanguage === null ? null : `Published in ${LANGUAGE_NAMES[locale]} only: ${oneLanguage}`;
+    if (warning) await alertOneLanguage(store, tools, settings, { run, post: post.id, warning });
+    return finish(
+      {
+        status: 'done',
+        runId,
+        postId: post.id,
+        score: reviewed.review.score,
+        reason: warning ?? (status === 'draft' ? 'held as a draft (reviewFirstRuns)' : null),
+        usage,
+      },
+      warning ?? undefined,
+    );
   } catch (error) {
-    const message = safeMessage(error, apiKey, RUN_MESSAGE_MAX);
+    const reason = message(error);
     const status = error instanceof PipelineStop ? error.status : 'failed';
-    return finish({ status, runId, postId: null, score: null, reason: message, usage }, message);
+    return finish({ status, runId, postId: null, score: null, reason, usage }, reason);
   }
 }
 
-const LLM_STEPS = new Set(['outline', 'draft', 'review', 'revise', 'seo', 'image']);
-
-interface ReviewOutcome {
-  score: number;
-  rubric: Rubric & { deductions: Array<{ rule: string; points: number; detail: string }> };
-  problems: string[];
-  refused: string[];
-  record: StepRecord;
+/** The other language onto the post the source wrote, and its alt onto a cover the run uploaded. */
+async function publishCompanion(
+  store: Store,
+  tools: StepTools,
+  postId: number,
+  companion: Companion,
+  status: 'draft' | 'published',
+  cover: { id: number; uploaded: boolean },
+): Promise<void> {
+  await tools.step(
+    `publish-${companion.locale}`,
+    { post: postId, locale: companion.locale, status },
+    async () => {
+      const body = await store.markdownToLexical(companion.markdown);
+      await store.writeLocale(
+        postId,
+        {
+          title: companion.title,
+          excerpt: companion.excerpt,
+          takeaways: companion.takeaways,
+          body,
+          seo: companion.seo,
+        },
+        companion.locale,
+        status,
+      );
+      if (cover.uploaded) await store.setImageAlt(cover.id, companion.alt, companion.locale);
+    },
+    () => `post ${postId} (${companion.locale}, score ${companion.score})`,
+  );
 }
 
-/** Step 5: the deterministic checks, then the model's rubric, merged into one score. */
-async function reviewDraft(
-  ctx: PipelineContext,
+/**
+ * The alert for a post that went out in one language. A mail that fails is written on the run
+ * as a step, never thrown: the post is published by then and the run is done.
+ */
+async function alertOneLanguage(
+  store: Store,
+  tools: StepTools,
   settings: EngineSettings,
-  brief: Brief,
-  draft: string,
-  revision: boolean,
-  addUsageFn: (u: Usage) => void,
-): Promise<ReviewOutcome> {
-  const t0 = Date.now();
-  const checks = checkDraft(draft, brief.facts.numbers, {
-    bannedPhrases: brief.style.bannedPhrases,
-    minWords: settings.minWords,
-    maxWords: settings.maxWords,
-    locale: brief.locale,
-  });
-  const res = await ctx.run(
-    'review',
-    () =>
-      ctx.provider.object({
-        step: 'review',
-        system: systemPrompt(brief.style, brief.locale),
-        prompt: reviewPrompt(brief, draft, revision),
-        schema: RubricSchema,
-        name: 'review',
-      }),
-    { retries: 2 },
-  );
-  addUsageFn(res.usage);
-  const modelTotal = rubricTotal(res.value);
-  const deterministic = deterministicScore(checks);
-  const score = Math.max(0, Math.min(modelTotal, deterministic, 100));
-  return {
-    score,
-    rubric: { ...res.value, deductions: checks.deductions },
-    problems: checks.deductions.map((d) => d.detail),
-    refused: checks.refused,
-    record: {
-      name: revision ? 'review-2' : 'review',
-      inputHash: createHash('sha256').update(draft).digest('hex').slice(0, 12),
-      summary: `${score} (model ${modelTotal}, checks ${deterministic}; ${checks.words} words)`,
-      ms: Date.now() - t0,
-      ok: true,
-    },
-  };
+  sent: { run: number; post: number; warning: string },
+): Promise<void> {
+  if (!settings.failureAlerts || !settings.notifyEmail) return;
+  try {
+    await store.sendEmail({
+      to: settings.notifyEmail,
+      subject: 'Content engine: a post was published in one language',
+      text: `Run ${sent.run} published post ${sent.post}. ${sent.warning}`,
+    });
+  } catch (error) {
+    await tools.record({
+      name: 'alert',
+      inputHash: hash(sent.run),
+      summary: error instanceof Error ? error.name : 'the alert was not sent',
+      ms: 0,
+      ok: false,
+    });
+  }
 }
 
 /** `slug`, `slug-2`, `slug-3`… until the store says it is free. */
@@ -522,8 +507,8 @@ async function coverFor(
   settings: EngineSettings,
   hub: { defaultCoverId: number | null },
   outline: Outline,
-  alt: string,
-): Promise<number> {
+  alt: { alt: string; locale: Locale },
+): Promise<{ id: number; uploaded: boolean }> {
   if (settings.imageMode === 'generate') {
     throw new PipelineStop(
       'imageMode "generate" is not wired yet: choose "hubDefault" or "stock"',
@@ -538,10 +523,12 @@ async function coverFor(
       outline.imageKeyword,
       settings.pexelsKey,
     );
-    if (photo) return store.uploadImage({ ...photo, alt });
+    if (photo) {
+      return { id: await store.uploadImage({ ...photo, alt: alt.alt }, alt.locale), uploaded: true };
+    }
   }
   if (hub.defaultCoverId === null) throw new PipelineStop('the hub has no default cover', 'failed');
-  return hub.defaultCoverId;
+  return { id: hub.defaultCoverId, uploaded: false };
 }
 
 export { PipelineStop };
