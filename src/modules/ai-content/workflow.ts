@@ -6,6 +6,7 @@ import type {
   StepRunner,
 } from '@/modules/ai-content/pipeline/types';
 import { providerOrRefusal } from '@/modules/ai-content/provider';
+import { withRetries } from '@/modules/ai-content/provider/retry';
 import { payloadStore } from '@/modules/ai-content/store/payload-store';
 
 export const GENERATE_POST = 'generatePost' as const;
@@ -20,8 +21,9 @@ export interface GeneratePostInput {
 
 /**
  * Runs the pipeline for a Payload instance: the store on the Local API, the provider from
- * the settings, and each step as an inline task of the job (retried on its own, logged in
- * the job's task status). Used by the workflow and, with a plain runner, by scripts.
+ * the settings with each model call retried in process (ADR-066), and each step as an inline
+ * task of the job (logged in the job's task status). Used by the workflow and, with a plain
+ * runner, by scripts.
  */
 export async function generatePost(
   payload: Payload,
@@ -31,14 +33,15 @@ export async function generatePost(
   const store = payloadStore(payload);
   // The provider is built before the topic is known; the mock reads the sheet by unit, not by language.
   const [settings, facts] = await Promise.all([store.settings(), store.facts('ar')]);
-  const provider = providerOrRefusal(settings, facts);
+  const provider = withRetries(providerOrRefusal(settings, facts));
   return runPipeline({ store, provider, now: () => new Date(), run }, input);
 }
 
 /**
  * The `generatePost` workflow (BRD 10.2.4): one job per run on the `ai` queue, which the
- * autorun serves one at a time. Every step is an inline task with its own retries; the
- * workflow itself does not retry (a failed run is recorded and the topic marked).
+ * autorun serves one at a time. Every step is an inline task for the job's log; nothing is
+ * retried at the job level (the pipeline records a failure instead of throwing it, and the
+ * model calls retry in process, ADR-066).
  */
 export const generatePostWorkflow: WorkflowConfig<GeneratePostInput> = {
   slug: GENERATE_POST,
@@ -53,11 +56,11 @@ export const generatePostWorkflow: WorkflowConfig<GeneratePostInput> = {
   handler: async ({ job, inlineTask, req }) => {
     const counters = new Map<string, number>();
     // Inline task ids must be unique per job: the second review is `review#2`.
-    const run: StepRunner = async (name, fn, options) => {
+    const run: StepRunner = async (name, fn) => {
       const n = (counters.get(name) ?? 0) + 1;
       counters.set(name, n);
       const { value } = await inlineTask(`${name}#${n}`, {
-        retries: options?.retries ?? 0,
+        retries: 0,
         task: async () => ({ output: { value: await fn() } }),
       });
       return value as Awaited<ReturnType<typeof fn>>;

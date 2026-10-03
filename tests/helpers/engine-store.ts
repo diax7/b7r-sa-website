@@ -6,6 +6,7 @@ import { type FactsSheet, factsSheet } from '@/modules/ai-content/facts';
 import type {
   EngineSettings,
   HubInfo,
+  LocaleFields,
   NewPost,
   Outline,
   RunPatch,
@@ -197,6 +198,16 @@ export interface MemoryState {
   topicPatches: Array<{ id: number; patch: Record<string, unknown> }>;
   runs: Map<number, Record<string, unknown>>;
   posts: Array<NewPost & { id: number }>;
+  /** The other language written onto a post (ADR-066), in order. */
+  localeWrites: Array<{
+    id: number;
+    locale: Locale;
+    fields: LocaleFields;
+    status: 'draft' | 'published';
+  }>;
+  /** The locales covers were uploaded in, and the alts written on them afterwards. */
+  uploadLocales: Locale[];
+  altWrites: Array<{ id: number; alt: string; locale: Locale }>;
   emails: Array<{ to: string; subject: string; text: string }>;
   uploads: number;
   counts: CapCounts;
@@ -215,6 +226,9 @@ export function memoryStore(init: Partial<MemoryState> = {}): { store: Store; st
     topicPatches: [],
     runs: new Map(),
     posts: [],
+    localeWrites: [],
+    uploadLocales: [],
+    altWrites: [],
     emails: [],
     uploads: 0,
     counts: { runsToday: 0, runsThisMonth: 0, costTodayUsd: 0, connectionSpentMonthUsd: 0 },
@@ -298,9 +312,17 @@ export function memoryStore(init: Partial<MemoryState> = {}): { store: Store; st
         outline: (lastDone?.['outline'] as Outline | undefined) ?? null,
       };
     },
-    async uploadImage() {
+    async writeLocale(id, fields, locale, status) {
+      if (!state.posts.some((p) => p.id === id)) throw new Error('no post');
+      state.localeWrites.push({ id, locale, fields, status });
+    },
+    async uploadImage(_upload, locale) {
       state.uploads += 1;
+      state.uploadLocales.push(locale);
       return 900 + state.uploads;
+    },
+    async setImageAlt(id, alt, locale) {
+      state.altWrites.push({ id, alt, locale });
     },
     async markdownToLexical(markdown): Promise<LexicalState> {
       // Enough of a tree for the tests: one paragraph per block, links kept as link nodes.

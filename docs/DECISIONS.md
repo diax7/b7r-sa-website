@@ -3060,3 +3060,60 @@ a merge unions an object's keys but replaces a list.
 - *A see-through island on a set* (the contact block's tinted booking card) composites over the
   page's white, as it does on the page; over deep sea the tint read as a mid blue under the
   page's grey words. The sweep that found it paints every pickable section with each set.
+
+## ADR-066: The engine writes both languages, retries its model calls, and its cron starts at boot (2026-10-03)
+
+**Context.** Dhia switched the engine on in production on 2026-10-03 (OpenAI connection on
+`gpt-6.1-sol`, `reviewFirstRuns` 0); the first run published post 99 in Arabic only, and the
+English site had no page for it. He asked for one post a day in both languages, each written
+the way a native writer would, published on its own. Three faults stood in the way: a post had
+one language (ADR-043: a topic's language was the only one written), the model calls never
+retried, and the jobs cron could inherit a request's store (found 2026-10-02). Plan:
+`docs/plans/2026-10-03-engine-bilingual.md` (CTO 82, then 94).
+
+**The decisions.**
+
+- **The companion language.** After the source passes review, links and SEO, the run writes the
+  other language (`pipeline/companion.ts`) through the same steps and that language's style,
+  facts, links and checks: an outline that adapts the source's sections and returns the working
+  title and search phrase in that language (the brief is rebuilt from them), a draft that reads
+  the source with its links reduced to text, the review and revision loop (`pipeline/review.ts`,
+  shared with the source), the two-link rule and the SEO step. It is written onto the same post
+  (`Store.writeLocale`), the takeaways onto the shared rows by id, with the source's status. The
+  slug is shared. The topic's `language` is now the language written first.
+- **A companion that fails never fails the run.** The source stays published; the run is `done`
+  with `error` "Published in Arabic only: …" (or English), its label `[ar]` instead of
+  `[ar+en]`, a `companion` step marked not ok, and the alert "a post was published in one
+  language" when `failureAlerts` and `notifyEmail` are set. A mail that cannot be sent is a step
+  on the run, never a failure of a published run. The companion is not deduplicated: it is the
+  same article, and a regeneration would match itself. Regeneration and freshness rewrite both.
+- **Retries at the provider boundary.** `provider/retry.ts` wraps the provider once in
+  `generatePost`: a call that failed with `RetryError` (reason `maxRetriesExceeded`, the SDK's own
+  two retries spent), a timeout or abort, or `NoObjectGeneratedError` is tried twice more, after
+  3 s and 10 s. A bad key or a bad request, a refusal and a `PipelineStop` fail at once. Store
+  writes are never retried. A schema miss's tokens are added to the attempt that succeeds.
+- **A refusal takes the revision pass.** An em dash or a mention of AI no longer refuses on the
+  first review: it goes to the revision pass with the critique, and refuses after the last pass.
+- **The cron starts at boot.** `register()` (`src/instrumentation.ts`) asserts the production
+  env first, as before, then starts Payload through `cms()` without awaiting it, outside the
+  build: the cron is born outside any request, so a job's `revalidatePath` meets "store missing",
+  which `safeRevalidatePath` tolerates, instead of a render's store. A start that fails is logged
+  by name and the first request starts Payload, with the old leak, for that process. The
+  instance and its hooks now come from the instrumentation layer's own compile of `src/`, a
+  second copy of the config graph; `payload` and `graphql` stay external, so `instanceof` holds,
+  but a hook that keeps module-level state would see a different copy from a page's.
+- **The ledger's Claude search** uses `webSearch_20250305` on every Claude model: the 2026-02-09
+  version needs programmatic tool calling, which `claude-haiku-4-5` lacks, and SDK 4.0.53 sends
+  no `allowed_callers` for a provider tool (every Claude batch failed from 2026-09-23).
+- **Topic notes** reach the model as a `NOTES:` header line.
+
+**Amends.** ADR-033 (the runner starts at boot, not at the first render or health probe);
+ADR-042 (the steps are inline tasks for the job's log only; retries live in the provider);
+ADR-043 and BRD §10.2.2 (a topic's language is the one written first; the post is written in
+both); ADR-049 D5 (the 2025-03-05 search tool). ADR-050 stands: `FAQPage` stays on `/faq` only.
+
+**Consequences.** A run costs about twice as much (post 99: $0.058 in one language; both about
+$0.12 at Sol's rates, at most about $0.18 with retries). The fifteen English seed topics mostly
+mirror Arabic ones; with every post bilingual the second of a pair is the same subject, which the
+source's dedupe rejects most of the time; retiring the mirrored English topics is Dhia's call.
+Post 99 gets its English by one Regenerate after the deploy.

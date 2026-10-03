@@ -146,7 +146,11 @@ describe('the weekly freshness pass (BRD 10.2.4 amendment, ADR-042)', () => {
     // The rewritten post carries today's sheet as its new baseline.
     expect(state.posts[0]!.factsBaseline).toEqual(sevenDays);
     // The outline came from the first run: the second provider never drew one.
-    expect(second.calls.filter((c) => c.step === 'outline')).toHaveLength(0);
+    // (The companion adapts its own outline from the stored one: ADR-066.)
+    const sourceOutline = second.calls.filter(
+      (c) => c.step === 'outline' && !/^SOURCE LANGUAGE:/m.test(c.prompt),
+    );
+    expect(sourceOutline).toHaveLength(0);
     const again = state.runs.get(refreshed.runId!)!;
     expect(again['kind']).toBe('freshness');
     expect(again['outline']).toEqual(run['outline']);
@@ -265,6 +269,31 @@ describe('the weekly digest (BRD 10.2.4 step 9)', () => {
     expect(text).toContain('Next slot: 9:00 Riyadh, 1 post(s) a day');
     expect(text).toContain('https://b7r.sa/admin/collections/ai-runs');
     expect(text).not.toContain(String.fromCharCode(0x2014));
+  });
+
+  it('says when a post went out in one language and links the blog it is on (ADR-066)', () => {
+    const text = digestText({
+      runs: [
+        {
+          id: 9,
+          label: 'generate [en]: Connect a Shopify store',
+          kind: 'generate',
+          status: 'done',
+          score: 90,
+          costUsd: 0.1,
+          error: 'Published in English only: refused: An em dash in the text',
+          post: { title: null, slug: 'connect-shopify-store' },
+          startedAt: '2026-09-12T06:00:00.000Z',
+        },
+      ],
+      settings: { enabled: true, publishHourRiyadh: 9, postsPerDay: 1 },
+      now: new Date('2026-09-13T05:00:00Z'),
+      base: 'https://b7r.sa',
+      envOn: true,
+    });
+    expect(text).toContain(
+      '- generate [en]: Connect a Shopify store (generate, score 90, 0.10 USD; Published in English only: refused: An em dash in the text): https://b7r.sa/en/blog/connect-shopify-store',
+    );
   });
 
   it('says the engine is off when the switch or the env stops it', () => {

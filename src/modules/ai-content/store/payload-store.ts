@@ -4,6 +4,7 @@ import { convertMarkdownToLexical, editorConfigFactory } from '@payloadcms/richt
 import type { Payload } from 'payload';
 import { type Locale, requestLocale } from '@/lib/i18n';
 import { DEFAULT_STYLE } from '@/modules/ai-content/prompts/defaults';
+import { ontoRows } from '@/modules/ai-content/store/rows';
 import { postBodyField } from '@/lib/cms/post-body';
 import type { LexicalState } from '@/lib/lexical';
 import { toIntegration, toProduct, toSiteSettings } from '@/lib/cms/mappers';
@@ -15,6 +16,7 @@ import type {
   EngineSettings,
   EngineStyle,
   HubInfo,
+  LocaleFields,
   MediaUpload,
   NewPost,
   Outline,
@@ -22,6 +24,7 @@ import type {
   Store,
   Topic,
 } from '@/modules/ai-content/pipeline/types';
+import { SKIP_TRANSLATIONS } from '@/modules/cms/fields/bilingual';
 import { DECRYPT_CONTEXT } from '@/modules/cms/fields/secret-field';
 import { DEFAULT_AUTHOR_SLUG } from '@/modules/cms/collections/posts';
 import type { ConnectionSpec } from '@/modules/connections/kinds';
@@ -96,6 +99,7 @@ function toTopic(doc: AiTopic): Topic {
     priority: doc.priority,
     windowStart: doc.windowStart ?? null,
     windowEnd: doc.windowEnd ?? null,
+    notes: doc.notes ?? null,
   };
 }
 
@@ -408,17 +412,13 @@ export function payloadStore(payload: Payload): Store {
         locale,
         overrideAccess: true,
       });
-      const rowIds = (current.takeaways ?? []).map((row) => row.id);
       const doc = await payload.update({
         collection: 'posts',
         id,
         data: {
           title: post.title,
           excerpt: post.excerpt,
-          takeaways: post.takeaways.map((text, i) => {
-            const rowId = rowIds[i];
-            return rowId ? { id: rowId, text } : { text };
-          }),
+          takeaways: ontoRows(current.takeaways, post.takeaways),
           body: post.body as unknown as Post['body'],
           seo: post.seo,
           contentUpdatedAt: post.publishedAt,
@@ -469,16 +469,62 @@ export function payloadStore(payload: Payload): Store {
       };
     },
 
-    async uploadImage(upload: MediaUpload) {
+    async writeLocale(id, fields: LocaleFields, locale, status) {
+      // The latest version holds the rows, a draft's included.
+      const current = await payload.findByID({
+        collection: 'posts',
+        id,
+        depth: 0,
+        locale,
+        draft: true,
+        overrideAccess: true,
+      });
+      await payload.update({
+        collection: 'posts',
+        id,
+        data: {
+          title: fields.title,
+          excerpt: fields.excerpt,
+          takeaways: ontoRows(current.takeaways, fields.takeaways),
+          body: fields.body as unknown as Post['body'],
+          seo: fields.seo,
+          _status: status,
+        },
+        draft: status === 'draft',
+        depth: 0,
+        locale,
+        overrideAccess: true,
+        // A safeguard (ADR-066): the engine writes each language itself, with no form JSON
+        // for the bilingual hook to apply.
+        context: { [SKIP_TRANSLATIONS]: true },
+      });
+    },
+
+    async uploadImage(upload: MediaUpload, locale) {
       const data = Buffer.from(upload.bytes);
       const doc = await payload.create({
         collection: 'media',
         data: { alt: upload.alt },
         file: { data, name: upload.filename, mimetype: upload.mime, size: data.byteLength },
         depth: 0,
+        locale,
         overrideAccess: true,
+        // A fresh context per upload: storage-s3 marks a shared one and skips the bucket.
+        context: {},
       });
       return doc.id;
+    },
+
+    async setImageAlt(id, alt, locale) {
+      await payload.update({
+        collection: 'media',
+        id,
+        data: { alt },
+        depth: 0,
+        locale,
+        overrideAccess: true,
+        context: { [SKIP_TRANSLATIONS]: true },
+      });
     },
 
     async markdownToLexical(markdown: string): Promise<LexicalState> {

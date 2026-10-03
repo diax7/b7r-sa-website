@@ -38,14 +38,29 @@ describe('generatePost with the mock provider (BRD 10.2.4, 10.3 item 2)', () => 
       'draft',
       'review',
       'seo',
+      'outline-en',
+      'draft-en',
+      'review-en',
+      'seo-en',
       'image',
       'publish',
+      'publish-en',
     ]);
     expect(run['status']).toBe('done');
     expect(run['outline']).toMatchObject({ takeaways: expect.any(Array) });
     expect(run['tokensIn']).toBeGreaterThan(0);
     expect(run['costUsd']).toBe(0);
-    expect(provider.calls.map((c) => c.step)).toEqual(['outline', 'draft', 'review', 'seo']);
+    // The source's four calls, then the companion's four under the same step names.
+    expect(provider.calls.map((c) => c.step)).toEqual([
+      'outline',
+      'draft',
+      'review',
+      'seo',
+      'outline',
+      'draft',
+      'review',
+      'seo',
+    ]);
     // The post: three takeaways, two internal links, the hub's cover, published, no AI mention.
     const post = state.posts[0]!;
     expect(post.status).toBe('published');
@@ -76,10 +91,15 @@ describe('generatePost with the mock provider (BRD 10.2.4, 10.3 item 2)', () => 
     const { ctx, state, provider } = context({ topics: [english] });
     const result = await runPipeline(ctx);
     expect(result.status).toBe('done');
-    // Every prompt names the language and carries the English facts sheet and link targets.
-    for (const call of provider.calls) {
-      expect(call.prompt).toMatch(/^LANGUAGE: en$/m);
-    }
+    // The source's prompts name English and carry the English facts sheet and link targets;
+    // the companion's name Arabic and the language they adapt from (ADR-066).
+    const [source, companion] = [provider.calls.slice(0, 4), provider.calls.slice(4)];
+    for (const call of source) expect(call.prompt).toMatch(/^LANGUAGE: en$/m);
+    expect(companion.map((c) => c.step)).toEqual(['outline', 'draft', 'review', 'seo']);
+    for (const call of companion) expect(call.prompt).toMatch(/^LANGUAGE: ar$/m);
+    expect(
+      companion.filter((c) => /^SOURCE LANGUAGE: en$/m.test(c.prompt)).map((c) => c.step),
+    ).toEqual(['outline', 'draft']);
     const draftPrompt = provider.calls.find((c) => c.step === 'draft')!.prompt;
     expect(draftPrompt).toContain('Facts sheet:');
     expect(draftPrompt).toContain('Company: ');
@@ -97,9 +117,17 @@ describe('generatePost with the mock provider (BRD 10.2.4, 10.3 item 2)', () => 
       linkTargets(post.body).filter((l) => l.href.startsWith('/en/')).length,
     ).toBeGreaterThanOrEqual(2);
     expect(wordCount(text)).toBeGreaterThanOrEqual(300);
-    // The run says so in its label.
+    // The Arabic is written onto the same post, and the run's label names both languages.
+    expect(state.localeWrites).toHaveLength(1);
+    const arabic = state.localeWrites[0]!;
+    expect(arabic).toMatchObject({ id: post.id, locale: 'ar', status: 'published' });
+    expect(arabic.fields.title).toMatch(/[؀-ۿ]/);
+    expect(arabic.fields.takeaways).toHaveLength(3);
+    const arabicLinks = linkTargets(arabic.fields.body).filter((l) => l.internal);
+    expect(arabicLinks.length).toBeGreaterThanOrEqual(2);
+    for (const link of arabicLinks) expect(link.href).not.toMatch(/^\/en\//);
     const run = state.runs.get(result.runId!)!;
-    expect(run['label']).toBe(`generate [en]: ${english.title}`);
+    expect(run['label']).toBe(`generate [en+ar]: ${english.title}`);
   });
 
   it('holds a live provider’s first posts as drafts and counts them down', async () => {
@@ -116,7 +144,14 @@ describe('generatePost with the mock provider (BRD 10.2.4, 10.3 item 2)', () => 
     const low = context({}, { reviewScore: 60, revisedScore: 85 });
     const ok = await runPipeline(low.ctx);
     expect(ok.status).toBe('done');
+    // Both languages take their revision pass under the same rule.
     expect(low.provider.calls.map((c) => c.step)).toEqual([
+      'outline',
+      'draft',
+      'review',
+      'revise',
+      'review',
+      'seo',
       'outline',
       'draft',
       'review',
@@ -216,5 +251,177 @@ describe('generatePost with the mock provider (BRD 10.2.4, 10.3 item 2)', () => 
     expect(state.posts).toHaveLength(1);
     expect(state.posts[0]!.slug).toBe(post.slug);
     expect(state.posts[0]!.cover).toBe(post.cover);
+  });
+});
+
+describe('the companion language (ADR-066)', () => {
+  const ARABIC = /[؀-ۿ]/;
+
+  it('writes the English onto the same post, and the run keeps the source’s score and outline', async () => {
+    const { ctx, state, provider } = context();
+    const result = await runPipeline(ctx);
+    expect(result.status).toBe('done');
+    const post = state.posts[0]!;
+    expect(state.postLocales.get(post.id)).toBe('ar');
+    expect(state.localeWrites).toHaveLength(1);
+    const english = state.localeWrites[0]!;
+    expect(english).toMatchObject({ id: post.id, locale: 'en', status: 'published' });
+    expect(english.fields.title).not.toMatch(ARABIC);
+    expect(english.fields.takeaways).toHaveLength(3);
+    expect(english.fields.seo.title.length).toBeLessThanOrEqual(70);
+    expect(english.fields.excerpt.length).toBeLessThanOrEqual(160);
+    const text = plainText(english.fields.body);
+    expect(text).not.toMatch(ARABIC);
+    expect(wordCount(text)).toBeGreaterThanOrEqual(300);
+    const links = linkTargets(english.fields.body).filter((l) => l.internal);
+    expect(links.length).toBeGreaterThanOrEqual(2);
+    for (const link of links) expect(link.href).toMatch(/^\/en\//);
+    // The companion prompts adapt the Arabic, with the Arabic links reduced to their text.
+    const draft = provider.calls.filter((c) => c.step === 'draft')[1]!.prompt;
+    expect(draft).toMatch(/^SOURCE LANGUAGE: ar$/m);
+    expect(draft).not.toMatch(/\]\(\/products\//);
+    // The run: both languages in its label, the source's score, rubric and outline, every
+    // call's tokens.
+    const run = state.runs.get(result.runId!)!;
+    expect(run['label']).toBe(`generate [ar+en]: ${state.topics[0]!.title}`);
+    expect(run['error']).toBeUndefined();
+    expect(run['score']).toBe(result.score);
+    expect((run['rubric'] as { critique: string }).critique).toMatch(ARABIC);
+    const outline = run['outline'] as { headings: Array<{ question: string }> };
+    expect(outline.headings[0]!.question).toMatch(ARABIC);
+    expect(run['tokensIn']).toBe(1200 * provider.calls.length);
+    expect(state.emails).toEqual([]);
+  });
+
+  it('publishes the source alone when the English is refused after its revision pass, and says so', async () => {
+    const { ctx, state, provider } = context({}, { emDashIn: 'en' });
+    const result = await runPipeline(ctx);
+    expect(result.status).toBe('done');
+    expect(state.posts[0]!.status).toBe('published');
+    expect(state.localeWrites).toEqual([]);
+    // The English took its revision pass before it was refused.
+    expect(provider.calls.slice(4).map((c) => c.step)).toEqual([
+      'outline',
+      'draft',
+      'review',
+      'revise',
+      'review',
+    ]);
+    const run = state.runs.get(result.runId!)!;
+    expect(run['status']).toBe('done');
+    expect(run['error']).toMatch(/^Published in Arabic only: refused: An em dash/);
+    expect(run['label']).toBe(`generate [ar]: ${state.topics[0]!.title}`);
+    const steps = run['steps'] as Array<{ name: string; ok: boolean }>;
+    expect(steps.find((s) => s.name === 'companion')).toMatchObject({ ok: false });
+    expect(state.topicStatus.get(10)).toBe('published');
+    expect(state.emails).toHaveLength(1);
+    expect(state.emails[0]).toMatchObject({ subject: /published in one language/ });
+    expect(state.emails[0]!.text).toMatch(/Published in Arabic only/);
+  });
+
+  it('gives a refused source its revision pass before the run fails', async () => {
+    const { ctx, state, provider } = context({}, { emDashIn: 'ar' });
+    const result = await runPipeline(ctx);
+    expect(result.status).toBe('failed');
+    expect(result.reason).toMatch(/refused: An em dash/);
+    expect(provider.calls.map((c) => c.step)).toEqual([
+      'outline',
+      'draft',
+      'review',
+      'revise',
+      'review',
+    ]);
+    expect(state.posts).toHaveLength(0);
+    expect(state.localeWrites).toHaveLength(0);
+  });
+
+  it('writes the other language as a draft when the source is held for a read', async () => {
+    const { ctx, state } = context();
+    ctx.provider = { ...ctx.provider, name: 'openai' };
+    const result = await runPipeline(ctx);
+    expect(result.status).toBe('done');
+    expect(state.posts[0]!.status).toBe('draft');
+    expect(state.localeWrites[0]).toMatchObject({ locale: 'en', status: 'draft' });
+  });
+
+  it('rewrites both languages on a regeneration', async () => {
+    const { ctx, state } = context();
+    const first = await runPipeline(ctx, { manual: true });
+    state.topicStatus.set(10, 'published');
+    const again = await runPipeline(ctx, { manual: true, replacePostId: first.postId! });
+    expect(again.status).toBe('done');
+    expect(state.localeWrites.map((w) => [w.id, w.locale, w.status])).toEqual([
+      [first.postId, 'en', 'published'],
+      [first.postId, 'en', 'published'],
+    ]);
+  });
+
+  it('keeps the source published when writing the other language fails', async () => {
+    const { ctx, state } = context();
+    ctx.store = {
+      ...ctx.store,
+      async writeLocale() {
+        throw new Error('the database went away');
+      },
+    };
+    const result = await runPipeline(ctx);
+    expect(result.status).toBe('done');
+    const run = state.runs.get(result.runId!)!;
+    expect(run['error']).toMatch(/^Published in Arabic only: the database went away/);
+    expect(run['label']).toMatch(/^generate \[ar\]:/);
+    const steps = run['steps'] as Array<{ name: string; ok: boolean }>;
+    expect(steps.find((s) => s.name === 'publish-en')).toMatchObject({ ok: false });
+  });
+
+  it('records an alert it cannot send instead of failing a published run', async () => {
+    const { ctx, state } = context({}, { emDashIn: 'en' });
+    ctx.store = {
+      ...ctx.store,
+      async sendEmail() {
+        throw new Error('the mail server refused');
+      },
+    };
+    const result = await runPipeline(ctx);
+    expect(result.status).toBe('done');
+    const steps = state.runs.get(result.runId!)!['steps'] as Array<{ name: string; ok: boolean }>;
+    expect(steps.find((s) => s.name === 'alert')).toMatchObject({ ok: false });
+  });
+
+  it('uploads a stock cover with the source’s alt and adds the other language’s', async () => {
+    const { ctx, state } = context({ settings: settings({ imageMode: 'stock', pexelsKey: 'px' }) });
+    const result = await runPipeline(ctx);
+    expect(result.status).toBe('done');
+    expect(state.uploadLocales).toEqual(['ar']);
+    expect(state.altWrites).toEqual([{ id: 901, alt: expect.any(String), locale: 'en' }]);
+    expect(state.altWrites[0]!.alt).not.toMatch(ARABIC);
+  });
+
+  it('hands the topic’s notes to the model', async () => {
+    const noted = topic({ notes: 'ركّز على المتاجر الصغيرة في جدة.' });
+    const { ctx, provider } = context({ topics: [noted] });
+    await runPipeline(ctx);
+    expect(provider.calls[0]!.prompt).toMatch(/^NOTES: ركّز على المتاجر الصغيرة في جدة\.$/m);
+    const plain = context();
+    await runPipeline(plain.ctx);
+    expect(plain.provider.calls[0]!.prompt).not.toMatch(/^NOTES:/m);
+  });
+});
+
+describe('the companion language on a regeneration (ADR-066)', () => {
+  it('says the other language kept its previous text when its rewrite fails', async () => {
+    const { ctx, state } = context();
+    const first = await runPipeline(ctx, { manual: true });
+    state.topicStatus.set(10, 'published');
+    ctx.store = {
+      ...ctx.store,
+      async writeLocale() {
+        throw new Error('the database went away');
+      },
+    };
+    const again = await runPipeline(ctx, { manual: true, replacePostId: first.postId! });
+    expect(again.status).toBe('done');
+    expect(state.runs.get(again.runId!)!['error']).toBe(
+      'Rewritten in Arabic only; the English, if any, is the previous text: the database went away',
+    );
   });
 });

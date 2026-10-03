@@ -52,6 +52,8 @@ export interface Topic {
   priority: number;
   windowStart: string | null;
   windowEnd: string | null;
+  /** The editor's notes on the topic, handed to the model as they are. */
+  notes?: string | null;
 }
 
 export interface HubInfo {
@@ -127,6 +129,18 @@ export interface NewPost {
   factsBaseline: FactNumber[];
 }
 
+/**
+ * One language of a post (ADR-066): what the companion step writes onto the post the source
+ * created, the takeaways onto the same rows by id.
+ */
+export interface LocaleFields {
+  title: string;
+  excerpt: string;
+  takeaways: string[];
+  body: LexicalState;
+  seo: { title: string; description: string };
+}
+
 export interface MediaUpload {
   bytes: Uint8Array;
   mime: string;
@@ -182,7 +196,17 @@ export interface Store {
     cover: number;
     outline: Outline | null;
   } | null>;
-  uploadImage(upload: MediaUpload): Promise<number>;
+  /** One language of a post the run created or replaces, written in that locale (ADR-066). */
+  writeLocale(
+    id: number,
+    fields: LocaleFields,
+    locale: Locale,
+    status: 'draft' | 'published',
+  ): Promise<void>;
+  /** A stock cover, its alt text in the run's language. */
+  uploadImage(upload: MediaUpload, locale: Locale): Promise<number>;
+  /** The other language's alt text on a cover this run uploaded. */
+  setImageAlt(id: number, alt: string, locale: Locale): Promise<void>;
   markdownToLexical(markdown: string): Promise<LexicalState>;
   decrementReviewFirstRuns(): Promise<void>;
   sendEmail(mail: { to: string; subject: string; text: string }): Promise<void>;
@@ -199,12 +223,23 @@ export interface PipelineInput {
   kind?: 'generate' | 'freshness';
 }
 
-/** Runs a step; the workflow wraps this in Payload's inline task for retries and the job log. */
-export type StepRunner = <T>(
-  name: string,
-  fn: () => Promise<T>,
-  options?: { retries?: number },
-) => Promise<T>;
+/** Runs a step; the workflow wraps this in Payload's inline task for the job log. */
+export type StepRunner = <T>(name: string, fn: () => Promise<T>) => Promise<T>;
+
+/**
+ * The run's step machinery, shared by the source, the review loop and the companion: a step
+ * is timed, hashed on its input and written to the run row as it goes.
+ */
+export interface StepTools {
+  step<T>(
+    name: string,
+    inputForHash: unknown,
+    fn: () => Promise<T>,
+    summary: (out: T) => string,
+  ): Promise<T>;
+  record(record: StepRecord): Promise<void>;
+  addUsage(usage: Usage): void;
+}
 
 export interface PipelineContext {
   store: Store;
