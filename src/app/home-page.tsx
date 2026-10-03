@@ -1,4 +1,4 @@
-import { env, siteBase } from '@/lib/env';
+import { siteBase } from '@/lib/env';
 import { getHome, getSiteSettings, getTestimonials } from '@/lib/cms';
 import type { Locale } from '@/lib/i18n';
 import { getAppearance, preloadsFor } from '@/modules/brand';
@@ -47,9 +47,7 @@ export async function HomePage({ locale }: { locale: Locale }) {
           steps: home.steps.enabled,
           video: home.video.enabled,
           whyUs: home.whyUs.enabled,
-          testimonials:
-            home.testimonials.enabled &&
-            shouldRenderTestimonials(testimonials, env.isProductionSite),
+          testimonials: home.testimonials.enabled && shouldRenderTestimonials(testimonials),
           integrations: home.integrations.enabled,
           faq: home.faq.enabled,
         },

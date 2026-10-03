@@ -1,14 +1,10 @@
 import type { Testimonial } from '@/content/schema';
 
 /**
- * BRD 6.4.7: while every entry is a placeholder, the section renders with «نموذج» badges on
- * preview hosts and is omitted entirely on the production host (ADR-013).
+ * BRD 6.4.7: the section shows whenever it has an entry, on every host. A sample entry
+ * (`placeholder`) carries its visible «نموذج» badge wherever it shows, so it never reads as a
+ * real merchant's words (ADR-013, amended 2026-10-03: the samples show on b7r.sa too).
  */
-export function shouldRenderTestimonials(
-  entries: Testimonial[],
-  isProductionSite: boolean,
-): boolean {
-  if (entries.length === 0) return false;
-  const allPlaceholders = entries.every((t) => t.placeholder);
-  return !(allPlaceholders && isProductionSite);
+export function shouldRenderTestimonials(entries: Testimonial[]): boolean {
+  return entries.length > 0;
 }

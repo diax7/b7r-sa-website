@@ -113,6 +113,12 @@ BRD §6.4.7 said `NODE_ENV=production` on `main`. A CranL preview build is also
 its branch at runtime. The rule now keys on `NEXT_PUBLIC_SITE_URL === https://b7r.sa`, the same
 signal that gates noindex. Verified: the production-origin build serves zero `data-placeholder`.
 
+Amended 2026-10-03 (Dhia): the sample cards show on b7r.sa too, each with its visible «نموذج»
+badge and `data-placeholder`, until real merchants' words replace them. A sample's badge is
+never removed by unticking "Sample" on an entry that no merchant said: the badge is what keeps
+the card from reading as a real merchant's words. Testimonials emit no structured data. The
+launch checklist's three real entries stand.
+
 ## ADR-014: Simulated LCP: measured floor (2026-09-13)
 
 Time-boxed investigation on `/` with every 1b section and analytics enabled. Lighthouse mobile
