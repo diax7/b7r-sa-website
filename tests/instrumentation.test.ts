@@ -39,14 +39,17 @@ describe('the server start (ADR-066)', () => {
 
   it('logs a start that fails by its name and still resolves', async () => {
     const error = vi.spyOn(console, 'error').mockImplementation(() => {});
-    const refused = new Error('connect ECONNREFUSED');
-    refused.name = 'ConnectionError';
+    const refused = Object.assign(new Error('connect ECONNREFUSED 10.0.0.5:5432'), {
+      name: 'ConnectionError',
+      code: 'ECONNREFUSED',
+    });
     cms.mockRejectedValue(refused);
     await expect(register()).resolves.toBeUndefined();
     await settle();
     expect(error).toHaveBeenCalledOnce();
-    expect(String(error.mock.calls[0]![0])).toMatch(/did not start at boot \(ConnectionError\)/);
-    expect(String(error.mock.calls[0]![0])).not.toContain('ECONNREFUSED');
+    const line = String(error.mock.calls[0]![0]);
+    expect(line).toMatch(/did not start at boot \(ConnectionError ECONNREFUSED\)/);
+    expect(line).not.toContain('10.0.0.5');
   });
 
   it('starts nothing during the build or in the edge runtime', async () => {

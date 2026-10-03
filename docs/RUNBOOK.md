@@ -855,7 +855,8 @@ ignore when 2.0.2 ships.
   deleted: pick another first. With no connection picked the dashboard shows "No
   connection" in red and nothing runs.
 - **Switching on.** Schedule and limits → "Engine on". Set Notifications → E-mail first: the
-  failure alerts and the one-language alert go nowhere without it. `AI_CONTENT_ENABLED=false` in the environment stops
+  failure alerts and the one-language alert go nowhere without it.
+  `AI_CONTENT_ENABLED=false` in the environment stops
   every run whatever the panel says (the kill switch outside the panel). While
   `reviewFirstRuns` is above zero, a live provider's posts land as drafts for a read.
 - **Trying it.** Add a topic (or bulk-add from CSV), open it and press "Generate now": the
@@ -872,7 +873,8 @@ ignore when 2.0.2 ships.
   schema miss; a bad key fails at once.
 - **A deploy during a run.** A run takes about three minutes in both languages. A deploy in
   that window leaves the run `running` and its topic `generating`, and neither clears itself:
-  press Deploy away from the publish hour, and reset such a topic to `backlog` by a script.
+  press Deploy away from the publish hour, and reset such a topic in its form (the sidebar's
+  Status → Backlog).
 - **The runner at boot.** The server starts Payload, and with it the jobs runner, when it
   boots (`src/instrumentation.ts`), outside any request. The log line "Payload did not start
   at boot (…)" means the database was not reachable then: the first request starts Payload,

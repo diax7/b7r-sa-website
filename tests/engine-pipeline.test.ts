@@ -421,7 +421,7 @@ describe('the companion language on a regeneration (ADR-066)', () => {
     const again = await runPipeline(ctx, { manual: true, replacePostId: first.postId! });
     expect(again.status).toBe('done');
     expect(state.runs.get(again.runId!)!['error']).toBe(
-      'Rewritten in Arabic only; the English is the previous text: the database went away',
+      'Rewritten in Arabic only; the English, if any, is the previous text: the database went away',
     );
   });
 });

@@ -454,7 +454,7 @@ export async function runPipeline(
 function oneLanguageWarning(locale: Locale, rewritten: boolean, reason: string): string {
   const [source, other] = [LANGUAGE_NAMES[locale], LANGUAGE_NAMES[otherLocale(locale)]];
   return rewritten
-    ? `Rewritten in ${source} only; the ${other} is the previous text: ${reason}`
+    ? `Rewritten in ${source} only; the ${other}, if any, is the previous text: ${reason}`
     : `Published in ${source} only: ${reason}`;
 }
 
