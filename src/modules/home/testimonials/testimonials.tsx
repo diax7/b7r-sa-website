@@ -6,13 +6,11 @@ import { SectionHeader } from '@/components/shared/section-header';
 import { copyFor } from '@/content/copy';
 import { getHome, getTestimonials } from '@/lib/cms';
 import type { Locale } from '@/lib/i18n';
-import { env } from '@/lib/env';
 import { shouldRenderTestimonials } from '@/modules/home/testimonials/rule';
 
 /**
  * Testimonials (BRD 6.4.7). Sample entries carry a visible «نموذج» badge and
- * `data-placeholder`; on the production host the section is omitted until a real entry
- * exists (ADR-013). Mobile: snap carousel.
+ * `data-placeholder` on every host (ADR-013, amended 2026-10-03). Mobile: snap carousel.
  */
 export async function Testimonials({
   locale,
@@ -26,7 +24,7 @@ export async function Testimonials({
     getTestimonials(locale),
   ]);
   const messages = copyFor(locale);
-  if (!copy.enabled || !shouldRenderTestimonials(testimonials, env.isProductionSite)) return null;
+  if (!copy.enabled || !shouldRenderTestimonials(testimonials)) return null;
 
   return (
     <Section id="testimonials" tone={tone} aria-labelledby="testimonials-title">

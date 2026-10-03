@@ -2,18 +2,16 @@ import { describe, expect, it } from 'vitest';
 import { testimonials } from '@/content/seed/testimonials';
 import { shouldRenderTestimonials } from '@/modules/home/testimonials/rule';
 
-describe('testimonials rendering rule (BRD 6.4.7, ADR-013)', () => {
-  it('renders placeholders on preview hosts', () => {
-    expect(shouldRenderTestimonials(testimonials, false)).toBe(true);
+describe('testimonials rendering rule (BRD 6.4.7, ADR-013 amended 2026-10-03)', () => {
+  it('renders the sample entries, each of which carries its badge flag', () => {
+    expect(testimonials.every((t) => t.placeholder)).toBe(true);
+    expect(shouldRenderTestimonials(testimonials)).toBe(true);
   });
-  it('omits the section on the production host while all entries are placeholders', () => {
-    expect(shouldRenderTestimonials(testimonials, true)).toBe(false);
-  });
-  it('renders on production once one real entry exists', () => {
+  it('renders a real entry beside the samples', () => {
     const real = [...testimonials, { quote: 'x', name: 'y', store: 'z', placeholder: false }];
-    expect(shouldRenderTestimonials(real, true)).toBe(true);
+    expect(shouldRenderTestimonials(real)).toBe(true);
   });
   it('never renders an empty list', () => {
-    expect(shouldRenderTestimonials([], false)).toBe(false);
+    expect(shouldRenderTestimonials([])).toBe(false);
   });
 });
