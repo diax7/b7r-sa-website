@@ -30,3 +30,8 @@ auditConfig:
     # Remove these two lines when it ships. Checked 2026-09-12.
     - GHSA-jmr9-qjv8-65gv
     - GHSA-7pqw-9j4j-h8q3
+    # braces <=3.0.3 (stack exhaustion on deeply nested patterns) via next > sass > chokidar,
+    # the build's file watcher: its patterns come from code, never from a request. The advisory
+    # names >=3.0.4 as patched but no 3.0.4 is published (npm latest 3.0.3). Remove this line
+    # when it ships. Checked 2026-10-03.
+    - GHSA-vfj7-8cjw-p6xm
