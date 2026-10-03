@@ -406,3 +406,22 @@ describe('the companion language (ADR-066)', () => {
     expect(plain.provider.calls[0]!.prompt).not.toMatch(/^NOTES:/m);
   });
 });
+
+describe('the companion language on a regeneration (ADR-066)', () => {
+  it('says the other language kept its previous text when its rewrite fails', async () => {
+    const { ctx, state } = context();
+    const first = await runPipeline(ctx, { manual: true });
+    state.topicStatus.set(10, 'published');
+    ctx.store = {
+      ...ctx.store,
+      async writeLocale() {
+        throw new Error('the database went away');
+      },
+    };
+    const again = await runPipeline(ctx, { manual: true, replacePostId: first.postId! });
+    expect(again.status).toBe('done');
+    expect(state.runs.get(again.runId!)!['error']).toBe(
+      'Rewritten in Arabic only; the English is the previous text: the database went away',
+    );
+  });
+});

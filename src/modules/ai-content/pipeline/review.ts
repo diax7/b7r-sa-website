@@ -1,6 +1,5 @@
 import { createHash } from 'node:crypto';
 import { checkDraft, deterministicScore } from '@/modules/ai-content/checks';
-import type { Usage } from '@/modules/ai-content/cost';
 import {
   type Brief,
   reviewPrompt,
@@ -31,16 +30,23 @@ export function stripSharp(text: string): string {
   return text.replace(/^#\s.*$/gm, '').trim();
 }
 
+/** What one language's review reads: the run, its settings, the brief and the step names. */
+export interface ReviewInput {
+  ctx: PipelineContext;
+  settings: EngineSettings;
+  brief: Brief;
+  tools: StepTools;
+  /** The step records: `review` and `revise`; `review-en` and `revise-en` for the companion. */
+  names: { review: string; revise: string };
+}
+
 /** Step 5: the deterministic checks, then the model's rubric, merged into one score. */
 async function reviewDraft(
-  ctx: PipelineContext,
-  settings: EngineSettings,
-  brief: Brief,
+  input: ReviewInput,
   draft: string,
-  name: string,
   revision: boolean,
-  addUsage: (usage: Usage) => void,
 ): Promise<ReviewOutcome> {
+  const { ctx, settings, brief, tools, names } = input;
   const t0 = Date.now();
   const checks = checkDraft(draft, brief.facts.numbers, {
     bannedPhrases: brief.style.bannedPhrases,
@@ -48,7 +54,7 @@ async function reviewDraft(
     maxWords: settings.maxWords,
     locale: brief.locale,
   });
-  const res = await ctx.run(name, () =>
+  const res = await ctx.run(names.review, () =>
     ctx.provider.object({
       step: 'review',
       system: systemPrompt(brief.style, brief.locale),
@@ -57,7 +63,7 @@ async function reviewDraft(
       name: 'review',
     }),
   );
-  addUsage(res.usage);
+  tools.addUsage(res.usage);
   const modelTotal = rubricTotal(res.value);
   const deterministic = deterministicScore(checks);
   const score = Math.max(0, Math.min(modelTotal, deterministic, 100));
@@ -67,7 +73,7 @@ async function reviewDraft(
     problems: checks.deductions.map((d) => d.detail),
     refused: checks.refused,
     record: {
-      name: revision ? `${name}-2` : name,
+      name: revision ? `${names.review}-2` : names.review,
       inputHash: createHash('sha256').update(draft).digest('hex').slice(0, 12),
       summary: `${score} (model ${modelTotal}, checks ${deterministic}; ${checks.words} words)`,
       ms: Date.now() - t0,
@@ -83,20 +89,19 @@ const passed = (review: ReviewOutcome, settings: EngineSettings) =>
  * Review and revise until the draft passes (BRD 10.2.4 step 5, ADR-066): a score below the
  * threshold or a refusal (an em dash, a mention of AI) takes a revision pass with the
  * reviewer's critique, the refusals and the problems the checks found; after the last pass a
- * refusal or a low score stops the run. `names` are the step records (`review`, `revise`;
- * `review-en`, `revise-en` for the companion); `onReview` sees each review as it lands.
+ * refusal or a low score stops the run. `onReview` sees each review as it lands (the source
+ * stores its score and rubric on the run; the companion stores nothing).
  */
 export async function writeReviewed(
-  ctx: PipelineContext,
-  settings: EngineSettings,
-  brief: Brief,
-  draft: string,
-  tools: StepTools,
-  names: { review: string; revise: string },
-  onReview: (review: ReviewOutcome) => Promise<void> = async () => {},
+  input: ReviewInput & {
+    draft: string;
+    onReview?: (review: ReviewOutcome) => Promise<void>;
+  },
 ): Promise<{ draft: string; review: ReviewOutcome }> {
-  let current = draft;
-  let review = await reviewDraft(ctx, settings, brief, current, names.review, false, tools.addUsage);
+  const { ctx, settings, brief, tools, names } = input;
+  const onReview = input.onReview ?? (async () => {});
+  let current = input.draft;
+  let review = await reviewDraft(input, current, false);
   await tools.record(review.record);
   await onReview(review);
   for (let pass = 1; pass <= settings.maxRevisionPasses && !passed(review, settings); pass++) {
@@ -120,7 +125,7 @@ export async function writeReviewed(
       (d) => `${d.length} chars`,
     );
     // oxlint-disable-next-line no-await-in-loop
-    review = await reviewDraft(ctx, settings, brief, current, names.review, true, tools.addUsage);
+    review = await reviewDraft(input, current, true);
     // oxlint-disable-next-line no-await-in-loop
     await tools.record(review.record);
     // oxlint-disable-next-line no-await-in-loop

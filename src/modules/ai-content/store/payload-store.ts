@@ -103,7 +103,6 @@ function toTopic(doc: AiTopic): Topic {
   };
 }
 
-
 const PEXELS = 'https://api.pexels.com/v1/search';
 
 export function payloadStore(payload: Payload): Store {

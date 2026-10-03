@@ -38,7 +38,10 @@ export interface MockOptions {
  */
 const COMPANION = {
   ar: { title: 'دليل عملي للتاجر في السعودية', keyword: 'الطباعة عند الطلب' },
-  en: { title: 'A practical guide for merchants in Saudi Arabia', keyword: 'print on demand Saudi Arabia' },
+  en: {
+    title: 'A practical guide for merchants in Saudi Arabia',
+    keyword: 'print on demand Saudi Arabia',
+  },
 } as const;
 
 /** A companion prompt names the language it adapts from. */
@@ -291,7 +294,8 @@ export function mockProvider(options: MockOptions): Provider & { calls: MockCall
         const text = en
           ? draftForEn(topicOf(req.prompt), keywordOf(req.prompt), hubOf(req.prompt), options.facts)
           : draftFor(req.prompt, options.facts);
-        const dash = options.emDashIn === (en ? 'en' : 'ar') ? ` ${String.fromCharCode(0x2014)}` : '';
+        const dash =
+          options.emDashIn === (en ? 'en' : 'ar') ? ` ${String.fromCharCode(0x2014)}` : '';
         return { text: `${text}${dash}`, usage: USAGE };
       }
       if (req.step === 'alt') {

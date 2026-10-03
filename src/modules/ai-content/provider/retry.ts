@@ -15,7 +15,8 @@ export function retryable(error: unknown): boolean {
   if (RetryError.isInstance(error)) return error.reason === 'maxRetriesExceeded';
   if (NoObjectGeneratedError.isInstance(error)) return true;
   // `AbortSignal.timeout` rejects with a DOMException, which is not an `Error` everywhere.
-  const name = typeof error === 'object' && error !== null ? (error as { name?: unknown }).name : null;
+  const name =
+    typeof error === 'object' && error !== null ? (error as { name?: unknown }).name : null;
   return name === 'TimeoutError' || name === 'AbortError';
 }
 

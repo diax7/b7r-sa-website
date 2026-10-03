@@ -33,7 +33,6 @@ import type {
   StepTools,
   Store,
 } from '@/modules/ai-content/pipeline/types';
-import type { Provider } from '@/modules/ai-content/provider/types';
 import { SLUG_MAX, slugFor } from '@/modules/ai-content/transliterate';
 
 /** A run's error keeps more of a message than a test's line (a validation report has detail). */
@@ -77,10 +76,22 @@ export async function runPipeline(
       const inputHash = hash(inputForHash);
       try {
         const out = await ctx.run(name, fn);
-        await tools.record({ name, inputHash, summary: summary(out), ms: Date.now() - t0, ok: true });
+        await tools.record({
+          name,
+          inputHash,
+          summary: summary(out),
+          ms: Date.now() - t0,
+          ok: true,
+        });
         return out;
       } catch (error) {
-        await tools.record({ name, inputHash, summary: message(error), ms: Date.now() - t0, ok: false });
+        await tools.record({
+          name,
+          inputHash,
+          summary: message(error),
+          ms: Date.now() - t0,
+          ok: false,
+        });
         throw error;
       }
     },
@@ -298,15 +309,15 @@ export async function runPipeline(
       },
       (d) => `${d.length} chars`,
     );
-    const reviewed = await writeReviewed(
+    const reviewed = await writeReviewed({
       ctx,
       settings,
       brief,
-      draft,
       tools,
-      { review: 'review', revise: 'revise' },
-      (r) => store.updateRun(run, { score: r.score, rubric: r.rubric }),
-    );
+      draft,
+      names: { review: 'review', revise: 'revise' },
+      onReview: (r) => store.updateRun(run, { score: r.score, rubric: r.rubric }),
+    });
     const links = sanitizeLinks(reviewed.draft, brief.linkTargets);
     if (links.internal < MIN_INTERNAL_LINKS) {
       throw new PipelineStop(
@@ -398,7 +409,14 @@ export async function runPipeline(
       // A regeneration republishes (`replacePost`), so its other language is live too.
       const written = regen ? 'published' : status;
       try {
-        await publishCompanion(store, tools, post.id, companion, written, cover);
+        await publishCompanion({
+          store,
+          tools,
+          postId: post.id,
+          companion,
+          status: written,
+          cover,
+        });
       } catch (error) {
         oneLanguage = message(error);
       }
@@ -409,7 +427,7 @@ export async function runPipeline(
     const both = companion !== null && oneLanguage === null;
     label = `${kind} [${both ? `${locale}+${otherLocale(locale)}` : locale}]: ${topic.title}`;
     const warning =
-      oneLanguage === null ? null : `Published in ${LANGUAGE_NAMES[locale]} only: ${oneLanguage}`;
+      oneLanguage === null ? null : oneLanguageWarning(locale, regen !== null, oneLanguage);
     if (warning) await alertOneLanguage(store, tools, settings, { run, post: post.id, warning });
     return finish(
       {
@@ -429,15 +447,27 @@ export async function runPipeline(
   }
 }
 
+/**
+ * What the run says when the other language was not written. A regeneration rewrote the source
+ * and left the other language's previous text standing, so it says that instead.
+ */
+function oneLanguageWarning(locale: Locale, rewritten: boolean, reason: string): string {
+  const [source, other] = [LANGUAGE_NAMES[locale], LANGUAGE_NAMES[otherLocale(locale)]];
+  return rewritten
+    ? `Rewritten in ${source} only; the ${other} is the previous text: ${reason}`
+    : `Published in ${source} only: ${reason}`;
+}
+
 /** The other language onto the post the source wrote, and its alt onto a cover the run uploaded. */
-async function publishCompanion(
-  store: Store,
-  tools: StepTools,
-  postId: number,
-  companion: Companion,
-  status: 'draft' | 'published',
-  cover: { id: number; uploaded: boolean },
-): Promise<void> {
+async function publishCompanion(written: {
+  store: Store;
+  tools: StepTools;
+  postId: number;
+  companion: Companion;
+  status: 'draft' | 'published';
+  cover: { id: number; uploaded: boolean };
+}): Promise<void> {
+  const { store, tools, postId, companion, status, cover } = written;
   await tools.step(
     `publish-${companion.locale}`,
     { post: postId, locale: companion.locale, status },
@@ -524,12 +554,12 @@ async function coverFor(
       settings.pexelsKey,
     );
     if (photo) {
-      return { id: await store.uploadImage({ ...photo, alt: alt.alt }, alt.locale), uploaded: true };
+      return {
+        id: await store.uploadImage({ ...photo, alt: alt.alt }, alt.locale),
+        uploaded: true,
+      };
     }
   }
   if (hub.defaultCoverId === null) throw new PipelineStop('the hub has no default cover', 'failed');
   return { id: hub.defaultCoverId, uploaded: false };
 }
-
-export { PipelineStop };
-export type { Provider };

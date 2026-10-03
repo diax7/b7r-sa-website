@@ -113,9 +113,13 @@ export async function writeCompanion(input: CompanionInput): Promise<Companion> 
     },
     (d) => `${d.length} chars`,
   );
-  const reviewed = await writeReviewed(ctx, settings, brief, draft, tools, {
-    review: `review-${locale}`,
-    revise: `revise-${locale}`,
+  const reviewed = await writeReviewed({
+    ctx,
+    settings,
+    brief,
+    tools,
+    draft,
+    names: { review: `review-${locale}`, revise: `revise-${locale}` },
   });
   const links = sanitizeLinks(reviewed.draft, brief.linkTargets);
   if (links.internal < MIN_INTERNAL_LINKS) {
